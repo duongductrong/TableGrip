@@ -1,0 +1,39 @@
+[versions]
+kotlin = "2.3.20"
+composeDesktop = "1.12.1"
+jewel = "0.41.0-262.10968.63"
+intellijPlatformBuild = "262.10968.63"
+jbr = "1.12.0"
+kotlinxCoroutines = "1.10.2"
+kotlinxSerialization = "1.11.0"
+# JDBC drivers
+postgresql = "42.7.8"
+mysql = "9.4.0"
+sqlite = "3.50.3.0"
+hikari = "7.0.2"
+javaKeyring = "1.0.4"
+junit = "5.13.4"
+
+[libraries]
+jewel-intUi-standalone = { module = "org.jetbrains.jewel:jewel-int-ui-standalone", version.ref = "jewel" }
+jewel-intUi-decoratedWindow = { module = "org.jetbrains.jewel:jewel-int-ui-decorated-window", version.ref = "jewel" }
+intellijPlatform-icons = { module = "com.jetbrains.intellij.platform:icons", version.ref = "intellijPlatformBuild" }
+jbr-api = { module = "org.jetbrains.runtime:jbr-api", version.ref = "jbr" }
+
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
+kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinxCoroutines" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+
+jdbc-postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
+jdbc-mysql = { module = "com.mysql:mysql-connector-j", version.ref = "mysql" }
+jdbc-sqlite = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite" }
+java-keyring = { module = "com.github.javakeyring:java-keyring", version.ref = "javaKeyring" }
+hikari = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
+
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+
+[plugins]
+kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+composeDesktop = { id = "org.jetbrains.compose", version.ref = "composeDesktop" }
