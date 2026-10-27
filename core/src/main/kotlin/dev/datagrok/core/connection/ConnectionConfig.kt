@@ -2,22 +2,13 @@ package dev.datagrok.core.connection
 
 import kotlinx.serialization.Serializable
 
-/** Database engines supported out of the box. */
+/** Database engines supported out of the box, with the JDBC drivers that can talk to each (default first). */
 @Serializable
-enum class DatabaseType(val displayName: String, val defaultPort: Int?) {
-    PostgreSQL("PostgreSQL", 5432),
-    MySQL("MySQL", 3306),
-    SQLite("SQLite", null);
-
-    fun jdbcUrl(config: ConnectionConfig): String =
-        when (this) {
-            PostgreSQL -> "jdbc:postgresql://${config.host}:${config.port ?: defaultPort}/${config.database}"
-            MySQL -> "jdbc:mysql://${config.host}:${config.port ?: defaultPort}/${config.database}"
-            // A private in-memory database would vanish per connection; share it across the pool instead.
-            SQLite ->
-                if (config.database == ":memory:") "jdbc:sqlite:file:datagrok-${config.id}?mode=memory&cache=shared"
-                else "jdbc:sqlite:${config.database}"
-        }
+enum class DatabaseType(val displayName: String, val defaultPort: Int?, val drivers: List<DriverId>) {
+    PostgreSQL("PostgreSQL", 5432, listOf(DriverId.PostgreSQL)),
+    MySQL("MySQL", 3306, listOf(DriverId.MySQL, DriverId.MariaDB)),
+    MariaDB("MariaDB", 3306, listOf(DriverId.MariaDB, DriverId.MySQL)),
+    SQLite("SQLite", null, listOf(DriverId.SQLite)),
 }
 
 /** Where a database lives; drives the connection's colour and how cautious the UI is. */
@@ -63,4 +54,16 @@ data class ConnectionConfig(
     /** Asks before running statements that change data or schema. */
     val confirmWrites: Boolean = false,
     val ssh: SshConfig? = null,
-)
+    /** JDBC driver to use; null (or one that can't serve [type]) means the type's default. */
+    val driver: DriverId? = null,
+    /** Extra driver properties, e.g. `sslmode=require` or `allowPublicKeyRetrieval=true`. */
+    val properties: Map<String, String> = emptyMap(),
+    /**
+     * A complete JDBC URL used as-is instead of host/port/database ("connect by URL"), for forms Datagrok doesn't
+     * model such as replication or load-balancing URLs. Never contains the password; that's in the [SecretStore].
+     */
+    val url: String? = null,
+) {
+    val effectiveDriver: DriverId
+        get() = driver?.takeIf { it in type.drivers } ?: type.drivers.first()
+}

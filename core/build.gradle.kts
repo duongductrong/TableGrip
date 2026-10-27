@@ -17,6 +17,7 @@ dependencies {
 
     runtimeOnly(libs.jdbc.postgresql)
     runtimeOnly(libs.jdbc.mysql)
+    runtimeOnly(libs.jdbc.mariadb)
     runtimeOnly(libs.jdbc.sqlite)
 
     testImplementation(kotlin("test"))

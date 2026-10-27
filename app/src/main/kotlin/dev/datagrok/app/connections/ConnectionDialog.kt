@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.input.KeyboardActionHandler
 import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
@@ -22,12 +23,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
 import dev.datagrok.core.connection.ConnectionConfig
+import dev.datagrok.core.connection.ConnectionString
 import dev.datagrok.core.connection.DatabaseType
+import dev.datagrok.core.connection.DriverId
+import dev.datagrok.core.connection.JdbcUrls
+import dev.datagrok.core.connection.ParsedConnection
 import dev.datagrok.core.connection.Environment
 import dev.datagrok.core.connection.SshAuth
 import dev.datagrok.core.connection.SshConfig
@@ -41,6 +47,7 @@ import org.jetbrains.jewel.ui.component.Divider
 import org.jetbrains.jewel.ui.component.SimpleTabContent
 import org.jetbrains.jewel.ui.component.TabData
 import org.jetbrains.jewel.ui.component.TabStrip
+import org.jetbrains.jewel.ui.component.TextArea
 import org.jetbrains.jewel.ui.theme.defaultTabStyle
 import org.jetbrains.jewel.ui.component.ListComboBox
 import org.jetbrains.jewel.ui.component.OutlinedButton
@@ -57,6 +64,12 @@ private class ConnectionForm(existing: ConnectionConfig?) {
     val database = TextFieldState(existing?.database.orEmpty())
     val user = TextFieldState(existing?.user.orEmpty())
     val password = TextFieldState()
+    var driver by mutableStateOf(existing?.effectiveDriver ?: DatabaseType.PostgreSQL.drivers.first())
+    /** Connect with a raw JDBC URL instead of host/port/database. */
+    var useUrl by mutableStateOf(existing?.url != null)
+    val url = TextFieldState(existing?.url.orEmpty())
+    val properties = TextFieldState(existing?.properties.orEmpty().entries.joinToString("\n") { "${it.key}=${it.value}" })
+    val connectionString = TextFieldState()
 
     var environment by mutableStateOf(existing?.environment ?: Environment.None)
     var readOnly by mutableStateOf(existing?.readOnly ?: false)
@@ -74,11 +87,62 @@ private class ConnectionForm(existing: ConnectionConfig?) {
     val isServer: Boolean
         get() = type.defaultPort != null
 
+    fun changeType(newType: DatabaseType) {
+        type = newType
+        if (driver !in newType.drivers) driver = newType.drivers.first()
+    }
+
+    /** Fills the form from a pasted connection string; returns warnings to show. */
+    fun apply(parsed: ParsedConnection): List<String> {
+        changeType(parsed.type)
+        parsed.driver?.takeIf { it in parsed.type.drivers }?.let { driver = it }
+        useUrl = parsed.url != null
+        parsed.url?.let { url.setTextAndPlaceCursorAtEnd(it) }
+        parsed.host?.let { host.setTextAndPlaceCursorAtEnd(it) }
+        port.setTextAndPlaceCursorAtEnd(parsed.port?.toString().orEmpty())
+        parsed.database?.let { database.setTextAndPlaceCursorAtEnd(it) }
+        parsed.user?.let { user.setTextAndPlaceCursorAtEnd(it) }
+        parsed.password?.let { password.setTextAndPlaceCursorAtEnd(it) }
+        if (parsed.properties.isNotEmpty()) {
+            val merged = parseProperties().getOrDefault(emptyMap()) + parsed.properties
+            properties.setTextAndPlaceCursorAtEnd(merged.entries.joinToString("\n") { "${it.key}=${it.value}" })
+        }
+        return parsed.warnings
+    }
+
+    /** Moves a password typed into the URL to the password field, so it ends up in the keychain, not the profile. */
+    fun moveUrlPassword() {
+        if (!useUrl) return
+        val (clean, secret) = ConnectionString.stripSecrets(url.text.toString().trim())
+        url.setTextAndPlaceCursorAtEnd(clean)
+        if (secret != null) password.setTextAndPlaceCursorAtEnd(secret)
+    }
+
+    /** `key=value` per line; blank lines and `#` comments are ignored. */
+    fun parseProperties(): Result<Map<String, String>> = runCatching {
+        properties.text.lines().map { it.trim() }.filter { it.isNotEmpty() && !it.startsWith("#") }.associate { line ->
+            require('=' in line) { "Driver property \"$line\" must look like key=value." }
+            line.substringBefore('=').trim() to line.substringAfter('=').trim()
+        }
+    }
+
     fun validate(): String? {
         val port = port.text.toString()
+        parseProperties().exceptionOrNull()?.let { return it.message }
+        if (useUrl) {
+            val raw = url.text.toString().trim()
+            return when {
+                raw.isEmpty() -> "JDBC URL is required."
+                !raw.startsWith("jdbc:") -> "A JDBC URL starts with jdbc: — paste other formats into Connection string."
+                ssh && runCatching { JdbcUrls.build(toConfig(), via = "127.0.0.1" to 1) }.isFailure -> "SSH tunnels need a single-host URL."
+                !driver.load().acceptsURL(JdbcUrls.build(toConfig())) -> "${driver.displayName} doesn't accept this URL."
+                else -> null
+            }
+        }
         return when {
             database.text.isBlank() -> if (isServer) "Database is required." else "Database file is required."
             isServer && host.text.isBlank() -> "Host is required."
+            ssh && ',' in host.text -> "SSH tunnels need a single host."
             isServer && port.isNotEmpty() && port.toIntOrNull() !in 1..65535 -> "Port must be between 1 and 65535."
             ssh && sshHost.text.isBlank() -> "SSH host is required."
             ssh && sshUser.text.isBlank() -> "SSH user is required."
@@ -92,7 +156,12 @@ private class ConnectionForm(existing: ConnectionConfig?) {
 
     fun toConfig(): ConnectionConfig {
         val database = database.text.toString().trim()
-        val fallbackName = if (isServer) "${host.text.trim()}/$database" else database.substringAfterLast('/')
+        val fallbackName =
+            when {
+                useUrl -> url.text.toString().substringAfter("//").substringBefore('?').substringAfterLast('@').ifEmpty { type.displayName }
+                isServer -> "${host.text.trim()}/$database"
+                else -> database.substringAfterLast('/')
+            }
         return ConnectionConfig(
             id = id,
             name = name.text.toString().trim().ifEmpty { fallbackName },
@@ -101,6 +170,9 @@ private class ConnectionForm(existing: ConnectionConfig?) {
             port = if (isServer) port.text.toString().toIntOrNull() else null,
             database = database,
             user = if (isServer) user.text.toString().trim() else "",
+            driver = driver,
+            properties = parseProperties().getOrDefault(emptyMap()),
+            url = url.text.toString().trim().takeIf { useUrl && it.isNotEmpty() },
             environment = environment,
             readOnly = readOnly,
             confirmWrites = confirmWrites,
@@ -124,6 +196,19 @@ private enum class DialogTab { General, Ssh, Options }
 
 @Composable
 internal fun ConnectionDialog(state: ConnectionsViewModel, request: ConnectionDialogRequest) {
+    DialogWindow(
+        onCloseRequest = state::closeDialog,
+        state = rememberDialogState(size = DpSize(640.dp, 600.dp)),
+        title = if (request.existing == null) "New Connection" else "Edit Connection",
+        resizable = false,
+    ) {
+        ConnectionDialogContent(state, request)
+    }
+}
+
+/** The dialog body, separate from its window so it can be rendered in tests. */
+@Composable
+internal fun ConnectionDialogContent(state: ConnectionsViewModel, request: ConnectionDialogRequest) {
     val form = remember(request) { ConnectionForm(request.existing) }
     val scope = rememberCoroutineScope()
     var message by remember { mutableStateOf<Message?>(null) }
@@ -137,6 +222,7 @@ internal fun ConnectionDialog(state: ConnectionsViewModel, request: ConnectionDi
     }
 
     fun submit(test: Boolean) {
+        form.moveUrlPassword()
         form.validate()?.let {
             message = Message(it, isError = true)
             return
@@ -157,74 +243,126 @@ internal fun ConnectionDialog(state: ConnectionsViewModel, request: ConnectionDi
         }
     }
 
-    DialogWindow(
-        onCloseRequest = state::closeDialog,
-        state = rememberDialogState(size = DpSize(580.dp, 520.dp)),
-        title = if (request.existing == null) "New Connection" else "Edit Connection",
-        resizable = false,
-    ) {
-        Column(Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground)) {
-            TabStrip(
-                tabs =
-                    DialogTab.entries
-                        .filter { it != DialogTab.Ssh || form.isServer }
-                        .map { entry ->
-                            TabData.Default(
-                                selected = entry == tab,
-                                content = { tabState ->
-                                    SimpleTabContent(
-                                        when (entry) {
-                                            DialogTab.General -> "General"
-                                            DialogTab.Ssh -> if (form.useSsh) "SSH ✓" else "SSH"
-                                            DialogTab.Options -> "Options"
-                                        },
-                                        tabState,
-                                    )
-                                },
-                                closable = false,
-                                onClick = { tab = entry },
-                            )
-                        },
-                style = JewelTheme.defaultTabStyle,
-            )
-            Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
-            Column(Modifier.weight(1f).fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                when (if (tab == DialogTab.Ssh && !form.isServer) DialogTab.General else tab) {
-                    DialogTab.General -> GeneralTab(form)
-                    DialogTab.Ssh -> SshTab(form)
-                    DialogTab.Options -> OptionsTab(form)
-                }
+    Column(Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground)) {
+        TabStrip(
+            tabs =
+                DialogTab.entries
+                    .filter { it != DialogTab.Ssh || form.isServer }
+                    .map { entry ->
+                        TabData.Default(
+                            selected = entry == tab,
+                            content = { tabState ->
+                                SimpleTabContent(
+                                    when (entry) {
+                                        DialogTab.General -> "General"
+                                        DialogTab.Ssh -> if (form.useSsh) "SSH ✓" else "SSH"
+                                        DialogTab.Options -> "Options"
+                                    },
+                                    tabState,
+                                )
+                            },
+                            closable = false,
+                            onClick = { tab = entry },
+                        )
+                    },
+            style = JewelTheme.defaultTabStyle,
+        )
+        Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
+        Column(Modifier.weight(1f).fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            when (if (tab == DialogTab.Ssh && !form.isServer) DialogTab.General else tab) {
+                DialogTab.General -> GeneralTab(form) { message = it }
+                DialogTab.Ssh -> SshTab(form)
+                DialogTab.Options -> OptionsTab(form)
             }
-            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                message?.let {
-                    Text(it.text, color = if (it.isError) JewelTheme.globalColors.text.error else JewelTheme.globalColors.text.info, maxLines = 3)
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedButton(onClick = { submit(test = true) }, enabled = !busy) { Text("Test Connection") }
-                    Spacer(Modifier.weight(1f))
-                    OutlinedButton(onClick = state::closeDialog) { Text("Cancel") }
-                    DefaultButton(onClick = { submit(test = false) }, enabled = !busy) { Text("Save") }
-                }
+        }
+        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            message?.let {
+                Text(it.text, color = if (it.isError) JewelTheme.globalColors.text.error else JewelTheme.globalColors.text.info, maxLines = 3)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                OutlinedButton(onClick = { submit(test = true) }, enabled = !busy) { Text("Test Connection") }
+                Spacer(Modifier.weight(1f))
+                OutlinedButton(onClick = state::closeDialog) { Text("Cancel") }
+                DefaultButton(onClick = { submit(test = false) }, enabled = !busy) { Text("Save") }
             }
         }
     }
 }
 
 @Composable
-private fun GeneralTab(form: ConnectionForm) {
+private fun GeneralTab(form: ConnectionForm, onMessage: (Message?) -> Unit) {
+    fun parse() {
+        val text = form.connectionString.text.toString()
+        if (text.isBlank()) return
+        onMessage(
+            runCatching { ConnectionString.parse(text) }
+                .fold(
+                    onSuccess = { parsed ->
+                        val warnings = form.apply(parsed)
+                        form.connectionString.setTextAndPlaceCursorAtEnd("")
+                        Message((listOf("Filled in from the connection string.") + warnings).joinToString("\n"), isError = false)
+                    },
+                    onFailure = { Message(it.message ?: "Couldn't parse the connection string.", isError = true) },
+                )
+        )
+    }
+    FormRow("Paste") {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            TextField(
+                form.connectionString,
+                Modifier.weight(1f),
+                textStyle = JewelTheme.editorTextStyle,
+                placeholder = { Text("postgres://user:pass@host:5432/db, jdbc:mysql://…, path.db") },
+                onKeyboardAction = KeyboardActionHandler { parse() },
+            )
+            OutlinedButton(onClick = ::parse) { Text("Parse") }
+        }
+    }
     FormRow("Name") { TextField(form.name, Modifier.fillMaxWidth(), placeholder = { Text("Optional") }) }
     FormRow("Type") {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            ListComboBox(
+                items = DatabaseType.entries.map { it.displayName },
+                selectedIndex = form.type.ordinal,
+                onSelectedItemChange = { form.changeType(DatabaseType.entries[it]) },
+                modifier = Modifier.width(140.dp),
+            )
+            val drivers = form.type.drivers
+            ListComboBox(
+                items = drivers.map { driver -> driver.displayName + (driver.version?.let { " $it" } ?: "") },
+                selectedIndex = drivers.indexOf(form.driver).coerceAtLeast(0),
+                onSelectedItemChange = { form.driver = drivers[it] },
+                modifier = Modifier.weight(1f),
+                enabled = drivers.size > 1,
+            )
+        }
+    }
+    FormRow("Connect by") {
         ListComboBox(
-            items = DatabaseType.entries.map { it.displayName },
-            selectedIndex = form.type.ordinal,
-            onSelectedItemChange = { form.type = DatabaseType.entries[it] },
+            items = listOf(if (form.isServer) "Host and port" else "File", "JDBC URL"),
+            selectedIndex = if (form.useUrl) 1 else 0,
+            onSelectedItemChange = { index ->
+                form.useUrl = index == 1
+                // Start the URL from the current fields, so switching modes doesn't lose them.
+                if (form.useUrl && form.url.text.isBlank()) runCatching { JdbcUrls.build(form.toConfig().copy(url = null)) }.onSuccess { form.url.setTextAndPlaceCursorAtEnd(it) }
+            },
             modifier = Modifier.width(180.dp),
         )
+    }
+    if (form.useUrl) {
+        FormRow("URL") { TextField(form.url, Modifier.fillMaxWidth(), textStyle = JewelTheme.editorTextStyle, placeholder = { Text("jdbc:mysql:replication://primary,replica/db") }) }
+        if (form.isServer) {
+            FormRow("User") { TextField(form.user, Modifier.fillMaxWidth()) }
+            FormRow("Password") {
+                TextField(form.password, Modifier.fillMaxWidth(), outputTransformation = MaskPassword, placeholder = { Text("Saved in the system keychain") })
+            }
+        }
+        return
     }
     if (form.isServer) {
         FormRow("Host") {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                TextField(form.host, Modifier.weight(1f))
+                TextField(form.host, Modifier.weight(1f), placeholder = { Text("host, or host1:port1,host2:port2") })
                 Text("Port")
                 TextField(form.port, Modifier.width(80.dp), placeholder = { Text(form.type.defaultPort.toString()) })
             }
@@ -234,10 +372,15 @@ private fun GeneralTab(form: ConnectionForm) {
         FormRow("Password") {
             TextField(form.password, Modifier.fillMaxWidth(), outputTransformation = MaskPassword, placeholder = { Text("Saved in the system keychain") })
         }
-        if (form.useSsh) Text("Host and port are resolved from the SSH server.", color = JewelTheme.globalColors.text.info)
     } else {
         FormRow("File") {
             TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text("/path/to/database.sqlite or :memory:") })
+        }
+    }
+    val preview = runCatching { JdbcUrls.build(form.toConfig()) }.getOrNull()
+    if (preview != null) {
+        FormRow("JDBC URL") {
+            Text(preview, color = JewelTheme.globalColors.text.info, style = JewelTheme.editorTextStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -300,7 +443,24 @@ private fun OptionsTab(form: ConnectionForm) {
     CheckboxRow("Read-only: refuse statements that change data or schema", form.readOnly, onCheckedChange = { form.readOnly = it })
     CheckboxRow("Confirm before running statements that change data or schema", form.confirmWrites, onCheckedChange = { form.confirmWrites = it })
     Text("Dangerous statements (DELETE/UPDATE without WHERE, DROP, TRUNCATE) always ask.", color = JewelTheme.globalColors.text.info)
+    Spacer(Modifier.height(4.dp))
+    Text("Driver properties (${form.driver.displayName})")
+    TextArea(
+        form.properties,
+        Modifier.fillMaxWidth().height(96.dp),
+        textStyle = JewelTheme.editorTextStyle,
+        placeholder = { Text(PropertyExamples[form.driver].orEmpty()) },
+    )
 }
+
+/** Commonly needed properties per driver, using each driver's documented names. */
+private val PropertyExamples =
+    mapOf(
+        DriverId.PostgreSQL to "sslmode=verify-full\ncurrentSchema=app\nApplicationName=Datagrok",
+        DriverId.MySQL to "sslMode=REQUIRED\nallowPublicKeyRetrieval=true\nserverTimezone=UTC",
+        DriverId.MariaDB to "sslMode=verify-full\nallowPublicKeyRetrieval=true",
+        DriverId.SQLite to "foreign_keys=true\nbusy_timeout=5000",
+    )
 
 /** Native file chooser; returns the picked path or null. */
 private fun chooseFile(title: String): String? {

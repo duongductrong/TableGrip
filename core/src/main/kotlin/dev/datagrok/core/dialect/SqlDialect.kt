@@ -105,7 +105,8 @@ sealed class SqlDialect(val syntax: SqlSyntax) {
         fun of(type: DatabaseType): SqlDialect =
             when (type) {
                 DatabaseType.PostgreSQL -> PostgreSQL
-                DatabaseType.MySQL -> MySQL
+                DatabaseType.MySQL,
+                DatabaseType.MariaDB -> MySQL
                 DatabaseType.SQLite -> SQLite
             }
     }

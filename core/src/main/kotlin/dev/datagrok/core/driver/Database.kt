@@ -4,7 +4,9 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import com.zaxxer.hikari.pool.HikariPool
 import dev.datagrok.core.connection.ConnectionConfig
-import dev.datagrok.core.connection.DatabaseType
+import dev.datagrok.core.connection.ConnectionString
+import dev.datagrok.core.connection.DriverId
+import dev.datagrok.core.connection.JdbcUrls
 import dev.datagrok.core.connection.SshTunnel
 import dev.datagrok.core.dialect.SortColumn
 import dev.datagrok.core.edit.ChangeStatement
@@ -17,9 +19,7 @@ import dev.datagrok.core.metadata.TableInfo
 import dev.datagrok.core.metadata.TableRef
 import dev.datagrok.core.sql.SqlClassifier
 import java.sql.Connection
-import java.sql.DriverManager
 import java.sql.SQLException
-import java.util.Properties
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -75,7 +75,8 @@ class Database private constructor(
             val autoCommit = withContext(Dispatchers.IO) { connection.autoCommit.also { connection.autoCommit = false } }
             try {
                 connection.withStatement(timeoutSeconds = 0) { statement ->
-                    statement.fetchSize = if (config.type == DatabaseType.MySQL) Int.MIN_VALUE else 1_000
+                    // Connector/J streams only with MIN_VALUE; MariaDB Connector/J and pgjdbc stream with a positive size.
+                    statement.fetchSize = if (config.effectiveDriver == DriverId.MySQL) Int.MIN_VALUE else 1_000
                     statement.executeQuery(sql).use { rs -> rs.streamTo(writer, onProgress) }
                 }
             } finally {
@@ -168,14 +169,15 @@ class Database private constructor(
                     val hikari =
                         HikariConfig().apply {
                             jdbcUrl = url
-                            dataSourceProperties = credentials(config, password)
+                            driverClassName = config.effectiveDriver.className
+                            dataSourceProperties = JdbcUrls.properties(config, password)
                             poolName = "datagrok-${config.name}"
                             maximumPoolSize = 4
                             // Keeps one connection open, which also keeps shared in-memory SQLite databases alive.
                             minimumIdle = 1
                             connectionTimeout = 10_000
                             initializationFailTimeout = 1
-                            isReadOnly = config.readOnly && config.type != DatabaseType.SQLite
+                            isReadOnly = config.readOnly && config.effectiveDriver != DriverId.SQLite
                         }
                     val pool =
                         try {
@@ -198,21 +200,29 @@ class Database private constructor(
 
         private fun openTunnel(config: ConnectionConfig, sshSecret: String?): SshTunnel? {
             val ssh = config.ssh ?: return null
-            val port = config.port ?: config.type.defaultPort ?: return null
-            return SshTunnel.open(ssh, sshSecret, config.host, port)
+            val (host, port) = tunnelTarget(config)
+            return SshTunnel.open(ssh, sshSecret, host, port)
+        }
+
+        /** The database host and port as seen from the SSH server. */
+        private fun tunnelTarget(config: ConnectionConfig): Pair<String, Int> {
+            val defaultPort = config.type.defaultPort ?: throw SQLException("${config.type.displayName} doesn't use a network connection.")
+            config.url?.let { url ->
+                val parsed = ConnectionString.parse(url)
+                val host = parsed.host?.takeIf { ',' !in it } ?: throw SQLException("SSH tunnels need a single-host URL.")
+                return host.trim('[', ']') to (parsed.port ?: defaultPort)
+            }
+            if (',' in config.host) throw SQLException("SSH tunnels need a single host.")
+            return config.host to (config.port ?: defaultPort)
         }
 
         /** Through a tunnel, the database is reached on the tunnel's local port. */
         private fun jdbcUrl(config: ConnectionConfig, tunnel: SshTunnel?): String =
-            config.type.jdbcUrl(if (tunnel == null) config else config.copy(host = "127.0.0.1", port = tunnel.localPort))
+            JdbcUrls.build(config, tunnel?.let { "127.0.0.1" to it.localPort })
 
+        /** Connects with the profile's own driver, so it handles the URL even if another driver also claims it. */
         private fun newConnection(url: String, config: ConnectionConfig, password: String?): Connection =
-            DriverManager.getConnection(url, credentials(config, password))
-
-        private fun credentials(config: ConnectionConfig, password: String?) =
-            Properties().apply {
-                if (config.user.isNotBlank()) setProperty("user", config.user)
-                if (!password.isNullOrEmpty()) setProperty("password", password)
-            }
+            config.effectiveDriver.load().connect(url, JdbcUrls.properties(config, password))
+                ?: throw SQLException("${config.effectiveDriver.displayName} doesn't accept the URL $url")
     }
 }

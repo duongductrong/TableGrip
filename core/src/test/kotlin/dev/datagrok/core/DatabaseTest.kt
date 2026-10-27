@@ -179,6 +179,14 @@ class DatabaseTest {
     }
 
     @Test
+    fun `connects with a raw JDBC URL through the profile's driver`(): Unit = runBlocking {
+        val raw = config.copy(url = "jdbc:sqlite:file:datagrok-raw-${config.id}?mode=memory&cache=shared")
+        Database.connect(raw, password = null).use { db ->
+            db.openSession().use { assertEquals("1", (it.execute("SELECT 1") as QueryResult.Rows).rows.single().single()) }
+        }
+    }
+
+    @Test
     fun `cancelling the coroutine cancels a running query`() = runBlocking {
         database.openSession().use { session ->
             val started = CompletableDeferred<Unit>()
