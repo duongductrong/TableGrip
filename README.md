@@ -13,6 +13,7 @@ Compose for Desktop and [Jewel](https://jewel-ui.dev) — the IntelliJ look & fe
 
 ```bash
 ./gradlew :app:run                  # launch the app
+./gradlew :app:run -Pdatagrok.home=/tmp/dg   # launch with a throwaway profile/settings/history directory
 ./gradlew :core:test                # run core tests
 ./gradlew :app:packageDistributionForCurrentOS   # build a native installer (dmg/msi/deb)
 ```
@@ -21,21 +22,46 @@ Compose for Desktop and [Jewel](https://jewel-ui.dev) — the IntelliJ look & fe
 
 | Module | Purpose |
 | --- | --- |
-| `core` | UI-free domain: connection profiles, JDBC sessions, query results. JDBC drivers for PostgreSQL, MySQL, SQLite. |
-| `app`  | Compose Desktop + Jewel UI: decorated window, database explorer, SQL consoles, result grid. |
+| `core` | UI-free domain: connection profiles + keychain, `Database` (pooled, introspection, paging) and per-console `QuerySession`s with cancellation, SQL dialects, lexer and statement splitter, settings, query history. |
+| `app`  | Compose Desktop + Jewel UI, one package per feature: `connections`, `explorer`, `workspace`, `console`, `table`. |
 
 Versions live in `gradle/libs.versions.toml`. Jewel (`0.41.0-262.10968.63`) is pinned to Compose
 `1.12.x` and Kotlin `2.3.20`; bump them together following the
 [Jewel samples](https://github.com/JetBrains/intellij-community/tree/master/platform/jewel/samples/standalone).
 
+## Data grid
+
+Shared by table viewers and console results (`app/.../grid`). Columns stretch to fill the width; drag a header border
+to resize (double-click to fit), drag a header to reorder, right-click a header to sort, hide or show columns. Rows and
+columns are virtualized; row numbers stay pinned.
+
+| Action | Shortcut |
+| --- | --- |
+| Move / extend selection | arrows / ⇧ arrows, Home/End, PgUp/PgDn, ⌘↑ ⌘↓ |
+| Select all · copy (TSV) · copy with header | ⌘A · ⌘C · ⇧⌘C |
+| Edit cell | Enter, F2, double-click, or just type |
+| Commit edit · next cell · cancel | Enter · Tab · Esc |
+| Add row · delete rows · revert rows · set NULL | ⌘N · ⌘⌫ · ⌘Z · ⌥⌘N |
+| Submit pending changes | ⌘Enter |
+| Sort · add secondary sort | click header · ⇧-click header |
+
+Right-click cells to copy as CSV / JSON / Markdown / SQL INSERT / IN-list or "Filter by This Value". Edits stay pending
+(highlighted) until submitted; they run in one transaction and are refused if a row changed underneath. Tables without
+a primary key only allow inserts. On Windows/Linux use Ctrl instead of ⌘.
+
 ## Connections
 
-Profiles are saved to `~/.datagrok/connections.json` (no secrets). Passwords go to the OS credential store
+Everything lives in `~/.datagrok/` (override with `-Ddatagrok.home`): `connections.json` (no secrets),
+`settings.json`, `history.jsonl` and `logs/`. Passwords go to the OS credential store
 via [java-keyring](https://github.com/javakeyring/java-keyring) under the service name `Datagrok`:
 macOS Keychain, Windows Credential Manager, or the Secret Service (GNOME Keyring / KWallet) on Linux.
 
-## Next steps
+## Roadmap
 
-- Schema tree with columns/indexes (`LazyTree`), table data viewer with paging & inline editing
-- SQL editor: syntax highlighting, autocomplete, proper statement splitting
-- Connection pooling (HikariCP is already a dependency), cancellable queries, SSH tunnels
+- **M1 – daily driver** (done): explorer tree, table viewer (paging, sort, WHERE filter, count), SQL console
+  (highlighting, run statement at caret / selection / script, cancel, output log, history).
+- **M2 – safe editing**: ~~inline editing with preview + commit~~ (done), transactions, safe mode, SSH tunnels,
+  connection colours, file export.
+- **M3 – editor**: autocomplete, formatter, EXPLAIN, snippets.
+- **M4 – schema tools**: structure editor, DDL, CSV import, more drivers.
+- **M5 – ship**: go-to-anything, session restore, signed installers, auto-update.

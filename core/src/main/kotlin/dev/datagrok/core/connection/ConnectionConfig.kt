@@ -13,7 +13,10 @@ enum class DatabaseType(val displayName: String, val defaultPort: Int?) {
         when (this) {
             PostgreSQL -> "jdbc:postgresql://${config.host}:${config.port ?: defaultPort}/${config.database}"
             MySQL -> "jdbc:mysql://${config.host}:${config.port ?: defaultPort}/${config.database}"
-            SQLite -> "jdbc:sqlite:${config.database}"
+            // A private in-memory database would vanish per connection; share it across the pool instead.
+            SQLite ->
+                if (config.database == ":memory:") "jdbc:sqlite:file:datagrok-${config.id}?mode=memory&cache=shared"
+                else "jdbc:sqlite:${config.database}"
         }
 }
 

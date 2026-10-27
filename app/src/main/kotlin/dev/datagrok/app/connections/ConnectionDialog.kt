@@ -1,4 +1,4 @@
-package dev.datagrok.app.ui
+package dev.datagrok.app.connections
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -25,8 +25,6 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
-import dev.datagrok.app.AppState
-import dev.datagrok.app.ConnectionDialogRequest
 import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.connection.DatabaseType
 import java.util.UUID
@@ -80,7 +78,7 @@ private class ConnectionForm(existing: ConnectionConfig?) {
 private val MaskPassword = OutputTransformation { replace(0, length, "•".repeat(length)) }
 
 @Composable
-internal fun ConnectionDialog(state: AppState, request: ConnectionDialogRequest) {
+internal fun ConnectionDialog(state: ConnectionsViewModel, request: ConnectionDialogRequest) {
     val form = remember(request) { ConnectionForm(request.existing) }
     val scope = rememberCoroutineScope()
     var message by remember { mutableStateOf<Message?>(null) }
@@ -101,7 +99,7 @@ internal fun ConnectionDialog(state: AppState, request: ConnectionDialogRequest)
         scope.launch {
             val config = form.toConfig()
             val password = form.password.text.toString()
-            val result = if (test) state.testConnection(config, password) else state.saveConnection(config, password)
+            val result = if (test) state.test(config, password) else state.save(config, password)
             message =
                 result.fold(
                     onSuccess = { Message("Connection succeeded.", isError = false).takeIf { test } },
@@ -112,7 +110,7 @@ internal fun ConnectionDialog(state: AppState, request: ConnectionDialogRequest)
     }
 
     DialogWindow(
-        onCloseRequest = state::closeConnectionDialog,
+        onCloseRequest = state::closeDialog,
         state = rememberDialogState(size = DpSize(520.dp, 440.dp)),
         title = if (request.existing == null) "New Connection" else "Edit Connection",
         resizable = false,
@@ -161,7 +159,7 @@ internal fun ConnectionDialog(state: AppState, request: ConnectionDialogRequest)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 OutlinedButton(onClick = { submit(test = true) }, enabled = !busy) { Text("Test Connection") }
                 Spacer(Modifier.weight(1f))
-                OutlinedButton(onClick = state::closeConnectionDialog) { Text("Cancel") }
+                OutlinedButton(onClick = state::closeDialog) { Text("Cancel") }
                 DefaultButton(onClick = { submit(test = false) }, enabled = !busy) { Text("Save") }
             }
         }
@@ -180,7 +178,7 @@ private fun FormRow(label: String, content: @Composable () -> Unit) {
 
 /** Asks before deleting a connection profile and its stored password. */
 @Composable
-internal fun DeleteConnectionDialog(state: AppState, config: ConnectionConfig) {
+internal fun DeleteConnectionDialog(state: ConnectionsViewModel, config: ConnectionConfig) {
     DialogWindow(
         onCloseRequest = { state.pendingDelete = null },
         state = rememberDialogState(size = DpSize(420.dp, 160.dp)),
@@ -195,7 +193,7 @@ internal fun DeleteConnectionDialog(state: AppState, config: ConnectionConfig) {
             Spacer(Modifier.weight(1f))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
                 OutlinedButton(onClick = { state.pendingDelete = null }) { Text("Cancel") }
-                DefaultButton(onClick = { state.deleteConnection(config) }) { Text("Delete") }
+                DefaultButton(onClick = { state.delete(config) }) { Text("Delete") }
             }
         }
     }

@@ -22,12 +22,12 @@ import org.jetbrains.jewel.window.utils.clientRegion
 @Composable
 internal fun DecoratedWindowScope.TitleBarView(state: AppState) {
     TitleBar(Modifier.newFullscreenControls()) {
-        Text(state.activeConnection?.let { "$title — ${it.name}" } ?: title)
+        Text(state.workspace.selected?.let { "${it.title} — $title" } ?: title)
 
         Row(Modifier.align(Alignment.End)) {
             Tooltip({ Text(if (state.theme.isDark()) "Switch to light theme" else "Switch to dark theme") }) {
                 IconButton(
-                    onClick = { state.theme = state.theme.next() },
+                    onClick = state::cycleTheme,
                     modifier = Modifier.size(40.dp).padding(5.dp).clientRegion("switch_theme"),
                 ) {
                     Icon(

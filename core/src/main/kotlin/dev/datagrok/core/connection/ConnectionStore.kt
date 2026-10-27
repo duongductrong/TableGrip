@@ -1,5 +1,6 @@
 package dev.datagrok.core.connection
 
+import dev.datagrok.core.DatagrokPaths
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
@@ -14,7 +15,10 @@ import kotlinx.serialization.json.Json
  *
  * Not thread-safe: call it from a single thread (the UI one).
  */
-class ConnectionStore(private val file: Path = defaultFile(), private val secrets: SecretStore = KeyringSecretStore()) {
+class ConnectionStore(
+    private val file: Path = DatagrokPaths.connections,
+    private val secrets: SecretStore = KeyringSecretStore(),
+) {
     private val json = Json {
         prettyPrint = true
         ignoreUnknownKeys = true
@@ -52,9 +56,5 @@ class ConnectionStore(private val file: Path = defaultFile(), private val secret
         val tmp = Files.createTempFile(file.parent, file.fileName.toString(), ".tmp")
         tmp.writeText(json.encodeToString(configs))
         Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
-    }
-
-    companion object {
-        fun defaultFile(): Path = Path.of(System.getProperty("user.home"), ".datagrok", "connections.json")
     }
 }

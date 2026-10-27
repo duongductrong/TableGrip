@@ -12,6 +12,7 @@ dependencies {
     api(libs.kotlinx.serialization.json)
     implementation(libs.hikari)
     implementation(libs.java.keyring)
+    api(libs.slf4j.api)
 
     runtimeOnly(libs.jdbc.postgresql)
     runtimeOnly(libs.jdbc.mysql)

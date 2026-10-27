@@ -12,7 +12,10 @@ val jdkLevel = providers.gradleProperty("jdk.level").get().toInt()
 
 kotlin {
     jvmToolchain(jdkLevel)
-    compilerOptions { optIn.add("androidx.compose.foundation.ExperimentalFoundationApi") }
+    compilerOptions {
+        optIn.add("androidx.compose.foundation.ExperimentalFoundationApi")
+        optIn.add("org.jetbrains.jewel.foundation.ExperimentalJewelApi")
+    }
 }
 
 dependencies {
@@ -25,6 +28,12 @@ dependencies {
 
     implementation(compose.desktop.currentOs) { exclude(group = "org.jetbrains.compose.material") }
     implementation(libs.kotlinx.coroutines.swing)
+    runtimeOnly(libs.logback.classic)
+
+    testImplementation(kotlin("test"))
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation(compose.desktop.uiTestJUnit4)
 }
 
 compose.desktop {
@@ -50,6 +59,11 @@ compose.desktop {
 }
 
 tasks {
+    test {
+        useJUnitPlatform()
+        providers.gradleProperty("snapshot.dir").orNull?.let { systemProperty("snapshot.dir", it) }
+    }
+
     withType<JavaExec> {
         // The Compose Gradle plugin registers its run tasks in afterEvaluate.
         afterEvaluate {
@@ -62,5 +76,7 @@ tasks {
             doFirst { setExecutable(javaLauncher.get().executablePath.asFile.absolutePath) }
         }
         jvmArgs("-Dcompose.interop.blending=true")
+        // `./gradlew :app:run -Pdatagrok.home=/tmp/dg` runs against a throwaway profile/settings directory.
+        providers.gradleProperty("datagrok.home").orNull?.let { systemProperty("datagrok.home", it) }
     }
 }
