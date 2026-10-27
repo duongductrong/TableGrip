@@ -56,6 +56,35 @@ Everything lives in `~/.datagrok/` (override with `-Ddatagrok.home`): `connectio
 via [java-keyring](https://github.com/javakeyring/java-keyring) under the service name `Datagrok`:
 macOS Keychain, Windows Credential Manager, or the Secret Service (GNOME Keyring / KWallet) on Linux.
 
+## Connecting
+
+Paste any of these into **New Connection → Paste** and press Parse:
+
+| Form | Example |
+| --- | --- |
+| libpq URI / keyword-value | `postgresql://user:pass@h1:5432,h2:5433/app?sslmode=require` · `host=db port=5432 dbname='my db'` |
+| pgjdbc | `jdbc:postgresql://[::1]:5740/accounting?currentSchema=app` |
+| MySQL / MariaDB | `mysql://user:pass@host/db?ssl-mode=REQUIRED` · `jdbc:mariadb://host/db?sslMode=verify-full` |
+| Advanced Connector/J, MariaDB | `jdbc:mysql:replication://…`, `address=(host=…)(port=…)` — kept as a raw JDBC URL |
+| SQLite | `jdbc:sqlite:/path/app.db` · `sqlite:///path/app.db` · `~/data/app.sqlite3` |
+
+libpq parameters are translated to pgjdbc properties (`application_name` → `ApplicationName`, `connect_timeout` →
+`connectTimeout`, `target_session_attrs` → `targetServerType`, `ssl=true` → `sslmode=require`). Passwords found in a
+string go to the keychain, never into the profile.
+
+**Drivers:** PostgreSQL JDBC, MySQL Connector/J, MariaDB Connector/J and SQLite JDBC are bundled. MySQL and MariaDB
+servers can use either Connector/J or MariaDB Connector/J; Datagrok writes the URL in the chosen driver's scheme (adding
+`permitMysqlScheme` when MariaDB Connector/J gets a `jdbc:mysql:` URL), translates `sslMode` values between the two
+vocabularies, and sets a 10 s connect timeout where the driver would otherwise wait forever. Extra driver properties go
+in **Options → Driver properties**.
+
+## Safety
+
+Each connection can be tagged with an environment (colours its badge everywhere; Production also turns on
+confirmations), made **read-only** (writes and DDL are refused before reaching the server), and set to **confirm
+writes**. DELETE/UPDATE without WHERE, DROP and TRUNCATE always ask first. Consoles default to auto-commit; switch to
+manual commit to review changes and Commit/Roll back, and closing a console with pending work asks what to do.
+
 ## Roadmap
 
 - **M1 – daily driver** (done): explorer tree, table viewer (paging, sort, WHERE filter, count), SQL console
