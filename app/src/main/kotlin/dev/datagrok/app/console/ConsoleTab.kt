@@ -15,6 +15,7 @@ import dev.datagrok.core.dialect.SqlDialect
 import dev.datagrok.core.driver.QueryResult
 import dev.datagrok.core.driver.QuerySession
 import dev.datagrok.core.history.HistoryEntry
+import dev.datagrok.core.sql.SqlClassifier
 import dev.datagrok.core.sql.SqlSplitter
 import dev.datagrok.core.sql.SqlStatement
 import java.time.LocalTime
@@ -31,6 +32,9 @@ enum class RunMode {
     /** The selection if there is one, else the whole script. */
     All,
 }
+
+/** Statements waiting for the user to confirm, with why they need confirming. */
+data class WriteConfirmation(val statements: List<String>, val reasons: List<String>, val proceed: () -> Unit)
 
 data class OutputLine(val time: String, val text: String, val isError: Boolean)
 
@@ -49,6 +53,7 @@ class ConsoleTab(
     override val connectionId: String = config.id
     val syntax = SqlDialect.of(config.type).syntax
     private val splitter = SqlSplitter(syntax)
+    private val classifier = SqlClassifier(syntax)
 
     val editor = TextFieldState(initialSql).apply { edit { placeCursorAtEnd() } }
     val output = mutableStateListOf<OutputLine>()
@@ -59,6 +64,19 @@ class ConsoleTab(
     var running by mutableStateOf(false)
         private set
 
+    /** False in manual-commit mode. Mirrors the session, which may not exist yet. */
+    var autoCommit by mutableStateOf(true)
+        private set
+    /** Statements run in manual mode since the last commit or rollback. */
+    var uncommitted by mutableStateOf(0)
+        private set
+    var pendingConfirmation by mutableStateOf<WriteConfirmation?>(null)
+    /** Set while asking what to do with an open transaction before closing the tab. */
+    var pendingClose by mutableStateOf<(() -> Unit)?>(null)
+
+    val hasOpenTransaction: Boolean
+        get() = !autoCommit && uncommitted > 0
+
     private var session: QuerySession? = null
     private var job: Job? = null
     private var resultCount = 0
@@ -67,6 +85,34 @@ class ConsoleTab(
         if (running) return
         val statements = statementsFor(mode)
         if (statements.isEmpty()) return
+        val infos = statements.map(classifier::classify)
+
+        if (config.readOnly && infos.any { it.changesData }) {
+            val verbs = infos.filter { it.changesData }.joinToString { it.verb }.ifEmpty { "writes" }
+            log("This connection is read-only: $verbs not run.", isError = true)
+            selectedResultTab = 0
+            return
+        }
+        val reasons = buildList {
+            infos.mapNotNullTo(this) { it.danger }
+            if (config.confirmWrites && infos.any { it.changesData } && isEmpty()) {
+                add("${config.name} asks before changing data (${config.environment.label.lowercase()} connection)")
+            }
+        }
+        if (reasons.isNotEmpty()) {
+            pendingConfirmation = WriteConfirmation(statements, reasons.distinct()) { start(statements) }
+            return
+        }
+        start(statements)
+    }
+
+    fun confirmPending() {
+        val confirmation = pendingConfirmation ?: return
+        pendingConfirmation = null
+        confirmation.proceed()
+    }
+
+    private fun start(statements: List<String>) {
         job = app.scope.launch {
             running = true
             results.clear()
@@ -92,10 +138,56 @@ class ConsoleTab(
         }
     }
 
+    private suspend fun session(): QuerySession =
+        session
+            ?: app.databases.database(config).openSession().also {
+                if (!autoCommit) it.setAutoCommit(false)
+                session = it
+            }
+
+    /** Switching to auto-commit commits pending work, as JDBC does. */
+    fun changeAutoCommit(enabled: Boolean) {
+        if (enabled == autoCommit || running) return
+        app.scope.launch {
+            val pending = uncommitted
+            runCatching { session?.setAutoCommit(enabled) }
+                .onSuccess {
+                    autoCommit = enabled
+                    uncommitted = 0
+                    log(if (enabled) "Auto-commit on" + (if (pending > 0) ": committed $pending pending statement(s)" else "") else "Manual commit: changes stay pending until Commit")
+                }
+                .onFailure { log("Could not change commit mode: ${it.message}", isError = true) }
+        }
+    }
+
+    fun commit() = endTransaction(commit = true)
+
+    fun rollback() = endTransaction(commit = false)
+
+    private fun endTransaction(commit: Boolean, then: () -> Unit = {}) {
+        val session = session ?: return then()
+        app.scope.launch {
+            runCatching { if (commit) session.commit() else session.rollback() }
+                .onSuccess {
+                    log(if (commit) "Committed" else "Rolled back")
+                    uncommitted = 0
+                    then()
+                }
+                .onFailure { log("${if (commit) "Commit" else "Rollback"} failed: ${it.message}", isError = true) }
+        }
+    }
+
+    /** Resolves [pendingClose] after committing or rolling back. */
+    fun closeAfter(commit: Boolean) {
+        val close = pendingClose ?: return
+        pendingClose = null
+        endTransaction(commit, close)
+    }
+
     private suspend fun execute(statements: List<String>) {
         val session =
             try {
-                session ?: app.databases.database(config).openSession().also { session = it }
+                session()
             } catch (e: Exception) {
                 log("Could not connect: ${e.message}", isError = true)
                 selectedResultTab = 0
@@ -106,6 +198,7 @@ class ConsoleTab(
             val startedAt = System.currentTimeMillis()
             try {
                 val result = session.execute(sql, app.settings.maxResultRows, app.settings.queryTimeoutSeconds)
+                uncommitted = session.uncommittedStatements
                 record(sql, startedAt, result.elapsedMillis, error = null)
                 when (result) {
                     is QueryResult.Rows -> {
@@ -150,9 +243,11 @@ class ConsoleTab(
         output += OutputLine(LocalTime.now().format(TimeFormat), text, isError)
     }
 
+    /** The connection is gone, and with it any open transaction. */
     private fun dropSession() {
-        session?.close()
+        runCatching { session?.close() }
         session = null
+        uncommitted = 0
     }
 
     override fun dispose() {

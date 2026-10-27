@@ -124,7 +124,7 @@ private fun Toolbar(tab: TableDataTab) {
         ToolButton(AllIconsKeys.Actions.Refresh, "Reload") { tab.reload() }
         Separator()
 
-        val editable = model != null
+        val editable = model?.editor != null
         ToolButton(AllIconsKeys.General.Add, "Add row (${primary}N)", enabled = editable) {
             model?.let { tab.grid.reveal(GridCell(it.addRow(), 0)) }
         }
@@ -139,6 +139,7 @@ private fun Toolbar(tab: TableDataTab) {
 
         Box(Modifier.weight(1f))
         if (tab.loading || tab.submitting) Text(if (tab.submitting) "Saving…" else "Loading…", Modifier.padding(end = 8.dp), color = JewelTheme.globalColors.text.info)
+        ToolButton(AllIconsKeys.Actions.Download, "Export…", enabled = model != null) { tab.export() }
         ToolButton(AllIconsKeys.Actions.PreviewDetails, if (tab.showValuePanel) "Hide value panel" else "Show value panel") {
             tab.showValuePanel = !tab.showValuePanel
         }
@@ -201,7 +202,10 @@ private fun StatusLine(tab: TableDataTab) {
             val columns = selection.columns(tab.grid.visibleColumns.size)
             Text("${selection.rows.count()} × ${columns.count()} selected", color = info)
         }
-        if (!model.hasKey) Text("No primary key: existing rows are read-only", color = info)
+        when {
+            tab.config.readOnly -> Text("Read-only connection", color = info)
+            !model.hasKey -> Text("No primary key: existing rows are read-only", color = info)
+        }
         Box(Modifier.weight(1f))
         Text(tab.dialect.qualifiedName(tab.table), color = info)
     }
@@ -243,7 +247,7 @@ private fun PreviewDialog(tab: TableDataTab, sql: String) {
             Text("Runs in one transaction; nothing is saved if any statement fails or hits an unexpected number of rows.", color = JewelTheme.globalColors.text.info)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
                 OutlinedButton(onClick = { tab.preview = null }) { Text("Close") }
-                DefaultButton(onClick = tab::submit) { Text("Submit") }
+                DefaultButton(onClick = tab::submitNow) { Text("Submit") }
             }
         }
     }

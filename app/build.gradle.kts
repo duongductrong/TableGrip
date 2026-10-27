@@ -62,6 +62,7 @@ tasks {
     test {
         useJUnitPlatform()
         providers.gradleProperty("snapshot.dir").orNull?.let { systemProperty("snapshot.dir", it) }
+        providers.gradleProperty("snapshot.db").orNull?.let { systemProperty("snapshot.db", it) }
     }
 
     withType<JavaExec> {

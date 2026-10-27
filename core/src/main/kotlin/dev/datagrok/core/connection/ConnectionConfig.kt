@@ -20,7 +20,34 @@ enum class DatabaseType(val displayName: String, val defaultPort: Int?) {
         }
 }
 
-/** A saved connection profile. The password is not part of it: it lives in a [SecretStore]. */
+/** Where a database lives; drives the connection's colour and how cautious the UI is. */
+@Serializable
+enum class Environment(val label: String) {
+    None("None"),
+    Local("Local"),
+    Development("Development"),
+    Staging("Staging"),
+    Production("Production"),
+}
+
+@Serializable
+enum class SshAuth { Password, PrivateKey }
+
+/**
+ * An SSH tunnel to reach the database through a bastion host. Its password or key passphrase lives in the
+ * [SecretStore], like the database password.
+ */
+@Serializable
+data class SshConfig(
+    val host: String,
+    val port: Int = 22,
+    val user: String,
+    val auth: SshAuth = SshAuth.PrivateKey,
+    /** Null uses the default keys in `~/.ssh`. */
+    val privateKeyPath: String? = null,
+)
+
+/** A saved connection profile. Passwords are not part of it: they live in a [SecretStore]. */
 @Serializable
 data class ConnectionConfig(
     val id: String,
@@ -30,4 +57,10 @@ data class ConnectionConfig(
     val port: Int? = null,
     val database: String = "",
     val user: String = "",
+    val environment: Environment = Environment.None,
+    /** Rejects writes and DDL, client-side and (where the driver supports it) on the connection itself. */
+    val readOnly: Boolean = false,
+    /** Asks before running statements that change data or schema. */
+    val confirmWrites: Boolean = false,
+    val ssh: SshConfig? = null,
 )

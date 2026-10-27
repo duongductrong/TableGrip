@@ -60,8 +60,9 @@ macOS Keychain, Windows Credential Manager, or the Secret Service (GNOME Keyring
 
 - **M1 – daily driver** (done): explorer tree, table viewer (paging, sort, WHERE filter, count), SQL console
   (highlighting, run statement at caret / selection / script, cancel, output log, history).
-- **M2 – safe editing**: ~~inline editing with preview + commit~~ (done), transactions, safe mode, SSH tunnels,
-  connection colours, file export.
+- **M2 – safe editing** (done): inline editing with preview + submit, manual/auto-commit transactions in consoles,
+  read-only connections, confirm-before-write and dangerous-statement warnings, environment colours (PROD/STG/DEV),
+  SSH tunnels (trust-on-first-use host keys), streaming export to CSV/TSV/JSON/SQL/Markdown.
 - **M3 – editor**: autocomplete, formatter, EXPLAIN, snippets.
 - **M4 – schema tools**: structure editor, DDL, CSV import, more drivers.
 - **M5 – ship**: go-to-anything, session restore, signed installers, auto-update.

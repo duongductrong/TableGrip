@@ -48,11 +48,16 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
     /** Reads the stored password off the UI thread: the OS keychain may block or prompt. */
     suspend fun storedPassword(id: String): String? = withContext(Dispatchers.IO) { store.password(id) }
 
-    suspend fun test(config: ConnectionConfig, password: String): Result<Unit> = runCatching { Database.test(config, password) }
+    suspend fun storedSshSecret(id: String): String? = withContext(Dispatchers.IO) { store.sshSecret(id) }
 
-    suspend fun save(config: ConnectionConfig, password: String): Result<Unit> = runCatching {
+    suspend fun test(config: ConnectionConfig, password: String, sshSecret: String): Result<Unit> = runCatching {
+        Database.test(config, password, sshSecret)
+    }
+
+    /** A blank SSH secret removes the stored one, as does turning SSH off. */
+    suspend fun save(config: ConnectionConfig, password: String, sshSecret: String): Result<Unit> = runCatching {
         val previous = byId(config.id)
-        val updated = withContext(Dispatchers.IO) { store.save(config, password) }
+        val updated = withContext(Dispatchers.IO) { store.save(config, password, if (config.ssh == null) "" else sshSecret) }
         replaceAll(updated)
         // Settings may have changed: drop the live connection so the next use reconnects with the new ones.
         if (previous != null) {

@@ -1,5 +1,6 @@
 package dev.datagrok.core.driver
 
+import dev.datagrok.core.export.ResultWriter
 import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.SQLException
@@ -48,15 +49,31 @@ internal fun Statement.executeForResult(sql: String, maxRows: Int): QueryResult 
     return if (execute(sql)) resultSet.use { it.readRows(maxRows, ::elapsed) } else QueryResult.Update(updateCount, elapsed())
 }
 
-internal fun ResultSet.readRows(maxRows: Int, elapsed: () -> Long): QueryResult.Rows {
+/** Writes every remaining row to a writer created from the result's columns, then finishes it. */
+internal fun ResultSet.streamTo(writer: (List<ResultColumn>) -> ResultWriter, onProgress: (Long) -> Unit): Long {
+    val columns = columns()
+    val out = writer(columns)
+    while (next()) {
+        out.write(columns.indices.map { cell(it, columns[it]) })
+        if (out.rowCount % 5_000 == 0L) onProgress(out.rowCount)
+    }
+    out.finish()
+    onProgress(out.rowCount)
+    return out.rowCount
+}
+
+private fun ResultSet.columns(): List<ResultColumn> {
     val meta = metaData
-    val columns =
-        (1..meta.columnCount).map { ResultColumn(meta.getColumnLabel(it), meta.getColumnTypeName(it).orEmpty(), meta.getColumnType(it)) }
-    val binary = columns.map { it.isBinary }
+    return (1..meta.columnCount).map { ResultColumn(meta.getColumnLabel(it), meta.getColumnTypeName(it).orEmpty(), meta.getColumnType(it)) }
+}
+
+private fun ResultSet.cell(index: Int, column: ResultColumn): String? =
+    if (column.isBinary) getBytes(index + 1)?.let { "<binary ${it.size} bytes>" } else getString(index + 1)
+
+internal fun ResultSet.readRows(maxRows: Int, elapsed: () -> Long): QueryResult.Rows {
+    val columns = columns()
     val rows = buildList {
-        while (size <= maxRows && next()) {
-            add(columns.indices.map { i -> if (binary[i]) getBytes(i + 1)?.let { "<binary ${it.size} bytes>" } else getString(i + 1) })
-        }
+        while (size <= maxRows && next()) add(columns.indices.map { cell(it, columns[it]) })
     }
     return QueryResult.Rows(columns, rows.take(maxRows), truncated = rows.size > maxRows, elapsedMillis = elapsed())
 }

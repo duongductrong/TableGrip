@@ -15,7 +15,12 @@ import dev.datagrok.core.edit.RowChange
  * One page of table rows plus pending, unsaved edits: changed cells, rows marked for deletion and new rows (appended
  * after the page). Updates and deletes need a primary key to identify rows; without one the page is insert-only.
  */
-class TableEditModel(private val result: QueryResult.Rows, primaryKey: List<String>) : GridModel, GridEditor {
+class TableEditModel(
+    private val result: QueryResult.Rows,
+    primaryKey: List<String>,
+    /** For read-only connections: the grid offers no editing at all. */
+    private val readOnly: Boolean = false,
+) : GridModel, GridEditor {
     override val columns: List<ResultColumn> = result.columns
 
     private val keyColumns: List<Int>? =
@@ -35,8 +40,8 @@ class TableEditModel(private val result: QueryResult.Rows, primaryKey: List<Stri
     override val rowCount: Int
         get() = baseRows + inserted.size
 
-    override val editor: GridEditor
-        get() = this
+    override val editor: GridEditor?
+        get() = if (readOnly) null else this
 
     val changeCount: Int
         get() = updates.keys.map { it.first }.filter { it !in deleted }.distinct().size + deleted.size + inserted.size
@@ -64,7 +69,7 @@ class TableEditModel(private val result: QueryResult.Rows, primaryKey: List<Stri
         if (row >= baseRows && column !in inserted[row - baseRows]) "<default>" else null
 
     override fun canEdit(row: Int, column: Int): Boolean =
-        !columns[column].isBinary && (row >= baseRows || (hasKey && row !in deleted))
+        !readOnly && !columns[column].isBinary && (row >= baseRows || (hasKey && row !in deleted))
 
     override fun setValue(row: Int, column: Int, value: String?) {
         if (!canEdit(row, column)) return

@@ -17,6 +17,8 @@
     </appender>
 
     <logger name="com.zaxxer.hikari" level="WARN" />
+    <!-- Jewel's ListComboBox pairs a single-selection list with a multi-selection state and warns on every open. -->
+    <logger name="#org.jetbrains.jewel.foundation.lazy.SelectableLazyColumn" level="ERROR" />
 
     <root level="INFO">
         <appender-ref ref="CONSOLE" />

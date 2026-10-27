@@ -12,6 +12,8 @@ mysql = "9.4.0"
 sqlite = "3.50.3.0"
 hikari = "7.0.2"
 javaKeyring = "1.0.4"
+sshj = "0.41.2"
+apacheSshd = "2.20.0"
 junit = "5.13.4"
 slf4j = "2.0.17"
 logback = "1.5.18"
@@ -30,6 +32,8 @@ jdbc-postgresql = { module = "org.postgresql:postgresql", version.ref = "postgre
 jdbc-mysql = { module = "com.mysql:mysql-connector-j", version.ref = "mysql" }
 jdbc-sqlite = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite" }
 java-keyring = { module = "com.github.javakeyring:java-keyring", version.ref = "javaKeyring" }
+sshj = { module = "com.hierynomus:sshj", version.ref = "sshj" }
+apache-sshd-core = { module = "org.apache.sshd:sshd-core", version.ref = "apacheSshd" }
 hikari = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
 
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }

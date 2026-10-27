@@ -26,29 +26,42 @@ class ConnectionStore(
 
     fun load(): List<ConnectionConfig> = if (file.exists()) json.decodeFromString(file.readText()) else emptyList()
 
-    /** Inserts or replaces [config]. A null [password] keeps the stored one; an empty one removes it. */
-    fun save(config: ConnectionConfig, password: String?): List<ConnectionConfig> {
+    /**
+     * Inserts or replaces [config]. For [password] and [sshSecret] (SSH password or key passphrase), null keeps the
+     * stored value and an empty string removes it.
+     */
+    fun save(config: ConnectionConfig, password: String?, sshSecret: String? = null): List<ConnectionConfig> {
         val current = load()
         val updated =
             if (current.any { it.id == config.id }) current.map { if (it.id == config.id) config else it }
             else current + config
         write(updated)
-        when {
-            password == null -> Unit
-            password.isEmpty() -> secrets.delete(config.id)
-            else -> secrets.set(config.id, password)
-        }
+        storeSecret(config.id, password)
+        storeSecret(sshKey(config.id), sshSecret)
         return updated
+    }
+
+    private fun storeSecret(key: String, value: String?) {
+        when {
+            value == null -> Unit
+            value.isEmpty() -> secrets.delete(key)
+            else -> secrets.set(key, value)
+        }
     }
 
     fun delete(id: String): List<ConnectionConfig> {
         val updated = load().filterNot { it.id == id }
         write(updated)
         secrets.delete(id)
+        secrets.delete(sshKey(id))
         return updated
     }
 
     fun password(id: String): String? = secrets.get(id)
+
+    fun sshSecret(id: String): String? = secrets.get(sshKey(id))
+
+    private fun sshKey(id: String) = "$id:ssh"
 
     private fun write(configs: List<ConnectionConfig>) {
         file.parent?.createDirectories()

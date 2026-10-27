@@ -2,64 +2,106 @@ package dev.datagrok.core.export
 
 import dev.datagrok.core.dialect.SqlDialect
 import dev.datagrok.core.driver.ResultColumn
-import kotlinx.serialization.json.JsonArray
+import java.io.StringWriter
+import java.io.Writer
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
-enum class CopyFormat(val label: String) {
-    Tsv("Tab-separated"),
-    Csv("CSV"),
-    Json("JSON"),
-    Markdown("Markdown"),
-    SqlInsert("SQL INSERT"),
-    SqlInList("SQL IN list"),
+enum class CopyFormat(val label: String, val extension: String) {
+    Tsv("Tab-separated", "tsv"),
+    Csv("CSV", "csv"),
+    Json("JSON", "json"),
+    Markdown("Markdown", "md"),
+    SqlInsert("SQL INSERT", "sql"),
+    SqlInList("SQL IN list", "sql"),
 }
 
-/** Renders a block of cells as text for the clipboard or a file. */
-object ResultFormats {
+/**
+ * Streams rows as text in a [CopyFormat], so exports of large tables never hold them all in memory. Call [write] per
+ * row, then [finish].
+ */
+class ResultWriter(
+    private val format: CopyFormat,
+    private val columns: List<ResultColumn>,
+    private val out: Writer,
+    includeHeader: Boolean = true,
+    private val dialect: SqlDialect = SqlDialect.PostgreSQL,
+    private val tableName: String = "table_name",
+) {
+    private var rows = 0L
+    private val seen = HashSet<String>()
+    private val insertPrefix by lazy {
+        "INSERT INTO $tableName (${columns.joinToString(", ") { dialect.quoteIdentifier(it.name) }}) VALUES ("
+    }
 
-    fun format(
-        format: CopyFormat,
-        columns: List<ResultColumn>,
-        rows: List<List<String?>>,
-        includeHeader: Boolean = true,
-        dialect: SqlDialect? = null,
-        tableName: String? = null,
-    ): String =
+    val rowCount: Long
+        get() = rows
+
+    init {
         when (format) {
-            CopyFormat.Tsv -> delimited(columns, rows, includeHeader, '\t')
-            CopyFormat.Csv -> delimited(columns, rows, includeHeader, ',')
-            CopyFormat.Json -> json(columns, rows)
-            CopyFormat.Markdown -> markdown(columns, rows)
-            CopyFormat.SqlInsert -> sqlInsert(columns, rows, dialect ?: SqlDialect.PostgreSQL, tableName ?: "table_name")
-            CopyFormat.SqlInList -> sqlInList(columns, rows, dialect ?: SqlDialect.PostgreSQL)
+            CopyFormat.Tsv,
+            CopyFormat.Csv -> if (includeHeader) line(columns.map { it.name })
+            CopyFormat.Json -> out.write("[")
+            CopyFormat.Markdown -> {
+                out.write("| " + columns.joinToString(" | ") { markdownCell(it.name) } + " |\n")
+                out.write("|" + columns.joinToString("|") { if (it.isNumeric) " ---: " else " --- " } + "|")
+            }
+            CopyFormat.SqlInsert -> Unit
+            CopyFormat.SqlInList -> out.write("(")
         }
-
-    /** TSV keeps cells verbatim (like spreadsheets expect) unless they contain tabs or newlines; CSV follows RFC 4180. */
-    private fun delimited(columns: List<ResultColumn>, rows: List<List<String?>>, includeHeader: Boolean, separator: Char): String {
-        fun cell(value: String?): String {
-            val text = value.orEmpty()
-            val needsQuotes = text.any { it == separator || it == '"' || it == '\n' || it == '\r' }
-            return if (needsQuotes) "\"" + text.replace("\"", "\"\"") + "\"" else text
-        }
-        val lines = buildList {
-            if (includeHeader) add(columns.joinToString(separator.toString()) { cell(it.name) })
-            rows.forEach { row -> add(row.joinToString(separator.toString(), transform = ::cell)) }
-        }
-        return lines.joinToString("\n")
     }
 
-    private fun json(columns: List<ResultColumn>, rows: List<List<String?>>): String {
-        val array =
-            JsonArray(
-                rows.map { row ->
-                    JsonObject(columns.mapIndexed { i, column -> column.name to jsonValue(row[i], column) }.toMap())
-                }
-            )
-        return PrettyJson.encodeToString(JsonElement.serializer(), array)
+    fun write(row: List<String?>) {
+        when (format) {
+            CopyFormat.Tsv,
+            CopyFormat.Csv -> line(row)
+            CopyFormat.Json -> {
+                if (rows > 0) out.write(",")
+                val element = JsonObject(columns.mapIndexed { i, column -> column.name to jsonValue(row[i], column) }.toMap())
+                out.write("\n  ")
+                out.write(PrettyJson.encodeToString(JsonElement.serializer(), element).replace("\n", "\n  "))
+            }
+            CopyFormat.Markdown -> out.write("\n| " + row.joinToString(" | ") { markdownCell(it ?: "NULL") } + " |")
+            CopyFormat.SqlInsert -> {
+                if (rows > 0) out.write("\n")
+                out.write(insertPrefix)
+                out.write(row.mapIndexed { i, value -> dialect.literal(value, columns[i].isNumeric) }.joinToString(", "))
+                out.write(");")
+            }
+            CopyFormat.SqlInList -> {
+                val literal = dialect.literal(row.first(), columns.first().isNumeric)
+                if (!seen.add(literal)) return
+                if (seen.size > 1) out.write(", ")
+                out.write(literal)
+            }
+        }
+        rows++
     }
+
+    fun finish() {
+        when (format) {
+            CopyFormat.Json -> out.write(if (rows == 0L) "]" else "\n]")
+            CopyFormat.SqlInList -> out.write(")")
+            else -> Unit
+        }
+        out.flush()
+    }
+
+    /** TSV keeps cells verbatim (as spreadsheets expect) unless they contain separators or newlines; CSV follows RFC 4180. */
+    private fun line(cells: List<String?>) {
+        val separator = if (format == CopyFormat.Tsv) '\t' else ','
+        if (lineCount++ > 0) out.write("\n")
+        out.write(cells.joinToString(separator.toString()) { cell ->
+            val text = cell.orEmpty()
+            if (text.any { it == separator || it == '"' || it == '\n' || it == '\r' }) "\"" + text.replace("\"", "\"\"") + "\"" else text
+        })
+    }
+
+    private var lineCount = 0
+
+    private fun markdownCell(value: String) = value.replace("|", "\\|").replace("\n", " ")
 
     private fun jsonValue(value: String?, column: ResultColumn): JsonElement =
         when {
@@ -68,26 +110,25 @@ object ResultFormats {
             else -> JsonPrimitive(value)
         }
 
-    private fun markdown(columns: List<ResultColumn>, rows: List<List<String?>>): String {
-        fun cell(value: String?) = (value ?: "NULL").replace("|", "\\|").replace("\n", " ")
-        return buildString {
-            append("| ").append(columns.joinToString(" | ") { cell(it.name) }).append(" |\n")
-            append("|").append(columns.joinToString("|") { if (it.isNumeric) " ---: " else " --- " }).append("|\n")
-            rows.forEach { row -> append("| ").append(row.joinToString(" | ", transform = ::cell)).append(" |\n") }
-        }.trimEnd()
+    private companion object {
+        val PrettyJson = kotlinx.serialization.json.Json { prettyPrint = true }
     }
+}
 
-    private fun sqlInsert(columns: List<ResultColumn>, rows: List<List<String?>>, dialect: SqlDialect, tableName: String): String {
-        val names = columns.joinToString(", ") { dialect.quoteIdentifier(it.name) }
-        return rows.joinToString("\n") { row ->
-            val values = row.mapIndexed { i, value -> dialect.literal(value, columns[i].isNumeric) }.joinToString(", ")
-            "INSERT INTO $tableName ($names) VALUES ($values);"
-        }
+/** Renders a block of cells as text, e.g. for the clipboard. */
+object ResultFormats {
+    fun format(
+        format: CopyFormat,
+        columns: List<ResultColumn>,
+        rows: List<List<String?>>,
+        includeHeader: Boolean = true,
+        dialect: SqlDialect? = null,
+        tableName: String? = null,
+    ): String {
+        val out = StringWriter()
+        val writer = ResultWriter(format, columns, out, includeHeader, dialect ?: SqlDialect.PostgreSQL, tableName ?: "table_name")
+        rows.forEach(writer::write)
+        writer.finish()
+        return out.toString()
     }
-
-    /** Values of the first column, e.g. for pasting into `WHERE id IN (...)`. */
-    private fun sqlInList(columns: List<ResultColumn>, rows: List<List<String?>>, dialect: SqlDialect): String =
-        rows.map { dialect.literal(it.first(), columns.first().isNumeric) }.distinct().joinToString(", ", "(", ")")
-
-    private val PrettyJson = kotlinx.serialization.json.Json { prettyPrint = true }
 }

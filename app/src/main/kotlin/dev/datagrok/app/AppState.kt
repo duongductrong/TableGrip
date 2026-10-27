@@ -6,7 +6,9 @@ import androidx.compose.runtime.setValue
 import dev.datagrok.app.connections.ConnectionsViewModel
 import dev.datagrok.app.connections.DatabaseRegistry
 import dev.datagrok.app.explorer.ExplorerViewModel
+import dev.datagrok.app.export.ExportRequest
 import dev.datagrok.app.workspace.WorkspaceViewModel
+import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.connection.ConnectionStore
 import dev.datagrok.core.history.QueryHistory
 import dev.datagrok.core.settings.Settings
@@ -17,6 +19,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
+
+enum class LeftTool { Explorer, History }
 
 /** Root of the UI state: owns app-wide services and wires the feature view models together. */
 class AppState(
@@ -35,8 +39,19 @@ class AppState(
 
     var status by mutableStateOf("Ready")
 
+    /** Tool window shown in the left island; null hides it. */
+    var leftTool by mutableStateOf<LeftTool?>(LeftTool.Explorer)
+    var settingsOpen by mutableStateOf(false)
+    var exportRequest by mutableStateOf<ExportRequest?>(null)
+
+    /** The connection the title bar shows and new consoles use; follows the selected tab. */
+    var currentConnectionId by mutableStateOf<String?>(null)
+
+    val currentConnection: ConnectionConfig?
+        get() = currentConnectionId?.let(connections::byId) ?: connections.profiles.firstOrNull()
+
     val connections = ConnectionsViewModel(this, connectionStore)
-    val databases = DatabaseRegistry(scope, connections::storedPassword)
+    val databases = DatabaseRegistry(scope, connections::storedPassword, connections::storedSshSecret)
     val explorer = ExplorerViewModel(this)
     val workspace = WorkspaceViewModel(this)
 
@@ -48,7 +63,19 @@ class AppState(
         }
     }
 
-    fun cycleTheme() = updateSettings { it.copy(theme = theme.next().name) }
+    fun toggleTheme() = updateSettings { it.copy(theme = theme.toggled().name) }
+
+    /** Makes [config] current: reveals it in the explorer (connecting it) without changing open tabs. */
+    fun pickConnection(config: ConnectionConfig) {
+        currentConnectionId = config.id
+        workspace.tabs.lastOrNull { it.connectionId == config.id }?.let { workspace.selected = it }
+        leftTool = LeftTool.Explorer
+        explorer.reveal(config.id)
+    }
+
+    fun toggleTool(tool: LeftTool) {
+        leftTool = if (leftTool == tool) null else tool
+    }
 
     fun dispose() {
         workspace.disposeAll()

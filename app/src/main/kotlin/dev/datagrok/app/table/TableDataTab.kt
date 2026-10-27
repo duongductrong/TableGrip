@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import dev.datagrok.app.AppState
+import dev.datagrok.app.export.ExportRequest
 import dev.datagrok.app.grid.DataGridState
 import dev.datagrok.app.workspace.WorkspaceTab
 import dev.datagrok.core.connection.ConnectionConfig
@@ -78,7 +79,7 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
                 val result =
                     database.fetchPage(table, appliedFilter, sort, pageSize, page.toLong() * pageSize, app.settings.queryTimeoutSeconds)
                 hasNextPage = result.truncated
-                model = TableEditModel(result, details?.primaryKey.orEmpty())
+                model = TableEditModel(result, details?.primaryKey.orEmpty(), readOnly = config.readOnly)
                 error = null
             } catch (e: CancellationException) {
                 throw e
@@ -142,12 +143,34 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
         }
     }
 
+    fun export() {
+        val model = model ?: return
+        val filter = appliedFilter
+        val order = sort
+        app.exportRequest =
+            ExportRequest(
+                title = table.name,
+                fileName = table.name,
+                columns = model.columns,
+                loadedRows = (0 until model.rowCount).map { row -> model.columns.indices.map { model.value(row, it) } },
+                dialect = dialect,
+                tableName = dialect.qualifiedName(table),
+                streamAll = { writer, progress -> app.databases.database(config).exportTable(table, filter, order, writer, progress) },
+            )
+    }
+
     fun openPreview() {
         val model = model ?: return
         preview = ChangeSql.statements(dialect, table, model.toChanges()).joinToString(";\n", postfix = ";") { it.preview(dialect) }
     }
 
+    /** Connections that confirm writes show the SQL first; [submitNow] runs it. */
     fun submit() {
+        if (!hasChanges) return
+        if (config.confirmWrites && preview == null) openPreview() else submitNow()
+    }
+
+    fun submitNow() {
         val model = model?.takeIf { it.hasChanges } ?: return
         preview = null
         app.scope.launch {

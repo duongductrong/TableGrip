@@ -22,6 +22,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.datagrok.app.AppState
 import dev.datagrok.app.connections.ConnectionStatus
+import dev.datagrok.app.ui.Badge
+import dev.datagrok.app.ui.EnvironmentChip
 import dev.datagrok.app.ui.copyToClipboard
 import dev.datagrok.core.dialect.SqlDialect
 import org.jetbrains.jewel.foundation.theme.JewelTheme
@@ -69,7 +71,7 @@ internal fun ExplorerPanel(app: AppState) {
                 if (node is ExplorerNode.Table) app.connections.byId(node.connectionId)?.let { app.workspace.openTable(it, node.info.ref) }
             },
         ) { element ->
-            ContextMenuArea(items = { contextMenu(app, element.data) }) { NodeRow(app, element.data) }
+            ContextMenuArea(items = { contextMenu(app, element.data) }) { NodeRow(app, element.data, Modifier.fillMaxWidth()) }
         }
     }
 }
@@ -106,13 +108,16 @@ private fun contextMenu(app: AppState, node: ExplorerNode): List<ContextMenuItem
     }
 
 @Composable
-private fun NodeRow(app: AppState, node: ExplorerNode) {
-    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+private fun NodeRow(app: AppState, node: ExplorerNode, modifier: Modifier = Modifier) {
+    // Filling the width makes the tree's selection highlight span the whole island, as in IntelliJ.
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
         val info = JewelTheme.globalColors.text.info
         when (node) {
             is ExplorerNode.Connection -> {
-                NodeIcon(AllIconsKeys.Nodes.DataSchema)
-                Text(node.config.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Badge(node.config, size = 16)
+                Text(node.config.name, Modifier.weight(1f, fill = false), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                EnvironmentChip(node.config)
+                if (node.config.readOnly) Text("read-only", color = info)
                 when (val status = app.databases.status(node.config.id)) {
                     ConnectionStatus.Connecting -> Text("connecting…", color = info)
                     is ConnectionStatus.Failed -> Text("failed", color = JewelTheme.globalColors.text.error)
@@ -131,13 +136,19 @@ private fun NodeRow(app: AppState, node: ExplorerNode) {
             }
             is ExplorerNode.Table -> {
                 NodeIcon(AllIconsKeys.Nodes.DataTables)
-                Text(node.info.ref.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(node.info.ref.name, Modifier.weight(1f, fill = false), maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             is ExplorerNode.Column -> {
                 val column = node.column
                 NodeIcon(if (column.primaryKey) AllIconsKeys.Nodes.FieldPK else AllIconsKeys.Nodes.DataColumn)
                 Text(column.name)
-                Text(column.typeName.lowercase() + if (column.nullable) "" else " not null", color = info)
+                Text(
+                    column.typeName.lowercase() + if (column.nullable) "" else " not null",
+                    Modifier.weight(1f, fill = false),
+                    color = info,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
             is ExplorerNode.Index -> {
                 NodeIcon(AllIconsKeys.Nodes.FieldPK)
@@ -148,7 +159,13 @@ private fun NodeRow(app: AppState, node: ExplorerNode) {
                 val fk = node.foreignKey
                 NodeIcon(AllIconsKeys.Nodes.FieldPK)
                 Text(fk.name)
-                Text("(${fk.columns.joinToString()}) → ${fk.referencedTable.name}(${fk.referencedColumns.joinToString()})", color = info)
+                Text(
+                    "(${fk.columns.joinToString()}) → ${fk.referencedTable.name}(${fk.referencedColumns.joinToString()})",
+                    Modifier.weight(1f, fill = false),
+                    color = info,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
             is ExplorerNode.Message ->
                 Text(node.text, color = if (node.isError) JewelTheme.globalColors.text.error else info, maxLines = 2)

@@ -146,6 +146,11 @@ class ExplorerViewModel(private val app: AppState) {
         }
     }
 
+    /** Opens a connection's node, which connects and loads its schemas. */
+    fun reveal(connectionId: String) {
+        treeState.openNodes(listOf(ConnectionKey(connectionId)))
+    }
+
     /** Drops cached children of [key] and reloads them if the node is open. */
     fun refresh(key: Any) {
         children.remove(key)

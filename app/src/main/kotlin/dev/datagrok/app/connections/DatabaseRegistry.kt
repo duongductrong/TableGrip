@@ -19,7 +19,11 @@ sealed interface ConnectionStatus {
 }
 
 /** Live [Database]s by connection id. Must be used from the UI thread. */
-class DatabaseRegistry(private val scope: CoroutineScope, private val password: suspend (String) -> String?) {
+class DatabaseRegistry(
+    private val scope: CoroutineScope,
+    private val password: suspend (String) -> String?,
+    private val sshSecret: suspend (String) -> String?,
+) {
     private val statuses = mutableStateMapOf<String, ConnectionStatus>()
     private val pending = mutableMapOf<String, Deferred<Database>>()
 
@@ -36,7 +40,8 @@ class DatabaseRegistry(private val scope: CoroutineScope, private val password: 
                 scope.async {
                     statuses[config.id] = ConnectionStatus.Connecting
                     try {
-                        Database.connect(config, password(config.id)).also {
+                        val secret = if (config.ssh != null) sshSecret(config.id) else null
+                        Database.connect(config, password(config.id), secret).also {
                             statuses[config.id] = ConnectionStatus.Connected(it)
                             log.info("Connected to {} ({})", config.name, config.type)
                         }

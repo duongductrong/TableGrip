@@ -22,7 +22,15 @@ interface WorkspaceTab {
 /** The tabs of the main area: SQL consoles and table data viewers. */
 class WorkspaceViewModel(private val app: AppState) {
     val tabs = mutableStateListOf<WorkspaceTab>()
-    var selected by mutableStateOf<WorkspaceTab?>(null)
+    private var selectedTab by mutableStateOf<WorkspaceTab?>(null)
+
+    /** Selecting a tab also makes its connection current. */
+    var selected: WorkspaceTab?
+        get() = selectedTab
+        set(value) {
+            selectedTab = value
+            value?.let { app.currentConnectionId = it.connectionId }
+        }
     private var consoleCount = 0
 
     fun openConsole(config: ConnectionConfig, initialSql: String = "") {
@@ -44,6 +52,9 @@ class WorkspaceViewModel(private val app: AppState) {
         if (tab is TableDataTab && tab.hasChanges) {
             selected = tab
             tab.guard { close(tab) }
+        } else if (tab is ConsoleTab && tab.hasOpenTransaction) {
+            selected = tab
+            tab.pendingClose = { close(tab) }
         } else {
             close(tab)
         }

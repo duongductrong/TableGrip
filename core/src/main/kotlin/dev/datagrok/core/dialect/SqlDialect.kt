@@ -43,6 +43,9 @@ sealed class SqlDialect(val syntax: SqlSyntax) {
         listOfNotNull(table.namespace.catalog, table.namespace.schema, table.name).joinToString(".", transform = ::quoteIdentifier)
 
     open fun selectPage(table: TableRef, filter: String?, orderBy: List<SortColumn>, limit: Int, offset: Long): String =
+        selectAll(table, filter, orderBy) + " LIMIT $limit OFFSET $offset"
+
+    open fun selectAll(table: TableRef, filter: String?, orderBy: List<SortColumn>): String =
         buildString {
             append("SELECT * FROM ").append(qualifiedName(table))
             filter?.takeIf { it.isNotBlank() }?.let { append(" WHERE ").append(it) }
@@ -50,7 +53,6 @@ sealed class SqlDialect(val syntax: SqlSyntax) {
                 append(" ORDER BY ")
                 append(orderBy.joinToString { "${quoteIdentifier(it.column)} ${it.direction.name.uppercase()}" })
             }
-            append(" LIMIT ").append(limit).append(" OFFSET ").append(offset)
         }
 
     open fun countRows(table: TableRef, filter: String?): String =

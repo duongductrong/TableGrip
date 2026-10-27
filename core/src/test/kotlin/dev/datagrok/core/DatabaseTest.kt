@@ -8,7 +8,10 @@ import dev.datagrok.core.driver.Database
 import dev.datagrok.core.edit.BoundValue
 import dev.datagrok.core.edit.ChangeSql
 import dev.datagrok.core.edit.RowChange
+import dev.datagrok.core.export.CopyFormat
+import dev.datagrok.core.export.ResultWriter
 import dev.datagrok.core.driver.QueryResult
+import dev.datagrok.core.driver.ReadOnlyViolationException
 import dev.datagrok.core.metadata.TableRef
 import java.sql.SQLException
 import java.sql.Types
@@ -123,6 +126,56 @@ class DatabaseTest {
             assertEquals(2, rows.rows.size)
             assertTrue(rows.truncated)
         }
+    }
+
+    @Test
+    fun `manual commit mode keeps changes pending until commit or rollback`() = runBlocking {
+        database.openSession().use { session ->
+            session.execute("CREATE TABLE tx (x INTEGER)")
+            session.setAutoCommit(false)
+            session.execute("INSERT INTO tx VALUES (1)")
+            assertEquals(1, session.uncommittedStatements)
+            session.rollback()
+            assertEquals(0, session.uncommittedStatements)
+
+            session.execute("INSERT INTO tx VALUES (2)")
+            session.commit()
+            val rows = database.openSession().use { other -> other.execute("SELECT x FROM tx") as QueryResult.Rows }
+            assertEquals(listOf(listOf("2")), rows.rows)
+        }
+    }
+
+    @Test
+    fun `read-only connections refuse writes before they reach the server`(): Unit = runBlocking {
+        seed()
+        Database.connect(config.copy(readOnly = true), password = null).use { readOnly ->
+            readOnly.openSession().use { session ->
+                assertEquals("3", (session.execute("SELECT count(*) FROM users") as QueryResult.Rows).rows.single().single())
+                assertFailsWith<ReadOnlyViolationException> { session.execute("DELETE FROM users") }
+                assertFailsWith<ReadOnlyViolationException> { session.execute("DROP TABLE users") }
+            }
+            assertFailsWith<ReadOnlyViolationException> { readOnly.applyChanges(emptyList()) }
+        }
+    }
+
+    @Test
+    fun `exports a whole table with filter and sort by streaming`(): Unit = runBlocking {
+        seed()
+        val users = TableRef(database.namespaces().single(), "users")
+        val out = java.io.StringWriter()
+        var progress = 0L
+        val count =
+            database.exportTable(
+                users,
+                filter = "id > 1",
+                orderBy = listOf(SortColumn("name", SortDirection.Asc)),
+                writer = { columns -> ResultWriter(CopyFormat.Csv, columns, out) },
+                onProgress = { progress = it },
+            )
+        assertEquals(2, count)
+        assertEquals(2, progress)
+        // seed(): carol=1, alice=2, bob=3; id > 1 sorted by name.
+        assertEquals("id,name,team_id\n2,alice,\n3,bob,", out.toString())
     }
 
     @Test

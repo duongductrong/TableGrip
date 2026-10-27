@@ -12,6 +12,7 @@ dependencies {
     api(libs.kotlinx.serialization.json)
     implementation(libs.hikari)
     implementation(libs.java.keyring)
+    implementation(libs.sshj)
     api(libs.slf4j.api)
 
     runtimeOnly(libs.jdbc.postgresql)
@@ -21,6 +22,7 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.jdbc.sqlite)
+    testImplementation(libs.apache.sshd.core)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

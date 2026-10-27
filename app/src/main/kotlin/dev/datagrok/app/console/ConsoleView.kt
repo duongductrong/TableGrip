@@ -1,5 +1,18 @@
 package dev.datagrok.app.console
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.window.DialogWindow
+import androidx.compose.ui.window.rememberDialogState
+import dev.datagrok.app.ui.EnvironmentChip
+import org.jetbrains.jewel.ui.component.DefaultButton
+import org.jetbrains.jewel.ui.component.ListComboBox
+import org.jetbrains.jewel.ui.component.OutlinedButton
+import org.jetbrains.jewel.ui.component.TextArea
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,6 +41,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.datagrok.app.AppState
+import dev.datagrok.app.export.ExportRequest
 import dev.datagrok.app.grid.DataGrid
 import dev.datagrok.app.grid.GridActions
 import dev.datagrok.core.dialect.SqlDialect
@@ -67,13 +81,15 @@ internal fun ConsoleView(app: AppState, tab: ConsoleTab) {
                     onShortcut = { runShortcut(tab, it) },
                 )
             },
-            second = { ResultPanel(tab) },
+            second = { ResultPanel(app, tab) },
             modifier = Modifier.fillMaxSize(),
             firstPaneMinWidth = 80.dp,
             secondPaneMinWidth = 80.dp,
             state = rememberSplitLayoutState(0.5f),
         )
     }
+    tab.pendingConfirmation?.let { ConfirmWriteDialog(tab, it) }
+    if (tab.pendingClose != null) OpenTransactionDialog(tab)
 }
 
 /** ⌘/Ctrl+Enter runs the current statement, adding Shift runs the whole script. */
@@ -99,14 +115,85 @@ private fun Toolbar(tab: ConsoleTab) {
         Tooltip({ Text("Cancel running query") }) {
             IconButton(onClick = tab::cancel, enabled = tab.running) { Icon(AllIconsKeys.Actions.Suspend, "Cancel") }
         }
+        Divider(Orientation.Vertical, Modifier.height(18.dp).padding(horizontal = 6.dp))
+        ListComboBox(
+            items = listOf("Auto-commit", "Manual commit"),
+            selectedIndex = if (tab.autoCommit) 0 else 1,
+            onSelectedItemChange = { tab.changeAutoCommit(it == 0) },
+            modifier = Modifier.width(140.dp),
+            enabled = !tab.running && !tab.config.readOnly,
+        )
+        if (!tab.autoCommit) {
+            Tooltip({ Text("Commit transaction") }) {
+                IconButton(onClick = tab::commit, enabled = tab.uncommitted > 0 && !tab.running) { Icon(AllIconsKeys.Actions.Commit, "Commit") }
+            }
+            Tooltip({ Text("Roll back transaction") }) {
+                IconButton(onClick = tab::rollback, enabled = tab.uncommitted > 0 && !tab.running) { Icon(AllIconsKeys.Actions.Rollback, "Rollback") }
+            }
+            if (tab.uncommitted > 0) Text("${tab.uncommitted} uncommitted", Modifier.padding(start = 4.dp), color = PendingColor)
+        }
         Text(if (tab.running) "Executing…" else "", Modifier.padding(start = 8.dp), color = JewelTheme.globalColors.text.info)
         Box(Modifier.weight(1f))
-        Text("${tab.config.name} · ${tab.config.type.displayName}", Modifier.padding(end = 8.dp), color = JewelTheme.globalColors.text.info)
+        if (tab.config.readOnly) Text("read-only", Modifier.padding(end = 6.dp), color = JewelTheme.globalColors.text.info)
+        EnvironmentChip(tab.config)
+        Text("${tab.config.name} · ${tab.config.type.displayName}", Modifier.padding(horizontal = 8.dp), color = JewelTheme.globalColors.text.info)
+    }
+}
+
+private val PendingColor = Color(0xFFD9822B)
+
+@Composable
+private fun ConfirmWriteDialog(tab: ConsoleTab, confirmation: WriteConfirmation) {
+    DialogWindow(
+        onCloseRequest = { tab.pendingConfirmation = null },
+        state = rememberDialogState(size = DpSize(620.dp, 380.dp)),
+        title = "Run Statements?",
+    ) {
+        Column(
+            Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(AllIconsKeys.General.Warning, null)
+                Text("Please confirm", fontWeight = FontWeight.SemiBold)
+                EnvironmentChip(tab.config)
+            }
+            confirmation.reasons.forEach { Text("• $it") }
+            val text = remember(confirmation) { TextFieldState(confirmation.statements.joinToString(";\n", postfix = ";")) }
+            TextArea(text, Modifier.weight(1f).fillMaxWidth(), readOnly = true, textStyle = JewelTheme.editorTextStyle)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
+                OutlinedButton(onClick = { tab.pendingConfirmation = null }) { Text("Cancel") }
+                DefaultButton(onClick = tab::confirmPending) { Text("Run") }
+            }
+        }
     }
 }
 
 @Composable
-private fun ResultPanel(tab: ConsoleTab) {
+private fun OpenTransactionDialog(tab: ConsoleTab) {
+    DialogWindow(
+        onCloseRequest = { tab.pendingClose = null },
+        state = rememberDialogState(size = DpSize(460.dp, 180.dp)),
+        title = "Uncommitted Transaction",
+        resizable = false,
+    ) {
+        Column(
+            Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text("${tab.title} has ${tab.uncommitted} uncommitted statement(s). What should happen to them?")
+            Box(Modifier.weight(1f))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
+                OutlinedButton(onClick = { tab.pendingClose = null }) { Text("Keep Open") }
+                OutlinedButton(onClick = { tab.closeAfter(commit = false) }) { Text("Roll Back & Close") }
+                DefaultButton(onClick = { tab.closeAfter(commit = true) }) { Text("Commit & Close") }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ResultPanel(app: AppState, tab: ConsoleTab) {
     val historyIndex = tab.results.size + 1
     Column(Modifier.fillMaxSize()) {
         val titles = listOf("Output") + tab.results.map { it.title } + "History"
@@ -138,11 +225,20 @@ private fun ResultPanel(tab: ConsoleTab) {
                     )
                     Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
                     val suffix = if (view.rows.truncated) " (limited)" else ""
-                    Text(
-                        "${view.rows.rows.size} row(s)$suffix · ${view.rows.elapsedMillis} ms",
-                        Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        color = JewelTheme.globalColors.text.info,
-                    )
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            "${view.rows.rows.size} row(s)$suffix · ${view.rows.elapsedMillis} ms",
+                            Modifier.weight(1f),
+                            color = JewelTheme.globalColors.text.info,
+                        )
+                        Tooltip({ Text("Export result…") }) {
+                            IconButton(onClick = {
+                                val dialect = SqlDialect.of(tab.config.type)
+                                app.exportRequest =
+                                    ExportRequest(view.title, "result", view.rows.columns, view.rows.rows, dialect, "table_name")
+                            }) { Icon(AllIconsKeys.Actions.Download, "Export") }
+                        }
+                    }
                 }
             }
         }
