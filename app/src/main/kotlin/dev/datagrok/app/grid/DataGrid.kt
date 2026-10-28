@@ -37,6 +37,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isShiftPressed
@@ -63,6 +64,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import dev.datagrok.core.dialect.SortColumn
 import dev.datagrok.core.dialect.SortDirection
+import dev.datagrok.app.ui.LocalIslands
 import dev.datagrok.app.ui.Shortcuts
 import dev.datagrok.app.ui.copyToClipboard
 import dev.datagrok.core.export.CopyFormat
@@ -211,7 +213,6 @@ fun DataGrid(
 internal class GridColors(
     val grid: Color,
     val headerBackground: Color,
-    val stripe: Color,
     val hover: Color,
     val focusRow: Color,
     val selection: Color,
@@ -229,9 +230,9 @@ private fun gridColors(focused: Boolean): GridColors {
     val tree = JewelTheme.treeStyle.colors
     val dark = JewelTheme.isDark
     return GridColors(
-        grid = JewelTheme.globalColors.borders.normal.copy(alpha = 0.6f),
+        // Int UI's border colour equals the dark island background, so the grid uses the islands' separator instead.
+        grid = LocalIslands.current.divider,
         headerBackground = JewelTheme.globalColors.panelBackground,
-        stripe = text.copy(alpha = 0.025f),
         hover = text.copy(alpha = 0.05f),
         focusRow = text.copy(alpha = 0.07f),
         selection = if (focused) tree.backgroundSelectedActive else tree.backgroundSelected,
@@ -264,7 +265,7 @@ private fun HeaderRow(
                 Modifier.offset(x = with(density) { geometry.offsets[column].toDp() })
                     .width(widths[column])
                     .fillMaxHeight()
-                    .rightLine(colors.grid)
+                    .gridLines(colors.grid)
                     .padding(horizontal = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -293,7 +294,7 @@ private fun HeaderRow(
                 .width(rowNumberWidth)
                 .fillMaxHeight()
                 .background(colors.headerBackground)
-                .rightLine(colors.grid)
+                .gridLines(colors.grid)
         )
     }
 }
@@ -322,7 +323,6 @@ private fun DataRow(
             status == RowStatus.Deleted -> colors.deleted
             focus?.row == row -> colors.focusRow
             controller.hoverRow == row -> colors.hover
-            row % 2 == 1 -> colors.stripe
             else -> Color.Transparent
         }
 
@@ -355,7 +355,7 @@ private fun DataRow(
                 .fillMaxHeight()
                 .background(colors.headerBackground)
                 .background(if (rowSelected) colors.selection else rowBackground)
-                .rightLine(colors.grid)
+                .gridLines(colors.grid)
                 .padding(horizontal = 8.dp),
             contentAlignment = Alignment.CenterEnd,
         ) {
@@ -385,7 +385,7 @@ private fun Cell(
     var cell = modifier
     if (modified) cell = cell.background(colors.modified)
     if (selected) cell = cell.background(colors.selection)
-    cell = cell.rightLine(colors.grid)
+    cell = cell.gridLines(colors.grid)
     if (focused) cell = cell.border(1.dp, colors.focusBorder)
     Box(cell.padding(horizontal = 8.dp), contentAlignment = if (numeric && value != null) Alignment.CenterEnd else Alignment.CenterStart) {
         val base = JewelTheme.editorTextStyle
@@ -498,10 +498,21 @@ private fun naturalWidths(model: GridModel, charWidth: Float): List<Dp> =
         ((maxOf(longest.coerceAtMost(60), header) * charWidth) + 24).dp.coerceIn(MinColumnWidth, MaxNaturalWidth)
     }
 
-private fun Modifier.rightLine(color: Color) = drawBehind {
-    drawLine(color, Offset(size.width - 0.5f, 0f), Offset(size.width - 0.5f, size.height), strokeWidth = 1f)
-}
+/**
+ * Every cell — header, row number or data — owns its right and bottom divider, drawn over its own backgrounds (so
+ * selection and change highlights never hide them) but under a focus border applied later in the chain.
+ */
+private fun Modifier.gridLines(color: Color) = drawBehind { drawGridLines(color, right = true) }
 
-private fun Modifier.bottomLine(color: Color) = drawBehind {
-    drawLine(color, Offset(0f, size.height - 0.5f), Offset(size.width, size.height - 0.5f), strokeWidth = 1f)
+/** Bottom divider for a whole row, so it also runs past the last column. */
+private fun Modifier.bottomLine(color: Color) = drawBehind { drawGridLines(color, right = false) }
+
+private fun DrawScope.drawGridLines(color: Color, right: Boolean) {
+    val stroke = 1.dp.toPx().coerceAtLeast(1f)
+    val y = size.height - stroke / 2
+    drawLine(color, Offset(0f, y), Offset(size.width, y), strokeWidth = stroke)
+    if (right) {
+        val x = size.width - stroke / 2
+        drawLine(color, Offset(x, 0f), Offset(x, size.height), strokeWidth = stroke)
+    }
 }

@@ -11,6 +11,7 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import dev.datagrok.app.table.TableEditModel
+import dev.datagrok.app.ui.DatagrokTheme
 import dev.datagrok.core.dialect.SortColumn
 import dev.datagrok.core.dialect.SortDirection
 import dev.datagrok.core.driver.QueryResult
@@ -20,7 +21,6 @@ import java.sql.Types
 import javax.imageio.ImageIO
 import kotlin.test.Test
 import org.jetbrains.jewel.foundation.theme.JewelTheme
-import org.jetbrains.jewel.intui.standalone.theme.IntUiTheme
 
 /**
  * Renders the grid to PNGs for eyeballing changes without launching the app:
@@ -52,7 +52,7 @@ class GridSnapshotTest {
             model.setValue(model.addRow(), 1, "New one")
             val state = DataGridState()
             setContent {
-                IntUiTheme(isDark = dark) {
+                DatagrokTheme(isDark = dark) {
                     Box(Modifier.size(900.dp, 420.dp).background(JewelTheme.globalColors.panelBackground)) {
                         DataGrid(model, state, sort = listOf(SortColumn("total", SortDirection.Desc)))
                     }
