@@ -61,13 +61,14 @@ class RedisClient : KeyValueClient {
             return builder.build()
         }
         val seeds = hosts(config.host, host, port)
+        fun cluster(): KeyValueConnection {
+            val client = RedisClusterClient.create(seeds.map { (h, p) -> uri(RedisURI.Builder.redis(h, p)) })
+            client.setOptions(ClusterClientOptions.builder().protocolVersion(ProtocolVersion.RESP2).build())
+            val connection = try { client.connect() } catch (e: Throwable) { client.shutdown(); throw e }
+            return Connection(config, connection, connection.sync(), cluster = true) { client.shutdown() }
+        }
         return when (properties["mode"]?.lowercase()) {
-            "cluster" -> {
-                val client = RedisClusterClient.create(seeds.map { (h, p) -> uri(RedisURI.Builder.redis(h, p)) })
-                client.setOptions(ClusterClientOptions.builder().protocolVersion(ProtocolVersion.RESP2).build())
-                val connection = try { client.connect() } catch (e: Throwable) { client.shutdown(); throw e }
-                Connection(config, connection, connection.sync(), cluster = true) { client.shutdown() }
-            }
+            "cluster" -> cluster()
             else -> {
                 val master = properties["sentinelMaster"]
                 val target =
@@ -80,6 +81,15 @@ class RedisClient : KeyValueClient {
                 val client = io.lettuce.core.RedisClient.create(target)
                 client.setOptions(ClientOptions.builder().protocolVersion(ProtocolVersion.RESP2).build())
                 val connection = try { client.connect() } catch (e: Throwable) { client.shutdown(); throw e }
+                // A cluster node reached without mode=cluster answers MOVED for most keys; switch to the cluster client.
+                val clustered =
+                    properties["mode"] == null &&
+                        runCatching { parseInfo(connection.sync().info("cluster"))["cluster_enabled"] == "1" }.getOrDefault(false)
+                if (clustered) {
+                    runCatching { connection.close() }
+                    client.shutdown()
+                    return cluster()
+                }
                 Connection(config, connection, connection.sync(), cluster = false) { client.shutdown() }
             }
         }
