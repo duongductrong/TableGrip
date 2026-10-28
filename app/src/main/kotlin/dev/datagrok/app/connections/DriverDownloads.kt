@@ -119,6 +119,19 @@ class DriverDownloads(private val scope: CoroutineScope, val library: DriverLibr
 
     suspend fun importFrom(folder: Path): List<DriverId> = library.importFrom(folder).onEach { states.remove(it) }
 
+    suspend fun uninstall(driver: DriverId) {
+        library.uninstall(driver)
+        states.remove(driver)
+    }
+
+    suspend fun removeOldVersions(driver: DriverId): List<String> = library.removeOldVersions(driver)
+
+    /** Re-reads the library, e.g. after files changed on disk behind Datagrok's back. */
+    fun refresh() {
+        resolutions.clear()
+        revision++
+    }
+
     private companion object {
         val log = LoggerFactory.getLogger(DriverDownloads::class.java)
     }

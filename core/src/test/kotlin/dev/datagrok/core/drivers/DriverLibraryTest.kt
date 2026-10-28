@@ -112,6 +112,27 @@ class DriverLibraryTest {
     }
 
     @Test
+    fun `old versions and whole drivers can be removed`() = runBlocking<Unit> {
+        library(lock(version = "41.0.0")).install(DriverId.PostgreSQL)
+        val library = library(lock(version = "42.0.0"))
+        library.install(DriverId.PostgreSQL)
+        assertEquals(setOf("41.0.0", "42.0.0"), library.installedVersions(DriverId.PostgreSQL).toSet())
+        // Two copies of the jar, plus each version's driver.json.
+        assertTrue(library.downloadedSize(DriverId.PostgreSQL) > 2 * pgJar.fileSize())
+
+        assertEquals(listOf("41.0.0"), library.removeOldVersions(DriverId.PostgreSQL))
+        assertEquals(listOf("42.0.0"), library.installedVersions(DriverId.PostgreSQL))
+        assertEquals(DriverResolution.Ready(DriverId.PostgreSQL, "42.0.0", DriverSource.Downloaded), library.resolve(DriverId.PostgreSQL))
+
+        library.uninstall(DriverId.PostgreSQL)
+        assertEquals(emptyList(), library.installedVersions(DriverId.PostgreSQL))
+        assertEquals(0, library.downloadedSize(DriverId.PostgreSQL))
+        assertIs<DriverResolution.Download>(library.resolve(DriverId.PostgreSQL))
+        assertFailsWith<DriverNotInstalledException> { library.load(DriverId.PostgreSQL) }
+        Unit
+    }
+
+    @Test
     fun `drivers import from a folder without network access`() = runBlocking<Unit> {
         val folder = Files.createTempDirectory("m2").resolve("org/postgresql").createDirectories()
         pgJar.copyTo(folder.resolve(pgJar.fileName))

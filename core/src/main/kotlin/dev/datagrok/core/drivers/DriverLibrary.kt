@@ -307,6 +307,58 @@ class DriverLibrary(
             imported
         }
 
+    /**
+     * Deletes every downloaded version of [driver]. The user's own jars are theirs and stay; connections already open
+     * keep their loaded driver until they reconnect.
+     */
+    suspend fun uninstall(driver: DriverId) {
+        val locked = locked(driver) ?: return
+        installs.computeIfAbsent(locked.id) { Mutex() }.withLock {
+            withContext(Dispatchers.IO) { root.resolve(locked.id).toFile().deleteRecursively() }
+        }
+        loaded.remove(driver)
+        clients.remove(driver)
+        _revision.update { it + 1 }
+    }
+
+    /** Deletes the downloaded versions of [driver] other than the one [resolve] uses. Returns the versions removed. */
+    suspend fun removeOldVersions(driver: DriverId): List<String> {
+        val locked = locked(driver) ?: return emptyList()
+        val removed =
+            installs.computeIfAbsent(locked.id) { Mutex() }.withLock {
+                withContext(Dispatchers.IO) {
+                    val all = installed(locked.id)
+                    val current = all.firstOrNull { it.version == locked.version } ?: all.firstOrNull() ?: return@withContext emptyList()
+                    (all - current).onEach { versionDir(it).toFile().deleteRecursively() }.map { it.version }
+                }
+            }
+        if (removed.isNotEmpty()) _revision.update { it + 1 }
+        return removed
+    }
+
+    // endregion
+
+    // region What's installed
+
+    /** The downloaded versions of [driver], newest first. */
+    fun installedVersions(driver: DriverId): List<String> = locked(driver)?.let { installed(it.id) }.orEmpty().map { it.version }
+
+    /** Bytes the downloaded versions of [driver] take on disk. */
+    fun downloadedSize(driver: DriverId): Long {
+        val dir = locked(driver)?.let { root.resolve(it.id) }?.takeIf { it.isDirectory() } ?: return 0
+        return dir.toFile().walkTopDown().filter { it.isFile }.sumOf { it.length() }
+    }
+
+    /** Where [driver]'s downloads live, if any were made. */
+    fun downloadFolder(driver: DriverId): Path? = locked(driver)?.let { root.resolve(it.id) }?.takeIf { it.isDirectory() }
+
+    /** The jars the user chose for [driver], even if some have since gone missing. */
+    fun userJarPaths(driver: DriverId): List<Path> = readUserJars()[driver.name].orEmpty().map(Path::of)
+
+    /** The folder holding every driver. */
+    val folder: Path
+        get() = root
+
     // endregion
 
     // region User jars

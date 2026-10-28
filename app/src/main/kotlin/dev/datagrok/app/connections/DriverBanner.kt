@@ -73,7 +73,7 @@ private fun DriverBannerContent(
     when (val state = downloads.state(driver)) {
         is DownloadState.Running -> {
             val percent = if (state.total == 0L) 0 else state.done * 100 / state.total
-            InlineInformationBanner("Downloading ${driver.displayName}… $percent% of ${size(state.total)}", modifier)
+            InlineInformationBanner("Downloading ${driver.displayName}… $percent% of ${byteSize(state.total)}", modifier)
             return
         }
         is DownloadState.Failed ->
@@ -115,7 +115,7 @@ private fun DriverBannerContent(
         is DriverResolution.Download -> {
             val locked = resolution.locked
             InlineInformationBanner(
-                "${locked.name} ${locked.version} needs to be downloaded from ${repositoryName(downloads)} (${size(locked.size)}). ${licenseNote(locked)}",
+                "${locked.name} ${locked.version} needs to be downloaded from ${repositoryName(downloads)} (${byteSize(locked.size)}). ${licenseNote(locked)}",
                 modifier,
                 // A banner shows at most three links. An LGPL driver's license and source must stay in view, so
                 // importing from a folder moves to the error banner a failed download shows.
@@ -153,17 +153,17 @@ private fun licenseNote(driver: LockedDriver): String =
         LicenseTier.WeakCopyleft -> "License: ${driver.license}; it's used unmodified and you can replace it with your own build."
     }
 
-private fun size(bytes: Long): String =
+internal fun byteSize(bytes: Long): String =
     when {
         bytes >= 1_000_000 -> "%.1f MB".format(bytes / 1_000_000.0)
         else -> "${(bytes + 999) / 1_000} KB"
     }
 
-private fun browse(url: String) {
+internal fun browse(url: String) {
     runCatching { Desktop.getDesktop().browse(URI(url)) }
 }
 
-private fun chooseJarFiles(title: String): List<Path>? {
+internal fun chooseJarFiles(title: String): List<Path>? {
     val dialog = java.awt.FileDialog(null as java.awt.Frame?, title, java.awt.FileDialog.LOAD)
     dialog.isMultipleMode = true
     dialog.setFilenameFilter { _, name -> name.endsWith(".jar") }
@@ -171,7 +171,7 @@ private fun chooseJarFiles(title: String): List<Path>? {
     return dialog.files.map { it.toPath() }.takeIf { it.isNotEmpty() }
 }
 
-private fun chooseFolder(title: String): Path? {
+internal fun chooseFolder(title: String): Path? {
     val chooser = JFileChooser().apply {
         dialogTitle = title
         fileSelectionMode = JFileChooser.DIRECTORIES_ONLY

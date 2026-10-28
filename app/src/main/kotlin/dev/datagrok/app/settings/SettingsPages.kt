@@ -1,6 +1,9 @@
 package dev.datagrok.app.settings
 
+import androidx.compose.runtime.Composable
+import dev.datagrok.app.AppState
 import dev.datagrok.app.AppTheme
+import dev.datagrok.core.connection.DriverId
 import dev.datagrok.core.drivers.DriverLibrary
 import dev.datagrok.core.settings.Settings
 
@@ -45,7 +48,14 @@ class StringField(
     override val hint: String? = null,
 ) : SettingField
 
-class SettingsSection(val title: String?, val fields: List<SettingField>)
+class SettingsSection(
+    val title: String?,
+    val fields: List<SettingField>,
+    /** Shown under [fields], for what isn't a single setting, e.g. managing the installed drivers. */
+    val panel: (@Composable (AppState) -> Unit)? = null,
+    /** More words the sidebar search finds this section by, e.g. what [panel] lists. */
+    val keywords: List<String> = emptyList(),
+)
 
 /** A page of the settings dialog; [group] is the sidebar heading it sits under. */
 class SettingsPage(
@@ -62,7 +72,7 @@ class SettingsPage(
     fun matches(query: String): Boolean {
         val needle = query.trim()
         if (needle.isEmpty()) return true
-        val texts = listOf(title, group, description) + sections.mapNotNull { it.title } + fields.flatMap { listOfNotNull(it.label, it.hint) }
+        val texts = listOf(title, group, description) + sections.mapNotNull { it.title } + sections.flatMap { it.keywords } + fields.flatMap { listOfNotNull(it.label, it.hint) }
         return texts.any { it.contains(needle, ignoreCase = true) }
     }
 }
@@ -145,7 +155,7 @@ object SettingsPages {
                 id = "drivers",
                 group = "Database",
                 title = "Drivers",
-                description = "Where JDBC drivers come from. None ships with Datagrok; each is downloaded the first time it's needed.",
+                description = "Where JDBC drivers come from, and the ones on this machine. None ships with Datagrok; each is downloaded the first time it's needed.",
                 sections =
                     listOf(
                         SettingsSection(
@@ -168,6 +178,13 @@ object SettingsPages {
                                 ),
                             ),
                         ),
+                        SettingsSection(
+                            "Installed",
+                            emptyList(),
+                            panel = { app -> DriversPanel(app, installed = true) },
+                            keywords = DriverId.entries.map { it.displayName },
+                        ),
+                        SettingsSection("Available", emptyList(), panel = { app -> DriversPanel(app, installed = false) }),
                     ),
             ),
             SettingsPage(

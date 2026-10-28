@@ -144,6 +144,7 @@ private fun PageContent(page: SettingsPage, app: AppState, form: SettingsForm, q
                     Divider(Orientation.Horizontal, Modifier.fillMaxWidth().padding(bottom = 4.dp))
                 }
                 section.fields.forEach { field -> FieldRow(field, app, form, highlighted = query.isNotBlank() && field.label.contains(query.trim(), ignoreCase = true)) }
+                section.panel?.invoke(app)
             }
         }
     }
