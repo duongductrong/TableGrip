@@ -101,6 +101,7 @@ fun DataGrid(
     val gridFocus = remember { FocusRequester() }
     val controller = remember(state) { GridController(state, scope, gridFocus) }
     var hasFocus by remember { mutableStateOf(false) }
+    LaunchedEffect(state.focusRequests) { if (state.focusRequests > 0) runCatching { gridFocus.requestFocus() } }
     var resizeHover by remember { mutableStateOf(false) }
 
     val cellStyle = JewelTheme.editorTextStyle
@@ -477,7 +478,12 @@ private fun cellMenu(controller: GridController): List<ContextMenuItem> {
         filter?.takeIf { single }?.let {
             val column = controller.columnName(focus.column)
             val value = controller.model.value(focus.row, state.modelColumn(focus.column))
-            ContextMenuItem("Filter by This Value") { it(column, value) }
+            ContextMenuItem("Filter by This Value (${Shortcuts.FilterByValue})") { it(column, value, false) }
+        },
+        filter?.takeIf { single }?.let {
+            val column = controller.columnName(focus.column)
+            val value = controller.model.value(focus.row, state.modelColumn(focus.column))
+            ContextMenuItem("Exclude This Value (${Shortcuts.ExcludeValue})") { it(column, value, true) }
         },
         ContextMenuItem("Set NULL (${Shortcuts.SetNull})") { controller.setNull() }.takeIf { editor != null },
         ContextMenuItem("Add Row (${Shortcuts.AddRow})") { controller.addRow() }.takeIf { editor != null },

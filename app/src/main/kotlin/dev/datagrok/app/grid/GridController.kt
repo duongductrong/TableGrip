@@ -16,6 +16,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.key.utf16CodePoint
 import androidx.compose.ui.unit.Dp
+import dev.datagrok.app.ui.Shortcuts
 import dev.datagrok.app.ui.copyToClipboard
 import dev.datagrok.core.dialect.SortColumn
 import dev.datagrok.core.dialect.SortDirection
@@ -31,7 +32,8 @@ import kotlinx.coroutines.launch
 data class GridActions(
     /** Sets [column]'s sort: null direction removes it; additive keeps other sorted columns. */
     val onSort: ((column: String, direction: SortDirection?, additive: Boolean) -> Unit)? = null,
-    val onFilterByValue: ((column: String, value: String?) -> Unit)? = null,
+    /** Filters the rows to [value] in [column], or to everything but it when excluding. */
+    val onFilterByValue: ((column: String, value: String?, exclude: Boolean) -> Unit)? = null,
     /** ⌘/Ctrl+Enter. */
     val onSubmit: (() -> Unit)? = null,
     /** Used for "Copy as SQL INSERT". */
@@ -258,7 +260,10 @@ internal class GridController(val state: DataGridState, private val scope: Corou
             primary && (event.key == Key.Enter || event.key == Key.NumPadEnter) -> actions.onSubmit?.invoke().let { actions.onSubmit != null }
             primary && event.isAltPressed && event.key == Key.N -> setNull().let { true }
             primary && event.key == Key.N -> addRow().let { editor != null }
-            primary && (event.key == Key.Backspace || event.key == Key.Delete) -> deleteSelectedRows().let { editor != null }
+            Shortcuts.FilterByValue.matches(event) -> filterByFocusedValue(exclude = false)
+            Shortcuts.ExcludeValue.matches(event) -> filterByFocusedValue(exclude = true)
+            // ⇧ is left to the table's Clear Filter.
+            primary && !shift && (event.key == Key.Backspace || event.key == Key.Delete) -> deleteSelectedRows().let { editor != null }
             primary && event.key == Key.Z -> revertSelectedRows().let { editor != null }
             primary && event.key == Key.DirectionUp -> moveTo(GridCell(0, focus?.column ?: 0), shift)
             primary && event.key == Key.DirectionDown -> moveTo(GridCell(rowCount - 1, focus?.column ?: 0), shift)
@@ -283,6 +288,13 @@ internal class GridController(val state: DataGridState, private val scope: Corou
                 else false
             }
         }
+    }
+
+    private fun filterByFocusedValue(exclude: Boolean): Boolean {
+        val filter = actions.onFilterByValue ?: return false
+        val focus = state.focus ?: return false
+        filter(columnName(focus.column), model.value(focus.row, state.modelColumn(focus.column)), exclude)
+        return true
     }
 
     private fun pageRows(): Int = ((geometry.viewportHeight - geometry.headerHeight) / geometry.rowHeight).toInt().coerceAtLeast(1) - 1

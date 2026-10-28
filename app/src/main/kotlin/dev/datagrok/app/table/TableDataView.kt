@@ -25,11 +25,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isCtrlPressed
 import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.key.utf16CodePoint
@@ -90,7 +93,8 @@ internal fun TableDataView(tab: TableDataTab) {
 
 @Composable
 private fun DataView(tab: TableDataTab) {
-    Column(Modifier.fillMaxSize()) {
+    // Filter keys the grid and the bar left alone; the window handles them too, for focus outside the table.
+    Column(Modifier.fillMaxSize().onKeyEvent { it.type == KeyEventType.KeyDown && handleFilterShortcut(tab, it) }) {
         Toolbar(tab)
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
         FilterBar(tab)
@@ -261,8 +265,18 @@ private fun SqlFilterBar(tab: TableDataTab) {
         }
     }
     LaunchedEffect(tab.schemaVersion) { if (controller.isOpen) controller.update(tab.filter, tab.filterCompletion, explicit = false) }
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(tab.focusSqlFilter) {
+        if (tab.focusSqlFilter) {
+            tab.focusSqlFilter = false
+            runCatching { focus.requestFocus() }
+        }
+    }
 
-    Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp).onPreviewKeyEvent { handleFilterShortcut(tab, it) },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Icon(AllIconsKeys.General.Filter, null)
         Spacer(Modifier.width(6.dp))
         FilterModeSwitch(tab)
@@ -270,9 +284,17 @@ private fun SqlFilterBar(tab: TableDataTab) {
         Box(Modifier.weight(1f).onSizeChanged { fieldWidth = it.width }) {
             TextField(
                 tab.filter,
-                Modifier.fillMaxWidth().onPreviewKeyEvent { event ->
+                Modifier.fillMaxWidth().focusRequester(focus).onPreviewKeyEvent { event ->
                     if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
                     if (handleCompletionKey(controller, event.key) { controller.accept(tab.filter) }) return@onPreviewKeyEvent true
+                    if (Shortcuts.ApplyFilter.matches(event)) {
+                        tab.applyFilter()
+                        return@onPreviewKeyEvent true
+                    }
+                    if (event.key == Key.Escape) {
+                        tab.grid.requestFocus()
+                        return@onPreviewKeyEvent true
+                    }
                     if (event.isCtrlPressed && event.key == Key.Spacebar) {
                         controller.update(tab.filter, tab.filterCompletion, explicit = true)
                         return@onPreviewKeyEvent true

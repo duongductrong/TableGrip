@@ -1,5 +1,6 @@
 package dev.datagrok.app.table
 
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import dev.datagrok.core.filter.Combinator
 import dev.datagrok.core.filter.FilterColumn
 import dev.datagrok.core.filter.FilterCondition
@@ -9,6 +10,7 @@ import dev.datagrok.core.filter.FilterValues
 import dev.datagrok.core.filter.ValueKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class FilterBuilderStateTest {
@@ -59,6 +61,56 @@ class FilterBuilderStateTest {
             listOf(Triple("name", FilterOperator.Equals, "alice"), Triple("total", FilterOperator.IsNull, ""), Triple("active", FilterOperator.IsFalse, "")),
             conditions.map { Triple(it.column, it.operator, it.value) },
         )
+    }
+
+    @Test
+    fun `excluding a value picks the opposite operator`() {
+        val builder = FilterBuilderState()
+        builder.addFromValue(name, "alice", exclude = true)
+        builder.addFromValue(total, null, exclude = true)
+        builder.addFromValue(active, "t", exclude = true)
+        val conditions = builder.toNode().children.map { it as FilterCondition }
+        assertEquals(
+            listOf(Triple("name", FilterOperator.NotEquals, "alice"), Triple("total", FilterOperator.IsNotNull, ""), Triple("active", FilterOperator.IsFalse, "")),
+            conditions.map { Triple(it.column, it.operator, it.value) },
+        )
+    }
+
+    @Test
+    fun `rows are added after the current one, duplicated and moved within their group`() {
+        val builder = FilterBuilderState()
+        val a = builder.addCondition(builder.root, name)
+        val c = builder.addCondition(builder.root, total)
+        val b = builder.addCondition(builder.root, active, after = a)
+        assertEquals(listOf(a, b, c), builder.root.children.toList())
+
+        a.value.setTextAndPlaceCursorAtEnd("x")
+        a.caseSensitive = true
+        a.enabled = false
+        val copy = builder.duplicate(a) as ConditionState
+        assertEquals(listOf(a, copy, b, c), builder.root.children.toList())
+        assertEquals(a.toNode().copy(id = copy.id), copy.toNode())
+
+        assertTrue(builder.move(c, -1))
+        assertEquals(listOf(a, copy, c, b), builder.root.children.toList())
+        assertFalse(builder.move(a, -1))
+    }
+
+    @Test
+    fun `groups are duplicated deeply and rows are listed in display order`() {
+        val builder = FilterBuilderState()
+        val first = builder.addCondition(builder.root, name)
+        val group = builder.addGroup(builder.root, total)
+        val raw = builder.addRaw(group, "x > 1")
+        val last = builder.addCondition(builder.root, active)
+        assertEquals(listOf(first, group.children[0], raw, last), builder.rows())
+        assertEquals(group, builder.parentOf(raw))
+
+        val copy = builder.duplicate(group) as GroupState
+        assertEquals(group.toNode().children.size, copy.children.size)
+        assertEquals("x > 1", (copy.children[1] as RawState).sql.text.toString())
+        assertTrue(copy.children.none { it in group.children })
+        assertEquals(6, builder.rows().size)
     }
 
     @Test

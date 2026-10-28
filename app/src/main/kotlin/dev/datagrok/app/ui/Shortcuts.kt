@@ -99,6 +99,25 @@ object Shortcuts {
     val Submit = Shortcut(Key.Enter, EnterLabel, primary = true)
     val Reload = Shortcut(Key.R, "R", primary = true)
 
+    // Table filter: anywhere in a table viewer
+    val FocusFilter = Shortcut(Key.F, "F", primary = true)
+    val FilterByValue = Shortcut(Key.F, "F", primary = true, alt = true)
+    val ExcludeValue = Shortcut(Key.F, "F", primary = true, alt = true, shift = true)
+    val ToggleFilterMode = Shortcut(Key.F, "F", primary = true, shift = true)
+    val ClearFilter = Shortcut(Key.Backspace, BackspaceLabel, primary = true, shift = true)
+
+    // Filter builder: in a condition row. Row editing mirrors line editing in the SQL editor.
+    val ApplyFilter = Shortcut(Key.Enter, EnterLabel, primary = true)
+    val AddCondition = Shortcut(Key.N, "N", primary = true)
+    val AddConditionGroup = Shortcut(Key.N, "N", primary = true, shift = true)
+    val AddSqlCondition = Shortcut(Key.N, "N", primary = true, alt = true)
+    val ChooseColumn = Shortcut(Key.C, "C", primary = true, alt = true)
+    val ChooseOperator = Shortcut(Key.O, "O", primary = true, alt = true)
+    val ToggleCombinator = Shortcut(Key.A, "A", primary = true, shift = true)
+    val MatchCase = Shortcut(Key.C, "C", alt = true)
+    val PreviousCondition = Shortcut(Key.DirectionUp, "↑")
+    val NextCondition = Shortcut(Key.DirectionDown, "↓")
+
     class Entry(val description: String, val keys: String)
 
     class Group(val title: String, val entries: List<Entry>)
@@ -159,6 +178,35 @@ object Shortcuts {
                     entry("Revert rows", RevertRows),
                     entry("Submit changes", Submit, Save),
                     entry("Reload table", Reload),
+                ),
+            ),
+            Group(
+                "Table Filter",
+                listOf(
+                    entry("Focus filter (adds a condition on the current column)", FocusFilter),
+                    entry("Filter by the selected cell's value", FilterByValue),
+                    entry("Exclude the selected cell's value", ExcludeValue),
+                    entry("Switch between builder and SQL", ToggleFilterMode),
+                    entry("Clear filter", ClearFilter),
+                    Entry("Apply filter", "$EnterLabel  /  ${ApplyFilter.label}"),
+                    Entry("Back to the grid", "Esc"),
+                ),
+            ),
+            Group(
+                "Filter Builder",
+                listOf(
+                    entry("Add condition below", AddCondition),
+                    entry("Add group below", AddConditionGroup),
+                    entry("Add SQL condition below", AddSqlCondition),
+                    entry("Duplicate condition", Duplicate),
+                    entry("Remove condition", DeleteLine),
+                    entry("Enable / disable condition", Comment),
+                    entry("Move condition up / down", MoveLineUp, MoveLineDown),
+                    entry("Previous / next condition", PreviousCondition, NextCondition),
+                    entry("Choose column", ChooseColumn),
+                    entry("Choose operator", ChooseOperator),
+                    entry("Switch the group between all / any", ToggleCombinator),
+                    entry("Match case", MatchCase),
                 ),
             ),
         )

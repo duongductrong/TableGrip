@@ -14,6 +14,7 @@ import androidx.compose.ui.window.rememberWindowState
 import dev.datagrok.app.console.ConsoleTab
 import dev.datagrok.app.console.handleConsoleShortcut
 import dev.datagrok.app.table.TableDataTab
+import dev.datagrok.app.table.handleFilterShortcut
 import dev.datagrok.app.ui.DatagrokTheme
 import dev.datagrok.app.ui.Shortcuts
 import dev.datagrok.app.ui.MainScreen
@@ -72,6 +73,7 @@ private fun handleWindowShortcut(app: AppState, event: KeyEvent): Boolean {
         selected is ConsoleTab -> handleConsoleShortcut(selected, event)
         selected is TableDataTab && Shortcuts.Reload.matches(event) -> done { selected.refresh() }
         selected is TableDataTab && Shortcuts.Save.matches(event) -> done { selected.submit() }
+        selected is TableDataTab -> handleFilterShortcut(selected, event)
         else -> false
     }
 }

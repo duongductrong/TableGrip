@@ -4,6 +4,7 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -53,6 +54,14 @@ class DataGridState {
     /** The text editing started from, to tell real edits from Enter-then-Escape. */
     var editInitial: String = ""
         private set
+
+    /** Bumped by [requestFocus] so the grid takes keyboard focus, e.g. on Esc from the filter bar. */
+    var focusRequests by mutableIntStateOf(0)
+        private set
+
+    fun requestFocus() {
+        focusRequests++
+    }
 
     /** A cell to scroll into view on the next frame; set via [reveal] by code outside the grid. */
     var pendingReveal by mutableStateOf<GridCell?>(null)

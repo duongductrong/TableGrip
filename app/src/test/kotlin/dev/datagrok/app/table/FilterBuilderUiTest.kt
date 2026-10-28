@@ -18,11 +18,15 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.test.withKeysDown
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import dev.datagrok.app.AppState
+import dev.datagrok.app.grid.GridCell
+import dev.datagrok.app.grid.isMac
 import dev.datagrok.app.ui.DatagrokTheme
 import dev.datagrok.app.ui.MainScreen
 import dev.datagrok.core.connection.ConnectionStore
@@ -169,6 +173,85 @@ class FilterBuilderUiTest {
             }
             app.dispose()
         }
+    }
+
+    @Test
+    fun `builds and applies a filter from the keyboard`() {
+        val app =
+            AppState(
+                settingsStore = SettingsStore(home.resolve("settings-keys.json")),
+                connectionStore = ConnectionStore(home.resolve("connections.json"), InMemorySecretStore()),
+                history = QueryHistory(home.resolve("history.jsonl")),
+            )
+        runComposeUiTest {
+            setContent { DatagrokTheme(isDark = false) { Box(Modifier.size(1300.dp, 640.dp)) { MainScreen(app) } } }
+            val config = app.connections.profiles.single()
+            runOnUiThread { app.workspace.openTable(config, TableRef(Namespace(null, null), "orders")) }
+            waitUntil(timeoutMillis = 10_000) { (app.workspace.selected as? TableDataTab)?.model != null && (app.workspace.selected as TableDataTab).details != null }
+            val tab = app.workspace.selected as TableDataTab
+            val builder = tab.builder
+            val primary = if (isMac) Key.MetaLeft else Key.CtrlLeft
+            // Key is a value class, so no varargs: modifiers come as a list.
+            fun keys(key: Key, modifiers: List<Key> = emptyList()) {
+                onNode(isFocused()).performKeyInput { withKeysDown(modifiers) { pressKey(key) } }
+                waitForIdle()
+            }
+            fun type(text: String) {
+                onNode(isFocused() and hasSetTextAction()).performTextInput(text)
+                waitForIdle()
+            }
+            fun focusedText() = onNode(isFocused() and hasSetTextAction()).fetchSemanticsNode().config[SemanticsProperties.EditableText].text
+
+            // From the grid, ⌘F starts a first condition with the caret in its value.
+            runOnUiThread { tab.grid.requestFocus() }
+            waitForIdle()
+            keys(Key.F, listOf(primary))
+            assertEquals(1, builder.rows().size)
+            type("1")
+            // ⌘N adds the next one below, ⌘D duplicates it, ⌘⌫ (Ctrl+Y) takes the copy away again.
+            keys(Key.N, listOf(primary))
+            type("4")
+            keys(Key.D, listOf(primary))
+            assertEquals(listOf("1", "4", "4"), builder.rows().map { (it as ConditionState).value.text.toString() })
+            if (isMac) keys(Key.Backspace, listOf(primary)) else keys(Key.Y, listOf(primary))
+            assertEquals(2, builder.rows().size)
+            assertEquals("4", focusedText())
+
+            // ↑ steps to the first row, ⌘/ disables it, ⇧⌘A flips the group's combinator (twice: back to all).
+            keys(Key.DirectionUp)
+            assertEquals("1", focusedText())
+            keys(Key.Slash, listOf(primary))
+            assertTrue(!builder.rows().first().enabled)
+            keys(Key.A, listOf(primary, Key.ShiftLeft))
+            assertEquals(Combinator.Any, builder.root.combinator)
+            keys(Key.A, listOf(primary, Key.ShiftLeft))
+            assertEquals(Combinator.All, builder.root.combinator)
+            // ⌥⇧↓ moves the row below its sibling.
+            keys(Key.DirectionDown, listOf(Key.AltLeft, Key.ShiftLeft))
+            assertEquals(listOf("4", "1"), builder.rows().map { (it as ConditionState).value.text.toString() })
+
+            keys(Key.Enter, listOf(primary))
+            waitUntil(timeoutMillis = 10_000) { !tab.loading && tab.appliedTree != null }
+            assertEquals(listOf(4L), rows(tab))
+
+            // Esc goes back to the grid, where ⌥⇧⌘F excludes the focused cell's value.
+            keys(Key.Escape)
+            onNode(isFocused() and hasSetTextAction()).assertDoesNotExist()
+            runOnUiThread { tab.grid.select(GridCell(0, 2)) }
+            keys(Key.F, listOf(primary, Key.AltLeft, Key.ShiftLeft))
+            waitUntil(timeoutMillis = 10_000) { !tab.loading && tab.model?.rowCount == 0 }
+            val excluded = builder.rows().last() as ConditionState
+            assertEquals(Triple("status", FilterOperator.NotEquals, "refunded"), Triple(excluded.column, excluded.operator, excluded.value.text.toString()))
+
+            // ⇧⌘⌫ clears it all, ⇧⌘F switches to SQL with the caret in the field.
+            keys(Key.Backspace, listOf(primary, Key.ShiftLeft))
+            waitUntil(timeoutMillis = 10_000) { !tab.loading && tab.model?.rowCount == 5 }
+            assertTrue(builder.isEmpty)
+            keys(Key.F, listOf(primary, Key.ShiftLeft))
+            assertEquals(FilterMode.Sql, tab.filterMode)
+            onNode(isFocused() and hasSetTextAction()).assertExists()
+        }
+        app.dispose()
     }
 
     private fun androidx.compose.ui.test.ComposeUiTest.save(dir: String, name: String, dark: Boolean) {

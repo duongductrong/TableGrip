@@ -25,6 +25,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -32,6 +33,7 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -39,12 +41,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.InputMode
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isAltPressed
 import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
@@ -61,6 +69,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import dev.datagrok.app.ui.LocalIslands
+import dev.datagrok.app.ui.Shortcuts
 import dev.datagrok.app.ui.copyToClipboard
 import dev.datagrok.core.filter.Arity
 import dev.datagrok.core.filter.CompiledFilter
@@ -78,7 +87,6 @@ import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.Outline
 import org.jetbrains.jewel.ui.component.Checkbox
 import org.jetbrains.jewel.ui.component.DefaultButton
-import org.jetbrains.jewel.ui.component.Dropdown
 import org.jetbrains.jewel.ui.component.Icon
 import org.jetbrains.jewel.ui.component.IconButton
 import org.jetbrains.jewel.ui.component.Link
@@ -93,8 +101,14 @@ import org.jetbrains.jewel.ui.theme.treeStyle
 /** Nested groups beyond this depth stop offering "+ Group"; deeper logic reads better as SQL. */
 private const val MaxDepth = 3
 
+/** Builder UI state that outlives a composition but isn't part of the filter. */
+private class BuilderUi {
+    /** The value field whose suggestion list is showing; it owns ↑, ↓ and Esc until the list closes. */
+    var suggestingIn: TextFieldState? = null
+}
+
 /** What every row of the builder needs: the tab, its typed columns and the live compile result. */
-private class BuilderContext(val tab: TableDataTab, val columns: List<FilterColumn>, val draft: CompiledFilter) {
+private class BuilderContext(val tab: TableDataTab, val columns: List<FilterColumn>, val draft: CompiledFilter, val ui: BuilderUi) {
     val builder: FilterBuilderState
         get() = tab.builder
 
@@ -110,29 +124,29 @@ private class BuilderContext(val tab: TableDataTab, val columns: List<FilterColu
         return issue.takeIf { tab.showFilterIssues || typed }
     }
 
-    /** New conditions start on the column under the grid's cursor, which is usually the one being looked at. */
-    fun defaultColumn(): FilterColumn? {
-        val focused = tab.grid.selection?.let { tab.model?.columns?.getOrNull(tab.grid.modelColumn(it.focus.column))?.name }
-        return columns.firstOrNull { it.name == focused } ?: columns.firstOrNull()
-    }
+    fun defaultColumn(): FilterColumn? = tab.defaultFilterColumn()
 }
 
 /** The table viewer's structured filter: rows of typed conditions in nestable all/any groups. */
 @Composable
 internal fun BuilderFilterBar(tab: TableDataTab) {
     val draft by remember(tab) { derivedStateOf { tab.compileDraft() } }
-    val context = BuilderContext(tab, tab.filterColumns, draft)
+    val ui = remember(tab) { BuilderUi() }
+    val context = BuilderContext(tab, tab.filterColumns, draft, ui)
     val root = tab.builder.root
     val info = JewelTheme.globalColors.text.info
 
-    Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(
+        Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp).onPreviewKeyEvent { handleFilterShortcut(tab, it) },
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
         Row(Modifier.fillMaxWidth().height(30.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(AllIconsKeys.General.Filter, null)
             FilterModeSwitch(tab)
             when {
                 root.children.isEmpty() -> {
-                    Link("Add condition", onClick = { context.addCondition(root) })
-                    Text("or right-click a cell → Filter by This Value", color = info, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Tooltip({ Text("Add condition (${Shortcuts.FocusFilter})") }) { Link("Add condition", onClick = { context.addCondition(root) }) }
+                    Text("or ${Shortcuts.FilterByValue} on a cell to filter by its value", color = info, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 root.children.size > 1 -> {
                     Text("Rows matching", color = info)
@@ -155,16 +169,95 @@ internal fun BuilderFilterBar(tab: TableDataTab) {
     }
 }
 
-private fun BuilderContext.addCondition(parent: GroupState) {
-    val condition = builder.addCondition(parent, defaultColumn())
+private fun BuilderContext.addCondition(parent: GroupState, after: FilterNodeState? = null) {
+    val condition = builder.addCondition(parent, defaultColumn(), after)
     tab.focusFilterNode = condition.id
+}
+
+private fun BuilderContext.addGroup(parent: GroupState, after: FilterNodeState? = null) {
+    val nested = builder.addGroup(parent, defaultColumn(), after)
+    tab.focusFilterNode = nested.children.first().id
+}
+
+/** Filter shortcuts that work anywhere in a table viewer: from the grid, the window, or inside the filter bar. */
+internal fun handleFilterShortcut(tab: TableDataTab, event: KeyEvent): Boolean {
+    fun done(block: () -> Unit) = true.also { block() }
+    return when {
+        Shortcuts.FocusFilter.matches(event) -> done { tab.focusFilter() }
+        Shortcuts.ToggleFilterMode.matches(event) ->
+            done {
+                tab.switchFilterMode(if (tab.filterMode == FilterMode.Builder) FilterMode.Sql else FilterMode.Builder)
+                tab.focusFilter()
+            }
+        Shortcuts.ClearFilter.matches(event) -> done { tab.clearFilter() }
+        else -> false
+    }
+}
+
+/**
+ * Keys in a condition row (or SQL condition) of [group], which sits at [depth]. Rows are edited like lines in the SQL
+ * editor: ⌘D duplicates, ⌘⌫ removes, ⌘/ disables, ⌥⇧↑/↓ moves; ↑/↓ step between rows and Esc goes back to the grid.
+ */
+private fun BuilderContext.onRowKey(group: GroupState, depth: Int, node: FilterNodeState, event: KeyEvent): Boolean {
+    if (event.type != KeyEventType.KeyDown) return false
+    val condition = node as? ConditionState
+    fun done(block: () -> Unit) = true.also { block() }
+    return when {
+        Shortcuts.ApplyFilter.matches(event) -> done { tab.applyFilter() }
+        Shortcuts.AddCondition.matches(event) -> done { addCondition(group, after = node) }
+        Shortcuts.AddConditionGroup.matches(event) -> done { if (depth < MaxDepth) addGroup(group, after = node) }
+        Shortcuts.AddSqlCondition.matches(event) -> done { tab.focusFilterNode = builder.addRaw(group, after = node).id }
+        Shortcuts.Duplicate.matches(event) -> done { builder.duplicate(node)?.let { tab.focusFilterNode = it.id } }
+        Shortcuts.DeleteLine.matches(event) -> done { removeRow(group, node) }
+        Shortcuts.Comment.matches(event) -> done { node.enabled = !node.enabled }
+        Shortcuts.MoveLineUp.matches(event) -> done { if (builder.move(node, -1)) tab.focusFilterNode = node.id }
+        Shortcuts.MoveLineDown.matches(event) -> done { if (builder.move(node, 1)) tab.focusFilterNode = node.id }
+        Shortcuts.ToggleCombinator.matches(event) -> done { group.combinator = if (group.combinator == Combinator.All) Combinator.Any else Combinator.All }
+        condition != null && Shortcuts.ChooseColumn.matches(event) -> done { tab.openFilterPicker = condition.id to FilterPicker.Column }
+        condition != null && Shortcuts.ChooseOperator.matches(event) -> done { tab.openFilterPicker = condition.id to FilterPicker.Operator }
+        // Only where the toggle is shown: elsewhere ⌥C still types (e.g. "ç" on macOS).
+        condition != null && condition.canMatchCase(tab) && Shortcuts.MatchCase.matches(event) -> done { condition.caseSensitive = !condition.caseSensitive }
+        // An open suggestion list takes ↑, ↓ and Esc itself.
+        ui.suggestingIn != null -> false
+        Shortcuts.PreviousCondition.matches(event) -> focusRow(node, -1)
+        Shortcuts.NextCondition.matches(event) -> focusRow(node, 1)
+        event.key == Key.Escape && !event.isShiftPressed && !event.isAltPressed && !event.isCtrlPressed && !event.isMetaPressed -> done { tab.grid.requestFocus() }
+        else -> false
+    }
+}
+
+private fun BuilderContext.focusRow(node: FilterNodeState, by: Int): Boolean {
+    val rows = builder.rows()
+    val target = rows.getOrNull(rows.indexOf(node) + by) ?: return false
+    tab.focusFilterNode = target.id
+    return true
+}
+
+/** Removes a row and keeps the keyboard in the builder: the next row takes focus, or the grid once none are left. */
+private fun BuilderContext.removeRow(group: GroupState, node: FilterNodeState) {
+    val rows = builder.rows()
+    val at = rows.indexOf(node)
+    builder.remove(node)
+    // A group emptied from the keyboard would be a box nothing can reach; it goes too.
+    if (group !== builder.root && group.children.isEmpty()) builder.remove(group)
+    val next = builder.rows().let { it.getOrNull(at) ?: it.lastOrNull() }
+    if (next != null) tab.focusFilterNode = next.id else tab.grid.requestFocus()
+}
+
+private fun ConditionState.canMatchCase(tab: TableDataTab): Boolean {
+    val regex = operator == FilterOperator.Regex || operator == FilterOperator.NotRegex
+    return operator.matchesText && (!regex || tab.dialect.regexHonoursCase)
 }
 
 @Composable
 internal fun FilterModeSwitch(tab: TableDataTab) {
     Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
-        ViewChip("Builder", tab.filterMode == FilterMode.Builder) { tab.switchFilterMode(FilterMode.Builder) }
-        ViewChip("SQL", tab.filterMode == FilterMode.Sql) { tab.switchFilterMode(FilterMode.Sql) }
+        Tooltip({ Text("Switch between builder and SQL (${Shortcuts.ToggleFilterMode})") }) {
+            Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
+                ViewChip("Builder", tab.filterMode == FilterMode.Builder) { tab.switchFilterMode(FilterMode.Builder) }
+                ViewChip("SQL", tab.filterMode == FilterMode.Sql) { tab.switchFilterMode(FilterMode.Sql) }
+            }
+        }
     }
 }
 
@@ -179,8 +272,8 @@ internal fun FilterActions(tab: TableDataTab, draft: CompiledFilter? = null) {
         Text("Not applied", color = JewelTheme.globalColors.text.info)
     }
     val canClear = tab.hasAppliedFilter || !tab.builder.isEmpty || tab.filter.text.isNotBlank()
-    if (canClear) Link("Clear", onClick = tab::clearFilter)
-    Tooltip({ Text("Apply filter (⏎ in any field)") }) {
+    if (canClear) Tooltip({ Text("Clear filter (${Shortcuts.ClearFilter})") }) { Link("Clear", onClick = tab::clearFilter) }
+    Tooltip({ Text("Apply filter (⏎ in any field, ${Shortcuts.ApplyFilter})") }) {
         DefaultButton(onClick = tab::applyFilter, enabled = tab.isFilterDirty || invalid) { Text("Apply") }
     }
 }
@@ -189,7 +282,7 @@ internal fun FilterActions(tab: TableDataTab, draft: CompiledFilter? = null) {
 private fun CombinatorSwitch(group: GroupState) {
     Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
         Combinator.entries.forEach { combinator ->
-            Tooltip({ Text(if (combinator == Combinator.All) "Every condition must hold (AND)" else "At least one condition holds (OR)") }) {
+            Tooltip({ Text((if (combinator == Combinator.All) "Every condition must hold (AND)" else "At least one condition holds (OR)") + " · ${Shortcuts.ToggleCombinator} in a condition") }) {
                 ViewChip(combinator.label, group.combinator == combinator) { group.combinator = combinator }
             }
         }
@@ -210,7 +303,8 @@ private fun GroupBody(context: BuilderContext, group: GroupState, depth: Int) {
                         fontSize = 11.sp,
                         style = JewelTheme.editorTextStyle,
                     )
-                    Box(Modifier.weight(1f)) {
+                    val keys = if (child is GroupState) Modifier else Modifier.onPreviewKeyEvent { context.onRowKey(group, depth, child, it) }
+                    Box(Modifier.weight(1f).then(keys)) {
                         when (child) {
                             is ConditionState -> ConditionRow(context, child)
                             is GroupState -> NestedGroup(context, child, depth + 1)
@@ -253,16 +347,15 @@ private fun NestedGroup(context: BuilderContext, group: GroupState, depth: Int) 
 @Composable
 private fun AddLinks(context: BuilderContext, group: GroupState, depth: Int) {
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-        Link("+ Condition", onClick = { context.addCondition(group) })
+        Tooltip({ Text("Add condition (${Shortcuts.AddCondition} in a condition adds one below it)") }) {
+            Link("+ Condition", onClick = { context.addCondition(group) })
+        }
         if (depth < MaxDepth) {
-            Tooltip({ Text("A nested group combines its conditions the other way (AND inside OR, or OR inside AND)") }) {
-                Link("+ Group", onClick = {
-                    val nested = context.builder.addGroup(group, context.defaultColumn())
-                    context.tab.focusFilterNode = nested.children.first().id
-                })
+            Tooltip({ Text("A nested group combines its conditions the other way (AND inside OR, or OR inside AND) · ${Shortcuts.AddConditionGroup}") }) {
+                Link("+ Group", onClick = { context.addGroup(group) })
             }
         }
-        Tooltip({ Text("A hand-written SQL condition, e.g. length(name) > 3") }) {
+        Tooltip({ Text("A hand-written SQL condition, e.g. length(name) > 3 · ${Shortcuts.AddSqlCondition}") }) {
             Link("+ SQL", onClick = { context.tab.focusFilterNode = context.builder.addRaw(group).id })
         }
     }
@@ -275,10 +368,23 @@ private fun ConditionRow(context: BuilderContext, condition: ConditionState) {
     val kind = column?.kind ?: ValueKind.Text
     val issue = context.issue(condition)
     val focus = remember { FocusRequester() }
+    val columnFocus = remember { FocusRequester() }
+    var columnOpen by remember { mutableStateOf(false) }
+    var operatorOpen by remember { mutableStateOf(false) }
     LaunchedEffect(tab.focusFilterNode) {
         if (tab.focusFilterNode == condition.id) {
             tab.focusFilterNode = null
-            if (condition.operator.arity != Arity.None) runCatching { focus.requestFocus() }
+            // A condition without a value (e.g. "is NULL") is reached through its column.
+            runCatching { if (condition.operator.arity != Arity.None) focus.requestFocus() else columnFocus.requestFocus() }
+        }
+    }
+    LaunchedEffect(tab.openFilterPicker) {
+        val (id, picker) = tab.openFilterPicker ?: return@LaunchedEffect
+        if (id != condition.id) return@LaunchedEffect
+        tab.openFilterPicker = null
+        when (picker) {
+            FilterPicker.Column -> columnOpen = true
+            FilterPicker.Operator -> operatorOpen = true
         }
     }
 
@@ -290,18 +396,33 @@ private fun ConditionRow(context: BuilderContext, condition: ConditionState) {
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                ColumnPicker(context.columns, condition.column, error = issue != null && column == null, Modifier.width(200.dp)) {
+                ColumnPicker(
+                    context.columns,
+                    condition.column,
+                    error = issue != null && column == null,
+                    open = columnOpen,
+                    onOpenChange = { columnOpen = it },
+                    // Back to the row after a pick or Esc, so typing carries on with the value.
+                    onDone = { tab.focusFilterNode = condition.id },
+                    Modifier.width(200.dp).focusRequester(columnFocus),
+                ) {
                     context.builder.setColumn(condition, it, tab.dialect.supportsRegex)
                 }
-                OperatorPicker(kind, condition.operator, tab.dialect.supportsRegex, Modifier.width(160.dp)) {
+                OperatorPicker(
+                    kind,
+                    condition.operator,
+                    tab.dialect.supportsRegex,
+                    open = operatorOpen,
+                    onOpenChange = { operatorOpen = it },
+                    onDone = { tab.focusFilterNode = condition.id },
+                    Modifier.width(160.dp),
+                ) {
                     context.builder.setOperator(condition, it)
-                    if (it.arity != Arity.None) tab.focusFilterNode = condition.id
                 }
                 ValueEditor(context, condition, column, kind, if (issue != null && column != null) Outline.Error else Outline.None, focus, Modifier.weight(1f))
-                val regex = condition.operator == FilterOperator.Regex || condition.operator == FilterOperator.NotRegex
-                if (condition.operator.matchesText && (!regex || tab.dialect.regexHonoursCase)) CaseToggle(condition)
+                if (condition.canMatchCase(tab)) CaseToggle(condition)
             }
-            RemoveButton("Remove condition") { context.builder.remove(condition) }
+            RemoveButton("Remove condition (${Shortcuts.DeleteLine})") { context.builder.remove(condition) }
         }
         issue?.let { IssueText(it, Modifier.padding(start = 28.dp)) }
     }
@@ -330,7 +451,7 @@ private fun RawRow(context: BuilderContext, raw: RawState) {
                 placeholder = { Text("any SQL condition, e.g. length(name) > 3") },
                 onKeyboardAction = KeyboardActionHandler { tab.applyFilter() },
             )
-            RemoveButton("Remove condition") { context.builder.remove(raw) }
+            RemoveButton("Remove condition (${Shortcuts.DeleteLine})") { context.builder.remove(raw) }
         }
         issue?.let { IssueText(it, Modifier.padding(start = 28.dp)) }
     }
@@ -348,7 +469,7 @@ private fun RemoveButton(tooltip: String, onClick: () -> Unit) {
 
 @Composable
 private fun CaseToggle(condition: ConditionState) {
-    Tooltip({ Text(if (condition.caseSensitive) "Match case (on)" else "Match case (off)") }) {
+    Tooltip({ Text((if (condition.caseSensitive) "Match case (on)" else "Match case (off)") + " · ${Shortcuts.MatchCase}") }) {
         ViewChip("Aa", condition.caseSensitive) { condition.caseSensitive = !condition.caseSensitive }
     }
 }
@@ -372,7 +493,7 @@ private fun SqlPreview(tab: TableDataTab, draft: CompiledFilter, modifier: Modif
                 )
             }
             Tooltip({ Text("Copy WHERE clause") }) { IconButton(onClick = { copyToClipboard(preview) }) { Icon(AllIconsKeys.Actions.Copy, "Copy") } }
-            Link("Edit as SQL", onClick = { tab.switchFilterMode(FilterMode.Sql) })
+            Tooltip({ Text("Edit as SQL (${Shortcuts.ToggleFilterMode})") }) { Link("Edit as SQL", onClick = { tab.switchFilterMode(FilterMode.Sql) }) }
         } else if (draft.isValid) {
             Text("No active conditions", color = info, fontSize = 11.sp)
         }
@@ -416,12 +537,20 @@ private fun PickerButton(error: Boolean, modifier: Modifier, onClick: () -> Unit
 
 /** Searchable column list: tables can have hundreds of columns, so it filters as you type and works from the keyboard. */
 @Composable
-private fun ColumnPicker(columns: List<FilterColumn>, selected: String, error: Boolean, modifier: Modifier, onSelect: (FilterColumn) -> Unit) {
-    var open by remember { mutableStateOf(false) }
+private fun ColumnPicker(
+    columns: List<FilterColumn>,
+    selected: String,
+    error: Boolean,
+    open: Boolean,
+    onOpenChange: (Boolean) -> Unit,
+    onDone: () -> Unit,
+    modifier: Modifier,
+    onSelect: (FilterColumn) -> Unit,
+) {
     var height by remember { mutableIntStateOf(0) }
     val current = columns.firstOrNull { it.name == selected }
-    Box(modifier.onSizeChanged { height = it.height }) {
-        PickerButton(error, Modifier.fillMaxWidth(), onClick = { open = true }) {
+    Box(Modifier.onSizeChanged { height = it.height }) {
+        PickerButton(error, modifier, onClick = { onOpenChange(true) }) {
             Icon(AllIconsKeys.Nodes.DataColumn, null)
             Text(
                 selected.ifEmpty { "Choose column" },
@@ -436,12 +565,13 @@ private fun ColumnPicker(columns: List<FilterColumn>, selected: String, error: B
         if (open) {
             Popup(
                 offset = IntOffset(0, height + 2),
-                onDismissRequest = { open = false },
+                onDismissRequest = { onOpenChange(false) },
                 properties = PopupProperties(focusable = true),
             ) {
-                ColumnList(columns, selected, onDismiss = { open = false }) {
-                    open = false
+                ColumnList(columns, selected, onDismiss = { onOpenChange(false); onDone() }) {
                     onSelect(it)
+                    onOpenChange(false)
+                    onDone()
                 }
             }
         }
@@ -512,20 +642,45 @@ private fun ColumnList(columns: List<FilterColumn>, selected: String, onDismiss:
     }
 }
 
+/** Operators for the column's type, in sections; opens from its shortcut too, and works from the keyboard. */
 @Composable
-private fun OperatorPicker(kind: ValueKind, selected: FilterOperator, regex: Boolean, modifier: Modifier, onSelect: (FilterOperator) -> Unit) {
-    Dropdown(
-        modifier,
-        menuContent = {
-            FilterOperator.forKind(kind, regex).forEachIndexed { index, section ->
-                if (index > 0) separator()
-                section.forEach { operator ->
-                    selectableItem(selected = operator == selected, onClick = { onSelect(operator) }) { Text(operator.label(kind)) }
+private fun OperatorPicker(
+    kind: ValueKind,
+    selected: FilterOperator,
+    regex: Boolean,
+    open: Boolean,
+    onOpenChange: (Boolean) -> Unit,
+    onDone: () -> Unit,
+    modifier: Modifier,
+    onSelect: (FilterOperator) -> Unit,
+) {
+    Box {
+        PickerButton(error = false, modifier, onClick = { onOpenChange(true) }) {
+            Text(selected.label(kind), Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Icon(AllIconsKeys.General.ChevronDown, null)
+        }
+        if (open) {
+            PopupMenu(
+                onDismissRequest = { mode ->
+                    onOpenChange(false)
+                    if (mode == InputMode.Keyboard) onDone()
+                    true
+                },
+                modifier = Modifier.focusProperties { canFocus = true },
+                horizontalAlignment = Alignment.Start,
+            ) {
+                FilterOperator.forKind(kind, regex).forEachIndexed { index, section ->
+                    if (index > 0) separator()
+                    section.forEach { operator ->
+                        selectableItem(selected = operator == selected, onClick = {
+                            onSelect(operator)
+                            onOpenChange(false)
+                            onDone()
+                        }) { Text(operator.label(kind)) }
+                    }
                 }
             }
-        },
-    ) {
-        Text(selected.label(kind), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
     }
 }
 
@@ -619,6 +774,10 @@ private fun ValueField(
         }
     }
     val open = focused && suggestions.isNotEmpty() && state.text.toString() != dismissedFor
+    SideEffect {
+        if (open) context.ui.suggestingIn = state else if (context.ui.suggestingIn === state) context.ui.suggestingIn = null
+    }
+    DisposableEffect(state) { onDispose { if (context.ui.suggestingIn === state) context.ui.suggestingIn = null } }
 
     fun accept(index: Int) {
         val value = suggestions.getOrNull(index) ?: return

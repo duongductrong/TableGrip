@@ -65,17 +65,65 @@ class FilterBuilderState {
 
     fun toNode(): FilterGroup = root.toNode()
 
-    fun addCondition(parent: GroupState, column: FilterColumn?): ConditionState =
-        ConditionState(nextId++, column?.name.orEmpty(), FilterOperator.defaultFor(column?.kind ?: ValueKind.Text)).also { parent.children += it }
+    /** Adds to [parent], right after [after] when given (e.g. the row being edited), else at the end. */
+    fun addCondition(parent: GroupState, column: FilterColumn?, after: FilterNodeState? = null): ConditionState =
+        insert(parent, ConditionState(nextId++, column?.name.orEmpty(), FilterOperator.defaultFor(column?.kind ?: ValueKind.Text)), after)
 
     /** A new group starts with one condition, so it's never an empty box. */
-    fun addGroup(parent: GroupState, column: FilterColumn?): GroupState =
-        GroupState(nextId++, if (parent.combinator == Combinator.All) Combinator.Any else Combinator.All).also {
-            parent.children += it
+    fun addGroup(parent: GroupState, column: FilterColumn?, after: FilterNodeState? = null): GroupState =
+        insert(parent, GroupState(nextId++, if (parent.combinator == Combinator.All) Combinator.Any else Combinator.All), after).also {
             addCondition(it, column)
         }
 
-    fun addRaw(parent: GroupState, sql: String = ""): RawState = RawState(nextId++, sql).also { parent.children += it }
+    fun addRaw(parent: GroupState, sql: String = "", after: FilterNodeState? = null): RawState = insert(parent, RawState(nextId++, sql), after)
+
+    private fun <T : FilterNodeState> insert(parent: GroupState, node: T, after: FilterNodeState?): T {
+        val at = parent.children.indexOf(after)
+        if (at < 0) parent.children += node else parent.children.add(at + 1, node)
+        return node
+    }
+
+    /** The group holding [node], or null for the root or a node that isn't in the tree. */
+    fun parentOf(node: FilterNodeState, from: GroupState = root): GroupState? {
+        if (node in from.children) return from
+        return from.children.filterIsInstance<GroupState>().firstNotNullOfOrNull { parentOf(node, it) }
+    }
+
+    /** Conditions and SQL conditions in the order they're shown, nested groups included: what keyboard navigation steps through. */
+    fun rows(from: GroupState = root): List<FilterNodeState> = from.children.flatMap { if (it is GroupState) rows(it) else listOf(it) }
+
+    /** Copies [node] (a whole group with its contents) right after it. */
+    fun duplicate(node: FilterNodeState): FilterNodeState? {
+        val parent = parentOf(node) ?: return null
+        return insert(parent, copy(node), node)
+    }
+
+    private fun copy(node: FilterNodeState): FilterNodeState =
+        when (node) {
+            is ConditionState ->
+                ConditionState(nextId++, node.column, node.operator).also {
+                    it.value.setTextAndPlaceCursorAtEnd(node.value.text.toString())
+                    it.value2.setTextAndPlaceCursorAtEnd(node.value2.text.toString())
+                    it.caseSensitive = node.caseSensitive
+                }
+            is RawState -> RawState(nextId++, node.sql.text.toString())
+            is GroupState ->
+                GroupState(nextId++, node.combinator).also { group ->
+                    group.negated = node.negated
+                    node.children.forEach { group.children += copy(it) }
+                }
+        }.also { it.enabled = node.enabled }
+
+    /** Moves [node] up ([by] < 0) or down within its group; false at the group's edge. */
+    fun move(node: FilterNodeState, by: Int): Boolean {
+        val siblings = parentOf(node)?.children ?: return false
+        val from = siblings.indexOf(node)
+        val to = from + by
+        if (to !in siblings.indices) return false
+        siblings.removeAt(from)
+        siblings.add(to, node)
+        return true
+    }
 
     fun remove(node: FilterNodeState, from: GroupState = root): Boolean {
         if (from.children.remove(node)) return true
@@ -96,20 +144,20 @@ class FilterBuilderState {
         if (operator.arity != Arity.Two) condition.value2.setTextAndPlaceCursorAtEnd("")
     }
 
-    /** Adds `column = value` from a grid cell, as the right kind of condition for the column's type. */
-    fun addFromValue(column: FilterColumn, value: String?) {
+    /** Adds `column = value` (or `column ≠ value` to [exclude] it) from a grid cell, as the right kind of condition for the column's type. */
+    fun addFromValue(column: FilterColumn, value: String?, exclude: Boolean = false) {
         root.children.removeAll { it is ConditionState && it.isBlank }
         val operator =
             when {
-                value == null -> FilterOperator.IsNull
+                value == null -> if (exclude) FilterOperator.IsNotNull else FilterOperator.IsNull
                 column.kind == ValueKind.Boolean ->
                     when (FilterValues.boolean(value)) {
-                        true -> FilterOperator.IsTrue
-                        false -> FilterOperator.IsFalse
-                        null -> FilterOperator.IsNotNull
+                        true -> if (exclude) FilterOperator.IsFalse else FilterOperator.IsTrue
+                        false -> if (exclude) FilterOperator.IsTrue else FilterOperator.IsFalse
+                        null -> if (exclude) FilterOperator.IsNull else FilterOperator.IsNotNull
                     }
-                column.kind == ValueKind.Binary -> FilterOperator.IsNotNull
-                else -> FilterOperator.Equals
+                column.kind == ValueKind.Binary -> if (exclude) FilterOperator.IsNull else FilterOperator.IsNotNull
+                else -> if (exclude) FilterOperator.NotEquals else FilterOperator.Equals
             }
         val condition = addCondition(root, column)
         condition.operator = operator

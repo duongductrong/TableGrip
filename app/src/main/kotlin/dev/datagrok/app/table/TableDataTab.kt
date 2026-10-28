@@ -30,6 +30,9 @@ import kotlinx.coroutines.launch
 
 enum class TableView { Data, Structure }
 
+/** The pickers of a builder condition that a shortcut can open. */
+enum class FilterPicker { Column, Operator }
+
 enum class StructureSection(val label: String) {
     Columns("Columns"),
     Indexes("Indexes"),
@@ -71,6 +74,10 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
         private set
     /** A builder row to focus once it's composed, e.g. a condition just added. */
     var focusFilterNode by mutableStateOf<Long?>(null)
+    /** Set to move focus into the SQL filter field once it's composed. */
+    var focusSqlFilter by mutableStateOf(false)
+    /** A builder row's picker to open, from its shortcut. */
+    var openFilterPicker by mutableStateOf<Pair<Long, FilterPicker>?>(null)
     /** Problems are shown once the user tries to apply; until then only values already typed are checked. */
     var showFilterIssues by mutableStateOf(false)
         private set
@@ -282,19 +289,42 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
         app.updateSettings { it.copy(filterMode = mode.name) }
     }
 
-    /** Adds `column = value` (or `IS NULL`) to the filter, like DataGrip's "Filter by this value". */
-    fun filterByValue(column: String, value: String?) {
+    /** Adds `column = value` (or `IS NULL`) to the filter, like DataGrip's "Filter by this value"; or `≠` to [exclude] it. */
+    fun filterByValue(column: String, value: String?, exclude: Boolean = false) {
         if (filterMode == FilterMode.Builder) {
             val target = filterColumns.firstOrNull { it.name == column } ?: return
-            builder.addFromValue(target, value)
+            builder.addFromValue(target, value, exclude)
             applyFilter()
             return
         }
         val numeric = model?.columns?.firstOrNull { it.name == column }?.isNumeric == true
-        val condition = dialect.quoteIdentifier(column) + if (value == null) " IS NULL" else " = " + dialect.literal(value, numeric)
+        val condition =
+            dialect.quoteIdentifier(column) +
+                when {
+                    value == null -> if (exclude) " IS NOT NULL" else " IS NULL"
+                    else -> (if (exclude) " <> " else " = ") + dialect.literal(value, numeric)
+                }
         val current = filter.text.toString().trim()
         filter.setTextAndPlaceCursorAtEnd(if (current.isEmpty()) condition else "($current) AND $condition")
         applyFilter()
+    }
+
+    /** New conditions start on the column under the grid's cursor, which is usually the one being looked at. */
+    fun defaultFilterColumn(): FilterColumn? {
+        val columns = filterColumns
+        val focused = grid.selection?.let { model?.columns?.getOrNull(grid.modelColumn(it.focus.column))?.name }
+        return columns.firstOrNull { it.name == focused } ?: columns.firstOrNull()
+    }
+
+    /** Puts the caret in the filter: the first condition, a new one on the grid's current column if there are none, or the SQL field. */
+    fun focusFilter() {
+        showData()
+        if (filterMode == FilterMode.Sql) {
+            focusSqlFilter = true
+            return
+        }
+        val first = builder.rows().firstOrNull() ?: builder.addCondition(builder.root, defaultFilterColumn())
+        focusFilterNode = first.id
     }
 
     /** Distinct values of [column] starting with [prefix], for the builder's value suggestions; empty on any failure. */
