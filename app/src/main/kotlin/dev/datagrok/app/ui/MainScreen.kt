@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.datagrok.app.AppState
+import dev.datagrok.app.settings.SettingsScreen
 import dev.datagrok.app.LeftTool
 import dev.datagrok.app.connections.ConnectionDialog
 import dev.datagrok.app.connections.DeleteConnectionDialog
@@ -51,7 +52,10 @@ internal fun MainScreen(app: AppState) {
             val workspace = @Composable { Island(Modifier.fillMaxSize()) { WorkspaceView(app) } }
             val tool = app.leftTool
             Box(Modifier.weight(1f).fillMaxSize().padding(end = IslandGap)) {
-                if (tool == null) {
+                if (app.settingsOpen) {
+                    // Settings take the whole content area; tabs and tool windows come back when it closes.
+                    Island(Modifier.fillMaxSize()) { SettingsScreen(app) }
+                } else if (tool == null) {
                     workspace()
                 } else {
                     // The split's divider is invisible: the gap between islands is the drag handle.
@@ -80,7 +84,7 @@ internal fun MainScreen(app: AppState) {
 
     app.connections.dialog?.let { ConnectionDialog(app.connections, it) }
     app.connections.pendingDelete?.let { DeleteConnectionDialog(app.connections, it) }
-    if (app.settingsOpen) SettingsDialog(app)
+    if (app.shortcutsOpen) ShortcutsDialog(app)
     app.exportRequest?.let { ExportDialog(app, it) }
 }
 

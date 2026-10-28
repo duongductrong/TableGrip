@@ -8,10 +8,10 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -56,8 +56,11 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -66,11 +69,13 @@ import dev.datagrok.app.completion.CompletionPopup
 import dev.datagrok.app.completion.CompletionSource
 import dev.datagrok.app.completion.handleCompletionKey
 import dev.datagrok.app.grid.isMac
+import dev.datagrok.app.ui.Shortcuts
 import dev.datagrok.core.sql.SqlFormatter
 import dev.datagrok.core.sql.SqlLexer
 import dev.datagrok.core.sql.SqlSplitter
 import dev.datagrok.core.sql.SqlSyntax
 import dev.datagrok.core.sql.TokenType
+import kotlin.math.roundToInt
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.Orientation
 import org.jetbrains.jewel.ui.component.Divider
@@ -82,9 +87,15 @@ import org.jetbrains.jewel.ui.component.TextField
 import org.jetbrains.jewel.ui.component.Tooltip
 import org.jetbrains.jewel.ui.icons.AllIconsKeys
 
-private val GutterWidth = 52.dp
-private val TextPaddingStart = 8.dp
-private val TextPaddingTop = 4.dp
+// Gutter: [start pad][line number][gap][statement bar] — then the text with its own start pad.
+private val GutterPaddingStart = 12.dp
+private val GutterNumberGap = 8.dp
+private val StatementBarWidth = 2.dp
+private val TextPaddingStart = 12.dp
+private val TextPaddingTop = 8.dp
+private val TextPaddingEnd = 24.dp
+/** Empty lines kept below the last one, so the end of a long script doesn't sit flush against the edge. */
+private const val OverscrollLines = 3
 
 /** What the editor exposes to its host's toolbar. */
 class SqlEditorActions {
@@ -113,12 +124,23 @@ internal fun SqlEditor(
     val highlighter = remember(syntax, isDark) { SqlHighlighter(syntax, palette) }
     val splitter = remember(syntax) { SqlSplitter(syntax) }
     val formatter = remember(syntax) { SqlFormatter(syntax) }
+    // No trimming: every line — first and last included — is exactly one pitch tall, so line N always sits at N × pitch.
     val textStyle =
-        JewelTheme.editorTextStyle.copy(fontSize = fontSize.sp, lineHeight = (fontSize * 1.5).sp, color = JewelTheme.globalColors.text.normal)
+        JewelTheme.editorTextStyle.copy(
+            fontSize = fontSize.sp,
+            lineHeight = (fontSize * 1.5).sp,
+            lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.None),
+            color = JewelTheme.globalColors.text.normal,
+        )
     val verticalScroll = rememberScrollState()
     val horizontalScroll = rememberScrollState()
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
+    val measurer = rememberTextMeasurer()
+    // Line pitch as the text engine really lays it out (fractional px), measured once per style rather than read from the
+    // field's latest layout, which lags the text by a frame after every edit.
+    val linePitch = remember(textStyle, density) { measurer.measure("0\n0", textStyle).let { it.getLineTop(1) - it.getLineTop(0) } }
+    val lineHeight = with(density) { linePitch.toDp() }
     val editorFocus = remember { FocusRequester() }
     val controller = remember { CompletionController(scope) }
     var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
@@ -171,51 +193,34 @@ internal fun SqlEditor(
             val caret = state.selection.start
             val statement = remember(text, caret) { if (text.isBlank()) null else splitter.statementAt(text, caret) }
             val brackets = remember(text, caret) { if (state.selection.collapsed) EditorActions.matchingBracket(text, caret, syntax) else null }
-            val lineLayout = layout
-            val statementLines =
-                if (statement != null && lineLayout != null && lineLayout.layoutInput.text.length == text.length) {
-                    lineLayout.getLineForOffset(statement.start)..lineLayout.getLineForOffset(statement.end.coerceAtMost(text.length))
-                } else IntRange.EMPTY
+            val lineCount = text.count { it == '\n' } + 1
+            val caretLine = lineIndexAt(text, caret)
+            // The gutter grows with the digit count (min. two), so short scripts don't waste width.
+            val digits = maxOf(2, lineCount.toString().length)
+            val digitWidth = remember(textStyle, digits) { with(density) { measurer.measure("0".repeat(digits), textStyle).size.width.toDp() } }
+            val gutterWidth = GutterPaddingStart + digitWidth + GutterNumberGap + StatementBarWidth
+            // From the text itself (no soft wrap), so the bar never blinks out while the layout catches up.
+            val statementLines = if (statement != null) lineIndexAt(text, statement.start)..lineIndexAt(text, statement.end) else IntRange.EMPTY
 
             Row(Modifier.fillMaxSize().verticalScroll(verticalScroll)) {
-                LineNumbers(lineCount = text.count { it == '\n' } + 1, textStyle = textStyle, statementLines = statementLines, accent = palette.statementBar)
+                LineNumbers(
+                    lineCount = lineCount,
+                    linePitch = linePitch,
+                    gutterWidth = gutterWidth,
+                    digitWidth = digitWidth,
+                    lineHeight = lineHeight,
+                    textStyle = textStyle,
+                    caretLine = caretLine,
+                    highlightCaretLine = state.selection.collapsed,
+                    statementLines = statementLines,
+                    palette = palette,
+                )
                 Box(Modifier.horizontalScroll(horizontalScroll)) {
                     BasicTextField(
                         state = state,
                         modifier =
-                            Modifier.defaultMinSize(minWidth = viewportWidth - GutterWidth, minHeight = viewportHeight)
+                            Modifier.defaultMinSize(minWidth = viewportWidth - gutterWidth, minHeight = viewportHeight)
                                 .focusRequester(editorFocus)
-                                .padding(start = TextPaddingStart, top = TextPaddingTop, end = 24.dp, bottom = 4.dp)
-                                .drawBehind {
-                                    val result = layout ?: return@drawBehind
-                                    if (result.layoutInput.text.length != state.text.length) return@drawBehind
-                                    // Current line.
-                                    if (state.selection.collapsed) {
-                                        val line = result.getLineForOffset(caret.coerceAtMost(result.layoutInput.text.length))
-                                        drawRect(palette.currentLine, Offset(-TextPaddingStart.toPx(), result.getLineTop(line)), Size(size.width + TextPaddingStart.toPx(), result.getLineBottom(line) - result.getLineTop(line)))
-                                    }
-                                    // Find matches.
-                                    find.matches.forEachIndexed { index, range ->
-                                        if (range.last >= result.layoutInput.text.length) return@forEachIndexed
-                                        val first = result.getBoundingBox(range.first)
-                                        val last = result.getBoundingBox(range.last)
-                                        drawRoundRect(
-                                            if (index == find.current) palette.findCurrent else palette.findMatch,
-                                            Offset(first.left, first.top),
-                                            Size(last.right - first.left, first.height),
-                                            CornerRadius(2f, 2f),
-                                        )
-                                    }
-                                    // Matching brackets.
-                                    brackets?.let { (open, close) ->
-                                        for (offset in listOf(open, close)) {
-                                            if (offset >= result.layoutInput.text.length) continue
-                                            val box = result.getBoundingBox(offset)
-                                            drawRect(palette.bracket, Offset(box.left, box.top), Size(box.width, box.height))
-                                            drawRect(palette.bracketBorder, Offset(box.left, box.top), Size(box.width, box.height), style = Stroke(1f))
-                                        }
-                                    }
-                                }
                                 .onPreviewKeyEvent { event ->
                                     if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
                                     if (handleCompletionKey(controller, event.key) { controller.accept(state) }) return@onPreviewKeyEvent true
@@ -227,6 +232,47 @@ internal fun SqlEditor(
                         textStyle = textStyle,
                         cursorBrush = SolidColor(JewelTheme.globalColors.text.normal),
                         outputTransformation = highlighter,
+                        // Padding lives inside the decorator so the whole area — margins included — takes clicks, and the
+                        // inner field stretches to the full width so line highlights run edge to edge.
+                        decorator = { innerTextField ->
+                            Box(
+                                Modifier.padding(start = TextPaddingStart, top = TextPaddingTop, end = TextPaddingEnd, bottom = lineHeight * OverscrollLines)
+                                    .drawBehind {
+                                        // Current line, from the gutter edge to the far right — same geometry as the gutter's band.
+                                        if (state.selection.collapsed) {
+                                            val left = -TextPaddingStart.toPx()
+                                            drawRect(palette.currentLine, Offset(left, caretLine * linePitch), Size(size.width - left + TextPaddingEnd.toPx(), linePitch))
+                                        }
+                                        // Matches and brackets need character positions; skip the frame where the layout is stale.
+                                        val result = layout ?: return@drawBehind
+                                        if (result.layoutInput.text.length != state.text.length) return@drawBehind
+                                        // Find matches.
+                                        find.matches.forEachIndexed { index, range ->
+                                            if (range.last >= result.layoutInput.text.length) return@forEachIndexed
+                                            val first = result.getBoundingBox(range.first)
+                                            val last = result.getBoundingBox(range.last)
+                                            drawRoundRect(
+                                                if (index == find.current) palette.findCurrent else palette.findMatch,
+                                                Offset(first.left, first.top),
+                                                Size(last.right - first.left, first.height),
+                                                CornerRadius(2f, 2f),
+                                            )
+                                        }
+                                        // Matching brackets.
+                                        brackets?.let { (open, close) ->
+                                            for (offset in listOf(open, close)) {
+                                                if (offset >= result.layoutInput.text.length) continue
+                                                val box = result.getBoundingBox(offset)
+                                                drawRect(palette.bracket, Offset(box.left, box.top), Size(box.width, box.height))
+                                                drawRect(palette.bracketBorder, Offset(box.left, box.top), Size(box.width, box.height), style = Stroke(1f))
+                                            }
+                                        }
+                                    },
+                                propagateMinConstraints = true,
+                            ) {
+                                innerTextField()
+                            }
+                        },
                         onTextLayout = { getResult -> layout = getResult() },
                     )
                     val cursor = layout?.takeIf { it.layoutInput.text.length == state.text.length }?.getCursorRect(state.selection.start.coerceAtMost(state.text.length))
@@ -260,16 +306,15 @@ private fun handleEditorKey(
 
     return when {
         // ⌃Space opens completion explicitly (also on macOS, like IntelliJ).
-        event.isCtrlPressed && event.key == Key.Spacebar -> done { completion?.let { controller.update(state, it, explicit = true) } }
-        primary && event.key == Key.Slash -> done { apply(EditorActions.toggleLineComment(current())) }
-        primary && event.key == Key.D -> done { apply(EditorActions.duplicate(current())) }
-        primary && !alt && (event.key == Key.F) -> done { find.open(state, replace = false) }
-        primary && event.key == Key.R -> done { find.open(state, replace = true) }
-        primary && alt && event.key == Key.L -> done(format)
-        isMac && event.isMetaPressed && event.key == Key.Backspace -> done { apply(EditorActions.deleteLines(current())) }
-        !isMac && event.isCtrlPressed && event.key == Key.Y -> done { apply(EditorActions.deleteLines(current())) }
-        alt && shift && event.key == Key.DirectionUp -> done { apply(EditorActions.moveLines(current(), up = true)) }
-        alt && shift && event.key == Key.DirectionDown -> done { apply(EditorActions.moveLines(current(), up = false)) }
+        Shortcuts.Completion.matches(event) -> done { completion?.let { controller.update(state, it, explicit = true) } }
+        Shortcuts.Comment.matches(event) -> done { apply(EditorActions.toggleLineComment(current())) }
+        Shortcuts.Duplicate.matches(event) -> done { apply(EditorActions.duplicate(current())) }
+        Shortcuts.Find.matches(event) -> done { find.open(state, replace = false) }
+        Shortcuts.Replace.matches(event) -> done { find.open(state, replace = true) }
+        Shortcuts.Format.matches(event) -> done(format)
+        Shortcuts.DeleteLine.matches(event) -> done { apply(EditorActions.deleteLines(current())) }
+        Shortcuts.MoveLineUp.matches(event) -> done { apply(EditorActions.moveLines(current(), up = true)) }
+        Shortcuts.MoveLineDown.matches(event) -> done { apply(EditorActions.moveLines(current(), up = false)) }
         primary || event.isCtrlPressed -> false
         event.key == Key.Escape && find.visible -> done { find.visible = false }
         event.key == Key.Tab -> {
@@ -438,16 +483,58 @@ private fun replaceAll(find: FindState, state: TextFieldState) {
 
 // endregion
 
+/** Zero-based line of [offset] in [text]; lines only break at `\n` because the editor never soft-wraps. */
+internal fun lineIndexAt(text: CharSequence, offset: Int): Int {
+    var line = 0
+    for (i in 0 until offset.coerceIn(0, text.length)) if (text[i] == '\n') line++
+    return line
+}
+
+/**
+ * Line numbers on the same fixed pitch as the text ([linePitch] per line, no trimming), computed from the text alone so
+ * nothing shifts while the field's layout catches up with an edit.
+ */
 @Composable
-private fun LineNumbers(lineCount: Int, textStyle: TextStyle, statementLines: IntRange, accent: Color) {
-    Column(Modifier.fillMaxHeight().padding(top = TextPaddingTop, bottom = 4.dp), horizontalAlignment = Alignment.End) {
-        val style = textStyle.copy(color = JewelTheme.globalColors.text.info, textAlign = TextAlign.End)
-        val lineHeight = with(LocalDensity.current) { textStyle.lineHeight.toDp() }
-        for (line in 0 until lineCount) {
-            Row(Modifier.height(lineHeight), verticalAlignment = Alignment.CenterVertically) {
-                Text((line + 1).toString(), modifier = Modifier.padding(start = 8.dp).defaultMinSize(minWidth = GutterWidth - 14.dp), style = style)
+private fun LineNumbers(
+    lineCount: Int,
+    linePitch: Float,
+    gutterWidth: Dp,
+    digitWidth: Dp,
+    lineHeight: Dp,
+    textStyle: TextStyle,
+    caretLine: Int,
+    highlightCaretLine: Boolean,
+    statementLines: IntRange,
+    palette: SqlPalette,
+) {
+    val dimmed = textStyle.copy(color = JewelTheme.globalColors.text.info, textAlign = TextAlign.End)
+    val bright = dimmed.copy(color = JewelTheme.globalColors.text.normal)
+    Box(
+        Modifier.width(gutterWidth)
+            .height(lineHeight * lineCount + TextPaddingTop)
+            .drawBehind {
+                val inset = TextPaddingTop.toPx()
+                if (highlightCaretLine) drawRect(palette.currentLine, Offset(0f, inset + caretLine * linePitch), Size(size.width, linePitch))
                 // Marks the statement ⌘Enter would run.
-                Box(Modifier.padding(start = 4.dp).width(2.dp).fillMaxHeight().background(if (line in statementLines) accent else Color.Transparent))
+                if (!statementLines.isEmpty()) {
+                    val barWidth = StatementBarWidth.toPx()
+                    drawRect(
+                        palette.statementBar,
+                        Offset(size.width - barWidth, inset + statementLines.first * linePitch),
+                        Size(barWidth, (statementLines.last - statementLines.first + 1) * linePitch),
+                    )
+                }
+            }
+    ) {
+        for (line in 0 until lineCount) {
+            Box(
+                Modifier.offset { IntOffset(0, (TextPaddingTop.toPx() + line * linePitch).roundToInt()) }
+                    .padding(start = GutterPaddingStart)
+                    .width(digitWidth)
+                    .height(lineHeight),
+                contentAlignment = Alignment.TopEnd,
+            ) {
+                Text((line + 1).toString(), style = if (line == caretLine) bright else dimmed)
             }
         }
     }

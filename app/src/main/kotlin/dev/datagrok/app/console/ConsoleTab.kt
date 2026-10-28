@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.TextRange
 import dev.datagrok.app.AppState
 import dev.datagrok.app.grid.DataGridState
 import dev.datagrok.app.grid.ResultGridModel
@@ -21,6 +22,9 @@ import dev.datagrok.core.sql.SqlClassifier
 import dev.datagrok.core.sql.StatementKind
 import dev.datagrok.core.sql.SqlSplitter
 import dev.datagrok.core.sql.SqlStatement
+import java.awt.FileDialog
+import java.awt.Frame
+import java.io.File
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.CancellationException
@@ -50,15 +54,27 @@ class ResultSetView(val title: String, val sql: String, val rows: QueryResult.Ro
 class ConsoleTab(
     private val app: AppState,
     val config: ConnectionConfig,
-    override val title: String,
+    private val name: String,
     initialSql: String,
 ) : WorkspaceTab {
+    /** A new, empty console starts with blank lines to click into instead of a single one. */
+    private val startText = initialSql.ifEmpty { "\n".repeat(BlankConsoleLines - 1) }
+
     override val connectionId: String = config.id
+
+    /** Where the script was last saved; null until the first save. */
+    var file by mutableStateOf<File?>(null)
+        private set
+    /** The script as last saved (or as the console opened with), to tell whether there are unsaved edits. */
+    private var savedText by mutableStateOf(startText)
+
+    override val title: String
+        get() = file?.name ?: name
     val syntax = SqlDialect.of(config.type).syntax
     private val splitter = SqlSplitter(syntax)
     private val classifier = SqlClassifier(syntax)
 
-    val editor = TextFieldState(initialSql).apply { edit { placeCursorAtEnd() } }
+    val editor = TextFieldState(startText, TextRange(if (initialSql.isEmpty()) 0 else startText.length))
     val output = mutableStateListOf<OutputLine>()
     val results = mutableStateListOf<ResultSetView>()
 
@@ -76,9 +92,17 @@ class ConsoleTab(
     var pendingConfirmation by mutableStateOf<WriteConfirmation?>(null)
     /** Set while asking what to do with an open transaction before closing the tab. */
     var pendingClose by mutableStateOf<(() -> Unit)?>(null)
+    /** Set while asking whether to save the script before closing the tab. */
+    var pendingScriptClose by mutableStateOf<(() -> Unit)?>(null)
 
     val hasOpenTransaction: Boolean
         get() = !autoCommit && uncommitted > 0
+
+    val hasUnsavedScript: Boolean
+        get() = editor.text.toString() != savedText
+
+    override val hasUnsavedWork: Boolean
+        get() = hasOpenTransaction || hasUnsavedScript
 
     private var session: QuerySession? = null
     private var job: Job? = null
@@ -201,6 +225,38 @@ class ConsoleTab(
         }
     }
 
+    /** Asks about an open transaction first, then about the unsaved script. */
+    override fun confirmClose(close: () -> Unit) {
+        val askAboutScript = { if (hasUnsavedScript) pendingScriptClose = close else close() }
+        if (hasOpenTransaction) pendingClose = askAboutScript else askAboutScript()
+    }
+
+    /** Writes the script to its file, asking for one first (or always, for [saveAs]); [then] runs once it is saved. */
+    fun save(saveAs: Boolean = false, then: () -> Unit = {}) {
+        val target = file.takeUnless { saveAs } ?: chooseScriptFile(title) ?: return
+        val text = editor.text.toString()
+        app.scope.launch {
+            runCatching { withContext(Dispatchers.IO) { target.writeText(text) } }
+                .onSuccess {
+                    file = target
+                    savedText = text
+                    app.status = "Saved ${target.path}"
+                    then()
+                }
+                .onFailure {
+                    log("Could not save ${target.path}: ${it.message}", isError = true)
+                    selectedResultTab = 0
+                }
+        }
+    }
+
+    /** Resolves [pendingScriptClose]; cancelling the file chooser keeps the tab open. */
+    fun closeAfterScript(save: Boolean) {
+        val close = pendingScriptClose ?: return
+        pendingScriptClose = null
+        if (save) save(then = close) else close()
+    }
+
     /** Resolves [pendingClose] after committing or rolling back. */
     fun closeAfter(commit: Boolean) {
         val close = pendingClose ?: return
@@ -290,3 +346,15 @@ class ConsoleTab(
         private fun String.preview(): String = lineSequence().first().let { if (it.length > 80) it.take(80) + "…" else it }
     }
 }
+
+/** Native save dialog for a script, adding `.sql` when no extension is given; null when cancelled. */
+private fun chooseScriptFile(suggested: String): File? {
+    val dialog = FileDialog(null as Frame?, "Save Script", FileDialog.SAVE)
+    dialog.file = if (suggested.endsWith(".sql", ignoreCase = true)) suggested else "$suggested.sql"
+    dialog.isVisible = true
+    val name = dialog.file ?: return null
+    return File(dialog.directory, if ('.' in name) name else "$name.sql")
+}
+
+/** Lines a new, empty console opens with. */
+private const val BlankConsoleLines = 12

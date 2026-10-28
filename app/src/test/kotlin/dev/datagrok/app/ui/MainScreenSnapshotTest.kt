@@ -61,6 +61,11 @@ class MainScreenSnapshotTest {
                 Thread.sleep(800)
                 waitForIdle()
                 ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(out, "main-${if (dark) "dark" else "light"}.png"))
+                runOnUiThread { app.workspace.selected = app.workspace.tabs.first() }
+                waitForIdle()
+                Thread.sleep(400)
+                waitForIdle()
+                ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(out, "console-${if (dark) "dark" else "light"}.png"))
             }
             app.dispose()
         }

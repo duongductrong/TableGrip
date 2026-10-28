@@ -99,9 +99,14 @@ private fun HistoryRow(app: AppState, entry: HistoryEntry) {
             val info = JewelTheme.globalColors.text.info
             if (config != null) {
                 Badge(config, size = 14)
-                Text(config.name, color = info, maxLines = 1)
+                Text(config.name, Modifier.weight(1f, fill = false), color = info, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            Text("· ${Time.format(Instant.ofEpochMilli(entry.executedAt))} · ${entry.elapsedMillis} ms", color = info, maxLines = 1)
+            Text(
+                "· ${Time.format(Instant.ofEpochMilli(entry.executedAt))} · ${entry.elapsedMillis} ms",
+                color = info,
+                maxLines = 1,
+                softWrap = false,
+            )
         }
     }
 }

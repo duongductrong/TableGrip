@@ -63,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import dev.datagrok.core.dialect.SortColumn
 import dev.datagrok.core.dialect.SortDirection
+import dev.datagrok.app.ui.Shortcuts
 import dev.datagrok.app.ui.copyToClipboard
 import dev.datagrok.core.export.CopyFormat
 import java.awt.Cursor
@@ -463,12 +464,11 @@ private fun cellMenu(controller: GridController): List<ContextMenuItem> {
     val editor = controller.model.editor
     val focus = selection.focus
     val single = selection.anchor == selection.focus && !selection.wholeRows
-    val primary = if (isMac) "⌘" else "Ctrl+"
     val filter = controller.actions.onFilterByValue
     return listOfNotNull(
         ContextMenuItem("Edit Cell") { controller.startEditing(focus) }.takeIf { single && controller.canEdit(focus) },
-        ContextMenuItem("Copy (${primary}C)") { controller.copy(CopyFormat.Tsv) },
-        ContextMenuItem("Copy with Header") { controller.copy(CopyFormat.Tsv, includeHeader = true) },
+        ContextMenuItem("Copy (${Shortcuts.Copy})") { controller.copy(CopyFormat.Tsv) },
+        ContextMenuItem("Copy with Header (${Shortcuts.CopyWithHeader})") { controller.copy(CopyFormat.Tsv, includeHeader = true) },
         ContextMenuItem("Copy as CSV") { controller.copy(CopyFormat.Csv, includeHeader = true) },
         ContextMenuItem("Copy as JSON") { controller.copy(CopyFormat.Json) },
         ContextMenuItem("Copy as Markdown") { controller.copy(CopyFormat.Markdown) },
@@ -479,10 +479,10 @@ private fun cellMenu(controller: GridController): List<ContextMenuItem> {
             val value = controller.model.value(focus.row, state.modelColumn(focus.column))
             ContextMenuItem("Filter by This Value") { it(column, value) }
         },
-        ContextMenuItem("Set NULL") { controller.setNull() }.takeIf { editor != null },
-        ContextMenuItem("Add Row (${primary}N)") { controller.addRow() }.takeIf { editor != null },
-        ContextMenuItem("Delete Row(s) (${primary}⌫)") { controller.deleteSelectedRows() }.takeIf { editor != null },
-        ContextMenuItem("Revert Row(s) (${primary}Z)") { controller.revertSelectedRows() }.takeIf { editor != null },
+        ContextMenuItem("Set NULL (${Shortcuts.SetNull})") { controller.setNull() }.takeIf { editor != null },
+        ContextMenuItem("Add Row (${Shortcuts.AddRow})") { controller.addRow() }.takeIf { editor != null },
+        ContextMenuItem("Delete Row(s) (${Shortcuts.DeleteRows})") { controller.deleteSelectedRows() }.takeIf { editor != null },
+        ContextMenuItem("Revert Row(s) (${Shortcuts.RevertRows})") { controller.revertSelectedRows() }.takeIf { editor != null },
     )
 }
 

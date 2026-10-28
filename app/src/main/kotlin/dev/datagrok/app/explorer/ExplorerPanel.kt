@@ -17,8 +17,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import dev.datagrok.app.AppState
 import dev.datagrok.app.connections.ConnectionStatus
@@ -117,22 +119,23 @@ private fun NodeRow(app: AppState, node: ExplorerNode, modifier: Modifier = Modi
                 Badge(node.config, size = 16)
                 Text(node.config.name, Modifier.weight(1f, fill = false), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 EnvironmentChip(node.config)
-                if (node.config.readOnly) Text("read-only", color = info)
+                if (node.config.readOnly) Text("read-only", color = info, maxLines = 1, softWrap = false)
                 when (val status = app.databases.status(node.config.id)) {
-                    ConnectionStatus.Connecting -> Text("connecting…", color = info)
-                    is ConnectionStatus.Failed -> Text("failed", color = JewelTheme.globalColors.text.error)
-                    is ConnectionStatus.Connected -> Text(node.config.type.displayName, color = info)
+                    ConnectionStatus.Connecting -> Text("connecting…", color = info, maxLines = 1, softWrap = false)
+                    is ConnectionStatus.Failed ->
+                        Text("failed", color = JewelTheme.globalColors.text.error, maxLines = 1, softWrap = false)
+                    is ConnectionStatus.Connected ->
+                        Text(node.config.type.displayName, color = info, maxLines = 1, softWrap = false)
                     ConnectionStatus.Disconnected -> Unit
                 }
             }
             is ExplorerNode.Schema -> {
                 NodeIcon(AllIconsKeys.Nodes.Folder)
-                Text(node.namespace.displayName)
+                Text(node.namespace.displayName, Modifier.weight(1f, fill = false), maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             is ExplorerNode.Folder -> {
                 NodeIcon(AllIconsKeys.Nodes.Folder)
-                Text(node.label)
-                Text(node.children.size.toString(), color = info)
+                NameAndDetail(node.label, node.children.size.toString(), Modifier.weight(1f))
             }
             is ExplorerNode.Table -> {
                 NodeIcon(AllIconsKeys.Nodes.DataTables)
@@ -141,30 +144,23 @@ private fun NodeRow(app: AppState, node: ExplorerNode, modifier: Modifier = Modi
             is ExplorerNode.Column -> {
                 val column = node.column
                 NodeIcon(if (column.primaryKey) AllIconsKeys.Nodes.FieldPK else AllIconsKeys.Nodes.DataColumn)
-                Text(column.name)
-                Text(
-                    column.typeName.lowercase() + if (column.nullable) "" else " not null",
-                    Modifier.weight(1f, fill = false),
-                    color = info,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                NameAndDetail(column.name, column.typeName.lowercase() + if (column.nullable) "" else " not null", Modifier.weight(1f))
             }
             is ExplorerNode.Index -> {
                 NodeIcon(AllIconsKeys.Nodes.FieldPK)
-                Text(node.index.name)
-                Text((if (node.index.unique) "unique " else "") + "(${node.index.columns.joinToString()})", color = info)
+                NameAndDetail(
+                    node.index.name,
+                    (if (node.index.unique) "unique " else "") + "(${node.index.columns.joinToString()})",
+                    Modifier.weight(1f),
+                )
             }
             is ExplorerNode.ForeignKey -> {
                 val fk = node.foreignKey
                 NodeIcon(AllIconsKeys.Nodes.FieldPK)
-                Text(fk.name)
-                Text(
+                NameAndDetail(
+                    fk.name,
                     "(${fk.columns.joinToString()}) → ${fk.referencedTable.name}(${fk.referencedColumns.joinToString()})",
-                    Modifier.weight(1f, fill = false),
-                    color = info,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                    Modifier.weight(1f),
                 )
             }
             is ExplorerNode.Message ->
@@ -175,6 +171,34 @@ private fun NodeRow(app: AppState, node: ExplorerNode, modifier: Modifier = Modi
 
 @Composable
 private fun NodeIcon(key: IconKey) = Icon(key, contentDescription = null)
+
+/**
+ * A node's name followed by its greyed detail on a single line. The name gets first claim on the width and
+ * the detail is ellipsized into what is left, so a narrow sidebar never wraps either one character by character.
+ */
+@Composable
+private fun NameAndDetail(name: String, detail: String, modifier: Modifier = Modifier) {
+    val info = JewelTheme.globalColors.text.info
+    Layout(
+        content = {
+            Text(name, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
+            Text(detail, color = info, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
+        },
+        modifier = modifier,
+    ) { measurables, constraints ->
+        val gap = 6.dp.roundToPx()
+        val loose = constraints.copy(minWidth = 0)
+        val nameText = measurables[0].measure(loose)
+        val remaining = if (constraints.hasBoundedWidth) constraints.maxWidth - nameText.width - gap else Constraints.Infinity
+        val detailText = if (remaining > 0) measurables[1].measure(loose.copy(maxWidth = remaining)) else null
+        val width = nameText.width + (detailText?.let { gap + it.width } ?: 0)
+        val height = maxOf(nameText.height, detailText?.height ?: 0)
+        layout(width.coerceIn(constraints.minWidth, constraints.maxWidth), height) {
+            nameText.placeRelative(0, (height - nameText.height) / 2)
+            detailText?.placeRelative(nameText.width + gap, (height - detailText.height) / 2)
+        }
+    }
+}
 
 @Composable
 private fun EmptyExplorer(app: AppState) {

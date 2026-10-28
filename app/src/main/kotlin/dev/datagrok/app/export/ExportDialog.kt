@@ -18,8 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogWindow
-import androidx.compose.ui.window.rememberDialogState
+import dev.datagrok.app.ui.AppDialog
 import dev.datagrok.app.AppState
 import dev.datagrok.core.dialect.SqlDialect
 import dev.datagrok.core.driver.ResultColumn
@@ -95,9 +94,9 @@ internal fun ExportDialog(app: AppState, request: ExportRequest) {
         }
     }
 
-    DialogWindow(
+    AppDialog(
         onCloseRequest = { app.exportRequest = null },
-        state = rememberDialogState(size = DpSize(460.dp, 300.dp)),
+        size = DpSize(460.dp, 300.dp),
         title = "Export ${request.title}",
         resizable = false,
     ) {

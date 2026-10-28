@@ -36,7 +36,9 @@ import dev.datagrok.app.console.ConsoleTab
 import dev.datagrok.app.console.ConsoleView
 import dev.datagrok.app.table.TableDataTab
 import dev.datagrok.app.table.TableDataView
+import dev.datagrok.app.ui.KeyCap
 import dev.datagrok.app.ui.LocalIslands
+import dev.datagrok.app.ui.Shortcuts
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.Orientation
 import org.jetbrains.jewel.ui.component.Divider
@@ -63,7 +65,7 @@ internal fun WorkspaceView(app: AppState) {
                 PillTab(
                     title = tab.title,
                     isConsole = tab is ConsoleTab,
-                    dirty = tab is TableDataTab && tab.hasChanges,
+                    dirty = tab.hasUnsavedWork,
                     selected = tab == selected,
                     onClick = { workspace.selected = tab },
                     onClose = { workspace.requestClose(tab) },
@@ -132,6 +134,13 @@ private fun EmptyWorkspace(app: AppState) {
         Text("Right-click a connection → New Console to write SQL", color = info)
         app.currentConnection?.let { config ->
             OutlinedButton(onClick = { app.workspace.openConsole(config) }, Modifier.padding(top = 8.dp)) { Text("New Console for ${config.name}") }
+        }
+        Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+            KeyCap(Shortcuts.NewConsole.label)
+            Text("new console", color = info)
+            Box(Modifier.size(12.dp))
+            KeyCap(Shortcuts.ShowShortcuts.label)
+            Text("all shortcuts", color = info)
         }
     }
 }

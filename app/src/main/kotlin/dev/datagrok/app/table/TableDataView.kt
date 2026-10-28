@@ -40,13 +40,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogWindow
-import androidx.compose.ui.window.rememberDialogState
+import dev.datagrok.app.ui.AppDialog
 import dev.datagrok.app.grid.DataGrid
 import dev.datagrok.app.grid.GridActions
 import dev.datagrok.app.grid.GridCell
 import dev.datagrok.app.grid.ValuePanel
-import dev.datagrok.app.grid.isMac
+import dev.datagrok.app.ui.Shortcuts
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.Orientation
 import org.jetbrains.jewel.ui.component.DefaultButton
@@ -66,7 +65,6 @@ import org.jetbrains.jewel.ui.icon.IconKey
 import org.jetbrains.jewel.ui.icons.AllIconsKeys
 
 private val PageSizes = listOf(50, 100, 200, 500, 1000)
-private val primary = if (isMac) "⌘" else "Ctrl+"
 
 @Composable
 internal fun TableDataView(tab: TableDataTab) {
@@ -142,20 +140,20 @@ private fun Toolbar(tab: TableDataTab) {
             onSelectedItemChange = { tab.setPageSize(PageSizes[it]) },
             modifier = Modifier.width(110.dp).padding(horizontal = 4.dp),
         )
-        ToolButton(AllIconsKeys.Actions.Refresh, "Reload") { tab.reload() }
+        ToolButton(AllIconsKeys.Actions.Refresh, "Reload (${Shortcuts.Reload})") { tab.reload() }
         Separator()
 
         val editable = model?.editor != null
-        ToolButton(AllIconsKeys.General.Add, "Add row (${primary}N)", enabled = editable) {
+        ToolButton(AllIconsKeys.General.Add, "Add row (${Shortcuts.AddRow})", enabled = editable) {
             model?.let { tab.grid.reveal(GridCell(it.addRow(), 0)) }
         }
-        ToolButton(AllIconsKeys.General.Remove, "Delete selected rows (${primary}⌫)", enabled = editable && tab.grid.selection != null) {
+        ToolButton(AllIconsKeys.General.Remove, "Delete selected rows (${Shortcuts.DeleteRows})", enabled = editable && tab.grid.selection != null) {
             tab.grid.selection?.rows?.let { model?.deleteRows(it.toList()) }
             model?.let { tab.grid.clamp(it.rowCount) }
         }
         ToolButton(AllIconsKeys.Actions.Rollback, "Revert all changes", enabled = tab.hasChanges) { tab.revert() }
         ToolButton(AllIconsKeys.Actions.Preview, "Preview pending SQL", enabled = tab.hasChanges) { tab.openPreview() }
-        ToolButton(AllIconsKeys.Actions.Commit, "Submit changes (${primary}Enter)", enabled = tab.hasChanges && !tab.submitting) { tab.submit() }
+        ToolButton(AllIconsKeys.Actions.Commit, "Submit changes (${Shortcuts.Submit})", enabled = tab.hasChanges && !tab.submitting) { tab.submit() }
         if (tab.hasChanges) Text("${model?.changeCount} pending", Modifier.padding(start = 4.dp), color = JewelTheme.globalColors.text.info)
 
         Box(Modifier.weight(1f))
@@ -219,7 +217,7 @@ private fun FilterBar(tab: TableDataTab) {
                     false
                 },
                 textStyle = JewelTheme.editorTextStyle,
-                placeholder = { Text("status = 'active' AND created_at > '2026-01-01'   ⌃Space for suggestions, ⏎ to apply") },
+                placeholder = { Text("status = 'active' AND created_at > '2026-01-01'   ${Shortcuts.Completion} for suggestions, ⏎ to apply") },
                 onKeyboardAction = KeyboardActionHandler {
                     controller.close()
                     tab.applyFilter()
@@ -276,22 +274,19 @@ private fun StatusLine(tab: TableDataTab) {
 
 @Composable
 private fun DiscardDialog(tab: TableDataTab) {
-    DialogWindow(
+    AppDialog(
         onCloseRequest = { tab.pendingDiscard = null },
-        state = rememberDialogState(size = DpSize(420.dp, 170.dp)),
+        size = DpSize(420.dp, 170.dp),
         title = "Unsaved Changes",
         resizable = false,
     ) {
         Column(Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("${tab.model?.changeCount ?: 0} change(s) to ${tab.table.name} haven't been submitted.")
+            Text("${tab.model?.changeCount ?: 0} change(s) to ${tab.table.name} haven't been submitted. Submit them before continuing?")
             Spacer(Modifier.weight(1f))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
                 OutlinedButton(onClick = { tab.pendingDiscard = null }) { Text("Keep Editing") }
                 OutlinedButton(onClick = tab::confirmDiscard) { Text("Discard") }
-                DefaultButton(onClick = {
-                    tab.pendingDiscard = null
-                    tab.submit()
-                }) { Text("Submit") }
+                DefaultButton(onClick = tab::submitAndContinue) { Text("Submit") }
             }
         }
     }
@@ -299,9 +294,9 @@ private fun DiscardDialog(tab: TableDataTab) {
 
 @Composable
 private fun PreviewDialog(tab: TableDataTab, sql: String) {
-    DialogWindow(
-        onCloseRequest = { tab.preview = null },
-        state = rememberDialogState(size = DpSize(720.dp, 420.dp)),
+    AppDialog(
+        onCloseRequest = tab::closePreview,
+        size = DpSize(720.dp, 420.dp),
         title = "Pending Changes",
     ) {
         Column(Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -309,7 +304,7 @@ private fun PreviewDialog(tab: TableDataTab, sql: String) {
             TextArea(text, Modifier.weight(1f).fillMaxWidth(), readOnly = true, textStyle = JewelTheme.editorTextStyle)
             Text("Runs in one transaction; nothing is saved if any statement fails or hits an unexpected number of rows.", color = JewelTheme.globalColors.text.info)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                OutlinedButton(onClick = { tab.preview = null }) { Text("Close") }
+                OutlinedButton(onClick = tab::closePreview) { Text("Close") }
                 DefaultButton(onClick = tab::submitNow) { Text("Submit") }
             }
         }

@@ -69,7 +69,11 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
 
     fun delete(config: ConnectionConfig) {
         pendingDelete = null
-        app.workspace.closeTabsOf(config.id)
+        // Unsaved work in the connection's tabs gets a chance to be saved; cancelling keeps the connection.
+        app.workspace.requestCloseAll({ it.connectionId == config.id }) { deleteNow(config) }
+    }
+
+    private fun deleteNow(config: ConnectionConfig) {
         app.databases.disconnect(config.id)
         app.explorer.forget(config.id)
         app.scope.launch {

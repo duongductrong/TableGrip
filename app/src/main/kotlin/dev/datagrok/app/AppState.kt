@@ -8,6 +8,7 @@ import dev.datagrok.app.connections.DatabaseRegistry
 import dev.datagrok.app.completion.SchemaCache
 import dev.datagrok.app.explorer.ExplorerViewModel
 import dev.datagrok.app.export.ExportRequest
+import dev.datagrok.app.settings.SettingsPages
 import dev.datagrok.app.workspace.WorkspaceViewModel
 import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.connection.ConnectionStore
@@ -42,7 +43,11 @@ class AppState(
 
     /** Tool window shown in the left island; null hides it. */
     var leftTool by mutableStateOf<LeftTool?>(LeftTool.Explorer)
+    /** Shows the settings screen in place of the tool window and editor tabs. */
     var settingsOpen by mutableStateOf(false)
+    /** The settings page shown when the dialog opens; kept so it reopens where the user left off. */
+    var settingsPage by mutableStateOf(SettingsPages.all.first().id)
+    var shortcutsOpen by mutableStateOf(false)
     var exportRequest by mutableStateOf<ExportRequest?>(null)
 
     /** The connection the title bar shows and new consoles use; follows the selected tab. */
@@ -79,14 +84,24 @@ class AppState(
     /** Makes [config] current: reveals it in the explorer (connecting it) without changing open tabs. */
     fun pickConnection(config: ConnectionConfig) {
         currentConnectionId = config.id
+        settingsOpen = false
         workspace.tabs.lastOrNull { it.connectionId == config.id }?.let { workspace.selected = it }
         leftTool = LeftTool.Explorer
         explorer.reveal(config.id)
     }
 
+    /** From the settings screen, a tool button goes back to the workspace with that tool shown. */
     fun toggleTool(tool: LeftTool) {
-        leftTool = if (leftTool == tool) null else tool
+        leftTool = if (leftTool == tool && !settingsOpen) null else tool
+        settingsOpen = false
     }
+
+    /** Quits via [exit] once every tab with unsaved work has been saved or discarded; does nothing if the user cancels. */
+    fun requestExit(exit: () -> Unit) =
+        workspace.requestCloseAll {
+            dispose()
+            exit()
+        }
 
     fun dispose() {
         workspace.disposeAll()

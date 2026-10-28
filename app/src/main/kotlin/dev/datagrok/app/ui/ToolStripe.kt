@@ -41,16 +41,17 @@ internal fun ToolStripe(app: AppState, modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        StripeButton(AllIconsKeys.Nodes.DataSchema, "Database Explorer", selected = app.leftTool == LeftTool.Explorer) {
+        StripeButton(AllIconsKeys.Nodes.DataSchema, "Database Explorer (${Shortcuts.Explorer})", selected = !app.settingsOpen && app.leftTool == LeftTool.Explorer) {
             app.toggleTool(LeftTool.Explorer)
         }
-        StripeButton(AllIconsKeys.Vcs.History, "Query History", selected = app.leftTool == LeftTool.History) {
+        StripeButton(AllIconsKeys.Vcs.History, "Query History (${Shortcuts.History})", selected = !app.settingsOpen && app.leftTool == LeftTool.History) {
             app.toggleTool(LeftTool.History)
         }
         Divider(Orientation.Horizontal, Modifier.width(20.dp).padding(vertical = 2.dp))
         StripeButton(AllIconsKeys.General.Add, "New Connection", selected = false, onClick = app.connections::openNew)
         Spacer(Modifier.weight(1f))
-        StripeButton(AllIconsKeys.General.Settings, "Settings", selected = app.settingsOpen) { app.settingsOpen = true }
+        StripeButton(AllIconsKeys.General.Keyboard, "Keyboard Shortcuts (${Shortcuts.ShowShortcuts})", selected = app.shortcutsOpen) { app.shortcutsOpen = true }
+        StripeButton(AllIconsKeys.General.Settings, "Settings (${Shortcuts.Settings})", selected = app.settingsOpen) { app.settingsOpen = !app.settingsOpen }
     }
 }
 

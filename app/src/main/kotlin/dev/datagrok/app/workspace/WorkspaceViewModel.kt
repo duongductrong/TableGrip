@@ -15,6 +15,13 @@ interface WorkspaceTab {
     val connectionId: String
     val title: String
 
+    /** Work that closing the tab would lose: unsubmitted edits, an unsaved script or an open transaction. */
+    val hasUnsavedWork: Boolean
+        get() = false
+
+    /** Asks the user what to do with [hasUnsavedWork]; calls [close] only once they chose to go ahead and it is done. */
+    fun confirmClose(close: () -> Unit) = close()
+
     /** Cancels running work and releases connections. */
     fun dispose()
 }
@@ -24,18 +31,19 @@ class WorkspaceViewModel(private val app: AppState) {
     val tabs = mutableStateListOf<WorkspaceTab>()
     private var selectedTab by mutableStateOf<WorkspaceTab?>(null)
 
-    /** Selecting a tab also makes its connection current. */
+    /** Selecting a tab also makes its connection current, and brings the tabs back if settings were showing. */
     var selected: WorkspaceTab?
         get() = selectedTab
         set(value) {
             selectedTab = value
+            if (value != null) app.settingsOpen = false
             value?.let { app.currentConnectionId = it.connectionId }
         }
     private var consoleCount = 0
 
     fun openConsole(config: ConnectionConfig, initialSql: String = "") {
         consoleCount++
-        open(ConsoleTab(app, config, title = if (consoleCount == 1) config.name else "${config.name} ($consoleCount)", initialSql))
+        open(ConsoleTab(app, config, name = if (consoleCount == 1) config.name else "${config.name} ($consoleCount)", initialSql))
     }
 
     /** Focuses the table's tab if it is already open. */
@@ -47,17 +55,33 @@ class WorkspaceViewModel(private val app: AppState) {
         open(TableDataTab(app, config, table).also { it.reload() })
     }
 
-    /** Closes [tab], first asking to discard unsaved table edits. */
-    fun requestClose(tab: WorkspaceTab) {
-        if (tab is TableDataTab && tab.hasChanges) {
-            selected = tab
-            tab.guard { close(tab) }
-        } else if (tab is ConsoleTab && tab.hasOpenTransaction) {
-            selected = tab
-            tab.pendingClose = { close(tab) }
-        } else {
+    /** Closes [tab], first asking what to do with its unsaved work; [then] runs once it is closed. */
+    fun requestClose(tab: WorkspaceTab, then: () -> Unit = {}) {
+        if (!tab.hasUnsavedWork) {
             close(tab)
+            then()
+            return
         }
+        // The tab's own view shows the question, so bring it to front.
+        selected = tab
+        tab.confirmClose {
+            close(tab)
+            then()
+        }
+    }
+
+    /**
+     * Closes the tabs matching [filter], asking about each one with unsaved work in turn; [then] runs once all are
+     * closed. Cancelling any question stops here and keeps the remaining tabs open.
+     */
+    fun requestCloseAll(filter: (WorkspaceTab) -> Boolean = { true }, then: () -> Unit) {
+        val unsaved = tabs.firstOrNull { filter(it) && it.hasUnsavedWork }
+        if (unsaved != null) {
+            requestClose(unsaved) { requestCloseAll(filter, then) }
+            return
+        }
+        tabs.filter(filter).forEach(::close)
+        then()
     }
 
     fun close(tab: WorkspaceTab) {
@@ -68,7 +92,12 @@ class WorkspaceViewModel(private val app: AppState) {
         if (selected == tab) selected = tabs.getOrNull(index) ?: tabs.lastOrNull()
     }
 
-    fun closeTabsOf(connectionId: String) = tabs.filter { it.connectionId == connectionId }.forEach(::close)
+    /** Selects the tab [offset] places from the current one, wrapping around. */
+    fun selectRelative(offset: Int) {
+        if (tabs.isEmpty()) return
+        val index = tabs.indexOf(selected).coerceAtLeast(0)
+        selected = tabs[Math.floorMod(index + offset, tabs.size)]
+    }
 
     fun disposeAll() = tabs.forEach { it.dispose() }
 

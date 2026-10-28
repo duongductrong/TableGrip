@@ -6,9 +6,10 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.window.DialogWindow
-import androidx.compose.ui.window.rememberDialogState
+import dev.datagrok.app.ui.AppDialog
 import dev.datagrok.app.ui.EnvironmentChip
+import dev.datagrok.app.ui.ShortcutHints
+import dev.datagrok.app.ui.Shortcuts
 import org.jetbrains.jewel.ui.component.DefaultButton
 import org.jetbrains.jewel.ui.component.ListComboBox
 import org.jetbrains.jewel.ui.component.OutlinedButton
@@ -30,14 +31,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.isCtrlPressed
-import androidx.compose.ui.input.key.isMetaPressed
-import androidx.compose.ui.input.key.isShiftPressed
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.datagrok.app.AppState
@@ -63,9 +57,6 @@ import org.jetbrains.jewel.ui.component.rememberSplitLayoutState
 import org.jetbrains.jewel.ui.icons.AllIconsKeys
 import org.jetbrains.jewel.ui.theme.defaultTabStyle
 
-private val isMac = System.getProperty("os.name").startsWith("Mac")
-private val modifierKey = if (isMac) "⌘" else "Ctrl+"
-
 @Composable
 internal fun ConsoleView(app: AppState, tab: ConsoleTab) {
     val editorActions = remember(tab) { SqlEditorActions() }
@@ -82,25 +73,36 @@ internal fun ConsoleView(app: AppState, tab: ConsoleTab) {
                     completion = tab.completion,
                     completionVersion = app.schemaCache(tab.config).version,
                     actions = editorActions,
-                    onShortcut = { runShortcut(tab, it) },
+                    onShortcut = { handleConsoleShortcut(tab, it) },
                 )
             },
             second = { ResultPanel(app, tab) },
             modifier = Modifier.fillMaxSize(),
             firstPaneMinWidth = 80.dp,
             secondPaneMinWidth = 80.dp,
-            state = rememberSplitLayoutState(0.5f),
+            state = rememberSplitLayoutState(0.6f),
         )
     }
     tab.pendingConfirmation?.let { ConfirmWriteDialog(tab, it) }
     if (tab.pendingClose != null) OpenTransactionDialog(tab)
+    if (tab.pendingScriptClose != null) UnsavedScriptDialog(tab)
 }
 
-/** ⌘/Ctrl+Enter runs the current statement, adding Shift runs the whole script. */
-private fun runShortcut(tab: ConsoleTab, event: KeyEvent): Boolean {
-    val isRun = event.type == KeyEventType.KeyDown && event.key == Key.Enter && (if (isMac) event.isMetaPressed else event.isCtrlPressed)
-    if (isRun) tab.run(if (event.isShiftPressed) RunMode.All else RunMode.Current)
-    return isRun
+/**
+ * Console actions, from the editor and — via the window — from anywhere else in the tab (e.g. the result grid), so a
+ * query can be re-run or cancelled without clicking back into the editor.
+ */
+internal fun handleConsoleShortcut(tab: ConsoleTab, event: KeyEvent): Boolean {
+    fun done(block: () -> Unit) = true.also { block() }
+    return when {
+        Shortcuts.RunStatement.matches(event) -> done { tab.run(RunMode.Current) }
+        Shortcuts.RunScript.matches(event) -> done { tab.run(RunMode.All) }
+        Shortcuts.Cancel.matches(event) -> done { if (tab.running) tab.cancel() }
+        Shortcuts.Explain.matches(event) -> done { tab.explain() }
+        Shortcuts.Save.matches(event) -> done { tab.save() }
+        Shortcuts.SaveAs.matches(event) -> done { tab.save(saveAs = true) }
+        else -> false
+    }
 }
 
 @Composable
@@ -110,23 +112,26 @@ private fun Toolbar(tab: ConsoleTab, editor: SqlEditorActions) {
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Tooltip({ Text("Execute statement at caret or selection (${modifierKey}Enter)") }) {
+        Tooltip({ Text("Execute statement at caret or selection (${Shortcuts.RunStatement})") }) {
             IconButton(onClick = { tab.run(RunMode.Current) }, enabled = !tab.running) { Icon(AllIconsKeys.Actions.Execute, "Execute") }
         }
-        Tooltip({ Text("Execute script (${modifierKey}⇧Enter)") }) {
+        Tooltip({ Text("Execute script (${Shortcuts.RunScript})") }) {
             IconButton(onClick = { tab.run(RunMode.All) }, enabled = !tab.running) { Icon(AllIconsKeys.Actions.RunAll, "Execute script") }
         }
-        Tooltip({ Text("Cancel running query") }) {
+        Tooltip({ Text("Cancel running query (${Shortcuts.Cancel})") }) {
             IconButton(onClick = tab::cancel, enabled = tab.running) { Icon(AllIconsKeys.Actions.Suspend, "Cancel") }
         }
-        Tooltip({ Text("Explain plan for the statement at caret") }) {
+        Tooltip({ Text("Explain plan for the statement at caret (${Shortcuts.Explain})") }) {
             IconButton(onClick = tab::explain, enabled = !tab.running) { Icon(AllIconsKeys.Actions.Preview, "Explain") }
         }
-        Tooltip({ Text("Reformat SQL (${if (isMac) "⌥⌘L" else "Ctrl+Alt+L"})") }) {
+        Tooltip({ Text("Reformat SQL (${Shortcuts.Format})") }) {
             IconButton(onClick = { editor.format() }) { Icon(AllIconsKeys.Actions.ShowCode, "Format") }
         }
-        Tooltip({ Text("Find (${modifierKey}F) · Replace (${modifierKey}R)") }) {
+        Tooltip({ Text("Find (${Shortcuts.Find}) · Replace (${Shortcuts.Replace})") }) {
             IconButton(onClick = { editor.openFind() }) { Icon(AllIconsKeys.Actions.Search, "Find") }
+        }
+        Tooltip({ Text("Save script (${Shortcuts.Save}) · Save as (${Shortcuts.SaveAs})") }) {
+            IconButton(onClick = { tab.save() }) { Icon(AllIconsKeys.Actions.MenuSaveall, "Save") }
         }
         Divider(Orientation.Vertical, Modifier.height(18.dp).padding(horizontal = 6.dp))
         ListComboBox(
@@ -157,9 +162,9 @@ private val PendingColor = Color(0xFFD9822B)
 
 @Composable
 private fun ConfirmWriteDialog(tab: ConsoleTab, confirmation: WriteConfirmation) {
-    DialogWindow(
+    AppDialog(
         onCloseRequest = { tab.pendingConfirmation = null },
-        state = rememberDialogState(size = DpSize(620.dp, 380.dp)),
+        size = DpSize(620.dp, 380.dp),
         title = "Run Statements?",
     ) {
         Column(
@@ -184,9 +189,9 @@ private fun ConfirmWriteDialog(tab: ConsoleTab, confirmation: WriteConfirmation)
 
 @Composable
 private fun OpenTransactionDialog(tab: ConsoleTab) {
-    DialogWindow(
+    AppDialog(
         onCloseRequest = { tab.pendingClose = null },
-        state = rememberDialogState(size = DpSize(460.dp, 180.dp)),
+        size = DpSize(460.dp, 180.dp),
         title = "Uncommitted Transaction",
         resizable = false,
     ) {
@@ -200,6 +205,29 @@ private fun OpenTransactionDialog(tab: ConsoleTab) {
                 OutlinedButton(onClick = { tab.pendingClose = null }) { Text("Keep Open") }
                 OutlinedButton(onClick = { tab.closeAfter(commit = false) }) { Text("Roll Back & Close") }
                 DefaultButton(onClick = { tab.closeAfter(commit = true) }) { Text("Commit & Close") }
+            }
+        }
+    }
+}
+
+@Composable
+private fun UnsavedScriptDialog(tab: ConsoleTab) {
+    AppDialog(
+        onCloseRequest = { tab.pendingScriptClose = null },
+        size = DpSize(460.dp, 170.dp),
+        title = "Unsaved Script",
+        resizable = false,
+    ) {
+        Column(
+            Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text("${tab.title} has unsaved changes. Save the script before closing?")
+            Box(Modifier.weight(1f))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
+                OutlinedButton(onClick = { tab.pendingScriptClose = null }) { Text("Cancel") }
+                OutlinedButton(onClick = { tab.closeAfterScript(save = false) }) { Text("Don't Save") }
+                DefaultButton(onClick = { tab.closeAfterScript(save = true) }) { Text(if (tab.file == null) "Save…" else "Save") }
             }
         }
     }
@@ -261,9 +289,14 @@ private fun ResultPanel(app: AppState, tab: ConsoleTab) {
 @Composable
 private fun OutputLog(tab: ConsoleTab) {
     if (tab.output.isEmpty()) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Run a query with ${modifierKey}Enter", color = JewelTheme.globalColors.text.info)
-        }
+        ShortcutHints(
+            listOf(
+                "Execute statement" to Shortcuts.RunStatement,
+                "Execute script" to Shortcuts.RunScript,
+                "Code completion" to Shortcuts.Completion,
+                "All shortcuts" to Shortcuts.ShowShortcuts,
+            )
+        )
         return
     }
     val listState = rememberLazyListState()

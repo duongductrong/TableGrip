@@ -13,6 +13,7 @@ import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.test.withKeyDown
@@ -117,4 +118,35 @@ class SqlEditorTest {
         assertEquals("SELECT\n    id,\n    name\nFROM users\nWHERE id = 1", state.text.toString())
         System.getProperty("snapshot.dir")?.let { snapshot(File(it, "editor-formatted.png")) }
     }
+
+    @Test
+    fun `gutter stays put on the frame right after an edit`() = runComposeUiTest {
+        val state = editorState("SELECT 1;\n\nSELECT 2")
+        setContent { DatagrokTheme(isDark = true) { Box(Modifier.size(600.dp, 300.dp)) { SqlEditor(state, SqlSyntax.PostgreSQL, 13) } } }
+        editor().performClick()
+        waitForIdle()
+        // The line-number column only: its pixels must not move while typing on the same line.
+        fun gutter() = onAllNodes(isRoot())[0].captureToImage().toAwtImage().let { it.getSubimage(0, 0, 30, it.height) }
+        val before = gutter()
+        mainClock.autoAdvance = false
+        editor().performTextInput("x")
+        mainClock.advanceTimeByFrame()
+        val sameFrame = gutter()
+        mainClock.autoAdvance = true
+        waitForIdle()
+        assertEquals("SELECT 1;\n\nSELECT 2x", state.text.toString())
+        assertTrue(samePixels(before, sameFrame), "gutter shifted on the frame after typing")
+        assertTrue(samePixels(before, gutter()), "gutter shifted after typing")
+    }
+
+    @Test
+    fun `line index counts newlines before the offset`() {
+        assertEquals(0, lineIndexAt("abc", 2))
+        assertEquals(1, lineIndexAt("a\nb", 2))
+        assertEquals(2, lineIndexAt("a\n\n", 3))
+        assertEquals(2, lineIndexAt("a\n\n", 99))
+    }
+
+    private fun samePixels(a: BufferedImage, b: BufferedImage): Boolean =
+        a.width == b.width && a.height == b.height && (0 until a.width).all { x -> (0 until a.height).all { y -> a.getRGB(x, y) == b.getRGB(x, y) } }
 }

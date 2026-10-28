@@ -28,6 +28,9 @@ import org.jetbrains.jewel.intui.window.decoratedWindow
 import org.jetbrains.jewel.intui.window.styling.dark
 import org.jetbrains.jewel.intui.window.styling.lightWithLightHeader
 import org.jetbrains.jewel.ui.ComponentStyling
+import org.jetbrains.jewel.ui.component.styling.DividerMetrics
+import org.jetbrains.jewel.ui.component.styling.DividerStyle
+import org.jetbrains.jewel.ui.component.styling.LocalDividerStyle
 import org.jetbrains.jewel.window.styling.TitleBarColors
 import org.jetbrains.jewel.window.styling.TitleBarStyle
 
@@ -39,6 +42,8 @@ data class IslandsPalette(
     val frame: Color,
     val island: Color,
     val islandBorder: Color,
+    /** Separators inside an island; Int UI's default dark divider is the island colour itself, i.e. invisible. */
+    val divider: Color,
     val accent: Color,
     val stripeHover: Color,
     val chipHover: Color,
@@ -49,6 +54,7 @@ private val DarkIslands =
         frame = Color(0xFF27292E),
         island = Color(0xFF1E1F22),
         islandBorder = Color(0x14FFFFFF),
+        divider = Color(0xFF393B40),
         accent = Color(0xFF3574F0),
         stripeHover = Color(0x14FFFFFF),
         chipHover = Color(0x1AFFFFFF),
@@ -59,6 +65,7 @@ private val LightIslands =
         frame = Color(0xFFE9EBF0),
         island = Color(0xFFFFFFFF),
         islandBorder = Color(0x14000000),
+        divider = Color(0xFFE4E5EA),
         accent = Color(0xFF3574F0),
         stripeHover = Color(0x14000000),
         chipHover = Color(0x12000000),
@@ -101,7 +108,11 @@ fun DatagrokTheme(isDark: Boolean, content: @Composable () -> Unit) {
                     )
             )
         }
-    IntUiTheme(theme = theme, styling = ComponentStyling.default().decoratedWindow(titleBarStyle = titleBarStyle)) {
+    val styling =
+        ComponentStyling.default()
+            .decoratedWindow(titleBarStyle = titleBarStyle)
+            .provide(LocalDividerStyle provides DividerStyle(islands.divider, DividerMetrics.defaults()))
+    IntUiTheme(theme = theme, styling = styling) {
         CompositionLocalProvider(LocalIslands provides islands, content = content)
     }
 }

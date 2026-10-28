@@ -26,8 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogWindow
-import androidx.compose.ui.window.rememberDialogState
+import dev.datagrok.app.ui.AppDialog
 import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.connection.ConnectionString
 import dev.datagrok.core.connection.DatabaseType
@@ -196,9 +195,9 @@ private enum class DialogTab { General, Ssh, Options }
 
 @Composable
 internal fun ConnectionDialog(state: ConnectionsViewModel, request: ConnectionDialogRequest) {
-    DialogWindow(
+    AppDialog(
         onCloseRequest = state::closeDialog,
-        state = rememberDialogState(size = DpSize(640.dp, 600.dp)),
+        size = DpSize(640.dp, 600.dp),
         title = if (request.existing == null) "New Connection" else "Edit Connection",
         resizable = false,
     ) {
@@ -483,9 +482,9 @@ private fun FormRow(label: String, content: @Composable () -> Unit) {
 /** Asks before deleting a connection profile and its stored password. */
 @Composable
 internal fun DeleteConnectionDialog(state: ConnectionsViewModel, config: ConnectionConfig) {
-    DialogWindow(
+    AppDialog(
         onCloseRequest = { state.pendingDelete = null },
-        state = rememberDialogState(size = DpSize(420.dp, 160.dp)),
+        size = DpSize(420.dp, 160.dp),
         title = "Delete Connection",
         resizable = false,
     ) {

@@ -71,6 +71,12 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
     val hasChanges: Boolean
         get() = model?.hasChanges == true
 
+    override val hasUnsavedWork: Boolean
+        get() = hasChanges
+
+    /** Navigation to resume once the pending edits are saved, when the user chose to submit them first. */
+    private var afterSubmit: (() -> Unit)? = null
+
     private var loadJob: Job? = null
 
     fun reload() = guard { load() }
@@ -176,6 +182,18 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
         if (config.confirmWrites && preview == null) openPreview() else submitNow()
     }
 
+    /** Answers [pendingDiscard] with "submit": saves the edits, then carries on with the navigation that asked. */
+    fun submitAndContinue() {
+        afterSubmit = pendingDiscard ?: return
+        pendingDiscard = null
+        submit()
+    }
+
+    fun closePreview() {
+        preview = null
+        afterSubmit = null
+    }
+
     fun submitNow() {
         val model = model?.takeIf { it.hasChanges } ?: return
         preview = null
@@ -187,11 +205,16 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
                 app.status = "Saved ${statements.size} change(s) to ${table.name} ($affected row(s))"
                 error = null
                 totalRows = null
-                load()
+                // The pending navigation reloads (or closes the tab) itself.
+                val next = afterSubmit
+                afterSubmit = null
+                if (next != null) next() else load()
             } catch (e: CancellationException) {
+                afterSubmit = null
                 throw e
             } catch (e: Exception) {
-                // Keep the edits so the user can fix them and retry.
+                // Keep the edits so the user can fix them and retry; the navigation that asked is abandoned.
+                afterSubmit = null
                 error = e.message ?: e.toString()
             } finally {
                 submitting = false
@@ -215,6 +238,8 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
         model?.revertAll()
         action()
     }
+
+    override fun confirmClose(close: () -> Unit) = guard(close)
 
     override fun dispose() {
         loadJob?.cancel()

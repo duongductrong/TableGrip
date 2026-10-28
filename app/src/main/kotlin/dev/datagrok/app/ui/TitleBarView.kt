@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.sp
 import dev.datagrok.app.AppState
 import dev.datagrok.app.console.ConsoleTab
 import dev.datagrok.app.console.RunMode
-import dev.datagrok.app.grid.isMac
 import dev.datagrok.core.connection.ConnectionConfig
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.component.Dropdown
@@ -48,25 +47,25 @@ internal fun DecoratedWindowScope.TitleBarView(app: AppState) {
             ConnectionWidget(app, current)
         }
 
-        Text(app.workspace.selected?.title ?: title, color = JewelTheme.globalColors.text.info)
+        // The centre names the screen in front: Settings while it is open, otherwise the selected tab.
+        Text(if (app.settingsOpen) "Settings" else app.workspace.selected?.title ?: title, color = JewelTheme.globalColors.text.info)
 
         Row(Modifier.align(Alignment.End).padding(end = 6.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
             val console = app.workspace.selected as? ConsoleTab
-            val primary = if (isMac) "⌘" else "Ctrl+"
-            HeaderButton("new_console", AllIconsKeys.Nodes.Console, "New console", enabled = current != null) {
+            HeaderButton("new_console", AllIconsKeys.Nodes.Console, "New console (${Shortcuts.NewConsole})", enabled = current != null) {
                 current?.let(app.workspace::openConsole)
             }
             if (console?.running == true) {
-                HeaderButton("stop", AllIconsKeys.Actions.Suspend, "Cancel query") { console.cancel() }
+                HeaderButton("stop", AllIconsKeys.Actions.Suspend, "Cancel query (${Shortcuts.Cancel})") { console.cancel() }
             } else {
-                HeaderButton("run", AllIconsKeys.Actions.Execute, "Execute statement (${primary}Enter)", enabled = console != null) {
+                HeaderButton("run", AllIconsKeys.Actions.Execute, "Execute statement (${Shortcuts.RunStatement})", enabled = console != null) {
                     console?.run(RunMode.Current)
                 }
             }
             HeaderButton("theme", if (app.theme.isDark()) AllIconsKeys.Actions.Lightning else AllIconsKeys.Actions.ProfileBlue, "Toggle light/dark") {
                 app.toggleTheme()
             }
-            HeaderButton("settings", AllIconsKeys.General.Settings, "Settings") { app.settingsOpen = true }
+            HeaderButton("settings", AllIconsKeys.General.Settings, "Settings (${Shortcuts.Settings})") { app.settingsOpen = !app.settingsOpen }
         }
     }
 }
