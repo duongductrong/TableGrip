@@ -10,6 +10,7 @@ import dev.datagrok.core.edit.ChangeSql
 import dev.datagrok.core.edit.RowChange
 import dev.datagrok.core.export.CopyFormat
 import dev.datagrok.core.export.ResultWriter
+import dev.datagrok.core.filter.SqlFilter
 import dev.datagrok.core.driver.QueryResult
 import dev.datagrok.core.driver.ReadOnlyViolationException
 import dev.datagrok.core.metadata.ConstraintKind
@@ -109,9 +110,9 @@ class DatabaseTest {
         assertEquals(false, page.truncated)
         assertEquals(true, database.fetchPage(users, null, byName, limit = 1, offset = 0).truncated)
 
-        val filtered = database.fetchPage(users, filter = "name LIKE 'a%'", orderBy = emptyList(), limit = 10, offset = 0)
+        val filtered = database.fetchPage(users, filter = SqlFilter.raw("name LIKE 'a%'"), orderBy = emptyList(), limit = 10, offset = 0)
         assertEquals(listOf("alice"), filtered.rows.map { it[1] })
-        assertEquals(2L, database.countRows(users, filter = "id > 1"))
+        assertEquals(2L, database.countRows(users, filter = SqlFilter.raw("id > 1")))
     }
 
     @Test
@@ -200,7 +201,7 @@ class DatabaseTest {
         val count =
             database.exportTable(
                 users,
-                filter = "id > 1",
+                filter = SqlFilter.raw("id > 1"),
                 orderBy = listOf(SortColumn("name", SortDirection.Asc)),
                 writer = { columns -> ResultWriter(CopyFormat.Csv, columns, out) },
                 onProgress = { progress = it },
@@ -255,5 +256,22 @@ class DatabaseTest {
             val result = async { session.execute("SELECT 42") }.await() as QueryResult.Rows
             assertEquals("42", result.rows.single().single())
         }
+    }
+
+    @Test
+    fun `cancelled table loads give their pooled connection back`() = runBlocking {
+        seed()
+        database.openSession().use { session ->
+            session.execute("CREATE VIEW endless AS WITH RECURSIVE c(x) AS (SELECT 1 UNION ALL SELECT x + 1 FROM c) SELECT count(*) AS n FROM c")
+        }
+        val endless = TableRef(database.namespaces().single(), "endless")
+        // More cancelled loads than the pool has connections, like paging or typing in the filter faster than queries return.
+        repeat(6) {
+            val job = launch(Dispatchers.Default) { database.fetchPage(endless, null, emptyList(), 10, 0) }
+            delay(200)
+            withTimeout(5_000) { job.cancelAndJoin() }
+        }
+        val users = TableRef(database.namespaces().single(), "users")
+        assertEquals(3, withTimeout(5_000) { database.fetchPage(users, null, emptyList(), 10, 0) }.rows.size)
     }
 }

@@ -2,6 +2,7 @@ package dev.datagrok.core.driver
 
 import dev.datagrok.core.export.ResultWriter
 import java.sql.Connection
+import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Statement
@@ -17,8 +18,15 @@ import kotlinx.coroutines.withContext
  * Runs [block] with a fresh statement on the IO dispatcher. Cancelling the calling coroutine cancels the statement on the
  * server, then waits for the driver to return before closing it.
  */
-internal suspend fun <T> Connection.withStatement(timeoutSeconds: Int, block: (Statement) -> T): T = coroutineScope {
-    val statement = withContext(Dispatchers.IO) { createStatement().apply { queryTimeout = timeoutSeconds } }
+internal suspend fun <T> Connection.withStatement(timeoutSeconds: Int, block: (Statement) -> T): T =
+    runStatement({ createStatement() }, timeoutSeconds, block)
+
+/** [withStatement] for a prepared [sql] statement. */
+internal suspend fun <T> Connection.withPrepared(sql: String, timeoutSeconds: Int, block: (PreparedStatement) -> T): T =
+    runStatement({ prepareStatement(sql) }, timeoutSeconds, block)
+
+private suspend fun <S : Statement, T> Connection.runStatement(create: Connection.() -> S, timeoutSeconds: Int, block: (S) -> T): T = coroutineScope {
+    val statement = withContext(Dispatchers.IO) { create().apply { queryTimeout = timeoutSeconds } }
     try {
         val cancelled = AtomicBoolean(false)
         val work = async(Dispatchers.IO) {

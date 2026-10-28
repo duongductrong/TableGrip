@@ -20,7 +20,11 @@ internal class Introspector(private val dialect: SqlDialect) {
             }
             .sortedBy { it.ref.name.lowercase() }
 
-    fun details(meta: DatabaseMetaData, table: TableRef): TableDetails {
+    /**
+     * Columns and primary key, plus indexes and foreign keys when [keysAndIndexes] (each is another round trip, and
+     * MariaDB's foreign keys one per referenced table).
+     */
+    fun details(meta: DatabaseMetaData, table: TableRef, keysAndIndexes: Boolean = true): TableDetails {
         val catalog = table.namespace.catalog
         val schema = table.namespace.schema
         val primaryKey = meta.getPrimaryKeys(catalog, schema, table.name).collect { getString("COLUMN_NAME") }.toSet()
@@ -38,10 +42,12 @@ internal class Introspector(private val dialect: SqlDialect) {
                             defaultValue = getString("COLUMN_DEF"),
                             autoIncrement = runCatching { getString("IS_AUTOINCREMENT") == "YES" }.getOrDefault(false),
                             primaryKey = name in primaryKey,
+                            jdbcType = getInt("DATA_TYPE"),
                         )
                 }
                 .sortedBy { it.first }
                 .map { it.second }
+        if (!keysAndIndexes) return TableDetails(table, columns, emptyList(), emptyList())
 
         val indexes =
             meta.getIndexInfo(catalog, schema, table.name, false, true)
@@ -95,6 +101,7 @@ internal class Introspector(private val dialect: SqlDialect) {
                         defaultValue = getString("COLUMN_DEF"),
                         autoIncrement = runCatching { getString("IS_AUTOINCREMENT") == "YES" }.getOrDefault(false),
                         primaryKey = false,
+                        jdbcType = getInt("DATA_TYPE"),
                     ),
                 )
             }

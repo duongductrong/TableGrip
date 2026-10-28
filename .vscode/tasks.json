@@ -1,0 +1,23 @@
+{
+  // ⇧⌘B (Ctrl+Shift+B) runs the default build task: build and launch the app.
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build & Launch",
+      "type": "shell",
+      "command": "${workspaceFolder}/scripts/run.sh",
+      "windows": { "command": "${workspaceFolder}\\scripts\\run.cmd" },
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Build & Launch (fresh profile)",
+      "type": "shell",
+      "command": "${workspaceFolder}/scripts/run.sh --fresh",
+      "group": "build",
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "problemMatcher": []
+    }
+  ]
+}

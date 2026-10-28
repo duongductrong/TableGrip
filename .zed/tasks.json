@@ -1,0 +1,22 @@
+// Zed has no project-level keymaps. Bind ⇧⌘B to the first task in ~/.config/zed/keymap.json:
+//   { "context": "Workspace", "bindings": { "cmd-shift-b": ["task::Spawn", { "task_name": "Build & Launch" }] } }
+[
+  {
+    "label": "Build & Launch",
+    "command": "./scripts/run.sh",
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "save": "all",
+  },
+  {
+    "label": "Build & Launch (fresh profile)",
+    "command": "./scripts/run.sh --fresh",
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "save": "all",
+  },
+]

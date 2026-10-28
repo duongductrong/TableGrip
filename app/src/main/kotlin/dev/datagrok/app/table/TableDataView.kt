@@ -148,7 +148,7 @@ private fun ViewSwitch(tab: TableDataTab) {
 }
 
 @Composable
-private fun ViewChip(label: String, selected: Boolean, onClick: () -> Unit) {
+internal fun ViewChip(label: String, selected: Boolean, onClick: () -> Unit) {
     val islands = LocalIslands.current
     val shape = RoundedCornerShape(6.dp)
     Text(
@@ -239,6 +239,11 @@ private fun Separator() {
 
 @Composable
 private fun FilterBar(tab: TableDataTab) {
+    if (tab.filterMode == FilterMode.Builder) BuilderFilterBar(tab) else SqlFilterBar(tab)
+}
+
+@Composable
+private fun SqlFilterBar(tab: TableDataTab) {
     val scope = rememberCoroutineScope()
     val controller = remember(tab) { CompletionController(scope) }
     var trigger by remember { mutableStateOf(false) }
@@ -259,6 +264,8 @@ private fun FilterBar(tab: TableDataTab) {
 
     Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         Icon(AllIconsKeys.General.Filter, null)
+        Spacer(Modifier.width(6.dp))
+        FilterModeSwitch(tab)
         Text("WHERE", Modifier.padding(horizontal = 8.dp), color = JewelTheme.globalColors.text.info, style = JewelTheme.editorTextStyle)
         Box(Modifier.weight(1f).onSizeChanged { fieldWidth = it.width }) {
             TextField(
@@ -291,13 +298,8 @@ private fun FilterBar(tab: TableDataTab) {
                 controller.accept(tab.filter, it)
             }
         }
-        if (tab.appliedFilter != null) {
-            Spacer(Modifier.width(6.dp))
-            Link("Clear", onClick = {
-                tab.filter.edit { replace(0, length, "") }
-                tab.applyFilter()
-            })
-        }
+        Spacer(Modifier.width(6.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) { FilterActions(tab) }
     }
 }
 

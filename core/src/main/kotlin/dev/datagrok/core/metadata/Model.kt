@@ -1,5 +1,7 @@
 package dev.datagrok.core.metadata
 
+import java.sql.Types
+
 /** A schema (PostgreSQL), a database (MySQL), or the single `main` database (SQLite). */
 data class Namespace(val catalog: String?, val schema: String?) {
     val displayName: String
@@ -18,6 +20,8 @@ data class ColumnInfo(
     val defaultValue: String?,
     val autoIncrement: Boolean,
     val primaryKey: Boolean,
+    /** A [java.sql.Types] constant, as the driver reports it. */
+    val jdbcType: Int = Types.OTHER,
 )
 
 data class IndexInfo(val name: String, val columns: List<String>, val unique: Boolean)

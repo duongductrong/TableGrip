@@ -14,11 +14,18 @@ import dev.datagrok.core.dialect.SortColumn
 import dev.datagrok.core.dialect.SortDirection
 import dev.datagrok.core.dialect.SqlDialect
 import dev.datagrok.core.edit.ChangeSql
+import dev.datagrok.core.filter.CompiledFilter
+import dev.datagrok.core.filter.FilterColumn
+import dev.datagrok.core.filter.FilterCompiler
+import dev.datagrok.core.filter.FilterGroup
+import dev.datagrok.core.filter.SqlFilter
+import dev.datagrok.core.filter.ValueKind
 import dev.datagrok.core.metadata.TableDetails
 import dev.datagrok.core.metadata.TableRef
 import dev.datagrok.core.metadata.TableStructure
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 enum class TableView { Data, Structure }
@@ -46,10 +53,52 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
     val schemaVersion: Int
         get() = app.schemaCache(config).version
 
+    /** Whether the filter bar shows the condition builder or a SQL WHERE field; remembered across tabs. */
+    var filterMode by mutableStateOf(runCatching { FilterMode.valueOf(app.settings.filterMode) }.getOrDefault(FilterMode.Builder))
+        private set
+    /** Structured conditions, applied on Enter or Apply. */
+    val builder = FilterBuilderState()
     /** Raw SQL condition typed by the user, applied on Enter. */
     val filter = TextFieldState()
-    var appliedFilter by mutableStateOf<String?>(null)
+
+    /**
+     * The filter the rows reflect: the builder's tree as applied, or applied SQL. The tree is compiled on every load, so
+     * relative dates like `today` stay current on reload.
+     */
+    var appliedTree by mutableStateOf<FilterGroup?>(null)
         private set
+    var appliedSql by mutableStateOf<String?>(null)
+        private set
+    /** A builder row to focus once it's composed, e.g. a condition just added. */
+    var focusFilterNode by mutableStateOf<Long?>(null)
+    /** Problems are shown once the user tries to apply; until then only values already typed are checked. */
+    var showFilterIssues by mutableStateOf(false)
+        private set
+
+    val hasAppliedFilter: Boolean
+        get() = appliedSql != null || appliedTree?.children?.isNotEmpty() == true
+
+    /** Columns the builder offers, typed from the table's metadata (or the loaded rows when that's unavailable). */
+    val filterColumns: List<FilterColumn>
+        get() =
+            details?.columns?.map { FilterColumn(it.name, it.typeName, ValueKind.of(it.typeName, it.jdbcType, it.size)) }
+                ?: model?.columns?.map { FilterColumn(it.name, it.typeName, ValueKind.of(it.typeName, it.jdbcType)) }
+                ?: emptyList()
+
+    /** The builder's current conditions, compiled; read from composition, so the bar stays in sync while typing. */
+    fun compileDraft(): CompiledFilter = FilterCompiler(dialect, filterColumns).compile(builder.toNode())
+
+    /** The bar's content differs from what the rows show. */
+    val isFilterDirty: Boolean
+        get() =
+            when (filterMode) {
+                FilterMode.Builder -> builder.toNode() != (appliedTree ?: FilterGroup(builder.root.id)) || appliedSql != null
+                FilterMode.Sql -> {
+                    val text = filter.text.toString().trim().ifEmpty { null }
+                    // SQL carried over from the builder shows the same rows as the builder's applied conditions.
+                    text != appliedSql && (appliedSql != null || text != appliedTree?.let { FilterCompiler(dialect, filterColumns).compile(it).filter?.preview })
+                }
+            }
     var sort by mutableStateOf<List<SortColumn>>(emptyList())
         private set
     var page by mutableStateOf(0)
@@ -144,13 +193,17 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
 
     private fun load() {
         loadJob?.cancel()
-        loadJob = app.scope.launch {
+        val job = app.scope.launch {
             loading = true
             try {
                 val database = app.databases.database(config)
-                if (details == null) details = runCatching { database.tableDetails(table) }.getOrNull()
+                // Columns and key load alongside the first page instead of before it, a round trip apart on a remote
+                // server; only a builder filter needs the column types before the rows can be queried.
+                val columns = if (details == null) async { runCatching { database.tableColumns(table) }.getOrNull() } else null
+                if (columns != null && appliedTree != null) details = columns.await()
                 val result =
-                    database.fetchPage(table, appliedFilter, sort, pageSize, page.toLong() * pageSize, app.settings.queryTimeoutSeconds)
+                    database.fetchPage(table, resolveFilter(), sort, pageSize, page.toLong() * pageSize, app.settings.queryTimeoutSeconds)
+                columns?.let { details = it.await() }
                 hasNextPage = result.truncated
                 model = TableEditModel(result, details?.primaryKey.orEmpty(), readOnly = config.readOnly)
                 error = null
@@ -159,26 +212,100 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
             } catch (e: Exception) {
                 error = e.message ?: e.toString()
             } finally {
-                loading = false
+                // A load replaced by a newer one leaves the indicator to it.
+                if (loadJob == coroutineContext[Job]) loading = false
+            }
+        }
+        loadJob = job
+    }
+
+    /** The applied filter as SQL; fails with the builder's first problem if the table changed under it. */
+    private fun resolveFilter(): SqlFilter? {
+        appliedSql?.let { return SqlFilter.raw(it) }
+        val tree = appliedTree ?: return null
+        val compiled = FilterCompiler(dialect, filterColumns).compile(tree)
+        return compiled.filter ?: compiled.issues.values.firstOrNull()?.let { throw IllegalStateException("Filter: $it") }
+    }
+
+    /** Applies the bar's content, unless the builder has conditions it can't run; those get flagged instead. */
+    fun applyFilter() {
+        if (filterMode == FilterMode.Builder) {
+            val compiled = compileDraft()
+            if (!compiled.isValid) {
+                showFilterIssues = true
+                return
+            }
+            guard {
+                showFilterIssues = false
+                appliedTree = builder.toNode()
+                appliedSql = null
+                reloadFiltered()
+            }
+        } else {
+            guard {
+                appliedSql = filter.text.toString().trim().ifEmpty { null }
+                appliedTree = null
+                reloadFiltered()
             }
         }
     }
 
-    fun applyFilter() = guard {
-        appliedFilter = filter.text.toString().trim().ifEmpty { null }
+    fun clearFilter() = guard {
+        builder.clear()
+        filter.setTextAndPlaceCursorAtEnd("")
+        showFilterIssues = false
+        appliedTree = null
+        appliedSql = null
+        reloadFiltered()
+    }
+
+    private fun reloadFiltered() {
         page = 0
         totalRows = null
         load()
     }
 
+    /**
+     * Switches the bar between builder and SQL without losing work: the SQL field starts from the builder's conditions,
+     * and SQL typed there comes back to the builder as a SQL condition.
+     */
+    fun switchFilterMode(mode: FilterMode) {
+        if (mode == filterMode) return
+        if (mode == FilterMode.Sql) {
+            val sql = compileDraft().filter?.preview
+            if (filter.text.isBlank() && sql != null) filter.setTextAndPlaceCursorAtEnd(sql)
+        } else {
+            val sql = filter.text.toString().trim()
+            if (sql.isNotEmpty() && !builder.hasRaw(sql) && sql != compileDraft().filter?.preview) builder.addRaw(builder.root, sql)
+        }
+        filterMode = mode
+        app.updateSettings { it.copy(filterMode = mode.name) }
+    }
+
     /** Adds `column = value` (or `IS NULL`) to the filter, like DataGrip's "Filter by this value". */
     fun filterByValue(column: String, value: String?) {
+        if (filterMode == FilterMode.Builder) {
+            val target = filterColumns.firstOrNull { it.name == column } ?: return
+            builder.addFromValue(target, value)
+            applyFilter()
+            return
+        }
         val numeric = model?.columns?.firstOrNull { it.name == column }?.isNumeric == true
         val condition = dialect.quoteIdentifier(column) + if (value == null) " IS NULL" else " = " + dialect.literal(value, numeric)
         val current = filter.text.toString().trim()
         filter.setTextAndPlaceCursorAtEnd(if (current.isEmpty()) condition else "($current) AND $condition")
         applyFilter()
     }
+
+    /** Distinct values of [column] starting with [prefix], for the builder's value suggestions; empty on any failure. */
+    suspend fun suggestValues(column: String, prefix: String): List<String> =
+        try {
+            app.databases.database(config).sampleValues(table, column, prefix, limit = 20)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            emptyList()
+        }
 
     fun setSort(column: String, direction: SortDirection?, additive: Boolean) = guard {
         val others = if (additive) sort.filterNot { it.column == column } else emptyList()
@@ -210,7 +337,7 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
     /** Counting can be slow on large tables, so it only runs on request. */
     fun countRows() {
         app.scope.launch {
-            runCatching { app.databases.database(config).countRows(table, appliedFilter, app.settings.queryTimeoutSeconds) }
+            runCatching { app.databases.database(config).countRows(table, resolveFilter(), app.settings.queryTimeoutSeconds) }
                 .onSuccess { totalRows = it }
                 .onFailure { error = it.message }
         }
@@ -218,7 +345,7 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
 
     fun export() {
         val model = model ?: return
-        val filter = appliedFilter
+        val filter = runCatching { resolveFilter() }.getOrElse { error = it.message; return }
         val order = sort
         app.exportRequest =
             ExportRequest(

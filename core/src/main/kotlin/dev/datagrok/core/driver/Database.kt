@@ -11,6 +11,7 @@ import dev.datagrok.core.connection.SshTunnel
 import dev.datagrok.core.dialect.SortColumn
 import dev.datagrok.core.edit.ChangeStatement
 import dev.datagrok.core.export.ResultWriter
+import dev.datagrok.core.filter.SqlFilter
 import dev.datagrok.core.dialect.SqlDialect
 import dev.datagrok.core.metadata.ColumnInfo
 import dev.datagrok.core.metadata.Introspector
@@ -23,8 +24,11 @@ import dev.datagrok.core.metadata.TableRelation
 import dev.datagrok.core.metadata.TableStructure
 import dev.datagrok.core.sql.SqlClassifier
 import java.sql.Connection
+import java.sql.ResultSet
 import java.sql.SQLException
+import java.sql.Statement
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 
 /**
@@ -46,6 +50,9 @@ class Database private constructor(
     suspend fun tables(namespace: Namespace): List<TableInfo> = withMetadata { introspector.tables(it.metaData, namespace) }
 
     suspend fun tableDetails(table: TableRef): TableDetails = withMetadata { introspector.details(it.metaData, table) }
+
+    /** Just the columns and primary key, which is all a table viewer needs: two round trips instead of four or more. */
+    suspend fun tableColumns(table: TableRef): TableDetails = withMetadata { introspector.details(it.metaData, table, keysAndIndexes = false) }
 
     /** Columns, keys and indexes plus constraints, triggers and DDL, for the structure view. */
     suspend fun tableStructure(table: TableRef): TableStructure =
@@ -73,16 +80,20 @@ class Database private constructor(
 
     suspend fun fetchPage(
         table: TableRef,
-        filter: String?,
+        filter: SqlFilter?,
         orderBy: List<SortColumn>,
         limit: Int,
         offset: Long,
         timeoutSeconds: Int = 0,
     ): QueryResult.Rows {
         // One extra row tells whether another page exists; it comes back as `truncated`.
-        val sql = dialect.selectPage(table, filter, orderBy, limit + 1, offset)
+        val sql = dialect.selectPage(table, filter?.sql, orderBy, limit + 1, offset)
+        val start = System.nanoTime()
         return withPooled { connection ->
-            connection.withStatement(timeoutSeconds) { it.executeForResult(sql, limit) as QueryResult.Rows }
+            // The SQL already has a LIMIT; Statement.maxRows would cost Connector/J two `SET sql_select_limit` round trips.
+            connection.query(sql, filter, timeoutSeconds) { rs ->
+                rs.readRows(limit) { (System.nanoTime() - start) / 1_000_000 }
+            }
         }
     }
 
@@ -92,36 +103,63 @@ class Database private constructor(
      */
     suspend fun exportTable(
         table: TableRef,
-        filter: String?,
+        filter: SqlFilter?,
         orderBy: List<SortColumn>,
         writer: (List<ResultColumn>) -> ResultWriter,
         onProgress: (Long) -> Unit = {},
     ): Long {
-        val sql = dialect.selectAll(table, filter, orderBy)
+        val sql = dialect.selectAll(table, filter?.sql, orderBy)
         return withPooled { connection ->
             // PostgreSQL only streams with a cursor inside a transaction; everyone else ignores this.
             val autoCommit = withContext(Dispatchers.IO) { connection.autoCommit.also { connection.autoCommit = false } }
             try {
-                connection.withStatement(timeoutSeconds = 0) { statement ->
+                connection.query(
+                    sql,
+                    filter,
+                    timeoutSeconds = 0,
                     // Connector/J streams only with MIN_VALUE; MariaDB Connector/J and pgjdbc stream with a positive size.
-                    statement.fetchSize = if (config.effectiveDriver == DriverId.MySQL) Int.MIN_VALUE else 1_000
-                    statement.executeQuery(sql).use { rs -> rs.streamTo(writer, onProgress) }
-                }
+                    configure = { it.fetchSize = if (config.effectiveDriver == DriverId.MySQL) Int.MIN_VALUE else 1_000 },
+                ) { rs -> rs.streamTo(writer, onProgress) }
             } finally {
-                withContext(Dispatchers.IO) {
+                // Also when the export is cancelled, so the connection goes back to the pool in auto-commit mode.
+                withContext(NonCancellable + Dispatchers.IO) {
                     runCatching { connection.rollback() }
-                    connection.autoCommit = autoCommit
+                    runCatching { connection.autoCommit = autoCommit }
                 }
             }
         }
     }
 
-    suspend fun countRows(table: TableRef, filter: String?, timeoutSeconds: Int = 0): Long =
+    suspend fun countRows(table: TableRef, filter: SqlFilter?, timeoutSeconds: Int = 0): Long =
         withPooled { connection ->
-            connection.withStatement(timeoutSeconds) { statement ->
-                statement.executeQuery(dialect.countRows(table, filter)).use { rs -> rs.next(); rs.getLong(1) }
+            connection.query(dialect.countRows(table, filter?.sql), filter, timeoutSeconds) { rs -> rs.next(); rs.getLong(1) }
+        }
+
+    /**
+     * Runs the query [sql], whose WHERE clause is [filter], and reads its results. Filters typed as SQL have no
+     * parameters and run unprepared, so a `?` in them (e.g. a jsonb operator) stays an operator.
+     */
+    private suspend fun <T> Connection.query(
+        sql: String,
+        filter: SqlFilter?,
+        timeoutSeconds: Int,
+        configure: (Statement) -> Unit = {},
+        read: (ResultSet) -> T,
+    ): T {
+        val parameters = filter?.parameters.orEmpty()
+        return if (parameters.isEmpty()) {
+            withStatement(timeoutSeconds) { statement ->
+                configure(statement)
+                statement.executeQuery(sql).use(read)
+            }
+        } else {
+            withPrepared(sql, timeoutSeconds) { statement ->
+                configure(statement)
+                parameters.forEachIndexed { i, parameter -> dialect.bind(statement, i + 1, parameter) }
+                statement.executeQuery().use(read)
             }
         }
+    }
 
     /**
      * Applies [statements] in one transaction. Rolls back if any update or delete doesn't hit exactly the expected
@@ -172,19 +210,30 @@ class Database private constructor(
         tunnel?.close()
     }
 
-    private suspend fun <T> withMetadata(block: (Connection) -> T): T =
-        withContext(Dispatchers.IO) { pool.connection.use(block) }
+    /** Runs blocking metadata reads; they go through [withPooled], so a closed tab's reads never start. */
+    private suspend fun <T> withMetadata(block: (Connection) -> T): T = withPooled { connection -> withContext(Dispatchers.IO) { block(connection) } }
 
+    /**
+     * Borrows a pool connection for [block], which doesn't run if the caller was cancelled while waiting for it: opening
+     * many tabs and closing most of them must not leave their reads queued ahead of the table still open. Giving the
+     * connection back must survive cancellation: a plain `withContext` in `finally` throws straight away in a cancelled
+     * coroutine, which leaked one connection per cancelled load until the pool ran dry.
+     */
     private suspend fun <T> withPooled(block: suspend (Connection) -> T): T {
-        val connection = withContext(Dispatchers.IO) { pool.connection }
-        return try {
-            block(connection)
+        var borrowed: Connection? = null
+        try {
+            // A connection checked out just as the caller is cancelled still has to go back, so it's recorded first.
+            withContext(Dispatchers.IO) { borrowed = pool.connection }
+            return block(borrowed!!)
         } finally {
-            withContext(Dispatchers.IO) { connection.close() }
+            borrowed?.let { connection -> withContext(NonCancellable + Dispatchers.IO) { runCatching { connection.close() } } }
         }
     }
 
     companion object {
+        /** Connections shared by explorer and table viewers; consoles have their own. */
+        private const val PoolSize = 4
+
         /**
          * Opens the SSH tunnel (if any) and the pool, and validates the connection, so bad credentials fail here
          * rather than later.
@@ -200,9 +249,12 @@ class Database private constructor(
                             driverClassName = config.effectiveDriver.className
                             dataSourceProperties = JdbcUrls.properties(config, password)
                             poolName = "datagrok-${config.name}"
-                            maximumPoolSize = 4
-                            // Keeps one connection open, which also keeps shared in-memory SQLite databases alive.
-                            minimumIdle = 1
+                            maximumPoolSize = PoolSize
+                            // A fixed, warm pool: a new connection to a remote server costs a TLS handshake and session
+                            // setup (hundreds of ms), too much to pay whenever a few tabs load at once. It also keeps shared
+                            // in-memory SQLite databases alive. Keepalive pings stop firewalls and NAT dropping idle ones.
+                            minimumIdle = PoolSize
+                            keepaliveTime = 120_000
                             connectionTimeout = 10_000
                             initializationFailTimeout = 1
                             isReadOnly = config.readOnly && config.effectiveDriver != DriverId.SQLite

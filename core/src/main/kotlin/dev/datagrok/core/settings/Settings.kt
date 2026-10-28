@@ -20,6 +20,8 @@ data class Settings(
     val maxResultRows: Int = 1_000,
     /** 0 means no timeout. */
     val queryTimeoutSeconds: Int = 0,
+    /** How table viewers filter: `Builder` (structured conditions) or `Sql` (a typed WHERE clause). */
+    val filterMode: String = "Builder",
 )
 
 class SettingsStore(private val file: Path = DatagrokPaths.settings) {

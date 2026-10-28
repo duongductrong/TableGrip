@@ -12,12 +12,17 @@ Compose for Desktop and [Jewel](https://jewel-ui.dev) — the IntelliJ look & fe
 ## Commands
 
 ```bash
+scripts/run.sh                      # launch the app (--fresh: throwaway profile; scripts\run.cmd on Windows)
 ./gradlew :app:run                  # launch the app
 ./gradlew :app:run -Pdatagrok.home=/tmp/dg   # launch with a throwaway profile/settings/history directory
 ./gradlew :core:test                # run core tests
 ./gradlew :core:test -Pit.postgres=localhost:55432 -Pit.mysql=localhost:53306   # also test against real servers (seed: core/src/test/resources/structure-it)
 ./gradlew :app:packageDistributionForCurrentOS   # build a native installer (dmg/msi/deb)
 ```
+
+In VS Code, ⇧⌘B (Ctrl+Shift+B) runs **Build & Launch** from `.vscode/tasks.json`. Zed picks up `.zed/tasks.json`;
+bind ⇧⌘B to it in `~/.config/zed/keymap.json`:
+`{ "context": "Workspace", "bindings": { "cmd-shift-b": ["task::Spawn", { "task_name": "Build & Launch" }] } }`.
 
 ## Layout
 
@@ -54,8 +59,33 @@ clauses from foreign keys (`JOIN orders o ON o.user_id = u.id`). Matching is fuz
 and inside `col = '…'` or `col IN (…)` it suggests real values sampled from the column. Metadata loads lazily per
 connection and refreshes after DDL or an explorer refresh.
 
-**Smart filter:** the table viewer's WHERE bar uses the same completion against the viewed table — columns, operators,
-and values from the data — without clauses that can't appear in a filter.
+## Filtering table data
+
+The table viewer's filter bar has two modes (the choice is remembered): **Builder** and **SQL**.
+
+**Builder** composes typed conditions — `column · operator · value` rows, combined as *all* (AND) or *any* (OR), with
+nested groups (which can be negated) and hand-written SQL conditions mixed in. Columns are classified from their database
+type, and each kind gets its own operators and value parsing:
+
+| Kind | Operators |
+| --- | --- |
+| Text | = ≠, contains, starts / ends with, is one of, like, regex (PostgreSQL, MySQL), is empty, NULL checks, < > between |
+| Number | = ≠ < ≤ > ≥, between, is one of, NULL checks, starts with / contains (as text) |
+| Date, date-time | is on / before / after, between, is one of, is today / yesterday / this week / month / year, in the last N days |
+| Boolean | is true / false · UUID, JSON, enums and other types: equality, lists and text matching |
+
+Values are bound as parameters of the column's JDBC type, never spliced into SQL. Dates accept `2026-10-28`,
+`2026-10-28 13:45:00+07`, or relative forms — `today`, `now-2h`, `today-7d`, `3 months ago` (units s, min, h, d, w, mo,
+y) — re-resolved on every reload; the field shows what they resolve to and offers quick picks. A date on a date-time
+column means the whole day (`created_at is on 2026-10-28` matches any time that day). Lists take commas or new lines,
+quotes for values containing commas, and `NULL`. Text matching is case-insensitive unless **Aa** is on. Value fields
+suggest real values from the column as you type (⌃Space to ask). Problems are flagged on their row before anything
+runs. ⏎ in any field applies; the compiled `WHERE` clause is shown below the conditions, ready to copy or "Edit as SQL".
+Right-click a cell → Filter by This Value adds a typed condition.
+
+**SQL** takes a raw WHERE clause with the same completion as the editor against the viewed table — columns, operators,
+and values from the data — without clauses that can't appear in a filter. Switching from Builder carries the conditions
+over as SQL; switching back keeps hand-written SQL as a SQL condition.
 
 ## Data grid
 
