@@ -171,6 +171,11 @@ private fun FieldRow(field: SettingField, app: AppState, form: SettingsForm, hig
                     TextField(text, Modifier.width(110.dp), outline = if (error != null) Outline.Error else Outline.None)
                     field.unit?.let { Text(it, Modifier.padding(start = 8.dp), color = JewelTheme.globalColors.text.info) }
                 }
+                is StringField -> {
+                    val text = form.text(field)
+                    LaunchedEffect(field) { snapshotFlow { text.text.toString() }.drop(1).collect { form.commit(field) } }
+                    TextField(text, Modifier.weight(1f), placeholder = { Text(field.placeholder) })
+                }
             }
         }
         val note = error ?: field.hint

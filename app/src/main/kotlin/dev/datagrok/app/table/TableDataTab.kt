@@ -1,5 +1,6 @@
 package dev.datagrok.app.table
 
+import dev.datagrok.core.connection.Capability
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.getValue
@@ -212,7 +213,7 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
                     database.fetchPage(table, resolveFilter(), sort, pageSize, page.toLong() * pageSize, app.settings.queryTimeoutSeconds)
                 columns?.let { details = it.await() }
                 hasNextPage = result.truncated
-                model = TableEditModel(result, details?.primaryKey.orEmpty(), readOnly = config.readOnly)
+                model = TableEditModel(result, details?.primaryKey.orEmpty(), readOnly = config.readOnly || Capability.EditRows !in config.type.capabilities)
                 error = null
             } catch (e: CancellationException) {
                 throw e

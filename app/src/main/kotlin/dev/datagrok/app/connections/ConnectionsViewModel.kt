@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import dev.datagrok.app.AppState
 import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.connection.ConnectionStore
+import dev.datagrok.core.connection.DatabaseType
 import dev.datagrok.core.driver.Database
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -18,12 +19,38 @@ data class ConnectionDialogRequest(val existing: ConnectionConfig?)
 class ConnectionsViewModel(private val app: AppState, private val store: ConnectionStore) {
     val profiles = mutableStateListOf<ConnectionConfig>()
 
+    val drivers: DriverDownloads
+        get() = app.drivers
+
     /** Non-null while the connection dialog is open; [ConnectionDialogRequest.existing] is null for a new one. */
     var dialog by mutableStateOf<ConnectionDialogRequest?>(null)
         private set
 
     /** Connection waiting for the user to confirm its deletion. */
     var pendingDelete by mutableStateOf<ConnectionConfig?>(null)
+
+    /** A saved connection that couldn't connect because its driver isn't installed; the user is asked to get it. */
+    var driverPrompt by mutableStateOf<ConnectionConfig?>(null)
+
+    fun askForDriver(config: ConnectionConfig) {
+        if (driverPrompt == null && dialog == null) driverPrompt = config
+    }
+
+    /** Saves a profile whose driver the user switched while being asked for it (e.g. to MariaDB Connector/J). */
+    fun updateDriver(config: ConnectionConfig) {
+        app.scope.launch {
+            runCatching { withContext(Dispatchers.IO) { store.save(config, password = null, sshSecret = null) } }
+                .onSuccess(::replaceAll)
+                .onFailure { app.status = "Failed to save ${config.name}: ${it.message}" }
+        }
+    }
+
+    /** Connects [config] again once its driver is there. */
+    fun retryAfterDriver(config: ConnectionConfig) {
+        driverPrompt = null
+        app.explorer.refresh(dev.datagrok.app.explorer.ConnectionKey(config.id))
+        app.pickConnection(config)
+    }
 
     init {
         runCatching { store.load() }
@@ -50,8 +77,13 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
 
     suspend fun storedSshSecret(id: String): String? = withContext(Dispatchers.IO) { store.sshSecret(id) }
 
-    suspend fun test(config: ConnectionConfig, password: String, sshSecret: String): Result<Unit> = runCatching {
-        Database.test(config, password, sshSecret)
+    /**
+     * Waits for a driver download the user started; fails if the driver is still missing. Succeeds with the engine the
+     * server really is when that differs from the profile's type.
+     */
+    suspend fun test(config: ConnectionConfig, password: String, sshSecret: String): Result<DatabaseType?> = runCatching {
+        app.drivers.ensure(config)
+        Database.test(config, password, sshSecret, app.drivers.library)
     }
 
     /** A blank SSH secret removes the stored one, as does turning SSH off. */

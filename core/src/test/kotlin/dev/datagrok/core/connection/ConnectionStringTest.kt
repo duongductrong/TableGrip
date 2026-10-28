@@ -96,7 +96,8 @@ class ConnectionStringTest {
         assertEquals("root", jdbc.user)
         assertEquals(mapOf("sslMode" to "verify-full"), jdbc.properties)
 
-        assertEquals(DriverId.MySQL, parse("jdbc:mysql://host1:33060/sakila").driver)
+        // The type's default driver (MariaDB Connector/J) takes jdbc:mysql URLs, and Datagrok can download it.
+        assertEquals(null, parse("jdbc:mysql://host1:33060/sakila").driver)
     }
 
     @Test
@@ -129,9 +130,22 @@ class ConnectionStringTest {
     @Test
     fun `rejects unsupported strings with a helpful message`() {
         assertFailsWith<ConnectionStringException> { parse("mysqlx://host/db") }
-        assertFailsWith<ConnectionStringException> { parse("jdbc:oracle:thin:@host:1521:orcl") }
         assertFailsWith<ConnectionStringException> { parse("hello world") }
         assertFailsWith<ConnectionStringException> { parse("postgresql://host:99999/db") }
+    }
+
+    @Test
+    fun `other JDBC URLs become profiles for the user's own driver, and known ones get their engine`() {
+        val oracle = parse("jdbc:oracle:thin:@host:1521:orcl")
+        assertEquals(DatabaseType.OtherJdbc to DriverId.Generic, oracle.type to oracle.driver)
+        assertEquals("jdbc:oracle:thin:@host:1521:orcl", oracle.url)
+
+        val mssql = parse("jdbc:sqlserver://db:1433;databaseName=shop;user=sa;password=s3cret;encrypt=true")
+        assertEquals(DatabaseType.SqlServer, mssql.type)
+        assertEquals("jdbc:sqlserver://db:1433;databaseName=shop;user=sa;encrypt=true" to "s3cret", mssql.url to mssql.password)
+
+        assertEquals(DatabaseType.ClickHouse, parse("jdbc:clickhouse://ch:8123/default").type)
+        assertEquals(DatabaseType.H2, parse("jdbc:h2:mem:test").type)
     }
 
     @Test

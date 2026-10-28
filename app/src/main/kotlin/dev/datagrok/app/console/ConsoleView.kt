@@ -1,5 +1,6 @@
 package dev.datagrok.app.console
 
+import dev.datagrok.core.connection.Capability
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.input.TextFieldState
@@ -121,8 +122,10 @@ private fun Toolbar(tab: ConsoleTab, editor: SqlEditorActions) {
         Tooltip({ Text("Cancel running query (${Shortcuts.Cancel})") }) {
             IconButton(onClick = tab::cancel, enabled = tab.running) { Icon(AllIconsKeys.Actions.Suspend, "Cancel") }
         }
-        Tooltip({ Text("Explain plan for the statement at caret (${Shortcuts.Explain})") }) {
-            IconButton(onClick = tab::explain, enabled = !tab.running) { Icon(AllIconsKeys.Actions.Preview, "Explain") }
+        if (Capability.Explain in tab.config.type.capabilities) {
+            Tooltip({ Text("Explain plan for the statement at caret (${Shortcuts.Explain})") }) {
+                IconButton(onClick = tab::explain, enabled = !tab.running) { Icon(AllIconsKeys.Actions.Preview, "Explain") }
+            }
         }
         Tooltip({ Text("Reformat SQL (${Shortcuts.Format})") }) {
             IconButton(onClick = { editor.format() }) { Icon(AllIconsKeys.Actions.ShowCode, "Format") }
@@ -133,22 +136,24 @@ private fun Toolbar(tab: ConsoleTab, editor: SqlEditorActions) {
         Tooltip({ Text("Save script (${Shortcuts.Save}) · Save as (${Shortcuts.SaveAs})") }) {
             IconButton(onClick = { tab.save() }) { Icon(AllIconsKeys.Actions.MenuSaveall, "Save") }
         }
-        Divider(Orientation.Vertical, Modifier.height(18.dp).padding(horizontal = 6.dp))
-        ListComboBox(
-            items = listOf("Auto-commit", "Manual commit"),
-            selectedIndex = if (tab.autoCommit) 0 else 1,
-            onSelectedItemChange = { tab.changeAutoCommit(it == 0) },
-            modifier = Modifier.width(140.dp),
-            enabled = !tab.running && !tab.config.readOnly,
-        )
-        if (!tab.autoCommit) {
-            Tooltip({ Text("Commit transaction") }) {
-                IconButton(onClick = tab::commit, enabled = tab.uncommitted > 0 && !tab.running) { Icon(AllIconsKeys.Actions.Commit, "Commit") }
+        if (Capability.Transactions in tab.config.type.capabilities) {
+            Divider(Orientation.Vertical, Modifier.height(18.dp).padding(horizontal = 6.dp))
+            ListComboBox(
+                items = listOf("Auto-commit", "Manual commit"),
+                selectedIndex = if (tab.autoCommit) 0 else 1,
+                onSelectedItemChange = { tab.changeAutoCommit(it == 0) },
+                modifier = Modifier.width(140.dp),
+                enabled = !tab.running && !tab.config.readOnly,
+            )
+            if (!tab.autoCommit) {
+                Tooltip({ Text("Commit transaction") }) {
+                    IconButton(onClick = tab::commit, enabled = tab.uncommitted > 0 && !tab.running) { Icon(AllIconsKeys.Actions.Commit, "Commit") }
+                }
+                Tooltip({ Text("Roll back transaction") }) {
+                    IconButton(onClick = tab::rollback, enabled = tab.uncommitted > 0 && !tab.running) { Icon(AllIconsKeys.Actions.Rollback, "Rollback") }
+                }
+                if (tab.uncommitted > 0) Text("${tab.uncommitted} uncommitted", Modifier.padding(start = 4.dp), color = PendingColor)
             }
-            Tooltip({ Text("Roll back transaction") }) {
-                IconButton(onClick = tab::rollback, enabled = tab.uncommitted > 0 && !tab.running) { Icon(AllIconsKeys.Actions.Rollback, "Rollback") }
-            }
-            if (tab.uncommitted > 0) Text("${tab.uncommitted} uncommitted", Modifier.padding(start = 4.dp), color = PendingColor)
         }
         Text(if (tab.running) "Executing…" else "", Modifier.padding(start = 8.dp), color = JewelTheme.globalColors.text.info)
         Box(Modifier.weight(1f))

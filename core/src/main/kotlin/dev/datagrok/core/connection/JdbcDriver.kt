@@ -1,34 +1,47 @@
 package dev.datagrok.core.connection
 
 import java.net.URLEncoder
-import java.sql.Driver
 import java.sql.SQLException
 import java.util.Properties
 import kotlinx.serialization.Serializable
 
-/** The JDBC drivers bundled with Datagrok. */
+/**
+ * The JDBC drivers Datagrok knows. None ships with the app: [catalogId] names the entry in the driver catalog it can
+ * download (see [dev.datagrok.core.drivers.DriverLibrary]); drivers without one (GPL or a vendor's license) are only
+ * used from jars the user supplies, which they get from [vendorUrl] under [license].
+ */
 @Serializable
-enum class DriverId(val displayName: String, val className: String, val scheme: String) {
-    PostgreSQL("PostgreSQL JDBC Driver", "org.postgresql.Driver", "jdbc:postgresql:"),
-    MySQL("MySQL Connector/J", "com.mysql.cj.jdbc.Driver", "jdbc:mysql:"),
-    MariaDB("MariaDB Connector/J", "org.mariadb.jdbc.Driver", "jdbc:mariadb:"),
-    SQLite("SQLite JDBC (Xerial)", "org.sqlite.JDBC", "jdbc:sqlite:");
+enum class DriverId(
+    val displayName: String,
+    val className: String,
+    val scheme: String,
+    val catalogId: String? = null,
+    val vendorUrl: String? = null,
+    val license: String? = null,
+) {
+    PostgreSQL("PostgreSQL JDBC Driver", "org.postgresql.Driver", "jdbc:postgresql:", catalogId = "postgresql"),
+    MySQL(
+        "MySQL Connector/J",
+        "com.mysql.cj.jdbc.Driver",
+        "jdbc:mysql:",
+        vendorUrl = "https://dev.mysql.com/downloads/connector/j/",
+        license = "GPL-2.0 with Universal FOSS Exception",
+    ),
+    MariaDB("MariaDB Connector/J", "org.mariadb.jdbc.Driver", "jdbc:mariadb:", catalogId = "mariadb"),
+    SQLite("SQLite JDBC (Xerial)", "org.sqlite.JDBC", "jdbc:sqlite:", catalogId = "sqlite"),
+    H2("H2 Database Engine", "org.h2.Driver", "jdbc:h2:", catalogId = "h2"),
+    HSQLDB("HyperSQL (HSQLDB)", "org.hsqldb.jdbc.JDBCDriver", "jdbc:hsqldb:", catalogId = "hsqldb"),
+    Derby("Apache Derby (embedded)", "org.apache.derby.iapi.jdbc.AutoloadedDriver", "jdbc:derby:", catalogId = "derby"),
+    SqlServer("Microsoft JDBC Driver for SQL Server", "com.microsoft.sqlserver.jdbc.SQLServerDriver", "jdbc:sqlserver:", catalogId = "sqlserver"),
+    ClickHouse("ClickHouse JDBC", "com.clickhouse.jdbc.Driver", "jdbc:clickhouse:", catalogId = "clickhouse"),
+    DuckDB("DuckDB JDBC", "org.duckdb.DuckDBDriver", "jdbc:duckdb:", catalogId = "duckdb"),
 
-    /**
-     * The driver instance, loaded by class name. Using it directly (instead of [java.sql.DriverManager]) guarantees
-     * the chosen driver handles the URL even when several accept the same scheme.
-     */
-    fun load(): Driver = instances.getOrPut(this) { Class.forName(className).getDeclaredConstructor().newInstance() as Driver }
-
-    /** e.g. "3.5" for MariaDB Connector/J 3.5.x; null if the driver can't be loaded. */
-    val version: String?
-        get() = runCatching { load().let { "${it.majorVersion}.${it.minorVersion}" } }.getOrNull()
+    /** Whatever driver the profile's own jars contain; its class is found in them. */
+    Generic("JDBC driver from your jars", "", "jdbc:");
 
     companion object {
-        private val instances = java.util.concurrent.ConcurrentHashMap<DriverId, Driver>()
-
         /** The driver whose own scheme a JDBC URL uses. */
-        fun forUrl(url: String): DriverId? = entries.firstOrNull { url.startsWith(it.scheme) }
+        fun forUrl(url: String): DriverId? = entries.firstOrNull { it != Generic && url.startsWith(it.scheme) }
     }
 }
 
@@ -42,11 +55,8 @@ object JdbcUrls {
     fun build(config: ConnectionConfig, via: Pair<String, Int>? = null): String {
         config.url?.let { raw -> return adaptToDriver(if (via == null) raw else redirect(raw, via.first, via.second), config.effectiveDriver) }
         val driver = config.effectiveDriver
-        if (driver == DriverId.SQLite) {
-            // A private in-memory database would vanish per connection; share it across the pool instead.
-            return if (config.database == ":memory:" || config.database.isBlank()) "jdbc:sqlite:file:datagrok-${config.id}?mode=memory&cache=shared"
-            else "jdbc:sqlite:${config.database}"
-        }
+        if (config.type.connection == ConnectionKind.Url) throw SQLException("${config.type.displayName} connects by JDBC URL only.")
+        if (config.type.isFile) return fileUrl(config, driver)
         val hosts =
             if (via != null) formatHost(via.first, via.second)
             else
@@ -56,7 +66,11 @@ object JdbcUrls {
                     .filter { it.isNotEmpty() }
                     .ifEmpty { listOf("localhost") }
                     .joinToString(",") { entry -> if (hasPort(entry)) entry else formatHost(entry, config.port) }
-        return "${driver.scheme}//$hosts/${encodePathSegment(config.database)}"
+        return when (driver) {
+            // Attributes follow `;`; the database is one of them.
+            DriverId.SqlServer -> "${driver.scheme}//$hosts" + (config.database.takeIf { it.isNotBlank() }?.let { ";databaseName=${it.replace(";", "{;}")}" } ?: "")
+            else -> "${driver.scheme}//$hosts/${encodePathSegment(config.database)}"
+        }
     }
 
     /**
@@ -67,6 +81,7 @@ object JdbcUrls {
         val driver = config.effectiveDriver
         val props = Properties()
         config.properties.forEach { (k, v) -> props.setProperty(k, v) }
+        config.type.defaultProperties[driver]?.forEach { (k, v) -> props.putIfAbsent(k, v) }
         if (config.user.isNotBlank()) props.setProperty("user", config.user)
         if (!password.isNullOrEmpty()) props.setProperty("password", password)
         when (driver) {
@@ -79,8 +94,7 @@ object JdbcUrls {
                 props.putIfAbsent("connectTimeout", "10000")
                 props.getProperty("sslMode")?.let { props.setProperty("sslMode", mysqlToMariaSslMode[it.uppercase()] ?: it) }
             }
-            DriverId.PostgreSQL,
-            DriverId.SQLite -> Unit
+            else -> Unit
         }
         return props
     }
@@ -102,6 +116,25 @@ object JdbcUrls {
             else -> url
         }
 
+    /**
+     * Embedded databases. In-memory ones would vanish with each pooled connection, so they're kept alive for the
+     * profile's lifetime: SQLite through a shared cache, H2 by not closing on the last connection.
+     */
+    private fun fileUrl(config: ConnectionConfig, driver: DriverId): String {
+        val path = config.database.trim().let { if (it.startsWith("~/")) System.getProperty("user.home") + it.substring(1) else it }
+        val memory = path.isEmpty() || path == ":memory:" || path.startsWith("mem:")
+        val memoryName = path.removePrefix("mem:").takeIf { it.isNotEmpty() && it != ":memory:" } ?: "datagrok-${config.id}"
+        return when (driver) {
+            DriverId.SQLite -> if (memory) "jdbc:sqlite:file:datagrok-${config.id}?mode=memory&cache=shared" else "jdbc:sqlite:$path"
+            DriverId.H2 -> if (memory) "jdbc:h2:mem:$memoryName;DB_CLOSE_DELAY=-1" else "jdbc:h2:file:$path"
+            DriverId.HSQLDB -> if (memory) "jdbc:hsqldb:mem:$memoryName" else "jdbc:hsqldb:file:$path"
+            DriverId.Derby -> if (memory) "jdbc:derby:memory:$memoryName;create=true" else "jdbc:derby:$path"
+            // A named in-memory database is shared by every connection of the process, so the pool sees one database.
+            DriverId.DuckDB -> if (memory) "jdbc:duckdb::memory:${memoryName.replace(Regex("[^A-Za-z0-9_]"), "_")}" else "jdbc:duckdb:$path"
+            else -> throw SQLException("${driver.displayName} has no file URL form; connect by JDBC URL.")
+        }
+    }
+
     fun formatHost(host: String, port: Int?): String {
         val bracketed = if (':' in host && !host.startsWith("[")) "[$host]" else host
         return if (port == null) bracketed else "$bracketed:$port"
@@ -116,7 +149,7 @@ object JdbcUrls {
     fun redirect(url: String, host: String, port: Int): String {
         val start = url.indexOf("//").takeIf { it >= 0 } ?: throw SQLException("Can't tunnel this URL: no //host part.")
         val authorityStart = start + 2
-        val end = url.indexOfAny(charArrayOf('/', '?'), authorityStart).let { if (it < 0) url.length else it }
+        val end = url.indexOfAny(charArrayOf('/', '?', ';'), authorityStart).let { if (it < 0) url.length else it }
         val authority = url.substring(authorityStart, end)
         val userInfo = authority.substringBeforeLast('@', "").let { if (it.isEmpty()) "" else "$it@" }
         val hostPart = authority.substringAfterLast('@')

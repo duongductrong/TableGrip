@@ -7,6 +7,8 @@ import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
@@ -16,13 +18,17 @@ import androidx.compose.ui.unit.dp
 import dev.datagrok.app.AppState
 import dev.datagrok.app.ui.DatagrokTheme
 import dev.datagrok.core.connection.ConnectionStore
+import dev.datagrok.core.connection.DriverId
 import dev.datagrok.core.connection.InMemorySecretStore
+import dev.datagrok.core.drivers.DriverLibrary
 import dev.datagrok.core.history.QueryHistory
 import dev.datagrok.core.settings.SettingsStore
 import java.io.File
 import javax.imageio.ImageIO
 import kotlin.io.path.createTempDirectory
 import kotlin.test.Test
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 @OptIn(ExperimentalTestApi::class)
 class ConnectionDialogTest {
@@ -32,7 +38,46 @@ class ConnectionDialogTest {
             settingsStore = SettingsStore(home.resolve("settings.json")),
             connectionStore = ConnectionStore(home.resolve("connections.json"), InMemorySecretStore()),
             history = QueryHistory(home.resolve("history.jsonl")),
-        )
+            // No drivers on this machine, and nothing reachable to download them from.
+            driverLibrary = DriverLibrary(home.resolve("drivers"), useClasspath = false).apply { repository = "http://127.0.0.1:9/" },
+        ).also { it.drivers.library.repository = "http://127.0.0.1:9/" }
+    }
+
+    @Test
+    fun `any other JDBC URL becomes a profile for the user's own driver jar`() = runComposeUiTest {
+        val app = app()
+        setContent {
+            DatagrokTheme(isDark = true) { Box(Modifier.size(640.dp, 600.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
+        }
+        onAllNodes(hasSetTextAction())[0].performTextInput("jdbc:firebirdsql://localhost:3050/employee?password=masterkey")
+        onNodeWithText("Parse").performClick()
+        waitForIdle()
+
+        onNodeWithText("Other (JDBC driver)").assertExists()
+        onNodeWithText("jdbc:firebirdsql://localhost:3050/employee").assertExists()
+        onNodeWithText("Choose jars…").assertExists()
+        // URL-only engines have nothing else to connect by.
+        onAllNodesWithText("Host and port").assertCountEquals(0)
+        System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "connection-dialog-other-jdbc.png")) }
+        app.dispose()
+    }
+
+    @Test
+    fun `the driver banner acts on the driver now selected, not the first one`() = runComposeUiTest {
+        val app = app()
+        setContent {
+            DatagrokTheme(isDark = false) { Box(Modifier.size(640.dp, 600.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
+        }
+        onNodeWithText("PostgreSQL JDBC Driver 42", substring = true).assertExists()
+        onAllNodes(hasSetTextAction())[0].performTextInput("mysql://root@localhost/shop")
+        onNodeWithText("Parse").performClick()
+        waitForIdle()
+
+        onNodeWithText("Download").performClick()
+        waitForIdle()
+        assertNotNull(app.drivers.state(DriverId.MariaDB), "Download must fetch the MySQL profile's driver")
+        assertNull(app.drivers.state(DriverId.PostgreSQL))
+        app.dispose()
     }
 
     @Test
@@ -68,7 +113,9 @@ class ConnectionDialogTest {
 
         onNodeWithText("jdbc:mysql:replication://sandy@primary:3306,replica:3306/db").assertExists()
         onNodeWithText("JDBC URL").assertExists()
-        onNodeWithText("MySQL Connector/J", substring = true).assertExists()
+        // MySQL's own driver is GPL and never downloaded, so pasted MySQL URLs use MariaDB Connector/J.
+        // The driver picker, and the banner saying what the driver needs.
+        onAllNodesWithText("MariaDB Connector/J", substring = true).assertCountEquals(2)
         System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "connection-dialog-url.png")) }
         app.dispose()
     }

@@ -22,6 +22,10 @@ data class Settings(
     val queryTimeoutSeconds: Int = 0,
     /** How table viewers filter: `Builder` (structured conditions) or `Sql` (a typed WHERE clause). */
     val filterMode: String = "Builder",
+    /** Maven repository drivers download from; a company mirror works too. Blank means Maven Central. */
+    val driverRepository: String = "",
+    /** Download permissively licensed drivers without asking. LGPL drivers always ask; GPL and vendor drivers never download. */
+    val autoDownloadDrivers: Boolean = false,
 )
 
 class SettingsStore(private val file: Path = DatagrokPaths.settings) {

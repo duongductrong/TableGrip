@@ -12,13 +12,20 @@ import dev.datagrok.core.settings.Settings
  * with an error and never reaches the app, which keeps its last good value.
  */
 class SettingsForm(private val current: () -> Settings, private val update: (Settings) -> Unit) {
-    private val texts = mutableMapOf<IntField, TextFieldState>()
+    private val texts = mutableMapOf<SettingField, TextFieldState>()
 
     /** Fields whose text can't be applied, with why. */
     var errors by mutableStateOf<Map<SettingField, String>>(emptyMap())
         private set
 
     fun text(field: IntField): TextFieldState = texts.getOrPut(field) { TextFieldState(field.get(current()).toString()) }
+
+    fun text(field: StringField): TextFieldState = texts.getOrPut(field) { TextFieldState(field.get(current())) }
+
+    fun commit(field: StringField) {
+        val value = text(field).text.toString()
+        if (field.get(current()) != value) update(field.set(current(), value))
+    }
 
     fun <T> choose(field: ChoiceField<T>, value: T) = update(field.set(current(), value))
 
@@ -41,6 +48,10 @@ class SettingsForm(private val current: () -> Settings, private val update: (Set
                 is ChoiceField<*> -> resetChoice(field, defaults)
                 is IntField -> {
                     text(field).setTextAndPlaceCursorAtEnd(field.get(defaults).toString())
+                    commit(field)
+                }
+                is StringField -> {
+                    text(field).setTextAndPlaceCursorAtEnd(field.get(defaults))
                     commit(field)
                 }
             }

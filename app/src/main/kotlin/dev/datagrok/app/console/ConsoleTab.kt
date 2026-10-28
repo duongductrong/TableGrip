@@ -1,5 +1,6 @@
 package dev.datagrok.app.console
 
+import dev.datagrok.core.connection.Capability
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.placeCursorAtEnd
 import androidx.compose.runtime.getValue
@@ -119,14 +120,9 @@ class ConsoleTab(
 
     /** Runs the statement at the caret under EXPLAIN, in the dialect's syntax. */
     fun explain() {
-        if (running) return
+        if (running || Capability.Explain !in config.type.capabilities) return
         val sql = statementsFor(RunMode.Current).firstOrNull() ?: return
-        val prefix =
-            when (dialect) {
-                SqlDialect.SQLite -> "EXPLAIN QUERY PLAN "
-                else -> "EXPLAIN "
-            }
-        start(listOf(prefix + sql))
+        start(dialect.explain(sql))
     }
 
     fun run(mode: RunMode) {

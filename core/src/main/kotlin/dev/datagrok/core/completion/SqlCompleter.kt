@@ -337,14 +337,7 @@ class SqlCompleter(private val dialect: SqlDialect) {
     }
 
     private fun functions(): List<CompletionItem> =
-        (CommonFunctions + dialectFunctions()).map { CompletionItem("$it()", "$it()", CompletionKind.Function, "function", caretOffset = it.length + 1) }
-
-    private fun dialectFunctions(): List<String> =
-        when (dialect) {
-            SqlDialect.PostgreSQL -> listOf("now", "date_trunc", "to_char", "string_agg", "array_agg", "jsonb_build_object", "generate_series", "gen_random_uuid")
-            SqlDialect.MySQL -> listOf("now", "date_format", "group_concat", "ifnull", "json_object", "json_extract", "uuid")
-            SqlDialect.SQLite -> listOf("datetime", "strftime", "group_concat", "ifnull", "json_extract", "random")
-        }
+        (CommonFunctions + dialect.functions).map { CompletionItem("$it()", "$it()", CompletionKind.Function, "function", caretOffset = it.length + 1) }
 
     private fun keywords(words: Collection<String>): List<CompletionItem> = words.map { CompletionItem(it, it, CompletionKind.Keyword) }
 
@@ -398,12 +391,7 @@ class SqlCompleter(private val dialect: SqlDialect) {
 
     /** Quotes names that wouldn't survive unquoted: reserved words, odd characters, and (PostgreSQL) upper case. */
     fun quote(name: String): String {
-        val plain =
-            when (dialect) {
-                SqlDialect.PostgreSQL -> Regex("[a-z_][a-z0-9_$]*")
-                else -> Regex("[A-Za-z_][A-Za-z0-9_$]*")
-            }
-        return if (plain.matches(name) && name.uppercase() !in ReservedWords) name else dialect.quoteIdentifier(name)
+        return if (dialect.plainIdentifier.matches(name) && name.uppercase() !in ReservedWords) name else dialect.quoteIdentifier(name)
     }
 
     private fun unquote(name: String): String =

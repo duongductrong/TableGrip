@@ -5,10 +5,12 @@ import com.zaxxer.hikari.HikariDataSource
 import com.zaxxer.hikari.pool.HikariPool
 import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.connection.ConnectionString
+import dev.datagrok.core.connection.DatabaseType
 import dev.datagrok.core.connection.DriverId
 import dev.datagrok.core.connection.JdbcUrls
 import dev.datagrok.core.connection.SshTunnel
 import dev.datagrok.core.dialect.SortColumn
+import dev.datagrok.core.drivers.DriverLibrary
 import dev.datagrok.core.edit.ChangeStatement
 import dev.datagrok.core.export.ResultWriter
 import dev.datagrok.core.filter.SqlFilter
@@ -32,41 +34,39 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 
 /**
- * A live connection to one database profile. A small pool serves the explorer and table viewers; SQL consoles get their
- * own dedicated [QuerySession]s.
+ * A [RelationalConnection] over JDBC. A small pool serves the explorer and table viewers; SQL consoles get their own
+ * dedicated [QuerySession]s.
  */
 class Database private constructor(
-    val config: ConnectionConfig,
+    override val config: ConnectionConfig,
     private val password: String?,
     private val jdbcUrl: String,
+    private val driver: java.sql.Driver,
     private val pool: HikariDataSource,
     private val tunnel: SshTunnel?,
-) : AutoCloseable {
-    val dialect: SqlDialect = SqlDialect.of(config.type)
+) : RelationalConnection {
+    override val dialect: SqlDialect = SqlDialect.of(config.type)
     private val introspector = Introspector(dialect)
 
-    suspend fun namespaces(): List<Namespace> = withMetadata { introspector.namespaces(it.metaData) }
+    override suspend fun namespaces(): List<Namespace> = withMetadata { introspector.namespaces(it.metaData) }
 
-    suspend fun tables(namespace: Namespace): List<TableInfo> = withMetadata { introspector.tables(it.metaData, namespace) }
+    override suspend fun tables(namespace: Namespace): List<TableInfo> = withMetadata { introspector.tables(it.metaData, namespace) }
 
-    suspend fun tableDetails(table: TableRef): TableDetails = withMetadata { introspector.details(it.metaData, table) }
+    override suspend fun tableDetails(table: TableRef): TableDetails = withMetadata { introspector.details(it.metaData, table) }
 
-    /** Just the columns and primary key, which is all a table viewer needs: two round trips instead of four or more. */
-    suspend fun tableColumns(table: TableRef): TableDetails = withMetadata { introspector.details(it.metaData, table, keysAndIndexes = false) }
+    /** Two round trips instead of four or more. */
+    override suspend fun tableColumns(table: TableRef): TableDetails = withMetadata { introspector.details(it.metaData, table, keysAndIndexes = false) }
 
-    /** Columns, keys and indexes plus constraints, triggers and DDL, for the structure view. */
-    suspend fun tableStructure(table: TableRef): TableStructure =
+    override suspend fun tableStructure(table: TableRef): TableStructure =
         withMetadata { StructureReader.of(dialect).read(it, introspector.details(it.metaData, table)) }
 
-    suspend fun columnsOf(namespace: Namespace): Map<String, List<ColumnInfo>> = withMetadata { introspector.columnsOf(it.metaData, namespace) }
+    override suspend fun columnsOf(namespace: Namespace): Map<String, List<ColumnInfo>> = withMetadata { introspector.columnsOf(it.metaData, namespace) }
 
-    suspend fun relations(table: TableRef): List<TableRelation> = withMetadata { introspector.relations(it.metaData, table) }
+    override suspend fun relations(table: TableRef): List<TableRelation> = withMetadata { introspector.relations(it.metaData, table) }
 
-    /** Values of [column] starting with [prefix], for suggestions; bounded in rows scanned and time. */
-    suspend fun sampleValues(table: TableRef, column: String, prefix: String, limit: Int = 30): List<String> {
+    override suspend fun sampleValues(table: TableRef, column: String, prefix: String, limit: Int): List<String> {
         val sql = dialect.sampleValues(table, column, limit, scan = 10_000)
-        // '!' escapes LIKE wildcards: unlike '\\' it means the same in every dialect's string literals.
-        val pattern = prefix.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%"
+        val pattern = dialect.samplePattern(prefix)
         return withPooled { connection ->
             withContext(Dispatchers.IO) {
                 connection.prepareStatement(sql).use { ps ->
@@ -78,13 +78,13 @@ class Database private constructor(
         }
     }
 
-    suspend fun fetchPage(
+    override suspend fun fetchPage(
         table: TableRef,
         filter: SqlFilter?,
         orderBy: List<SortColumn>,
         limit: Int,
         offset: Long,
-        timeoutSeconds: Int = 0,
+        timeoutSeconds: Int,
     ): QueryResult.Rows {
         // One extra row tells whether another page exists; it comes back as `truncated`.
         val sql = dialect.selectPage(table, filter?.sql, orderBy, limit + 1, offset)
@@ -101,12 +101,12 @@ class Database private constructor(
      * Streams every row of [table] (with the viewer's filter and sort) into [writer] using a server-side cursor, calling
      * [onProgress] every few thousand rows. Cancel the coroutine to stop.
      */
-    suspend fun exportTable(
+    override suspend fun exportTable(
         table: TableRef,
         filter: SqlFilter?,
         orderBy: List<SortColumn>,
         writer: (List<ResultColumn>) -> ResultWriter,
-        onProgress: (Long) -> Unit = {},
+        onProgress: (Long) -> Unit,
     ): Long {
         val sql = dialect.selectAll(table, filter?.sql, orderBy)
         return withPooled { connection ->
@@ -130,7 +130,7 @@ class Database private constructor(
         }
     }
 
-    suspend fun countRows(table: TableRef, filter: SqlFilter?, timeoutSeconds: Int = 0): Long =
+    override suspend fun countRows(table: TableRef, filter: SqlFilter?, timeoutSeconds: Int): Long =
         withPooled { connection ->
             connection.query(dialect.countRows(table, filter?.sql), filter, timeoutSeconds) { rs -> rs.next(); rs.getLong(1) }
         }
@@ -165,7 +165,7 @@ class Database private constructor(
      * Applies [statements] in one transaction. Rolls back if any update or delete doesn't hit exactly the expected
      * number of rows, e.g. because the row changed since it was read.
      */
-    suspend fun applyChanges(statements: List<ChangeStatement>): Int {
+    override suspend fun applyChanges(statements: List<ChangeStatement>): Int {
         if (config.readOnly) throw ReadOnlyViolationException("editing data")
         return withMetadata { connection ->
             val autoCommit = connection.autoCommit
@@ -197,9 +197,9 @@ class Database private constructor(
         }
     }
 
-    suspend fun openSession(): QuerySession =
+    override suspend fun openSession(): QuerySession =
         withContext(Dispatchers.IO) {
-            val connection = newConnection(jdbcUrl, config, password)
+            val connection = newConnection(driver, jdbcUrl, config, password)
             // Defence in depth on top of the client-side check; not every driver supports it after connecting.
             if (config.readOnly) runCatching { connection.isReadOnly = true }
             QuerySession(connection, SqlClassifier(dialect.syntax), config.readOnly)
@@ -236,18 +236,20 @@ class Database private constructor(
 
         /**
          * Opens the SSH tunnel (if any) and the pool, and validates the connection, so bad credentials fail here
-         * rather than later.
+         * rather than later. Throws [dev.datagrok.core.drivers.DriverNotInstalledException] if the profile's driver
+         * isn't on this machine yet.
          */
-        suspend fun connect(config: ConnectionConfig, password: String?, sshSecret: String? = null): Database =
+        suspend fun connect(config: ConnectionConfig, password: String?, sshSecret: String? = null, drivers: DriverLibrary = DriverLibrary.shared): Database =
             withContext(Dispatchers.IO) {
+                val driver = drivers.load(config)
                 val tunnel = openTunnel(config, sshSecret)
                 try {
                     val url = jdbcUrl(config, tunnel)
                     val hikari =
                         HikariConfig().apply {
-                            jdbcUrl = url
-                            driverClassName = config.effectiveDriver.className
-                            dataSourceProperties = JdbcUrls.properties(config, password)
+                            // The driver lives in its own class loader, so the pool gets it as a DataSource rather than
+                            // a class name it would look up itself.
+                            dataSource = DriverDataSource(driver, url, JdbcUrls.properties(config, password))
                             poolName = "datagrok-${config.name}"
                             maximumPoolSize = PoolSize
                             // A fixed, warm pool: a new connection to a remote server costs a TLS handshake and session
@@ -265,17 +267,23 @@ class Database private constructor(
                         } catch (e: HikariPool.PoolInitializationException) {
                             throw e.cause ?: e
                         }
-                    Database(config, password, url, pool, tunnel)
+                    Database(config, password, url, driver, pool, tunnel)
                 } catch (e: Throwable) {
                     tunnel?.close()
                     throw e
                 }
             }
 
-        /** A single unpooled connection (through the tunnel, if any), e.g. for "Test Connection". */
-        suspend fun test(config: ConnectionConfig, password: String?, sshSecret: String? = null) =
+        /**
+         * A single unpooled connection (through the tunnel, if any), e.g. for "Test Connection". Returns the engine the
+         * server turned out to be when that isn't the profile's type (see [ServerIdentity]), else null.
+         */
+        suspend fun test(config: ConnectionConfig, password: String?, sshSecret: String? = null, drivers: DriverLibrary = DriverLibrary.shared): DatabaseType? =
             withContext(Dispatchers.IO) {
-                openTunnel(config, sshSecret).use { tunnel -> newConnection(jdbcUrl(config, tunnel), config, password).close() }
+                val driver = drivers.load(config)
+                openTunnel(config, sshSecret).use { tunnel ->
+                    newConnection(driver, jdbcUrl(config, tunnel), config, password).use { ServerIdentity.suggest(it, config.type) }
+                }
             }
 
         private fun openTunnel(config: ConnectionConfig, sshSecret: String?): SshTunnel? {
@@ -301,8 +309,8 @@ class Database private constructor(
             JdbcUrls.build(config, tunnel?.let { "127.0.0.1" to it.localPort })
 
         /** Connects with the profile's own driver, so it handles the URL even if another driver also claims it. */
-        private fun newConnection(url: String, config: ConnectionConfig, password: String?): Connection =
-            config.effectiveDriver.load().connect(url, JdbcUrls.properties(config, password))
+        private fun newConnection(driver: java.sql.Driver, url: String, config: ConnectionConfig, password: String?): Connection =
+            driver.connect(url, JdbcUrls.properties(config, password))
                 ?: throw SQLException("${config.effectiveDriver.displayName} doesn't accept the URL $url")
     }
 }

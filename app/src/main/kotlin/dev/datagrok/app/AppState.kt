@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import dev.datagrok.app.connections.ConnectionsViewModel
 import dev.datagrok.app.connections.DatabaseRegistry
+import dev.datagrok.app.connections.DriverDownloads
 import dev.datagrok.app.completion.SchemaCache
 import dev.datagrok.app.explorer.ExplorerViewModel
 import dev.datagrok.app.export.ExportRequest
@@ -12,6 +13,7 @@ import dev.datagrok.app.settings.SettingsPages
 import dev.datagrok.app.workspace.WorkspaceViewModel
 import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.connection.ConnectionStore
+import dev.datagrok.core.drivers.DriverLibrary
 import dev.datagrok.core.history.QueryHistory
 import dev.datagrok.core.settings.Settings
 import dev.datagrok.core.settings.SettingsStore
@@ -29,6 +31,7 @@ class AppState(
     private val settingsStore: SettingsStore = SettingsStore(),
     connectionStore: ConnectionStore = ConnectionStore(),
     val history: QueryHistory = QueryHistory(),
+    driverLibrary: DriverLibrary = DriverLibrary.shared,
 ) {
     /** Lives as long as the app; everything here runs on the UI thread unless it hops to IO itself. */
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -56,8 +59,11 @@ class AppState(
     val currentConnection: ConnectionConfig?
         get() = currentConnectionId?.let(connections::byId) ?: connections.profiles.firstOrNull()
 
+    /** JDBC drivers on this machine and downloads in progress. */
+    val drivers = DriverDownloads(scope, driverLibrary) { settings }.also { it.library.repository = settings.driverRepository }
+
     val connections = ConnectionsViewModel(this, connectionStore)
-    val databases = DatabaseRegistry(scope, connections::storedPassword, connections::storedSshSecret)
+    val databases = DatabaseRegistry(scope, connections::storedPassword, connections::storedSshSecret, drivers, connections::askForDriver)
     val explorer = ExplorerViewModel(this)
     val workspace = WorkspaceViewModel(this)
 
@@ -74,6 +80,7 @@ class AppState(
     fun updateSettings(transform: (Settings) -> Settings) {
         settings = transform(settings)
         val snapshot = settings
+        drivers.library.repository = snapshot.driverRepository
         scope.launch(Dispatchers.IO) {
             runCatching { settingsStore.save(snapshot) }.onFailure { log.warn("Failed to save settings", it) }
         }

@@ -1,6 +1,7 @@
 package dev.datagrok.app.settings
 
 import dev.datagrok.app.AppTheme
+import dev.datagrok.core.drivers.DriverLibrary
 import dev.datagrok.core.settings.Settings
 
 /** One editable setting, declared once here and rendered by the settings dialog. */
@@ -34,6 +35,15 @@ class IntField(
     fun error(text: String): String? =
         if (text.trim().toIntOrNull()?.takeIf { it in range } == null) "Must be a number from ${range.first} to ${range.last}" else null
 }
+
+/** Free text, applied as typed; [placeholder] shows when it's empty. */
+class StringField(
+    override val label: String,
+    val get: (Settings) -> String,
+    val set: (Settings, String) -> Settings,
+    val placeholder: String = "",
+    override val hint: String? = null,
+) : SettingField
 
 class SettingsSection(val title: String?, val fields: List<SettingField>)
 
@@ -126,6 +136,35 @@ object SettingsPages {
                                     { s, v -> s.copy(queryTimeoutSeconds = v) },
                                     unit = "seconds",
                                     hint = "0 waits as long as the query takes.",
+                                ),
+                            ),
+                        ),
+                    ),
+            ),
+            SettingsPage(
+                id = "drivers",
+                group = "Database",
+                title = "Drivers",
+                description = "Where JDBC drivers come from. None ships with Datagrok; each is downloaded the first time it's needed.",
+                sections =
+                    listOf(
+                        SettingsSection(
+                            "Downloads",
+                            listOf(
+                                ChoiceField(
+                                    "Downloading drivers",
+                                    listOf(false, true),
+                                    { if (it) "Automatic for permissive licenses" else "Ask every time" },
+                                    Settings::autoDownloadDrivers,
+                                    { s, v -> s.copy(autoDownloadDrivers = v) },
+                                    hint = "LGPL drivers (MariaDB) always ask. GPL and vendor drivers (MySQL Connector/J, Oracle) are never downloaded: you choose their jars.",
+                                ),
+                                StringField(
+                                    "Maven repository",
+                                    Settings::driverRepository,
+                                    { s, v -> s.copy(driverRepository = v.trim()) },
+                                    placeholder = DriverLibrary.MavenCentral,
+                                    hint = "Leave empty for Maven Central, or use your company's mirror. Downloads are checked against Datagrok's checksums either way.",
                                 ),
                             ),
                         ),

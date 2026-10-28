@@ -38,6 +38,16 @@ class SqlLexer(private val syntax: SqlSyntax) {
                     i = skipQuoted(sql, i, '"', syntax.backslashEscapes && syntax.doubleQuotedStrings)
                     type = if (syntax.doubleQuotedStrings) TokenType.String else TokenType.QuotedIdentifier
                 }
+                c == '[' && syntax.bracketIdentifiers -> {
+                    // `]]` inside the brackets is an escaped bracket.
+                    i++
+                    while (i < sql.length) {
+                        if (sql[i] == ']') {
+                            if (sql.getOrNull(i + 1) == ']') i += 2 else { i++; break }
+                        } else i++
+                    }
+                    type = TokenType.QuotedIdentifier
+                }
                 c == '`' && syntax.backtickIdentifiers -> {
                     i = skipQuoted(sql, i, '`', backslashEscapes = false)
                     type = TokenType.QuotedIdentifier

@@ -7,8 +7,8 @@ package dev.datagrok.core.sql
 data class SqlStatement(val text: String, val start: Int, val end: Int, val delimiterEnd: Int)
 
 /**
- * Splits scripts into statements, respecting quotes, comments, dollar quoting, MySQL's `DELIMITER` command and
- * `BEGIN ... END` bodies inside `CREATE` statements (e.g. SQLite triggers).
+ * Splits scripts into statements, respecting quotes, comments, dollar quoting, MySQL's `DELIMITER` command, T-SQL's `GO`
+ * and `BEGIN ... END` bodies inside `CREATE` statements (e.g. SQLite triggers).
  */
 class SqlSplitter(private val syntax: SqlSyntax) {
     private val lexer = SqlLexer(syntax)
@@ -47,6 +47,11 @@ class SqlSplitter(private val syntax: SqlSyntax) {
                 skipUntil = token.start + delimiter.length
                 continue
             }
+            if (syntax.batchSeparator && token.text(sql).equals("GO", ignoreCase = true) && aloneOnLine(sql, token.start, token.end)) {
+                finish(token.end)
+                skipUntil = sql.indexOf('\n', token.end).let { if (it < 0) sql.length else it }
+                continue
+            }
             if (syntax.delimiterCommand && start < 0 && token.text(sql).equals("DELIMITER", ignoreCase = true)) {
                 val lineEnd = sql.indexOf('\n', token.end).let { if (it < 0) sql.length else it }
                 sql.substring(token.end, lineEnd).trim().split(Regex("\\s+")).firstOrNull()?.takeIf { it.isNotEmpty() }?.let {
@@ -63,6 +68,13 @@ class SqlSplitter(private val syntax: SqlSyntax) {
         }
         finish(end)
         return statements
+    }
+
+    /** Whether only whitespace (or a `GO 5`-style count) shares the line with [start]..[end]. */
+    private fun aloneOnLine(sql: String, start: Int, end: Int): Boolean {
+        val lineStart = sql.lastIndexOf('\n', start - 1) + 1
+        val lineEnd = sql.indexOf('\n', end).let { if (it < 0) sql.length else it }
+        return sql.substring(lineStart, start).isBlank() && sql.substring(end, lineEnd).trim().all { it.isDigit() }
     }
 
     /**

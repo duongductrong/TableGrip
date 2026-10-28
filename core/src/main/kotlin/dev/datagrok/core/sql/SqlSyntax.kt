@@ -10,6 +10,10 @@ data class SqlSyntax(
     val backslashEscapes: Boolean = false,
     /** MySQL client `DELIMITER //` command, used around procedure bodies. */
     val delimiterCommand: Boolean = false,
+    /** T-SQL `[quoted name]`. */
+    val bracketIdentifiers: Boolean = false,
+    /** T-SQL tools' `GO` on a line of its own, which ends a batch. */
+    val batchSeparator: Boolean = false,
 ) {
     companion object {
         val PostgreSQL = SqlSyntax(dollarQuotedStrings = true)
@@ -22,5 +26,8 @@ data class SqlSyntax(
                 delimiterCommand = true,
             )
         val SQLite = SqlSyntax(backtickIdentifiers = true)
+        val Standard = SqlSyntax()
+        val TSql = SqlSyntax(bracketIdentifiers = true, batchSeparator = true)
+        val ClickHouse = SqlSyntax(backtickIdentifiers = true, backslashEscapes = true)
     }
 }

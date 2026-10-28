@@ -7,3 +7,6 @@ out/
 *.iml
 local.properties
 .DS_Store
+
+# Written by Apache Derby in the working directory (tests)
+derby.log

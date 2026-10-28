@@ -1,5 +1,7 @@
 package dev.datagrok.core.connection
 
+import dev.datagrok.core.drivers.DriverLibrary
+import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -7,13 +9,16 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class JdbcUrlsTest {
+    private val drivers = DriverLibrary(Files.createTempDirectory("drivers"))
+
     private fun config(type: DatabaseType, vararg changes: (ConnectionConfig) -> ConnectionConfig) =
         changes.fold(ConnectionConfig(id = "id", name = "n", type = type, host = "db.local", port = 5555, database = "app")) { c, f -> f(c) }
 
     @Test
     fun `builds URLs in each driver's syntax`() {
         assertEquals("jdbc:postgresql://db.local:5555/app", JdbcUrls.build(config(DatabaseType.PostgreSQL)))
-        assertEquals("jdbc:mysql://db.local:5555/app", JdbcUrls.build(config(DatabaseType.MySQL)))
+        assertEquals("jdbc:mariadb://db.local:5555/app", JdbcUrls.build(config(DatabaseType.MySQL)), "MySQL defaults to MariaDB Connector/J")
+        assertEquals("jdbc:mysql://db.local:5555/app", JdbcUrls.build(config(DatabaseType.MySQL, { it.copy(driver = DriverId.MySQL) })))
         assertEquals("jdbc:mariadb://db.local:5555/app", JdbcUrls.build(config(DatabaseType.MariaDB)))
         // MySQL servers through MariaDB Connector/J, and the reverse.
         assertEquals("jdbc:mariadb://db.local:5555/app", JdbcUrls.build(config(DatabaseType.MySQL, { it.copy(driver = DriverId.MariaDB) })))
@@ -26,7 +31,7 @@ class JdbcUrlsTest {
     fun `hosts, IPv6, multiple hosts and encoded database names`() {
         assertEquals("jdbc:postgresql://[::1]:5432/my%20db", JdbcUrls.build(config(DatabaseType.PostgreSQL, { it.copy(host = "::1", port = 5432, database = "my db") })))
         assertEquals("jdbc:postgresql://h1:1,h2/app", JdbcUrls.build(config(DatabaseType.PostgreSQL, { it.copy(host = "h1:1, h2", port = null) })))
-        assertEquals("jdbc:mysql://127.0.0.1:40000/app", JdbcUrls.build(config(DatabaseType.MySQL), via = "127.0.0.1" to 40000))
+        assertEquals("jdbc:mysql://127.0.0.1:40000/app", JdbcUrls.build(config(DatabaseType.MySQL, { it.copy(driver = DriverId.MySQL) }), via = "127.0.0.1" to 40000))
     }
 
     @Test
@@ -37,7 +42,7 @@ class JdbcUrlsTest {
 
     @Test
     fun `raw URLs are adapted to the chosen driver and can be redirected through a tunnel`() {
-        val raw = config(DatabaseType.MySQL, { it.copy(url = "jdbc:mysql://user@db.local:3306/app?useSSL=false") })
+        val raw = config(DatabaseType.MySQL, { it.copy(driver = DriverId.MySQL, url = "jdbc:mysql://user@db.local:3306/app?useSSL=false") })
         assertEquals("jdbc:mysql://user@db.local:3306/app?useSSL=false", JdbcUrls.build(raw))
         assertEquals("jdbc:mysql://user@127.0.0.1:41000/app?useSSL=false", JdbcUrls.build(raw, via = "127.0.0.1" to 41000))
         assertEquals("jdbc:mysql://user@db.local:3306/app?useSSL=false&permitMysqlScheme", JdbcUrls.build(raw.copy(driver = DriverId.MariaDB)))
@@ -52,23 +57,25 @@ class JdbcUrlsTest {
             listOf(
                 config(DatabaseType.PostgreSQL),
                 config(DatabaseType.MySQL),
-                config(DatabaseType.MySQL, { it.copy(driver = DriverId.MariaDB) }),
+                config(DatabaseType.MySQL, { it.copy(driver = DriverId.MySQL) }),
                 config(DatabaseType.MariaDB),
                 config(DatabaseType.MariaDB, { it.copy(driver = DriverId.MySQL) }),
                 config(DatabaseType.MySQL, { it.copy(driver = DriverId.MariaDB, url = "jdbc:mysql://db.local/app") }),
+                // Pasted Connector/J replication URLs now default to MariaDB Connector/J, which must take them too.
+                config(DatabaseType.MySQL, { it.copy(url = "jdbc:mysql:replication://primary:3306,replica:3306/db") }),
                 config(DatabaseType.SQLite, { it.copy(database = "/tmp/x.db") }),
             )
         for (case in cases) {
             val url = JdbcUrls.build(case)
-            assertTrue(case.effectiveDriver.load().acceptsURL(url), "${case.effectiveDriver} should accept $url")
+            assertTrue(drivers.load(case.effectiveDriver).acceptsURL(url), "${case.effectiveDriver} should accept $url")
         }
         // Which is why the adaptation matters: MariaDB Connector/J refuses plain jdbc:mysql URLs.
-        assertFalse(DriverId.MariaDB.load().acceptsURL("jdbc:mysql://db.local/app"))
+        assertFalse(drivers.load(DriverId.MariaDB).acceptsURL("jdbc:mysql://db.local/app"))
     }
 
     @Test
     fun `driver properties add credentials, timeouts and translate ssl modes`() {
-        val mysql = JdbcUrls.properties(config(DatabaseType.MySQL, { it.copy(user = "me", properties = mapOf("sslMode" to "verify-full")) }), "pw")
+        val mysql = JdbcUrls.properties(config(DatabaseType.MySQL, { it.copy(driver = DriverId.MySQL, user = "me", properties = mapOf("sslMode" to "verify-full")) }), "pw")
         assertEquals("me", mysql.getProperty("user"))
         assertEquals("pw", mysql.getProperty("password"))
         assertEquals("10000", mysql.getProperty("connectTimeout"))
@@ -83,7 +90,8 @@ class JdbcUrlsTest {
     }
 
     @Test
-    fun `all bundled drivers load`() {
-        DriverId.entries.forEach { assertTrue(it.version != null, "$it should load") }
+    fun `every driver loads from the test classpath`() {
+        // Generic has no driver of its own: each profile brings its jars.
+        DriverId.entries.filter { it != DriverId.Generic }.forEach { drivers.load(it) }
     }
 }

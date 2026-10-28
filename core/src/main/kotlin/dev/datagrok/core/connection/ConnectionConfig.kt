@@ -2,15 +2,6 @@ package dev.datagrok.core.connection
 
 import kotlinx.serialization.Serializable
 
-/** Database engines supported out of the box, with the JDBC drivers that can talk to each (default first). */
-@Serializable
-enum class DatabaseType(val displayName: String, val defaultPort: Int?, val drivers: List<DriverId>) {
-    PostgreSQL("PostgreSQL", 5432, listOf(DriverId.PostgreSQL)),
-    MySQL("MySQL", 3306, listOf(DriverId.MySQL, DriverId.MariaDB)),
-    MariaDB("MariaDB", 3306, listOf(DriverId.MariaDB, DriverId.MySQL)),
-    SQLite("SQLite", null, listOf(DriverId.SQLite)),
-}
-
 /** Where a database lives; drives the connection's colour and how cautious the UI is. */
 @Serializable
 enum class Environment(val label: String) {
@@ -63,6 +54,8 @@ data class ConnectionConfig(
      * model such as replication or load-balancing URLs. Never contains the password; that's in the [SecretStore].
      */
     val url: String? = null,
+    /** The driver jars of a [DriverId.Generic] profile: the user's, kept where they are. */
+    val driverJars: List<String> = emptyList(),
 ) {
     val effectiveDriver: DriverId
         get() = driver?.takeIf { it in type.drivers } ?: type.drivers.first()

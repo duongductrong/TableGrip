@@ -15,4 +15,8 @@ object DatagrokPaths {
 
     val history: Path
         get() = home.resolve("history.jsonl")
+
+    /** Downloaded JDBC drivers and the user's own driver jars. */
+    val drivers: Path
+        get() = home.resolve("drivers")
 }

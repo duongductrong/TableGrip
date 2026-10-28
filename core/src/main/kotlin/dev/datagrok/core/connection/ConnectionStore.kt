@@ -9,6 +9,9 @@ import kotlin.io.path.exists
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonArray
 
 /**
  * Persists connection profiles as JSON in [file], and their passwords in [secrets].
@@ -24,7 +27,18 @@ class ConnectionStore(
         ignoreUnknownKeys = true
     }
 
-    fun load(): List<ConnectionConfig> = if (file.exists()) json.decodeFromString(file.readText()) else emptyList()
+    /**
+     * The profiles this version understands. Others (an engine added by a newer Datagrok) are skipped, not lost:
+     * [write] keeps them in the file.
+     */
+    fun load(): List<ConnectionConfig> = readAll().mapNotNull { it.second }
+
+    private fun readAll(): List<Pair<JsonElement, ConnectionConfig?>> {
+        if (!file.exists()) return emptyList()
+        return json.parseToJsonElement(file.readText()).jsonArray.map { element ->
+            element to runCatching { json.decodeFromJsonElement(ConnectionConfig.serializer(), element) }.getOrNull()
+        }
+    }
 
     /**
      * Inserts or replaces [config]. For [password] and [sshSecret] (SSH password or key passphrase), null keeps the
@@ -67,7 +81,8 @@ class ConnectionStore(
         file.parent?.createDirectories()
         // Write to a temp file first so a crash never leaves a half-written profile list behind.
         val tmp = Files.createTempFile(file.parent, file.fileName.toString(), ".tmp")
-        tmp.writeText(json.encodeToString(configs))
+        val unknown = readAll().filter { it.second == null }.map { it.first }
+        tmp.writeText(json.encodeToString(JsonArray(configs.map { json.encodeToJsonElement(ConnectionConfig.serializer(), it) } + unknown)))
         Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
     }
 }

@@ -35,12 +35,7 @@ class SchemaCache(private val scope: CoroutineScope, private val databases: Data
     override val defaultNamespace: String?
         get() {
             val names = namespaceList?.map { it.displayName } ?: return null
-            return when (config.type) {
-                DatabaseType.PostgreSQL -> "public".takeIf { it in names } ?: names.firstOrNull()
-                DatabaseType.MySQL,
-                DatabaseType.MariaDB -> config.database.takeIf { it in names } ?: names.firstOrNull()
-                DatabaseType.SQLite -> names.firstOrNull()
-            }
+            return config.type.dialect.defaultNamespace(names, config.database)
         }
 
     override fun namespaces(): List<String> = namespaceList?.map { it.displayName } ?: emptyList<String>().also { loadNamespaces() }

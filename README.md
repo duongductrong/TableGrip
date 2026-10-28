@@ -17,6 +17,8 @@ scripts/run.sh                      # launch the app (--fresh: throwaway profile
 ./gradlew :app:run -Pdatagrok.home=/tmp/dg   # launch with a throwaway profile/settings/history directory
 ./gradlew :core:test                # run core tests
 ./gradlew :core:test -Pit.postgres=localhost:55432 -Pit.mysql=localhost:53306   # also test against real servers (seed: core/src/test/resources/structure-it)
+./gradlew :core:test -Pit.network=true          # also download the real catalog drivers from Maven Central
+./gradlew :core:lockDrivers                      # after changing the driver catalog in core/build.gradle.kts
 ./gradlew :app:packageDistributionForCurrentOS   # build a native installer (dmg/msi/deb)
 ```
 
@@ -123,6 +125,24 @@ Everything lives in `~/.datagrok/` (override with `-Ddatagrok.home`): `connectio
 via [java-keyring](https://github.com/javakeyring/java-keyring) under the service name `Datagrok`:
 macOS Keychain, Windows Credential Manager, or the Secret Service (GNOME Keyring / KWallet) on Linux.
 
+## Drivers
+
+No JDBC driver ships with Datagrok. The connection dialog says what the chosen driver needs and offers it:
+
+- **Catalog drivers** (PostgreSQL, MariaDB Connector/J, SQLite, SQL Server, ClickHouse, DuckDB, H2, HSQLDB, Derby)
+  download from Maven Central, or a mirror set in
+  Settings → Drivers, into `~/.datagrok/drivers/`. Every jar must match the SHA-256 pinned in
+  `core/src/main/resources/dev/datagrok/core/drivers/drivers.lock.json`, which `:core:lockDrivers` writes from the catalog
+  in `core/build.gradle.kts`. The catalog only takes jars whose license a person reviewed and the allowlist accepts
+  (permissive, or LGPL as a separate user download); `check` fails when the lockfile is stale.
+- **Your own jars** for drivers Datagrok can't distribute (MySQL Connector/J is GPL): choose them in the dialog.
+- **Offline**: "Import from folder…" installs catalog drivers from jars already on disk, checked against the same hashes.
+
+MySQL connections use MariaDB Connector/J by default. Each driver loads in its own class loader; `:app:verifyNoBundledDrivers`
+(part of `check` and every `package*` task) fails if a driver ends up in the installer.
+`:app:thirdPartyNotices` (also part of `check`) writes `THIRD-PARTY-NOTICES.txt` into the app jar and fails on any
+shipped library whose license hasn't been reviewed into `bundledLicenses` in `app/build.gradle.kts`.
+
 ## Connecting
 
 Paste any of these into **New Connection → Paste** and press Parse:
@@ -134,6 +154,8 @@ Paste any of these into **New Connection → Paste** and press Parse:
 | MySQL / MariaDB | `mysql://user:pass@host/db?ssl-mode=REQUIRED` · `jdbc:mariadb://host/db?sslMode=verify-full` |
 | Advanced Connector/J, MariaDB | `jdbc:mysql:replication://…`, `address=(host=…)(port=…)` — kept as a raw JDBC URL |
 | SQLite | `jdbc:sqlite:/path/app.db` · `sqlite:///path/app.db` · `~/data/app.sqlite3` |
+| SQL Server, ClickHouse, DuckDB, H2, HSQLDB, Derby | `jdbc:sqlserver://db:1433;databaseName=shop` · `jdbc:clickhouse://ch:8123/default` · `jdbc:duckdb:/data/a.duckdb` |
+| Any other JDBC driver | `jdbc:firebirdsql://…`, `jdbc:oracle:thin:@…` — becomes "Other (JDBC driver)"; choose the driver's jar |
 
 libpq parameters are translated to pgjdbc properties (`application_name` → `ApplicationName`, `connect_timeout` →
 `connectTimeout`, `target_session_attrs` → `targetServerType`, `ssl=true` → `sslmode=require`). Passwords found in a

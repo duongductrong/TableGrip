@@ -28,7 +28,9 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import dev.datagrok.app.ui.AppDialog
 import dev.datagrok.core.connection.ConnectionConfig
+import dev.datagrok.core.connection.ConnectionKind
 import dev.datagrok.core.connection.ConnectionString
+import dev.datagrok.core.connection.DatabaseFiles
 import dev.datagrok.core.connection.DatabaseType
 import dev.datagrok.core.connection.DriverId
 import dev.datagrok.core.connection.JdbcUrls
@@ -36,6 +38,8 @@ import dev.datagrok.core.connection.ParsedConnection
 import dev.datagrok.core.connection.Environment
 import dev.datagrok.core.connection.SshAuth
 import dev.datagrok.core.connection.SshConfig
+import dev.datagrok.core.drivers.DriverResolution
+import java.nio.file.Path
 import java.util.UUID
 import kotlinx.coroutines.launch
 import org.jetbrains.jewel.foundation.theme.JewelTheme
@@ -48,6 +52,7 @@ import org.jetbrains.jewel.ui.component.TabData
 import org.jetbrains.jewel.ui.component.TabStrip
 import org.jetbrains.jewel.ui.component.TextArea
 import org.jetbrains.jewel.ui.theme.defaultTabStyle
+import org.jetbrains.jewel.ui.component.Link
 import org.jetbrains.jewel.ui.component.ListComboBox
 import org.jetbrains.jewel.ui.component.OutlinedButton
 import org.jetbrains.jewel.ui.component.Text
@@ -65,7 +70,9 @@ private class ConnectionForm(existing: ConnectionConfig?) {
     val password = TextFieldState()
     var driver by mutableStateOf(existing?.effectiveDriver ?: DatabaseType.PostgreSQL.drivers.first())
     /** Connect with a raw JDBC URL instead of host/port/database. */
-    var useUrl by mutableStateOf(existing?.url != null)
+    var useUrl by mutableStateOf(existing?.url != null || existing?.type?.connection == ConnectionKind.Url)
+    /** Jars of a [DriverId.Generic] driver, as paths. */
+    var driverJars by mutableStateOf(existing?.driverJars.orEmpty())
     val url = TextFieldState(existing?.url.orEmpty())
     val properties = TextFieldState(existing?.properties.orEmpty().entries.joinToString("\n") { "${it.key}=${it.value}" })
     val connectionString = TextFieldState()
@@ -84,18 +91,23 @@ private class ConnectionForm(existing: ConnectionConfig?) {
     val sshSecret = TextFieldState()
 
     val isServer: Boolean
-        get() = type.defaultPort != null
+        get() = type.isServer
+
+    /** The engine has no host/file form: only a JDBC URL. */
+    val urlOnly: Boolean
+        get() = type.connection == ConnectionKind.Url
 
     fun changeType(newType: DatabaseType) {
         type = newType
         if (driver !in newType.drivers) driver = newType.drivers.first()
+        if (urlOnly) useUrl = true
     }
 
     /** Fills the form from a pasted connection string; returns warnings to show. */
     fun apply(parsed: ParsedConnection): List<String> {
         changeType(parsed.type)
         parsed.driver?.takeIf { it in parsed.type.drivers }?.let { driver = it }
-        useUrl = parsed.url != null
+        useUrl = parsed.url != null || urlOnly
         parsed.url?.let { url.setTextAndPlaceCursorAtEnd(it) }
         parsed.host?.let { host.setTextAndPlaceCursorAtEnd(it) }
         port.setTextAndPlaceCursorAtEnd(parsed.port?.toString().orEmpty())
@@ -125,7 +137,7 @@ private class ConnectionForm(existing: ConnectionConfig?) {
         }
     }
 
-    fun validate(): String? {
+    fun validate(drivers: DriverDownloads): String? {
         val port = port.text.toString()
         parseProperties().exceptionOrNull()?.let { return it.message }
         if (useUrl) {
@@ -134,12 +146,15 @@ private class ConnectionForm(existing: ConnectionConfig?) {
                 raw.isEmpty() -> "JDBC URL is required."
                 !raw.startsWith("jdbc:") -> "A JDBC URL starts with jdbc: — paste other formats into Connection string."
                 ssh && runCatching { JdbcUrls.build(toConfig(), via = "127.0.0.1" to 1) }.isFailure -> "SSH tunnels need a single-host URL."
-                !driver.load().acceptsURL(JdbcUrls.build(toConfig())) -> "${driver.displayName} doesn't accept this URL."
+                // Only checkable once the driver is here; until then the driver banner asks for it.
+                drivers.library.resolve(toConfig()) is DriverResolution.Ready && !drivers.library.load(toConfig()).acceptsURL(JdbcUrls.build(toConfig())) ->
+                    "${driver.displayName} doesn't accept this URL."
                 else -> null
             }
         }
         return when {
             database.text.isBlank() -> if (isServer) "Database is required." else "Database file is required."
+            fileMismatch() != null -> fileMismatch()
             isServer && host.text.isBlank() -> "Host is required."
             ssh && ',' in host.text -> "SSH tunnels need a single host."
             isServer && port.isNotEmpty() && port.toIntOrNull() !in 1..65535 -> "Port must be between 1 and 65535."
@@ -149,6 +164,10 @@ private class ConnectionForm(existing: ConnectionConfig?) {
             else -> null
         }
     }
+
+    /** Why the chosen file isn't a database of this type (checked by content), or null. */
+    private fun fileMismatch(): String? =
+        if (isServer) null else runCatching { Path.of(database.text.toString().trim()) }.getOrNull()?.let { DatabaseFiles.mismatch(it, type) }
 
     private val ssh: Boolean
         get() = useSsh && isServer
@@ -170,6 +189,7 @@ private class ConnectionForm(existing: ConnectionConfig?) {
             database = database,
             user = if (isServer) user.text.toString().trim() else "",
             driver = driver,
+            driverJars = if (driver == DriverId.Generic) driverJars else emptyList(),
             properties = parseProperties().getOrDefault(emptyMap()),
             url = url.text.toString().trim().takeIf { useUrl && it.isNotEmpty() },
             environment = environment,
@@ -222,7 +242,7 @@ internal fun ConnectionDialogContent(state: ConnectionsViewModel, request: Conne
 
     fun submit(test: Boolean) {
         form.moveUrlPassword()
-        form.validate()?.let {
+        form.validate(state.drivers)?.let {
             message = Message(it, isError = true)
             return
         }
@@ -232,12 +252,18 @@ internal fun ConnectionDialogContent(state: ConnectionsViewModel, request: Conne
             val config = form.toConfig()
             val password = form.password.text.toString()
             val sshSecret = form.sshSecret.text.toString()
-            val result = if (test) state.test(config, password, sshSecret) else state.save(config, password, sshSecret)
             message =
-                result.fold(
-                    onSuccess = { Message("Connection succeeded.", isError = false).takeIf { test } },
-                    onFailure = { Message(it.message ?: it.toString(), isError = true) },
-                )
+                if (test) {
+                    state.test(config, password, sshSecret).fold(
+                        onSuccess = { detected ->
+                            if (detected == null) Message("Connection succeeded.", isError = false)
+                            else Message("Connection succeeded. This server is ${detected.displayName}.", isError = false, action = "Use ${detected.displayName}" to { form.changeType(detected) })
+                        },
+                        onFailure = { Message(it.message ?: it.toString(), isError = true) },
+                    )
+                } else {
+                    state.save(config, password, sshSecret).exceptionOrNull()?.let { Message(it.message ?: it.toString(), isError = true) }
+                }
             busy = false
         }
     }
@@ -269,14 +295,22 @@ internal fun ConnectionDialogContent(state: ConnectionsViewModel, request: Conne
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
         Column(Modifier.weight(1f).fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             when (if (tab == DialogTab.Ssh && !form.isServer) DialogTab.General else tab) {
-                DialogTab.General -> GeneralTab(form) { message = it }
+                DialogTab.General -> GeneralTab(form, state.drivers) { message = it }
                 DialogTab.Ssh -> SshTab(form)
                 DialogTab.Options -> OptionsTab(form)
             }
         }
         Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             message?.let {
-                Text(it.text, color = if (it.isError) JewelTheme.globalColors.text.error else JewelTheme.globalColors.text.info, maxLines = 3)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(it.text, color = if (it.isError) JewelTheme.globalColors.text.error else JewelTheme.globalColors.text.info, maxLines = 3)
+                    it.action?.let { (label, act) ->
+                        Link(label, onClick = {
+                            act()
+                            message = null
+                        })
+                    }
+                }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 OutlinedButton(onClick = { submit(test = true) }, enabled = !busy) { Text("Test Connection") }
@@ -289,7 +323,7 @@ internal fun ConnectionDialogContent(state: ConnectionsViewModel, request: Conne
 }
 
 @Composable
-private fun GeneralTab(form: ConnectionForm, onMessage: (Message?) -> Unit) {
+private fun GeneralTab(form: ConnectionForm, drivers: DriverDownloads, onMessage: (Message?) -> Unit) {
     fun parse() {
         val text = form.connectionString.text.toString()
         if (text.isBlank()) return
@@ -322,21 +356,30 @@ private fun GeneralTab(form: ConnectionForm, onMessage: (Message?) -> Unit) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             ListComboBox(
                 items = DatabaseType.entries.map { it.displayName },
-                selectedIndex = form.type.ordinal,
+                selectedIndex = DatabaseType.entries.indexOf(form.type),
                 onSelectedItemChange = { form.changeType(DatabaseType.entries[it]) },
-                modifier = Modifier.width(140.dp),
+                modifier = Modifier.width(180.dp),
             )
-            val drivers = form.type.drivers
+            val choices = form.type.drivers
             ListComboBox(
-                items = drivers.map { driver -> driver.displayName + (driver.version?.let { " $it" } ?: "") },
-                selectedIndex = drivers.indexOf(form.driver).coerceAtLeast(0),
-                onSelectedItemChange = { form.driver = drivers[it] },
+                items = choices.map { it.displayName },
+                selectedIndex = choices.indexOf(form.driver).coerceAtLeast(0),
+                onSelectedItemChange = { form.driver = choices[it] },
                 modifier = Modifier.weight(1f),
-                enabled = drivers.size > 1,
+                enabled = choices.size > 1,
             )
         }
     }
-    FormRow("Connect by") {
+    DriverBanner(
+        form.driver,
+        drivers,
+        Modifier.fillMaxWidth(),
+        onSwitch = { form.driver = it },
+        onMessage = { onMessage(Message(it, isError = true)) },
+        profileJars = form.driverJars,
+        onProfileJars = { form.driverJars = it },
+    )
+    if (!form.urlOnly) FormRow("Connect by") {
         ListComboBox(
             items = listOf(if (form.isServer) "Host and port" else "File", "JDBC URL"),
             selectedIndex = if (form.useUrl) 1 else 0,
@@ -349,8 +392,8 @@ private fun GeneralTab(form: ConnectionForm, onMessage: (Message?) -> Unit) {
         )
     }
     if (form.useUrl) {
-        FormRow("URL") { TextField(form.url, Modifier.fillMaxWidth(), textStyle = JewelTheme.editorTextStyle, placeholder = { Text("jdbc:mysql:replication://primary,replica/db") }) }
-        if (form.isServer) {
+        FormRow("URL") { TextField(form.url, Modifier.fillMaxWidth(), textStyle = JewelTheme.editorTextStyle, placeholder = { Text(if (form.urlOnly) "jdbc:firebirdsql://host:3050/employee" else "jdbc:mysql:replication://primary,replica/db") }) }
+        if (form.isServer || form.urlOnly) {
             FormRow("User") { TextField(form.user, Modifier.fillMaxWidth()) }
             FormRow("Password") {
                 TextField(form.password, Modifier.fillMaxWidth(), outputTransformation = MaskPassword, placeholder = { Text("Saved in the system keychain") })
@@ -373,7 +416,7 @@ private fun GeneralTab(form: ConnectionForm, onMessage: (Message?) -> Unit) {
         }
     } else {
         FormRow("File") {
-            TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text("/path/to/database.sqlite or :memory:") })
+            TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text(form.type.databaseHint ?: "/path/to/database.sqlite or :memory:") })
         }
     }
     val preview = runCatching { JdbcUrls.build(form.toConfig()) }.getOrNull()
@@ -469,7 +512,7 @@ private fun chooseFile(title: String): String? {
     return dialog.file?.let { java.io.File(dialog.directory, it).path }
 }
 
-private data class Message(val text: String, val isError: Boolean)
+private data class Message(val text: String, val isError: Boolean, val action: Pair<String, () -> Unit>? = null)
 
 @Composable
 private fun FormRow(label: String, content: @Composable () -> Unit) {
@@ -497,6 +540,53 @@ internal fun DeleteConnectionDialog(state: ConnectionsViewModel, config: Connect
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
                 OutlinedButton(onClick = { state.pendingDelete = null }) { Text("Cancel") }
                 DefaultButton(onClick = { state.delete(config) }) { Text("Delete") }
+            }
+        }
+    }
+}
+
+/**
+ * Shown when a saved connection can't connect because its driver isn't on this machine (a new install, another
+ * computer, or a profile using MySQL's own driver). Connects as soon as the driver is ready.
+ */
+@Composable
+internal fun MissingDriverDialog(state: ConnectionsViewModel, config: ConnectionConfig) {
+    var driver by remember(config) { mutableStateOf(config.effectiveDriver) }
+    var jars by remember(config) { mutableStateOf(config.driverJars) }
+    var error by remember(config) { mutableStateOf<String?>(null) }
+    val updated = config.copy(driver = driver, driverJars = if (driver == DriverId.Generic) jars else config.driverJars)
+    val ready = state.drivers.resolve(updated) is DriverResolution.Ready
+    fun connect() {
+        if (updated != config) state.updateDriver(updated)
+        state.retryAfterDriver(updated)
+    }
+    // The user's download or jar was the whole point: connect without another click once it lands.
+    LaunchedEffect(ready) { if (ready) connect() }
+    AppDialog(
+        onCloseRequest = { state.driverPrompt = null },
+        size = DpSize(520.dp, 240.dp),
+        title = "Driver Needed",
+        resizable = false,
+    ) {
+        Column(
+            Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text("“${config.name}” uses ${driver.displayName}, which isn't on this computer yet.")
+            DriverBanner(
+                driver,
+                state.drivers,
+                Modifier.fillMaxWidth(),
+                onSwitch = { driver = it },
+                onMessage = { error = it },
+                profileJars = jars,
+                onProfileJars = { jars = it },
+            )
+            error?.let { Text(it, color = JewelTheme.globalColors.text.error, maxLines = 3) }
+            Spacer(Modifier.weight(1f))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
+                OutlinedButton(onClick = { state.driverPrompt = null }) { Text("Cancel") }
+                DefaultButton(onClick = ::connect, enabled = ready) { Text("Connect") }
             }
         }
     }

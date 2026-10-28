@@ -5,6 +5,7 @@ import dev.datagrok.core.sql.SqlLexer
 import dev.datagrok.core.sql.TokenType
 import java.sql.Connection
 import java.sql.ResultSet
+import java.sql.Types
 
 /**
  * Reads what JDBC metadata doesn't cover — constraints, triggers and DDL — with each engine's own catalog queries.
@@ -48,14 +49,31 @@ internal sealed class StructureReader(protected val dialect: SqlDialect) {
     companion object {
         fun of(dialect: SqlDialect): StructureReader =
             when (dialect) {
-                SqlDialect.PostgreSQL -> PostgreSQLStructure
-                SqlDialect.MySQL -> MySQLStructure
-                SqlDialect.SQLite -> SQLiteStructure
+                is SqlDialect.CockroachDBDialect -> CockroachDBStructure
+                is SqlDialect.PostgreSQLDialect -> PostgreSQLStructure
+                is SqlDialect.MySQLDialect -> MySQLStructure
+                is SqlDialect.SQLiteDialect -> SQLiteStructure
+                is SqlDialect.SqlServerDialect -> SqlServerStructure
+                is SqlDialect.ClickHouseDialect -> ClickHouseStructure
+                is SqlDialect.DuckDBDialect -> DuckDBStructure
+                else -> GenericStructure(dialect)
             }
     }
 }
 
-private data object PostgreSQLStructure : StructureReader(SqlDialect.PostgreSQL) {
+private data object PostgreSQLStructure : PostgreSQLCatalog()
+
+/** CockroachDB answers PostgreSQL's constraint queries, but has no trigger catalog and writes its own DDL. */
+private data object CockroachDBStructure : PostgreSQLCatalog() {
+    override fun triggers(connection: Connection, table: TableRef): List<TriggerInfo> = emptyList()
+
+    override fun ddl(connection: Connection, details: TableDetails, constraints: List<ConstraintInfo>, triggers: List<TriggerInfo>): String =
+        connection.createStatement().use { statement ->
+            statement.executeQuery("SHOW CREATE TABLE ${dialect.qualifiedName(details.table)}").use { rs -> rs.next(); rs.getString("create_statement") }
+        }.trim().removeSuffix(";") + ";"
+}
+
+private open class PostgreSQLCatalog : StructureReader(SqlDialect.PostgreSQL) {
     private val kinds = mapOf("p" to ConstraintKind.PrimaryKey, "u" to ConstraintKind.Unique, "f" to ConstraintKind.ForeignKey, "c" to ConstraintKind.Check, "x" to ConstraintKind.Exclusion)
 
     // Relations are addressed as `?::regclass` with the quoted qualified name, so every query resolves them the same way.
@@ -326,4 +344,100 @@ private data object SQLiteStructure : StructureReader(SqlDialect.SQLite) {
 
     private fun unquote(identifier: String): String =
         if (identifier.length >= 2 && identifier.first() in "\"`[") identifier.substring(1, identifier.length - 1) else identifier
+}
+
+/**
+ * Structure from JDBC metadata alone, for engines without a reader of their own: keys come from metadata, there are no
+ * triggers, and the DDL is rebuilt from the columns, so it may differ in detail from what created the table.
+ */
+private open class GenericStructure(dialect: SqlDialect) : StructureReader(dialect) {
+    override fun constraints(connection: Connection, details: TableDetails): List<ConstraintInfo> {
+        val primaryKey =
+            details.primaryKey.takeIf { it.isNotEmpty() }?.let { ConstraintInfo("", ConstraintKind.PrimaryKey, it, "PRIMARY KEY ${columnList(it)}") }
+        val foreignKeys = details.foreignKeys.map { ConstraintInfo(it.name, ConstraintKind.ForeignKey, it.columns, foreignKeyDefinition(details.table, it)) }
+        return listOfNotNull(primaryKey) + foreignKeys
+    }
+
+    override fun triggers(connection: Connection, table: TableRef): List<TriggerInfo> = emptyList()
+
+    /** What the rebuilt DDL can't know; empty when the engine supplies what's missing. */
+    protected open val ddlNote: String = "-- Rebuilt from JDBC metadata; details such as CHECK constraints and triggers aren't included.\n"
+
+    override fun ddl(connection: Connection, details: TableDetails, constraints: List<ConstraintInfo>, triggers: List<TriggerInfo>): String {
+        val columns =
+            details.columns.map { column ->
+                buildString {
+                    append(dialect.quoteIdentifier(column.name)).append(' ').append(column.typeName)
+                    if (column.size != null && column.jdbcType in SizedTypes) append('(').append(column.size).append(')')
+                    column.defaultValue?.takeIf { !column.autoIncrement }?.let { append(" DEFAULT ").append(it) }
+                    if (!column.nullable) append(" NOT NULL")
+                }
+            }
+        val keys = constraints.map { (if (it.name.isEmpty()) "" else "CONSTRAINT ${dialect.quoteIdentifier(it.name)} ") + it.definition }
+        val create = "CREATE TABLE ${dialect.qualifiedName(details.table)} (\n" + (columns + keys).joinToString(",\n") { "    $it" } + "\n)"
+        // Unique indexes that back the primary key are part of it already.
+        val indexes =
+            details.indexes.filterNot { it.columns == details.primaryKey }.map { index ->
+                "CREATE ${if (index.unique) "UNIQUE " else ""}INDEX ${dialect.quoteIdentifier(index.name)} ON ${dialect.qualifiedName(details.table)} ${columnList(index.columns)}"
+            }
+        return ddlNote + statements(listOf(create), indexes, triggers.map { it.definition })
+    }
+
+    private companion object {
+        val SizedTypes = setOf(Types.CHAR, Types.VARCHAR, Types.NCHAR, Types.NVARCHAR, Types.BINARY, Types.VARBINARY)
+    }
+}
+
+/** SQL Server has no SHOW CREATE: the table is rebuilt from metadata, with CHECK constraints and triggers from `sys`. */
+private object SqlServerStructure : GenericStructure(SqlDialect.SqlServer) {
+    override val ddlNote = "-- Rebuilt from the catalog; storage options (filegroups, compression) aren't included.\n"
+
+    override fun constraints(connection: Connection, details: TableDetails): List<ConstraintInfo> {
+        val checks =
+            connection.query(
+                "SELECT name, definition FROM sys.check_constraints WHERE parent_object_id = OBJECT_ID(?) ORDER BY name",
+                dialect.qualifiedName(details.table),
+            ) { ConstraintInfo(getString(1), ConstraintKind.Check, emptyList(), "CHECK " + getString(2)) }
+        return super.constraints(connection, details) + checks
+    }
+
+    override fun triggers(connection: Connection, table: TableRef): List<TriggerInfo> =
+        connection.query(
+            """
+            SELECT t.name, t.is_instead_of_trigger, t.is_disabled, OBJECT_DEFINITION(t.object_id),
+                   STUFF((SELECT ' OR ' + e.type_desc FROM sys.trigger_events e WHERE e.object_id = t.object_id FOR XML PATH('')), 1, 4, '')
+            FROM sys.triggers t WHERE t.parent_id = OBJECT_ID(?) ORDER BY t.name
+            """,
+            dialect.qualifiedName(table),
+        ) { TriggerInfo(getString(1), if (getBoolean(2)) "INSTEAD OF" else "AFTER", getString(5).orEmpty(), enabled = !getBoolean(3), getString(4).orEmpty()) }
+}
+
+/** ClickHouse's own DDL carries the engine, ORDER BY and settings that metadata can't express. */
+private object ClickHouseStructure : StructureReader(SqlDialect.ClickHouse) {
+    override fun constraints(connection: Connection, details: TableDetails): List<ConstraintInfo> = emptyList()
+
+    override fun triggers(connection: Connection, table: TableRef): List<TriggerInfo> = emptyList()
+
+    override fun ddl(connection: Connection, details: TableDetails, constraints: List<ConstraintInfo>, triggers: List<TriggerInfo>): String =
+        connection.createStatement().use { statement ->
+            statement.executeQuery("SHOW CREATE TABLE ${dialect.qualifiedName(details.table)}").use { rs -> rs.next(); rs.getString(1) }
+        }.trim().removeSuffix(";") + ";"
+}
+
+/** DuckDB keeps the SQL of tables, views and indexes in its catalog functions. */
+private object DuckDBStructure : GenericStructure(SqlDialect.DuckDB) {
+    override fun ddl(connection: Connection, details: TableDetails, constraints: List<ConstraintInfo>, triggers: List<TriggerInfo>): String {
+        val schema = details.table.namespace.schema ?: "main"
+        val name = details.table.name
+        val objects =
+            connection.query(
+                """
+                SELECT sql FROM duckdb_tables() WHERE schema_name = ? AND table_name = ?
+                UNION ALL SELECT sql FROM duckdb_views() WHERE schema_name = ? AND view_name = ?
+                UNION ALL SELECT sql FROM duckdb_indexes() WHERE schema_name = ? AND table_name = ? AND sql IS NOT NULL
+                """,
+                schema, name, schema, name, schema, name,
+            ) { getString(1) }
+        return if (objects.isEmpty()) super.ddl(connection, details, constraints, triggers) else statements(objects)
+    }
 }

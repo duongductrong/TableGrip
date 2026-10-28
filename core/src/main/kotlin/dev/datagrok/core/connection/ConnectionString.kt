@@ -1,5 +1,7 @@
 package dev.datagrok.core.connection
 
+import java.nio.file.Path
+
 /**
  * What a pasted connection string describes. [host] may list several hosts (`h1:5432,h2:5433`), in which case [port] is
  * null and each entry carries its own. When [url] is set the string uses a form Datagrok can't break into fields
@@ -37,7 +39,8 @@ object ConnectionString {
         return when {
             lower.startsWith("postgresql://") || lower.startsWith("postgres://") -> libpqUri(text)
             lower.startsWith("jdbc:postgresql:") -> pgjdbc(text)
-            lower.startsWith("jdbc:mysql") -> mysqlFamily(text, DatabaseType.MySQL, DriverId.MySQL, prefix = "jdbc:mysql")
+            // MariaDB Connector/J takes jdbc:mysql: URLs too, and unlike Connector/J Datagrok can download it.
+            lower.startsWith("jdbc:mysql") -> mysqlFamily(text, DatabaseType.MySQL, driver = null, prefix = "jdbc:mysql")
             lower.startsWith("jdbc:mariadb") -> mysqlFamily(text, DatabaseType.MariaDB, DriverId.MariaDB, prefix = "jdbc:mariadb")
             lower.startsWith("mysqlx") -> throw ConnectionStringException("X Protocol (mysqlx://) isn't supported; use a mysql:// URL.")
             lower.startsWith("mysql://") -> mysqlFamily(text, DatabaseType.MySQL, driver = null, prefix = "mysql")
@@ -47,16 +50,35 @@ object ConnectionString {
             lower.startsWith("file:") -> sqlite(text)
             looksLikeKeywordValue(text) -> libpqKeywordValue(text)
             looksLikeSqlitePath(text) -> sqlite(expandHome(text))
-            lower.startsWith("jdbc:") ->
-                throw ConnectionStringException("Unsupported JDBC URL: ${text.substringBefore("//").substringBefore('?')}")
+            lower.startsWith("jdbc:sqlserver:") -> rawJdbc(text, DatabaseType.SqlServer, DriverId.SqlServer)
+            lower.startsWith("jdbc:clickhouse:") || lower.startsWith("jdbc:ch:") -> rawJdbc(text, DatabaseType.ClickHouse, DriverId.ClickHouse)
+            lower.startsWith("jdbc:duckdb:") -> rawJdbc(text, DatabaseType.DuckDB, DriverId.DuckDB)
+            lower.startsWith("jdbc:h2:") -> rawJdbc(text, DatabaseType.H2, DriverId.H2)
+            lower.startsWith("jdbc:hsqldb:") -> rawJdbc(text, DatabaseType.HSQLDB, DriverId.HSQLDB)
+            lower.startsWith("jdbc:derby:") -> rawJdbc(text, DatabaseType.Derby, DriverId.Derby)
+            // Any other driver works too, from the user's own jar.
+            lower.startsWith("jdbc:") -> rawJdbc(text, DatabaseType.OtherJdbc, DriverId.Generic)
             else -> throw ConnectionStringException("Unrecognized connection string. Try postgres://, mysql://, jdbc:… or a file path.")
         }
     }
 
-    /** Removes the password from a URL's user info and query, returning the cleaned URL and the password. */
+    /** A JDBC URL kept as it is, minus its password. */
+    private fun rawJdbc(text: String, type: DatabaseType, driver: DriverId): ParsedConnection {
+        val (url, password) = stripSecrets(text)
+        return ParsedConnection(type = type, driver = driver, url = url, password = password)
+    }
+
+    /**
+     * Removes the password from a URL's user info, its query, and `;password=` attributes (H2, HSQLDB, Derby, SQL
+     * Server), returning the cleaned URL and the password.
+     */
     fun stripSecrets(url: String): Pair<String, String?> {
         var password: String? = null
         var result = url
+        Regex(""";\s*password\s*=\s*([^;]*)""", RegexOption.IGNORE_CASE).find(result)?.let { match ->
+            password = match.groupValues[1]
+            result = result.removeRange(match.range)
+        }
         Regex("""(//)([^/@?]*?):([^/@?]*)@""").find(result)?.let { match ->
             password = decode(match.groupValues[3])
             result = result.replaceRange(match.range, "${match.groupValues[1]}${match.groupValues[2]}@")
@@ -313,13 +335,20 @@ object ConnectionString {
                 path.startsWith("file:") && '?' !in path -> decode(path.removePrefix("file:").removePrefix("//"))
                 else -> path
             }
-        return ParsedConnection(type = DatabaseType.SQLite, driver = DriverId.SQLite, database = expandHome(database))
+        val expanded = expandHome(database)
+        val warnings = listOfNotNull(fileOrNull(expanded)?.let { DatabaseFiles.mismatch(it, DatabaseType.SQLite) })
+        return ParsedConnection(type = DatabaseType.SQLite, driver = DriverId.SQLite, database = expanded, warnings = warnings)
     }
+
+    private fun fileOrNull(path: String): Path? =
+        if (path == ":memory:" || path.startsWith("file:")) null else runCatching { Path.of(path) }.getOrNull()
 
     private fun looksLikeSqlitePath(text: String): Boolean {
         val lower = text.lowercase()
         return listOf(".db", ".sqlite", ".sqlite3", ".db3").any { lower.endsWith(it) } ||
-            text.startsWith("/") || text.startsWith("~/") || text.startsWith("./") || Regex("^[A-Za-z]:[\\\\/]").containsMatchIn(text)
+            text.startsWith("/") || text.startsWith("~/") || text.startsWith("./") || Regex("^[A-Za-z]:[\\\\/]").containsMatchIn(text) ||
+            // A relative name with no telling extension, e.g. `chinook`: its content decides.
+            fileOrNull(expandHome(text))?.let(DatabaseFiles::detect) == DatabaseType.SQLite
     }
 
     // endregion
