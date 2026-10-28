@@ -72,7 +72,10 @@ class MongoClient : DocumentClient {
         override suspend fun server(): String =
             io {
                 val admin = db("admin")
-                val version = admin.runCommand(org.bson.Document("buildInfo", 1)).getString("version")
+                val build = admin.runCommand(org.bson.Document("buildInfo", 1))
+                val version = build.getString("version")
+                // FerretDB answers buildInfo with the MongoDB version it emulates, plus its own.
+                (build["ferretdb"] as? org.bson.Document)?.getString("version")?.let { return@io "FerretDB ${it.removePrefix("v")} (MongoDB $version compatible)" }
                 val hello = admin.runCommand(org.bson.Document("hello", 1))
                 val topology =
                     when {

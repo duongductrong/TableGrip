@@ -30,6 +30,7 @@ import dev.datagrok.app.table.StructureSection
 import dev.datagrok.app.ui.Badge
 import dev.datagrok.app.ui.EnvironmentChip
 import dev.datagrok.app.ui.copyToClipboard
+import dev.datagrok.core.connection.EngineFamily
 import dev.datagrok.core.dialect.SqlDialect
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.intui.standalone.styling.defaults
@@ -255,7 +256,8 @@ private fun NodeRow(app: AppState, node: ExplorerNode, modifier: Modifier = Modi
             }
             is ExplorerNode.Keyspace -> {
                 NodeIcon(AllIconsKeys.Nodes.DataSchema)
-                NameAndDetail("db${node.keyspace.index}", node.keyspace.keys?.let { "$it ${if (it == 1L) "key" else "keys"}" }.orEmpty(), Modifier.weight(1f))
+                val etcd = app.connections.byId(node.connectionId)?.type?.family == EngineFamily.Etcd
+                NameAndDetail(if (etcd) "keys" else "db${node.keyspace.index}", node.keyspace.keys?.let { "$it ${if (it == 1L) "key" else "keys"}" }.orEmpty(), Modifier.weight(1f))
             }
             is ExplorerNode.Message ->
                 Text(node.text, color = if (node.isError) JewelTheme.globalColors.text.error else info, maxLines = 2)

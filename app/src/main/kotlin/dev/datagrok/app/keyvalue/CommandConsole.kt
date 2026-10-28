@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import dev.datagrok.app.AppState
 import dev.datagrok.app.workspace.WorkspaceTab
 import dev.datagrok.core.connection.ConnectionConfig
+import dev.datagrok.core.connection.EngineFamily
 import dev.datagrok.core.connection.Paradigm
 import dev.datagrok.core.driver.KeyValueStore
 import kotlinx.coroutines.CancellationException
@@ -84,8 +85,14 @@ class CommandConsoleTab(
     private var historyIndex = 0
     private var job: Job? = null
 
+    private val etcd = config.type.family == EngineFamily.Etcd
+
     val prompt: String
-        get() = if (document) "$database>" else "db$keyspace>"
+        get() = when {
+            document -> "$database>"
+            etcd -> "etcd>"
+            else -> "db$keyspace>"
+        }
 
     fun run() {
         val line = input.text.toString().trim()
@@ -114,7 +121,7 @@ class CommandConsoleTab(
             app.scope.launch {
                 try {
                     val reply = app.databases.keyValue(config).command(keyspace, arguments)
-                    entries += Entry(prompt, line, reply, isError = reply.startsWith("(error)"))
+                    entries += Entry(prompt, line, reply, isError = reply.startsWith("(error)") || reply.startsWith("Error:"))
                     // The console follows SELECT, like redis-cli's prompt.
                     if (arguments.first().equals("SELECT", ignoreCase = true) && reply == "OK") arguments.getOrNull(1)?.toIntOrNull()?.let { keyspace = it }
                 } catch (e: CancellationException) {
@@ -152,7 +159,9 @@ class CommandConsoleTab(
 
     val help: String
         get() =
-            if (document) "Mongo shell commands without JavaScript, e.g. db.orders.find({status: 'A'}).sort({total: -1}).limit(10), " +
+            if (etcd) "etcdctl-style commands: get KEY [--prefix] [--keys-only] [--limit=N], put KEY VALUE [--lease=ID], " +
+                "del KEY [--prefix], lease grant|revoke|timetolive|list, member list, endpoint status. ↑/↓ recall earlier commands."
+            else if (document) "Mongo shell commands without JavaScript, e.g. db.orders.find({status: 'A'}).sort({total: -1}).limit(10), " +
                 "db.orders.aggregate([...]), db.runCommand({...}), show collections, use <db>. ↑/↓ recall earlier commands."
             else "Commands run as in redis-cli, e.g. HGETALL user:1 or SCAN 0 MATCH session:* COUNT 100. " +
                 "↑/↓ recall earlier commands; \"clear\" empties this view."

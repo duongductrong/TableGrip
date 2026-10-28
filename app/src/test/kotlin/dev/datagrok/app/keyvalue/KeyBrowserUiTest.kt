@@ -108,4 +108,43 @@ class KeyBrowserUiTest {
     private companion object {
         const val Db = 5
     }
+
+    @Test
+    fun `etcd keys browse and edit with the same screens`() = runComposeUiTest {
+        val (host, port) = System.getProperty("it.etcd")?.split(":") ?: return@runComposeUiTest
+        val home = createTempDirectory("datagrok-etcd")
+        val config = ConnectionConfig(id = "etcd", name = "cluster", type = DatabaseType.Etcd, host = host, port = port.toInt())
+        val store = ConnectionStore(home.resolve("connections.json"), InMemorySecretStore()).apply { save(config, null) }
+        val app = AppState(SettingsStore(home.resolve("settings.json")), store, QueryHistory(home.resolve("history.jsonl")), DriverLibrary(home.resolve("drivers")))
+        runBlocking {
+            KeyValueStore.connect(config, null).use { etcd ->
+                etcd.command(0, listOf("del", "/dg/", "--prefix"))
+                etcd.edit(0, "/dg/services/api/port", KeyEdit.SetText("8080"))
+                etcd.edit(0, "/dg/services/api/host", KeyEdit.SetText("10.0.0.12"))
+                etcd.edit(0, "/dg/feature-flags", KeyEdit.SetText("{\"newCheckout\": true}"))
+                etcd.expire(0, "/dg/feature-flags", 600_000)
+            }
+        }
+        val tab = KeyBrowserTab(app, config, 0)
+        tab.pattern.edit { replace(0, length, "/dg/*") }
+        tab.reload()
+        setContent { DatagrokTheme(isDark = true) { Box(Modifier.size(1000.dp, 420.dp)) { KeyBrowserView(tab) } } }
+        waitUntil(timeoutMillis = 10_000) { !tab.scanning && tab.keys.size == 3 }
+        tab.select("/dg/feature-flags")
+        waitUntil(timeoutMillis = 10_000) { tab.value?.key == "/dg/feature-flags" }
+        onNodeWithText("TTL 9m", substring = true).assertExists()
+        System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "etcd-keys.png")) }
+
+        val console = CommandConsoleTab(app, config, "cluster")
+        tab.dispose()
+        setContent { DatagrokTheme(isDark = true) { Box(Modifier.size(900.dp, 300.dp)) { CommandConsoleView(console) } } }
+        console.input.edit { replace(0, length, "get /dg/services/ --prefix") }
+        console.run()
+        waitUntil(timeoutMillis = 10_000) { console.entries.size == 1 }
+        assertEquals("/dg/services/api/host\n10.0.0.12\n/dg/services/api/port\n8080", console.entries.single().reply)
+        onNodeWithText("etcd>").assertExists()
+        System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "etcd-console.png")) }
+        runBlocking { KeyValueStore.connect(config, null).use { it.command(0, listOf("del", "/dg/", "--prefix")) } }
+        app.dispose()
+    }
 }

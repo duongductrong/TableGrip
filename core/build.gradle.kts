@@ -40,7 +40,7 @@ tasks.test {
     useJUnitPlatform()
     // Opt-in server tests: -Pit.postgres=localhost:55432 -Pit.mysql=localhost:53306 (and it.cockroach, it.timescale, it.tidb,
     // it.mssql, it.clickhouse: see ServerEnginesIntegrationTest); -Pit.network=true downloads drivers.
-    listOf("it.postgres", "it.mysql", "it.network", "it.cockroach", "it.timescale", "it.tidb", "it.mssql", "it.clickhouse").forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
+    listOf("it.postgres", "it.mysql", "it.network", "it.cockroach", "it.timescale", "it.tidb", "it.mssql", "it.clickhouse", "it.etcd", "it.etcdauth").forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
     testLogging { showStandardStreams = providers.gradleProperty("it.postgres").isPresent || providers.gradleProperty("it.mysql").isPresent }
 }
 

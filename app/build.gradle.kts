@@ -195,7 +195,7 @@ tasks {
         useJUnitPlatform()
         providers.gradleProperty("snapshot.dir").orNull?.let { systemProperty("snapshot.dir", it) }
         providers.gradleProperty("snapshot.db").orNull?.let { systemProperty("snapshot.db", it) }
-        listOf("it.network", "it.redis", "it.mongo").forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
+        listOf("it.network", "it.redis", "it.mongo", "it.etcd").forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
     }
 
     withType<JavaExec> {

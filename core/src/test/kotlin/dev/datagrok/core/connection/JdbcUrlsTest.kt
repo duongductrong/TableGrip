@@ -93,6 +93,6 @@ class JdbcUrlsTest {
     fun `every driver loads from the test classpath`() {
         // Generic has no driver of its own: each profile brings its jars.
         // Generic has no driver of its own (each profile brings its jars); adapters aren't JDBC drivers.
-        DriverId.entries.filter { it != DriverId.Generic && it.adapter == null }.forEach { drivers.load(it) }
+        DriverId.entries.filter { it != DriverId.Generic && it.isJdbc }.forEach { drivers.load(it) }
     }
 }

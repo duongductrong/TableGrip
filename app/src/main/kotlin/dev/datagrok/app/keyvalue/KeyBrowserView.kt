@@ -66,7 +66,7 @@ internal fun KeyBrowserView(tab: KeyBrowserTab) {
                 tab.pattern,
                 Modifier.width(260.dp),
                 textStyle = JewelTheme.editorTextStyle,
-                placeholder = { Text("Pattern, e.g. user:*") },
+                placeholder = { Text(if (tab.plainValues) "Pattern, e.g. /services/*" else "Pattern, e.g. user:*") },
                 onKeyboardAction = KeyboardActionHandler { tab.reload() },
             )
             Tooltip({ Text("Scan again") }) { IconButton(onClick = tab::reload) { Icon(AllIconsKeys.Actions.Refresh, "Scan again") } }
@@ -331,7 +331,7 @@ private fun Elements(
 /** Creates a key with its first element. */
 @Composable
 private fun NewKeyForm(tab: KeyBrowserTab, onDone: () -> Unit) {
-    val types = listOf(KeyType.Text, KeyType.Hash, KeyType.List, KeyType.Set, KeyType.SortedSet, KeyType.Stream)
+    val types = if (tab.plainValues) listOf(KeyType.Text) else listOf(KeyType.Text, KeyType.Hash, KeyType.List, KeyType.Set, KeyType.SortedSet, KeyType.Stream)
     var type by remember { mutableStateOf(KeyType.Text) }
     val name = remember { TextFieldState() }
     val first = remember { TextFieldState() }
@@ -345,7 +345,7 @@ private fun NewKeyForm(tab: KeyBrowserTab, onDone: () -> Unit) {
             else -> "Value" to null
         }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("New key in db${tab.keyspace}", fontWeight = FontWeight.SemiBold)
+        Text(if (tab.plainValues) "New key" else "New key in db${tab.keyspace}", fontWeight = FontWeight.SemiBold)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Name", Modifier.width(140.dp))
             TextField(name, Modifier.weight(1f))

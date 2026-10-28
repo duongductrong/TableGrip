@@ -100,6 +100,7 @@ private fun DriverBannerContent(
                         modifier,
                         linkActions = { action("Update") { downloads.download(driver) } },
                     )
+                resolution.source == DriverSource.BuiltIn -> InlineSuccessBanner("Built into Datagrok: nothing to download.", modifier)
                 resolution.source == DriverSource.UserJars ->
                     InlineSuccessBanner(
                         "Using your ${driver.displayName} jar.",

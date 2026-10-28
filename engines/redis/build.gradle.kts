@@ -24,5 +24,5 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
     // Opt-in server tests: -Pit.redis=localhost:56379 -Pit.valkey=localhost:56380 (see RedisClientTest).
-    listOf("it.redis", "it.valkey", "it.rediscluster").forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
+    listOf("it.redis", "it.valkey", "it.rediscluster", "it.keydb", "it.dragonfly", "it.sentinel").forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
 }

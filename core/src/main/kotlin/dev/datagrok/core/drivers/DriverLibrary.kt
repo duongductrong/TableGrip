@@ -46,6 +46,9 @@ enum class DriverSource {
     Downloaded,
     /** Jars the user pointed Datagrok at, for drivers it can't download. */
     UserJars,
+
+    /** Datagrok's own client, e.g. for etcd's HTTP API. */
+    BuiltIn,
 }
 
 /** What it takes to use a driver right now. */
@@ -100,6 +103,7 @@ class DriverLibrary(
     fun locked(driver: DriverId): LockedDriver? = driver.catalogId?.let(lock::byId)
 
     fun resolve(driver: DriverId): DriverResolution {
+        if (driver.builtIn) return DriverResolution.Ready(driver, null, DriverSource.BuiltIn)
         if (useClasspath && classpathDriverClass(driver) != null) return DriverResolution.Ready(driver, null, DriverSource.Classpath)
         if (userJars(driver) != null) return DriverResolution.Ready(driver, null, DriverSource.UserJars)
         val locked = locked(driver) ?: return DriverResolution.BringYourOwn(driver)
@@ -169,6 +173,7 @@ class DriverLibrary(
     fun loadClient(driver: DriverId): Any = clients.computeIfAbsent(driver, ::openClient)
 
     private fun openClient(driver: DriverId): Any {
+        if (driver.builtIn) return Class.forName(driver.className).getDeclaredConstructor().newInstance()
         val adapter = driver.adapter ?: throw IllegalArgumentException("${driver.displayName} is a JDBC driver")
         // Tests and the adapter's own module have it, and its client, on the classpath.
         if (useClasspath) runCatching { Class.forName(driver.className, true, DriverLibrary::class.java.classLoader) }.getOrNull()?.let {

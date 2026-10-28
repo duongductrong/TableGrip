@@ -45,6 +45,25 @@ class RedisClientTest {
 
     @Test fun valkey() = server("it.valkey", DatabaseType.Valkey) { contract(it, "Valkey") }
 
+    /** `docker run -d --name dg-it-keydb -p 56381:6379 eqalpha/keydb`, `-Pit.keydb=localhost:56381` */
+    @Test fun keydb() = server("it.keydb", DatabaseType.KeyDB) { contract(it, "KeyDB") }
+
+    /** `docker run -d --name dg-it-dragonfly -p 56382:6379 --ulimit memlock=-1 docker.dragonflydb.io/dragonflydb/dragonfly`, `-Pit.dragonfly=localhost:56382` */
+    @Test fun dragonfly() = server("it.dragonfly", DatabaseType.Dragonfly) { contract(it, "Dragonfly") }
+
+    /**
+     * A master and a sentinel on the host network, so the address the sentinel hands out is reachable:
+     * `docker run -d --network host redis:7.4 redis-server --port 56390` and a sentinel on 56391 monitoring it as
+     * `mymaster`; `-Pit.sentinel=localhost:56391`.
+     */
+    @Test
+    fun sentinel() = server("it.sentinel", DatabaseType.Redis, properties = mapOf("mode" to "sentinel", "sentinelMaster" to "mymaster")) { redis ->
+        assertTrue(redis.server().startsWith("Redis"), redis.server())
+        redis.edit(3, "dg:sentinel", KeyEdit.SetText("through the sentinel"))
+        assertEquals("through the sentinel", (redis.read(3, "dg:sentinel") as KeyValue.Text).value)
+        assertEquals(1L, redis.delete(3, listOf("dg:sentinel")))
+    }
+
     /** `docker run -d --name dg-it-rcluster -e IP=0.0.0.0 -e INITIAL_PORT=7100 -p 7100-7105:7100-7105 grokzen/redis-cluster:7.0.10`, `-Pit.rediscluster=localhost:7100` */
     @Test
     fun cluster() = server("it.rediscluster", DatabaseType.Redis, properties = mapOf("mode" to "cluster")) { redis ->
@@ -81,6 +100,17 @@ class RedisClientTest {
         assertEquals("(nil)", redis.command(0, listOf("GET", "dg:ro-missing")))
     }
 
+    private suspend fun scanAll(redis: KeyValueConnection, db: Int, pattern: String): List<String> {
+        val keys = mutableListOf<String>()
+        var cursor: String? = null
+        do {
+            val page = redis.scan(db, pattern, cursor)
+            keys += page.keys.map { it.name }
+            cursor = page.cursor
+        } while (cursor != null)
+        return keys
+    }
+
     private suspend fun contract(redis: KeyValueConnection, name: String) {
         val db = 7
         assertTrue(redis.server().startsWith(name), redis.server())
@@ -114,7 +144,8 @@ class RedisClientTest {
             mapOf("dg:text" to KeyType.Text, "dg:hash" to KeyType.Hash, "dg:list" to KeyType.List, "dg:set" to KeyType.Set, "dg:zset" to KeyType.SortedSet, "dg:stream" to KeyType.Stream),
             types.filterKeys { !it.startsWith("dg:many") },
         )
-        assertEquals(listOf("dg:hash"), redis.scan(db, "dg:h*", null).keys.map { it.name })
+        // A single SCAN batch may hold no match at all; only the whole scan is complete.
+        assertEquals(listOf("dg:hash"), scanAll(redis, db, "dg:h*"))
 
         assertEquals("hello\nworld", (redis.read(db, "dg:text") as KeyValue.Text).value)
         assertEquals(listOf("a" to "1", "b" to "2"), (redis.read(db, "dg:hash") as KeyValue.Hash).fields)

@@ -24,5 +24,5 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
     // Opt-in server tests: -Pit.mongo=localhost:57017 (see MongoClientTest).
-    listOf("it.mongo").forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
+    listOf("it.mongo", "it.ferretdb").forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
 }

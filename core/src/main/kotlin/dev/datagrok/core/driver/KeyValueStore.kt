@@ -1,6 +1,7 @@
 package dev.datagrok.core.driver
 
 import dev.datagrok.core.connection.ConnectionConfig
+import dev.datagrok.core.connection.EngineFamily
 import dev.datagrok.core.connection.Paradigm
 import dev.datagrok.core.connection.SshTunnel
 import dev.datagrok.core.drivers.DriverLibrary
@@ -18,7 +19,8 @@ object KeyValueStore {
             try {
                 val host = if (tunnel != null) "127.0.0.1" else config.host.trim().ifEmpty { "localhost" }
                 val port = tunnel?.localPort ?: config.port ?: defaultPort(config)
-                Guarded(client.connect(config, host, port, password), config.readOnly) { tunnel?.close() }
+                val reads = if (config.type.family == EngineFamily.Etcd) ::isEtcdRead else { arguments: List<String> -> arguments.first().uppercase() in ReadCommands }
+                Guarded(client.connect(config, host, port, password), config.readOnly, reads) { tunnel?.close() }
             } catch (e: Throwable) {
                 tunnel?.close()
                 throw e
@@ -91,8 +93,25 @@ object KeyValueStore {
             "CLIENT", "CLUSTER", "COMMAND", "SLOWLOG", "LATENCY", "SELECT",
         )
 
+    /** etcdctl commands that only read. */
+    fun isEtcdRead(arguments: List<String>): Boolean {
+        val words = arguments.filterNot { it.startsWith("--") }.map { it.lowercase() }
+        return when (words.firstOrNull()) {
+            "get", "version" -> true
+            "member" -> words.getOrNull(1) == "list"
+            "endpoint" -> words.getOrNull(1) == "status"
+            "lease" -> words.getOrNull(1) in setOf("timetolive", "list")
+            else -> false
+        }
+    }
+
     /** Applies the profile's read-only setting, and closes the tunnel with the connection. */
-    private class Guarded(private val inner: KeyValueConnection, private val readOnly: Boolean, private val onClose: () -> Unit) :
+    private class Guarded(
+        private val inner: KeyValueConnection,
+        private val readOnly: Boolean,
+        private val isRead: (List<String>) -> Boolean,
+        private val onClose: () -> Unit,
+    ) :
         KeyValueConnection by inner {
         private fun refuse(what: String): Nothing = throw ReadOnlyViolationException(what)
 
@@ -106,7 +125,7 @@ object KeyValueStore {
 
         override suspend fun command(keyspace: Int, arguments: List<String>): String {
             val name = arguments.firstOrNull()?.uppercase() ?: return ""
-            if (readOnly && name !in ReadCommands) refuse(name)
+            if (readOnly && !isRead(arguments)) refuse(name)
             return inner.command(keyspace, arguments)
         }
 

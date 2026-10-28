@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import dev.datagrok.app.AppState
 import dev.datagrok.app.workspace.WorkspaceTab
 import dev.datagrok.core.connection.ConnectionConfig
+import dev.datagrok.core.connection.EngineFamily
 import dev.datagrok.core.driver.KeyEdit
 import dev.datagrok.core.driver.KeyInfo
 import dev.datagrok.core.driver.KeyType
@@ -19,7 +20,11 @@ import kotlinx.coroutines.launch
 /** Browses one database of a key-value store: keys matching a pattern, a page at a time, and the selected key's value. */
 class KeyBrowserTab(private val app: AppState, val config: ConnectionConfig, val keyspace: Int) : WorkspaceTab {
     override val connectionId = config.id
-    override val title = "${config.name} · db$keyspace"
+
+    /** etcd: one keyspace of plain values, rather than Redis's numbered databases of typed values. */
+    val plainValues = config.type.family == EngineFamily.Etcd
+
+    override val title = if (plainValues) "${config.name} · keys" else "${config.name} · db$keyspace"
 
     val readOnly: Boolean
         get() = config.readOnly

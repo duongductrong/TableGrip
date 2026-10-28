@@ -126,7 +126,8 @@ class RedisClient : KeyValueClient {
                     when {
                         info["server_name"] == "valkey" || "valkey_version" in info -> "Valkey" to info["valkey_version"]
                         "dragonfly_version" in info -> "Dragonfly" to info["dragonfly_version"]
-                        "keydb_version" in info -> "KeyDB" to info["keydb_version"]
+                        // KeyDB reports its own version as redis_version.
+                        "keydb_version" in info || info["executable"].orEmpty().contains("keydb") -> "KeyDB" to (info["keydb_version"] ?: info["redis_version"])
                         else -> "Redis" to info["redis_version"]
                     }
                 listOfNotNull(name, version).joinToString(" ") + (info["redis_mode"]?.takeIf { it != "standalone" }?.let { " ($it)" } ?: "")

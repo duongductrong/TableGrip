@@ -24,19 +24,43 @@ class MongoClientTest {
     private val drivers = DriverLibrary(Files.createTempDirectory("drivers"))
     private val db = "dg_${System.currentTimeMillis()}"
 
-    private fun server(readOnly: Boolean = false, url: Boolean = false, test: suspend (DocumentConnection) -> Unit) = runBlocking<Unit> {
-        val (host, port) = System.getProperty("it.mongo")?.split(":") ?: return@runBlocking
+    private fun server(
+        readOnly: Boolean = false,
+        url: Boolean = false,
+        property: String = "it.mongo",
+        type: DatabaseType = DatabaseType.MongoDB,
+        user: String = "",
+        password: String? = null,
+        test: suspend (DocumentConnection) -> Unit,
+    ) = runBlocking<Unit> {
+        val (host, port) = System.getProperty(property)?.split(":") ?: return@runBlocking
         val config =
             ConnectionConfig(
-                id = "mongo", name = "mongo", type = DatabaseType.MongoDB, host = host, port = port.toInt(), readOnly = readOnly,
+                id = "mongo", name = "mongo", type = type, host = host, port = port.toInt(), readOnly = readOnly, user = user,
                 url = if (url) "mongodb://$host:$port/$db?directConnection=true" else null,
             )
-        DocumentStore.connect(config, password = null, drivers = drivers).use { test(it) }
+        DocumentStore.connect(config, password = password, drivers = drivers).use { test(it) }
     }
 
     @Test
     fun `documents are listed, paged, filtered and edited`() = server { mongo ->
         assertTrue(mongo.server().startsWith("MongoDB 8") && "replica set rs0" in mongo.server(), mongo.server())
+        documents(mongo)
+    }
+
+    /**
+     * The same on FerretDB, with a user and password:
+     * `docker run -d --name dg-it-ferret -p 57018:27017 -e POSTGRES_USER=user -e POSTGRES_PASSWORD=Pass-2026 ghcr.io/ferretdb/ferretdb-eval:2`,
+     * `-Pit.ferretdb=localhost:57018`
+     */
+    @Test
+    fun ferretdb() = server(property = "it.ferretdb", type = DatabaseType.FerretDB, user = "user", password = "Pass-2026") { mongo ->
+        assertTrue(mongo.server().startsWith("FerretDB 2"), mongo.server())
+        documents(mongo)
+        mongo.command(db, "db.dropDatabase()")
+    }
+
+    private suspend fun documents(mongo: DocumentConnection) {
         val seeded =
             mongo.command(
                 db,

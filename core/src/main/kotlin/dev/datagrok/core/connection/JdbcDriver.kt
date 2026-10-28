@@ -20,6 +20,8 @@ enum class DriverId(
     val license: String? = null,
     /** For non-JDBC clients: the name of Datagrok's adapter jar that drives this client library. */
     val adapter: String? = null,
+    /** Part of Datagrok itself: always ready, never downloaded. */
+    val builtIn: Boolean = false,
 ) {
     PostgreSQL("PostgreSQL JDBC Driver", "org.postgresql.Driver", "jdbc:postgresql:", catalogId = "postgresql"),
     MySQL(
@@ -45,8 +47,15 @@ enum class DriverId(
     Lettuce("Lettuce (Redis client)", "dev.datagrok.engines.redis.RedisClient", "redis:", catalogId = "lettuce", adapter = "redis"),
     MongoDB("MongoDB Java Driver", "dev.datagrok.engines.mongodb.MongoClient", "mongodb:", catalogId = "mongodb", adapter = "mongodb"),
 
+    /** Built in: Datagrok talks to etcd's v3 HTTP/JSON API itself, so there's nothing to download. */
+    Etcd("etcd v3 API (built in)", "dev.datagrok.core.driver.etcd.EtcdClient", "http:", builtIn = true),
+
     /** Whatever driver the profile's own jars contain; its class is found in them. */
     Generic("JDBC driver from your jars", "", "jdbc:");
+
+    /** A java.sql.Driver, as opposed to a non-JDBC client (adapter or built in). */
+    val isJdbc: Boolean
+        get() = adapter == null && !builtIn
 
     companion object {
         /** The driver whose own scheme a JDBC URL uses. */

@@ -359,7 +359,7 @@ Kích thước: **S** ≤ 2 ngày · **M** ~1 tuần · **L** 2–3 tuần. Cộ
 
 ### Phase 2: key-value và document (≈5–6 tuần)
 
-**Trạng thái (2026-10-29): Redis và MongoDB xong, etcd chưa làm.**
+**Trạng thái (2026-10-29): Phase 2 xong — Redis, MongoDB, etcd.**
 - Kiến trúc cho client không phải JDBC: adapter của DataGrok (module `engines/redis`, biên dịch với core + Lettuce ở dạng
   `compileOnly`) đóng gói trong app tại `engines/redis.jar`, không nằm trên classpath; `DriverLibrary.loadClient` nạp nó
   cùng classloader với các jar Lettuce người dùng tải (15 jar, 7.7 MB, MIT/Apache/MIT-0). MongoDB và etcd sẽ đi cùng
@@ -388,8 +388,17 @@ Kích thước: **S** ≤ 2 ngày · **M** ~1 tuần · **L** 2–3 tuần. Cộ
 - Sửa lỗi phát hiện được: adapter giờ đặt thread context class loader về classloader của nó khi gọi vào client (Lettuce
   dò class JFR qua TCCL và có thể lấy nhầm bản ở classloader khác); task `lockDrivers` khai báo nội dung lockfile làm
   input (trước đó Gradle coi là up-to-date khi catalog đổi).
-- Chưa test: Sentinel, KeyDB, Dragonfly (dùng chung giao thức, chưa chạy server thật). Console ở chế độ Cluster gửi lệnh
-  không có key (vd. `FLUSHALL`, `DBSIZE`) tới một node.
+- etcd: client có sẵn trong app (`DriverId.Etcd`, `builtIn`), gọi HTTP/JSON API v3 của etcd bằng `java.net.http` — không
+  tải gì, không thư viện bên thứ ba (nhóm D), thay cho `jetcd` (gRPC + Vert.x + Netty, vài chục jar). Dùng lại toàn bộ
+  `KeyValueConnection` và giao diện key-value: pattern glob đổi thành dải prefix + lọc phần còn lại; TTL là lease (sửa giá
+  trị giữ lease, bỏ TTL = gỡ lease); đổi tên là một transaction (chỉ khi tên mới chưa có); console kiểu etcdctl (`get
+  --prefix`, `put`, `del`, `lease grant|revoke|timetolive|list`, `member list`, `endpoint status`). Xác thực user/password
+  lấy token; TLS (`ssl=true`, `verifyPeer=false`). Hồ sơ chỉ-đọc chỉ chạy lệnh đọc của etcdctl.
+- Đã chạy server thật cho mọi engine của Phase 2: Redis 7.4, Valkey 8.1, KeyDB 6.3, Dragonfly 2.0, Redis Sentinel, Redis
+  Cluster 7.0; MongoDB 8.0 (replica set), FerretDB 2.7 (có xác thực); etcd 3.5 (có và không có xác thực). KeyDB và
+  FerretDB được nhận diện đúng tên trong `server()`.
+- Giới hạn còn lại (ghi nhận, không chặn phase): console Redis ở chế độ Cluster gửi lệnh không có key (vd. `FLUSHALL`,
+  `DBSIZE`) tới một node; chưa thử MongoDB sharded, Atlas thật, AWS DocumentDB/Azure Cosmos; chưa thử etcd qua TLS.
 
 | Engine | Driver | Nhóm | Size | Ghi chú |
 | --- | --- | --- | --- | --- |

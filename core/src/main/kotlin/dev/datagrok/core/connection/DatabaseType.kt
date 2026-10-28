@@ -35,6 +35,9 @@ enum class EngineFamily {
 
     /** The MongoDB wire protocol and query language. */
     MongoDB,
+
+    /** etcd's v3 key-value API. */
+    Etcd,
 }
 
 /** How a profile reaches its database, which decides the fields the connection dialog asks for. */
@@ -145,6 +148,10 @@ class DatabaseType(
         val KeyDB = keyValue("KeyDB", "KeyDB")
         val Dragonfly = keyValue("Dragonfly", "Dragonfly")
 
+        val Etcd =
+            DatabaseType("Etcd", "etcd", EngineFamily.Etcd, 2379, listOf(DriverId.Etcd), paradigm = Paradigm.KeyValue, capabilities = emptySet())
+        val FerretDB =
+            DatabaseType("FerretDB", "FerretDB", EngineFamily.MongoDB, 27017, listOf(DriverId.MongoDB), paradigm = Paradigm.Document, capabilities = emptySet())
         val MongoDB =
             DatabaseType("MongoDB", "MongoDB", EngineFamily.MongoDB, 27017, listOf(DriverId.MongoDB), paradigm = Paradigm.Document, capabilities = emptySet())
 
@@ -163,7 +170,7 @@ class DatabaseType(
             listOf(
                 PostgreSQL, MySQL, MariaDB, SQLite, SqlServer, ClickHouse, DuckDB, MongoDB, Redis, Valkey,
                 CockroachDB, TimescaleDB, Neon, Supabase, TiDB, PlanetScale, AzureSql,
-                KeyDB, Dragonfly, H2, HSQLDB, Derby, OtherJdbc,
+                KeyDB, Dragonfly, Etcd, FerretDB, H2, HSQLDB, Derby, OtherJdbc,
             )
 
         fun byId(id: String): DatabaseType? = entries.firstOrNull { it.id.equals(id, ignoreCase = true) }

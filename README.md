@@ -159,6 +159,7 @@ Paste any of these into **New Connection → Paste** and press Parse:
 | SQLite | `jdbc:sqlite:/path/app.db` · `sqlite:///path/app.db` · `~/data/app.sqlite3` |
 | SQL Server, ClickHouse, DuckDB, H2, HSQLDB, Derby | `jdbc:sqlserver://db:1433;databaseName=shop` · `jdbc:clickhouse://ch:8123/default` · `jdbc:duckdb:/data/a.duckdb` |
 | MongoDB | `mongodb://user@host:27017/shop?authSource=admin` · `mongodb+srv://user@cluster0.example.net/shop` (password goes to the keychain) |
+| etcd | host and port (2379); user and password if auth is on; `ssl=true` for HTTPS. Built in: nothing to download |
 | Redis, Valkey, KeyDB, Dragonfly | host and port in the form; properties `mode=cluster` / `mode=sentinel` + `sentinelMaster=…`, `ssl=true` |
 | Any other JDBC driver | `jdbc:firebirdsql://…`, `jdbc:oracle:thin:@…` — becomes "Other (JDBC driver)"; choose the driver's jar |
 

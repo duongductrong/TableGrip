@@ -538,6 +538,7 @@ private val PropertyExamples =
         DriverId.MariaDB to "sslMode=verify-full\nallowPublicKeyRetrieval=true",
         DriverId.SQLite to "foreign_keys=true\nbusy_timeout=5000",
         DriverId.MongoDB to "authSource=admin\ntls=true\nreplicaSet=rs0",
+        DriverId.Etcd to "ssl=true\nverifyPeer=false  (self-signed certificates)",
         DriverId.Lettuce to "ssl=true\nmode=cluster  (hosts are seed nodes)\nmode=sentinel + sentinelMaster=mymaster",
     )
 
