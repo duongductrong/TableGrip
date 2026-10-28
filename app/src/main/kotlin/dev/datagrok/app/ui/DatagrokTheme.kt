@@ -11,6 +11,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.connection.Environment
@@ -121,9 +122,9 @@ private val IslandShape = RoundedCornerShape(10.dp)
 
 /** A rounded content panel on the frame. */
 @Composable
-fun Island(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
+fun Island(modifier: Modifier = Modifier, shape: Shape = IslandShape, content: @Composable BoxScope.() -> Unit) {
     val islands = LocalIslands.current
-    Box(modifier.clip(IslandShape).background(islands.island).border(1.dp, islands.islandBorder, IslandShape), content = content)
+    Box(modifier.clip(shape).background(islands.island).border(1.dp, islands.islandBorder, shape), content = content)
 }
 
 /** The connection's colour: its environment's if it has one, else a stable colour derived from its id. */

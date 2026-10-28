@@ -92,7 +92,6 @@ internal fun DialogTitleBar(
         }
         scope.content()
     }
-    Box(Modifier.fillMaxWidth().height(1.dp).background(colors.border))
 }
 
 /**
