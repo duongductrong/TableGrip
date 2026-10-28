@@ -278,8 +278,8 @@ internal class GridController(val state: DataGridState, private val scope: Corou
             event.key == Key.Enter || event.key == Key.NumPadEnter || event.key == Key.F2 -> focus?.let { startEditing(it) } == true
             event.key == Key.Backspace || event.key == Key.Delete -> focus?.let { startEditing(it, replaceWith = "") } == true
             else -> {
-                val char = event.utf16CodePoint
-                if (char >= 32 && char != 127 && !event.isAltPressed) focus?.let { startEditing(it, replaceWith = String(Character.toChars(char))) } == true
+                val text = typedText(event.utf16CodePoint)
+                if (text != null && !event.isAltPressed) focus?.let { startEditing(it, replaceWith = text) } == true
                 else false
             }
         }
@@ -402,4 +402,15 @@ internal class GridController(val state: DataGridState, private val scope: Corou
     }
 
     // endregion
+}
+
+/**
+ * The text a key press types, or null when it types nothing. AWT reports keys without a character
+ * (Shift, Caps Lock, Fn, F1…) as [java.awt.event.KeyEvent.CHAR_UNDEFINED] (U+FFFF), not 0.
+ */
+internal fun typedText(codePoint: Int): String? {
+    if (codePoint <= 0 || codePoint > Char.MAX_VALUE.code) return null
+    val char = codePoint.toChar()
+    if (char == java.awt.event.KeyEvent.CHAR_UNDEFINED || Character.isISOControl(char) || char.isSurrogate() || !Character.isDefined(char)) return null
+    return char.toString()
 }

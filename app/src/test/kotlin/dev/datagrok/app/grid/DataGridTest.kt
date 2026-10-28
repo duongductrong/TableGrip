@@ -106,6 +106,45 @@ class DataGridTest {
     }
 
     @Test
+    fun `modifier and function keys alone do not start editing`() = runComposeUiTest {
+        val state = DataGridState()
+        val model = TableEditModel(result(3, 5), primaryKey = listOf("id"))
+        setContent { IntUiTheme(isDark = false) { Box(Modifier.size(800.dp, 400.dp)) { DataGrid(model, state) } } }
+
+        onNodeWithText("r1c1").performMouseInput { click(center) }
+        waitForIdle()
+        onRoot().performKeyInput {
+            pressKey(Key.ShiftLeft)
+            pressKey(Key.ShiftRight)
+            pressKey(Key.CapsLock)
+            pressKey(Key.F5)
+        }
+        waitForIdle()
+        assertEquals(null, state.editing)
+        assertEquals(0, model.changeCount)
+
+        // Shift-selecting still works after the bare Shift press.
+        onRoot().performKeyInput { withKeyDown(Key.ShiftLeft) { pressKey(Key.DirectionDown) } }
+        waitForIdle()
+        assertEquals(null, state.editing)
+        assertEquals(GridCell(1, 1), state.selection!!.anchor)
+        assertEquals(GridCell(2, 1), state.selection!!.focus)
+    }
+
+    @Test
+    fun `only keys that type a character start editing`() {
+        assertEquals("x", typedText('x'.code))
+        assertEquals(" ", typedText(' '.code))
+        assertEquals("é", typedText('é'.code))
+        // Shift, Caps Lock, Fn… arrive from AWT as CHAR_UNDEFINED.
+        assertEquals(null, typedText(java.awt.event.KeyEvent.CHAR_UNDEFINED.code))
+        assertEquals(null, typedText(0))
+        assertEquals(null, typedText(8))
+        assertEquals(null, typedText(127))
+        assertEquals(null, typedText(0xD800))
+    }
+
+    @Test
     fun `typing over a cell replaces it, and new rows show defaults`() = runComposeUiTest {
         val state = DataGridState()
         val model = TableEditModel(result(3, 5), primaryKey = listOf("id"))
