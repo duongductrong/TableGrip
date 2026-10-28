@@ -8,6 +8,7 @@ import dev.datagrok.app.AppState
 import dev.datagrok.app.console.ConsoleTab
 import dev.datagrok.app.table.StructureSection
 import dev.datagrok.app.table.TableDataTab
+import dev.datagrok.app.documents.DocumentBrowserTab
 import dev.datagrok.app.keyvalue.CommandConsoleTab
 import dev.datagrok.app.keyvalue.KeyBrowserTab
 import dev.datagrok.core.connection.ConnectionConfig
@@ -50,11 +51,29 @@ class WorkspaceViewModel(private val app: AppState) {
     /** A stable identity for [tab] while it is open, for keying the tab strip. */
     fun keyOf(tab: WorkspaceTab): Long = keys.getValue(tab)
 
-    /** A SQL console, or a command console for engines without SQL ([keyspace] picks its database). */
-    fun openConsole(config: ConnectionConfig, initialSql: String = "", keyspace: Int = 0) {
+    /**
+     * A SQL console, or a command console for engines without SQL: [keyspace] picks a key-value store's database,
+     * [database] a document store's; [initialSql] is the first command to show.
+     */
+    fun openConsole(config: ConnectionConfig, initialSql: String = "", keyspace: Int = 0, database: String? = null) {
         consoleCount++
         val name = if (consoleCount == 1) config.name else "${config.name} ($consoleCount)"
-        open(if (config.type.paradigm == Paradigm.KeyValue) CommandConsoleTab(app, config, name, keyspace) else ConsoleTab(app, config, name, initialSql))
+        open(
+            when (config.type.paradigm) {
+                Paradigm.KeyValue -> CommandConsoleTab(app, config, name, keyspace = keyspace)
+                Paradigm.Document -> CommandConsoleTab(app, config, name, database = database ?: config.database.ifBlank { "test" }, initial = initialSql)
+                else -> ConsoleTab(app, config, name, initialSql)
+            }
+        )
+    }
+
+    /** Focuses the collection's document browser if it is already open. */
+    fun openCollection(config: ConnectionConfig, database: String, collection: String) {
+        tabs.firstOrNull { it is DocumentBrowserTab && it.connectionId == config.id && it.database == database && it.collection == collection }?.let {
+            selected = it
+            return
+        }
+        open(DocumentBrowserTab(app, config, database, collection))
     }
 
     /** Focuses the key browser of [keyspace] if it is already open. */

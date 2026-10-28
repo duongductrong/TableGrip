@@ -5,6 +5,8 @@ import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.driver.Database
 import dev.datagrok.core.connection.Paradigm
 import dev.datagrok.core.driver.DatabaseConnection
+import dev.datagrok.core.driver.DocumentConnection
+import dev.datagrok.core.driver.DocumentStore
 import dev.datagrok.core.driver.KeyValueConnection
 import dev.datagrok.core.driver.KeyValueStore
 import dev.datagrok.core.driver.RelationalConnection
@@ -50,6 +52,10 @@ class DatabaseRegistry(
     suspend fun keyValue(config: ConnectionConfig): KeyValueConnection =
         connection(config) as? KeyValueConnection ?: throw IllegalStateException("${config.type.displayName} isn't a key-value store")
 
+    /** The live document-store connection; fails for profiles of other kinds. */
+    suspend fun documents(config: ConnectionConfig): DocumentConnection =
+        connection(config) as? DocumentConnection ?: throw IllegalStateException("${config.type.displayName} isn't a document store")
+
     suspend fun connection(config: ConnectionConfig): DatabaseConnection {
         (statuses[config.id] as? ConnectionStatus.Connected)?.let { return it.database }
         val attempt =
@@ -62,6 +68,7 @@ class DatabaseRegistry(
                         val connection: DatabaseConnection =
                             when (config.type.paradigm) {
                                 Paradigm.KeyValue -> KeyValueStore.connect(config, password(config.id), secret, drivers.library)
+                                Paradigm.Document -> DocumentStore.connect(config, password(config.id), secret, drivers.library)
                                 else -> Database.connect(config, password(config.id), secret, drivers.library)
                             }
                         connection.also {

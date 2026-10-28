@@ -135,7 +135,8 @@ No JDBC driver ships with Datagrok. The connection dialog says what the chosen d
   `core/src/main/resources/dev/datagrok/core/drivers/drivers.lock.json`, which `:core:lockDrivers` writes from the catalog
   in `core/build.gradle.kts`. The catalog only takes jars whose license a person reviewed and the allowlist accepts
   (permissive, or LGPL as a separate user download); `check` fails when the lockfile is stale.
-- **Non-JDBC clients** (Lettuce, for Redis) download the same way; Datagrok's own adapter for each (`engines/redis`) ships
+- **Non-JDBC clients** (Lettuce for Redis, the MongoDB Java driver) download the same way; Datagrok's own adapter for each
+  (`engines/redis`, `engines/mongodb`) ships
   inside the app as `engines/<name>.jar`, off the classpath, and loads together with the client's jars.
 - **Your own jars** for drivers Datagrok can't distribute (MySQL Connector/J is GPL): choose them in the dialog.
 - **Offline**: "Import from folder…" installs catalog drivers from jars already on disk, checked against the same hashes.
@@ -157,6 +158,7 @@ Paste any of these into **New Connection → Paste** and press Parse:
 | Advanced Connector/J, MariaDB | `jdbc:mysql:replication://…`, `address=(host=…)(port=…)` — kept as a raw JDBC URL |
 | SQLite | `jdbc:sqlite:/path/app.db` · `sqlite:///path/app.db` · `~/data/app.sqlite3` |
 | SQL Server, ClickHouse, DuckDB, H2, HSQLDB, Derby | `jdbc:sqlserver://db:1433;databaseName=shop` · `jdbc:clickhouse://ch:8123/default` · `jdbc:duckdb:/data/a.duckdb` |
+| MongoDB | `mongodb://user@host:27017/shop?authSource=admin` · `mongodb+srv://user@cluster0.example.net/shop` (password goes to the keychain) |
 | Redis, Valkey, KeyDB, Dragonfly | host and port in the form; properties `mode=cluster` / `mode=sentinel` + `sentinelMaster=…`, `ssl=true` |
 | Any other JDBC driver | `jdbc:firebirdsql://…`, `jdbc:oracle:thin:@…` — becomes "Other (JDBC driver)"; choose the driver's jar |
 

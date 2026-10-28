@@ -32,6 +32,9 @@ enum class EngineFamily {
 
     /** The Redis protocol: Redis, Valkey, KeyDB, Dragonfly. */
     Redis,
+
+    /** The MongoDB wire protocol and query language. */
+    MongoDB,
 }
 
 /** How a profile reaches its database, which decides the fields the connection dialog asks for. */
@@ -142,6 +145,9 @@ class DatabaseType(
         val KeyDB = keyValue("KeyDB", "KeyDB")
         val Dragonfly = keyValue("Dragonfly", "Dragonfly")
 
+        val MongoDB =
+            DatabaseType("MongoDB", "MongoDB", EngineFamily.MongoDB, 27017, listOf(DriverId.MongoDB), paradigm = Paradigm.Document, capabilities = emptySet())
+
         private fun keyValue(id: String, name: String) =
             DatabaseType(id, name, EngineFamily.Redis, 6379, listOf(DriverId.Lettuce), paradigm = Paradigm.KeyValue, capabilities = emptySet())
         val H2 = DatabaseType("H2", "H2", EngineFamily.Generic, null, listOf(DriverId.H2), databaseHint = "/path/to/data (without .mv.db) or mem:test")
@@ -155,7 +161,7 @@ class DatabaseType(
         /** Every engine, in the order the connection dialog lists them. */
         val entries: List<DatabaseType> =
             listOf(
-                PostgreSQL, MySQL, MariaDB, SQLite, SqlServer, ClickHouse, DuckDB, Redis, Valkey,
+                PostgreSQL, MySQL, MariaDB, SQLite, SqlServer, ClickHouse, DuckDB, MongoDB, Redis, Valkey,
                 CockroachDB, TimescaleDB, Neon, Supabase, TiDB, PlanetScale, AzureSql,
                 KeyDB, Dragonfly, H2, HSQLDB, Derby, OtherJdbc,
             )

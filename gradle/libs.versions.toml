@@ -18,6 +18,7 @@ mssql = "13.6.1.jre11"
 clickhouse = "0.11.0"
 duckdb = "1.5.6.0"
 lettuce = "7.9.0.RELEASE"
+mongodb = "5.14.0"
 hikari = "7.0.2"
 javaKeyring = "1.0.4"
 sshj = "0.41.2"
@@ -47,6 +48,7 @@ jdbc-mssql = { module = "com.microsoft.sqlserver:mssql-jdbc", version.ref = "mss
 jdbc-clickhouse = { module = "com.clickhouse:clickhouse-jdbc", version.ref = "clickhouse" }
 jdbc-duckdb = { module = "org.duckdb:duckdb_jdbc", version.ref = "duckdb" }
 lettuce = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
+mongodb-driver-sync = { module = "org.mongodb:mongodb-driver-sync", version.ref = "mongodb" }
 java-keyring = { module = "com.github.javakeyring:java-keyring", version.ref = "javaKeyring" }
 sshj = { module = "com.hierynomus:sshj", version.ref = "sshj" }
 apache-sshd-core = { module = "org.apache.sshd:sshd-core", version.ref = "apacheSshd" }

@@ -10,6 +10,7 @@ import dev.datagrok.core.driver.KeyValueClient
 import dev.datagrok.core.driver.KeyValueConnection
 import dev.datagrok.core.driver.Keyspace
 import dev.datagrok.core.driver.StreamEntry
+import dev.datagrok.core.driver.withContextClassLoader
 import io.lettuce.core.ClientOptions
 import io.lettuce.core.Limit
 import io.lettuce.core.Range
@@ -44,7 +45,10 @@ import kotlinx.coroutines.withContext
  * sentinels), `ssl=true`, `verifyPeer=false`.
  */
 class RedisClient : KeyValueClient {
-    override fun connect(config: ConnectionConfig, host: String, port: Int, password: String?): KeyValueConnection {
+    override fun connect(config: ConnectionConfig, host: String, port: Int, password: String?): KeyValueConnection =
+        withContextClassLoader(RedisClient::class.java.classLoader) { open(config, host, port, password) }
+
+    private fun open(config: ConnectionConfig, host: String, port: Int, password: String?): KeyValueConnection {
         val properties = config.properties
         val tls = properties["ssl"]?.toBoolean() == true
         val user = config.user.trim().takeIf { it.isNotEmpty() }
@@ -104,12 +108,14 @@ class RedisClient : KeyValueClient {
         private suspend fun <T> on(keyspace: Int, block: RedisClusterCommands<String, String>.() -> T): T =
             lock.withLock {
                 withContext(Dispatchers.IO) {
-                    if (cluster) require(keyspace == 0) { "A Redis cluster has database 0 only." }
-                    else if (keyspace != selected) {
-                        (connection as StatefulRedisConnection<String, String>).sync().select(keyspace)
-                        selected = keyspace
+                    withContextClassLoader(RedisClient::class.java.classLoader) {
+                        if (cluster) require(keyspace == 0) { "A Redis cluster has database 0 only." }
+                        else if (keyspace != selected) {
+                            (connection as StatefulRedisConnection<String, String>).sync().select(keyspace)
+                            selected = keyspace
+                        }
+                        redis.block()
                     }
-                    redis.block()
                 }
             }
 

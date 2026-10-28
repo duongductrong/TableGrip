@@ -359,7 +359,7 @@ Kích thước: **S** ≤ 2 ngày · **M** ~1 tuần · **L** 2–3 tuần. Cộ
 
 ### Phase 2: key-value và document (≈5–6 tuần)
 
-**Trạng thái (2026-10-29): Redis xong, MongoDB và etcd chưa làm.**
+**Trạng thái (2026-10-29): Redis và MongoDB xong, etcd chưa làm.**
 - Kiến trúc cho client không phải JDBC: adapter của DataGrok (module `engines/redis`, biên dịch với core + Lettuce ở dạng
   `compileOnly`) đóng gói trong app tại `engines/redis.jar`, không nằm trên classpath; `DriverLibrary.loadClient` nạp nó
   cùng classloader với các jar Lettuce người dùng tải (15 jar, 7.7 MB, MIT/Apache/MIT-0). MongoDB và etcd sẽ đi cùng
@@ -373,6 +373,21 @@ Kích thước: **S** ≤ 2 ngày · **M** ~1 tuần · **L** 2–3 tuần. Cộ
   sửa theo kiểu, tạo key, đổi tên, đặt/bỏ TTL, xóa); tab Console kiểu redis-cli (lịch sử ↑/↓, theo `SELECT`).
 - Đã test trên server thật: Redis 7.4, Valkey 8.1, Redis Cluster 7.0 (6 node); đường tải Lettuce từ Maven Central + nạp
   adapter từ app; UI test có ảnh chụp.
+- MongoDB: adapter `engines/mongodb` trên MongoDB Java driver 5.14 (4 jar, 2.8 MB, Apache-2.0), đi cùng đường tải/nạp
+  như Redis. `DocumentConnection`: database, collection (ước lượng số document), `find` với filter/sort kiểu shell
+  (Extended JSON, `ObjectId('…')`, `ISODate('…')`), phân trang, đếm, insert/replace/delete theo `_id`, index, console.
+  Kết nối bằng host/port (một host thì `directConnection=true`) hoặc chuỗi `mongodb://` / `mongodb+srv://` (mật khẩu tách
+  ra keychain). Console là tập con của mongo shell không chạy JavaScript: `show dbs|collections`, `use`,
+  `db.<coll>.find(…).sort(…).limit(…)`, `findOne`, `countDocuments`, `distinct`, `aggregate`, `insertOne/Many`,
+  `updateOne/Many`, `replaceOne`, `deleteOne/Many`, index, `db.runCommand/adminCommand`. Hồ sơ chỉ-đọc chỉ cho chạy lệnh
+  đọc (pipeline có `$out`/`$merge` là ghi).
+- Giao diện MongoDB: explorer database → collection; tab Documents (lưới với mỗi field cấp một là một cột, kiểu suy ra
+  từ giá trị, ObjectId/date hiện theo giá trị; JSON của document đang chọn để sửa, thêm, xóa nhiều dòng).
+- Đã test MongoDB 8.0 (replica set một node) thật: adapter, console, chỉ-đọc, chuỗi kết nối, tải driver + nạp adapter,
+  UI test có ảnh chụp.
+- Sửa lỗi phát hiện được: adapter giờ đặt thread context class loader về classloader của nó khi gọi vào client (Lettuce
+  dò class JFR qua TCCL và có thể lấy nhầm bản ở classloader khác); task `lockDrivers` khai báo nội dung lockfile làm
+  input (trước đó Gradle coi là up-to-date khi catalog đổi).
 - Chưa test: Sentinel, KeyDB, Dragonfly (dùng chung giao thức, chưa chạy server thật). Console ở chế độ Cluster gửi lệnh
   không có key (vd. `FLUSHALL`, `DBSIZE`) tới một node.
 

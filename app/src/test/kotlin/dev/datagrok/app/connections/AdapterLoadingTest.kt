@@ -31,4 +31,19 @@ class AdapterLoadingTest {
             assertEquals("PONG", redis.command(0, listOf("PING")))
         }
     }
+
+    @Test
+    fun `the mongodb adapter runs on the downloaded driver`() = runBlocking<Unit> {
+        if (System.getProperty("it.network") != "true") return@runBlocking
+        val (host, port) = System.getProperty("it.mongo")?.split(":") ?: return@runBlocking
+        val drivers = DriverLibrary(Files.createTempDirectory("drivers"), useClasspath = false)
+        drivers.install(DriverId.MongoDB)
+
+        assertEquals("datagrok-client-MongoDB", drivers.loadClient(DriverId.MongoDB).javaClass.classLoader.name)
+        val config = ConnectionConfig(id = "m", name = "m", type = DatabaseType.MongoDB, host = host, port = port.toInt())
+        dev.datagrok.core.driver.DocumentStore.connect(config, null, drivers = drivers).use { mongo ->
+            assertTrue(mongo.server().startsWith("MongoDB"), mongo.server())
+            assertTrue("\"ok\": 1" in mongo.command("admin", "db.runCommand({ping: 1})"))
+        }
+    }
 }

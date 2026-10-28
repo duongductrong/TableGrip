@@ -98,6 +98,10 @@ private class ConnectionForm(existing: ConnectionConfig?) {
     val relational: Boolean
         get() = type.paradigm == Paradigm.Relational
 
+    /** MongoDB and the like: a database field and a connection string, but nothing JDBC. */
+    val document: Boolean
+        get() = type.paradigm == Paradigm.Document
+
     /** The engine has no host/file form: only a JDBC URL. */
     val urlOnly: Boolean
         get() = type.connection == ConnectionKind.Url
@@ -145,6 +149,15 @@ private class ConnectionForm(existing: ConnectionConfig?) {
     fun validate(drivers: DriverDownloads): String? {
         val port = port.text.toString()
         parseProperties().exceptionOrNull()?.let { return it.message }
+        if (useUrl && document) {
+            val raw = url.text.toString().trim()
+            return when {
+                raw.isEmpty() -> "Connection string is required."
+                !raw.startsWith("mongodb://") && !raw.startsWith("mongodb+srv://") -> "A connection string starts with mongodb:// or mongodb+srv://."
+                ssh -> "SSH tunnels need host and port, not a connection string."
+                else -> null
+            }
+        }
         if (useUrl) {
             val raw = url.text.toString().trim()
             return when {
@@ -355,7 +368,7 @@ private fun GeneralTab(form: ConnectionForm, drivers: DriverDownloads, onMessage
                 form.connectionString,
                 Modifier.weight(1f),
                 textStyle = JewelTheme.editorTextStyle,
-                placeholder = { Text("postgres://user:pass@host:5432/db, jdbc:mysql://…, path.db") },
+                placeholder = { Text("postgres://user:pass@host/db, mongodb+srv://…, jdbc:…, path.db") },
                 onKeyboardAction = KeyboardActionHandler { parse() },
             )
             OutlinedButton(onClick = ::parse) { Text("Parse") }
@@ -389,20 +402,31 @@ private fun GeneralTab(form: ConnectionForm, drivers: DriverDownloads, onMessage
         profileJars = form.driverJars,
         onProfileJars = { form.driverJars = it },
     )
-    if (!form.urlOnly && form.relational) FormRow("Connect by") {
+    if (!form.urlOnly && (form.relational || form.document)) FormRow("Connect by") {
         ListComboBox(
-            items = listOf(if (form.isServer) "Host and port" else "File", "JDBC URL"),
+            items = listOf(if (form.isServer) "Host and port" else "File", if (form.document) "Connection string" else "JDBC URL"),
             selectedIndex = if (form.useUrl) 1 else 0,
             onSelectedItemChange = { index ->
                 form.useUrl = index == 1
                 // Start the URL from the current fields, so switching modes doesn't lose them.
-                if (form.useUrl && form.url.text.isBlank()) runCatching { JdbcUrls.build(form.toConfig().copy(url = null)) }.onSuccess { form.url.setTextAndPlaceCursorAtEnd(it) }
+                if (form.useUrl && form.url.text.isBlank()) {
+                    val start =
+                        if (form.document) "mongodb://${form.host.text.toString().trim().ifEmpty { "localhost" }}:${form.port.text.toString().trim().ifEmpty { "27017" }}/${form.database.text.toString().trim()}"
+                        else runCatching { JdbcUrls.build(form.toConfig().copy(url = null)) }.getOrNull()
+                    start?.let { form.url.setTextAndPlaceCursorAtEnd(it) }
+                }
             },
             modifier = Modifier.width(180.dp),
         )
     }
     if (form.useUrl) {
-        FormRow("URL") { TextField(form.url, Modifier.fillMaxWidth(), textStyle = JewelTheme.editorTextStyle, placeholder = { Text(if (form.urlOnly) "jdbc:firebirdsql://host:3050/employee" else "jdbc:mysql:replication://primary,replica/db") }) }
+        val example =
+            when {
+                form.document -> "mongodb+srv://user@cluster0.example.net/shop"
+                form.urlOnly -> "jdbc:firebirdsql://host:3050/employee"
+                else -> "jdbc:mysql:replication://primary,replica/db"
+            }
+        FormRow("URL") { TextField(form.url, Modifier.fillMaxWidth(), textStyle = JewelTheme.editorTextStyle, placeholder = { Text(example) }) }
         if (form.isServer || form.urlOnly) {
             FormRow("User") { TextField(form.user, Modifier.fillMaxWidth()) }
             FormRow("Password") {
@@ -420,6 +444,7 @@ private fun GeneralTab(form: ConnectionForm, drivers: DriverDownloads, onMessage
             }
         }
         if (form.relational) FormRow("Database") { TextField(form.database, Modifier.fillMaxWidth()) }
+        if (form.document) FormRow("Database") { TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text("Optional: opened first, and the default auth source") }) }
         FormRow("User") { TextField(form.user, Modifier.fillMaxWidth()) }
         FormRow("Password") {
             TextField(form.password, Modifier.fillMaxWidth(), outputTransformation = MaskPassword, placeholder = { Text("Saved in the system keychain") })
@@ -512,6 +537,7 @@ private val PropertyExamples =
         DriverId.MySQL to "sslMode=REQUIRED\nallowPublicKeyRetrieval=true\nserverTimezone=UTC",
         DriverId.MariaDB to "sslMode=verify-full\nallowPublicKeyRetrieval=true",
         DriverId.SQLite to "foreign_keys=true\nbusy_timeout=5000",
+        DriverId.MongoDB to "authSource=admin\ntls=true\nreplicaSet=rs0",
         DriverId.Lettuce to "ssl=true\nmode=cluster  (hosts are seed nodes)\nmode=sentinel + sentinelMaster=mymaster",
     )
 

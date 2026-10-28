@@ -43,6 +43,7 @@ enum class DriverId(
      * together with it. [className] is the adapter's entry point.
      */
     Lettuce("Lettuce (Redis client)", "dev.datagrok.engines.redis.RedisClient", "redis:", catalogId = "lettuce", adapter = "redis"),
+    MongoDB("MongoDB Java Driver", "dev.datagrok.engines.mongodb.MongoClient", "mongodb:", catalogId = "mongodb", adapter = "mongodb"),
 
     /** Whatever driver the profile's own jars contain; its class is found in them. */
     Generic("JDBC driver from your jars", "", "jdbc:");

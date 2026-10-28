@@ -56,6 +56,15 @@ sealed interface ExplorerNode {
         override val key = connectionId to "keyspace:${keyspace.index}"
     }
 
+    /** A database of a document store; its children are collections. */
+    data class DocumentDatabase(val connectionId: String, val name: String) : ExplorerNode {
+        override val key = this
+    }
+
+    data class Collection(val connectionId: String, val database: String, val info: dev.datagrok.core.driver.CollectionInfo) : ExplorerNode {
+        override val key = connectionId to "collection:$database.${info.name}"
+    }
+
     data class Message(val parent: Any, val text: String, val isError: Boolean) : ExplorerNode {
         override val key = parent to "message"
     }
@@ -96,6 +105,7 @@ class ExplorerViewModel(private val app: AppState) {
                 is ExplorerNode.Folder -> node.children
                 is ExplorerNode.Connection,
                 is ExplorerNode.Schema,
+                is ExplorerNode.DocumentDatabase,
                 is ExplorerNode.Table ->
                     when (val loaded = snapshot[node.key]) {
                         is Children.Loaded -> loaded.nodes
@@ -124,6 +134,14 @@ class ExplorerViewModel(private val app: AppState) {
     }
 
     private suspend fun load(config: ConnectionConfig, key: Any): List<ExplorerNode> {
+        if (config.type.paradigm == Paradigm.Document) {
+            val mongo = app.databases.documents(config)
+            return when (key) {
+                is ConnectionKey -> mongo.databases().map { ExplorerNode.DocumentDatabase(config.id, it) }
+                is ExplorerNode.DocumentDatabase -> mongo.collections(key.name).map { ExplorerNode.Collection(config.id, key.name, it) }
+                else -> emptyList()
+            }
+        }
         if (config.type.paradigm == Paradigm.KeyValue) {
             // Empty databases past the first add nothing but noise; the console's SELECT still reaches them.
             val keyspaces = app.databases.keyValue(config).keyspaces()
@@ -199,6 +217,7 @@ class ExplorerViewModel(private val app: AppState) {
         when (key) {
             is ConnectionKey -> key.id
             is ExplorerNode.Schema -> key.connectionId
+            is ExplorerNode.DocumentDatabase -> key.connectionId
             is TableKey -> key.connectionId
             is Pair<*, *> -> key.first?.let(::connectionIdOf)
             else -> null

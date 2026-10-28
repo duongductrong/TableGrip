@@ -477,7 +477,8 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
                 EngineFamily.SqlServer -> SqlServer
                 EngineFamily.ClickHouse -> ClickHouse
                 EngineFamily.DuckDB -> DuckDB
-                EngineFamily.Redis -> null
+                EngineFamily.Redis,
+                EngineFamily.MongoDB -> null
             }
 
         fun of(type: DatabaseType): SqlDialect = type.dialect ?: throw IllegalArgumentException("${type.displayName} has no SQL dialect")

@@ -9,6 +9,7 @@ import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.connection.ConnectionStore
 import dev.datagrok.core.connection.DatabaseType
 import dev.datagrok.core.connection.Paradigm
+import dev.datagrok.core.driver.DocumentStore
 import dev.datagrok.core.driver.KeyValueStore
 import dev.datagrok.core.driver.Database
 import kotlinx.coroutines.Dispatchers
@@ -90,6 +91,7 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
         app.drivers.ensure(config)
         when (config.type.paradigm) {
             Paradigm.KeyValue -> TestOutcome(server = KeyValueStore.test(config, password, sshSecret, app.drivers.library))
+            Paradigm.Document -> TestOutcome(server = DocumentStore.test(config, password, sshSecret, app.drivers.library))
             else -> TestOutcome(suggested = Database.test(config, password, sshSecret, app.drivers.library))
         }
     }

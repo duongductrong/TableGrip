@@ -1,0 +1,49 @@
+package dev.datagrok.core.driver
+
+import dev.datagrok.core.connection.ConnectionConfig
+
+/** A collection as the explorer lists it. [kind] is `collection`, `view` or `timeseries`; [documents] is an estimate. */
+data class CollectionInfo(val name: String, val kind: String, val documents: Long?)
+
+/** A page of documents as relaxed Extended JSON, one string each; [hasMore] says whether another page follows. */
+data class DocumentPage(val documents: List<String>, val hasMore: Boolean)
+
+/**
+ * Databases, collections and documents: what the document browser and the shell console work with. Filters, sorts and
+ * documents are Extended JSON, in the shell's relaxed syntax too (`{status: 'A', _id: ObjectId('…')}`).
+ */
+interface DocumentConnection : DatabaseConnection {
+    /** The server, e.g. "MongoDB 8.0.4" and its topology. */
+    suspend fun server(): String
+
+    suspend fun databases(): List<String>
+
+    suspend fun collections(database: String): List<CollectionInfo>
+
+    suspend fun find(database: String, collection: String, filter: String, sort: String, skip: Long, limit: Int): DocumentPage
+
+    suspend fun count(database: String, collection: String, filter: String): Long
+
+    /** Inserts [document], returning its `_id` as Extended JSON. */
+    suspend fun insert(database: String, collection: String, document: String): String
+
+    /** Replaces the document whose `_id` is [id] (Extended JSON) with [document]. */
+    suspend fun replace(database: String, collection: String, id: String, document: String)
+
+    /** Deletes the documents with these `_id`s (Extended JSON each), returning how many were deleted. */
+    suspend fun delete(database: String, collection: String, ids: List<String>): Long
+
+    /** Index definitions as Extended JSON. */
+    suspend fun indexes(database: String, collection: String): List<String>
+
+    /**
+     * Runs one shell command in [database]: `db.orders.find({…}).sort({…}).limit(5)`, `db.runCommand({…})`, `show
+     * collections`… and returns the reply as the shell would print it. `use` is the console's own business.
+     */
+    suspend fun command(database: String, line: String): String
+}
+
+/** Implemented by an engine adapter; see [KeyValueClient]. [host] and [port] point through any SSH tunnel. */
+interface DocumentClient {
+    fun connect(config: ConnectionConfig, host: String, port: Int, password: String?): DocumentConnection
+}

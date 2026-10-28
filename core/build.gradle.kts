@@ -104,6 +104,10 @@ val driverCatalog =
             "https://github.com/redis/lettuce/blob/main/LICENSE", "https://github.com/redis/lettuce",
         ),
         CatalogDriver(
+            "mongodb", "MongoDB Java Driver", libs.mongodb.driver.sync, "dev.datagrok.engines.mongodb.MongoClient",
+            "https://github.com/mongodb/mongo-java-driver/blob/main/LICENSE.txt", "https://github.com/mongodb/mongo-java-driver",
+        ),
+        CatalogDriver(
             "duckdb", "DuckDB JDBC", libs.jdbc.duckdb, "org.duckdb.DuckDBDriver",
             "https://github.com/duckdb/duckdb-java/blob/main/LICENSE", "https://github.com/duckdb/duckdb-java",
         ),
@@ -165,6 +169,10 @@ val artifactLicenses =
         "io.projectreactor:reactor-core" to "Apache-2.0",
         "org.reactivestreams:reactive-streams" to "MIT-0",
         "redis.clients.authentication:redis-authx-core" to "MIT",
+        "org.mongodb:mongodb-driver-sync" to "Apache-2.0",
+        "org.mongodb:mongodb-driver-core" to "Apache-2.0",
+        "org.mongodb:bson" to "Apache-2.0",
+        "org.mongodb:bson-record-codec" to "Apache-2.0",
     )
 
 val driverConfigurations =
@@ -227,6 +235,8 @@ tasks.register("lockDrivers") {
     description = "Resolves the driver catalog and writes drivers.lock.json (coordinates, sha256 and license of every jar)."
     val content = driverLockContent
     val output = driverLockFile.asFile
+    // The resolved content is the input: a catalog change must rewrite the file even when the file itself is unchanged.
+    inputs.property("lock", content)
     outputs.file(output)
     doLast { output.writeText(content.get()) }
 }

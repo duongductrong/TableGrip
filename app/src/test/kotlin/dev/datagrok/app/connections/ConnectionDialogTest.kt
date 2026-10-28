@@ -63,6 +63,24 @@ class ConnectionDialogTest {
     }
 
     @Test
+    fun `mongodb connection strings connect by string, with the password moved out`() = runComposeUiTest {
+        val app = app()
+        setContent {
+            DatagrokTheme(isDark = true) { Box(Modifier.size(640.dp, 600.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
+        }
+        onAllNodes(hasSetTextAction())[0].performTextInput("mongodb+srv://app:s3cret@cluster0.example.net/shop?retryWrites=true")
+        onNodeWithText("Parse").performClick()
+        waitForIdle()
+
+        onNodeWithText("MongoDB").assertExists()
+        onNodeWithText("Connection string").assertExists()
+        onNodeWithText("mongodb+srv://app@cluster0.example.net/shop?retryWrites=true").assertExists()
+        onAllNodesWithText("JDBC URL").assertCountEquals(0)
+        System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "connection-dialog-mongo.png")) }
+        app.dispose()
+    }
+
+    @Test
     fun `the driver banner acts on the driver now selected, not the first one`() = runComposeUiTest {
         val app = app()
         setContent {

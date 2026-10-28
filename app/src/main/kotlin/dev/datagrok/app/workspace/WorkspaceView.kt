@@ -1,5 +1,7 @@
 package dev.datagrok.app.workspace
 
+import dev.datagrok.app.documents.DocumentBrowserTab
+import dev.datagrok.app.documents.DocumentBrowserView
 import dev.datagrok.app.keyvalue.CommandConsoleTab
 import dev.datagrok.app.keyvalue.CommandConsoleView
 import dev.datagrok.app.keyvalue.KeyBrowserTab
@@ -82,6 +84,7 @@ internal fun WorkspaceView(app: AppState) {
                 is ConsoleTab -> ConsoleView(app, selected)
                 is TableDataTab -> TableDataView(selected)
                 is KeyBrowserTab -> KeyBrowserView(selected)
+                is DocumentBrowserTab -> DocumentBrowserView(selected)
                 is CommandConsoleTab -> CommandConsoleView(selected)
                 else -> Unit
             }

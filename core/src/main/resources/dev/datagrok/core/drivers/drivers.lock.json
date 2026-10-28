@@ -158,6 +158,22 @@
       ]
     },
     {
+      "id": "mongodb",
+      "name": "MongoDB Java Driver",
+      "version": "5.14.0",
+      "className": "dev.datagrok.engines.mongodb.MongoClient",
+      "license": "Apache-2.0",
+      "tier": "Permissive",
+      "licenseUrl": "https://github.com/mongodb/mongo-java-driver/blob/main/LICENSE.txt",
+      "sourceUrl": "https://github.com/mongodb/mongo-java-driver",
+      "artifacts": [
+        {"coordinates": "org.mongodb:mongodb-driver-sync:5.14.0", "path": "org/mongodb/mongodb-driver-sync/5.14.0/mongodb-driver-sync-5.14.0.jar", "sha256": "15c75bd17cbc38d7d5edcc03dbd47666087159b8737ceeb045a36345e533f5d6", "size": 180284, "license": "Apache-2.0"},
+        {"coordinates": "org.mongodb:mongodb-driver-core:5.14.0", "path": "org/mongodb/mongodb-driver-core/5.14.0/mongodb-driver-core-5.14.0.jar", "sha256": "ebd32361a9122f7e49950c3854a00cd4f12027d3038fd6957634a968d241b510", "size": 2072118, "license": "Apache-2.0"},
+        {"coordinates": "org.mongodb:bson-record-codec:5.14.0", "path": "org/mongodb/bson-record-codec/5.14.0/bson-record-codec-5.14.0.jar", "sha256": "0c090422fba1f9b463cae32c88f4161f4dac5de9cd7006e490ebf7ffd36f8a84", "size": 11802, "license": "Apache-2.0"},
+        {"coordinates": "org.mongodb:bson:5.14.0", "path": "org/mongodb/bson/5.14.0/bson-5.14.0.jar", "sha256": "6299c18ad698681440f17cf86172dfab169530082959fd9949244982394ea99d", "size": 533371, "license": "Apache-2.0"}
+      ]
+    },
+    {
       "id": "duckdb",
       "name": "DuckDB JDBC",
       "version": "1.5.6.0",

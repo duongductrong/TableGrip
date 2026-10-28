@@ -27,6 +27,7 @@ val engineAdapters by configurations.creating {
 
 dependencies {
     engineAdapters(projects.engines.redis)
+    engineAdapters(projects.engines.mongodb)
     implementation(projects.core)
 
     implementation(libs.jewel.intUi.standalone)
@@ -47,6 +48,8 @@ dependencies {
     // The Redis adapter and its client, on the classpath for UI tests against a real server.
     testImplementation(projects.engines.redis)
     testRuntimeOnly(libs.lettuce)
+    testImplementation(projects.engines.mongodb)
+    testRuntimeOnly(libs.mongodb.driver.sync)
 }
 
 compose.desktop {
@@ -192,7 +195,7 @@ tasks {
         useJUnitPlatform()
         providers.gradleProperty("snapshot.dir").orNull?.let { systemProperty("snapshot.dir", it) }
         providers.gradleProperty("snapshot.db").orNull?.let { systemProperty("snapshot.db", it) }
-        listOf("it.network", "it.redis").forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
+        listOf("it.network", "it.redis", "it.mongo").forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
     }
 
     withType<JavaExec> {

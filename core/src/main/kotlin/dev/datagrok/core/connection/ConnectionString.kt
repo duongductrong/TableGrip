@@ -50,6 +50,10 @@ object ConnectionString {
             lower.startsWith("file:") -> sqlite(text)
             looksLikeKeywordValue(text) -> libpqKeywordValue(text)
             looksLikeSqlitePath(text) -> sqlite(expandHome(text))
+            lower.startsWith("mongodb://") || lower.startsWith("mongodb+srv://") -> {
+                val (url, password) = stripSecrets(text)
+                ParsedConnection(type = DatabaseType.MongoDB, driver = DriverId.MongoDB, url = url, password = password)
+            }
             lower.startsWith("jdbc:sqlserver:") -> rawJdbc(text, DatabaseType.SqlServer, DriverId.SqlServer)
             lower.startsWith("jdbc:clickhouse:") || lower.startsWith("jdbc:ch:") -> rawJdbc(text, DatabaseType.ClickHouse, DriverId.ClickHouse)
             lower.startsWith("jdbc:duckdb:") -> rawJdbc(text, DatabaseType.DuckDB, DriverId.DuckDB)

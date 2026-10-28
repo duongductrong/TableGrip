@@ -116,6 +116,10 @@ private fun openNode(app: AppState, node: ExplorerNode) {
         app.connections.byId(node.connectionId)?.let { app.workspace.openKeys(it, node.keyspace.index) }
         return
     }
+    if (node is ExplorerNode.Collection) {
+        app.connections.byId(node.connectionId)?.let { app.workspace.openCollection(it, node.database, node.info.name) }
+        return
+    }
     val (table, section) =
         when (node) {
             is ExplorerNode.Table -> TableKey(node.connectionId, node.info.ref) to null
@@ -141,6 +145,24 @@ private fun contextMenu(app: AppState, node: ExplorerNode): List<ContextMenuItem
             )
         }
         is ExplorerNode.Schema -> listOf(ContextMenuItem("Refresh") { app.explorer.refresh(node.key) })
+        is ExplorerNode.DocumentDatabase -> {
+            val config = app.connections.byId(node.connectionId) ?: return emptyList()
+            listOf(
+                ContextMenuItem("New Console") { app.workspace.openConsole(config, database = node.name) },
+                ContextMenuItem("Copy Name") { copyToClipboard(node.name) },
+                ContextMenuItem("Refresh") { app.explorer.refresh(node.key) },
+            )
+        }
+        is ExplorerNode.Collection -> {
+            val config = app.connections.byId(node.connectionId) ?: return emptyList()
+            listOf(
+                ContextMenuItem("Open Documents") { app.workspace.openCollection(config, node.database, node.info.name) },
+                ContextMenuItem("New Console with find()") {
+                    app.workspace.openConsole(config, database = node.database, initialSql = "db.getCollection('${node.info.name}').find({})")
+                },
+                ContextMenuItem("Copy Name") { copyToClipboard(node.info.name) },
+            )
+        }
         is ExplorerNode.Keyspace -> {
             val config = app.connections.byId(node.connectionId) ?: return emptyList()
             listOf(
@@ -221,6 +243,15 @@ private fun NodeRow(app: AppState, node: ExplorerNode, modifier: Modifier = Modi
                     "(${fk.columns.joinToString()}) → ${fk.referencedTable.name}(${fk.referencedColumns.joinToString()})",
                     Modifier.weight(1f),
                 )
+            }
+            is ExplorerNode.DocumentDatabase -> {
+                NodeIcon(AllIconsKeys.Nodes.DataSchema)
+                Text(node.name, Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            is ExplorerNode.Collection -> {
+                NodeIcon(AllIconsKeys.Nodes.DataTables)
+                val detail = listOfNotNull(node.info.kind.takeIf { it != "collection" }, node.info.documents?.let { "~$it docs" }).joinToString(" · ")
+                NameAndDetail(node.info.name, detail, Modifier.weight(1f))
             }
             is ExplorerNode.Keyspace -> {
                 NodeIcon(AllIconsKeys.Nodes.DataSchema)

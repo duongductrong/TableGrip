@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import dev.datagrok.app.AppState
 import dev.datagrok.app.workspace.WorkspaceTab
 import dev.datagrok.core.connection.ConnectionConfig
+import dev.datagrok.core.connection.Paradigm
 import dev.datagrok.core.driver.KeyValueStore
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -46,15 +47,31 @@ import org.jetbrains.jewel.ui.component.Divider
 import org.jetbrains.jewel.ui.component.Text
 import org.jetbrains.jewel.ui.component.TextField
 
-/** A redis-cli style console: one command per line, replies printed below, in the database [keyspace] selects. */
-class CommandConsoleTab(private val app: AppState, val config: ConnectionConfig, name: String, keyspace: Int) : WorkspaceTab {
+/**
+ * A console for engines without SQL, one command per line with replies printed below: redis-cli style for key-value
+ * stores (in the database [keyspace] selects), mongo-shell style for document stores (in [database], which `use`
+ * switches).
+ */
+class CommandConsoleTab(
+    private val app: AppState,
+    val config: ConnectionConfig,
+    name: String,
+    keyspace: Int = 0,
+    database: String = "",
+    initial: String = "",
+) : WorkspaceTab {
     override val connectionId = config.id
     override val title = name
+
+    private val document = config.type.paradigm == Paradigm.Document
 
     var keyspace by mutableIntStateOf(keyspace)
         private set
 
-    val input = TextFieldState()
+    var database by mutableStateOf(database)
+        private set
+
+    val input = TextFieldState(initial)
 
     data class Entry(val prompt: String, val command: String, val reply: String, val isError: Boolean)
 
@@ -68,7 +85,7 @@ class CommandConsoleTab(private val app: AppState, val config: ConnectionConfig,
     private var job: Job? = null
 
     val prompt: String
-        get() = "db$keyspace>"
+        get() = if (document) "$database>" else "db$keyspace>"
 
     fun run() {
         val line = input.text.toString().trim()
@@ -76,8 +93,12 @@ class CommandConsoleTab(private val app: AppState, val config: ConnectionConfig,
         input.clearText()
         if (history.lastOrNull() != line) history += line
         historyIndex = history.size
-        if (line.equals("clear", ignoreCase = true)) {
+        if (line.equals("clear", ignoreCase = true) || line.equals("cls", ignoreCase = true)) {
             entries.clear()
+            return
+        }
+        if (document) {
+            runDocument(line)
             return
         }
         val arguments =
@@ -106,6 +127,36 @@ class CommandConsoleTab(private val app: AppState, val config: ConnectionConfig,
             }
     }
 
+    private fun runDocument(line: String) {
+        Regex("""^use\s+(\S+?);?$""").matchEntire(line)?.let { match ->
+            database = match.groupValues[1]
+            entries += Entry(prompt, line, "switched to db $database", isError = false)
+            return
+        }
+        val prompt = prompt
+        running = true
+        job =
+            app.scope.launch {
+                try {
+                    val reply = app.databases.documents(config).command(database, line)
+                    entries += Entry(prompt, line, reply, isError = reply.startsWith("Error:"))
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Throwable) {
+                    entries += Entry(prompt, line, "Error: ${e.message ?: e}", isError = true)
+                } finally {
+                    running = false
+                }
+            }
+    }
+
+    val help: String
+        get() =
+            if (document) "Mongo shell commands without JavaScript, e.g. db.orders.find({status: 'A'}).sort({total: -1}).limit(10), " +
+                "db.orders.aggregate([...]), db.runCommand({...}), show collections, use <db>. ↑/↓ recall earlier commands."
+            else "Commands run as in redis-cli, e.g. HGETALL user:1 or SCAN 0 MATCH session:* COUNT 100. " +
+                "↑/↓ recall earlier commands; \"clear\" empties this view."
+
     /** Steps through earlier commands: -1 for older, +1 for newer. */
     fun recall(step: Int) {
         if (history.isEmpty()) return
@@ -129,11 +180,7 @@ internal fun CommandConsoleView(tab: CommandConsoleTab) {
             LazyColumn(Modifier.fillMaxSize().padding(10.dp), state = listState, verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (tab.entries.isEmpty()) {
                     item {
-                        Text(
-                            "Commands run as in redis-cli, e.g. HGETALL user:1 or SCAN 0 MATCH session:* COUNT 100. " +
-                                "↑/↓ recall earlier commands; \"clear\" empties this view.",
-                            color = JewelTheme.globalColors.text.info,
-                        )
+                        Text(tab.help, color = JewelTheme.globalColors.text.info)
                     }
                 }
                 items(tab.entries) { entry ->
