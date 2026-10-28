@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import dev.datagrok.app.connections.ConnectionsViewModel
 import dev.datagrok.app.connections.DatabaseRegistry
+import dev.datagrok.app.completion.SchemaCache
 import dev.datagrok.app.explorer.ExplorerViewModel
 import dev.datagrok.app.export.ExportRequest
 import dev.datagrok.app.workspace.WorkspaceViewModel
@@ -54,6 +55,16 @@ class AppState(
     val databases = DatabaseRegistry(scope, connections::storedPassword, connections::storedSshSecret)
     val explorer = ExplorerViewModel(this)
     val workspace = WorkspaceViewModel(this)
+
+    private val schemaCaches = mutableMapOf<String, SchemaCache>()
+
+    /** Completion metadata for a connection, shared by its consoles and table filters. */
+    fun schemaCache(config: ConnectionConfig): SchemaCache = schemaCaches.getOrPut(config.id) { SchemaCache(scope, databases, config) }
+
+    /** Drops cached completion metadata, e.g. after DDL or when the connection's settings change. */
+    fun forgetSchema(connectionId: String) {
+        schemaCaches.remove(connectionId)?.invalidate()
+    }
 
     fun updateSettings(transform: (Settings) -> Settings) {
         settings = transform(settings)

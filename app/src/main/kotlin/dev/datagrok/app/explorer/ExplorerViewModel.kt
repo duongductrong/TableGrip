@@ -153,6 +153,7 @@ class ExplorerViewModel(private val app: AppState) {
 
     /** Drops cached children of [key] and reloads them if the node is open. */
     fun refresh(key: Any) {
+        connectionIdOf(key)?.let(app::forgetSchema)
         children.remove(key)
         if (key is ConnectionKey) forget(key.id, keepConnection = true)
         if (key in treeState.openNodes) ensureLoaded(key)
@@ -165,6 +166,7 @@ class ExplorerViewModel(private val app: AppState) {
 
     /** Clears everything cached for a connection and collapses it. */
     fun forget(connectionId: String, keepConnection: Boolean = false) {
+        if (!keepConnection) app.forgetSchema(connectionId)
         val stale = children.keys.filter { connectionIdOf(it) == connectionId && !(keepConnection && it is ConnectionKey) }
         stale.forEach(children::remove)
         if (!keepConnection) treeState.openNodes = treeState.openNodes.filterNot { connectionIdOf(it) == connectionId }.toSet()

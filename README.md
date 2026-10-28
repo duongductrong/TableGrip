@@ -29,6 +29,33 @@ Versions live in `gradle/libs.versions.toml`. Jewel (`0.41.0-262.10968.63`) is p
 `1.12.x` and Kotlin `2.3.20`; bump them together following the
 [Jewel samples](https://github.com/JetBrains/intellij-community/tree/master/platform/jewel/samples/standalone).
 
+## SQL editor
+
+Syntax highlighting, line numbers with the statement ⌘Enter would run marked in the gutter, current-line and
+matching-bracket highlights, auto-paired brackets and quotes.
+
+| Action | Shortcut |
+| --- | --- |
+| Run statement at caret / selection · run script | ⌘Enter · ⇧⌘Enter |
+| Completion | as you type, or ⌃Space |
+| Comment / uncomment lines | ⌘/ |
+| Duplicate · delete · move lines | ⌘D · ⌘⌫ · ⌥⇧↑/↓ |
+| Indent / outdent | Tab / ⇧Tab |
+| Find · replace | ⌘F · ⌘R (Enter / ⇧Enter for next / previous) |
+| Reformat SQL | ⌥⌘L |
+
+Toolbar: execute, execute script, cancel, **Explain** (plan for the statement at the caret), reformat, find.
+
+**Completion** understands the statement around the caret: tables, views and schemas after `FROM`/`JOIN`, columns of
+the tables and aliases in scope (qualified when several tables are joined), `alias.` / `schema.` members, CTE columns,
+`INSERT INTO t (` column lists, operators after a column, functions and keywords. After `JOIN` it proposes whole join
+clauses from foreign keys (`JOIN orders o ON o.user_id = u.id`). Matching is fuzzy by word starts (`uid` → `user_id`),
+and inside `col = '…'` or `col IN (…)` it suggests real values sampled from the column. Metadata loads lazily per
+connection and refreshes after DDL or an explorer refresh.
+
+**Smart filter:** the table viewer's WHERE bar uses the same completion against the viewed table — columns, operators,
+and values from the data — without clauses that can't appear in a filter.
+
 ## Data grid
 
 Shared by table viewers and console results (`app/.../grid`). Columns stretch to fill the width; drag a header border
@@ -92,6 +119,7 @@ manual commit to review changes and Commit/Roll back, and closing a console with
 - **M2 – safe editing** (done): inline editing with preview + submit, manual/auto-commit transactions in consoles,
   read-only connections, confirm-before-write and dangerous-statement warnings, environment colours (PROD/STG/DEV),
   SSH tunnels (trust-on-first-use host keys), streaming export to CSV/TSV/JSON/SQL/Markdown.
-- **M3 – editor**: autocomplete, formatter, EXPLAIN, snippets.
+- **M3 – editor** (done): context-aware completion with FK joins and value suggestions, formatter, EXPLAIN,
+  find/replace, line actions, smart table filters. Next: snippets, parameter prompts.
 - **M4 – schema tools**: structure editor, DDL, CSV import, more drivers.
 - **M5 – ship**: go-to-anything, session restore, signed installers, auto-update.

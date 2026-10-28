@@ -15,6 +15,27 @@ import androidx.compose.foundation.text.input.KeyboardActionHandler
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.key.utf16CodePoint
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.IntOffset
+import dev.datagrok.app.completion.CompletionController
+import dev.datagrok.app.completion.CompletionPopup
+import dev.datagrok.app.completion.handleCompletionKey
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpSize
@@ -158,16 +179,58 @@ private fun Separator() {
 
 @Composable
 private fun FilterBar(tab: TableDataTab) {
+    val scope = rememberCoroutineScope()
+    val controller = remember(tab) { CompletionController(scope) }
+    var trigger by remember { mutableStateOf(false) }
+    var fieldWidth by remember { mutableStateOf(0) }
+    val density = LocalDensity.current
+    val charWidth = rememberTextMeasurer().let { measurer ->
+        val style = JewelTheme.editorTextStyle
+        remember(style, density) { measurer.measure("0123456789", style).size.width / 10f }
+    }
+
+    LaunchedEffect(tab) {
+        snapshotFlow { tab.filter.text.toString() to tab.filter.selection }.collect {
+            if (trigger || controller.isOpen) controller.update(tab.filter, tab.filterCompletion, explicit = false)
+            trigger = false
+        }
+    }
+    LaunchedEffect(tab.schemaVersion) { if (controller.isOpen) controller.update(tab.filter, tab.filterCompletion, explicit = false) }
+
     Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         Icon(AllIconsKeys.General.Filter, null)
         Text("WHERE", Modifier.padding(horizontal = 8.dp), color = JewelTheme.globalColors.text.info, style = JewelTheme.editorTextStyle)
-        TextField(
-            tab.filter,
-            Modifier.weight(1f),
-            textStyle = JewelTheme.editorTextStyle,
-            placeholder = { Text("status = 'active' AND created_at > '2026-01-01'   ⏎ to apply") },
-            onKeyboardAction = KeyboardActionHandler { tab.applyFilter() },
-        )
+        Box(Modifier.weight(1f).onSizeChanged { fieldWidth = it.width }) {
+            TextField(
+                tab.filter,
+                Modifier.fillMaxWidth().onPreviewKeyEvent { event ->
+                    if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                    if (handleCompletionKey(controller, event.key) { controller.accept(tab.filter) }) return@onPreviewKeyEvent true
+                    if (event.isCtrlPressed && event.key == Key.Spacebar) {
+                        controller.update(tab.filter, tab.filterCompletion, explicit = true)
+                        return@onPreviewKeyEvent true
+                    }
+                    val code = event.utf16CodePoint
+                    if (code > 0 && !event.isMetaPressed && !event.isCtrlPressed) {
+                        val char = code.toChar()
+                        if (char.isLetterOrDigit() || char in "_.' ") trigger = true
+                    }
+                    if (event.key == Key.Backspace) trigger = controller.isOpen
+                    false
+                },
+                textStyle = JewelTheme.editorTextStyle,
+                placeholder = { Text("status = 'active' AND created_at > '2026-01-01'   ⌃Space for suggestions, ⏎ to apply") },
+                onKeyboardAction = KeyboardActionHandler {
+                    controller.close()
+                    tab.applyFilter()
+                },
+            )
+            // The field scrolls long filters; keep the popup within it.
+            val x = with(density) { 10.dp.toPx() } + charWidth * (controller.result?.replaceStart ?: 0)
+            CompletionPopup(controller, IntOffset(x.toInt().coerceAtMost((fieldWidth - 200).coerceAtLeast(0)), with(density) { 30.dp.roundToPx() })) {
+                controller.accept(tab.filter, it)
+            }
+        }
         if (tab.appliedFilter != null) {
             Spacer(Modifier.width(6.dp))
             Link("Clear", onClick = {

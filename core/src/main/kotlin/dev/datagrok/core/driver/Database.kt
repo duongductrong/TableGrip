@@ -12,11 +12,13 @@ import dev.datagrok.core.dialect.SortColumn
 import dev.datagrok.core.edit.ChangeStatement
 import dev.datagrok.core.export.ResultWriter
 import dev.datagrok.core.dialect.SqlDialect
+import dev.datagrok.core.metadata.ColumnInfo
 import dev.datagrok.core.metadata.Introspector
 import dev.datagrok.core.metadata.Namespace
 import dev.datagrok.core.metadata.TableDetails
 import dev.datagrok.core.metadata.TableInfo
 import dev.datagrok.core.metadata.TableRef
+import dev.datagrok.core.metadata.TableRelation
 import dev.datagrok.core.sql.SqlClassifier
 import java.sql.Connection
 import java.sql.SQLException
@@ -42,6 +44,26 @@ class Database private constructor(
     suspend fun tables(namespace: Namespace): List<TableInfo> = withMetadata { introspector.tables(it.metaData, namespace) }
 
     suspend fun tableDetails(table: TableRef): TableDetails = withMetadata { introspector.details(it.metaData, table) }
+
+    suspend fun columnsOf(namespace: Namespace): Map<String, List<ColumnInfo>> = withMetadata { introspector.columnsOf(it.metaData, namespace) }
+
+    suspend fun relations(table: TableRef): List<TableRelation> = withMetadata { introspector.relations(it.metaData, table) }
+
+    /** Values of [column] starting with [prefix], for suggestions; bounded in rows scanned and time. */
+    suspend fun sampleValues(table: TableRef, column: String, prefix: String, limit: Int = 30): List<String> {
+        val sql = dialect.sampleValues(table, column, limit, scan = 10_000)
+        // '!' escapes LIKE wildcards: unlike '\\' it means the same in every dialect's string literals.
+        val pattern = prefix.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%"
+        return withPooled { connection ->
+            withContext(Dispatchers.IO) {
+                connection.prepareStatement(sql).use { ps ->
+                    ps.queryTimeout = 3
+                    ps.setString(1, pattern)
+                    ps.executeQuery().use { rs -> buildList { while (rs.next()) rs.getString(1)?.let(::add) } }
+                }
+            }
+        }
+    }
 
     suspend fun fetchPage(
         table: TableRef,

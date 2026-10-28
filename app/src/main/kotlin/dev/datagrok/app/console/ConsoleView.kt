@@ -68,8 +68,9 @@ private val modifierKey = if (isMac) "⌘" else "Ctrl+"
 
 @Composable
 internal fun ConsoleView(app: AppState, tab: ConsoleTab) {
+    val editorActions = remember(tab) { SqlEditorActions() }
     Column(Modifier.fillMaxSize()) {
-        Toolbar(tab)
+        Toolbar(tab, editorActions)
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
         VerticalSplitLayout(
             first = {
@@ -78,6 +79,9 @@ internal fun ConsoleView(app: AppState, tab: ConsoleTab) {
                     syntax = tab.syntax,
                     fontSize = app.settings.editorFontSize,
                     modifier = Modifier.fillMaxSize(),
+                    completion = tab.completion,
+                    completionVersion = app.schemaCache(tab.config).version,
+                    actions = editorActions,
                     onShortcut = { runShortcut(tab, it) },
                 )
             },
@@ -100,7 +104,7 @@ private fun runShortcut(tab: ConsoleTab, event: KeyEvent): Boolean {
 }
 
 @Composable
-private fun Toolbar(tab: ConsoleTab) {
+private fun Toolbar(tab: ConsoleTab, editor: SqlEditorActions) {
     Row(
         Modifier.fillMaxWidth().height(32.dp).padding(horizontal = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(2.dp),
@@ -114,6 +118,15 @@ private fun Toolbar(tab: ConsoleTab) {
         }
         Tooltip({ Text("Cancel running query") }) {
             IconButton(onClick = tab::cancel, enabled = tab.running) { Icon(AllIconsKeys.Actions.Suspend, "Cancel") }
+        }
+        Tooltip({ Text("Explain plan for the statement at caret") }) {
+            IconButton(onClick = tab::explain, enabled = !tab.running) { Icon(AllIconsKeys.Actions.Preview, "Explain") }
+        }
+        Tooltip({ Text("Reformat SQL (${if (isMac) "⌥⌘L" else "Ctrl+Alt+L"})") }) {
+            IconButton(onClick = { editor.format() }) { Icon(AllIconsKeys.Actions.ShowCode, "Format") }
+        }
+        Tooltip({ Text("Find (${modifierKey}F) · Replace (${modifierKey}R)") }) {
+            IconButton(onClick = { editor.openFind() }) { Icon(AllIconsKeys.Actions.Search, "Find") }
         }
         Divider(Orientation.Vertical, Modifier.height(18.dp).padding(horizontal = 6.dp))
         ListComboBox(

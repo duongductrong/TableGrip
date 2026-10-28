@@ -15,7 +15,10 @@ import dev.datagrok.core.dialect.SqlDialect
 import dev.datagrok.core.driver.QueryResult
 import dev.datagrok.core.driver.QuerySession
 import dev.datagrok.core.history.HistoryEntry
+import dev.datagrok.app.completion.CompletionSource
+import dev.datagrok.core.completion.SqlCompleter
 import dev.datagrok.core.sql.SqlClassifier
+import dev.datagrok.core.sql.StatementKind
 import dev.datagrok.core.sql.SqlSplitter
 import dev.datagrok.core.sql.SqlStatement
 import java.time.LocalTime
@@ -80,6 +83,27 @@ class ConsoleTab(
     private var session: QuerySession? = null
     private var job: Job? = null
     private var resultCount = 0
+
+    /** Completion for this console's connection; created lazily so consoles don't load metadata until typed in. */
+    val completion: CompletionSource by lazy {
+        val cache = app.schemaCache(config)
+        val completer = SqlCompleter(dialect)
+        CompletionSource({ text, caret -> completer.complete(text, caret, cache) }, dialect, cache)
+    }
+
+    private val dialect = SqlDialect.of(config.type)
+
+    /** Runs the statement at the caret under EXPLAIN, in the dialect's syntax. */
+    fun explain() {
+        if (running) return
+        val sql = statementsFor(RunMode.Current).firstOrNull() ?: return
+        val prefix =
+            when (dialect) {
+                SqlDialect.SQLite -> "EXPLAIN QUERY PLAN "
+                else -> "EXPLAIN "
+            }
+        start(listOf(prefix + sql))
+    }
 
     fun run(mode: RunMode) {
         if (running) return
@@ -199,6 +223,8 @@ class ConsoleTab(
             try {
                 val result = session.execute(sql, app.settings.maxResultRows, app.settings.queryTimeoutSeconds)
                 uncommitted = session.uncommittedStatements
+                // New or changed tables should show up in completion right away.
+                if (classifier.classify(sql).kind == StatementKind.Ddl) app.forgetSchema(config.id)
                 record(sql, startedAt, result.elapsedMillis, error = null)
                 when (result) {
                     is QueryResult.Rows -> {

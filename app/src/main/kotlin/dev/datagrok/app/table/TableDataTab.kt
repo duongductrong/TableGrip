@@ -28,6 +28,12 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
 
     val grid = DataGridState()
 
+    /** Columns, operators and real values for the WHERE filter. */
+    val filterCompletion by lazy { app.schemaCache(config).let { filterCompletion(dialect, table, it, it) } }
+
+    val schemaVersion: Int
+        get() = app.schemaCache(config).version
+
     /** Raw SQL condition typed by the user, applied on Enter. */
     val filter = TextFieldState()
     var appliedFilter by mutableStateOf<String?>(null)

@@ -33,3 +33,6 @@ data class TableDetails(
     val primaryKey: List<String>
         get() = columns.filter { it.primaryKey }.map { it.name }
 }
+
+/** A foreign key: [fromTable].[fromColumns] references [toTable].[toColumns]. */
+data class TableRelation(val fromTable: TableRef, val fromColumns: List<String>, val toTable: TableRef, val toColumns: List<String>)

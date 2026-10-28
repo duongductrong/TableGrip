@@ -187,6 +187,26 @@ class DatabaseTest {
     }
 
     @Test
+    fun `loads schema-wide columns, relations both ways and sample values`(): Unit = runBlocking {
+        seed()
+        val namespace = database.namespaces().single()
+        val columns = database.columnsOf(namespace)
+        assertEquals(listOf("id", "name", "team_id"), columns["users"]?.map { it.name })
+        assertEquals(listOf("id", "name"), columns["teams"]?.map { it.name })
+
+        val teams = TableRef(namespace, "teams")
+        val users = TableRef(namespace, "users")
+        val relation = database.relations(teams).single()
+        assertEquals("users" to listOf("team_id"), relation.fromTable.name to relation.fromColumns)
+        assertEquals(relation, database.relations(users).single(), "seen from either side")
+
+        database.openSession().use { it.execute("INSERT INTO users (name) VALUES ('al_x'), ('alpha%')") }
+        assertEquals(listOf("al_x", "alice", "alpha%"), database.sampleValues(users, "name", "al"))
+        assertEquals(listOf("al_x"), database.sampleValues(users, "name", "al_"), "wildcards in the prefix are literal")
+        assertEquals(listOf("1", "2"), database.sampleValues(users, "id", "").take(2))
+    }
+
+    @Test
     fun `cancelling the coroutine cancels a running query`() = runBlocking {
         database.openSession().use { session ->
             val started = CompletableDeferred<Unit>()

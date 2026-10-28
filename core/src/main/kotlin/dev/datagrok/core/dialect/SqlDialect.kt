@@ -55,6 +55,19 @@ sealed class SqlDialect(val syntax: SqlSyntax) {
             }
         }
 
+    /** [expression] as text, for prefix matching any column type. */
+    open fun castToText(expression: String): String = "CAST($expression AS TEXT)"
+
+    /**
+     * Up to [limit] distinct non-null values of [column] starting with a bound `?` prefix, scanning at most [scan] rows so
+     * suggestions stay cheap on large tables.
+     */
+    fun sampleValues(table: TableRef, column: String, limit: Int, scan: Int): String {
+        val col = quoteIdentifier(column)
+        return "SELECT DISTINCT v FROM (SELECT $col AS v FROM ${qualifiedName(table)} WHERE $col IS NOT NULL AND " +
+            "${castToText(col)} LIKE ? ESCAPE '!' LIMIT $scan) s ORDER BY v LIMIT $limit"
+    }
+
     open fun countRows(table: TableRef, filter: String?): String =
         "SELECT COUNT(*) FROM ${qualifiedName(table)}" + (filter?.takeIf { it.isNotBlank() }?.let { " WHERE $it" } ?: "")
 
@@ -83,6 +96,8 @@ sealed class SqlDialect(val syntax: SqlSyntax) {
         private val systemDatabases = setOf("information_schema", "performance_schema", "mysql", "sys")
 
         override fun quoteIdentifier(name: String) = "`${name.replace("`", "``")}`"
+
+        override fun castToText(expression: String) = "CAST($expression AS CHAR)"
 
         override fun escapeString(value: String) = value.replace("\\", "\\\\").replace("'", "''")
 
