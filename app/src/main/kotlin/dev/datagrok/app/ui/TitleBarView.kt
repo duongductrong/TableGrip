@@ -62,9 +62,6 @@ internal fun DecoratedWindowScope.TitleBarView(app: AppState) {
                     console?.run(RunMode.Current)
                 }
             }
-            HeaderButton("theme", if (app.theme.isDark()) AllIconsKeys.Actions.Lightning else AllIconsKeys.Actions.ProfileBlue, "Toggle light/dark") {
-                app.toggleTheme()
-            }
             HeaderButton("settings", AllIconsKeys.General.Settings, "Settings (${Shortcuts.Settings})") { app.settingsOpen = !app.settingsOpen }
         }
     }

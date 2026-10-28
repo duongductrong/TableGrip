@@ -79,8 +79,6 @@ class AppState(
         }
     }
 
-    fun toggleTheme() = updateSettings { it.copy(theme = theme.toggled().name) }
-
     /** Makes [config] current: reveals it in the explorer (connecting it) without changing open tabs. */
     fun pickConnection(config: ConnectionConfig) {
         currentConnectionId = config.id

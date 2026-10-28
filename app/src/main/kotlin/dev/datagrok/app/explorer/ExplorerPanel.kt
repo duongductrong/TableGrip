@@ -3,12 +3,14 @@ package dev.datagrok.app.explorer
 import androidx.compose.foundation.ContextMenuArea
 import androidx.compose.foundation.ContextMenuItem
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -30,6 +32,7 @@ import dev.datagrok.app.ui.EnvironmentChip
 import dev.datagrok.app.ui.copyToClipboard
 import dev.datagrok.core.dialect.SqlDialect
 import org.jetbrains.jewel.foundation.theme.JewelTheme
+import org.jetbrains.jewel.intui.standalone.styling.defaults
 import org.jetbrains.jewel.ui.Orientation
 import org.jetbrains.jewel.ui.component.Divider
 import org.jetbrains.jewel.ui.component.Icon
@@ -38,19 +41,23 @@ import org.jetbrains.jewel.ui.component.LazyTree
 import org.jetbrains.jewel.ui.component.OutlinedButton
 import org.jetbrains.jewel.ui.component.Text
 import org.jetbrains.jewel.ui.component.Tooltip
+import org.jetbrains.jewel.ui.component.styling.LazyTreeMetrics
+import org.jetbrains.jewel.ui.component.styling.LazyTreeStyle
 import org.jetbrains.jewel.ui.icon.IconKey
 import org.jetbrains.jewel.ui.icons.AllIconsKeys
+import org.jetbrains.jewel.ui.theme.treeStyle
 
-/** Left-hand database explorer: connections → schemas → tables/views → columns, indexes, keys. */
+/** Left-hand connections tree: connections → schemas → tables/views → columns, indexes, keys. */
 @Composable
 internal fun ExplorerPanel(app: AppState) {
     val explorer = app.explorer
     Column(Modifier.fillMaxSize()) {
+        // The title starts where the tree rows' chevrons do, so the header and the tree share one left edge.
         Row(
-            Modifier.fillMaxWidth().height(32.dp).padding(horizontal = 8.dp),
+            Modifier.fillMaxWidth().height(36.dp).padding(start = TreeRowInset, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Database Explorer", Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
+            Text("Connections", Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
             Tooltip({ Text("New connection") }) {
                 IconButton(onClick = app.connections::openNew) { Icon(AllIconsKeys.General.Add, "New connection") }
             }
@@ -69,11 +76,38 @@ internal fun ExplorerPanel(app: AppState) {
             tree = tree,
             treeState = explorer.treeState,
             modifier = Modifier.fillMaxSize().padding(vertical = 4.dp),
+            style = explorerTreeStyle(),
             onElementDoubleClick = { element -> openNode(app, element.data) },
         ) { element ->
             ContextMenuArea(items = { contextMenu(app, element.data) }) { NodeRow(app, element.data, Modifier.fillMaxWidth()) }
         }
     }
+}
+
+private val TreeRowOuterPadding = 6.dp
+private val TreeRowInnerPadding = 4.dp
+private val TreeRowInset = TreeRowOuterPadding + TreeRowInnerPadding
+
+/**
+ * Int UI's tree metrics are tuned for IntelliJ's project view: a 23dp indent and 12dp side gutters push deep schemas
+ * off a narrow sidebar. A tighter indent and gutter keep each level readable while the content stays balanced.
+ */
+@Composable
+private fun explorerTreeStyle(): LazyTreeStyle {
+    val base = JewelTheme.treeStyle
+    return LazyTreeStyle(
+        colors = base.colors,
+        metrics =
+            LazyTreeMetrics.defaults(
+                indentSize = 16.dp,
+                elementBackgroundCornerSize = CornerSize(4.dp),
+                elementPadding = PaddingValues(horizontal = TreeRowOuterPadding),
+                elementContentPadding = PaddingValues(horizontal = TreeRowInnerPadding, vertical = 2.dp),
+                elementMinHeight = 26.dp,
+                chevronContentGap = 4.dp,
+            ),
+        icons = base.icons,
+    )
 }
 
 /** Tables open on their data; columns, indexes and keys open the table's structure on their section. */

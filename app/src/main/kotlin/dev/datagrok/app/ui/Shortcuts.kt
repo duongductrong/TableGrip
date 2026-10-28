@@ -134,7 +134,7 @@ object Shortcuts {
                     entry("Close tab", CloseTab),
                     entry("Next tab", NextTab, NextTabAlt),
                     entry("Previous tab", PreviousTab, PreviousTabAlt),
-                    entry("Database Explorer", Explorer),
+                    entry("Connections", Explorer),
                     entry("Query History", History),
                     entry("Settings", Settings),
                     entry("Keyboard shortcuts", ShowShortcuts),

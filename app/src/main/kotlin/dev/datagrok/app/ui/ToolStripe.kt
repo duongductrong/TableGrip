@@ -41,7 +41,7 @@ internal fun ToolStripe(app: AppState, modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        StripeButton(AllIconsKeys.Nodes.DataSchema, "Database Explorer (${Shortcuts.Explorer})", selected = !app.settingsOpen && app.leftTool == LeftTool.Explorer) {
+        StripeButton(AllIconsKeys.Nodes.DataSchema, "Connections (${Shortcuts.Explorer})", selected = !app.settingsOpen && app.leftTool == LeftTool.Explorer) {
             app.toggleTool(LeftTool.Explorer)
         }
         StripeButton(AllIconsKeys.Vcs.History, "Query History (${Shortcuts.History})", selected = !app.settingsOpen && app.leftTool == LeftTool.History) {

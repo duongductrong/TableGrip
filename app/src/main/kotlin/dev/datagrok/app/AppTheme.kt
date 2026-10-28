@@ -10,9 +10,6 @@ enum class AppTheme(val label: String) {
 
     fun isDark(): Boolean = (if (this == System) fromSystemTheme(currentSystemTheme) else this) == Dark
 
-    /** The title bar toggle flips between explicit light and dark. */
-    fun toggled(): AppTheme = if (isDark()) Light else Dark
-
     companion object {
         fun fromSystemTheme(systemTheme: SystemTheme): AppTheme = if (systemTheme == SystemTheme.LIGHT) Light else Dark
     }
