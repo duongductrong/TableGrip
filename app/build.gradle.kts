@@ -19,7 +19,14 @@ kotlin {
     }
 }
 
+/** Datagrok's adapters for non-JDBC clients: shipped as jars inside the app, loaded only with their client's download. */
+val engineAdapters by configurations.creating {
+    isCanBeConsumed = false
+    isTransitive = false
+}
+
 dependencies {
+    engineAdapters(projects.engines.redis)
     implementation(projects.core)
 
     implementation(libs.jewel.intUi.standalone)
@@ -37,6 +44,9 @@ dependencies {
     testImplementation(compose.desktop.uiTestJUnit4)
     // Drivers never ship with the app (see verifyNoBundledDrivers); tests that open databases bring their own.
     testRuntimeOnly(libs.jdbc.sqlite)
+    // The Redis adapter and its client, on the classpath for UI tests against a real server.
+    testImplementation(projects.engines.redis)
+    testRuntimeOnly(libs.lettuce)
 }
 
 compose.desktop {
@@ -168,13 +178,21 @@ val thirdPartyNotices by tasks.registering {
 
 tasks {
     check { dependsOn(verifyNoBundledDrivers, thirdPartyNotices) }
-    processResources { from(thirdPartyNotices) }
+    processResources {
+        from(thirdPartyNotices)
+        // Renamed to the adapter's name, which DriverLibrary looks up as engines/<name>.jar.
+        from(engineAdapters) {
+            into("engines")
+            rename { it.substringBefore('-').removeSuffix(".jar") + ".jar" }
+        }
+    }
     matching { it.name.startsWith("package") }.configureEach { dependsOn(verifyNoBundledDrivers) }
 
     test {
         useJUnitPlatform()
         providers.gradleProperty("snapshot.dir").orNull?.let { systemProperty("snapshot.dir", it) }
         providers.gradleProperty("snapshot.db").orNull?.let { systemProperty("snapshot.db", it) }
+        listOf("it.network", "it.redis").forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
     }
 
     withType<JavaExec> {

@@ -52,7 +52,7 @@ tasks.test {
 // license isn't allowed. Drivers under GPL or a vendor's own license never go here: users bring those jars themselves.
 
 /** Licenses a catalog driver may be under, by SPDX id. Weak copyleft is allowed only because the user downloads it. */
-val permissiveLicenses = setOf("Apache-2.0", "MIT", "BSD-2-Clause", "BSD-3-Clause", "MPL-2.0", "EPL-1.0", "EPL-2.0")
+val permissiveLicenses = setOf("Apache-2.0", "MIT", "MIT-0", "BSD-2-Clause", "BSD-3-Clause", "MPL-2.0", "EPL-1.0", "EPL-2.0")
 val weakCopyleftLicenses = setOf("LGPL-2.1-or-later")
 
 data class CatalogDriver(
@@ -97,6 +97,11 @@ val driverCatalog =
         CatalogDriver(
             "clickhouse", "ClickHouse JDBC", libs.jdbc.clickhouse, "com.clickhouse.jdbc.Driver",
             "https://github.com/ClickHouse/clickhouse-java/blob/main/LICENSE", "https://github.com/ClickHouse/clickhouse-java",
+        ),
+        // Not JDBC: Datagrok's Redis adapter (engines/redis) runs on this client; the class is the adapter's.
+        CatalogDriver(
+            "lettuce", "Lettuce (Redis client)", libs.lettuce, "dev.datagrok.engines.redis.RedisClient",
+            "https://github.com/redis/lettuce/blob/main/LICENSE", "https://github.com/redis/lettuce",
         ),
         CatalogDriver(
             "duckdb", "DuckDB JDBC", libs.jdbc.duckdb, "org.duckdb.DuckDBDriver",
@@ -146,6 +151,20 @@ val artifactLicenses =
         "org.ow2.asm:asm" to "BSD-3-Clause",
         "org.roaringbitmap:RoaringBitmap" to "Apache-2.0",
         "org.slf4j:slf4j-api" to "MIT",
+        // Lettuce and what it pulls in; Netty's modules take the license of netty-parent.
+        "io.lettuce:lettuce-core" to "MIT",
+        "io.netty:netty-buffer" to "Apache-2.0",
+        "io.netty:netty-codec-base" to "Apache-2.0",
+        "io.netty:netty-codec-dns" to "Apache-2.0",
+        "io.netty:netty-common" to "Apache-2.0",
+        "io.netty:netty-handler" to "Apache-2.0",
+        "io.netty:netty-resolver" to "Apache-2.0",
+        "io.netty:netty-resolver-dns" to "Apache-2.0",
+        "io.netty:netty-transport" to "Apache-2.0",
+        "io.netty:netty-transport-native-unix-common" to "Apache-2.0",
+        "io.projectreactor:reactor-core" to "Apache-2.0",
+        "org.reactivestreams:reactive-streams" to "MIT-0",
+        "redis.clients.authentication:redis-authx-core" to "MIT",
     )
 
 val driverConfigurations =

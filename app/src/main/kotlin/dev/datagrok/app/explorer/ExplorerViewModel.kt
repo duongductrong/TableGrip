@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import dev.datagrok.app.AppState
 import dev.datagrok.app.ui.copyToClipboard
 import dev.datagrok.core.connection.ConnectionConfig
+import dev.datagrok.core.connection.Paradigm
 import dev.datagrok.core.metadata.ColumnInfo
 import dev.datagrok.core.metadata.ForeignKeyInfo
 import dev.datagrok.core.metadata.IndexInfo
@@ -48,6 +49,11 @@ sealed interface ExplorerNode {
 
     data class ForeignKey(val table: TableKey, val foreignKey: ForeignKeyInfo) : ExplorerNode {
         override val key = table to "fk:${foreignKey.name}"
+    }
+
+    /** One database of a key-value store; opening it browses its keys. */
+    data class Keyspace(val connectionId: String, val keyspace: dev.datagrok.core.driver.Keyspace) : ExplorerNode {
+        override val key = connectionId to "keyspace:${keyspace.index}"
     }
 
     data class Message(val parent: Any, val text: String, val isError: Boolean) : ExplorerNode {
@@ -118,6 +124,11 @@ class ExplorerViewModel(private val app: AppState) {
     }
 
     private suspend fun load(config: ConnectionConfig, key: Any): List<ExplorerNode> {
+        if (config.type.paradigm == Paradigm.KeyValue) {
+            // Empty databases past the first add nothing but noise; the console's SELECT still reaches them.
+            val keyspaces = app.databases.keyValue(config).keyspaces()
+            return keyspaces.filter { it.index == 0 || (it.keys ?: 0) > 0 }.map { ExplorerNode.Keyspace(config.id, it) }
+        }
         val database = app.databases.database(config)
         return when (key) {
             is ConnectionKey -> {

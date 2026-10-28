@@ -112,6 +112,10 @@ private fun explorerTreeStyle(): LazyTreeStyle {
 
 /** Tables open on their data; columns, indexes and keys open the table's structure on their section. */
 private fun openNode(app: AppState, node: ExplorerNode) {
+    if (node is ExplorerNode.Keyspace) {
+        app.connections.byId(node.connectionId)?.let { app.workspace.openKeys(it, node.keyspace.index) }
+        return
+    }
     val (table, section) =
         when (node) {
             is ExplorerNode.Table -> TableKey(node.connectionId, node.info.ref) to null
@@ -137,6 +141,13 @@ private fun contextMenu(app: AppState, node: ExplorerNode): List<ContextMenuItem
             )
         }
         is ExplorerNode.Schema -> listOf(ContextMenuItem("Refresh") { app.explorer.refresh(node.key) })
+        is ExplorerNode.Keyspace -> {
+            val config = app.connections.byId(node.connectionId) ?: return emptyList()
+            listOf(
+                ContextMenuItem("Browse Keys") { app.workspace.openKeys(config, node.keyspace.index) },
+                ContextMenuItem("New Console") { app.workspace.openConsole(config, keyspace = node.keyspace.index) },
+            )
+        }
         is ExplorerNode.Table -> {
             val config = app.connections.byId(node.connectionId) ?: return emptyList()
             val ref = node.info.ref
@@ -210,6 +221,10 @@ private fun NodeRow(app: AppState, node: ExplorerNode, modifier: Modifier = Modi
                     "(${fk.columns.joinToString()}) → ${fk.referencedTable.name}(${fk.referencedColumns.joinToString()})",
                     Modifier.weight(1f),
                 )
+            }
+            is ExplorerNode.Keyspace -> {
+                NodeIcon(AllIconsKeys.Nodes.DataSchema)
+                NameAndDetail("db${node.keyspace.index}", node.keyspace.keys?.let { "$it ${if (it == 1L) "key" else "keys"}" }.orEmpty(), Modifier.weight(1f))
             }
             is ExplorerNode.Message ->
                 Text(node.text, color = if (node.isError) JewelTheme.globalColors.text.error else info, maxLines = 2)

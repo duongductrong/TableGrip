@@ -131,6 +131,33 @@
       ]
     },
     {
+      "id": "lettuce",
+      "name": "Lettuce (Redis client)",
+      "version": "7.9.0.RELEASE",
+      "className": "dev.datagrok.engines.redis.RedisClient",
+      "license": "MIT",
+      "tier": "Permissive",
+      "licenseUrl": "https://github.com/redis/lettuce/blob/main/LICENSE",
+      "sourceUrl": "https://github.com/redis/lettuce",
+      "artifacts": [
+        {"coordinates": "io.lettuce:lettuce-core:7.9.0.RELEASE", "path": "io/lettuce/lettuce-core/7.9.0.RELEASE/lettuce-core-7.9.0.RELEASE.jar", "sha256": "d08f925e2f5b1207a6eb3724d07caaf79543b8c8687f4a7413047ccc397b5230", "size": 2860488, "license": "MIT"},
+        {"coordinates": "redis.clients.authentication:redis-authx-core:0.2.0", "path": "redis/clients/authentication/redis-authx-core/0.2.0/redis-authx-core-0.2.0.jar", "sha256": "67875cfeb9ff9e8325045b9ac81d709eb6267b475cb8273fdb9139563458056d", "size": 18299, "license": "MIT"},
+        {"coordinates": "io.netty:netty-resolver-dns:4.2.17.Final", "path": "io/netty/netty-resolver-dns/4.2.17.Final/netty-resolver-dns-4.2.17.Final.jar", "sha256": "d332481c22136a68c2ee9e45e86212174932587d93a5dd4d201e196828bf9f91", "size": 174347, "license": "Apache-2.0"},
+        {"coordinates": "io.netty:netty-handler:4.2.17.Final", "path": "io/netty/netty-handler/4.2.17.Final/netty-handler-4.2.17.Final.jar", "sha256": "4df11c7520b556c5e2c84b939182699d48fcbb09e97a6bb5e1c0b6835227d126", "size": 588756, "license": "Apache-2.0"},
+        {"coordinates": "io.netty:netty-transport-native-unix-common:4.2.17.Final", "path": "io/netty/netty-transport-native-unix-common/4.2.17.Final/netty-transport-native-unix-common-4.2.17.Final.jar", "sha256": "e01aa467b9104de54a57c08c290f70b22e53ec97cf5583c87c112170ef5832cc", "size": 46878, "license": "Apache-2.0"},
+        {"coordinates": "io.netty:netty-codec-dns:4.2.17.Final", "path": "io/netty/netty-codec-dns/4.2.17.Final/netty-codec-dns-4.2.17.Final.jar", "sha256": "394f4649a824683735f28b299d0a48caff059ae30e654e2abf8b3f392af4d374", "size": 71407, "license": "Apache-2.0"},
+        {"coordinates": "io.netty:netty-codec-base:4.2.17.Final", "path": "io/netty/netty-codec-base/4.2.17.Final/netty-codec-base-4.2.17.Final.jar", "sha256": "3b92bc3b7d231fa6f4889b2b9281cae6b634428b8121fb1b9b5fccba1543d352", "size": 155357, "license": "Apache-2.0"},
+        {"coordinates": "io.netty:netty-transport:4.2.17.Final", "path": "io/netty/netty-transport/4.2.17.Final/netty-transport-4.2.17.Final.jar", "sha256": "d2409ce3a735cbab4188d0ea5d82abed823a6a07a8389f49af4a9e1243a562bc", "size": 549857, "license": "Apache-2.0"},
+        {"coordinates": "io.netty:netty-resolver:4.2.17.Final", "path": "io/netty/netty-resolver/4.2.17.Final/netty-resolver-4.2.17.Final.jar", "sha256": "7a4b599b9c0c29a505d3b7311f142df883fb27d0f67495a7cbaf533b0e456623", "size": 32977, "license": "Apache-2.0"},
+        {"coordinates": "io.netty:netty-buffer:4.2.17.Final", "path": "io/netty/netty-buffer/4.2.17.Final/netty-buffer-4.2.17.Final.jar", "sha256": "0d249178ec0204b35a6ad3e5ac8a6c2ecb3eb496c6cdae40b8eca4fa3cb6a0c7", "size": 378264, "license": "Apache-2.0"},
+        {"coordinates": "io.netty:netty-common:4.2.17.Final", "path": "io/netty/netty-common/4.2.17.Final/netty-common-4.2.17.Final.jar", "sha256": "502aae2a6680e9bca3558a3fa098f06dc4d87340b8b714e925a6d690871c092a", "size": 820948, "license": "Apache-2.0"},
+        {"coordinates": "io.projectreactor:reactor-core:3.8.7", "path": "io/projectreactor/reactor-core/3.8.7/reactor-core-3.8.7.jar", "sha256": "9a5f1bfc5ad0416a410ff63beaa279cc30c2da3ae9b111a678c83c99298a1551", "size": 1938852, "license": "Apache-2.0"},
+        {"coordinates": "org.slf4j:slf4j-api:1.7.36", "path": "org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar", "sha256": "d3ef575e3e4979678dc01bf1dcce51021493b4d11fb7f1be8ad982877c16a1c0", "size": 41125, "license": "MIT"},
+        {"coordinates": "org.reactivestreams:reactive-streams:1.0.4", "path": "org/reactivestreams/reactive-streams/1.0.4/reactive-streams-1.0.4.jar", "sha256": "f75ca597789b3dac58f61857b9ac2e1034a68fa672db35055a8fb4509e325f28", "size": 11640, "license": "MIT-0"},
+        {"coordinates": "org.jspecify:jspecify:1.0.0", "path": "org/jspecify/jspecify/1.0.0/jspecify-1.0.0.jar", "sha256": "1fad6e6be7557781e4d33729d49ae1cdc8fdda6fe477bb0cc68ce351eafdfbab", "size": 3819, "license": "Apache-2.0"}
+      ]
+    },
+    {
       "id": "duckdb",
       "name": "DuckDB JDBC",
       "version": "1.5.6.0",

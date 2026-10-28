@@ -35,13 +35,14 @@ class DatabaseTypeTest {
         val config = ConnectionConfig(id = "c", name = "crdb", type = cockroach, host = "db", database = "bank")
         assertEquals(DriverId.PostgreSQL, config.effectiveDriver)
         assertEquals("jdbc:postgresql://db/bank", JdbcUrls.build(config))
-        assertEquals("public", cockroach.dialect.defaultNamespace(listOf("crdb_internal", "public"), "bank"))
+        assertEquals("public", cockroach.dialect!!.defaultNamespace(listOf("crdb_internal", "public"), "bank"))
     }
 
     @Test
-    fun `every built-in engine has a dialect and a default driver it allows`() {
+    fun `every relational engine has a dialect, and every engine a default driver it allows`() {
         DatabaseType.entries.forEach { type ->
-            type.dialect
+            // Relational engines have SQL; key-value stores don't.
+            assertEquals(type.paradigm == Paradigm.Relational, type.dialect != null, "$type")
             assertTrue(ConnectionConfig(id = "x", name = "x", type = type).effectiveDriver in type.drivers)
         }
         assertEquals(DriverId.MariaDB, DatabaseType.MySQL.drivers.first(), "MySQL's own driver is GPL; it must not be the default")

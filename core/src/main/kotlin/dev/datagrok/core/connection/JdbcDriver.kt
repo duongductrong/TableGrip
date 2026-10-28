@@ -18,6 +18,8 @@ enum class DriverId(
     val catalogId: String? = null,
     val vendorUrl: String? = null,
     val license: String? = null,
+    /** For non-JDBC clients: the name of Datagrok's adapter jar that drives this client library. */
+    val adapter: String? = null,
 ) {
     PostgreSQL("PostgreSQL JDBC Driver", "org.postgresql.Driver", "jdbc:postgresql:", catalogId = "postgresql"),
     MySQL(
@@ -35,6 +37,12 @@ enum class DriverId(
     SqlServer("Microsoft JDBC Driver for SQL Server", "com.microsoft.sqlserver.jdbc.SQLServerDriver", "jdbc:sqlserver:", catalogId = "sqlserver"),
     ClickHouse("ClickHouse JDBC", "com.clickhouse.jdbc.Driver", "jdbc:clickhouse:", catalogId = "clickhouse"),
     DuckDB("DuckDB JDBC", "org.duckdb.DuckDBDriver", "jdbc:duckdb:", catalogId = "duckdb"),
+
+    /**
+     * Not JDBC: the Lettuce Redis client, driven by Datagrok's own adapter ([adapter], bundled with the app) loaded
+     * together with it. [className] is the adapter's entry point.
+     */
+    Lettuce("Lettuce (Redis client)", "dev.datagrok.engines.redis.RedisClient", "redis:", catalogId = "lettuce", adapter = "redis"),
 
     /** Whatever driver the profile's own jars contain; its class is found in them. */
     Generic("JDBC driver from your jars", "", "jdbc:");

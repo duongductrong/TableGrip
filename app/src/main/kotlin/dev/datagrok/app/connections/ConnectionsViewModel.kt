@@ -8,12 +8,17 @@ import dev.datagrok.app.AppState
 import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.connection.ConnectionStore
 import dev.datagrok.core.connection.DatabaseType
+import dev.datagrok.core.connection.Paradigm
+import dev.datagrok.core.driver.KeyValueStore
 import dev.datagrok.core.driver.Database
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 data class ConnectionDialogRequest(val existing: ConnectionConfig?)
+
+/** What Test Connection learned: the server's own description, or a better-fitting engine in its family. */
+data class TestOutcome(val server: String? = null, val suggested: DatabaseType? = null)
 
 /** Saved connection profiles and the dialogs that edit them. */
 class ConnectionsViewModel(private val app: AppState, private val store: ConnectionStore) {
@@ -81,9 +86,12 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
      * Waits for a driver download the user started; fails if the driver is still missing. Succeeds with the engine the
      * server really is when that differs from the profile's type.
      */
-    suspend fun test(config: ConnectionConfig, password: String, sshSecret: String): Result<DatabaseType?> = runCatching {
+    suspend fun test(config: ConnectionConfig, password: String, sshSecret: String): Result<TestOutcome> = runCatching {
         app.drivers.ensure(config)
-        Database.test(config, password, sshSecret, app.drivers.library)
+        when (config.type.paradigm) {
+            Paradigm.KeyValue -> TestOutcome(server = KeyValueStore.test(config, password, sshSecret, app.drivers.library))
+            else -> TestOutcome(suggested = Database.test(config, password, sshSecret, app.drivers.library))
+        }
     }
 
     /** A blank SSH secret removes the stored one, as does turning SSH off. */

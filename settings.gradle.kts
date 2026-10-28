@@ -27,4 +27,4 @@ dependencyResolutionManagement {
     }
 }
 
-include(":core", ":app")
+include(":core", ":app", ":engines:redis")

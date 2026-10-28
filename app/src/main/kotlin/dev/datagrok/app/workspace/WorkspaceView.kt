@@ -1,5 +1,9 @@
 package dev.datagrok.app.workspace
 
+import dev.datagrok.app.keyvalue.CommandConsoleTab
+import dev.datagrok.app.keyvalue.CommandConsoleView
+import dev.datagrok.app.keyvalue.KeyBrowserTab
+import dev.datagrok.app.keyvalue.KeyBrowserView
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
@@ -77,6 +81,8 @@ internal fun WorkspaceView(app: AppState) {
             when (selected) {
                 is ConsoleTab -> ConsoleView(app, selected)
                 is TableDataTab -> TableDataView(selected)
+                is KeyBrowserTab -> KeyBrowserView(selected)
+                is CommandConsoleTab -> CommandConsoleView(selected)
                 else -> Unit
             }
         }
@@ -103,7 +109,7 @@ private fun TabStrip(workspace: WorkspaceViewModel, selected: WorkspaceTab) {
             val dragged = drag.draggedKey == key
             PillTab(
                 title = tab.title,
-                isConsole = tab is ConsoleTab,
+                isConsole = tab is ConsoleTab || tab is CommandConsoleTab,
                 dirty = tab.hasUnsavedWork,
                 selected = tab == selected,
                 lifted = dragged,

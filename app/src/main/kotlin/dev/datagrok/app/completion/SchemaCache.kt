@@ -1,5 +1,6 @@
 package dev.datagrok.app.completion
 
+import dev.datagrok.core.dialect.SqlDialect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
@@ -35,7 +36,7 @@ class SchemaCache(private val scope: CoroutineScope, private val databases: Data
     override val defaultNamespace: String?
         get() {
             val names = namespaceList?.map { it.displayName } ?: return null
-            return config.type.dialect.defaultNamespace(names, config.database)
+            return SqlDialect.of(config.type).defaultNamespace(names, config.database)
         }
 
     override fun namespaces(): List<String> = namespaceList?.map { it.displayName } ?: emptyList<String>().also { loadNamespaces() }

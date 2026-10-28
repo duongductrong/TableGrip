@@ -29,6 +29,9 @@ enum class EngineFamily {
 
     /** Standard SQL read through JDBC metadata alone: embedded Java databases, and any driver the user brings. */
     Generic,
+
+    /** The Redis protocol: Redis, Valkey, KeyDB, Dragonfly. */
+    Redis,
 }
 
 /** How a profile reaches its database, which decides the fields the connection dialog asks for. */
@@ -85,8 +88,8 @@ class DatabaseType(
     val databaseHint: String? = null,
     /** Driver properties the engine needs unless the user sets them, e.g. TLS for hosted services. */
     val defaultProperties: Map<DriverId, Map<String, String>> = emptyMap(),
-    /** The family's dialect, unless the engine strays from it. */
-    val dialect: SqlDialect = SqlDialect.of(family),
+    /** The family's SQL dialect, unless the engine strays from it; null for engines without SQL. */
+    val dialect: SqlDialect? = SqlDialect.of(family),
 ) {
     init {
         require(drivers.isNotEmpty()) { "$id needs at least one driver" }
@@ -134,6 +137,13 @@ class DatabaseType(
         val ClickHouse =
             DatabaseType("ClickHouse", "ClickHouse", EngineFamily.ClickHouse, 8123, listOf(DriverId.ClickHouse), capabilities = setOf(Capability.Explain))
         val DuckDB = DatabaseType("DuckDB", "DuckDB", EngineFamily.DuckDB, null, listOf(DriverId.DuckDB), databaseHint = "/path/to/file.duckdb or :memory:")
+        val Redis = keyValue("Redis", "Redis")
+        val Valkey = keyValue("Valkey", "Valkey")
+        val KeyDB = keyValue("KeyDB", "KeyDB")
+        val Dragonfly = keyValue("Dragonfly", "Dragonfly")
+
+        private fun keyValue(id: String, name: String) =
+            DatabaseType(id, name, EngineFamily.Redis, 6379, listOf(DriverId.Lettuce), paradigm = Paradigm.KeyValue, capabilities = emptySet())
         val H2 = DatabaseType("H2", "H2", EngineFamily.Generic, null, listOf(DriverId.H2), databaseHint = "/path/to/data (without .mv.db) or mem:test")
         val HSQLDB = DatabaseType("HSQLDB", "HSQLDB", EngineFamily.Generic, null, listOf(DriverId.HSQLDB), databaseHint = "/path/to/data (without .script) or mem:test")
         val Derby = DatabaseType("Derby", "Apache Derby", EngineFamily.Generic, null, listOf(DriverId.Derby), databaseHint = "/path/to/database directory")
@@ -145,9 +155,9 @@ class DatabaseType(
         /** Every engine, in the order the connection dialog lists them. */
         val entries: List<DatabaseType> =
             listOf(
-                PostgreSQL, MySQL, MariaDB, SQLite, SqlServer, ClickHouse, DuckDB,
+                PostgreSQL, MySQL, MariaDB, SQLite, SqlServer, ClickHouse, DuckDB, Redis, Valkey,
                 CockroachDB, TimescaleDB, Neon, Supabase, TiDB, PlanetScale, AzureSql,
-                H2, HSQLDB, Derby, OtherJdbc,
+                KeyDB, Dragonfly, H2, HSQLDB, Derby, OtherJdbc,
             )
 
         fun byId(id: String): DatabaseType? = entries.firstOrNull { it.id.equals(id, ignoreCase = true) }

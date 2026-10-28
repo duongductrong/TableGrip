@@ -468,7 +468,7 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
         val DuckDB: DuckDBDialect = DuckDBDialect()
         val CockroachDB: CockroachDBDialect = CockroachDBDialect()
 
-        fun of(family: EngineFamily): SqlDialect =
+        fun of(family: EngineFamily): SqlDialect? =
             when (family) {
                 EngineFamily.PostgreSQL -> PostgreSQL
                 EngineFamily.MySQL -> MySQL
@@ -477,8 +477,9 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
                 EngineFamily.SqlServer -> SqlServer
                 EngineFamily.ClickHouse -> ClickHouse
                 EngineFamily.DuckDB -> DuckDB
+                EngineFamily.Redis -> null
             }
 
-        fun of(type: DatabaseType): SqlDialect = type.dialect
+        fun of(type: DatabaseType): SqlDialect = type.dialect ?: throw IllegalArgumentException("${type.displayName} has no SQL dialect")
     }
 }

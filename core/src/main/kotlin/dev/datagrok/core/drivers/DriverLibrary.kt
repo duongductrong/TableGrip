@@ -140,6 +140,12 @@ class DriverLibrary(
     private fun open(driver: DriverId): Driver {
         if (useClasspath) classpathDriverClass(driver)?.let { return it.getDeclaredConstructor().newInstance() as Driver }
         userJars(driver)?.let { return instantiate(driver, it, discover = true) }
+        val (manifest, jars) = verifiedInstall(driver)
+        return instantiate(driver, jars, discover = false, className = manifest.className)
+    }
+
+    /** The installed catalog version of [driver] (the pinned one if present), its jars checked against their checksums. */
+    private fun verifiedInstall(driver: DriverId): Pair<LockedDriver, List<Path>> {
         val locked = locked(driver) ?: throw DriverNotInstalledException(driver)
         val manifest = installed(locked.id).let { all -> all.firstOrNull { it.version == locked.version } ?: all.firstOrNull() } ?: throw DriverNotInstalledException(driver)
         val dir = versionDir(manifest)
@@ -149,8 +155,46 @@ class DriverLibrary(
                 throw SQLException("${driver.displayName} ${manifest.version} is damaged: ${artifact.fileName} doesn't match its checksum. Download it again.")
             }
         }
-        return instantiate(driver, manifest.artifacts.map { dir.resolve(it.fileName) }, discover = false, className = manifest.className)
+        return manifest to manifest.artifacts.map { dir.resolve(it.fileName) }
     }
+
+    // region Non-JDBC clients
+
+    private val clients = ConcurrentHashMap<DriverId, Any>()
+
+    /**
+     * The entry point of a non-JDBC client (e.g. a [dev.datagrok.core.driver.KeyValueClient]): Datagrok's adapter for it,
+     * shipped inside the app, loaded in one class loader with the client library the user downloaded. Blocking.
+     */
+    fun loadClient(driver: DriverId): Any = clients.computeIfAbsent(driver, ::openClient)
+
+    private fun openClient(driver: DriverId): Any {
+        val adapter = driver.adapter ?: throw IllegalArgumentException("${driver.displayName} is a JDBC driver")
+        // Tests and the adapter's own module have it, and its client, on the classpath.
+        if (useClasspath) runCatching { Class.forName(driver.className, true, DriverLibrary::class.java.classLoader) }.getOrNull()?.let {
+            return it.getDeclaredConstructor().newInstance()
+        }
+        val jars = listOf(adapterJar(adapter)) + verifiedInstall(driver).second
+        val loader = DriverClassLoader("datagrok-client-${driver.name}", jars.map { it.toUri().toURL() }, DriverLibrary::class.java.classLoader)
+        return Class.forName(driver.className, true, loader).getDeclaredConstructor().newInstance()
+    }
+
+    /** The adapter jar bundled with the app, copied out once per content so a class loader can open it. */
+    private fun adapterJar(name: String): Path {
+        val bytes =
+            DriverLibrary::class.java.classLoader.getResourceAsStream("engines/$name.jar")?.use { it.readBytes() }
+                ?: throw SQLException("This build of Datagrok has no $name adapter.")
+        val digest = MessageDigest.getInstance("SHA-256").digest(bytes).toHex().take(16)
+        val jar = root.resolve("adapters").createDirectories().resolve("$name-$digest.jar")
+        if (!jar.isRegularFile()) {
+            val temp = Files.createTempFile(jar.parent, name, ".part")
+            Files.write(temp, bytes)
+            Files.move(temp, jar, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
+        }
+        return jar
+    }
+
+    // endregion
 
     private fun instantiate(driver: DriverId, jars: List<Path>, discover: Boolean, className: String = driver.className): Driver {
         val loader = DriverClassLoader("datagrok-driver-${driver.name}", jars.map { it.toUri().toURL() }, DriverLibrary::class.java.classLoader)
@@ -192,6 +236,7 @@ class DriverLibrary(
             }
         }
         loaded.remove(driver)
+        clients.remove(driver)
         _revision.update { it + 1 }
     }
 

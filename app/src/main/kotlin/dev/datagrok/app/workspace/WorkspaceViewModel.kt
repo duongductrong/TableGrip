@@ -8,7 +8,10 @@ import dev.datagrok.app.AppState
 import dev.datagrok.app.console.ConsoleTab
 import dev.datagrok.app.table.StructureSection
 import dev.datagrok.app.table.TableDataTab
+import dev.datagrok.app.keyvalue.CommandConsoleTab
+import dev.datagrok.app.keyvalue.KeyBrowserTab
 import dev.datagrok.core.connection.ConnectionConfig
+import dev.datagrok.core.connection.Paradigm
 import dev.datagrok.core.metadata.TableRef
 
 /** An editor tab in the main area. */
@@ -47,9 +50,20 @@ class WorkspaceViewModel(private val app: AppState) {
     /** A stable identity for [tab] while it is open, for keying the tab strip. */
     fun keyOf(tab: WorkspaceTab): Long = keys.getValue(tab)
 
-    fun openConsole(config: ConnectionConfig, initialSql: String = "") {
+    /** A SQL console, or a command console for engines without SQL ([keyspace] picks its database). */
+    fun openConsole(config: ConnectionConfig, initialSql: String = "", keyspace: Int = 0) {
         consoleCount++
-        open(ConsoleTab(app, config, name = if (consoleCount == 1) config.name else "${config.name} ($consoleCount)", initialSql))
+        val name = if (consoleCount == 1) config.name else "${config.name} ($consoleCount)"
+        open(if (config.type.paradigm == Paradigm.KeyValue) CommandConsoleTab(app, config, name, keyspace) else ConsoleTab(app, config, name, initialSql))
+    }
+
+    /** Focuses the key browser of [keyspace] if it is already open. */
+    fun openKeys(config: ConnectionConfig, keyspace: Int) {
+        tabs.firstOrNull { it is KeyBrowserTab && it.connectionId == config.id && it.keyspace == keyspace }?.let {
+            selected = it
+            return
+        }
+        open(KeyBrowserTab(app, config, keyspace))
     }
 
     /** Focuses the table's tab if it is already open; [structure] switches it to the structure view. */

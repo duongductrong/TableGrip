@@ -34,6 +34,7 @@ import dev.datagrok.core.connection.DatabaseFiles
 import dev.datagrok.core.connection.DatabaseType
 import dev.datagrok.core.connection.DriverId
 import dev.datagrok.core.connection.JdbcUrls
+import dev.datagrok.core.connection.Paradigm
 import dev.datagrok.core.connection.ParsedConnection
 import dev.datagrok.core.connection.Environment
 import dev.datagrok.core.connection.SshAuth
@@ -92,6 +93,10 @@ private class ConnectionForm(existing: ConnectionConfig?) {
 
     val isServer: Boolean
         get() = type.isServer
+
+    /** Reached through JDBC; key-value and document stores have no database field, URL form or JDBC URL preview. */
+    val relational: Boolean
+        get() = type.paradigm == Paradigm.Relational
 
     /** The engine has no host/file form: only a JDBC URL. */
     val urlOnly: Boolean
@@ -153,7 +158,7 @@ private class ConnectionForm(existing: ConnectionConfig?) {
             }
         }
         return when {
-            database.text.isBlank() -> if (isServer) "Database is required." else "Database file is required."
+            relational && database.text.isBlank() -> if (isServer) "Database is required." else "Database file is required."
             fileMismatch() != null -> fileMismatch()
             isServer && host.text.isBlank() -> "Host is required."
             ssh && ',' in host.text -> "SSH tunnels need a single host."
@@ -255,9 +260,14 @@ internal fun ConnectionDialogContent(state: ConnectionsViewModel, request: Conne
             message =
                 if (test) {
                     state.test(config, password, sshSecret).fold(
-                        onSuccess = { detected ->
-                            if (detected == null) Message("Connection succeeded.", isError = false)
-                            else Message("Connection succeeded. This server is ${detected.displayName}.", isError = false, action = "Use ${detected.displayName}" to { form.changeType(detected) })
+                        onSuccess = { outcome ->
+                            val detected = outcome.suggested
+                            when {
+                                detected != null ->
+                                    Message("Connection succeeded. This server is ${detected.displayName}.", isError = false, action = "Use ${detected.displayName}" to { form.changeType(detected) })
+                                outcome.server != null -> Message("Connected to ${outcome.server}.", isError = false)
+                                else -> Message("Connection succeeded.", isError = false)
+                            }
                         },
                         onFailure = { Message(it.message ?: it.toString(), isError = true) },
                     )
@@ -379,7 +389,7 @@ private fun GeneralTab(form: ConnectionForm, drivers: DriverDownloads, onMessage
         profileJars = form.driverJars,
         onProfileJars = { form.driverJars = it },
     )
-    if (!form.urlOnly) FormRow("Connect by") {
+    if (!form.urlOnly && form.relational) FormRow("Connect by") {
         ListComboBox(
             items = listOf(if (form.isServer) "Host and port" else "File", "JDBC URL"),
             selectedIndex = if (form.useUrl) 1 else 0,
@@ -409,7 +419,7 @@ private fun GeneralTab(form: ConnectionForm, drivers: DriverDownloads, onMessage
                 TextField(form.port, Modifier.width(80.dp), placeholder = { Text(form.type.defaultPort.toString()) })
             }
         }
-        FormRow("Database") { TextField(form.database, Modifier.fillMaxWidth()) }
+        if (form.relational) FormRow("Database") { TextField(form.database, Modifier.fillMaxWidth()) }
         FormRow("User") { TextField(form.user, Modifier.fillMaxWidth()) }
         FormRow("Password") {
             TextField(form.password, Modifier.fillMaxWidth(), outputTransformation = MaskPassword, placeholder = { Text("Saved in the system keychain") })
@@ -419,7 +429,7 @@ private fun GeneralTab(form: ConnectionForm, drivers: DriverDownloads, onMessage
             TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text(form.type.databaseHint ?: "/path/to/database.sqlite or :memory:") })
         }
     }
-    val preview = runCatching { JdbcUrls.build(form.toConfig()) }.getOrNull()
+    val preview = if (form.relational) runCatching { JdbcUrls.build(form.toConfig()) }.getOrNull() else null
     if (preview != null) {
         FormRow("JDBC URL") {
             Text(preview, color = JewelTheme.globalColors.text.info, style = JewelTheme.editorTextStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -502,6 +512,7 @@ private val PropertyExamples =
         DriverId.MySQL to "sslMode=REQUIRED\nallowPublicKeyRetrieval=true\nserverTimezone=UTC",
         DriverId.MariaDB to "sslMode=verify-full\nallowPublicKeyRetrieval=true",
         DriverId.SQLite to "foreign_keys=true\nbusy_timeout=5000",
+        DriverId.Lettuce to "ssl=true\nmode=cluster  (hosts are seed nodes)\nmode=sentinel + sentinelMaster=mymaster",
     )
 
 /** Native file chooser; returns the picked path or null. */

@@ -359,6 +359,23 @@ Kích thước: **S** ≤ 2 ngày · **M** ~1 tuần · **L** 2–3 tuần. Cộ
 
 ### Phase 2: key-value và document (≈5–6 tuần)
 
+**Trạng thái (2026-10-29): Redis xong, MongoDB và etcd chưa làm.**
+- Kiến trúc cho client không phải JDBC: adapter của DataGrok (module `engines/redis`, biên dịch với core + Lettuce ở dạng
+  `compileOnly`) đóng gói trong app tại `engines/redis.jar`, không nằm trên classpath; `DriverLibrary.loadClient` nạp nó
+  cùng classloader với các jar Lettuce người dùng tải (15 jar, 7.7 MB, MIT/Apache/MIT-0). MongoDB và etcd sẽ đi cùng
+  đường này.
+- `KeyValueConnection` (con của `DatabaseConnection`): keyspace, SCAN theo trang, đọc/sửa 6 kiểu (string, hash, list,
+  set, zset, stream), TTL, đổi tên, xóa, console. `KeyValueStore` lo SSH tunnel và chặn ghi ở hồ sơ chỉ-đọc (console chỉ
+  chạy lệnh trong danh sách lệnh đọc).
+- Engine: Redis, Valkey, KeyDB, Dragonfly. Chế độ standalone, Cluster (`mode=cluster`), Sentinel (`mode=sentinel` +
+  `sentinelMaster`), TLS (`ssl=true`), ACL user.
+- Giao diện: explorer hiện db0…db15 (bỏ db trống trừ db0) kèm số key; tab Keys (lọc theo glob, tải thêm, badge kiểu, TTL,
+  sửa theo kiểu, tạo key, đổi tên, đặt/bỏ TTL, xóa); tab Console kiểu redis-cli (lịch sử ↑/↓, theo `SELECT`).
+- Đã test trên server thật: Redis 7.4, Valkey 8.1, Redis Cluster 7.0 (6 node); đường tải Lettuce từ Maven Central + nạp
+  adapter từ app; UI test có ảnh chụp.
+- Chưa test: Sentinel, KeyDB, Dragonfly (dùng chung giao thức, chưa chạy server thật). Console ở chế độ Cluster gửi lệnh
+  không có key (vd. `FLUSHALL`, `DBSIZE`) tới một node.
+
 | Engine | Driver | Nhóm | Size | Ghi chú |
 | --- | --- | --- | --- | --- |
 | Redis, Valkey, KeyDB, Dragonfly, Upstash | Lettuce | A | L | Paradigm KeyValue: cây key, SCAN phân trang, editor theo kiểu, TTL, chọn DB, Cluster + Sentinel, console lệnh |
