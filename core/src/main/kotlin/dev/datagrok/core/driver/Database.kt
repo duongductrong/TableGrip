@@ -15,10 +15,12 @@ import dev.datagrok.core.dialect.SqlDialect
 import dev.datagrok.core.metadata.ColumnInfo
 import dev.datagrok.core.metadata.Introspector
 import dev.datagrok.core.metadata.Namespace
+import dev.datagrok.core.metadata.StructureReader
 import dev.datagrok.core.metadata.TableDetails
 import dev.datagrok.core.metadata.TableInfo
 import dev.datagrok.core.metadata.TableRef
 import dev.datagrok.core.metadata.TableRelation
+import dev.datagrok.core.metadata.TableStructure
 import dev.datagrok.core.sql.SqlClassifier
 import java.sql.Connection
 import java.sql.SQLException
@@ -44,6 +46,10 @@ class Database private constructor(
     suspend fun tables(namespace: Namespace): List<TableInfo> = withMetadata { introspector.tables(it.metaData, namespace) }
 
     suspend fun tableDetails(table: TableRef): TableDetails = withMetadata { introspector.details(it.metaData, table) }
+
+    /** Columns, keys and indexes plus constraints, triggers and DDL, for the structure view. */
+    suspend fun tableStructure(table: TableRef): TableStructure =
+        withMetadata { StructureReader.of(dialect).read(it, introspector.details(it.metaData, table)) }
 
     suspend fun columnsOf(namespace: Namespace): Map<String, List<ColumnInfo>> = withMetadata { introspector.columnsOf(it.metaData, namespace) }
 

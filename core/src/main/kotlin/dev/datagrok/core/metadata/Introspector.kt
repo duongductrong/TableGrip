@@ -66,12 +66,15 @@ internal class Introspector(private val dialect: SqlDialect) {
                         column = getString("FKCOLUMN_NAME"),
                         target = target,
                         targetColumn = getString("PKCOLUMN_NAME"),
+                        onUpdate = referentialAction(getShort("UPDATE_RULE").takeUnless { wasNull() }),
+                        onDelete = referentialAction(getShort("DELETE_RULE").takeUnless { wasNull() }),
                     )
                 }
                 .groupBy { it.name }
                 .map { (name, rows) ->
                     val sorted = rows.sortedBy { it.sequence }
-                    ForeignKeyInfo(name, sorted.map { it.column }, sorted.first().target, sorted.map { it.targetColumn })
+                    val first = sorted.first()
+                    ForeignKeyInfo(name, sorted.map { it.column }, first.target, sorted.map { it.targetColumn }, first.onUpdate, first.onDelete)
                 }
 
         return TableDetails(table, columns, indexes, foreignKeys)
@@ -123,7 +126,24 @@ internal class Introspector(private val dialect: SqlDialect) {
 
     private data class RelationRow(val name: String, val sequence: Short, val from: TableRef, val fromColumn: String, val to: TableRef, val toColumn: String)
 
-    private data class ForeignKeyRow(val name: String, val sequence: Short, val column: String, val target: TableRef, val targetColumn: String)
+    private data class ForeignKeyRow(
+        val name: String,
+        val sequence: Short,
+        val column: String,
+        val target: TableRef,
+        val targetColumn: String,
+        val onUpdate: String?,
+        val onDelete: String?,
+    )
+
+    /** `NO ACTION` and `RESTRICT` are what every engine does by default, so they map to null. */
+    private fun referentialAction(rule: Short?): String? =
+        when (rule?.toInt()) {
+            DatabaseMetaData.importedKeyCascade -> "CASCADE"
+            DatabaseMetaData.importedKeySetNull -> "SET NULL"
+            DatabaseMetaData.importedKeySetDefault -> "SET DEFAULT"
+            else -> null
+        }
 
     /** Metadata name arguments are LIKE patterns: escape `_` and `%` so `user_x` doesn't match `userAx`. */
     private fun DatabaseMetaData.escape(name: String): String {

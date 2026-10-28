@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import dev.datagrok.app.AppState
 import dev.datagrok.app.console.ConsoleTab
+import dev.datagrok.app.table.StructureSection
 import dev.datagrok.app.table.TableDataTab
 import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.metadata.TableRef
@@ -46,13 +47,15 @@ class WorkspaceViewModel(private val app: AppState) {
         open(ConsoleTab(app, config, name = if (consoleCount == 1) config.name else "${config.name} ($consoleCount)", initialSql))
     }
 
-    /** Focuses the table's tab if it is already open. */
-    fun openTable(config: ConnectionConfig, table: TableRef) {
-        tabs.firstOrNull { it is TableDataTab && it.connectionId == config.id && it.table == table }?.let {
-            selected = it
-            return
+    /** Focuses the table's tab if it is already open; [structure] switches it to the structure view. */
+    fun openTable(config: ConnectionConfig, table: TableRef, structure: StructureSection? = null) {
+        val existing = tabs.firstOrNull { it is TableDataTab && it.connectionId == config.id && it.table == table } as TableDataTab?
+        if (existing != null) selected = existing
+        val tab = existing ?: TableDataTab(app, config, table).also(::open)
+        when {
+            structure != null -> tab.showStructure(structure)
+            existing == null -> tab.showData()
         }
-        open(TableDataTab(app, config, table).also { it.reload() })
     }
 
     /** Closes [tab], first asking what to do with its unsaved work; [then] runs once it is closed. */

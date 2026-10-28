@@ -16,11 +16,23 @@ import dev.datagrok.core.dialect.SqlDialect
 import dev.datagrok.core.edit.ChangeSql
 import dev.datagrok.core.metadata.TableDetails
 import dev.datagrok.core.metadata.TableRef
+import dev.datagrok.core.metadata.TableStructure
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
-/** Paged, sortable, filterable and editable view of one table's rows. */
+enum class TableView { Data, Structure }
+
+enum class StructureSection(val label: String) {
+    Columns("Columns"),
+    Indexes("Indexes"),
+    ForeignKeys("Foreign Keys"),
+    Constraints("Constraints"),
+    Triggers("Triggers"),
+    Ddl("DDL"),
+}
+
+/** Paged, sortable, filterable and editable view of one table's rows, and its structure. */
 class TableDataTab(private val app: AppState, val config: ConnectionConfig, val table: TableRef) : WorkspaceTab {
     override val connectionId: String = config.id
     override val title: String = table.name
@@ -44,6 +56,8 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
         private set
     val pageSize: Int
         get() = app.settings.pageSize
+    val editorFontSize: Int
+        get() = app.settings.editorFontSize
 
     var model by mutableStateOf<TableEditModel?>(null)
         private set
@@ -57,6 +71,17 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
     var totalRows by mutableStateOf<Long?>(null)
         private set
     var showValuePanel by mutableStateOf(false)
+
+    var view by mutableStateOf(TableView.Data)
+        private set
+    var section by mutableStateOf(StructureSection.Columns)
+    var structure by mutableStateOf<TableStructure?>(null)
+        private set
+    var structureError by mutableStateOf<String?>(null)
+    var structureLoading by mutableStateOf(false)
+        private set
+    /** One grid per structure section, so each keeps its own selection and column widths. */
+    val structureGrids = StructureSection.entries.associateWith { DataGridState() }
 
     /** Navigation waiting for the user to confirm discarding unsaved edits. */
     var pendingDiscard by mutableStateOf<(() -> Unit)?>(null)
@@ -80,6 +105,42 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
     private var loadJob: Job? = null
 
     fun reload() = guard { load() }
+
+    /** Reloads whichever view is showing. */
+    fun refresh() = if (view == TableView.Structure) loadStructure() else reload()
+
+    /** Rows load the first time the data view is shown, so opening a huge table's structure doesn't query it. */
+    fun showData() {
+        view = TableView.Data
+        if (model == null && !loading) load()
+    }
+
+    fun showStructure(section: StructureSection? = null) {
+        view = TableView.Structure
+        section?.let { this.section = it }
+        if (structure == null && !structureLoading) loadStructure()
+    }
+
+    fun loadStructure() {
+        app.scope.launch {
+            structureLoading = true
+            try {
+                structure = app.databases.database(config).tableStructure(table)
+                structureError = null
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                structureError = e.message ?: e.toString()
+            } finally {
+                structureLoading = false
+            }
+        }
+    }
+
+    fun openDdlInConsole() {
+        val ddl = structure?.ddl ?: return
+        app.workspace.openConsole(config, ddl)
+    }
 
     private fun load() {
         loadJob?.cancel()

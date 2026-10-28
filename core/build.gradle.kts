@@ -27,4 +27,9 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-tasks.test { useJUnitPlatform() }
+tasks.test {
+    useJUnitPlatform()
+    // Opt-in server tests: -Pit.postgres=localhost:55432 -Pit.mysql=localhost:53306
+    listOf("it.postgres", "it.mysql").forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
+    testLogging { showStandardStreams = providers.gradleProperty("it.postgres").isPresent || providers.gradleProperty("it.mysql").isPresent }
+}

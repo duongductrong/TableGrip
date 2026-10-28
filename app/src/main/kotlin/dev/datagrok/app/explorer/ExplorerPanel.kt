@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import dev.datagrok.app.AppState
 import dev.datagrok.app.connections.ConnectionStatus
+import dev.datagrok.app.table.StructureSection
 import dev.datagrok.app.ui.Badge
 import dev.datagrok.app.ui.EnvironmentChip
 import dev.datagrok.app.ui.copyToClipboard
@@ -68,14 +69,24 @@ internal fun ExplorerPanel(app: AppState) {
             tree = tree,
             treeState = explorer.treeState,
             modifier = Modifier.fillMaxSize().padding(vertical = 4.dp),
-            onElementDoubleClick = { element ->
-                val node = element.data
-                if (node is ExplorerNode.Table) app.connections.byId(node.connectionId)?.let { app.workspace.openTable(it, node.info.ref) }
-            },
+            onElementDoubleClick = { element -> openNode(app, element.data) },
         ) { element ->
             ContextMenuArea(items = { contextMenu(app, element.data) }) { NodeRow(app, element.data, Modifier.fillMaxWidth()) }
         }
     }
+}
+
+/** Tables open on their data; columns, indexes and keys open the table's structure on their section. */
+private fun openNode(app: AppState, node: ExplorerNode) {
+    val (table, section) =
+        when (node) {
+            is ExplorerNode.Table -> TableKey(node.connectionId, node.info.ref) to null
+            is ExplorerNode.Column -> node.table to StructureSection.Columns
+            is ExplorerNode.Index -> node.table to StructureSection.Indexes
+            is ExplorerNode.ForeignKey -> node.table to StructureSection.ForeignKeys
+            else -> return
+        }
+    app.connections.byId(table.connectionId)?.let { app.workspace.openTable(it, table.ref, section) }
 }
 
 private fun contextMenu(app: AppState, node: ExplorerNode): List<ContextMenuItem> =
@@ -97,6 +108,9 @@ private fun contextMenu(app: AppState, node: ExplorerNode): List<ContextMenuItem
             val ref = node.info.ref
             listOf(
                 ContextMenuItem("Open Data") { app.workspace.openTable(config, ref) },
+                ContextMenuItem("Open Structure") { app.workspace.openTable(config, ref, StructureSection.Columns) },
+                ContextMenuItem("Show DDL") { app.workspace.openTable(config, ref, StructureSection.Ddl) },
+                ContextMenuItem("Copy DDL") { app.explorer.copyDdl(config, ref) },
                 ContextMenuItem("New Console with SELECT") {
                     val name = SqlDialect.of(config.type).qualifiedName(ref)
                     app.workspace.openConsole(config, "SELECT * FROM $name;")

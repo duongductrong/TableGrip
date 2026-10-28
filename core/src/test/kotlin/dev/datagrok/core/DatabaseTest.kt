@@ -12,6 +12,7 @@ import dev.datagrok.core.export.CopyFormat
 import dev.datagrok.core.export.ResultWriter
 import dev.datagrok.core.driver.QueryResult
 import dev.datagrok.core.driver.ReadOnlyViolationException
+import dev.datagrok.core.metadata.ConstraintKind
 import dev.datagrok.core.metadata.TableRef
 import java.sql.SQLException
 import java.sql.Types
@@ -63,6 +64,38 @@ class DatabaseTest {
         assertEquals(false, users.columns[1].nullable)
         assertTrue(users.indexes.any { it.name == "users_name" && it.unique && it.columns == listOf("name") })
         assertEquals("teams", users.foreignKeys.single().referencedTable.name)
+    }
+
+    @Test
+    fun `reads constraints, triggers and DDL`() = runBlocking {
+        database.openSession().use { session ->
+            session.execute("CREATE TABLE teams (id INTEGER PRIMARY KEY, name TEXT UNIQUE)")
+            session.execute(
+                "CREATE TABLE users (id INTEGER PRIMARY KEY, age INTEGER CHECK (age > 0), " +
+                    "team_id INTEGER REFERENCES teams(id) ON DELETE CASCADE, CONSTRAINT adult CHECK (age >= (18)))"
+            )
+            session.execute("CREATE INDEX users_team ON users(team_id)")
+            session.execute("CREATE TRIGGER users_touch AFTER UPDATE ON users BEGIN SELECT 1; END")
+        }
+        val namespace = database.namespaces().single()
+        val users = database.tableStructure(TableRef(namespace, "users"))
+        assertEquals(
+            listOf(
+                ConstraintKind.PrimaryKey to "PRIMARY KEY (\"id\")",
+                ConstraintKind.ForeignKey to "FOREIGN KEY (\"team_id\") REFERENCES \"teams\" (\"id\") ON DELETE CASCADE",
+                ConstraintKind.Check to "CHECK (age > 0)",
+                ConstraintKind.Check to "CHECK (age >= (18))",
+            ),
+            users.constraints.map { it.kind to it.definition },
+        )
+        assertEquals("adult", users.constraints.last().name)
+        assertEquals(listOf(Triple("users_touch", "AFTER", "UPDATE")), users.triggers.map { Triple(it.name, it.timing, it.events) })
+        assertTrue(users.ddl.startsWith("CREATE TABLE users"))
+        assertTrue("CREATE INDEX users_team ON users(team_id);" in users.ddl)
+        assertTrue(users.ddl.trimEnd().endsWith("END;"))
+
+        val teams = database.tableStructure(TableRef(namespace, "teams"))
+        assertEquals(listOf(ConstraintKind.PrimaryKey, ConstraintKind.Unique), teams.constraints.map { it.kind })
     }
 
     @Test

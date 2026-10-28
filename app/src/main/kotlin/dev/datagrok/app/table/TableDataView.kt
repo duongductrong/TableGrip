@@ -1,6 +1,10 @@
 package dev.datagrok.app.table
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -45,7 +49,9 @@ import dev.datagrok.app.grid.DataGrid
 import dev.datagrok.app.grid.GridActions
 import dev.datagrok.app.grid.GridCell
 import dev.datagrok.app.grid.ValuePanel
+import dev.datagrok.app.ui.LocalIslands
 import dev.datagrok.app.ui.Shortcuts
+import dev.datagrok.app.ui.copyToClipboard
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.Orientation
 import org.jetbrains.jewel.ui.component.DefaultButton
@@ -68,6 +74,22 @@ private val PageSizes = listOf(50, 100, 200, 500, 1000)
 
 @Composable
 internal fun TableDataView(tab: TableDataTab) {
+    if (tab.view == TableView.Structure) {
+        Column(Modifier.fillMaxSize()) {
+            StructureToolbar(tab)
+            Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
+            tab.structureError?.let { ErrorBanner(it, onDismiss = { tab.structureError = null }) }
+            StructureView(tab, Modifier.weight(1f).fillMaxWidth())
+        }
+    } else {
+        DataView(tab)
+    }
+    tab.pendingDiscard?.let { DiscardDialog(tab) }
+    tab.preview?.let { PreviewDialog(tab, it) }
+}
+
+@Composable
+private fun DataView(tab: TableDataTab) {
     Column(Modifier.fillMaxSize()) {
         Toolbar(tab)
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
@@ -113,9 +135,48 @@ internal fun TableDataView(tab: TableDataTab) {
         }
         StatusLine(tab)
     }
+}
 
-    tab.pendingDiscard?.let { DiscardDialog(tab) }
-    tab.preview?.let { PreviewDialog(tab, it) }
+/** Switches the tab between its rows and its structure; leads both toolbars so it stays in one place. */
+@Composable
+private fun ViewSwitch(tab: TableDataTab) {
+    Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
+        ViewChip("Data", tab.view == TableView.Data, onClick = tab::showData)
+        ViewChip("Structure", tab.view == TableView.Structure, onClick = { tab.showStructure() })
+    }
+    Separator()
+}
+
+@Composable
+private fun ViewChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    val islands = LocalIslands.current
+    val shape = RoundedCornerShape(6.dp)
+    Text(
+        label,
+        Modifier.clip(shape)
+            .background(if (selected) islands.accent.copy(alpha = if (JewelTheme.isDark) 0.22f else 0.12f) else Color.Transparent)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 3.dp),
+        color = if (selected) JewelTheme.globalColors.text.normal else JewelTheme.globalColors.text.info,
+    )
+}
+
+@Composable
+private fun StructureToolbar(tab: TableDataTab) {
+    Row(
+        Modifier.fillMaxWidth().height(34.dp).padding(horizontal = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ViewSwitch(tab)
+        ToolButton(AllIconsKeys.Actions.Refresh, "Reload structure (${Shortcuts.Reload})") { tab.loadStructure() }
+        val ddl = tab.structure?.ddl
+        ToolButton(AllIconsKeys.Actions.Copy, "Copy DDL", enabled = ddl != null) { ddl?.let(::copyToClipboard) }
+        ToolButton(AllIconsKeys.Nodes.Console, "Open DDL in new console", enabled = ddl != null) { tab.openDdlInConsole() }
+        Box(Modifier.weight(1f))
+        if (tab.structureLoading) Text("Loading…", Modifier.padding(end = 8.dp), color = JewelTheme.globalColors.text.info)
+        Text(tab.dialect.qualifiedName(tab.table), Modifier.padding(end = 8.dp), color = JewelTheme.globalColors.text.info)
+    }
 }
 
 @Composable
@@ -126,6 +187,7 @@ private fun Toolbar(tab: TableDataTab) {
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        ViewSwitch(tab)
         ToolButton(AllIconsKeys.Actions.Play_first, "First page", enabled = tab.page > 0) { tab.goToPage(0) }
         ToolButton(AllIconsKeys.Actions.Play_back, "Previous page", enabled = tab.page > 0) { tab.goToPage(tab.page - 1) }
         val shown = (model?.rowCount ?: 0)

@@ -15,6 +15,7 @@ Compose for Desktop and [Jewel](https://jewel-ui.dev) — the IntelliJ look & fe
 ./gradlew :app:run                  # launch the app
 ./gradlew :app:run -Pdatagrok.home=/tmp/dg   # launch with a throwaway profile/settings/history directory
 ./gradlew :core:test                # run core tests
+./gradlew :core:test -Pit.postgres=localhost:55432 -Pit.mysql=localhost:53306   # also test against real servers (seed: core/src/test/resources/structure-it)
 ./gradlew :app:packageDistributionForCurrentOS   # build a native installer (dmg/msi/deb)
 ```
 
@@ -75,6 +76,15 @@ columns are virtualized; row numbers stay pinned.
 Right-click cells to copy as CSV / JSON / Markdown / SQL INSERT / IN-list or "Filter by This Value". Edits stay pending
 (highlighted) until submitted; they run in one transaction and are refused if a row changed underneath. Tables without
 a primary key only allow inserts. On Windows/Linux use Ctrl instead of ⌘.
+
+## Table structure
+
+Each table tab switches between **Data** and **Structure** (toolbar, top left). Structure shows Columns, Indexes,
+Foreign Keys, Constraints (primary key, unique, foreign key, check, exclusion), Triggers and the DDL, read from each
+engine's own catalog: `pg_constraint` / `pg_trigger` / `pg_get_*def` on PostgreSQL (the DDL is assembled from them),
+`SHOW CREATE TABLE` and `information_schema` on MySQL/MariaDB, `sqlite_master` on SQLite. Copy the DDL or open it in a
+new console from the toolbar. In the explorer, right-click a table → Open Structure / Show DDL / Copy DDL, or
+double-click a column, index or foreign key to open its section. Rows only load once the Data view is shown.
 
 ## Connections
 

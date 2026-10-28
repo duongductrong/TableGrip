@@ -3,6 +3,7 @@ package dev.datagrok.app.explorer
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.mutableStateMapOf
 import dev.datagrok.app.AppState
+import dev.datagrok.app.ui.copyToClipboard
 import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.metadata.ColumnInfo
 import dev.datagrok.core.metadata.ForeignKeyInfo
@@ -143,6 +144,17 @@ class ExplorerViewModel(private val app: AppState) {
                 )
             }
             else -> emptyList()
+        }
+    }
+
+    fun copyDdl(config: ConnectionConfig, table: TableRef) {
+        app.scope.launch {
+            runCatching { app.databases.database(config).tableStructure(table).ddl }
+                .onSuccess {
+                    copyToClipboard(it)
+                    app.status = "Copied DDL of ${table.name}"
+                }
+                .onFailure { app.status = "Couldn't read DDL of ${table.name}: ${it.message}" }
         }
     }
 

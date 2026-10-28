@@ -70,7 +70,7 @@ private fun handleWindowShortcut(app: AppState, event: KeyEvent): Boolean {
         Shortcuts.Settings.matches(event) -> done { app.settingsOpen = true }
         Shortcuts.ShowShortcuts.matches(event) -> done { app.shortcutsOpen = true }
         selected is ConsoleTab -> handleConsoleShortcut(selected, event)
-        selected is TableDataTab && Shortcuts.Reload.matches(event) -> done { selected.reload() }
+        selected is TableDataTab && Shortcuts.Reload.matches(event) -> done { selected.refresh() }
         selected is TableDataTab && Shortcuts.Save.matches(event) -> done { selected.submit() }
         else -> false
     }

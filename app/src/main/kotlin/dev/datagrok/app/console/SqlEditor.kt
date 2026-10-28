@@ -118,6 +118,8 @@ internal fun SqlEditor(
     completionVersion: Int = 0,
     actions: SqlEditorActions? = null,
     onShortcut: (KeyEvent) -> Boolean = { false },
+    /** Selection, copy and find still work; nothing edits the text. */
+    readOnly: Boolean = false,
 ) {
     val isDark = JewelTheme.isDark
     val palette = if (isDark) DarkPalette else LightPalette
@@ -218,6 +220,7 @@ internal fun SqlEditor(
                 Box(Modifier.horizontalScroll(horizontalScroll)) {
                     BasicTextField(
                         state = state,
+                        readOnly = readOnly,
                         modifier =
                             Modifier.defaultMinSize(minWidth = viewportWidth - gutterWidth, minHeight = viewportHeight)
                                 .focusRequester(editorFocus)
@@ -225,6 +228,7 @@ internal fun SqlEditor(
                                     if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
                                     if (handleCompletionKey(controller, event.key) { controller.accept(state) }) return@onPreviewKeyEvent true
                                     if (onShortcut(event)) return@onPreviewKeyEvent true
+                                    if (readOnly) return@onPreviewKeyEvent handleReadOnlyKey(event, state, find)
                                     val handled = handleEditorKey(event, state, syntax, ::current, ::apply, ::format, find, controller, completion)
                                     if (!handled && isCompletionTrigger(event)) triggerCompletion = true
                                     handled
@@ -288,6 +292,13 @@ internal fun SqlEditor(
 }
 
 /** Keys the editor handles itself; returns true when consumed. */
+private fun handleReadOnlyKey(event: KeyEvent, state: TextFieldState, find: FindState): Boolean =
+    when {
+        Shortcuts.Find.matches(event) -> true.also { find.open(state, replace = false) }
+        event.key == Key.Escape && find.visible -> true.also { find.visible = false }
+        else -> false
+    }
+
 private fun handleEditorKey(
     event: KeyEvent,
     state: TextFieldState,

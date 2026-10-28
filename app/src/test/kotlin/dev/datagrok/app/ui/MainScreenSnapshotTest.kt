@@ -10,6 +10,7 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import dev.datagrok.app.AppState
+import dev.datagrok.app.table.StructureSection
 import dev.datagrok.app.table.TableDataTab
 import dev.datagrok.core.connection.ConnectionStore
 import dev.datagrok.core.connection.InMemorySecretStore
@@ -66,6 +67,19 @@ class MainScreenSnapshotTest {
                 Thread.sleep(400)
                 waitForIdle()
                 ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(out, "console-${if (dark) "dark" else "light"}.png"))
+                val table = app.workspace.tabs.filterIsInstance<TableDataTab>().single()
+                runOnUiThread {
+                    app.workspace.selected = table
+                    table.showStructure(StructureSection.Columns)
+                }
+                waitUntil(timeoutMillis = 10_000) { table.structure != null }
+                for (section in listOf(StructureSection.Columns, StructureSection.Constraints, StructureSection.Ddl)) {
+                    runOnUiThread { table.section = section }
+                    waitForIdle()
+                    Thread.sleep(400)
+                    waitForIdle()
+                    ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(out, "structure-${section.name.lowercase()}-${if (dark) "dark" else "light"}.png"))
+                }
             }
             app.dispose()
         }

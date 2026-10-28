@@ -22,7 +22,15 @@ data class ColumnInfo(
 
 data class IndexInfo(val name: String, val columns: List<String>, val unique: Boolean)
 
-data class ForeignKeyInfo(val name: String, val columns: List<String>, val referencedTable: TableRef, val referencedColumns: List<String>)
+/** [onUpdate] and [onDelete] are referential actions such as `CASCADE`, or null for the default (no action). */
+data class ForeignKeyInfo(
+    val name: String,
+    val columns: List<String>,
+    val referencedTable: TableRef,
+    val referencedColumns: List<String>,
+    val onUpdate: String? = null,
+    val onDelete: String? = null,
+)
 
 data class TableDetails(
     val table: TableRef,
@@ -36,3 +44,25 @@ data class TableDetails(
 
 /** A foreign key: [fromTable].[fromColumns] references [toTable].[toColumns]. */
 data class TableRelation(val fromTable: TableRef, val fromColumns: List<String>, val toTable: TableRef, val toColumns: List<String>)
+
+enum class ConstraintKind(val label: String) {
+    PrimaryKey("PRIMARY KEY"),
+    Unique("UNIQUE"),
+    ForeignKey("FOREIGN KEY"),
+    Check("CHECK"),
+    Exclusion("EXCLUDE"),
+}
+
+/** A table constraint; [definition] is its SQL as it would follow `CONSTRAINT name`. [name] is empty if unnamed. */
+data class ConstraintInfo(val name: String, val kind: ConstraintKind, val columns: List<String>, val definition: String)
+
+/** [timing] is e.g. `BEFORE`, [events] e.g. `INSERT OR UPDATE`; [definition] is the full `CREATE TRIGGER` statement. */
+data class TriggerInfo(val name: String, val timing: String, val events: String, val enabled: Boolean, val definition: String)
+
+/** Everything the structure view shows about a table or view. */
+data class TableStructure(
+    val details: TableDetails,
+    val constraints: List<ConstraintInfo>,
+    val triggers: List<TriggerInfo>,
+    val ddl: String,
+)
