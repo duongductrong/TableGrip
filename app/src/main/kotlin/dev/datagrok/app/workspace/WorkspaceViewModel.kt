@@ -41,6 +41,11 @@ class WorkspaceViewModel(private val app: AppState) {
             value?.let { app.currentConnectionId = it.connectionId }
         }
     private var consoleCount = 0
+    private var tabCount = 0L
+    private val keys = mutableMapOf<WorkspaceTab, Long>()
+
+    /** A stable identity for [tab] while it is open, for keying the tab strip. */
+    fun keyOf(tab: WorkspaceTab): Long = keys.getValue(tab)
 
     fun openConsole(config: ConnectionConfig, initialSql: String = "") {
         consoleCount++
@@ -92,7 +97,14 @@ class WorkspaceViewModel(private val app: AppState) {
         if (index < 0) return
         tab.dispose()
         tabs.removeAt(index)
+        keys -= tab
         if (selected == tab) selected = tabs.getOrNull(index) ?: tabs.lastOrNull()
+    }
+
+    /** Moves the tab at [from] to [to], shifting the ones in between. */
+    fun move(from: Int, to: Int) {
+        if (from == to || from !in tabs.indices || to !in tabs.indices) return
+        tabs.add(to, tabs.removeAt(from))
     }
 
     /** Selects the tab [offset] places from the current one, wrapping around. */
@@ -105,6 +117,7 @@ class WorkspaceViewModel(private val app: AppState) {
     fun disposeAll() = tabs.forEach { it.dispose() }
 
     private fun open(tab: WorkspaceTab) {
+        keys[tab] = tabCount++
         tabs += tab
         selected = tab
     }

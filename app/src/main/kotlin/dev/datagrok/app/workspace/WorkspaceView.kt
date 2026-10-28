@@ -1,36 +1,50 @@
 package dev.datagrok.app.workspace
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.hoverable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isTertiaryPressed
 import androidx.compose.ui.input.pointer.onPointerEvent
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import dev.datagrok.app.AppState
 import dev.datagrok.app.console.ConsoleTab
 import dev.datagrok.app.console.ConsoleView
@@ -56,22 +70,7 @@ internal fun WorkspaceView(app: AppState) {
         return
     }
     Column(Modifier.fillMaxSize()) {
-        Row(
-            Modifier.fillMaxWidth().height(42.dp).horizontalScroll(rememberScrollState()).padding(horizontal = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            workspace.tabs.forEach { tab ->
-                PillTab(
-                    title = tab.title,
-                    isConsole = tab is ConsoleTab,
-                    dirty = tab.hasUnsavedWork,
-                    selected = tab == selected,
-                    onClick = { workspace.selected = tab },
-                    onClose = { workspace.requestClose(tab) },
-                )
-            }
-        }
+        TabStrip(workspace, selected)
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
         // Keyed so each tab keeps its own scroll positions and split sizes.
         key(selected) {
@@ -84,16 +83,80 @@ internal fun WorkspaceView(app: AppState) {
     }
 }
 
-/** A rounded editor tab: filled with the accent when selected; middle-click closes it. */
+/** The row of open tabs; dragging a tab sideways reorders it. */
+@Composable
+private fun TabStrip(workspace: WorkspaceViewModel, selected: WorkspaceTab) {
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+    val density = LocalDensity.current.density
+    val drag = remember(listState) { TabDragState(listState, scope, density, workspace::move) }
+    LaunchedEffect(drag.scrollSpeed != 0f) { drag.autoScroll() }
+    LazyRow(
+        Modifier.fillMaxWidth().height(42.dp),
+        state = listState,
+        contentPadding = PaddingValues(horizontal = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        items(workspace.tabs, key = workspace::keyOf) { tab ->
+            val key = workspace.keyOf(tab)
+            val dragged = drag.draggedKey == key
+            PillTab(
+                title = tab.title,
+                isConsole = tab is ConsoleTab,
+                dirty = tab.hasUnsavedWork,
+                selected = tab == selected,
+                lifted = dragged,
+                onClick = { workspace.selected = tab },
+                onClose = { workspace.requestClose(tab) },
+                // The dragged tab follows the pointer above the others, which slide aside to make room for it.
+                modifier = Modifier
+                    .animateItem(
+                        fadeInSpec = null,
+                        fadeOutSpec = null,
+                        placementSpec = if (dragged) null else spring(Spring.DampingRatioNoBouncy, Spring.StiffnessMediumLow, IntOffset.VisibilityThreshold),
+                    )
+                    .zIndex(if (dragged) 1f else 0f)
+                    .graphicsLayer { if (dragged) translationX = drag.offset }
+                    .pointerInput(key) {
+                        detectDragGestures(
+                            onDragStart = {
+                                workspace.selected = tab
+                                drag.start(key)
+                            },
+                            onDragEnd = drag::end,
+                            onDragCancel = drag::end,
+                        ) { change, amount ->
+                            change.consume()
+                            drag.drag(amount.x)
+                        }
+                    },
+            )
+        }
+    }
+}
+
+/** A rounded editor tab: filled with the accent when selected; middle-click closes it. [lifted] while being dragged. */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-private fun PillTab(title: String, isConsole: Boolean, dirty: Boolean, selected: Boolean, onClick: () -> Unit, onClose: () -> Unit) {
+private fun PillTab(
+    title: String,
+    isConsole: Boolean,
+    dirty: Boolean,
+    selected: Boolean,
+    lifted: Boolean,
+    onClick: () -> Unit,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val islands = LocalIslands.current
     val interaction = remember { MutableInteractionSource() }
     val hovered by interaction.collectIsHoveredAsState()
     val shape = RoundedCornerShape(8.dp)
     Row(
-        Modifier.height(30.dp)
+        modifier.height(30.dp)
+            // Opaque underneath the translucent fill so tabs it passes over don't show through.
+            .then(if (lifted) Modifier.shadow(6.dp, shape).background(islands.island, shape) else Modifier)
             .clip(shape)
             .background(
                 when {
