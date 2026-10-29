@@ -19,4 +19,8 @@ object DatagrokPaths {
     /** Downloaded JDBC drivers and the user's own driver jars. */
     val drivers: Path
         get() = home.resolve("drivers")
+
+    /** Where CLI agents run: a directory of their own, so an agent with file tools works there, not in the user's home. */
+    val agentWorkspace: Path
+        get() = home.resolve("agent")
 }

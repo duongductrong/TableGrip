@@ -26,6 +26,8 @@ data class Settings(
     val driverRepository: String = "",
     /** Download permissively licensed drivers without asking. LGPL drivers always ask; GPL and vendor drivers never download. */
     val autoDownloadDrivers: Boolean = false,
+    /** Id of the agent the chat panel last used; blank picks the first one found. */
+    val agent: String = "",
 )
 
 class SettingsStore(private val file: Path = DatagrokPaths.settings) {

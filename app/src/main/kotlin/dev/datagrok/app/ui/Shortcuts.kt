@@ -63,6 +63,7 @@ object Shortcuts {
     val PreviousTabAlt = Shortcut(Key.Tab, "Tab", ctrl = true, shift = true)
     val Explorer = if (isMac) Shortcut(Key.One, "1", primary = true) else Shortcut(Key.One, "1", alt = true)
     val History = if (isMac) Shortcut(Key.Two, "2", primary = true) else Shortcut(Key.Two, "2", alt = true)
+    val Agent = if (isMac) Shortcut(Key.Three, "3", primary = true) else Shortcut(Key.Three, "3", alt = true)
     val Settings = if (isMac) Shortcut(Key.Comma, ",", primary = true) else Shortcut(Key.S, "S", primary = true, alt = true)
     val ShowShortcuts = Shortcut(Key.Slash, "/", primary = true, shift = true)
 
@@ -136,6 +137,7 @@ object Shortcuts {
                     entry("Previous tab", PreviousTab, PreviousTabAlt),
                     entry("Connections", Explorer),
                     entry("Query History", History),
+                    entry("Agent", Agent),
                     entry("Settings", Settings),
                     entry("Keyboard shortcuts", ShowShortcuts),
                 ),

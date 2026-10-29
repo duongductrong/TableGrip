@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.datagrok.app.AppState
+import dev.datagrok.app.agent.AgentPanel
 import dev.datagrok.app.settings.SettingsScreen
 import dev.datagrok.app.LeftTool
 import dev.datagrok.app.connections.ConnectionDialog
@@ -50,35 +52,25 @@ internal fun MainScreen(app: AppState) {
     Column(Modifier.fillMaxSize().background(islands.frame)) {
         Row(Modifier.fillMaxWidth().weight(1f)) {
             ToolStripe(app)
-            val workspace = @Composable { Island(Modifier.fillMaxSize()) { WorkspaceView(app) } }
-            val tool = app.leftTool
-            Box(Modifier.weight(1f).fillMaxSize().padding(end = IslandGap)) {
-                if (app.settingsOpen) {
-                    // Settings take the whole content area; tabs and tool windows come back when it closes.
-                    Island(Modifier.fillMaxSize()) { SettingsScreen(app) }
-                } else if (tool == null) {
-                    workspace()
+            // Movable, so opening the agent doesn't rebuild the editors and lose their scroll and focus.
+            val center = remember { movableContentOf { CenterArea(app) } }
+            Box(Modifier.weight(1f).fillMaxSize()) {
+                if (!app.agentOpen) {
+                    center()
                 } else {
-                    // The split's divider is invisible: the gap between islands is the drag handle.
                     HorizontalSplitLayout(
-                        first = {
-                            Island(Modifier.fillMaxSize().padding(end = IslandGap / 2)) {
-                                when (tool) {
-                                    LeftTool.Explorer -> ExplorerPanel(app)
-                                    LeftTool.History -> HistoryPanel(app)
-                                }
-                            }
-                        },
-                        second = { Box(Modifier.fillMaxSize().padding(start = IslandGap / 2)) { workspace() } },
+                        first = { Box(Modifier.fillMaxSize().padding(end = IslandGap / 2)) { center() } },
+                        second = { Island(Modifier.fillMaxSize().padding(start = IslandGap / 2)) { AgentPanel(app) } },
                         modifier = Modifier.fillMaxSize(),
                         dividerStyle = remember { DividerStyle(Color.Transparent, DividerMetrics(0.dp, 0.dp)) },
                         draggableWidth = IslandGap,
-                        firstPaneMinWidth = 220.dp,
-                        secondPaneMinWidth = 420.dp,
-                        state = rememberSplitLayoutState(0.24f),
+                        firstPaneMinWidth = 480.dp,
+                        secondPaneMinWidth = 300.dp,
+                        state = rememberSplitLayoutState(0.68f),
                     )
                 }
             }
+            RightToolStripe(app)
         }
         StatusBar(app)
     }
@@ -88,6 +80,38 @@ internal fun MainScreen(app: AppState) {
     app.connections.driverPrompt?.let { MissingDriverDialog(app.connections, it) }
     if (app.shortcutsOpen) ShortcutsDialog(app)
     app.exportRequest?.let { ExportDialog(app, it) }
+}
+
+/** The left tool window and the editor tabs, or the settings screen in their place. */
+@Composable
+private fun CenterArea(app: AppState) {
+    val workspace = @Composable { Island(Modifier.fillMaxSize()) { WorkspaceView(app) } }
+    val tool = app.leftTool
+    if (app.settingsOpen) {
+        // Settings take the whole content area; tabs and tool windows come back when it closes.
+        Island(Modifier.fillMaxSize()) { SettingsScreen(app) }
+    } else if (tool == null) {
+        workspace()
+    } else {
+        // The split's divider is invisible: the gap between islands is the drag handle.
+        HorizontalSplitLayout(
+            first = {
+                Island(Modifier.fillMaxSize().padding(end = IslandGap / 2)) {
+                    when (tool) {
+                        LeftTool.Explorer -> ExplorerPanel(app)
+                        LeftTool.History -> HistoryPanel(app)
+                    }
+                }
+            },
+            second = { Box(Modifier.fillMaxSize().padding(start = IslandGap / 2)) { workspace() } },
+            modifier = Modifier.fillMaxSize(),
+            dividerStyle = remember { DividerStyle(Color.Transparent, DividerMetrics(0.dp, 0.dp)) },
+            draggableWidth = IslandGap,
+            firstPaneMinWidth = 220.dp,
+            secondPaneMinWidth = 420.dp,
+            state = rememberSplitLayoutState(0.24f),
+        )
+    }
 }
 
 /** Breadcrumbs of what's selected on the left, the latest status message on the right — all on the frame. */

@@ -41,6 +41,9 @@ enum class RunMode {
     All,
 }
 
+/** What one run produced: its result sets, and the log lines it wrote (row counts, errors). */
+class RunOutcome(val results: List<ResultSetView>, val log: List<OutputLine>)
+
 /** Statements waiting for the user to confirm, with why they need confirming. */
 data class WriteConfirmation(val statements: List<String>, val reasons: List<String>, val proceed: () -> Unit)
 
@@ -125,16 +128,26 @@ class ConsoleTab(
         start(dialect.explain(sql))
     }
 
-    fun run(mode: RunMode) {
-        if (running) return
-        val statements = statementsFor(mode)
-        if (statements.isEmpty()) return
+    fun run(mode: RunMode) = run(statementsFor(mode))
+
+    /**
+     * Runs [sql] as given rather than what's at the caret, e.g. a query the agent suggested; same checks as typed SQL.
+     * [onFinished] gets this run's result sets and log lines, unless the user cancels a write confirmation.
+     */
+    fun run(sql: String, onFinished: ((RunOutcome) -> Unit)? = null) = run(splitter.split(sql).map(SqlStatement::text), onFinished)
+
+    /** Whether every statement in [sql] only reads. */
+    fun onlyReads(sql: String): Boolean = splitter.split(sql).all { classifier.classify(it.text).kind == StatementKind.Read }
+
+    private fun run(statements: List<String>, onFinished: ((RunOutcome) -> Unit)? = null) {
+        if (running || statements.isEmpty()) return
         val infos = statements.map(classifier::classify)
 
         if (config.readOnly && infos.any { it.changesData }) {
             val verbs = infos.filter { it.changesData }.joinToString { it.verb }.ifEmpty { "writes" }
             log("This connection is read-only: $verbs not run.", isError = true)
             selectedResultTab = 0
+            onFinished?.invoke(RunOutcome(emptyList(), output.takeLast(1)))
             return
         }
         val reasons = buildList {
@@ -144,10 +157,10 @@ class ConsoleTab(
             }
         }
         if (reasons.isNotEmpty()) {
-            pendingConfirmation = WriteConfirmation(statements, reasons.distinct()) { start(statements) }
+            pendingConfirmation = WriteConfirmation(statements, reasons.distinct()) { start(statements, onFinished) }
             return
         }
-        start(statements)
+        start(statements, onFinished)
     }
 
     fun confirmPending() {
@@ -156,14 +169,16 @@ class ConsoleTab(
         confirmation.proceed()
     }
 
-    private fun start(statements: List<String>) {
+    private fun start(statements: List<String>, onFinished: ((RunOutcome) -> Unit)? = null) {
         job = app.scope.launch {
             running = true
             results.clear()
+            val firstLine = output.size
             try {
                 execute(statements)
             } finally {
                 running = false
+                onFinished?.invoke(RunOutcome(results.toList(), output.drop(firstLine)))
             }
         }
     }

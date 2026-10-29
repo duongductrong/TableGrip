@@ -55,6 +55,18 @@ internal fun ToolStripe(app: AppState, modifier: Modifier = Modifier) {
     }
 }
 
+/** The right edge's stripe, mirroring the left one: tool windows that sit beside the editor rather than before it. */
+@Composable
+internal fun RightToolStripe(app: AppState, modifier: Modifier = Modifier) {
+    Column(
+        modifier.width(44.dp).fillMaxHeight().padding(vertical = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        StripeButton(AllIconsKeys.Actions.AiIntentionBulb, "Agent (${Shortcuts.Agent})", selected = app.agentOpen) { app.agentOpen = !app.agentOpen }
+    }
+}
+
 @Composable
 private fun StripeButton(icon: IconKey, tooltip: String, selected: Boolean, onClick: () -> Unit) {
     val islands = LocalIslands.current

@@ -3,6 +3,7 @@ package dev.datagrok.app
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import dev.datagrok.app.agent.AgentViewModel
 import dev.datagrok.app.connections.ConnectionsViewModel
 import dev.datagrok.app.connections.DatabaseRegistry
 import dev.datagrok.app.connections.DriverDownloads
@@ -12,6 +13,7 @@ import dev.datagrok.app.export.ExportRequest
 import dev.datagrok.app.settings.SettingsPages
 import dev.datagrok.app.workspace.WorkspaceViewModel
 import dev.datagrok.core.connection.ConnectionConfig
+import dev.datagrok.core.agent.AgentRegistry
 import dev.datagrok.core.connection.ConnectionStore
 import dev.datagrok.core.drivers.DriverLibrary
 import dev.datagrok.core.history.QueryHistory
@@ -32,6 +34,7 @@ class AppState(
     connectionStore: ConnectionStore = ConnectionStore(),
     val history: QueryHistory = QueryHistory(),
     driverLibrary: DriverLibrary = DriverLibrary.shared,
+    agentRegistry: AgentRegistry = AgentRegistry.default(),
 ) {
     /** Lives as long as the app; everything here runs on the UI thread unless it hops to IO itself. */
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -51,6 +54,8 @@ class AppState(
     /** The settings page shown when the dialog opens; kept so it reopens where the user left off. */
     var settingsPage by mutableStateOf(SettingsPages.all.first().id)
     var shortcutsOpen by mutableStateOf(false)
+    /** Shows the agent chat in an island on the right, next to whatever is in front. */
+    var agentOpen by mutableStateOf(false)
     var exportRequest by mutableStateOf<ExportRequest?>(null)
 
     /** The connection the title bar shows and new consoles use; follows the selected tab. */
@@ -66,6 +71,7 @@ class AppState(
     val databases = DatabaseRegistry(scope, connections::storedPassword, connections::storedSshSecret, drivers, connections::askForDriver)
     val explorer = ExplorerViewModel(this)
     val workspace = WorkspaceViewModel(this)
+    val agent = AgentViewModel(this, agentRegistry)
 
     private val schemaCaches = mutableMapOf<String, SchemaCache>()
 
@@ -75,6 +81,7 @@ class AppState(
     /** Drops cached completion metadata, e.g. after DDL or when the connection's settings change. */
     fun forgetSchema(connectionId: String) {
         schemaCaches.remove(connectionId)?.invalidate()
+        agent.forgetSchema(connectionId)
     }
 
     fun updateSettings(transform: (Settings) -> Settings) {
@@ -109,6 +116,7 @@ class AppState(
         }
 
     fun dispose() {
+        agent.stop()
         workspace.disposeAll()
         databases.closeAll()
         scope.cancel()

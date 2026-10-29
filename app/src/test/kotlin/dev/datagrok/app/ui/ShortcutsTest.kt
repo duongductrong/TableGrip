@@ -9,7 +9,7 @@ class ShortcutsTest {
     private val consoleScope =
         with(Shortcuts) {
             listOf(
-                NewConsole, CloseTab, NextTab, PreviousTab, NextTabAlt, PreviousTabAlt, Explorer, History, Settings, ShowShortcuts,
+                NewConsole, CloseTab, NextTab, PreviousTab, NextTabAlt, PreviousTabAlt, Explorer, History, Agent, Settings, ShowShortcuts,
                 RunStatement, RunScript, Cancel, Explain, Save, SaveAs,
                 Completion, Comment, Duplicate, DeleteLine, MoveLineUp, MoveLineDown, Format, Find, Replace, Indent, Outdent,
             )
@@ -25,7 +25,7 @@ class ShortcutsTest {
     private val builderScope =
         with(Shortcuts) {
             listOf(
-                NewConsole, CloseTab, NextTab, PreviousTab, NextTabAlt, PreviousTabAlt, Explorer, History, Settings, ShowShortcuts, Reload, Save,
+                NewConsole, CloseTab, NextTab, PreviousTab, NextTabAlt, PreviousTabAlt, Explorer, History, Agent, Settings, ShowShortcuts, Reload, Save,
                 FocusFilter, ToggleFilterMode, ClearFilter,
                 ApplyFilter, AddCondition, AddConditionGroup, AddSqlCondition, Duplicate, DeleteLine, Comment, MoveLineUp, MoveLineDown,
                 PreviousCondition, NextCondition, ChooseColumn, ChooseOperator, ToggleCombinator, MatchCase,
