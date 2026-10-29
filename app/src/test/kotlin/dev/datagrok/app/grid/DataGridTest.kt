@@ -3,6 +3,7 @@ package dev.datagrok.app.grid
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.click
@@ -103,6 +104,21 @@ class DataGridTest {
         // Enter moves down, like a spreadsheet.
         assertEquals(GridCell(3, 1), state.focus)
         onNodeWithText("r2c1!").assertExists()
+    }
+
+    @Test
+    fun `clicking inside the editor keeps editing`() = runComposeUiTest {
+        val state = DataGridState()
+        val model = TableEditModel(result(3, 5), primaryKey = listOf("id"))
+        setContent { IntUiTheme(isDark = false) { Box(Modifier.size(800.dp, 400.dp)) { DataGrid(model, state) } } }
+
+        onNodeWithText("r2c1").performMouseInput { doubleClick(center) }
+        waitForIdle()
+        mainClock.advanceTimeBy(1000)
+        onNodeWithText("r2c1").performMouseInput { click(centerLeft + Offset(12f, 0f)) }
+        waitForIdle()
+
+        assertEquals(GridCell(2, 1), state.editing)
     }
 
     @Test

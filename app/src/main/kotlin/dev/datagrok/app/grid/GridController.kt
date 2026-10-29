@@ -108,9 +108,12 @@ internal class GridController(val state: DataGridState, private val scope: Corou
     }
 
     fun onPress(position: Offset, primary: Boolean, shift: Boolean, time: Long) {
+        val hit = hitTest(position)
+        // Presses inside the open editor belong to its text field (caret placement, text selection); taking focus
+        // back to the grid would commit the edit.
+        if (hit is GridHit.Cell && state.editing == GridCell(hit.row, hit.column)) return
         gridFocus.requestFocus()
         lastPointerContentX = position.x + state.horizontalScroll.value
-        val hit = hitTest(position)
         val isDouble = lastPress?.let { (t, target) -> time - t < 400 && target == hit } == true
         lastPress = time to (hit ?: Unit)
         menuHeaderColumn = null
