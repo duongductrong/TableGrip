@@ -227,7 +227,8 @@ private class ConnectionForm(existing: ConnectionConfig?) {
     }
 }
 
-private val MaskPassword = OutputTransformation { replace(0, length, "•".repeat(length)) }
+/** Shows typed secrets as dots; the field still holds the real text. */
+internal val MaskPassword = OutputTransformation { replace(0, length, "•".repeat(length)) }
 
 private enum class DialogTab { General, Ssh, Options }
 

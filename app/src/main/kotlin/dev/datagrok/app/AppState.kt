@@ -15,6 +15,7 @@ import dev.datagrok.app.workspace.WorkspaceViewModel
 import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.agent.AgentRegistry
 import dev.datagrok.core.connection.ConnectionStore
+import dev.datagrok.core.connection.SecretStore
 import dev.datagrok.core.drivers.DriverLibrary
 import dev.datagrok.core.history.QueryHistory
 import dev.datagrok.core.settings.Settings
@@ -34,7 +35,8 @@ class AppState(
     connectionStore: ConnectionStore = ConnectionStore(),
     val history: QueryHistory = QueryHistory(),
     driverLibrary: DriverLibrary = DriverLibrary.shared,
-    agentRegistry: AgentRegistry = AgentRegistry.default(),
+    /** Null picks agents by the settings: the CLIs on this machine, or the configured provider. */
+    agentRegistry: AgentRegistry? = null,
 ) {
     /** Lives as long as the app; everything here runs on the UI thread unless it hops to IO itself. */
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -71,7 +73,9 @@ class AppState(
     val databases = DatabaseRegistry(scope, connections::storedPassword, connections::storedSshSecret, drivers, connections::askForDriver)
     val explorer = ExplorerViewModel(this)
     val workspace = WorkspaceViewModel(this)
-    val agent = AgentViewModel(this, agentRegistry)
+    /** Secrets kept out of settings.json, in the same store as connection passwords. */
+    val secrets: SecretStore = connectionStore.secrets
+    val agent = agentRegistry?.let { AgentViewModel(this, it) } ?: AgentViewModel(this)
 
     private val schemaCaches = mutableMapOf<String, SchemaCache>()
 
@@ -85,9 +89,11 @@ class AppState(
     }
 
     fun updateSettings(transform: (Settings) -> Settings) {
+        val before = settings
         settings = transform(settings)
         val snapshot = settings
         drivers.library.repository = snapshot.driverRepository
+        agent.settingsChanged(before, snapshot)
         scope.launch(Dispatchers.IO) {
             runCatching { settingsStore.save(snapshot) }.onFailure { log.warn("Failed to save settings", it) }
         }

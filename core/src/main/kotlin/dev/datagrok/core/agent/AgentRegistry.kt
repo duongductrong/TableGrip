@@ -1,6 +1,10 @@
 package dev.datagrok.core.agent
 
 import dev.datagrok.core.agent.cli.CliAgentSource
+import dev.datagrok.core.agent.provider.AgentMode
+import dev.datagrok.core.agent.provider.ProviderAgentSource
+import dev.datagrok.core.agent.provider.ProviderConfig
+import dev.datagrok.core.agent.provider.ProviderProtocol
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -26,8 +30,27 @@ class AgentRegistry(private val sources: List<AgentSource>) {
     companion object {
         private val log = LoggerFactory.getLogger(AgentRegistry::class.java)
 
-        fun default(): AgentRegistry = AgentRegistry(listOf(CliAgentSource()))
+        /**
+         * The CLIs on this machine or the provider in settings, whichever [mode] picks at discovery time. The defaults
+         * are the CLI-only registry Datagrok had before the choice existed.
+         */
+        fun default(
+            mode: () -> AgentMode = { AgentMode.Cli },
+            provider: () -> ProviderConfig = { ProviderConfig.of(ProviderProtocol.Anthropic, "", "") },
+            apiKey: (ProviderProtocol) -> String? = { null },
+        ): AgentRegistry =
+            AgentRegistry(
+                listOf(
+                    ModeSource(AgentMode.Cli, mode, CliAgentSource()),
+                    ModeSource(AgentMode.Provider, mode, ProviderAgentSource(provider, apiKey)),
+                ),
+            )
     }
+}
+
+/** [source] while [mode] is [active], nothing otherwise; the switch takes effect on the next discovery. */
+private class ModeSource(private val active: AgentMode, private val mode: () -> AgentMode, private val source: AgentSource) : AgentSource {
+    override suspend fun discover(rescan: Boolean): List<AgentAdapter> = if (mode() == active) source.discover(rescan) else emptyList()
 }
 
 /** Flattens a conversation into one prompt, for transports that take a single string and keep no session of their own. */

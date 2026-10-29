@@ -3,6 +3,8 @@ package dev.datagrok.app.settings
 import androidx.compose.runtime.Composable
 import dev.datagrok.app.AppState
 import dev.datagrok.app.AppTheme
+import dev.datagrok.core.agent.provider.AgentMode
+import dev.datagrok.core.agent.provider.ProviderProtocol
 import dev.datagrok.core.connection.DriverId
 import dev.datagrok.core.drivers.DriverLibrary
 import dev.datagrok.core.settings.Settings
@@ -206,6 +208,57 @@ object SettingsPages {
                                     hint = "Rows loaded per page when opening a table.",
                                 ),
                             ),
+                        ),
+                    ),
+            ),
+            SettingsPage(
+                id = "agent",
+                group = "Tools",
+                title = "Agent",
+                description = "Where the agent chat gets its answers. Changing these sends nothing: the agent is only asked when you send a message.",
+                sections =
+                    listOf(
+                        SettingsSection(
+                            "Source",
+                            listOf(
+                                ChoiceField(
+                                    "Agents from",
+                                    AgentMode.entries,
+                                    AgentMode::label,
+                                    get = { s -> AgentMode.of(s.agentMode) },
+                                    set = { s, mode -> s.copy(agentMode = mode.name) },
+                                    hint = "Command-line agents run the CLIs installed here (Claude Code, Codex, Gemini CLI…) on their own accounts. An API provider is called directly with your key.",
+                                ),
+                            ),
+                        ),
+                        SettingsSection(
+                            "API provider",
+                            listOf(
+                                ChoiceField(
+                                    "Protocol",
+                                    ProviderProtocol.entries,
+                                    ProviderProtocol::title,
+                                    get = { s -> ProviderProtocol.of(s.agentProvider) },
+                                    set = { s, protocol -> s.copy(agentProvider = protocol.name) },
+                                    hint = "OpenAI-compatible also covers OpenRouter, LiteLLM, Ollama, LM Studio and vLLM. Used when agents come from an API provider.",
+                                ),
+                                StringField(
+                                    "Base URL",
+                                    Settings::agentBaseUrl,
+                                    { s, v -> s.copy(agentBaseUrl = v.trim()) },
+                                    placeholder = "Protocol default",
+                                    hint = "Empty uses ${ProviderProtocol.entries.joinToString(" or ") { it.defaultBaseUrl }}. For a local server, e.g. http://localhost:11434/v1.",
+                                ),
+                                StringField(
+                                    "Model",
+                                    Settings::agentModel,
+                                    { s, v -> s.copy(agentModel = v.trim()) },
+                                    placeholder = "Protocol default",
+                                    hint = "Empty uses ${ProviderProtocol.entries.joinToString(" or ") { it.defaultModel }}.",
+                                ),
+                            ),
+                            panel = { app -> ApiKeyPanel(app) },
+                            keywords = listOf("API key", "token", "Anthropic", "OpenAI", "Ollama"),
                         ),
                     ),
             ),

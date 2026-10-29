@@ -63,7 +63,7 @@ internal fun RightToolStripe(app: AppState, modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        StripeButton(AllIconsKeys.Actions.AiIntentionBulb, "Agent (${Shortcuts.Agent})", selected = app.agentOpen) { app.agentOpen = !app.agentOpen }
+        StripeButton(AllIconsKeys.Toolwindows.ToolWindowAskAI, "Agent (${Shortcuts.Agent})", selected = app.agentOpen) { app.agentOpen = !app.agentOpen }
     }
 }
 

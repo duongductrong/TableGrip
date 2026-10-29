@@ -20,7 +20,8 @@ import kotlinx.serialization.json.jsonArray
  */
 class ConnectionStore(
     private val file: Path = DatagrokPaths.connections,
-    private val secrets: SecretStore = KeyringSecretStore(),
+    /** Also holds other secrets that stay out of the profile files, such as the agent provider's API key. */
+    val secrets: SecretStore = KeyringSecretStore(),
 ) {
     private val json = Json {
         prettyPrint = true

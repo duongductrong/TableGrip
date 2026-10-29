@@ -28,6 +28,14 @@ data class Settings(
     val autoDownloadDrivers: Boolean = false,
     /** Id of the agent the chat panel last used; blank picks the first one found. */
     val agent: String = "",
+    /** Where agents come from: `Cli` (the CLIs installed here) or `Provider` (the HTTP API below). Missing means `Cli`. */
+    val agentMode: String = "Cli",
+    /** The provider's protocol: `Anthropic` or `OpenAi` (any OpenAI-compatible endpoint). Its API key is in the keychain. */
+    val agentProvider: String = "Anthropic",
+    /** Blank means the protocol's own endpoint. */
+    val agentBaseUrl: String = "",
+    /** Blank means the protocol's default model. */
+    val agentModel: String = "",
 )
 
 class SettingsStore(private val file: Path = DatagrokPaths.settings) {

@@ -5,8 +5,8 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * How Datagrok reaches an agent. Every transport reduces to the same [AgentAdapter.send] stream, so the chat panel never
- * knows which one answered: today a CLI installed on this machine, run headless; later an Agent Client Protocol server
- * and HTTP providers configured in settings.
+ * knows which one answered: a CLI installed on this machine, run headless, or an HTTP provider configured in settings;
+ * later an Agent Client Protocol server.
  */
 enum class AgentTransport { Cli, Acp, Http }
 

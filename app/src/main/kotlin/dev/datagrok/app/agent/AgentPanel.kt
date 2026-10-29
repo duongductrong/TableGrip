@@ -28,6 +28,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -59,6 +60,7 @@ import dev.datagrok.app.AppState
 import dev.datagrok.app.ui.LocalIslands
 import dev.datagrok.app.ui.copyToClipboard
 import dev.datagrok.core.agent.AgentMessage
+import dev.datagrok.core.agent.provider.AgentMode
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.Orientation
 import org.jetbrains.jewel.ui.component.CircularProgressIndicator
@@ -105,7 +107,7 @@ private fun EmptyState(agent: AgentViewModel) {
         verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Icon(AllIconsKeys.Actions.AiIntentionBulb, null, Modifier.size(28.dp))
+        Icon(AllIconsKeys.Toolwindows.ToolWindowAskAI, null, Modifier.size(28.dp))
         when {
             agent.discovering -> Text("Looking for agents on this machine…", color = info)
             agent.agents.isEmpty() -> {
@@ -116,6 +118,7 @@ private fun EmptyState(agent: AgentViewModel) {
                     textAlign = TextAlign.Center,
                 )
                 Text("Rescan", Modifier.clickable { agent.discover(rescan = true) }, color = LocalIslands.current.accent)
+                Text("Or use an API provider…", Modifier.clickable { agent.openSettings() }, color = LocalIslands.current.accent)
             }
             else -> {
                 Text("Ask about your data", fontWeight = FontWeight.SemiBold)
@@ -154,28 +157,41 @@ private val ProseLineHeight = 1.5.em
 @Composable
 private fun MessageView(app: AppState, message: ChatMessage) {
     val islands = LocalIslands.current
+    val agent = app.agent
+    val interaction = remember { MutableInteractionSource() }
+    val hovered by interaction.collectIsHoveredAsState()
     if (message.kind == ChatMessage.Kind.Note) {
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(top = 14.dp),
+            Modifier.fillMaxWidth().hoverable(interaction).padding(horizontal = 16.dp).padding(top = 14.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(AllIconsKeys.General.Information, null, Modifier.size(14.dp))
             Text(message.label ?: message.text, color = JewelTheme.globalColors.text.info, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Box(Modifier.size(24.dp)) {
+                if (hovered && agent.canRewind) MessageAction(AllIconsKeys.Actions.Rollback, "Rewind to here: the run request is asked again") { agent.rewind(message) }
+            }
         }
         return
     }
     if (message.role == AgentMessage.Role.User) {
-        Box(Modifier.fillMaxWidth().padding(start = 48.dp, end = 16.dp, top = 20.dp), contentAlignment = Alignment.CenterEnd) {
+        Column(Modifier.fillMaxWidth().hoverable(interaction).padding(start = 48.dp, end = 16.dp, top = 20.dp), horizontalAlignment = Alignment.End) {
             Text(
                 message.text,
                 Modifier.clip(RoundedCornerShape(12.dp)).background(islands.chipHover).padding(horizontal = 12.dp, vertical = 8.dp),
                 lineHeight = ProseLineHeight,
             )
+            // Reserved even when hidden, so hovering doesn't shift the conversation.
+            Row(Modifier.height(26.dp).padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (hovered) {
+                    MessageAction(AllIconsKeys.Actions.Copy, "Copy") { copyToClipboard(message.text) }
+                    if (agent.canRewind) MessageAction(AllIconsKeys.Actions.Rollback, "Rewind to here: removes this message and everything after, to edit and resend") { agent.rewind(message) }
+                }
+            }
         }
         return
     }
-    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(Modifier.fillMaxWidth().hoverable(interaction).padding(horizontal = 16.dp).padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         parseMarkdown(message.text).forEachIndexed { index, block ->
             when {
                 block is MarkdownBlock.Paragraph -> Text(block.text, lineHeight = ProseLineHeight)
@@ -195,7 +211,22 @@ private fun MessageView(app: AppState, message: ChatMessage) {
                 Text(error, color = JewelTheme.globalColors.text.error, lineHeight = ProseLineHeight)
             }
         }
+        // A failed reply keeps its actions in view: retrying or rewinding is the way out of it.
+        if (!message.streaming) {
+            Row(Modifier.height(24.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (hovered || message.error != null) {
+                    if (message.text.isNotBlank()) MessageAction(AllIconsKeys.Actions.Copy, "Copy") { copyToClipboard(message.text) }
+                    if (agent.canRewind && agent.selected != null) MessageAction(AllIconsKeys.Actions.Refresh, "Retry: asks again for this answer") { agent.retry(message) }
+                    if (agent.canRewind) MessageAction(AllIconsKeys.Actions.Rollback, "Remove this answer and everything after") { agent.rewind(message) }
+                }
+            }
+        }
     }
+}
+
+@Composable
+private fun MessageAction(icon: org.jetbrains.jewel.ui.icon.IconKey, tooltip: String, onClick: () -> Unit) {
+    Tooltip({ Text(tooltip) }) { IconButton(onClick = onClick) { Icon(icon, tooltip, Modifier.size(14.dp)) } }
 }
 
 /** The agent asks to run a query: nothing runs until the user allows it here. */
@@ -211,7 +242,7 @@ private fun RunRequestCard(app: AppState, message: ChatMessage, index: Int, bloc
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(AllIconsKeys.Actions.AiIntentionBulb, null, Modifier.size(14.dp))
+            Icon(AllIconsKeys.Toolwindows.ToolWindowAskAI, null, Modifier.size(14.dp))
             Text("${app.agent.selected?.descriptor?.name ?: "The agent"} wants to run a query", Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
         }
         Text(
@@ -296,6 +327,13 @@ private fun Composer(agent: AgentViewModel, modifier: Modifier = Modifier) {
         state.clearText()
     }
     LaunchedEffect(Unit) { focus.requestFocus() }
+    // A rewind hands the message back to edit; it replaces whatever was being typed.
+    LaunchedEffect(agent.draft) {
+        val draft = agent.draft ?: return@LaunchedEffect
+        state.setTextAndPlaceCursorAtEnd(draft)
+        agent.draft = null
+        focus.requestFocus()
+    }
 
     Column(
         modifier.fillMaxWidth()
@@ -359,7 +397,7 @@ private fun AgentPicker(agent: AgentViewModel) {
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(AllIconsKeys.Actions.AiIntentionBulb, null, Modifier.size(14.dp))
+            Icon(AllIconsKeys.Toolwindows.ToolWindowAskAI, null, Modifier.size(14.dp))
             Text(
                 selected?.descriptor?.name ?: if (agent.discovering) "Detecting…" else "No agent",
                 Modifier.widthIn(max = 180.dp),
@@ -383,10 +421,16 @@ private fun AgentPicker(agent: AgentViewModel) {
                     }
                 }
                 if (agent.agents.isNotEmpty()) separator()
-                selectableItem(selected = false, iconKey = AllIconsKeys.Actions.Refresh, onClick = {
-                    agent.discover(rescan = true)
+                if (agent.mode == AgentMode.Cli) {
+                    selectableItem(selected = false, iconKey = AllIconsKeys.Actions.Refresh, onClick = {
+                        agent.discover(rescan = true)
+                        open = false
+                    }) { Text("Rescan installed agents") }
+                }
+                selectableItem(selected = false, iconKey = AllIconsKeys.General.Settings, onClick = {
+                    agent.openSettings()
                     open = false
-                }) { Text("Rescan installed agents") }
+                }) { Text("Agent settings…") }
             }
         }
     }
