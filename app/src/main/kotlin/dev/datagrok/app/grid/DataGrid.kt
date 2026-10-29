@@ -5,10 +5,15 @@ import androidx.compose.foundation.ContextMenuItem
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,8 +21,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.runtime.Composable
@@ -30,6 +37,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -60,7 +69,14 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupPositionProvider
+import androidx.compose.ui.window.PopupProperties
 import androidx.compose.ui.zIndex
 import dev.datagrok.core.dialect.SortColumn
 import dev.datagrok.core.dialect.SortDirection
@@ -73,7 +89,9 @@ import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.component.HorizontalScrollbar
 import org.jetbrains.jewel.ui.component.Icon
 import org.jetbrains.jewel.ui.component.Text
+import org.jetbrains.jewel.ui.component.Tooltip
 import org.jetbrains.jewel.ui.component.VerticalScrollbar
+import org.jetbrains.jewel.ui.icon.IconKey
 import org.jetbrains.jewel.ui.icons.AllIconsKeys
 import org.jetbrains.jewel.ui.theme.treeStyle
 
@@ -426,34 +444,139 @@ private fun Cell(
 private fun CellEditor(controller: GridController, modifier: Modifier, colors: GridColors) {
     val focus = remember { FocusRequester() }
     var hadFocus by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { focus.requestFocus() }
-    BasicTextField(
-        state = controller.state.editText,
-        modifier =
-            modifier
-                .background(JewelTheme.globalColors.panelBackground)
-                .border(1.dp, colors.focusBorder)
-                .padding(horizontal = 8.dp, vertical = 4.dp)
-                .focusRequester(focus)
-                .onFocusChanged {
-                    // Clicking elsewhere commits, like DataGrip.
-                    if (hadFocus && !it.isFocused) controller.commitEdit()
-                    hadFocus = it.isFocused
-                }
-                .onPreviewKeyEvent { event ->
-                    if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
-                    when (event.key) {
-                        Key.Enter,
-                        Key.NumPadEnter -> controller.commitEdit(moveDown = true).let { true }
-                        Key.Tab -> controller.commitEdit(moveRight = if (event.isShiftPressed) -1 else 1).let { true }
-                        Key.Escape -> controller.cancelEdit().let { true }
-                        else -> false
+    // The expanded editor floats over the grid and edits the same text, so collapsing it keeps what was typed.
+    var expanded by remember { mutableStateOf(false) }
+    LaunchedEffect(expanded) { if (!expanded) runCatching { focus.requestFocus() } }
+    Box(modifier.background(JewelTheme.globalColors.panelBackground).border(1.dp, colors.focusBorder)) {
+        BasicTextField(
+            state = controller.state.editText,
+            modifier =
+                Modifier.fillMaxSize()
+                    .padding(start = 8.dp, end = ExpandButtonSize + 4.dp, top = 4.dp, bottom = 4.dp)
+                    .focusRequester(focus)
+                    .onFocusChanged {
+                        // Clicking elsewhere commits, like DataGrip; moving into the expanded editor does not.
+                        if (hadFocus && !it.isFocused && !expanded) controller.commitEdit()
+                        hadFocus = it.isFocused
                     }
-                },
-        textStyle = JewelTheme.editorTextStyle.copy(color = colors.text),
-        cursorBrush = SolidColor(colors.text),
-        lineLimits = TextFieldLineLimits.SingleLine,
-    )
+                    .onPreviewKeyEvent { event ->
+                        if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                        when {
+                            Shortcuts.ExpandEditor.matches(event) -> expanded = true
+                            event.key == Key.Enter || event.key == Key.NumPadEnter -> controller.commitEdit(moveDown = true)
+                            event.key == Key.Tab -> controller.commitEdit(moveRight = if (event.isShiftPressed) -1 else 1)
+                            event.key == Key.Escape -> controller.cancelEdit()
+                            else -> return@onPreviewKeyEvent false
+                        }
+                        true
+                    },
+            textStyle = JewelTheme.editorTextStyle.copy(color = colors.text),
+            cursorBrush = SolidColor(colors.text),
+            lineLimits = TextFieldLineLimits.SingleLine,
+        )
+        EditorIconButton(
+            icon = AllIconsKeys.General.ExpandComponent,
+            tooltip = "Expand (${Shortcuts.ExpandEditor.label})",
+            modifier = Modifier.align(Alignment.CenterEnd).padding(end = 2.dp),
+        ) {
+            expanded = true
+        }
+        if (expanded) ExpandedCellEditor(controller, colors, onCollapse = { expanded = false })
+    }
+}
+
+private val ExpandButtonSize = 18.dp
+
+/** A small borderless icon button that never takes focus, so clicking it leaves the text field focused. */
+@Composable
+private fun EditorIconButton(icon: IconKey, tooltip: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val interaction = remember { MutableInteractionSource() }
+    val hovered by interaction.collectIsHoveredAsState()
+    Tooltip({ Text(tooltip) }, modifier) {
+        Box(
+            Modifier.size(ExpandButtonSize)
+                .clip(RoundedCornerShape(3.dp))
+                .background(if (hovered) JewelTheme.globalColors.borders.normal.copy(alpha = 0.35f) else Color.Transparent)
+                .hoverable(interaction)
+                .pointerHoverIcon(PointerIcon.Hand)
+                .pointerInput(onClick) { detectTapGestures { onClick() } }
+                .alpha(if (hovered) 1f else 0.6f),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(icon, tooltip, Modifier.size(14.dp))
+        }
+    }
+}
+
+/**
+ * A roomier multi-line editor floating over the cell: it does not take part in the grid's layout. Enter inserts a line
+ * break, [Shortcuts.Submit] applies, Escape collapses back to the inline editor and clicking outside applies.
+ */
+@Composable
+private fun ExpandedCellEditor(controller: GridController, colors: GridColors, onCollapse: () -> Unit) {
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+    val shape = RoundedCornerShape(6.dp)
+    Popup(
+        popupPositionProvider = OverCellPositionProvider,
+        onDismissRequest = { controller.commitEdit() },
+        properties = PopupProperties(focusable = true),
+    ) {
+        Column(
+            Modifier.width(ExpandedEditorWidth)
+                .clip(shape)
+                .background(JewelTheme.globalColors.panelBackground)
+                .border(1.dp, colors.focusBorder, shape)
+        ) {
+            BasicTextField(
+                state = controller.state.editText,
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .height(ExpandedEditorHeight)
+                        .padding(horizontal = 8.dp, vertical = 6.dp)
+                        .focusRequester(focus)
+                        .onPreviewKeyEvent { event ->
+                            if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                            when {
+                                Shortcuts.Submit.matches(event) -> controller.commitEdit()
+                                event.key == Key.Escape -> onCollapse()
+                                else -> return@onPreviewKeyEvent false
+                            }
+                            true
+                        },
+                textStyle = JewelTheme.editorTextStyle.copy(color = colors.text),
+                cursorBrush = SolidColor(colors.text),
+                lineLimits = TextFieldLineLimits.MultiLine(),
+            )
+            Row(
+                Modifier.fillMaxWidth().topLine(colors.grid).padding(start = 8.dp, end = 4.dp, top = 3.dp, bottom = 3.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    "${Shortcuts.Submit.label} to apply · Esc to collapse",
+                    Modifier.weight(1f),
+                    color = colors.muted,
+                    fontSize = 11.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                EditorIconButton(AllIconsKeys.General.CollapseComponent, "Collapse (Esc)", onClick = onCollapse)
+            }
+        }
+    }
+}
+
+private val ExpandedEditorWidth = 420.dp
+private val ExpandedEditorHeight = 180.dp
+
+/** Opens over the cell from its top-left corner, shifted back inside the window when it would overflow. */
+private object OverCellPositionProvider : PopupPositionProvider {
+    override fun calculatePosition(anchorBounds: IntRect, windowSize: IntSize, layoutDirection: LayoutDirection, popupContentSize: IntSize): IntOffset {
+        val x = anchorBounds.left.coerceAtMost(windowSize.width - popupContentSize.width).coerceAtLeast(0)
+        val below = anchorBounds.top + popupContentSize.height <= windowSize.height
+        val y = if (below) anchorBounds.top else (anchorBounds.bottom - popupContentSize.height).coerceAtLeast(0)
+        return IntOffset(x, y)
+    }
 }
 
 private fun contextMenu(controller: GridController): List<ContextMenuItem> {
@@ -530,6 +653,11 @@ private fun Modifier.gridLines(color: Color) = drawBehind { drawGridLines(color,
 
 /** Bottom divider for a whole row, so it also runs past the last column. */
 private fun Modifier.bottomLine(color: Color) = drawBehind { drawGridLines(color, right = false) }
+
+private fun Modifier.topLine(color: Color) = drawBehind {
+    val stroke = 1.dp.toPx().coerceAtLeast(1f)
+    drawLine(color, Offset(0f, stroke / 2), Offset(size.width, stroke / 2), strokeWidth = stroke)
+}
 
 private fun DrawScope.drawGridLines(color: Color, right: Boolean) {
     val stroke = 1.dp.toPx().coerceAtLeast(1f)
