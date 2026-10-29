@@ -25,6 +25,7 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
+import dev.datagrok.app.connections.ConnectionStatus
 
 /**
  * One collection's documents, a page at a time: a grid with a column per top-level field, and the selected document as
@@ -48,6 +49,8 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
 
     var loading by mutableStateOf(false)
         private set
+    val connectionStatus: ConnectionStatus
+        get() = app.databases.status(config.id)
 
     /** Documents matching the filter, counted on request: counting can be slow on large collections. */
     var total by mutableStateOf<Long?>(null)

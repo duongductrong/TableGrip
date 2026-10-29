@@ -72,6 +72,7 @@ import org.jetbrains.jewel.ui.component.Tooltip
 import org.jetbrains.jewel.ui.component.rememberSplitLayoutState
 import org.jetbrains.jewel.ui.icon.IconKey
 import org.jetbrains.jewel.ui.icons.AllIconsKeys
+import dev.datagrok.app.connections.ConnectionLoadingPlaceholder
 
 private val PageSizes = listOf(50, 100, 200, 500, 1000)
 
@@ -104,7 +105,7 @@ private fun DataView(tab: TableDataTab) {
         val model = tab.model
         Box(Modifier.weight(1f).fillMaxWidth()) {
             if (model == null) {
-                if (tab.error == null) Text("Loading…", Modifier.align(Alignment.Center), color = JewelTheme.globalColors.text.info)
+                if (tab.error == null) ConnectionLoadingPlaceholder(tab.config, tab.connectionStatus, "Loading ${tab.table.name}…", Modifier.align(Alignment.Center))
                 return@Box
             }
             val grid =

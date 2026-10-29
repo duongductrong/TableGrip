@@ -19,7 +19,16 @@ import org.slf4j.LoggerFactory
 sealed interface ConnectionStatus {
     data object Disconnected : ConnectionStatus
 
-    data object Connecting : ConnectionStatus
+    /** [since] is the attempt's start in epoch millis, so the UI can say how long it has been trying. */
+    data class Connecting(val step: Step, val since: Long) : ConnectionStatus {
+        enum class Step {
+            /** Downloading or loading the driver. */
+            Driver,
+
+            /** Opening the SSH tunnel (if any) and signing in to the server. */
+            Server,
+        }
+    }
 
     data class Connected(val database: DatabaseConnection) : ConnectionStatus
 
@@ -61,9 +70,11 @@ class DatabaseRegistry(
         val attempt =
             pending.getOrPut(config.id) {
                 scope.async {
-                    statuses[config.id] = ConnectionStatus.Connecting
+                    val since = System.currentTimeMillis()
+                    statuses[config.id] = ConnectionStatus.Connecting(ConnectionStatus.Connecting.Step.Driver, since)
                     try {
                         drivers.ensure(config)
+                        statuses[config.id] = ConnectionStatus.Connecting(ConnectionStatus.Connecting.Step.Server, since)
                         val secret = if (config.ssh != null) sshSecret(config.id) else null
                         val connection: DatabaseConnection =
                             when (config.type.paradigm) {

@@ -65,8 +65,14 @@ sealed interface ExplorerNode {
         override val key = connectionId to "collection:$database.${info.name}"
     }
 
-    data class Message(val parent: Any, val text: String, val isError: Boolean) : ExplorerNode {
-        override val key = parent to "message"
+    /** Stands in for [parent]'s children while they load, connecting first if need be. */
+    data class Loading(val parent: Any) : ExplorerNode {
+        override val key = parent to "loading"
+    }
+
+    /** Stands in for [parent]'s children when loading them failed; it offers a retry. */
+    data class Failure(val parent: Any, val message: String) : ExplorerNode {
+        override val key = parent to "failure"
     }
 }
 
@@ -109,9 +115,9 @@ class ExplorerViewModel(private val app: AppState) {
                 is ExplorerNode.Table ->
                     when (val loaded = snapshot[node.key]) {
                         is Children.Loaded -> loaded.nodes
-                        is Children.Failed -> listOf(ExplorerNode.Message(node.key, loaded.message, isError = true))
+                        is Children.Failed -> listOf(ExplorerNode.Failure(node.key, loaded.message))
                         Children.Loading,
-                        null -> listOf(ExplorerNode.Message(node.key, "Loading…", isError = false))
+                        null -> listOf(ExplorerNode.Loading(node.key))
                     }
                 else -> null
             }
@@ -213,7 +219,7 @@ class ExplorerViewModel(private val app: AppState) {
         if (!keepConnection) treeState.openNodes = treeState.openNodes.filterNot { connectionIdOf(it) == connectionId }.toSet()
     }
 
-    private fun connectionIdOf(key: Any): String? =
+    fun connectionIdOf(key: Any): String? =
         when (key) {
             is ConnectionKey -> key.id
             is ExplorerNode.Schema -> key.connectionId

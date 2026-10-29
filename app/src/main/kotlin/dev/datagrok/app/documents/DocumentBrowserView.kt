@@ -31,6 +31,8 @@ import org.jetbrains.jewel.ui.component.TextArea
 import org.jetbrains.jewel.ui.component.TextField
 import org.jetbrains.jewel.ui.component.Tooltip
 import org.jetbrains.jewel.ui.icons.AllIconsKeys
+import dev.datagrok.app.connections.ConnectionLoadingPlaceholder
+import androidx.compose.foundation.layout.Box
 
 @Composable
 internal fun DocumentBrowserView(tab: DocumentBrowserTab) {
@@ -73,7 +75,11 @@ internal fun DocumentBrowserView(tab: DocumentBrowserTab) {
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
         Row(Modifier.weight(1f).fillMaxWidth()) {
             Column(Modifier.weight(1f).fillMaxHeight()) {
-                if (tab.loading && tab.documents.isEmpty()) Text("Loading…", Modifier.padding(10.dp), color = JewelTheme.globalColors.text.info)
+                if (tab.loading && tab.documents.isEmpty()) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        ConnectionLoadingPlaceholder(tab.config, tab.connectionStatus, "Loading ${tab.collection}…")
+                    }
+                }
                 else if (tab.documents.isEmpty()) Text("No documents match.", Modifier.padding(10.dp), color = JewelTheme.globalColors.text.info)
                 else DataGrid(tab.model, tab.grid, Modifier.fillMaxSize(), firstRowNumber = tab.skip + 1)
             }

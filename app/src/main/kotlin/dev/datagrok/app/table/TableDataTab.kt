@@ -28,6 +28,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import dev.datagrok.app.connections.ConnectionStatus
 
 enum class TableView { Data, Structure }
 
@@ -121,6 +122,8 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
     var details by mutableStateOf<TableDetails?>(null)
         private set
     var error by mutableStateOf<String?>(null)
+    val connectionStatus: ConnectionStatus
+        get() = app.databases.status(config.id)
     var loading by mutableStateOf(false)
         private set
     var hasNextPage by mutableStateOf(false)

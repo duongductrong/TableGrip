@@ -24,6 +24,7 @@ import org.jetbrains.jewel.ui.component.TabData
 import org.jetbrains.jewel.ui.component.TabStrip
 import org.jetbrains.jewel.ui.component.Text
 import org.jetbrains.jewel.ui.theme.defaultTabStyle
+import dev.datagrok.app.connections.ConnectionLoadingPlaceholder
 
 /** Columns, indexes, keys, constraints, triggers and DDL of the tab's table, one section at a time. */
 @Composable
@@ -47,7 +48,7 @@ internal fun StructureView(tab: TableDataTab, modifier: Modifier = Modifier) {
         Box(Modifier.weight(1f).fillMaxWidth()) {
             when {
                 structure == null ->
-                    if (tab.structureError == null) Text("Loading…", Modifier.align(Alignment.Center), color = JewelTheme.globalColors.text.info)
+                    if (tab.structureError == null) ConnectionLoadingPlaceholder(tab.config, tab.connectionStatus, "Loading the structure of ${tab.table.name}…", Modifier.align(Alignment.Center))
                 tab.section == StructureSection.Ddl -> {
                     // Keyed on the DDL so a refresh replaces the text.
                     val text = remember(structure.ddl) { TextFieldState(structure.ddl) }

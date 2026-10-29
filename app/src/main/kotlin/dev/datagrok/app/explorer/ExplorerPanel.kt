@@ -2,6 +2,14 @@ package dev.datagrok.app.explorer
 
 import androidx.compose.foundation.ContextMenuArea
 import androidx.compose.foundation.ContextMenuItem
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
@@ -26,19 +34,27 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import dev.datagrok.app.AppState
 import dev.datagrok.app.connections.ConnectionStatus
+import dev.datagrok.app.connections.ProgressLine
+import dev.datagrok.app.connections.connectingText
+import dev.datagrok.app.connections.friendlyError
 import dev.datagrok.app.table.StructureSection
 import dev.datagrok.app.ui.Badge
 import dev.datagrok.app.ui.EnvironmentChip
+import dev.datagrok.app.ui.LocalIslands
 import dev.datagrok.app.ui.copyToClipboard
+import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.connection.EngineFamily
+import dev.datagrok.core.connection.Paradigm
 import dev.datagrok.core.dialect.SqlDialect
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.intui.standalone.styling.defaults
 import org.jetbrains.jewel.ui.Orientation
+import org.jetbrains.jewel.ui.component.CircularProgressIndicator
 import org.jetbrains.jewel.ui.component.Divider
 import org.jetbrains.jewel.ui.component.Icon
 import org.jetbrains.jewel.ui.component.IconButton
 import org.jetbrains.jewel.ui.component.LazyTree
+import org.jetbrains.jewel.ui.component.Link
 import org.jetbrains.jewel.ui.component.OutlinedButton
 import org.jetbrains.jewel.ui.component.Text
 import org.jetbrains.jewel.ui.component.Tooltip
@@ -198,14 +214,18 @@ private fun NodeRow(app: AppState, node: ExplorerNode, modifier: Modifier = Modi
         val info = JewelTheme.globalColors.text.info
         when (node) {
             is ExplorerNode.Connection -> {
-                Badge(node.config, size = 16)
+                val status = app.databases.status(node.config.id)
+                StatusBadge(node.config, status)
                 Text(node.config.name, Modifier.weight(1f, fill = false), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 EnvironmentChip(node.config)
                 if (node.config.readOnly) Text("read-only", color = info, maxLines = 1, softWrap = false)
-                when (val status = app.databases.status(node.config.id)) {
-                    ConnectionStatus.Connecting -> Text("connecting…", color = info, maxLines = 1, softWrap = false)
+                when (status) {
+                    // The spinner stays on the row itself, so a collapsed connection still shows it's being opened.
+                    is ConnectionStatus.Connecting -> Tooltip({ Text(connectingText(node.config, status)) }) { CircularProgressIndicator() }
                     is ConnectionStatus.Failed ->
-                        Text("failed", color = JewelTheme.globalColors.text.error, maxLines = 1, softWrap = false)
+                        Tooltip({ Text(friendlyError(status.message).headline) }) {
+                            Text("failed", color = JewelTheme.globalColors.text.error, maxLines = 1, softWrap = false)
+                        }
                     is ConnectionStatus.Connected ->
                         Text(node.config.type.displayName, color = info, maxLines = 1, softWrap = false)
                     ConnectionStatus.Disconnected -> Unit
@@ -259,14 +279,92 @@ private fun NodeRow(app: AppState, node: ExplorerNode, modifier: Modifier = Modi
                 val etcd = app.connections.byId(node.connectionId)?.type?.family == EngineFamily.Etcd
                 NameAndDetail(if (etcd) "keys" else "db${node.keyspace.index}", node.keyspace.keys?.let { "$it ${if (it == 1L) "key" else "keys"}" }.orEmpty(), Modifier.weight(1f))
             }
-            is ExplorerNode.Message ->
-                Text(node.text, color = if (node.isError) JewelTheme.globalColors.text.error else info, maxLines = 2)
+            is ExplorerNode.Loading -> LoadingRow(app, node.parent, Modifier.weight(1f))
+            is ExplorerNode.Failure -> FailureRow(app, node, Modifier.weight(1f))
         }
     }
 }
 
 @Composable
 private fun NodeIcon(key: IconKey) = Icon(key, contentDescription = null)
+
+/** The connection's badge with a dot in its corner once it's open (green) or has failed (red). */
+@Composable
+private fun StatusBadge(config: ConnectionConfig, status: ConnectionStatus) {
+    val dark = JewelTheme.isDark
+    val dot =
+        when (status) {
+            is ConnectionStatus.Connected -> if (dark) Color(0xFF5FB865) else Color(0xFF369650)
+            is ConnectionStatus.Failed -> if (dark) Color(0xFFDB5C5C) else Color(0xFFE55765)
+            else -> null
+        }
+    Box {
+        Badge(config, size = 16)
+        if (dot != null) {
+            // A ring in the island's colour cuts the dot out of the badge, as on IntelliJ's data source icons.
+            Box(
+                Modifier.align(Alignment.BottomEnd)
+                    .offset(3.dp, 3.dp)
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(LocalIslands.current.island)
+                    .padding(1.5.dp)
+                    .clip(CircleShape)
+                    .background(dot)
+            )
+        }
+    }
+}
+
+/** What a node is waiting for: the connection's progress while it opens, then what is being listed. */
+@Composable
+private fun LoadingRow(app: AppState, parent: Any, modifier: Modifier = Modifier) {
+    val connectionId = app.explorer.connectionIdOf(parent)
+    val config = connectionId?.let(app.connections::byId)
+    val status = connectionId?.let(app.databases::status)
+    val startedAt = remember(parent) { System.currentTimeMillis() }
+    if (config != null && status is ConnectionStatus.Connecting) {
+        ProgressLine(connectingText(config, status), modifier, since = status.since)
+        return
+    }
+    val text =
+        when (parent) {
+            is ConnectionKey ->
+                when (config?.type?.paradigm) {
+                    Paradigm.Document -> "Loading databases…"
+                    Paradigm.KeyValue -> "Loading keys…"
+                    else -> "Loading schemas…"
+                }
+            is ExplorerNode.Schema -> "Loading tables…"
+            is ExplorerNode.DocumentDatabase -> "Loading collections…"
+            is TableKey -> "Loading columns…"
+            else -> "Loading…"
+        }
+    ProgressLine(text, modifier, since = startedAt)
+}
+
+/** Why a node's children couldn't load, in plain words, with ways out: retry, fix the connection, or copy the details. */
+@Composable
+private fun FailureRow(app: AppState, node: ExplorerNode.Failure, modifier: Modifier = Modifier) {
+    val error = remember(node.message) { friendlyError(node.message) }
+    val config = (node.parent as? ConnectionKey)?.let { app.connections.byId(it.id) }
+    // The hint and actions line up with the headline's text rather than its icon.
+    val textInset = 22.dp
+    Column(modifier.padding(vertical = 2.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Tooltip({ Text(error.detail, Modifier.widthIn(max = 420.dp)) }) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(AllIconsKeys.General.Error, contentDescription = null)
+                Text(error.headline, color = JewelTheme.globalColors.text.error, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            }
+        }
+        error.hint?.let { Text(it, Modifier.padding(start = textInset), color = JewelTheme.globalColors.text.info, maxLines = 2) }
+        Row(Modifier.padding(start = textInset), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Link("Retry", onClick = { app.explorer.refresh(node.parent) })
+            if (config != null) Link("Edit…", onClick = { app.connections.openEdit(config) })
+            Link("Copy details", onClick = { copyToClipboard(error.detail) })
+        }
+    }
+}
 
 /**
  * A node's name followed by its greyed detail on a single line. The name gets first claim on the width and
