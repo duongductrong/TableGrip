@@ -80,6 +80,17 @@ import org.jetbrains.jewel.ui.theme.treeStyle
 private val ResizeCursor = PointerIcon(Cursor(Cursor.E_RESIZE_CURSOR))
 
 /**
+ * Consumes every pointer event that reaches this element once its own content has handled it, so the grid's handler
+ * (an ancestor) leaves the gesture alone. Pointer capture keeps a drag that started here routed here until release.
+ */
+private fun Modifier.claimPointer(): Modifier =
+    pointerInput(Unit) {
+        awaitPointerEventScope {
+            while (true) awaitPointerEvent().changes.forEach { it.consume() }
+        }
+    }
+
+/**
  * A DataGrip-style data grid: rows and columns are virtualized, row numbers stay pinned, columns stretch to fill the
  * available width and can be resized, auto-fitted, hidden and reordered. Supports range selection with mouse and
  * keyboard, copying in several formats and, when [model] has an editor, inline editing.
@@ -168,6 +179,13 @@ fun DataGrid(
                             while (true) {
                                 val event = awaitPointerEvent()
                                 val change = event.changes.first()
+                                // The scrollbars claim everything over them, including drags of their thumb that
+                                // wander over the cells; those must not select or hover anything underneath.
+                                if (change.isConsumed) {
+                                    controller.onExit()
+                                    resizeHover = false
+                                    continue
+                                }
                                 when (event.type) {
                                     PointerEventType.Press ->
                                         controller.onPress(
@@ -197,11 +215,11 @@ fun DataGrid(
                 }
                 VerticalScrollbar(
                     state.verticalScroll,
-                    Modifier.align(Alignment.TopEnd).fillMaxHeight().padding(top = HeaderHeight),
+                    Modifier.align(Alignment.TopEnd).fillMaxHeight().padding(top = HeaderHeight).claimPointer(),
                 )
                 HorizontalScrollbar(
                     state.horizontalScroll,
-                    Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(start = rowNumberWidth),
+                    Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(start = rowNumberWidth).claimPointer(),
                 )
                 if (model.rowCount == 0) {
                     Text("No rows", Modifier.align(Alignment.Center), color = JewelTheme.globalColors.text.info)
