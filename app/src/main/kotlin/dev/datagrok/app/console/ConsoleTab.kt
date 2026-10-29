@@ -84,6 +84,21 @@ class ConsoleTab(
 
     /** Index into the result panel tabs: 0 is Output, 1.. are [results], then History. */
     var selectedResultTab by mutableStateOf(0)
+
+    /** Removes one result tab, keeping the selection on the same tab or its nearest neighbour. */
+    fun closeResult(view: ResultSetView) {
+        val index = results.indexOf(view)
+        if (index < 0) return
+        val tabIndex = index + 1
+        results.removeAt(index)
+        selectedResultTab =
+            when {
+                selectedResultTab > tabIndex -> selectedResultTab - 1
+                selectedResultTab == tabIndex -> if (index < results.size) tabIndex else index
+                else -> selectedResultTab
+            }
+    }
+
     var running by mutableStateOf(false)
         private set
 
@@ -132,14 +147,16 @@ class ConsoleTab(
 
     /**
      * Runs [sql] as given rather than what's at the caret, e.g. a query the agent suggested; same checks as typed SQL.
-     * [onFinished] gets this run's result sets and log lines, unless the user cancels a write confirmation.
+     * [onFinished] gets this run's result sets and log lines, unless the user cancels a write confirmation. [confirmed]
+     * skips that confirmation when the user already gave it elsewhere; a read-only connection still refuses writes.
      */
-    fun run(sql: String, onFinished: ((RunOutcome) -> Unit)? = null) = run(splitter.split(sql).map(SqlStatement::text), onFinished)
+    fun run(sql: String, confirmed: Boolean = false, onFinished: ((RunOutcome) -> Unit)? = null) =
+        run(splitter.split(sql).map(SqlStatement::text), confirmed, onFinished)
 
     /** Whether every statement in [sql] only reads. */
     fun onlyReads(sql: String): Boolean = splitter.split(sql).all { classifier.classify(it.text).kind == StatementKind.Read }
 
-    private fun run(statements: List<String>, onFinished: ((RunOutcome) -> Unit)? = null) {
+    private fun run(statements: List<String>, confirmed: Boolean = false, onFinished: ((RunOutcome) -> Unit)? = null) {
         if (running || statements.isEmpty()) return
         val infos = statements.map(classifier::classify)
 
@@ -156,7 +173,7 @@ class ConsoleTab(
                 add("${config.name} asks before changing data (${config.environment.label.lowercase()} connection)")
             }
         }
-        if (reasons.isNotEmpty()) {
+        if (reasons.isNotEmpty() && !confirmed) {
             pendingConfirmation = WriteConfirmation(statements, reasons.distinct()) { start(statements, onFinished) }
             return
         }

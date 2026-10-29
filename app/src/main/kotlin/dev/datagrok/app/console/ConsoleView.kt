@@ -246,10 +246,12 @@ private fun ResultPanel(app: AppState, tab: ConsoleTab) {
         TabStrip(
             tabs =
                 titles.mapIndexed { index, title ->
+                    val view = tab.results.getOrNull(index - 1)
                     TabData.Default(
                         selected = index == tab.selectedResultTab,
                         content = { state -> SimpleTabContent(title, state) },
-                        closable = false,
+                        closable = view != null,
+                        onClose = { view?.let(tab::closeResult) },
                         onClick = { tab.selectedResultTab = index },
                     )
                 },

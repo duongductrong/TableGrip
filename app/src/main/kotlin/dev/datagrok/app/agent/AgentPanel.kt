@@ -28,6 +28,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
@@ -54,9 +55,11 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import dev.datagrok.app.AppState
+import dev.datagrok.app.ui.AppDialog
 import dev.datagrok.app.ui.LocalIslands
 import dev.datagrok.app.ui.copyToClipboard
 import dev.datagrok.core.agent.AgentMessage
@@ -71,6 +74,7 @@ import org.jetbrains.jewel.ui.component.Icon
 import org.jetbrains.jewel.ui.component.IconButton
 import org.jetbrains.jewel.ui.component.PopupMenu
 import org.jetbrains.jewel.ui.component.Text
+import org.jetbrains.jewel.ui.component.TextArea
 import org.jetbrains.jewel.ui.component.Tooltip
 import org.jetbrains.jewel.ui.component.VerticalScrollbar
 import org.jetbrains.jewel.ui.component.separator
@@ -96,6 +100,43 @@ internal fun AgentPanel(app: AppState) {
             if (agent.messages.isEmpty()) EmptyState(agent) else Conversation(app, agent)
         }
         Composer(agent, Modifier.padding(start = 10.dp, end = 10.dp, bottom = 10.dp))
+    }
+    agent.pendingRun?.let { ConfirmRunDialog(app, it) }
+}
+
+/** Red, so a query that can lose data never looks like one that only reads. */
+private val DangerColor = Color(0xFFDB4B4B)
+
+/** What a risky query would do, in red, above its code. */
+@Composable
+private fun RiskNotice(risks: List<String>, modifier: Modifier = Modifier) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(AllIconsKeys.General.Warning, null, Modifier.size(14.dp))
+            Text("Can change or delete data", color = DangerColor, fontWeight = FontWeight.SemiBold)
+        }
+        risks.forEach { Text("• $it", color = DangerColor) }
+    }
+}
+
+@Composable
+private fun ConfirmRunDialog(app: AppState, run: RunConfirmation) {
+    val agent = app.agent
+    AppDialog(onCloseRequest = { agent.pendingRun = null }, size = DpSize(620.dp, 400.dp), title = "Run Query from Agent?") {
+        Column(
+            Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            RiskNotice(run.reasons)
+            Text("The agent wrote this query. Check it before running: changes may not be undoable.", color = JewelTheme.globalColors.text.info)
+            val text = remember(run) { TextFieldState(run.sql.trim()) }
+            TextArea(text, Modifier.weight(1f).fillMaxWidth().border(1.dp, DangerColor, RoundedCornerShape(4.dp)), readOnly = true, textStyle = JewelTheme.editorTextStyle)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
+                // Cancel is the default and Esc closes: running takes a deliberate click.
+                DefaultButton(onClick = { agent.pendingRun = null }) { Text("Cancel") }
+                OutlinedButton(onClick = agent::confirmRun) { Text("Run anyway", color = DangerColor) }
+            }
+        }
     }
 }
 
@@ -236,7 +277,10 @@ private fun RunRequestCard(app: AppState, message: ChatMessage, index: Int, bloc
     val info = JewelTheme.globalColors.text.info
     val shape = RoundedCornerShape(8.dp)
     val state = message.runs[index]
-    Column(Modifier.fillMaxWidth().clip(shape).background(islands.frame).border(1.dp, if (state == null) islands.accent else islands.islandBorder, shape)) {
+    val risks = remember(block.code, app.currentConnection?.id) { app.agent.risks(block.code) }
+    val border = if (risks.isNotEmpty()) DangerColor else if (state == null) islands.accent else islands.islandBorder
+    val background = if (risks.isNotEmpty()) DangerColor.copy(alpha = 0.08f) else islands.frame
+    Column(Modifier.fillMaxWidth().clip(shape).background(islands.frame).background(background).border(1.dp, border, shape)) {
         Row(
             Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 10.dp, bottom = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -245,6 +289,7 @@ private fun RunRequestCard(app: AppState, message: ChatMessage, index: Int, bloc
             Icon(AllIconsKeys.Toolwindows.ToolWindowAskAI, null, Modifier.size(14.dp))
             Text("${app.agent.selected?.descriptor?.name ?: "The agent"} wants to run a query", Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
         }
+        if (risks.isNotEmpty()) RiskNotice(risks, Modifier.padding(horizontal = 12.dp, vertical = 4.dp))
         Text(
             block.code,
             Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 4.dp),
@@ -253,7 +298,12 @@ private fun RunRequestCard(app: AppState, message: ChatMessage, index: Int, bloc
             softWrap = false,
         )
         if (state == null) {
-            Text("Runs in a console, then the result goes back to the agent.", Modifier.padding(horizontal = 12.dp).padding(top = 6.dp), color = info)
+            Text(
+                if (risks.isEmpty()) "Runs in a console, then the result goes back to the agent."
+                else "Not run from here: it opens in a console for you to review and run yourself.",
+                Modifier.padding(horizontal = 12.dp).padding(top = 6.dp),
+                color = info,
+            )
         }
         Row(
             Modifier.fillMaxWidth().padding(start = 12.dp, end = 10.dp, top = 8.dp, bottom = 10.dp),
@@ -265,7 +315,9 @@ private fun RunRequestCard(app: AppState, message: ChatMessage, index: Int, bloc
                     Spacer(Modifier.weight(1f))
                     val ready = !message.streaming && !app.agent.busy && !app.agent.consoleRunning
                     OutlinedButton(onClick = { app.agent.declineRun(message, index) }, enabled = ready) { Text("Decline") }
-                    DefaultButton(onClick = { app.agent.allowRun(message, index, block.code) }, enabled = ready) { Text("Run") }
+                    DefaultButton(onClick = { app.agent.allowRun(message, index, block.code) }, enabled = ready) {
+                        Text(if (risks.isEmpty()) "Run" else "Open in console")
+                    }
                 }
                 RunRequestState.Running -> {
                     CircularProgressIndicator()
@@ -273,7 +325,7 @@ private fun RunRequestCard(app: AppState, message: ChatMessage, index: Int, bloc
                 }
                 is RunRequestState.Done -> Text(state.summary, color = info)
                 RunRequestState.Declined -> Text("Declined", color = info)
-                RunRequestState.Refused -> Text("This query changes data, so it was only opened in the console for you to review and run.", color = info)
+                RunRequestState.Refused -> Text("This query changes data, so it was only opened in the console for you to review and run.", color = DangerColor)
             }
         }
     }
@@ -284,7 +336,13 @@ private fun CodeBlock(app: AppState, block: MarkdownBlock.Code) {
     val islands = LocalIslands.current
     val info = JewelTheme.globalColors.text.info
     val shape = RoundedCornerShape(8.dp)
-    Column(Modifier.fillMaxWidth().clip(shape).background(islands.frame).border(1.dp, islands.islandBorder, shape)) {
+    val risks = if (block.isSql && app.agent.canRunSql) remember(block.code, app.currentConnection?.id) { app.agent.risks(block.code) } else emptyList()
+    val danger = risks.isNotEmpty()
+    Column(
+        Modifier.fillMaxWidth().clip(shape).background(islands.frame)
+            .background(if (danger) DangerColor.copy(alpha = 0.08f) else islands.frame)
+            .border(1.dp, if (danger) DangerColor else islands.islandBorder, shape)
+    ) {
         Row(
             Modifier.fillMaxWidth().height(32.dp).padding(start = 12.dp, end = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(2.dp),
@@ -297,13 +355,15 @@ private fun CodeBlock(app: AppState, block: MarkdownBlock.Code) {
                     IconButton(onClick = { app.agent.openSql(block.code) }) { Icon(AllIconsKeys.Nodes.Console, "Open in console") }
                 }
                 val running = app.agent.consoleRunning
-                Tooltip({ Text(if (running) "The console is running a query" else "Run in console") }) {
+                val tooltip = if (running) "The console is running a query" else if (danger) "Run in console (asks first)" else "Run in console"
+                Tooltip({ Text(tooltip) }) {
                     IconButton(onClick = { app.agent.runSql(block.code) }, enabled = !running) {
                         Icon(AllIconsKeys.Actions.Execute, "Run in console")
                     }
                 }
             }
         }
+        if (danger) RiskNotice(risks, Modifier.padding(start = 12.dp, end = 12.dp, bottom = 6.dp))
         Text(
             block.code,
             Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(start = 12.dp, end = 12.dp, top = 2.dp, bottom = 12.dp),

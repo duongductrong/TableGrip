@@ -16,8 +16,12 @@ import dev.datagrok.core.agent.AgentRequest
 import dev.datagrok.core.agent.provider.AgentMode
 import dev.datagrok.core.agent.provider.ProviderConfig
 import dev.datagrok.core.agent.provider.ProviderProtocol
+import dev.datagrok.core.connection.Environment
 import dev.datagrok.core.connection.Paradigm
+import dev.datagrok.core.dialect.SqlDialect
 import dev.datagrok.core.settings.Settings
+import dev.datagrok.core.sql.SqlClassifier
+import dev.datagrok.core.sql.SqlSplitter
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -35,6 +39,9 @@ sealed interface RunRequestState {
     /** Not offered: the query changes data, which the agent may only suggest. */
     data object Refused : RunRequestState
 }
+
+/** A query from the chat that could lose data, waiting for the user to confirm it on [connectionId]. */
+data class RunConfirmation(val sql: String, val connectionId: String, val reasons: List<String>)
 
 /** One entry in the chat. [text] grows while the agent streams. */
 class ChatMessage(val role: AgentMessage.Role, text: String = "", val kind: Kind = Kind.Chat) {
@@ -198,10 +205,46 @@ class AgentViewModel(private val app: AppState, private val registry: AgentRegis
         return app.workspace.selected as? ConsoleTab
     }
 
-    /** Opens a suggested query in a console and runs it there, with the console's read-only and confirmation checks. */
+    /**
+     * Why running [sql] on the current connection could lose data, worst first; empty when every statement only reads.
+     * Any change counts, not just the statements the console always asks about: the agent wrote it, not the user.
+     */
+    fun risks(sql: String): List<String> {
+        val connection = app.currentConnection ?: return emptyList()
+        val syntax = SqlDialect.of(connection.type).syntax
+        val classifier = SqlClassifier(syntax)
+        val infos = SqlSplitter(syntax).split(sql).map { classifier.classify(it.text) }
+        val changes = infos.filter { it.changesData }
+        if (changes.isEmpty()) return emptyList()
+        return buildList {
+            infos.mapNotNullTo(this) { it.danger }
+            add("Changes data or schema: ${changes.map { it.verb }.distinct().joinToString()}")
+            val environment = connection.environment.takeIf { it != Environment.None }?.let { " (${it.label.lowercase()})" }.orEmpty()
+            add("Runs on ${connection.name}$environment")
+        }.distinct()
+    }
+
+    /** Set while asking the user to confirm a query from the chat that could lose data. */
+    var pendingRun by mutableStateOf<RunConfirmation?>(null)
+
+    /** Opens a suggested query in a console and runs it there; one that changes anything asks here first. */
     fun runSql(sql: String) {
         if (consoleRunning) return
+        val connection = app.currentConnection ?: return
+        val risks = risks(sql)
+        if (risks.isNotEmpty()) {
+            pendingRun = RunConfirmation(sql, connection.id, risks)
+            return
+        }
         openSql(sql)?.run(sql)
+    }
+
+    /** Runs the confirmed query, without the console asking a second time; dropped if the connection changed meanwhile. */
+    fun confirmRun() {
+        val run = pendingRun ?: return
+        pendingRun = null
+        if (consoleRunning || app.currentConnection?.id != run.connectionId) return
+        openSql(run.sql)?.run(run.sql, confirmed = true)
     }
 
     /**
