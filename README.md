@@ -188,6 +188,14 @@ MySQL connections use MariaDB Connector/J by default. Each driver loads in its o
 `:app:thirdPartyNotices` (also part of `check`) writes `THIRD-PARTY-NOTICES.txt` into the app jar and fails on any
 shipped library whose license hasn't been reviewed into `bundledLicenses` in `app/build.gradle.kts`.
 
+## Organising connections
+
+Connections can sit in groups (folders in the explorer) and in Favorites, listed first. Drag a connection onto a group,
+or onto any connection in it, to move it there; onto Favorites to star it. While dragging, two zones appear under the
+tree: **No group** takes it out of its group and **＋ New group** asks for a name. Selected connections (⇧/⌘-click) move
+together. Right-click a group for New Connection in it, Rename Group… (renaming to an existing name merges them) and
+Ungroup; right-click a connection for Move to Group… and Remove from Group.
+
 ## Importing connections
 
 **Import Connections** (the explorer's **+ ▾** menu, which says how many connections other tools have, the connection

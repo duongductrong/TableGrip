@@ -25,6 +25,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import dev.datagrok.app.connections.GroupRequest
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.sp
@@ -113,14 +117,22 @@ internal fun ExplorerPanel(app: AppState) {
             if (keys.isNotEmpty()) explorer.treeState.openNodes(keys.toList())
         }
 
-        LazyTree(
-            tree = tree,
-            treeState = explorer.treeState,
-            modifier = Modifier.fillMaxSize().padding(vertical = 4.dp),
-            style = explorerTreeStyle(),
-            onElementDoubleClick = { element -> openNode(app, element.data) },
-        ) { element ->
-            ContextMenuArea(items = { contextMenu(app, element.data) }) { NodeRow(app, element.data, Modifier.fillMaxWidth()) }
+        val drag = rememberConnectionDrag(app)
+        var origin by remember { mutableStateOf(Offset.Zero) }
+        Box(Modifier.weight(1f).fillMaxWidth().onGloballyPositioned { origin = it.positionInRoot() }) {
+            Column(Modifier.fillMaxSize()) {
+                LazyTree(
+                    tree = tree,
+                    treeState = explorer.treeState,
+                    modifier = Modifier.weight(1f).fillMaxWidth().padding(vertical = 4.dp),
+                    style = explorerTreeStyle(),
+                    onElementDoubleClick = { element -> openNode(app, element.data) },
+                ) { element ->
+                    ContextMenuArea(items = { contextMenu(app, element.data) }) { NodeRow(app, element.data, Modifier.fillMaxWidth().dragAndDrop(drag, element.data)) }
+                }
+                if (drag.dragging) DropZones(drag)
+            }
+            if (drag.dragging) DragGhost(drag, origin)
         }
     }
 }
@@ -149,6 +161,28 @@ private fun explorerTreeStyle(): LazyTreeStyle {
             ),
         icons = base.icons,
     )
+}
+
+/** Connections can be dragged; groups, and connections standing for the group they're in, take drops. */
+@Composable
+private fun Modifier.dragAndDrop(drag: ConnectionDragState, node: ExplorerNode): Modifier {
+    val target =
+        when (node) {
+            is ExplorerNode.Group -> if (node.favorites) DropTarget.Favorites else DropTarget.Group(node.name)
+            is ExplorerNode.Connection ->
+                when {
+                    node.config.favorite -> DropTarget.Favorites
+                    node.config.group.isNotBlank() -> DropTarget.Group(node.config.group.trim())
+                    else -> DropTarget.TopLevel
+                }
+            else -> return this
+        }
+    ForgetDropTarget(drag, node.key)
+    val dropping = drag.hovered == target
+    return dropTarget(drag, node.key, target)
+        .let { if (node is ExplorerNode.Connection) it.draggableConnection(drag, node.config) else it }
+        // A group lights up when connections would land in it, whether the pointer is on it or on one of its members.
+        .dropHighlight(dropping && node is ExplorerNode.Group)
 }
 
 /** Tables open on their data; columns, indexes and keys open the table's structure on their section. */
@@ -182,11 +216,22 @@ private fun contextMenu(app: AppState, node: ExplorerNode): List<ContextMenuItem
                 ContextMenuItem("Refresh") { app.explorer.refresh(node.key) },
                 ContextMenuItem("Disconnect") { app.explorer.disconnect(config.id) }.takeIf { connected },
                 ContextMenuItem(if (config.favorite) "Remove from Favorites" else "Add to Favorites") { app.connections.toggleFavorite(config) },
-                ContextMenuItem("Move to Group…") { app.connections.moving = config },
+                ContextMenuItem("Move to Group…") { app.connections.groupRequest = GroupRequest(listOf(config)) },
+                ContextMenuItem("Remove from Group") { app.connections.moveToGroup(listOf(config), "") }.takeIf { config.group.isNotBlank() && !config.favorite },
                 ContextMenuItem("Edit…") { app.connections.openEdit(config) },
                 ContextMenuItem("Delete…") { app.connections.pendingDelete = config },
             )
         }
+        is ExplorerNode.Group ->
+            if (node.favorites) emptyList()
+            else
+                listOf(
+                    ContextMenuItem("New Connection in ${node.name}…") { app.connections.openNew(group = node.name) },
+                    ContextMenuItem("Rename Group…") {
+                        app.connections.groupRequest = GroupRequest(node.children.mapNotNull { (it as? ExplorerNode.Connection)?.config }, renaming = node.name)
+                    },
+                    ContextMenuItem("Ungroup") { app.connections.ungroup(node.name) },
+                )
         is ExplorerNode.Schema -> listOf(ContextMenuItem("Refresh") { app.explorer.refresh(node.key) })
         is ExplorerNode.DocumentDatabase -> {
             val config = app.connections.byId(node.connectionId) ?: return emptyList()

@@ -17,7 +17,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-data class ConnectionDialogRequest(val existing: ConnectionConfig?)
+/** [group] is where a new connection goes, e.g. when created from a group's menu. */
+data class ConnectionDialogRequest(val existing: ConnectionConfig?, val group: String = "")
+
+/**
+ * Asks for a group name: one for [configs] to move into ([newGroup] when they were dropped on "New group"), or a new name
+ * for the group [renaming].
+ */
+data class GroupRequest(val configs: List<ConnectionConfig>, val renaming: String? = null, val newGroup: Boolean = false)
 
 /** What Test Connection learned: the server's own description, or a better-fitting engine in its family. */
 data class TestOutcome(val server: String? = null, val suggested: DatabaseType? = null)
@@ -47,18 +54,60 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
     val groups: List<String>
         get() = profiles.map { it.group }.filter { it.isNotBlank() }.distinct().sortedBy { it.lowercase() }
 
-    /** A connection waiting for the user to choose its group. */
-    var moving by mutableStateOf<ConnectionConfig?>(null)
+    /** Non-null while the group name dialog is open. */
+    var groupRequest by mutableStateOf<GroupRequest?>(null)
 
-    fun moveToGroup(config: ConnectionConfig, group: String) {
-        moving = null
-        updateProfile(config.copy(group = group.trim()))
+    /**
+     * Puts [configs] in [group], or at the top level when it's blank. They leave Favorites too, so they show up where
+     * they were put.
+     */
+    fun moveToGroup(configs: List<ConnectionConfig>, group: String) {
+        groupRequest = null
+        val name = group.trim()
+        val moved = configs.filter { it.group.trim() != name || it.favorite }
+        if (moved.isEmpty()) return
+        updateProfiles(moved.map { it.copy(group = name, favorite = false) })
+        app.status = describe(moved) + if (name.isEmpty()) " moved out of its group" else " moved to $name"
     }
+
+    fun addToFavorites(configs: List<ConnectionConfig>) {
+        val moved = configs.filter { !it.favorite }
+        if (moved.isNotEmpty()) updateProfiles(moved.map { it.copy(favorite = true) })
+    }
+
+    /** Renames a group, merging it into another of that name if there is one. */
+    fun renameGroup(from: String, to: String) {
+        groupRequest = null
+        val name = to.trim()
+        if (name.isEmpty() || name == from) return
+        updateProfiles(profiles.filter { it.group.trim() == from }.map { it.copy(group = name) })
+    }
+
+    /** Removes a group, moving its connections to the top level. */
+    fun ungroup(name: String) {
+        updateProfiles(profiles.filter { it.group.trim() == name }.map { it.copy(group = "") })
+        app.status = "Ungrouped $name"
+    }
+
+    private fun describe(configs: List<ConnectionConfig>) = if (configs.size == 1) configs[0].name else "${configs.size} connections"
 
     fun toggleFavorite(config: ConnectionConfig) = updateProfile(config.copy(favorite = !config.favorite))
 
     /** Saves a change that doesn't touch how to connect, e.g. its group; the live connection stays as it is. */
     fun updateProfile(config: ConnectionConfig) = updateDriver(config)
+
+    /** Like [updateProfile] for several, saved one after another so no change overwrites another. */
+    fun updateProfiles(configs: List<ConnectionConfig>) {
+        if (configs.isEmpty()) return
+        // Shown at once, so a dragged connection lands where it was dropped without waiting for the disk.
+        val byId = configs.associateBy { it.id }
+        replaceAll(profiles.map { byId[it.id] ?: it })
+        app.scope.launch {
+            runCatching { withContext(Dispatchers.IO) { configs.fold(emptyList<ConnectionConfig>()) { _, config -> store.save(config, password = null, sshSecret = null) } } }
+                .onSuccess(::replaceAll)
+                .onFailure { app.status = "Failed to save: ${it.message}" }
+        }
+    }
 
     /** Saves a profile whose driver the user switched while being asked for it (e.g. to MariaDB Connector/J). */
     fun updateDriver(config: ConnectionConfig) {
@@ -84,8 +133,8 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
 
     fun byId(id: String): ConnectionConfig? = profiles.firstOrNull { it.id == id }
 
-    fun openNew() {
-        dialog = ConnectionDialogRequest(existing = null)
+    fun openNew(group: String = "") {
+        dialog = ConnectionDialogRequest(existing = null, group = group)
     }
 
     fun openEdit(config: ConnectionConfig) {

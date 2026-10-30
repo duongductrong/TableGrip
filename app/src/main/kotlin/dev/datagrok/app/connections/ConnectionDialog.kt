@@ -73,7 +73,7 @@ import org.jetbrains.jewel.ui.component.Text
 import org.jetbrains.jewel.ui.component.TextField
 
 /** Form state for creating or editing a connection profile. */
-private class ConnectionForm(existing: ConnectionConfig?) {
+private class ConnectionForm(existing: ConnectionConfig?, group: String = "") {
     val id = existing?.id ?: UUID.randomUUID().toString()
     var type by mutableStateOf(existing?.type ?: DatabaseType.PostgreSQL)
     val name = TextFieldState(existing?.name.orEmpty())
@@ -92,7 +92,7 @@ private class ConnectionForm(existing: ConnectionConfig?) {
     val connectionString = TextFieldState()
 
     var environment by mutableStateOf(existing?.environment ?: Environment.None)
-    val group = TextFieldState(existing?.group.orEmpty())
+    val group = TextFieldState(existing?.group ?: group)
     private val favorite = existing?.favorite ?: false
     var readOnly by mutableStateOf(existing?.readOnly ?: false)
     var confirmWrites by mutableStateOf(existing?.confirmWrites ?: false)
@@ -276,7 +276,7 @@ internal fun ConnectionDialog(state: ConnectionsViewModel, request: ConnectionDi
 /** The dialog body, separate from its window so it can be rendered in tests. */
 @Composable
 internal fun ConnectionDialogContent(state: ConnectionsViewModel, request: ConnectionDialogRequest) {
-    val form = remember(request) { ConnectionForm(request.existing) }
+    val form = remember(request) { ConnectionForm(request.existing, request.group) }
     val scope = rememberCoroutineScope()
     var message by remember { mutableStateOf<Message?>(null) }
     var busy by remember { mutableStateOf(false) }
@@ -697,36 +697,46 @@ internal fun MissingDriverDialog(state: ConnectionsViewModel, config: Connection
     }
 }
 
-/** Puts a connection in a group of the explorer; a blank name takes it out of its group. */
+/** Names a group: one to move connections into (blank takes them out of their group), or a group's new name. */
 @Composable
-internal fun MoveToGroupDialog(state: ConnectionsViewModel, config: ConnectionConfig) {
-    val group = remember(config) { TextFieldState(config.group) }
+internal fun GroupDialog(state: ConnectionsViewModel, request: GroupRequest) {
+    val renaming = request.renaming
+    val group = remember(request) { TextFieldState(renaming ?: if (request.newGroup) "" else request.configs.singleOrNull()?.group.orEmpty()) }
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { focus.requestFocus() }
-    AppDialog(
-        onCloseRequest = { state.moving = null },
-        size = DpSize(440.dp, 210.dp),
-        title = "Move to Group",
-        resizable = false,
-    ) {
+    fun submit() {
+        val name = group.text.toString()
+        if (renaming != null) state.renameGroup(renaming, name)
+        else if (!request.newGroup || name.isNotBlank()) state.moveToGroup(request.configs, name)
+    }
+    val title =
+        when {
+            renaming != null -> "Rename Group"
+            request.newGroup -> "New Group"
+            else -> "Move to Group"
+        }
+    AppDialog(onCloseRequest = { state.groupRequest = null }, size = DpSize(440.dp, 210.dp), title = title, resizable = false) {
         Column(
             Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp).onPreviewKeyEvent {
-                if (it.type == KeyEventType.KeyDown && (it.key == Key.Enter || it.key == Key.NumPadEnter)) true.also { state.moveToGroup(config, group.text.toString()) } else false
+                if (it.type == KeyEventType.KeyDown && (it.key == Key.Enter || it.key == Key.NumPadEnter)) true.also { submit() } else false
             },
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            FormRow("Group") { TextField(group, Modifier.fillMaxWidth().focusRequester(focus), placeholder = { Text("Leave blank for no group") }) }
-            val existing = state.groups.filter { it != config.group }
-            if (existing.isNotEmpty()) {
+            val placeholder = if (renaming != null || request.newGroup) "e.g. a project or client" else "Leave blank for no group"
+            FormRow("Group") { TextField(group, Modifier.fillMaxWidth().focusRequester(focus), placeholder = { Text(placeholder) }) }
+            val existing = state.groups.filter { it != renaming && it != request.configs.singleOrNull()?.group }
+            if (existing.isNotEmpty() && renaming == null) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Existing:", color = JewelTheme.globalColors.text.info)
                     existing.take(6).forEach { name -> Link(name, onClick = { group.setTextAndPlaceCursorAtEnd(name) }) }
                 }
+            } else if (request.configs.size > 1) {
+                Text("${request.configs.size} connections", color = JewelTheme.globalColors.text.info)
             }
             Spacer(Modifier.weight(1f))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                OutlinedButton(onClick = { state.moving = null }) { Text("Cancel") }
-                DefaultButton(onClick = { state.moveToGroup(config, group.text.toString()) }) { Text("Move") }
+                OutlinedButton(onClick = { state.groupRequest = null }) { Text("Cancel") }
+                DefaultButton(onClick = ::submit) { Text(if (renaming != null) "Rename" else if (request.newGroup) "Create" else "Move") }
             }
         }
     }
