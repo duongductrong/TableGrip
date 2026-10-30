@@ -13,6 +13,9 @@ import dev.datagrok.app.table.TableDataTab
 import dev.datagrok.app.documents.DocumentBrowserTab
 import dev.datagrok.app.keyvalue.CommandConsoleTab
 import dev.datagrok.app.keyvalue.KeyBrowserTab
+import dev.datagrok.app.schema.ErDiagramTab
+import dev.datagrok.app.schema.SchemaCompareTab
+import dev.datagrok.app.schema.TableDesignerTab
 import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.connection.Paradigm
 import dev.datagrok.core.metadata.Namespace
@@ -113,6 +116,31 @@ class WorkspaceViewModel(private val app: AppState) {
             structure != null -> tab.showStructure(structure)
             existing == null -> tab.showData()
         }
+    }
+
+    /** Designs [table] of [namespace], or a new table there when null; focuses an open designer of the same table. */
+    fun openTableDesigner(config: ConnectionConfig, namespace: Namespace, table: TableRef? = null) {
+        if (table != null) {
+            tabs.firstOrNull { it is TableDesignerTab && it.connectionId == config.id && it.tableRef == table }?.let {
+                selected = it
+                return
+            }
+        }
+        open(TableDesignerTab(app, config, namespace, table))
+    }
+
+    /** Compares [namespace] of [config] (the source) with a target picked in the tab. */
+    fun openSchemaCompare(config: ConnectionConfig?, namespace: Namespace?) {
+        open(SchemaCompareTab(app, config, namespace))
+    }
+
+    /** An ER diagram of [namespace], or of the tables around [focus]; focuses one already open for the same. */
+    fun openErDiagram(config: ConnectionConfig, namespace: Namespace, focus: TableRef? = null) {
+        tabs.firstOrNull { it is ErDiagramTab && it.connectionId == config.id && it.namespace == namespace && it.focus == focus }?.let {
+            selected = it
+            return
+        }
+        open(ErDiagramTab(app, config, namespace, focus))
     }
 
     /** Closes [tab], first asking what to do with its unsaved work; [then] runs once it is closed. */

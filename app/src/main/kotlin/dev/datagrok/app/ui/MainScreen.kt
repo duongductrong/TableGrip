@@ -36,6 +36,8 @@ import dev.datagrok.app.queries.QueriesPanel
 import dev.datagrok.app.queries.RenameQueryDialog
 import dev.datagrok.app.queries.SaveQueryDialog
 import dev.datagrok.app.search.GoToAnythingPopup
+import dev.datagrok.app.schema.ImportDialog
+import dev.datagrok.app.schema.TestDataDialog
 import dev.datagrok.app.table.TableDataTab
 import dev.datagrok.app.workspace.WorkspaceView
 import org.jetbrains.jewel.foundation.theme.JewelTheme
@@ -96,6 +98,8 @@ internal fun MainScreen(app: AppState) {
     app.connections.driverPrompt?.let { MissingDriverDialog(app.connections, it) }
     if (app.shortcutsOpen) ShortcutsDialog(app)
     app.exportRequest?.let { ExportDialog(app, it) }
+    app.importWizard?.let { ImportDialog(app, it) }
+    app.testData?.let { TestDataDialog(app, it) }
     app.savedQueries.saveRequest?.let { SaveQueryDialog(app, it) }
     app.savedQueries.renaming?.let { RenameQueryDialog(app, it) }
     app.savedQueries.pendingDelete?.let { DeleteQueryDialog(app, it) }

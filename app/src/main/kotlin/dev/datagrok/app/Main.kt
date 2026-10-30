@@ -19,6 +19,7 @@ import dev.datagrok.app.table.handleFilterShortcut
 import dev.datagrok.app.ui.DatagrokTheme
 import dev.datagrok.app.ui.Shortcuts
 import dev.datagrok.app.ui.MainScreen
+import dev.datagrok.app.ui.PinchZoom
 import dev.datagrok.app.ui.TitleBarView
 import java.awt.Desktop
 import org.jetbrains.jewel.window.DecoratedWindow
@@ -51,6 +52,10 @@ fun main() = application {
             },
             onKeyEvent = { handleWindowShortcut(appState, it) },
         ) {
+            DisposableEffect(window) {
+                val stop = PinchZoom.install(window.rootPane)
+                onDispose { stop?.invoke() }
+            }
             TitleBarView(appState)
             MainScreen(appState)
         }

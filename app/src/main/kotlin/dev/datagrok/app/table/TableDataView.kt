@@ -187,6 +187,8 @@ private fun StructureToolbar(tab: TableDataTab) {
         val ddl = tab.structure?.ddl
         ToolButton(AllIconsKeys.Actions.Copy, "Copy DDL", enabled = ddl != null) { ddl?.let(::copyToClipboard) }
         ToolButton(AllIconsKeys.Nodes.Console, "Open DDL in new console", enabled = ddl != null) { tab.openDdlInConsole() }
+        if (!tab.config.readOnly) ToolButton(AllIconsKeys.Actions.Edit, "Edit structure") { tab.editStructure() }
+        ToolButton(AllIconsKeys.FileTypes.Diagram, "Show in ER diagram") { tab.showInDiagram() }
         Box(Modifier.weight(1f))
         if (tab.structureLoading) Text("Loading…", Modifier.padding(end = 8.dp), color = JewelTheme.globalColors.text.info)
         Text(tab.dialect.qualifiedName(tab.table), Modifier.padding(end = 8.dp), color = JewelTheme.globalColors.text.info)
@@ -242,12 +244,12 @@ private fun Toolbar(tab: TableDataTab) {
 }
 
 @Composable
-private fun ToolButton(icon: IconKey, tooltip: String, enabled: Boolean = true, onClick: () -> Unit) {
+internal fun ToolButton(icon: IconKey, tooltip: String, enabled: Boolean = true, onClick: () -> Unit) {
     Tooltip({ Text(tooltip) }) { IconButton(onClick = onClick, enabled = enabled) { Icon(icon, tooltip) } }
 }
 
 @Composable
-private fun Separator() {
+internal fun Separator() {
     Divider(Orientation.Vertical, Modifier.height(18.dp).padding(horizontal = 4.dp))
 }
 
@@ -336,7 +338,7 @@ private fun SqlFilterBar(tab: TableDataTab) {
 }
 
 @Composable
-private fun ErrorBanner(message: String, onDismiss: () -> Unit) {
+internal fun ErrorBanner(message: String, onDismiss: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().background(JewelTheme.globalColors.text.error.copy(alpha = 0.12f)).padding(horizontal = 8.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),

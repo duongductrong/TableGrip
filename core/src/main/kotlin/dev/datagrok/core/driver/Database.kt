@@ -15,6 +15,8 @@ import dev.datagrok.core.edit.ChangeStatement
 import dev.datagrok.core.export.ResultWriter
 import dev.datagrok.core.filter.SqlFilter
 import dev.datagrok.core.dialect.SqlDialect
+import dev.datagrok.core.ddl.DdlPhase
+import dev.datagrok.core.ddl.DdlScript
 import dev.datagrok.core.metadata.ColumnInfo
 import dev.datagrok.core.metadata.Introspector
 import dev.datagrok.core.metadata.Namespace
@@ -24,6 +26,7 @@ import dev.datagrok.core.metadata.TableInfo
 import dev.datagrok.core.metadata.TableRef
 import dev.datagrok.core.metadata.TableRelation
 import dev.datagrok.core.metadata.TableStructure
+import dev.datagrok.core.schema.SchemaSnapshot
 import dev.datagrok.core.sql.SqlClassifier
 import java.sql.Connection
 import java.sql.ResultSet
@@ -31,7 +34,15 @@ import java.sql.SQLException
 import java.sql.Statement
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.coroutines.coroutineContext
 
 /**
  * A [RelationalConnection] over JDBC. A small pool serves the explorer and table viewers; SQL consoles get their own
@@ -197,6 +208,150 @@ class Database private constructor(
         }
     }
 
+    override suspend fun schemaSnapshot(namespace: Namespace, onProgress: (done: Int, total: Int) -> Unit): SchemaSnapshot {
+        val (views, tables) = tables(namespace).partition { it.isView }
+        onProgress(0, tables.size)
+        val done = AtomicInteger()
+        // A few tables at a time: each is several metadata round trips, which add up on a remote server, but the pool is
+        // shared with open table tabs.
+        val permits = Semaphore(PoolSize - 1)
+        val details =
+            coroutineScope {
+                tables.map { table ->
+                    async {
+                        permits.withPermit {
+                            withMetadata { introspector.details(it.metaData, table.ref) }.also { onProgress(done.incrementAndGet(), tables.size) }
+                        }
+                    }
+                }.awaitAll()
+            }
+        return SchemaSnapshot(namespace, details, views.map { it.ref.name })
+    }
+
+    override suspend fun executeScript(script: DdlScript, onProgress: (Int) -> Unit): Int {
+        if (config.readOnly) throw ReadOnlyViolationException("changing the schema")
+        val prologue = script.statements.filter { it.phase == DdlPhase.Prologue }.map { it.sql }
+        val epilogue = script.statements.filter { it.phase == DdlPhase.Epilogue }.map { it.sql }
+        val body = script.statements.filter { it.phase != DdlPhase.Prologue && it.phase != DdlPhase.Epilogue }.map { it.sql }
+        return withPooled { connection ->
+            withContext(Dispatchers.IO) {
+                val autoCommit = connection.autoCommit
+                // SQLite rebuilds turn foreign keys off; put back whatever the connection had, not blindly ON.
+                val sqliteForeignKeys =
+                    if (dialect is SqlDialect.SQLiteDialect && prologue.isNotEmpty()) connection.scalar("PRAGMA foreign_keys") else null
+                var done = 0
+                fun run(sql: String) {
+                    connection.createStatement().use { it.execute(sql) }
+                    onProgress(++done)
+                }
+                try {
+                    prologue.forEach(::run)
+                    if (script.transactional) connection.autoCommit = false
+                    for ((index, sql) in body.withIndex()) {
+                        try {
+                            coroutineContext.ensureActive()
+                            run(sql)
+                        } catch (e: Exception) {
+                            val rolledBack = script.transactional && runCatching { connection.rollback() }.isSuccess
+                            val reason = (e as? SQLException)?.message ?: e.toString()
+                            val outcome =
+                                when {
+                                    rolledBack -> "Nothing was changed."
+                                    index == 0 -> "Nothing was changed."
+                                    else -> "The $index statement(s) before it were applied and stay applied: $dialect can't roll back DDL."
+                                }
+                            throw ScriptException("Statement ${index + 1} of ${body.size} failed: $reason\n$outcome", sql, index, rolledBack, e)
+                        }
+                    }
+                    if (sqliteForeignKeys != null) {
+                        val violations = connection.createStatement().use { st -> st.executeQuery("PRAGMA foreign_key_check").use { rs -> buildList { while (rs.next() && size < 5) add(rs.getString(1)) } } }
+                        if (violations.isNotEmpty()) {
+                            connection.rollback()
+                            throw ScriptException(
+                                "The change leaves rows whose foreign keys point nowhere (in ${violations.distinct().joinToString()}). Nothing was changed.",
+                                "PRAGMA foreign_key_check", body.size, rolledBack = true, cause = null,
+                            )
+                        }
+                    }
+                    if (script.transactional) connection.commit()
+                    if (sqliteForeignKeys != null) connection.createStatement().use { it.execute("PRAGMA foreign_keys = $sqliteForeignKeys") }
+                    else epilogue.forEach(::run)
+                    done
+                } finally {
+                    withContext(NonCancellable) {
+                        runCatching { if (!connection.autoCommit) connection.rollback() }
+                        runCatching { connection.autoCommit = autoCommit }
+                        if (sqliteForeignKeys != null) runCatching { connection.createStatement().use { it.execute("PRAGMA foreign_keys = $sqliteForeignKeys") } }
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun <T> insertRows(
+        table: TableRef,
+        columns: List<ColumnInfo>,
+        rows: Sequence<T>,
+        values: (T) -> List<String?>,
+        describe: (index: Long, row: T) -> String,
+        onProgress: (Long) -> Unit,
+    ): Long {
+        if (config.readOnly) throw ReadOnlyViolationException("inserting rows")
+        require(columns.isNotEmpty()) { "No columns to insert into" }
+        val sql =
+            "INSERT INTO ${dialect.qualifiedName(table)} (${columns.joinToString(", ") { dialect.quoteIdentifier(it.name) }}) " +
+                "VALUES (${columns.joinToString(", ") { "?" }})"
+        return withPooled { connection ->
+            withContext(Dispatchers.IO) {
+                val autoCommit = connection.autoCommit
+                connection.autoCommit = false
+                try {
+                    var count = 0L
+                    connection.prepareStatement(sql).use { statement ->
+                        // Rows of the batch being built, to name the one that fails.
+                        val pending = ArrayList<Pair<Long, T>>(InsertBatchSize)
+                        fun flush() {
+                            if (pending.isEmpty()) return
+                            try {
+                                statement.executeBatch()
+                            } catch (e: SQLException) {
+                                // Drivers that stop at the bad row report how many went in before it.
+                                val failed = (e as? java.sql.BatchUpdateException)?.updateCounts?.let { counts ->
+                                    counts.indexOfFirst { it == Statement.EXECUTE_FAILED }.takeIf { it >= 0 } ?: counts.size.takeIf { it < pending.size }
+                                }
+                                val culprit = failed?.let { pending.getOrNull(it) }
+                                val where = culprit?.let { (index, row) -> describe(index, row) } ?: "rows ${pending.first().first + 1}–${pending.last().first + 1}"
+                                val reason = generateSequence<Throwable>(e) { (it as? SQLException)?.nextException ?: it.cause }.drop(1).firstOrNull()?.message ?: e.message
+                                throw InsertException("Couldn't insert $where: $reason. Nothing was imported.", where, e)
+                            }
+                            count += pending.size
+                            pending.clear()
+                            onProgress(count)
+                        }
+                        for ((index, row) in rows.withIndex()) {
+                            if (index % InsertBatchSize == 0) coroutineContext.ensureActive()
+                            val rowValues = values(row)
+                            columns.forEachIndexed { i, column -> dialect.bind(statement, i + 1, rowValues.getOrNull(i), column.jdbcType) }
+                            statement.addBatch()
+                            pending += index.toLong() to row
+                            if (pending.size == InsertBatchSize) flush()
+                        }
+                        flush()
+                    }
+                    connection.commit()
+                    count
+                } catch (e: Throwable) {
+                    withContext(NonCancellable) { runCatching { connection.rollback() } }
+                    throw e
+                } finally {
+                    withContext(NonCancellable) { runCatching { connection.autoCommit = autoCommit } }
+                }
+            }
+        }
+    }
+
+    private fun Connection.scalar(sql: String): String? = createStatement().use { st -> st.executeQuery(sql).use { rs -> if (rs.next()) rs.getString(1) else null } }
+
     override suspend fun openSession(): QuerySession =
         withContext(Dispatchers.IO) {
             val connection = newConnection(driver, jdbcUrl, config, password)
@@ -233,6 +388,9 @@ class Database private constructor(
     companion object {
         /** Connections shared by explorer and table viewers; consoles have their own. */
         private const val PoolSize = 4
+
+        /** Rows per JDBC batch when inserting: big enough to amortize round trips, small enough to name a failing row. */
+        private const val InsertBatchSize = 500
 
         /**
          * Opens the SSH tunnel (if any) and the pool, and validates the connection, so bad credentials fail here

@@ -340,6 +340,10 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
         }
     }
 
+    fun editStructure() = app.workspace.openTableDesigner(config, table.namespace, table)
+
+    fun showInDiagram() = app.workspace.openErDiagram(config, table.namespace, table)
+
     fun openDdlInConsole() {
         val ddl = structure?.ddl ?: return
         app.workspace.openConsole(config, ddl)

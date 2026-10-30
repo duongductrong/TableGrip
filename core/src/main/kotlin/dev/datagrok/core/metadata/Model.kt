@@ -22,6 +22,8 @@ data class ColumnInfo(
     val primaryKey: Boolean,
     /** A [java.sql.Types] constant, as the driver reports it. */
     val jdbcType: Int = Types.OTHER,
+    /** Digits after the decimal point for exact numerics (`numeric(10,2)` has 2), else null. */
+    val scale: Int? = null,
 )
 
 data class IndexInfo(val name: String, val columns: List<String>, val unique: Boolean)
@@ -41,6 +43,8 @@ data class TableDetails(
     val columns: List<ColumnInfo>,
     val indexes: List<IndexInfo>,
     val foreignKeys: List<ForeignKeyInfo>,
+    /** The primary key constraint's name where the engine names it (`users_pkey`, `PRIMARY`), else null. */
+    val primaryKeyName: String? = null,
 ) {
     val primaryKey: List<String>
         get() = columns.filter { it.primaryKey }.map { it.name }

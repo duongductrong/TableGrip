@@ -5,6 +5,12 @@ import dev.datagrok.app.documents.DocumentBrowserView
 import dev.datagrok.app.keyvalue.CommandConsoleTab
 import dev.datagrok.app.keyvalue.CommandConsoleView
 import dev.datagrok.app.keyvalue.KeyBrowserTab
+import dev.datagrok.app.schema.ErDiagramTab
+import dev.datagrok.app.schema.ErDiagramView
+import dev.datagrok.app.schema.SchemaCompareTab
+import dev.datagrok.app.schema.SchemaCompareView
+import dev.datagrok.app.schema.TableDesignerTab
+import dev.datagrok.app.schema.TableDesignerView
 import dev.datagrok.app.keyvalue.KeyBrowserView
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VisibilityThreshold
@@ -86,6 +92,9 @@ internal fun WorkspaceView(app: AppState) {
                 is KeyBrowserTab -> KeyBrowserView(selected)
                 is DocumentBrowserTab -> DocumentBrowserView(selected)
                 is CommandConsoleTab -> CommandConsoleView(selected)
+                is TableDesignerTab -> TableDesignerView(app, selected)
+                is SchemaCompareTab -> SchemaCompareView(app, selected)
+                is ErDiagramTab -> ErDiagramView(app, selected)
                 else -> Unit
             }
         }

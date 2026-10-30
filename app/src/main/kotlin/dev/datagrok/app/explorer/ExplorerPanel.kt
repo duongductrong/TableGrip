@@ -1,6 +1,9 @@
 package dev.datagrok.app.explorer
 
 import dev.datagrok.core.agent.Mention
+import dev.datagrok.app.schema.openImport
+import dev.datagrok.app.schema.openTestData
+import dev.datagrok.app.schema.schemaTools
 import androidx.compose.foundation.ContextMenuArea
 import androidx.compose.foundation.ContextMenuItem
 import androidx.compose.foundation.background
@@ -221,6 +224,7 @@ private fun contextMenu(app: AppState, node: ExplorerNode): List<ContextMenuItem
             val connected = app.databases.status(config.id) is ConnectionStatus.Connected
             listOfNotNull(
                 ContextMenuItem("New Console") { app.workspace.openConsole(config) },
+                *schemaTools(app, config).toTypedArray(),
                 ContextMenuItem("Refresh") { app.explorer.refresh(node.key) },
                 ContextMenuItem("Disconnect") { app.explorer.disconnect(config.id) }.takeIf { connected },
                 ContextMenuItem(if (config.favorite) "Remove from Favorites" else "Add to Favorites") { app.connections.toggleFavorite(config) },
@@ -240,7 +244,16 @@ private fun contextMenu(app: AppState, node: ExplorerNode): List<ContextMenuItem
                     },
                     ContextMenuItem("Ungroup") { app.connections.ungroup(node.name) },
                 )
-        is ExplorerNode.Schema -> listOf(ContextMenuItem("Refresh") { app.explorer.refresh(node.key) })
+        is ExplorerNode.Schema -> {
+            val config = app.connections.byId(node.connectionId) ?: return emptyList()
+            listOfNotNull(
+                ContextMenuItem("New Table…") { app.workspace.openTableDesigner(config, node.namespace) }.takeUnless { config.readOnly },
+                ContextMenuItem("Import Data…") { app.openImport(config, node.namespace) }.takeUnless { config.readOnly },
+                ContextMenuItem("Show ER Diagram") { app.workspace.openErDiagram(config, node.namespace) },
+                ContextMenuItem("Compare Schema With…") { app.workspace.openSchemaCompare(config, node.namespace) },
+                ContextMenuItem("Refresh") { app.explorer.refresh(node.key) },
+            )
+        }
         is ExplorerNode.DocumentDatabase -> {
             val config = app.connections.byId(node.connectionId) ?: return emptyList()
             listOf(
@@ -273,6 +286,10 @@ private fun contextMenu(app: AppState, node: ExplorerNode): List<ContextMenuItem
                 ContextMenuItem("Open Data") { app.workspace.openTable(config, ref) },
                 ContextMenuItem("Open Structure") { app.workspace.openTable(config, ref, StructureSection.Columns) },
                 ContextMenuItem("Show DDL") { app.workspace.openTable(config, ref, StructureSection.Ddl) },
+                ContextMenuItem("Edit Structure…") { app.workspace.openTableDesigner(config, ref.namespace, ref) }.takeUnless { config.readOnly || node.info.isView },
+                ContextMenuItem("Show in ER Diagram") { app.workspace.openErDiagram(config, ref.namespace, ref) },
+                ContextMenuItem("Import Data…") { app.openImport(config, ref.namespace, ref) }.takeUnless { config.readOnly || node.info.isView },
+                ContextMenuItem("Generate Test Data…") { app.openTestData(config, ref) }.takeUnless { config.readOnly || node.info.isView },
                 ContextMenuItem("Copy DDL") { app.explorer.copyDdl(config, ref) },
                 ContextMenuItem("New Console with SELECT") {
                     val name = SqlDialect.of(config.type).qualifiedName(ref)

@@ -57,6 +57,8 @@ compose.desktop {
         mainClass = "dev.datagrok.app.MainKt"
         // Skiko and the SQLite driver load native libraries.
         jvmArgs("--enable-native-access=ALL-UNNAMED")
+        // Trackpad pinch-to-zoom reads macOS magnify gestures (see PinchZoom).
+        jvmArgs("--add-exports=java.desktop/com.apple.eawt.event=ALL-UNNAMED")
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)

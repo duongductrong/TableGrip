@@ -3,6 +3,7 @@ package dev.datagrok.core.driver
 import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.dialect.SortColumn
 import dev.datagrok.core.dialect.SqlDialect
+import dev.datagrok.core.ddl.DdlScript
 import dev.datagrok.core.edit.ChangeStatement
 import dev.datagrok.core.export.ResultWriter
 import dev.datagrok.core.filter.SqlFilter
@@ -13,6 +14,7 @@ import dev.datagrok.core.metadata.TableInfo
 import dev.datagrok.core.metadata.TableRef
 import dev.datagrok.core.metadata.TableRelation
 import dev.datagrok.core.metadata.TableStructure
+import dev.datagrok.core.schema.SchemaSnapshot
 
 /**
  * A live connection to one profile. There is one interface per [dev.datagrok.core.connection.Paradigm], and the UI
@@ -64,4 +66,37 @@ interface RelationalConnection : DatabaseConnection {
 
     /** A dedicated session for a console, with its own transaction state. */
     suspend fun openSession(): QuerySession
+
+    /**
+     * Every table of [namespace] with columns, keys and indexes, for schema compare and the ER diagram. [onProgress] gets
+     * tables read and the total. Cancel the coroutine to stop between tables.
+     */
+    suspend fun schemaSnapshot(namespace: Namespace, onProgress: (done: Int, total: Int) -> Unit = { _, _ -> }): SchemaSnapshot
+
+    /**
+     * Runs a schema tool's [script]: in one transaction when the engine can roll DDL back, else statement by statement,
+     * stopping at the first failure ([ScriptException] says how far it got). [onProgress] gets statements done.
+     */
+    suspend fun executeScript(script: DdlScript, onProgress: (Int) -> Unit = {}): Int
+
+    /**
+     * Inserts [rows] into [columns] of [table] in batches, all in one transaction: on failure or cancellation nothing is
+     * kept. Values are text, bound with each column's JDBC type; [describe] names a row in error messages (e.g. its line
+     * in a file). [onProgress] gets rows inserted so far. Returns the row count.
+     */
+    suspend fun <T> insertRows(
+        table: TableRef,
+        columns: List<ColumnInfo>,
+        rows: Sequence<T>,
+        values: (T) -> List<String?>,
+        describe: (index: Long, row: T) -> String = { index, _ -> "row ${index + 1}" },
+        onProgress: (Long) -> Unit = {},
+    ): Long
 }
+
+/** A script statement failed. [completed] statements ran before it; [rolledBack] says whether they were undone. */
+class ScriptException(message: String, val statement: String, val completed: Int, val rolledBack: Boolean, cause: Throwable?) :
+    java.sql.SQLException(message, cause)
+
+/** An insert failed on [row] (as the caller described it); nothing was kept. */
+class InsertException(message: String, val row: String, cause: Throwable?) : java.sql.SQLException(message, cause)

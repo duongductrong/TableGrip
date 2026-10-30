@@ -160,6 +160,31 @@ engine's own catalog: `pg_constraint` / `pg_trigger` / `pg_get_*def` on PostgreS
 new console from the toolbar. In the explorer, right-click a table → Open Structure / Show DDL / Copy DDL, or
 double-click a column, index or foreign key to open its section. Rows only load once the Data view is shown.
 
+## Schema tools
+
+Right-click a schema (or a connection, for its default schema) or a table in the explorer. Everything that changes the
+schema or writes rows shows the statements first, respects read-only connections, and asks again on Production.
+Transactional DDL (PostgreSQL, SQLite, SQL Server, DuckDB) runs all-or-nothing; elsewhere statements apply one by one
+and stop at the first failure, which the dialog says up front.
+
+- **Table designer** — *New Table…* / *Edit Structure…* (also the pencil in a table's Structure view). Columns, indexes
+  and foreign keys as editable lists; renames are renames, not drop-and-add, and follow into indexes and keys. The SQL
+  preview updates as you type (⌘S applies). SQLite changes it can't make in place rebuild the table the documented way:
+  rows, indexes, triggers, UNIQUE and CHECK constraints come back, with foreign keys checked before committing.
+- **Schema compare** — *Compare Schema With…*: any two relational connections and schemas (staging → production).
+  Differences per table, each with a checkbox; drops start unchecked. The migration is written in the target's dialect:
+  copy it, save it, open it in a console, or run it through the same confirmation dialog.
+- **ER diagram** — *Show ER Diagram* / *Show in ER Diagram* (the table and its neighbours). Layered by foreign keys,
+  crow's-foot ends, drag to arrange, pinch or ⌘-scroll to zoom, two-finger scroll to pan, find a table, double-click to open its rows. Export as PNG
+  (light or dark, 2×) or Mermaid `erDiagram`.
+- **Import data** — *Import Data…*: CSV/TSV (delimiter and encoding detected), Excel `.xlsx`, JSON arrays or NDJSON.
+  Preview, then a new table (types inferred, names cleaned to snake_case) or an existing one (columns matched by name).
+  Batched inserts in one transaction: a bad row is named by its line and nothing is kept; a table created for the
+  import is dropped again.
+- **Test data** — *Generate Test Data…*: a generator per column picked from its name and type (emails that match the
+  name, phone numbers, prices, past timestamps…), NULL ratios, uniqueness, foreign keys drawn from the referenced
+  table's rows. Same seed, same rows. Preview before inserting.
+
 ## Connections
 
 Everything lives in `~/.datagrok/` (override with `-Ddatagrok.home`): `connections.json` (no secrets),
@@ -266,5 +291,6 @@ Options; production connections never share data unless their own Options say so
   SSH tunnels (trust-on-first-use host keys), streaming export to CSV/TSV/JSON/SQL/Markdown.
 - **M3 – editor** (done): context-aware completion with FK joins and value suggestions, formatter, EXPLAIN,
   find/replace, line actions, smart table filters, saved queries, parameter prompts. Next: snippets.
-- **M4 – schema tools**: structure editor, DDL, CSV import, more drivers.
+- **M4 – schema tools** (done): table designer, schema compare and migrations, ER diagram, CSV/Excel/JSON import,
+  test data generator.
 - **M5 – ship**: go-to-anything and session restore (done); signed installers, auto-update.

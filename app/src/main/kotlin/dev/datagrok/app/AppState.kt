@@ -11,6 +11,8 @@ import dev.datagrok.app.completion.SchemaCache
 import dev.datagrok.app.explorer.ExplorerViewModel
 import dev.datagrok.app.export.ExportRequest
 import dev.datagrok.app.queries.SavedQueries
+import dev.datagrok.app.schema.ImportWizard
+import dev.datagrok.app.schema.TestDataState
 import dev.datagrok.app.settings.SettingsPages
 import dev.datagrok.app.workspace.SessionKeeper
 import dev.datagrok.app.workspace.WorkspaceViewModel
@@ -62,6 +64,10 @@ class AppState(
     /** Shows the agent chat in an island on the right, next to whatever is in front. */
     var agentOpen by mutableStateOf(false)
     var exportRequest by mutableStateOf<ExportRequest?>(null)
+    /** The import wizard, while it's open. */
+    var importWizard by mutableStateOf<ImportWizard?>(null)
+    /** The test data generator, while it's open. */
+    var testData by mutableStateOf<TestDataState?>(null)
     /** Shows the go-to-anything popup (⌘P / ⇧⇧). */
     var goToOpen by mutableStateOf(false)
     /** Values last given to query parameters, by name, offered again the next time a query asks for them. */

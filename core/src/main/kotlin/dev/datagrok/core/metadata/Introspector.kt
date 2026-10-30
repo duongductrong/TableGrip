@@ -27,7 +27,9 @@ internal class Introspector(private val dialect: SqlDialect) {
     fun details(meta: DatabaseMetaData, table: TableRef, keysAndIndexes: Boolean = true): TableDetails {
         val catalog = table.namespace.catalog
         val schema = table.namespace.schema
-        val primaryKey = meta.getPrimaryKeys(catalog, schema, table.name).collect { getString("COLUMN_NAME") }.toSet()
+        val primaryKeyRows = meta.getPrimaryKeys(catalog, schema, table.name).collect { getString("COLUMN_NAME") to getString("PK_NAME") }
+        val primaryKey = primaryKeyRows.map { it.first }.toSet()
+        val primaryKeyName = primaryKeyRows.firstNotNullOfOrNull { it.second }
 
         val columns =
             meta.getColumns(catalog, schema?.let { meta.escape(it) }, meta.escape(table.name), "%")
@@ -43,11 +45,12 @@ internal class Introspector(private val dialect: SqlDialect) {
                             autoIncrement = runCatching { getString("IS_AUTOINCREMENT") == "YES" }.getOrDefault(false),
                             primaryKey = name in primaryKey,
                             jdbcType = getInt("DATA_TYPE"),
+                            scale = getInt("DECIMAL_DIGITS").takeUnless { wasNull() },
                         )
                 }
                 .sortedBy { it.first }
                 .map { it.second }
-        if (!keysAndIndexes) return TableDetails(table, columns, emptyList(), emptyList())
+        if (!keysAndIndexes) return TableDetails(table, columns, emptyList(), emptyList(), primaryKeyName)
 
         val indexes =
             meta.getIndexInfo(catalog, schema, table.name, false, true)
@@ -76,14 +79,16 @@ internal class Introspector(private val dialect: SqlDialect) {
                         onDelete = referentialAction(getShort("DELETE_RULE").takeUnless { wasNull() }),
                     )
                 }
-                .groupBy { it.name }
-                .map { (name, rows) ->
+                // SQLite names no foreign key: grouping by name alone would merge a table's keys to different tables.
+                .groupBy { it.name to it.target }
+                .map { (key, rows) ->
+                    val name = key.first
                     val sorted = rows.sortedBy { it.sequence }
                     val first = sorted.first()
                     ForeignKeyInfo(name, sorted.map { it.column }, first.target, sorted.map { it.targetColumn }, first.onUpdate, first.onDelete)
                 }
 
-        return TableDetails(table, columns, indexes, foreignKeys)
+        return TableDetails(table, columns, indexes, foreignKeys, primaryKeyName)
     }
 
     /** Every column of every table in [namespace], in one metadata call. */
@@ -102,6 +107,7 @@ internal class Introspector(private val dialect: SqlDialect) {
                         autoIncrement = runCatching { getString("IS_AUTOINCREMENT") == "YES" }.getOrDefault(false),
                         primaryKey = false,
                         jdbcType = getInt("DATA_TYPE"),
+                        scale = getInt("DECIMAL_DIGITS").takeUnless { wasNull() },
                     ),
                 )
             }
@@ -123,7 +129,7 @@ internal class Introspector(private val dialect: SqlDialect) {
                     toColumn = getString("PKCOLUMN_NAME"),
                 )
             }
-                .groupBy { it.from to it.name }
+                .groupBy { Triple(it.from, it.name, it.to) }
                 .map { (_, rows) ->
                     val sorted = rows.sortedBy { it.sequence }
                     TableRelation(sorted.first().from, sorted.map { it.fromColumn }, sorted.first().to, sorted.map { it.toColumn })
