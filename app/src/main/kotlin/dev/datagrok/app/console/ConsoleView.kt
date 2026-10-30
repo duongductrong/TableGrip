@@ -297,7 +297,11 @@ private fun ResultPanel(app: AppState, tab: ConsoleTab) {
                         model = view.model,
                         state = view.grid,
                         modifier = Modifier.weight(1f),
-                        actions = GridActions(dialect = SqlDialect.of(tab.config.type)),
+                        actions =
+                            GridActions(
+                                dialect = SqlDialect.of(tab.config.type),
+                                onMention = if (tab.canAskAgent) { columns, rows, values -> tab.mentionCells(view, columns, rows, values) } else null,
+                            ),
                     )
                     Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
                     val suffix = if (view.rows.truncated) " (limited)" else ""

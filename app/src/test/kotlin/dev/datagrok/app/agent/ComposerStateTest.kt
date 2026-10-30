@@ -91,4 +91,35 @@ class ComposerStateTest {
         assertNull(composer.preview)
         assertEquals(" and again ${first + 1} ", text)
     }
+
+    @Test
+    fun `typing after @ is a mention query until Esc or a space`() {
+        composer.text.edit { append("join @ord") }
+        assertEquals(5 to "ord", composer.typing)
+        composer.text.edit { append(".to") }
+        assertEquals(5 to "ord.to", composer.typing)
+        composer.dismissed = 5
+        assertNull(composer.typing)
+        composer.dismissed = null
+        composer.text.edit { append(" ") }
+        assertNull(composer.typing)
+    }
+
+    @Test
+    fun `an @ inside a word is not a mention`() {
+        composer.text.edit { append("mail me@exa") }
+        assertNull(composer.typing)
+        composer.text.edit { replace(0, length, "@") }
+        assertEquals(0 to "", composer.typing)
+    }
+
+    @Test
+    fun `picking replaces the query with a pill`() {
+        composer.text.edit { append("why @ord slow") }
+        select(8)
+        composer.accept(orders)
+        assertEquals("why ${MentionText.First}  slow", text)
+        assertEquals(TextRange(6), composer.text.selection)
+        assertNull(composer.typing)
+    }
 }

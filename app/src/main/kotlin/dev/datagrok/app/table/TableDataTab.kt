@@ -1,5 +1,7 @@
 package dev.datagrok.app.table
 
+import dev.datagrok.core.driver.ResultColumn
+import dev.datagrok.core.agent.Mention
 import dev.datagrok.core.connection.Capability
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
@@ -156,6 +158,26 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
 
     val firstRowNumber: Long
         get() = page.toLong() * pageSize + 1
+
+    /** Whether this table may be mentioned to agents at all. */
+    val canMention: Boolean
+        get() = app.aiAccess(config).sharesSchema
+
+    /** The table as a mention in the agent chat: ⌘L with no cells selected. */
+    fun mentionTable(): Boolean {
+        if (!canMention) return false
+        app.agent.mention(Mention.Table(config.id, config.name, config.type.displayName, table.namespace.displayName, table.name))
+        return true
+    }
+
+    /** Selected cells, page [rows], as a mention in the agent chat (⌘L); their values only when the connection shares data. */
+    fun mentionCells(columns: List<ResultColumn>, rows: IntRange, values: List<List<String?>>) {
+        val access = app.aiAccess(config)
+        if (!access.sharesSchema) return
+        val first = firstRowNumber.toInt() + rows.first
+        val mention = Mention.Cells(table.name, config.type.displayName, columns.map { it.name to it.typeName }, first..first + rows.last - rows.first, values.takeIf { access.sharesData })
+        app.agent.mention(mention)
+    }
 
     val hasChanges: Boolean
         get() = model?.hasChanges == true

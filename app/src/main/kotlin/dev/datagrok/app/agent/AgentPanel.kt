@@ -400,6 +400,15 @@ private fun Composer(agent: AgentViewModel, modifier: Modifier = Modifier) {
     LaunchedEffect(Unit) { focus.requestFocus() }
     // A mention or a rewind put something in the composer from elsewhere: go on typing there.
     LaunchedEffect(composer.focusRequests) { focus.requestFocus() }
+    // While typing `@…`: what it can mention, read on every composition so tables show up once they've loaded.
+    val typing = composer.typing
+    val candidates = typing?.let { agent.sources.search(it.second) }.orEmpty()
+    LaunchedEffect(typing?.second) { composer.highlighted = 0 }
+    // An Esc-closed list opens again once its @ is gone.
+    LaunchedEffect(state.text) {
+        val at = composer.dismissed ?: return@LaunchedEffect
+        if (at >= state.text.length || state.text[at] != '@') composer.dismissed = null
+    }
 
     Column(
         modifier.fillMaxWidth()
@@ -424,7 +433,7 @@ private fun Composer(agent: AgentViewModel, modifier: Modifier = Modifier) {
                         }
                         .focusRequester(focus)
                         .onFocusChanged { focused = it.isFocused }
-                        .onPreviewKeyEvent { event -> event.type == KeyEventType.KeyDown && handleComposerKey(event, composer, ::submit) },
+                        .onPreviewKeyEvent { event -> event.type == KeyEventType.KeyDown && handleComposerKey(event, composer, candidates, ::submit) },
                 textStyle = JewelTheme.defaultTextStyle.copy(color = JewelTheme.globalColors.text.normal),
                 cursorBrush = SolidColor(JewelTheme.globalColors.text.normal),
                 inputTransformation = composer.filter,
@@ -432,13 +441,16 @@ private fun Composer(agent: AgentViewModel, modifier: Modifier = Modifier) {
                 onTextLayout = { getResult -> layout = getResult() },
                 decorator = { inner ->
                     if (state.text.isEmpty()) {
-                        Text("Ask anything, ${Shortcuts.AddToChat} in a console to mention SQL (Shift+Enter for a new line)", color = JewelTheme.globalColors.text.info)
+                        Text("Ask anything: @ mentions tables, tabs and saved queries, ${Shortcuts.AddToChat} what's selected", color = JewelTheme.globalColors.text.info)
                     }
                     inner()
                 },
             )
         }
-        composer.preview?.let { char ->
+        if (typing != null && focused) {
+            MentionSuggestions(typing.second, candidates, composer.highlighted) { composer.accept(it.mention) }
+        }
+        composer.preview?.takeIf { typing == null }?.let { char ->
             composer.mention(char)?.let { mention -> MentionPreview(mention, onDismiss = { composer.preview = null }, onRemove = { composer.remove(char) }) }
         }
         Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -453,9 +465,24 @@ private fun Composer(agent: AgentViewModel, modifier: Modifier = Modifier) {
     }
 }
 
-/** Enter sends; copy, cut and paste keep pills readable outside and whole inside; Esc closes a pill's details. */
-private fun handleComposerKey(event: KeyEvent, composer: ComposerState, submit: () -> Unit): Boolean {
+/**
+ * Enter sends, or picks from the `@` list while it's open; copy, cut and paste keep pills readable outside and whole
+ * inside; Esc closes the `@` list or a pill's details.
+ */
+private fun handleComposerKey(event: KeyEvent, composer: ComposerState, candidates: List<MentionCandidate>, submit: () -> Unit): Boolean {
     val primary = if (isMac) event.isMetaPressed else event.isCtrlPressed
+    val typing = composer.typing
+    if (typing != null) {
+        val last = candidates.lastIndex
+        when {
+            event.key == Key.Escape -> return true.also { composer.dismissed = typing.first }
+            candidates.isEmpty() -> Unit
+            event.key == Key.DirectionDown -> return true.also { composer.highlighted = if (composer.highlighted >= last) 0 else composer.highlighted + 1 }
+            event.key == Key.DirectionUp -> return true.also { composer.highlighted = if (composer.highlighted <= 0) last else composer.highlighted - 1 }
+            (event.key == Key.Enter || event.key == Key.NumPadEnter || event.key == Key.Tab) && !event.isShiftPressed ->
+                return true.also { composer.accept(candidates[composer.highlighted.coerceIn(0, last)].mention) }
+        }
+    }
     return when {
         event.key == Key.Enter && !event.isShiftPressed -> true.also { submit() }
         event.key == Key.Escape && composer.preview != null -> true.also { composer.preview = null }

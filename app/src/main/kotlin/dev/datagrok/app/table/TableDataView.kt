@@ -130,6 +130,7 @@ private fun DataView(tab: TableDataTab) {
                                 linkedColumns = tab.linkedColumns,
                                 onFollowLink = tab::followLink,
                                 relatedRows = tab::referencingRows,
+                                onMention = tab::mentionCells.takeIf { tab.canMention },
                             ),
                     )
                 }

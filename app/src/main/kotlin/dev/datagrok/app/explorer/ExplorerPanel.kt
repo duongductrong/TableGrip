@@ -1,5 +1,6 @@
 package dev.datagrok.app.explorer
 
+import dev.datagrok.core.agent.Mention
 import androidx.compose.foundation.ContextMenuArea
 import androidx.compose.foundation.ContextMenuItem
 import androidx.compose.foundation.background
@@ -220,10 +221,24 @@ private fun contextMenu(app: AppState, node: ExplorerNode): List<ContextMenuItem
                     app.workspace.openConsole(config, "SELECT * FROM $name;")
                 },
                 ContextMenuItem("Copy Name") { copyToClipboard(ref.name) },
+                ContextMenuItem("Add to Chat") {
+                    app.agent.mention(Mention.Table(config.id, config.name, config.type.displayName, ref.namespace.displayName, ref.name))
+                }.takeIf { app.aiAccess(config).sharesSchema },
                 ContextMenuItem("Refresh") { app.explorer.refresh(node.key) },
+            ).filterNotNull()
+        }
+        is ExplorerNode.Column -> {
+            val config = app.connections.byId(node.table.connectionId)
+            listOfNotNull(
+                ContextMenuItem("Copy Name") { copyToClipboard(node.column.name) },
+                config?.takeIf { app.aiAccess(it).sharesSchema }?.let {
+                    ContextMenuItem("Add to Chat") {
+                        val column = node.column
+                        app.agent.mention(Mention.Column(it.name, it.type.displayName, node.table.ref.name, column.name, column.typeName, column.primaryKey))
+                    }
+                },
             )
         }
-        is ExplorerNode.Column -> listOf(ContextMenuItem("Copy Name") { copyToClipboard(node.column.name) })
         else -> emptyList()
     }
 

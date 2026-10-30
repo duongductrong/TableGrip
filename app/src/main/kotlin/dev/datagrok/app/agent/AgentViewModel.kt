@@ -53,7 +53,7 @@ data class RunConfirmation(val sql: String, val connectionId: String, val reason
  * One entry in the chat. [text] grows while the agent streams. A message the user typed may hold [mentions], as stand-in
  * characters in [text] (see [MentionText]).
  */
-class ChatMessage(val role: AgentMessage.Role, text: String = "", val kind: Kind = Kind.Chat, val mentions: Map<Char, Mention> = emptyMap()) {
+class ChatMessage(val role: AgentMessage.Role, text: String = "", val kind: Kind = Kind.Chat, mentions: Map<Char, Mention> = emptyMap()) {
     enum class Kind {
         Chat,
         /** Sent to the agent on the user's behalf (a query result, a declined run); shown as a one-line note. */
@@ -61,6 +61,8 @@ class ChatMessage(val role: AgentMessage.Role, text: String = "", val kind: Kind
     }
 
     var text by mutableStateOf(text)
+    /** Completed when the message is first sent (see [MentionSources.complete]), so every later turn sends the same. */
+    var mentions by mutableStateOf(mentions)
     var streaming by mutableStateOf(false)
     var error by mutableStateOf<String?>(null)
     /** The note's line in the chat, when [text] is what the agent reads. */
@@ -86,6 +88,9 @@ class AgentViewModel(private val app: AppState, private val registry: AgentRegis
         private set
     /** What is being typed, mentions included; a rewind hands a message back here to edit and send again. */
     val composer = ComposerState()
+
+    /** What `@` and ⌘L can mention. */
+    val sources = MentionSources(app)
 
     private val context = AgentContext(app)
     private var discovered = false
@@ -178,10 +183,11 @@ class AgentViewModel(private val app: AppState, private val registry: AgentRegis
         turn =
             app.scope.launch {
                 try {
+                    if (message.mentions.isNotEmpty()) message.mentions = message.mentions.mapValues { (_, mention) -> sources.complete(mention) }
                     val request =
                         AgentRequest(
                             history + AgentMessage(AgentMessage.Role.User, message.mentionText.prompt),
-                            system = context.systemPrompt(),
+                            system = context.systemPrompt(message.mentions.values),
                             workingDirectory = DatagrokPaths.agentWorkspace,
                             reminder = AgentContext.Reminder,
                         )

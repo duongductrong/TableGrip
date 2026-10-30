@@ -2,6 +2,7 @@ package dev.datagrok.core.assist
 
 import dev.datagrok.core.driver.RelationalConnection
 import dev.datagrok.core.metadata.ColumnInfo
+import dev.datagrok.core.metadata.TableDetails
 import dev.datagrok.core.metadata.TableInfo
 
 /**
@@ -20,6 +21,26 @@ object SchemaDigest {
         val namespace = namespaces.firstOrNull { it.displayName == defaultName } ?: return "The database has no schemas."
         return describe(namespace.displayName, names.filter { it != namespace.displayName }, database.tables(namespace), database.columnsOf(namespace), budget, focus)
     }
+
+    /** One table in full: every column with its type and nullability, then its keys and indexes. */
+    fun table(details: TableDetails): String = buildString {
+        append("Columns:\n")
+        for (column in details.columns) {
+            append("  ${column.name} ${column.typeName.lowercase()}")
+            if (column.primaryKey) append(" pk")
+            if (!column.nullable) append(" not null")
+            if (column.autoIncrement) append(" auto increment")
+            column.defaultValue?.takeIf { it.isNotBlank() }?.let { append(" default ").append(it.take(60)) }
+            append('\n')
+        }
+        if (details.primaryKey.isNotEmpty()) append("Primary key: ${details.primaryKey.joinToString()}\n")
+        for (key in details.foreignKeys) {
+            append("Foreign key: (${key.columns.joinToString()}) -> ${key.referencedTable.name}(${key.referencedColumns.joinToString()})\n")
+        }
+        for (index in details.indexes) {
+            append("${if (index.unique) "Unique index" else "Index"} ${index.name}: (${index.columns.joinToString()})\n")
+        }
+    }.trimEnd()
 
     fun describe(
         namespace: String,

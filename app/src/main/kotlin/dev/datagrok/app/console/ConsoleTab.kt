@@ -1,5 +1,6 @@
 package dev.datagrok.app.console
 
+import dev.datagrok.core.driver.ResultColumn
 import dev.datagrok.core.agent.Mention
 import dev.datagrok.core.connection.Capability
 import androidx.compose.foundation.text.input.TextFieldState
@@ -312,6 +313,21 @@ class ConsoleTab(
         val last = end - (sql.length - sql.trimEnd().length) - 1
         fun line(offset: Int) = text.substring(0, offset).count { it == '\n' } + 1
         return Mention.Sql(title, line(first)..line(last), config.type.displayName, sql.trim())
+    }
+
+    /** The whole console as a mention, for `@` in the chat; null when it's empty or not shared with agents. */
+    fun whole(): Mention? {
+        val text = editor.text.toString()
+        if (!canAskAgent || text.isBlank()) return null
+        return Mention.Sql(title, 1..text.trimEnd().count { it == '\n' } + 1, config.type.displayName, text.trim())
+    }
+
+    /** Cells selected in result [view] as a mention in the agent chat (⌘L); their values only when the connection shares data. */
+    fun mentionCells(view: ResultSetView, columns: List<ResultColumn>, rows: IntRange, values: List<List<String?>>) {
+        val access = app.aiAccess(config)
+        if (!access.sharesSchema) return
+        val mention = Mention.Cells(view.title, config.type.displayName, columns.map { it.name to it.typeName }, rows.first + 1..rows.last + 1, values.takeIf { access.sharesData })
+        app.agent.mention(mention)
     }
 
     /** Mentions the selection or the statement at the caret in the agent chat (⌘L); false when there is nothing to. */

@@ -67,6 +67,34 @@ class MentionTextTest {
     }
 
     @Test
+    fun `a table reads as its structure once it is known`() {
+        val table = Mention.Table("shop", "Shop", "SQLite", "main", "orders")
+        assertEquals("orders", table.label)
+        assertEquals("SQLite table main.orders on connection Shop:\n(its structure couldn't be read)", table.context)
+        assertEquals("SQLite table main.orders on connection Shop:\nTable columns:\n  id integer pk", table.copy(details = "Table columns:\n  id integer pk").context)
+    }
+
+    @Test
+    fun `cells send their values only when the connection shares data`() {
+        val columns = listOf("id" to "INTEGER", "note" to "TEXT")
+        val shared = Mention.Cells("orders", "SQLite", columns, 3..4, listOf(listOf("3", "a\nb"), listOf("4", null)))
+        assertEquals("orders rows 3-4", shared.label)
+        assertEquals("Cells from orders (SQLite), 2 column(s) × 2 row(s), rows 3-4:\nid integer | note text\n3 | a b\n4 | NULL", shared.context)
+        val withheld = shared.copy(rows = 7..7, values = null)
+        assertEquals("orders row 7", withheld.label)
+        assertTrue(withheld.context.endsWith("id integer | note text\n(Values not shared: the connection only shares its schema with agents.)"), withheld.context)
+    }
+
+    @Test
+    fun `columns and saved queries name themselves`() {
+        assertEquals("orders.total", Mention.Column("Shop", "SQLite", "orders", "total", "REAL", false).label)
+        assertEquals("Column orders.id of SQLite connection Shop: integer, primary key", Mention.Column("Shop", "SQLite", "orders", "id", "INTEGER", true).context)
+        val query = Mention.Query("Top customers", "SELECT 1")
+        assertEquals("Top customers", query.label)
+        assertEquals("Saved query \"Top customers\":\n```sql\nSELECT 1\n```", query.context)
+    }
+
+    @Test
     fun `a removed mention is not sent and an unknown stand-in is dropped`() {
         val text = MentionText("just ${b}this", mapOf(a to select))
         assertEquals("just this", text.prompt)

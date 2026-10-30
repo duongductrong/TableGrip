@@ -45,17 +45,56 @@ class ComposerState(private val clipboard: TextClipboard = TextClipboard.System)
     /** Puts [mention] at the caret, or focuses the pill already there for the same thing. */
     fun insert(mention: Mention) {
         focusRequests++
+        put(mention, text.selection.min, text.selection.max)
+    }
+
+    /** Replaces [start] until [end] with a pill for [mention]; with one already in the text, just drops that range. */
+    private fun put(mention: Mention, start: Int, end: Int) {
         val existing = mentions.entries.firstOrNull { it.value == mention && it.key in text.text }?.key
-        if (existing != null) return
+        if (existing != null) {
+            if (end > start) text.edit { replace(start, end, ""); selection = TextRange(start) }
+            return
+        }
         val char = allocate()
         mentions[char] = mention
         text.edit {
-            val start = selection.min
-            val end = selection.max
             val before = if (start > 0 && !this.charAt(start - 1).isWhitespace()) " " else ""
             replace(start, end, "$before$char ")
             selection = TextRange(start + before.length + 2)
         }
+    }
+
+    /**
+     * The mention being typed: where its `@` is and what follows it up to the caret, e.g. `ord` or `orders.to`. Null
+     * when the caret isn't right after one, or after the user closed its list with Esc.
+     */
+    val typing: Pair<Int, String>?
+        get() {
+            val selection = text.selection
+            if (!selection.collapsed) return null
+            val value = text.text
+            var at = selection.start
+            while (at > 0 && at > selection.start - MaxQuery && isQueryChar(value[at - 1])) at--
+            if (at == 0 || value[at - 1] != '@') return null
+            val start = at - 1
+            // An @ inside a word (an email address) isn't a mention.
+            if (start > 0 && !value[start - 1].isWhitespace() && !MentionText.isMention(value[start - 1])) return null
+            if (start == dismissed) return null
+            return start to value.substring(at, selection.start)
+        }
+
+    /** The `@` whose list was closed with Esc; typing another one opens a list again. */
+    var dismissed by mutableStateOf<Int?>(null)
+
+    /** Which candidate of the `@` list Enter picks. */
+    var highlighted by mutableStateOf(0)
+
+    /** Replaces the `@query` being typed with a pill for [mention]. */
+    fun accept(mention: Mention) {
+        val (start, _) = typing ?: return
+        highlighted = 0
+        put(mention, start, text.selection.start)
+        focusRequests++
     }
 
     /** Takes every copy of the pill [char] out of the text. */
@@ -162,6 +201,11 @@ class ComposerState(private val clipboard: TextClipboard = TextClipboard.System)
     fun pills(): List<IntRange> = layout().pills
 
     companion object {
+        /** The longest `@query` that still opens the list. */
+        private const val MaxQuery = 64
+
+        private fun isQueryChar(char: Char) = char.isLetterOrDigit() || char in "_.-$"
+
         /** Thin spaces pad the label inside its pill. */
         fun pillText(mention: Mention): String = " @${mention.label} "
     }

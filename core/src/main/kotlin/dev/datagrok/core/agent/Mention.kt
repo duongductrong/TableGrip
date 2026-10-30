@@ -29,7 +29,67 @@ sealed interface Mention {
             get() = "This $engine statement from $source failed:\n```sql\n${capped(sql.trim())}\n```\nError: ${capped(message.trim(), MessageBudget)}"
     }
 
+    /**
+     * A table or view of [connectionId]. Its structure is read when the message is sent ([details]), so the agent gets
+     * the columns, keys and indexes of this table even when the schema in its framing had to be cut short.
+     */
+    data class Table(val connectionId: String, val connection: String, val engine: String, val namespace: String?, val name: String, val details: String? = null) :
+        Mention {
+        override val label: String
+            get() = name
+
+        val qualified: String
+            get() = listOfNotNull(namespace, name).joinToString(".")
+
+        override val context: String
+            get() = "$engine table $qualified on connection $connection:\n${details?.let { capped(it) } ?: "(its structure couldn't be read)"}"
+    }
+
+    data class Column(val connection: String, val engine: String, val table: String, val name: String, val type: String, val primaryKey: Boolean) : Mention {
+        override val label: String
+            get() = "$table.$name"
+
+        override val context: String
+            get() = "Column $table.$name of $engine connection $connection: ${type.lowercase()}${if (primaryKey) ", primary key" else ""}"
+    }
+
+    /** A saved query, by its [name] in the library. */
+    data class Query(val name: String, val sql: String) : Mention {
+        override val label: String
+            get() = name
+
+        override val context: String
+            get() = "Saved query \"$name\":\n```sql\n${capped(sql.trim())}\n```"
+    }
+
+    /**
+     * Cells selected in a grid: [columns] as name and type, the 1-based [rows] of [source]. [values] is null when the
+     * connection doesn't share data, and then only the shape of the selection is sent.
+     */
+    data class Cells(val source: String, val engine: String, val columns: List<Pair<String, String>>, val rows: IntRange, val values: List<List<String?>>?) :
+        Mention {
+        override val label: String
+            get() = if (rows.first == rows.last) "$source row ${rows.first}" else "$source rows ${rows.first}-${rows.last}"
+
+        override val context: String
+            get() = buildString {
+                val count = rows.last - rows.first + 1
+                append("Cells from $source ($engine), ${columns.size} column(s) × $count row(s), rows ${rows.first}-${rows.last}:\n")
+                append(columns.joinToString(" | ") { (name, type) -> "$name ${type.lowercase()}" })
+                if (values == null) {
+                    append("\n(Values not shared: the connection only shares its schema with agents.)")
+                    return@buildString
+                }
+                values.take(CellRows).forEach { row -> append('\n').append(row.joinToString(" | ") { it?.replace('\n', ' ')?.take(CellBudget) ?: "NULL" }) }
+                if (values.size > CellRows) append("\n(${values.size - CellRows} more rows not shown)")
+            }
+    }
+
     companion object {
+        /** Rows of a [Cells] mention the agent reads, and how much of each value. */
+        const val CellRows = 50
+        const val CellBudget = 200
+
         /** Most of a mention the agent reads, so one huge selection can't crowd out the conversation. */
         const val Budget = 8_000
         const val MessageBudget = 2_000

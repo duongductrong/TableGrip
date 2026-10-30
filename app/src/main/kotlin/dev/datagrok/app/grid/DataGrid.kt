@@ -647,6 +647,7 @@ private fun cellMenu(controller: GridController): List<ContextMenuItem> {
         ContextMenuItem("Copy as Markdown") { controller.copy(CopyFormat.Markdown) },
         ContextMenuItem("Copy as SQL INSERT") { controller.copy(CopyFormat.SqlInsert) },
         ContextMenuItem("Copy as SQL IN (…)") { controller.copy(CopyFormat.SqlInList) },
+        ContextMenuItem("Add to Chat (${Shortcuts.AddToChat})") { controller.mentionSelection() }.takeIf { controller.actions.onMention != null },
         filter?.takeIf { single }?.let {
             val column = controller.columnName(focus.column)
             val value = controller.model.value(focus.row, state.modelColumn(focus.column))

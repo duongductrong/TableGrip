@@ -49,6 +49,22 @@ class DataGridTest {
     }
 
     @Test
+    fun `the agent chat key hands over the selected block`() = runComposeUiTest {
+        val state = DataGridState()
+        var mentioned: Triple<List<String>, IntRange, List<List<String?>>>? = null
+        val actions = GridActions(onMention = { columns, rows, values -> mentioned = Triple(columns.map { it.name }, rows, values) })
+        setContent { IntUiTheme(isDark = false) { Box(Modifier.size(800.dp, 400.dp)) { DataGrid(ResultGridModel(result(4, 50)), state, actions = actions) } } }
+
+        onNodeWithText("r1c1").performMouseInput { click(center) }
+        onRoot().performKeyInput {
+            withKeyDown(Key.ShiftLeft) { pressKey(Key.DirectionDown); pressKey(Key.DirectionRight) }
+            withKeyDown(if (isMac) Key.MetaLeft else Key.CtrlLeft) { pressKey(Key.L) }
+        }
+        waitForIdle()
+        assertEquals(Triple(listOf("c1", "c2"), 1..2, listOf(listOf("r1c1", "r1c2"), listOf("r2c1", "r2c2"))), mentioned)
+    }
+
+    @Test
     fun `click selects, keyboard moves and extends the selection`() = runComposeUiTest {
         val state = DataGridState()
         setContent { IntUiTheme(isDark = false) { Box(Modifier.size(800.dp, 400.dp)) { DataGrid(ResultGridModel(result(4, 50)), state) } } }

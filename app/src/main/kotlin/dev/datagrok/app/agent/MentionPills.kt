@@ -167,7 +167,7 @@ internal fun MentionMessageText(text: String, mentions: Map<Char, Mention>, modi
 }
 
 /** Puts a popup just above its anchor, or below it when there is no room above. */
-private object AboveAnchor : PopupPositionProvider {
+internal object AboveAnchor : PopupPositionProvider {
     private const val Gap = 6
 
     override fun calculatePosition(anchorBounds: IntRect, windowSize: IntSize, layoutDirection: LayoutDirection, popupContentSize: IntSize): IntOffset {
@@ -177,16 +177,39 @@ private object AboveAnchor : PopupPositionProvider {
     }
 }
 
-/** What a pill stands for, as the agent reads it: where it came from and its SQL. [onRemove] offers to take it out. */
+/** How a pill's details read: a line under its name, a block of code or text, and a note under it. */
+private class PreviewContent(val detail: String, val body: String?, val note: String? = null, val noteIsError: Boolean = false)
+
+private fun lines(range: IntRange) = if (range.first == range.last) "line ${range.first}" else "lines ${range.first}–${range.last}"
+
+private fun previewOf(mention: Mention): PreviewContent =
+    when (mention) {
+        is Mention.Sql -> PreviewContent("${mention.engine} · ${lines(mention.lines)}", mention.sql)
+        is Mention.Error -> PreviewContent("${mention.engine} · failed statement", mention.sql, mention.message, noteIsError = true)
+        is Mention.Table -> PreviewContent("${mention.engine} · ${mention.connection} · ${mention.qualified}", mention.details, if (mention.details == null) "Its columns, keys and indexes are read when the message is sent." else null)
+        is Mention.Column -> PreviewContent("${mention.engine} · ${mention.connection}", "${mention.type.lowercase()}${if (mention.primaryKey) ", primary key" else ""}")
+        is Mention.Query -> PreviewContent("Saved query", mention.sql)
+        is Mention.Cells -> {
+            val count = mention.rows.last - mention.rows.first + 1
+            val header = mention.columns.joinToString(" | ") { it.first }
+            val body = mention.values?.take(PreviewRows)?.joinToString("\n", prefix = "$header\n") { row -> row.joinToString(" | ") { it?.take(40) ?: "NULL" } } ?: header
+            val more = mention.values?.let { if (it.size > PreviewRows) "${it.size - PreviewRows} more rows are sent too." else null }
+            PreviewContent(
+                "${mention.engine} · ${mention.columns.size} column(s) × $count row(s)",
+                body,
+                if (mention.values == null) "Values aren't sent: this connection only shares its schema with agents." else more,
+            )
+        }
+    }
+
+private const val PreviewRows = 8
+
+/** What a pill stands for, as the agent reads it. [onRemove] offers to take it out of the message. */
 @Composable
 internal fun MentionPreview(mention: Mention, onDismiss: () -> Unit, onRemove: (() -> Unit)? = null) {
     val islands = LocalIslands.current
     val shape = RoundedCornerShape(8.dp)
-    val (detail, sql, error) =
-        when (mention) {
-            is Mention.Sql -> Triple("${mention.engine} · line${if (mention.lines.first == mention.lines.last) " ${mention.lines.first}" else "s ${mention.lines.first}–${mention.lines.last}"}", mention.sql, null)
-            is Mention.Error -> Triple("${mention.engine} · failed statement", mention.sql, mention.message)
-        }
+    val content = previewOf(mention)
     Popup(popupPositionProvider = AboveAnchor, onDismissRequest = onDismiss, properties = PopupProperties(focusable = false)) {
         Column(
             Modifier.widthIn(min = 240.dp, max = 380.dp)
@@ -199,22 +222,32 @@ internal fun MentionPreview(mention: Mention, onDismiss: () -> Unit, onRemove: (
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("@${mention.label}", fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(detail, color = JewelTheme.globalColors.text.info)
+                    Text(content.detail, color = JewelTheme.globalColors.text.info, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 if (onRemove != null) {
                     Tooltip({ Text("Remove from message") }) { IconButton(onClick = onRemove) { Icon(AllIconsKeys.Actions.Close, "Remove from message") } }
                 }
             }
-            Text(
-                sql.trim(),
-                Modifier.fillMaxWidth().heightIn(max = 200.dp).padding(end = 8.dp)
-                    .clip(RoundedCornerShape(6.dp)).background(islands.frame)
-                    .verticalScroll(rememberScrollState()).horizontalScroll(rememberScrollState())
-                    .padding(8.dp),
-                style = JewelTheme.editorTextStyle,
-                softWrap = false,
-            )
-            error?.let { Text(it.trim(), Modifier.padding(end = 8.dp), color = JewelTheme.globalColors.text.error, maxLines = 4, overflow = TextOverflow.Ellipsis) }
+            content.body?.let { body ->
+                Text(
+                    body.trim(),
+                    Modifier.fillMaxWidth().heightIn(max = 200.dp).padding(end = 8.dp)
+                        .clip(RoundedCornerShape(6.dp)).background(islands.frame)
+                        .verticalScroll(rememberScrollState()).horizontalScroll(rememberScrollState())
+                        .padding(8.dp),
+                    style = JewelTheme.editorTextStyle,
+                    softWrap = false,
+                )
+            }
+            content.note?.let {
+                Text(
+                    it.trim(),
+                    Modifier.padding(end = 8.dp),
+                    color = if (content.noteIsError) JewelTheme.globalColors.text.error else JewelTheme.globalColors.text.info,
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }

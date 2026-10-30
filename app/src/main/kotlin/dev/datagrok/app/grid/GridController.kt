@@ -45,6 +45,8 @@ data class GridActions(
     val onFollowLink: ((row: Int, column: String) -> Unit)? = null,
     /** Extra cell menu entries for [row], e.g. the rows of other tables that reference it. */
     val relatedRows: ((row: Int) -> List<Pair<String, () -> Unit>>)? = null,
+    /** Mentions the selected cells in the agent chat (⌘L): their columns, model [rows] and values. */
+    val onMention: ((columns: List<ResultColumn>, rows: IntRange, values: List<List<String?>>) -> Unit)? = null,
 )
 
 internal val isMac = System.getProperty("os.name").startsWith("Mac")
@@ -276,6 +278,7 @@ internal class GridController(val state: DataGridState, private val scope: Corou
         return when {
             primary && event.key == Key.A -> state.selectAll(rowCount).let { true }
             primary && event.key == Key.C -> copy(CopyFormat.Tsv, includeHeader = shift).let { true }
+            Shortcuts.AddToChat.matches(event) -> mentionSelection()
             primary && (event.key == Key.Enter || event.key == Key.NumPadEnter) -> actions.onSubmit?.invoke().let { actions.onSubmit != null }
             primary && event.isAltPressed && event.key == Key.N -> setNull().let { true }
             primary && event.key == Key.N -> addRow().let { editor != null }
@@ -425,6 +428,16 @@ internal class GridController(val state: DataGridState, private val scope: Corou
         val columns = selection.columns(columnCount).map(state::modelColumn)
         val rows = selection.rows.filter { it < model.rowCount }.map { row -> columns.map { model.value(row, it) } }
         return columns.map { model.columns[it] } to rows
+    }
+
+    /** Hands the selected cells to [GridActions.onMention]; false when there is no handler or nothing selected. */
+    fun mentionSelection(): Boolean {
+        val mention = actions.onMention ?: return false
+        val rows = state.selection?.rows?.filter { it < model.rowCount }.orEmpty()
+        val (columns, values) = selectedBlock()
+        if (rows.isEmpty() || values.isEmpty()) return false
+        mention(columns, rows.first()..rows.last(), values)
+        return true
     }
 
     fun copy(format: CopyFormat, includeHeader: Boolean = false) {

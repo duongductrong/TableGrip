@@ -1,5 +1,6 @@
 package dev.datagrok.app.agent
 
+import dev.datagrok.core.agent.Mention
 import dev.datagrok.app.AppState
 import dev.datagrok.app.console.ConsoleTab
 import dev.datagrok.app.console.RunOutcome
@@ -21,8 +22,11 @@ internal class AgentContext(private val app: AppState) {
         if (connectionId == null) schemas.clear() else schemas.remove(connectionId)
     }
 
-    /** The framing for a turn: rules first, then the connection, its schema, and what the user has open. */
-    suspend fun systemPrompt(): String = buildString {
+    /**
+     * The framing for a turn: rules first, then the connection, its schema, and what the user has open. An open console
+     * the message already [mentioned] in full isn't repeated.
+     */
+    suspend fun systemPrompt(mentioned: Collection<Mention> = emptyList()): String = buildString {
         append(Rules)
         val connection = app.currentConnection
         if (connection == null) {
@@ -44,7 +48,7 @@ internal class AgentContext(private val app: AppState) {
         when (val tab = app.workspace.selected) {
             is TableDataTab ->
                 append("\n\n# Open in Datagrok\nThe user is viewing table ${listOfNotNull(tab.table.namespace.catalog, tab.table.namespace.schema, tab.table.name).joinToString(".")}.")
-            is ConsoleTab -> tab.editor.text.toString().trim().takeIf { it.isNotEmpty() }?.let {
+            is ConsoleTab -> tab.editor.text.toString().trim().takeIf { text -> text.isNotEmpty() && mentioned.none { it is Mention.Sql && it.sql == text } }?.let {
                 append("\n\n# Open in Datagrok\nThe user's open console contains:\n```sql\n${it.take(ConsoleBudget)}\n```")
             }
             else -> Unit
