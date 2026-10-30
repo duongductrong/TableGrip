@@ -1,5 +1,9 @@
 package dev.datagrok.core.agent
 
+import dev.datagrok.core.driver.ResultColumn
+import dev.datagrok.core.export.CopyFormat
+import dev.datagrok.core.export.ResultFormats
+
 /**
  * Something the user pointed the agent at from elsewhere in the app, copied when it was mentioned: the conversation keeps
  * what was asked about even after the editor changes.
@@ -63,36 +67,67 @@ sealed interface Mention {
     }
 
     /**
-     * Cells selected in a grid: [columns] as name and type, the 1-based [rows] of [source]. [values] is null when the
-     * connection doesn't share data, and then only the shape of the selection is sent.
+     * Cells selected in a grid: [columns] and the 1-based [rows] of [source], counted over what [origin] returns: the
+     * query that produced a result, or a table's SELECT with the viewer's filter and sort. [values] holds at most
+     * [CellRows] rows, and is null when the connection doesn't share data; then only the shape of the selection is sent.
+     * [keys] are primary key columns that weren't selected, with their [keyValues] per row, so the agent can tell which
+     * rows these are. [notes] flag rows, by number, whose values are edits not saved to the database yet.
      */
-    data class Cells(val source: String, val engine: String, val columns: List<Pair<String, String>>, val rows: IntRange, val values: List<List<String?>>?) :
-        Mention {
+    data class Cells(
+        val source: String,
+        val engine: String,
+        val columns: List<ResultColumn>,
+        val rows: IntRange,
+        val values: List<List<String?>>?,
+        val origin: String? = null,
+        val keys: List<ResultColumn> = emptyList(),
+        val keyValues: List<List<String?>>? = null,
+        val notes: Map<Int, String> = emptyMap(),
+    ) : Mention {
+        val rowCount: Int
+            get() = rows.last - rows.first + 1
+
         override val label: String
-            get() = if (rows.first == rows.last) "$source row ${rows.first}" else "$source rows ${rows.first}-${rows.last}"
+            get() {
+                val where = if (rows.first == rows.last) "row ${rows.first}" else "rows ${rows.first}-${rows.last}"
+                return columns.singleOrNull()?.let { "$source.${it.name} $where" } ?: "$source $where · ${columns.size} cols"
+            }
 
         override val context: String
-            get() = buildString {
-                val count = rows.last - rows.first + 1
-                append("Cells from $source ($engine), ${columns.size} column(s) × $count row(s), rows ${rows.first}-${rows.last}:\n")
-                append(columns.joinToString(" | ") { (name, type) -> "$name ${type.lowercase()}" })
+            get() = capped(buildString {
+                append("Cells from $source ($engine), ${columns.size} column(s) × $rowCount row(s), rows ${rows.first}-${rows.last}")
+                append(if (origin == null) ":\n" else " of what this returns:\n```sql\n${capped(origin.trim(), MessageBudget)}\n```\n")
                 if (values == null) {
+                    append(columns.joinToString(" | ") { "${it.name} ${it.typeName.lowercase()}" })
                     append("\n(Values not shared: the connection only shares its schema with agents.)")
                     return@buildString
                 }
-                values.take(CellRows).forEach { row -> append('\n').append(row.joinToString(" | ") { it?.replace('\n', ' ')?.take(CellBudget) ?: "NULL" }) }
-                if (values.size > CellRows) append("\n(${values.size - CellRows} more rows not shown)")
-            }
+                val keyed = keyValues?.takeIf { keys.isNotEmpty() }
+                if (keyed != null) append("The primary key (${keys.joinToString { it.name }}) comes first to identify the rows; it wasn't selected.\n")
+                val table = values.mapIndexed { i, row -> (keyed?.getOrNull(i).orEmpty() + row).map(::cell) }
+                append(ResultFormats.format(CopyFormat.Markdown, if (keyed != null) keys + columns else columns, table))
+                if (rowCount > values.size) append("\n(${rowCount - values.size} more rows not shown)")
+                if (notes.isNotEmpty()) append("\nNot saved to the database yet: ${notes.entries.sortedBy { it.key }.joinToString { (row, note) -> "row $row ($note)" }}")
+            })
     }
 
     companion object {
-        /** Rows of a [Cells] mention the agent reads, and how much of each value. */
+        /** Rows of a [Cells] mention that are kept and sent, and how much of each value. */
         const val CellRows = 50
         const val CellBudget = 200
 
         /** Most of a mention the agent reads, so one huge selection can't crowd out the conversation. */
         const val Budget = 8_000
         const val MessageBudget = 2_000
+
+        /** A cell of [Cells], cut to [CellBudget]; a text `NULL` is quoted so it can't pass for a missing value. */
+        private fun cell(value: String?): String? =
+            when {
+                value == null -> null
+                value == "NULL" -> "\"NULL\""
+                value.length > CellBudget -> value.take(CellBudget) + "…"
+                else -> value
+            }
 
         fun capped(text: String, budget: Int = Budget): String =
             if (text.length <= budget) text else "${text.take(budget)}\n… (${text.length - budget} more characters not shown)"

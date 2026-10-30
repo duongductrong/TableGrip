@@ -22,6 +22,7 @@ import dev.datagrok.core.dialect.SortDirection
 import dev.datagrok.core.driver.QueryResult
 import dev.datagrok.core.driver.ResultColumn
 import java.sql.Types
+import dev.datagrok.core.agent.Mention
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -51,9 +52,9 @@ class DataGridTest {
     @Test
     fun `the agent chat key hands over the selected block`() = runComposeUiTest {
         val state = DataGridState()
-        var mentioned: Triple<List<String>, IntRange, List<List<String?>>>? = null
-        val actions = GridActions(onMention = { columns, rows, values -> mentioned = Triple(columns.map { it.name }, rows, values) })
-        setContent { IntUiTheme(isDark = false) { Box(Modifier.size(800.dp, 400.dp)) { DataGrid(ResultGridModel(result(4, 50)), state, actions = actions) } } }
+        var mentioned: GridMention? = null
+        val actions = GridActions(onMention = { mentioned = it })
+        setContent { IntUiTheme(isDark = false) { Box(Modifier.size(800.dp, 400.dp)) { DataGrid(ResultGridModel(result(4, 120)), state, actions = actions) } } }
 
         onNodeWithText("r1c1").performMouseInput { click(center) }
         onRoot().performKeyInput {
@@ -61,7 +62,15 @@ class DataGridTest {
             withKeyDown(if (isMac) Key.MetaLeft else Key.CtrlLeft) { pressKey(Key.L) }
         }
         waitForIdle()
-        assertEquals(Triple(listOf("c1", "c2"), 1..2, listOf(listOf("r1c1", "r1c2"), listOf("r2c1", "r2c2"))), mentioned)
+        assertEquals(listOf("c1", "c2"), mentioned?.columns?.map { it.name })
+        assertEquals(1..2, mentioned?.rows)
+        assertEquals(listOf(listOf("r1c1", "r1c2"), listOf("r2c1", "r2c2")), mentioned?.values)
+
+        // Everything selected: the whole range, but only the rows a mention keeps are read.
+        onRoot().performKeyInput { withKeyDown(if (isMac) Key.MetaLeft else Key.CtrlLeft) { pressKey(Key.A); pressKey(Key.L) } }
+        waitForIdle()
+        assertEquals(0..119, mentioned?.rows)
+        assertEquals(Mention.CellRows, mentioned?.values?.size)
     }
 
     @Test

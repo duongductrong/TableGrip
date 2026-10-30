@@ -21,6 +21,7 @@ import dev.datagrok.app.ui.copyToClipboard
 import dev.datagrok.core.dialect.SortColumn
 import dev.datagrok.core.dialect.SortDirection
 import dev.datagrok.core.dialect.SqlDialect
+import dev.datagrok.core.agent.Mention
 import dev.datagrok.core.driver.ResultColumn
 import dev.datagrok.core.export.CopyFormat
 import dev.datagrok.core.export.ResultFormats
@@ -45,9 +46,12 @@ data class GridActions(
     val onFollowLink: ((row: Int, column: String) -> Unit)? = null,
     /** Extra cell menu entries for [row], e.g. the rows of other tables that reference it. */
     val relatedRows: ((row: Int) -> List<Pair<String, () -> Unit>>)? = null,
-    /** Mentions the selected cells in the agent chat (⌘L): their columns, model [rows] and values. */
-    val onMention: ((columns: List<ResultColumn>, rows: IntRange, values: List<List<String?>>) -> Unit)? = null,
+    /** Mentions the selected cells in the agent chat (⌘L). */
+    val onMention: ((GridMention) -> Unit)? = null,
 )
+
+/** Cells selected for the agent chat: their [columns], model [rows], and the values of the first [Mention.CellRows] rows. */
+data class GridMention(val columns: List<ResultColumn>, val rows: IntRange, val values: List<List<String?>>)
 
 internal val isMac = System.getProperty("os.name").startsWith("Mac")
 
@@ -430,13 +434,18 @@ internal class GridController(val state: DataGridState, private val scope: Corou
         return columns.map { model.columns[it] } to rows
     }
 
-    /** Hands the selected cells to [GridActions.onMention]; false when there is no handler or nothing selected. */
+    /**
+     * Hands the selected cells to [GridActions.onMention]; false when there is no handler or nothing selected. Only the
+     * rows a mention keeps are read, so ⌘A ⌘L on a large result doesn't copy all of it.
+     */
     fun mentionSelection(): Boolean {
         val mention = actions.onMention ?: return false
-        val rows = state.selection?.rows?.filter { it < model.rowCount }.orEmpty()
-        val (columns, values) = selectedBlock()
-        if (rows.isEmpty() || values.isEmpty()) return false
-        mention(columns, rows.first()..rows.last(), values)
+        val selection = state.selection ?: return false
+        val rows = selection.rows.first..minOf(selection.rows.last, model.rowCount - 1)
+        val columns = selection.columns(columnCount).map(state::modelColumn)
+        if (rows.isEmpty() || columns.isEmpty()) return false
+        val values = rows.take(Mention.CellRows).map { row -> columns.map { model.value(row, it) } }
+        mention(GridMention(columns.map { model.columns[it] }, rows, values))
         return true
     }
 

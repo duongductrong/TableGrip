@@ -42,6 +42,7 @@ import dev.datagrok.app.AppState
 import dev.datagrok.app.export.ExportRequest
 import dev.datagrok.app.grid.DataGrid
 import dev.datagrok.app.grid.GridActions
+import dev.datagrok.app.grid.GridMention
 import dev.datagrok.app.queries.ParametersDialog
 import dev.datagrok.core.dialect.SqlDialect
 import java.time.Instant
@@ -300,7 +301,7 @@ private fun ResultPanel(app: AppState, tab: ConsoleTab) {
                         actions =
                             GridActions(
                                 dialect = SqlDialect.of(tab.config.type),
-                                onMention = if (tab.canAskAgent) { columns, rows, values -> tab.mentionCells(view, columns, rows, values) } else null,
+                                onMention = { cells: GridMention -> tab.mentionCells(view, cells) }.takeIf { tab.canAskAgent },
                             ),
                     )
                     Divider(Orientation.Horizontal, Modifier.fillMaxWidth())

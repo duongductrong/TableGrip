@@ -17,6 +17,7 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import dev.datagrok.app.AppState
 import dev.datagrok.app.console.ConsoleTab
+import dev.datagrok.app.grid.GridMention
 import dev.datagrok.app.table.TableDataTab
 import dev.datagrok.app.ui.DatagrokTheme
 import dev.datagrok.core.agent.AgentAdapter
@@ -71,6 +72,7 @@ class MentionSourcesTest {
                 it.executeUpdate("CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)")
                 it.executeUpdate("CREATE TABLE orders (id INTEGER PRIMARY KEY, user_id INTEGER REFERENCES users(id), total REAL NOT NULL)")
                 it.executeUpdate("CREATE INDEX orders_user ON orders(user_id)")
+                it.executeUpdate("INSERT INTO orders VALUES (1, NULL, 12.5), (2, NULL, 99), (3, NULL, 5)")
             }
         }
         home.resolve("connections.json").writeText("""[{"id":"shop","name":"Shop","type":"SQLite","database":"$db"}]""")
@@ -156,19 +158,48 @@ class MentionSourcesTest {
         val tab = app.workspace.selected as TableDataTab
         val columns = listOf(ResultColumn("id", "INTEGER"), ResultColumn("total", "REAL"))
 
-        tab.mentionCells(columns, 0..1, listOf(listOf("1", "12.5"), listOf("2", "99")))
+        tab.mentionCells(GridMention(columns, 0..1, listOf(listOf("1", "12.5"), listOf("2", "99"))))
         val schemaOnly = app.agent.composer.mention(pill) as Mention.Cells
-        assertEquals("orders rows 1-2", schemaOnly.label)
+        assertEquals("orders rows 1-2 · 2 cols", schemaOnly.label)
         assertNull(schemaOnly.values)
         assertTrue(app.agentOpen)
 
         app.updateSettings { it.copy(aiAccess = AiAccess.SchemaAndSamples.name) }
-        tab.mentionCells(columns, 1..1, listOf(listOf("2", "99")))
+        tab.mentionCells(GridMention(columns, 1..1, listOf(listOf("2", "99"))))
         assertEquals(listOf(listOf("2", "99")), (app.agent.composer.mention(pill + 1) as Mention.Cells).values)
 
         // ⌘L with nothing selected mentions the table.
         assertTrue(tab.mentionTable())
         assertEquals("orders", (app.agent.composer.mention(pill + 2) as Mention.Table).name)
+    }
+
+    @Test
+    fun `table cells carry the filter, the key of each row and which ones aren't saved`() {
+        val app = app(ScriptedAgent())
+        app.updateSettings { it.copy(aiAccess = AiAccess.SchemaAndSamples.name) }
+        app.workspace.openTable(app.connections.profiles.single(), TableRef(Namespace(null, "main"), "orders"))
+        val tab = app.workspace.selected as TableDataTab
+        tab.showRowsWhere("total > 10")
+        waitFor { !tab.loading && tab.model?.rowCount == 2 && tab.details != null }
+        val model = tab.model!!
+        val total = model.columns.indexOfFirst { it.name == "total" }
+        model.setValue(1, total, "100")
+
+        tab.mentionCells(GridMention(listOf(model.columns[total]), 0..1, listOf(listOf("12.5"), listOf("100"))))
+        val cells = app.agent.composer.mention(pill) as Mention.Cells
+        assertEquals("orders.total rows 1-2", cells.label)
+        assertEquals("SELECT * FROM \"main\".\"orders\" WHERE (total > 10)", cells.origin)
+        assertEquals(listOf("id"), cells.keys.map { it.name })
+        assertEquals(listOf(listOf("1"), listOf("2")), cells.keyValues)
+        assertEquals(mapOf(2 to "edited"), cells.notes)
+    }
+
+    private fun waitFor(condition: () -> Boolean) {
+        val until = System.currentTimeMillis() + 10_000
+        while (!condition()) {
+            check(System.currentTimeMillis() < until) { "timed out" }
+            Thread.sleep(20)
+        }
     }
 
     @Test

@@ -191,14 +191,14 @@ private fun previewOf(mention: Mention): PreviewContent =
         is Mention.Column -> PreviewContent("${mention.engine} · ${mention.connection}", "${mention.type.lowercase()}${if (mention.primaryKey) ", primary key" else ""}")
         is Mention.Query -> PreviewContent("Saved query", mention.sql)
         is Mention.Cells -> {
-            val count = mention.rows.last - mention.rows.first + 1
-            val header = mention.columns.joinToString(" | ") { it.first }
+            val header = mention.columns.joinToString(" | ") { it.name }
             val body = mention.values?.take(PreviewRows)?.joinToString("\n", prefix = "$header\n") { row -> row.joinToString(" | ") { it?.take(40) ?: "NULL" } } ?: header
             val more = mention.values?.let { if (it.size > PreviewRows) "${it.size - PreviewRows} more rows are sent too." else null }
+            val unsaved = if (mention.notes.isEmpty()) null else "${mention.notes.size} row(s) have edits not saved yet."
             PreviewContent(
-                "${mention.engine} · ${mention.columns.size} column(s) × $count row(s)",
+                "${mention.engine} · ${mention.columns.size} column(s) × ${mention.rowCount} row(s)",
                 body,
-                if (mention.values == null) "Values aren't sent: this connection only shares its schema with agents." else more,
+                if (mention.values == null) "Values aren't sent: this connection only shares its schema with agents." else listOfNotNull(more, unsaved).joinToString(" ").ifEmpty { null },
             )
         }
     }

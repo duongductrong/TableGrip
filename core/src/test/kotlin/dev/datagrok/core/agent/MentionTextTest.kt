@@ -1,5 +1,7 @@
 package dev.datagrok.core.agent
 
+import dev.datagrok.core.driver.ResultColumn
+import java.sql.Types
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -76,13 +78,48 @@ class MentionTextTest {
 
     @Test
     fun `cells send their values only when the connection shares data`() {
-        val columns = listOf("id" to "INTEGER", "note" to "TEXT")
-        val shared = Mention.Cells("orders", "SQLite", columns, 3..4, listOf(listOf("3", "a\nb"), listOf("4", null)))
-        assertEquals("orders rows 3-4", shared.label)
-        assertEquals("Cells from orders (SQLite), 2 column(s) × 2 row(s), rows 3-4:\nid integer | note text\n3 | a b\n4 | NULL", shared.context)
+        val columns = listOf(ResultColumn("id", "INTEGER", Types.INTEGER), ResultColumn("note", "TEXT"))
+        val shared = Mention.Cells("orders", "SQLite", columns, 3..4, listOf(listOf("3", "a\nb|c"), listOf("4", null)))
+        assertEquals("orders rows 3-4 · 2 cols", shared.label)
+        assertEquals(
+            "Cells from orders (SQLite), 2 column(s) × 2 row(s), rows 3-4:\n| id | note |\n| ---: | --- |\n| 3 | a b\\|c |\n| 4 | NULL |",
+            shared.context,
+        )
         val withheld = shared.copy(rows = 7..7, values = null)
-        assertEquals("orders row 7", withheld.label)
+        assertEquals("orders row 7 · 2 cols", withheld.label)
         assertTrue(withheld.context.endsWith("id integer | note text\n(Values not shared: the connection only shares its schema with agents.)"), withheld.context)
+        assertEquals("orders.note rows 3-4", shared.copy(columns = columns.drop(1)).label)
+    }
+
+    @Test
+    fun `cells say where their rows come from, which rows they are and what isn't saved`() {
+        val cells =
+            Mention.Cells(
+                "orders",
+                "SQLite",
+                listOf(ResultColumn("note", "TEXT")),
+                51..53,
+                listOf(listOf("NULL"), listOf("x".repeat(Mention.CellBudget + 5))),
+                origin = "SELECT * FROM orders WHERE total > 10 ORDER BY total DESC",
+                keys = listOf(ResultColumn("id", "INTEGER", Types.INTEGER)),
+                keyValues = listOf(listOf("7"), listOf("9")),
+                notes = mapOf(52 to "edited"),
+            )
+        val context = cells.context
+        assertTrue(context.startsWith("Cells from orders (SQLite), 1 column(s) × 3 row(s), rows 51-53 of what this returns:\n```sql\nSELECT * FROM orders WHERE total > 10 ORDER BY total DESC\n```\n"), context)
+        assertTrue("The primary key (id) comes first to identify the rows; it wasn't selected.\n| id | note |" in context, context)
+        assertTrue("| 7 | \"NULL\" |" in context, context)
+        assertTrue("| 9 | ${"x".repeat(Mention.CellBudget)}… |" in context, context)
+        assertTrue(context.endsWith("(1 more rows not shown)\nNot saved to the database yet: row 52 (edited)"), context)
+    }
+
+    @Test
+    fun `wide cells stay within the budget`() {
+        val columns = (1..40).map { ResultColumn("c$it", "TEXT") }
+        val values = List(Mention.CellRows) { List(40) { "v".repeat(Mention.CellBudget) } }
+        val context = Mention.Cells("wide", "SQLite", columns, 1..Mention.CellRows, values).context
+        assertTrue(context.length < Mention.Budget + 100, "${context.length}")
+        assertTrue(context.endsWith("more characters not shown)"), context.takeLast(80))
     }
 
     @Test

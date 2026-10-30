@@ -1,6 +1,7 @@
 package dev.datagrok.app.table
 
-import dev.datagrok.core.driver.ResultColumn
+import dev.datagrok.app.grid.GridMention
+import dev.datagrok.app.grid.RowStatus
 import dev.datagrok.core.agent.Mention
 import dev.datagrok.core.connection.Capability
 import androidx.compose.foundation.text.input.TextFieldState
@@ -170,14 +171,40 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
         return true
     }
 
-    /** Selected cells, page [rows], as a mention in the agent chat (⌘L); their values only when the connection shares data. */
-    fun mentionCells(columns: List<ResultColumn>, rows: IntRange, values: List<List<String?>>) {
+    /**
+     * Selected cells, page rows, as a mention in the agent chat (⌘L), numbered over this filter and sort. Their values,
+     * the primary key of each row and which ones hold unsaved edits only go when the connection shares data.
+     */
+    fun mentionCells(cells: GridMention) {
         val access = app.aiAccess(config)
         if (!access.sharesSchema) return
-        val first = firstRowNumber.toInt() + rows.first
-        val mention = Mention.Cells(table.name, config.type.displayName, columns.map { it.name to it.typeName }, first..first + rows.last - rows.first, values.takeIf { access.sharesData })
+        val first = firstRowNumber.toInt() + cells.rows.first
+        val origin = runCatching { dialect.selectAll(table, resolveFilter()?.preview, sort) }.getOrNull()
+        val model = model.takeIf { access.sharesData }
+        val shown = cells.rows.take(cells.values.size)
+        val keys = model?.columns?.withIndex()?.filter { (_, column) -> column.name in details?.primaryKey.orEmpty() && column !in cells.columns }.orEmpty()
+        val mention =
+            Mention.Cells(
+                table.name,
+                config.type.displayName,
+                cells.columns,
+                first..first + cells.rows.last - cells.rows.first,
+                cells.values.takeIf { access.sharesData },
+                origin = origin,
+                keys = keys.map { it.value },
+                keyValues = model?.let { m -> shown.map { row -> keys.map { (index, _) -> m.value(row, index) } } },
+                notes = model?.let { m -> shown.mapNotNull { row -> unsavedNote(m, row)?.let { first + row - cells.rows.first to it } }.toMap() }.orEmpty(),
+            )
         app.agent.mention(mention)
     }
+
+    private fun unsavedNote(model: TableEditModel, row: Int): String? =
+        when {
+            model.rowStatus(row) == RowStatus.Inserted -> "new row"
+            model.rowStatus(row) == RowStatus.Deleted -> "marked for deletion"
+            model.columns.indices.any { model.isModified(row, it) } -> "edited"
+            else -> null
+        }
 
     val hasChanges: Boolean
         get() = model?.hasChanges == true

@@ -1,6 +1,6 @@
 package dev.datagrok.app.console
 
-import dev.datagrok.core.driver.ResultColumn
+import dev.datagrok.app.grid.GridMention
 import dev.datagrok.core.agent.Mention
 import dev.datagrok.core.connection.Capability
 import androidx.compose.foundation.text.input.TextFieldState
@@ -322,12 +322,12 @@ class ConsoleTab(
         return Mention.Sql(title, 1..text.trimEnd().count { it == '\n' } + 1, config.type.displayName, text.trim())
     }
 
-    /** Cells selected in result [view] as a mention in the agent chat (⌘L); their values only when the connection shares data. */
-    fun mentionCells(view: ResultSetView, columns: List<ResultColumn>, rows: IntRange, values: List<List<String?>>) {
+    /** Cells selected in result [view] as a mention in the agent chat (⌘L), with the query; their values only when the connection shares data. */
+    fun mentionCells(view: ResultSetView, cells: GridMention) {
         val access = app.aiAccess(config)
         if (!access.sharesSchema) return
-        val mention = Mention.Cells(view.title, config.type.displayName, columns.map { it.name to it.typeName }, rows.first + 1..rows.last + 1, values.takeIf { access.sharesData })
-        app.agent.mention(mention)
+        val rows = cells.rows.first + 1..cells.rows.last + 1
+        app.agent.mention(Mention.Cells(view.title, config.type.displayName, cells.columns, rows, cells.values.takeIf { access.sharesData }, origin = view.sql))
     }
 
     /** Mentions the selection or the statement at the caret in the agent chat (⌘L); false when there is nothing to. */
