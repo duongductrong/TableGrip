@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -71,6 +72,7 @@ import org.jetbrains.jewel.ui.component.OutlinedButton
 import org.jetbrains.jewel.ui.component.Text
 import org.jetbrains.jewel.ui.component.TextField
 import org.jetbrains.jewel.ui.component.Tooltip
+import org.jetbrains.jewel.ui.component.VerticalScrollbar
 import org.jetbrains.jewel.ui.component.styling.LazyTreeMetrics
 import org.jetbrains.jewel.ui.component.styling.LazyTreeStyle
 import org.jetbrains.jewel.ui.icon.IconKey
@@ -121,14 +123,20 @@ internal fun ExplorerPanel(app: AppState) {
         var origin by remember { mutableStateOf(Offset.Zero) }
         Box(Modifier.weight(1f).fillMaxWidth().onGloballyPositioned { origin = it.positionInRoot() }) {
             Column(Modifier.fillMaxSize()) {
-                LazyTree(
-                    tree = tree,
-                    treeState = explorer.treeState,
-                    modifier = Modifier.weight(1f).fillMaxWidth().padding(vertical = 4.dp),
-                    style = explorerTreeStyle(),
-                    onElementDoubleClick = { element -> openNode(app, element.data) },
-                ) { element ->
-                    ContextMenuArea(items = { contextMenu(app, element.data) }) { NodeRow(app, element.data, Modifier.fillMaxWidth().dragAndDrop(drag, element.data)) }
+                Box(Modifier.weight(1f).fillMaxWidth()) {
+                    LazyTree(
+                        tree = tree,
+                        treeState = explorer.treeState,
+                        modifier = Modifier.fillMaxSize().padding(vertical = 4.dp),
+                        style = explorerTreeStyle(),
+                        onElementDoubleClick = { element -> openNode(app, element.data) },
+                    ) { element ->
+                        ContextMenuArea(items = { contextMenu(app, element.data) }) { NodeRow(app, element.data, Modifier.fillMaxWidth().dragAndDrop(drag, element.data)) }
+                    }
+                    VerticalScrollbar(
+                        explorer.treeState.lazyListState.lazyListState,
+                        Modifier.align(Alignment.TopEnd).fillMaxHeight().padding(vertical = 2.dp),
+                    )
                 }
                 if (drag.dragging) DropZones(drag)
             }
