@@ -1,5 +1,6 @@
 package dev.datagrok.app.console
 
+import dev.datagrok.core.agent.Mention
 import dev.datagrok.core.connection.Capability
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.placeCursorAtEnd
@@ -276,8 +277,11 @@ class ConsoleTab(
 
     /** Hands the failure to the chat, as a draft the user can add to before sending. */
     fun discussInChat(failure: StatementFailure) {
-        app.agent.draft = "This ${config.type.displayName} statement failed:\n```sql\n${failure.sql.trim()}\n```\nError: ${failure.error.message.trim()}\n\nHow do I fix it?"
-        app.agentOpen = true
+        val composer = app.agent.composer
+        val wasBlank = composer.isBlank
+        app.agent.mention(Mention.Error(title, config.type.displayName, failure.sql, failure.error.message))
+        // An empty composer gets the obvious question; one with something typed keeps it.
+        if (wasBlank) composer.text.edit { append("How do I fix it?") }
     }
 
     /** Where [sql] is in the editor, as start until end: the occurrence nearest the caret, ignoring whitespace changes. */
@@ -289,6 +293,29 @@ class ConsoleTab(
             .minByOrNull { minOf(kotlin.math.abs(it.start - caret), kotlin.math.abs(it.end - caret)) }
             ?.let { it.start to it.end }
     }
+
+    /**
+     * The selection, else the statement at the caret, as a mention for the agent chat (⌘L). Null over blank text, and when
+     * the connection isn't shared with agents.
+     */
+    fun mention(): Mention? {
+        if (!canAskAgent) return null
+        val text = editor.text.toString()
+        val selection = editor.selection
+        val (start, end) =
+            if (!selection.collapsed) selection.min to selection.max
+            else splitter.statementAt(text, selection.start)?.let { it.start to it.end } ?: return null
+        val sql = text.substring(start, end)
+        if (sql.isBlank()) return null
+        // Lines of the text itself, not of the whitespace around it.
+        val first = start + (sql.length - sql.trimStart().length)
+        val last = end - (sql.length - sql.trimEnd().length) - 1
+        fun line(offset: Int) = text.substring(0, offset).count { it == '\n' } + 1
+        return Mention.Sql(title, line(first)..line(last), config.type.displayName, sql.trim())
+    }
+
+    /** Mentions the selection or the statement at the caret in the agent chat (⌘L); false when there is nothing to. */
+    fun mentionInChat(): Boolean = mention()?.let { app.agent.mention(it) } != null
 
     /** Runs the statement at the caret under EXPLAIN, in the dialect's syntax. */
     fun explain() {

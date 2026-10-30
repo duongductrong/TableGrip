@@ -95,7 +95,7 @@ class AgentRewindTest {
             waitForIdle()
             assertEquals(listOf("User:first", "Assistant:one"), app.transcript())
             // The composer took the rewound text back.
-            assertNull(app.agent.draft)
+            assertEquals("say hi as well", app.agent.composer.text.text.toString())
 
             runOnUiThread { app.agent.send("second") }
             waitUntil(timeoutMillis = 5_000) { !app.agent.busy && agent.requests.size == 3 }

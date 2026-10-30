@@ -1,5 +1,6 @@
 package dev.datagrok.app.console
 
+import androidx.compose.foundation.ContextMenuDataProvider
 import dev.datagrok.core.connection.Capability
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.width
@@ -69,16 +70,21 @@ internal fun ConsoleView(app: AppState, tab: ConsoleTab) {
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
         VerticalSplitLayout(
             first = {
-                SqlEditor(
-                    state = tab.editor,
-                    syntax = tab.syntax,
-                    fontSize = app.settings.editorFontSize,
-                    modifier = Modifier.fillMaxSize(),
-                    completion = tab.completion,
-                    completionVersion = app.schemaCache(tab.config).version,
-                    actions = editorActions,
-                    onShortcut = { handleConsoleShortcut(tab, it) },
-                )
+                // Added to the editor's own Cut / Copy / Paste menu.
+                ContextMenuDataProvider(
+                    items = { if (tab.canAskAgent) listOf(ContextMenuItem("Add to Chat (${Shortcuts.AddToChat})") { tab.mentionInChat() }) else emptyList() }
+                ) {
+                    SqlEditor(
+                        state = tab.editor,
+                        syntax = tab.syntax,
+                        fontSize = app.settings.editorFontSize,
+                        modifier = Modifier.fillMaxSize(),
+                        completion = tab.completion,
+                        completionVersion = app.schemaCache(tab.config).version,
+                        actions = editorActions,
+                        onShortcut = { handleConsoleShortcut(tab, it) },
+                    )
+                }
             },
             second = { ResultPanel(app, tab) },
             modifier = Modifier.fillMaxSize(),

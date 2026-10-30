@@ -1,0 +1,220 @@
+package dev.datagrok.app.agent
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.isPrimaryPressed
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupPositionProvider
+import androidx.compose.ui.window.PopupProperties
+import dev.datagrok.app.ui.LocalIslands
+import dev.datagrok.core.agent.Mention
+import org.jetbrains.jewel.foundation.theme.JewelTheme
+import org.jetbrains.jewel.ui.component.Icon
+import org.jetbrains.jewel.ui.component.IconButton
+import org.jetbrains.jewel.ui.component.Text
+import org.jetbrains.jewel.ui.component.Tooltip
+import org.jetbrains.jewel.ui.icons.AllIconsKeys
+
+/** Text with each mention spelled out as its pill, and where those pills are in it. */
+internal class PillLayout(val text: String, val pills: List<IntRange>, val chars: List<Char>) {
+    companion object {
+        fun of(text: CharSequence, mentions: Map<Char, Mention>): PillLayout {
+            val pills = mutableListOf<IntRange>()
+            val chars = mutableListOf<Char>()
+            val shown = buildString {
+                for (char in text) {
+                    val mention = mentions[char]
+                    if (mention == null) {
+                        append(char)
+                        continue
+                    }
+                    val pill = ComposerState.pillText(mention)
+                    pills += length until length + pill.length
+                    chars += char
+                    append(pill)
+                }
+            }
+            return PillLayout(shown, pills, chars)
+        }
+    }
+}
+
+/** The colours of a mention pill: a tint of the accent behind accent-coloured text. */
+internal class PillColors(val text: Color, val fill: Color) {
+    val style: SpanStyle
+        get() = SpanStyle(color = text)
+
+    companion object {
+        @Composable
+        fun current(): PillColors {
+            val accent = LocalIslands.current.accent
+            return PillColors(accent, accent.copy(alpha = 0.16f))
+        }
+    }
+}
+
+/** Rounded backgrounds behind [pills], one per line a pill spans; skipped while [layout] is of other text. */
+internal fun DrawScope.drawPills(layout: TextLayoutResult?, length: Int, pills: List<IntRange>, fill: Color) {
+    if (layout == null || layout.layoutInput.text.length != length) return
+    val radius = CornerRadius(4f * density, 4f * density)
+    for (pill in pills) {
+        if (pill.last >= length) continue
+        val firstLine = layout.getLineForOffset(pill.first)
+        val lastLine = layout.getLineForOffset(pill.last)
+        for (line in firstLine..lastLine) {
+            val left = if (line == firstLine) layout.getBoundingBox(pill.first).left else layout.getLineLeft(line)
+            val right = if (line == lastLine) layout.getBoundingBox(pill.last).right else layout.getLineRight(line)
+            val top = layout.getLineTop(line)
+            val bottom = layout.getLineBottom(line)
+            // A little inset vertically, so pills on adjacent lines don't touch.
+            val inset = (bottom - top) * 0.08f
+            drawRoundRect(fill, Offset(left, top + inset), Size(right - left, bottom - top - 2 * inset), radius)
+        }
+    }
+}
+
+/** The pill under [position] in [layout], given where pills are in its text. */
+internal fun pillUnder(layout: TextLayoutResult?, position: Offset, pills: PillLayout): Char? {
+    if (layout == null || layout.layoutInput.text.length != pills.text.length) return null
+    val offset = layout.getOffsetForPosition(position)
+    // The offset is a caret position: the character under the pointer is on one side of it or the other.
+    val index = listOf(offset, offset - 1).firstOrNull { it in pills.text.indices && layout.getBoundingBox(it).contains(position) } ?: return null
+    return pills.pills.indexOfFirst { index in it }.takeIf { it >= 0 }?.let(pills.chars::get)
+}
+
+/** Calls [onPress] with where a primary-button press lands, without taking it from the text field underneath. */
+internal fun Modifier.onPrimaryPress(onPress: (Offset) -> Unit): Modifier =
+    pointerInput(Unit) {
+        awaitPointerEventScope {
+            while (true) {
+                val event = awaitPointerEvent(PointerEventPass.Initial)
+                if (event.type == PointerEventType.Press && event.buttons.isPrimaryPressed) onPress(event.changes.first().position)
+            }
+        }
+    }
+
+/** A sent message with its mentions as pills; clicking one shows what was sent for it. */
+@Composable
+internal fun MentionMessageText(text: String, mentions: Map<Char, Mention>, modifier: Modifier = Modifier, lineHeight: TextUnit = TextUnit.Unspecified) {
+    val colors = PillColors.current()
+    val layout = remember(text, mentions) { PillLayout.of(text, mentions) }
+    val annotated: AnnotatedString =
+        remember(layout, colors.text) {
+            buildAnnotatedString {
+                var at = 0
+                for (pill in layout.pills) {
+                    append(layout.text.substring(at, pill.first))
+                    withStyle(colors.style) { append(layout.text.substring(pill.first, pill.last + 1)) }
+                    at = pill.last + 1
+                }
+                append(layout.text.substring(at))
+            }
+        }
+    var result by remember { mutableStateOf<TextLayoutResult?>(null) }
+    var preview by remember { mutableStateOf<Char?>(null) }
+    Box(modifier) {
+        Text(
+            annotated,
+            Modifier.drawBehind { drawPills(result, annotated.length, layout.pills, colors.fill) }
+                .onPrimaryPress { position -> pillUnder(result, position, layout)?.let { preview = if (preview == it) null else it } },
+            lineHeight = lineHeight,
+            onTextLayout = { result = it },
+        )
+        preview?.let(mentions::get)?.let { mention -> MentionPreview(mention, onDismiss = { preview = null }) }
+    }
+}
+
+/** Puts a popup just above its anchor, or below it when there is no room above. */
+private object AboveAnchor : PopupPositionProvider {
+    private const val Gap = 6
+
+    override fun calculatePosition(anchorBounds: IntRect, windowSize: IntSize, layoutDirection: LayoutDirection, popupContentSize: IntSize): IntOffset {
+        val x = anchorBounds.left.coerceAtMost(windowSize.width - popupContentSize.width).coerceAtLeast(0)
+        val above = anchorBounds.top - popupContentSize.height - Gap
+        return IntOffset(x, if (above >= 0) above else anchorBounds.bottom + Gap)
+    }
+}
+
+/** What a pill stands for, as the agent reads it: where it came from and its SQL. [onRemove] offers to take it out. */
+@Composable
+internal fun MentionPreview(mention: Mention, onDismiss: () -> Unit, onRemove: (() -> Unit)? = null) {
+    val islands = LocalIslands.current
+    val shape = RoundedCornerShape(8.dp)
+    val (detail, sql, error) =
+        when (mention) {
+            is Mention.Sql -> Triple("${mention.engine} · line${if (mention.lines.first == mention.lines.last) " ${mention.lines.first}" else "s ${mention.lines.first}–${mention.lines.last}"}", mention.sql, null)
+            is Mention.Error -> Triple("${mention.engine} · failed statement", mention.sql, mention.message)
+        }
+    Popup(popupPositionProvider = AboveAnchor, onDismissRequest = onDismiss, properties = PopupProperties(focusable = false)) {
+        Column(
+            Modifier.widthIn(min = 240.dp, max = 380.dp)
+                .clip(shape)
+                .background(JewelTheme.globalColors.panelBackground)
+                .border(1.dp, JewelTheme.globalColors.borders.normal, shape)
+                .padding(start = 12.dp, end = 4.dp, top = 6.dp, bottom = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("@${mention.label}", fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(detail, color = JewelTheme.globalColors.text.info)
+                }
+                if (onRemove != null) {
+                    Tooltip({ Text("Remove from message") }) { IconButton(onClick = onRemove) { Icon(AllIconsKeys.Actions.Close, "Remove from message") } }
+                }
+            }
+            Text(
+                sql.trim(),
+                Modifier.fillMaxWidth().heightIn(max = 200.dp).padding(end = 8.dp)
+                    .clip(RoundedCornerShape(6.dp)).background(islands.frame)
+                    .verticalScroll(rememberScrollState()).horizontalScroll(rememberScrollState())
+                    .padding(8.dp),
+                style = JewelTheme.editorTextStyle,
+                softWrap = false,
+            )
+            error?.let { Text(it.trim(), Modifier.padding(end = 8.dp), color = JewelTheme.globalColors.text.error, maxLines = 4, overflow = TextOverflow.Ellipsis) }
+        }
+    }
+}

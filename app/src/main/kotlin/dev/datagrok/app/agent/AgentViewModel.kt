@@ -13,6 +13,8 @@ import dev.datagrok.core.agent.AgentEvent
 import dev.datagrok.core.agent.AgentMessage
 import dev.datagrok.core.agent.AgentRegistry
 import dev.datagrok.core.agent.AgentRequest
+import dev.datagrok.core.agent.Mention
+import dev.datagrok.core.agent.MentionText
 import dev.datagrok.core.agent.provider.AgentMode
 import dev.datagrok.core.agent.provider.ProviderConfig
 import dev.datagrok.core.agent.provider.ProviderProtocol
@@ -47,8 +49,11 @@ sealed interface RunRequestState {
 /** A query from the chat that could lose data, waiting for the user to confirm it on [connectionId]. */
 data class RunConfirmation(val sql: String, val connectionId: String, val reasons: List<String>)
 
-/** One entry in the chat. [text] grows while the agent streams. */
-class ChatMessage(val role: AgentMessage.Role, text: String = "", val kind: Kind = Kind.Chat) {
+/**
+ * One entry in the chat. [text] grows while the agent streams. A message the user typed may hold [mentions], as stand-in
+ * characters in [text] (see [MentionText]).
+ */
+class ChatMessage(val role: AgentMessage.Role, text: String = "", val kind: Kind = Kind.Chat, val mentions: Map<Char, Mention> = emptyMap()) {
     enum class Kind {
         Chat,
         /** Sent to the agent on the user's behalf (a query result, a declined run); shown as a one-line note. */
@@ -64,6 +69,9 @@ class ChatMessage(val role: AgentMessage.Role, text: String = "", val kind: Kind
     val runs = mutableStateMapOf<Int, RunRequestState>()
     /** For a note: the run request it answers, so rewinding past the note asks that question again. */
     var origin: Pair<ChatMessage, Int>? = null
+
+    val mentionText: MentionText
+        get() = MentionText(text, mentions)
 }
 
 /** The agent chat in the right island: which agents exist, which one is picked, and the conversation with it. */
@@ -76,8 +84,8 @@ class AgentViewModel(private val app: AppState, private val registry: AgentRegis
     val messages = mutableStateListOf<ChatMessage>()
     var busy by mutableStateOf(false)
         private set
-    /** Text handed back to the composer by a rewind, for the user to edit and send again; the composer takes it. */
-    var draft by mutableStateOf<String?>(null)
+    /** What is being typed, mentions included; a rewind hands a message back here to edit and send again. */
+    val composer = ComposerState()
 
     private val context = AgentContext(app)
     private var discovered = false
@@ -140,15 +148,29 @@ class AgentViewModel(private val app: AppState, private val registry: AgentRegis
             if (value.isEmpty()) app.secrets.delete(protocol.secretKey) else app.secrets.set(protocol.secretKey, value)
         }
 
-    fun send(prompt: String) {
-        val text = prompt.trim()
-        if (text.isNotEmpty()) startTurn(ChatMessage(AgentMessage.Role.User, text))
+    fun send(prompt: String) = send(MentionText(prompt))
+
+    fun send(message: MentionText) {
+        val text = message.text.trim()
+        if (MentionText(text, message.mentions).plain.isNotBlank()) startTurn(ChatMessage(AgentMessage.Role.User, text, mentions = message.mentions))
+    }
+
+    /** Sends what the composer holds, which leaves it empty. */
+    fun sendComposer() {
+        if (selected == null || busy || composer.isBlank) return
+        send(composer.take())
+    }
+
+    /** Adds [mention] where the user is typing to the agent, opening the chat (⌘L). */
+    fun mention(mention: Mention) {
+        composer.insert(mention)
+        app.agentOpen = true
     }
 
     private fun startTurn(message: ChatMessage) {
         val agent = selected ?: return
         if (busy) return
-        val history = messages.filter { it.error == null && it.text.isNotBlank() }.map { AgentMessage(it.role, it.text) }
+        val history = messages.filter { it.error == null && it.text.isNotBlank() }.map { AgentMessage(it.role, it.mentionText.prompt) }
         messages += message
         val reply = ChatMessage(AgentMessage.Role.Assistant).apply { streaming = true }
         messages += reply
@@ -158,7 +180,7 @@ class AgentViewModel(private val app: AppState, private val registry: AgentRegis
                 try {
                     val request =
                         AgentRequest(
-                            history + AgentMessage(AgentMessage.Role.User, message.text),
+                            history + AgentMessage(AgentMessage.Role.User, message.mentionText.prompt),
                             system = context.systemPrompt(),
                             workingDirectory = DatagrokPaths.agentWorkspace,
                             reminder = AgentContext.Reminder,
@@ -316,7 +338,7 @@ class AgentViewModel(private val app: AppState, private val registry: AgentRegis
         val index = messages.indexOf(message)
         if (index < 0) return
         truncate(index)
-        if (message.role == AgentMessage.Role.User && message.kind == ChatMessage.Kind.Chat) draft = message.text
+        if (message.role == AgentMessage.Role.User && message.kind == ChatMessage.Kind.Chat) composer.restore(message.mentionText)
     }
 
     /** Asks again for [reply]: drops it and what followed, then resends the message it answered. */

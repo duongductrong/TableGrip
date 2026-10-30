@@ -80,6 +80,7 @@ private fun handleWindowShortcut(app: AppState, event: KeyEvent): Boolean {
         Shortcuts.Explorer.matches(event) -> done { app.toggleTool(LeftTool.Explorer) }
         Shortcuts.History.matches(event) -> done { app.toggleTool(LeftTool.History) }
         Shortcuts.Agent.matches(event) -> done { app.agentOpen = !app.agentOpen }
+        selected is ConsoleTab && Shortcuts.AddToChat.matches(event) -> selected.mentionInChat()
         Shortcuts.Queries.matches(event) -> done { app.toggleTool(LeftTool.Queries) }
         Shortcuts.Settings.matches(event) -> done { app.settingsOpen = true }
         Shortcuts.ShowShortcuts.matches(event) -> done { app.shortcutsOpen = true }

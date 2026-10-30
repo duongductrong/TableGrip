@@ -69,6 +69,8 @@ object Shortcuts {
     val GoToAnything = Shortcut(Key.P, "P", primary = true)
     val Settings = if (isMac) Shortcut(Key.Comma, ",", primary = true) else Shortcut(Key.S, "S", primary = true, alt = true)
     val ShowShortcuts = Shortcut(Key.Slash, "/", primary = true, shift = true)
+    /** Cursor's key: mentions what is selected in the agent chat. */
+    val AddToChat = Shortcut(Key.L, "L", primary = true)
 
     // Console
     val RunStatement = Shortcut(Key.Enter, EnterLabel, primary = true)
@@ -145,6 +147,7 @@ object Shortcuts {
                     entry("Connections", Explorer),
                     entry("Query History", History),
                     entry("Agent", Agent),
+                    entry("Mention the selection or statement in the agent chat", AddToChat),
                     entry("Saved Queries", Queries),
                     entry("Settings", Settings),
                     entry("Keyboard shortcuts", ShowShortcuts),

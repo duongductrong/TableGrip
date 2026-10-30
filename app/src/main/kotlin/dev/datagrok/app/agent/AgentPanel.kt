@@ -26,10 +26,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.input.clearText
-import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -41,17 +38,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -59,8 +61,10 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import dev.datagrok.app.AppState
+import dev.datagrok.app.grid.isMac
 import dev.datagrok.app.ui.AppDialog
 import dev.datagrok.app.ui.LocalIslands
+import dev.datagrok.app.ui.Shortcuts
 import dev.datagrok.app.ui.copyToClipboard
 import dev.datagrok.core.agent.AgentMessage
 import dev.datagrok.core.agent.provider.AgentMode
@@ -217,15 +221,16 @@ private fun MessageView(app: AppState, message: ChatMessage) {
     }
     if (message.role == AgentMessage.Role.User) {
         Column(Modifier.fillMaxWidth().hoverable(interaction).padding(start = 48.dp, end = 16.dp, top = 20.dp), horizontalAlignment = Alignment.End) {
-            Text(
+            MentionMessageText(
                 message.text,
+                message.mentions,
                 Modifier.clip(RoundedCornerShape(12.dp)).background(islands.chipHover).padding(horizontal = 12.dp, vertical = 8.dp),
                 lineHeight = ProseLineHeight,
             )
             // Reserved even when hidden, so hovering doesn't shift the conversation.
             Row(Modifier.height(26.dp).padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (hovered) {
-                    MessageAction(AllIconsKeys.Actions.Copy, "Copy") { copyToClipboard(message.text) }
+                    MessageAction(AllIconsKeys.Actions.Copy, "Copy") { copyToClipboard(message.mentionText.plain) }
                     if (agent.canRewind) MessageAction(AllIconsKeys.Actions.Rollback, "Rewind to here: removes this message and everything after, to edit and resend") { agent.rewind(message) }
                 }
             }
@@ -381,23 +386,20 @@ private fun CodeBlock(app: AppState, block: MarkdownBlock.Code) {
 @Composable
 private fun Composer(agent: AgentViewModel, modifier: Modifier = Modifier) {
     val islands = LocalIslands.current
-    val state = rememberTextFieldState()
+    val composer = agent.composer
+    val state = composer.text
     val focus = remember { FocusRequester() }
     var focused by remember { mutableStateOf(false) }
-    val canSend = agent.selected != null && !agent.busy && state.text.isNotBlank()
+    val canSend = agent.selected != null && !agent.busy && !composer.isBlank
+    val pills = PillColors.current()
+    val display = remember(composer, pills.text) { composer.display(pills.style) }
+    var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
     fun submit() {
-        if (!canSend) return
-        agent.send(state.text.toString())
-        state.clearText()
+        if (canSend) agent.sendComposer()
     }
     LaunchedEffect(Unit) { focus.requestFocus() }
-    // A rewind hands the message back to edit; it replaces whatever was being typed.
-    LaunchedEffect(agent.draft) {
-        val draft = agent.draft ?: return@LaunchedEffect
-        state.setTextAndPlaceCursorAtEnd(draft)
-        agent.draft = null
-        focus.requestFocus()
-    }
+    // A mention or a rewind put something in the composer from elsewhere: go on typing there.
+    LaunchedEffect(composer.focusRequests) { focus.requestFocus() }
 
     Column(
         modifier.fillMaxWidth()
@@ -412,25 +414,32 @@ private fun Composer(agent: AgentViewModel, modifier: Modifier = Modifier) {
                 state = state,
                 modifier =
                     Modifier.fillMaxWidth()
+                        .drawBehind {
+                            val shown = layout?.layoutInput?.text?.length ?: return@drawBehind
+                            drawPills(layout, shown, composer.pills(), pills.fill)
+                        }
+                        .onPrimaryPress { position ->
+                            val pill = pillUnder(layout, position, composer.layout())
+                            composer.preview = pill?.takeIf { it != composer.preview }
+                        }
                         .focusRequester(focus)
                         .onFocusChanged { focused = it.isFocused }
-                        .onPreviewKeyEvent { event ->
-                            if (event.type == KeyEventType.KeyDown && event.key == Key.Enter && !event.isShiftPressed) {
-                                submit()
-                                true
-                            } else {
-                                false
-                            }
-                        },
+                        .onPreviewKeyEvent { event -> event.type == KeyEventType.KeyDown && handleComposerKey(event, composer, ::submit) },
                 textStyle = JewelTheme.defaultTextStyle.copy(color = JewelTheme.globalColors.text.normal),
                 cursorBrush = SolidColor(JewelTheme.globalColors.text.normal),
+                inputTransformation = composer.filter,
+                outputTransformation = display,
+                onTextLayout = { getResult -> layout = getResult() },
                 decorator = { inner ->
                     if (state.text.isEmpty()) {
-                        Text("Type a message and press Enter (Shift+Enter for a new line)", color = JewelTheme.globalColors.text.info)
+                        Text("Ask anything, ${Shortcuts.AddToChat} in a console to mention SQL (Shift+Enter for a new line)", color = JewelTheme.globalColors.text.info)
                     }
                     inner()
                 },
             )
+        }
+        composer.preview?.let { char ->
+            composer.mention(char)?.let { mention -> MentionPreview(mention, onDismiss = { composer.preview = null }, onRemove = { composer.remove(char) }) }
         }
         Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             AgentPicker(agent)
@@ -441,6 +450,19 @@ private fun Composer(agent: AgentViewModel, modifier: Modifier = Modifier) {
                 RoundButton(AllIconsKeys.General.ArrowUp, "Send (Enter)", enabled = canSend, onClick = ::submit)
             }
         }
+    }
+}
+
+/** Enter sends; copy, cut and paste keep pills readable outside and whole inside; Esc closes a pill's details. */
+private fun handleComposerKey(event: KeyEvent, composer: ComposerState, submit: () -> Unit): Boolean {
+    val primary = if (isMac) event.isMetaPressed else event.isCtrlPressed
+    return when {
+        event.key == Key.Enter && !event.isShiftPressed -> true.also { submit() }
+        event.key == Key.Escape && composer.preview != null -> true.also { composer.preview = null }
+        primary && !event.isShiftPressed && event.key == Key.C -> composer.copy()
+        primary && !event.isShiftPressed && event.key == Key.X -> composer.copy(cut = true)
+        primary && !event.isShiftPressed && event.key == Key.V -> composer.paste()
+        else -> false
     }
 }
 

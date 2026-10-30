@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
@@ -148,6 +149,8 @@ class ConsoleFixTest {
 
             // A "fix" that would delete rows is flagged and can only be applied for the user to run themselves.
             runAndFail(app, "SELECT * FROM orders WHERE amount > 50;")
+            // The card for the new failure replaces the old one; click it once it has settled.
+            waitUntil(timeoutMillis = 5_000) { onAllNodesWithText("Fix with AI").fetchSemanticsNodes().size == 1 }
             onNodeWithText("Fix with AI").performClick()
             waitUntil(timeoutMillis = 10_000) { console.fix is FixState.Proposed }
             assertTrue((console.fix as FixState.Proposed).warnings.any { "the original only read" in it })
