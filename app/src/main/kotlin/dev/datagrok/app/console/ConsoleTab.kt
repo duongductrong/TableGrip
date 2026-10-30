@@ -10,6 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.TextRange
 import dev.datagrok.app.AppState
 import dev.datagrok.app.grid.DataGridState
+import dev.datagrok.app.grid.GridModel
 import dev.datagrok.app.grid.ResultGridModel
 import dev.datagrok.app.workspace.WorkspaceTab
 import dev.datagrok.core.connection.ConnectionConfig
@@ -17,10 +18,12 @@ import dev.datagrok.core.dialect.SqlDialect
 import dev.datagrok.core.driver.QueryResult
 import dev.datagrok.core.driver.QuerySession
 import dev.datagrok.core.history.HistoryEntry
+import dev.datagrok.core.session.SessionTab
 import dev.datagrok.app.completion.CompletionSource
 import dev.datagrok.core.completion.SqlCompleter
 import dev.datagrok.core.sql.SqlClassifier
 import dev.datagrok.core.sql.StatementKind
+import dev.datagrok.core.sql.SqlParameters
 import dev.datagrok.core.sql.SqlSplitter
 import dev.datagrok.core.sql.SqlStatement
 import java.awt.FileDialog
@@ -44,6 +47,9 @@ enum class RunMode {
 /** What one run produced: its result sets, and the log lines it wrote (row counts, errors). */
 class RunOutcome(val results: List<ResultSetView>, val log: List<OutputLine>)
 
+/** Parameters ([names]) the statements need values for before they run; [run] takes them by name. */
+class ParameterRequest(val names: List<String>, val run: (Map<String, String>) -> Unit)
+
 /** Statements waiting for the user to confirm, with why they need confirming. */
 data class WriteConfirmation(val statements: List<String>, val reasons: List<String>, val proceed: () -> Unit)
 
@@ -52,6 +58,8 @@ data class OutputLine(val time: String, val text: String, val isError: Boolean)
 class ResultSetView(val title: String, val sql: String, val rows: QueryResult.Rows) {
     val model = ResultGridModel(rows)
     val grid = DataGridState()
+    /** Pinned results survive the next run, like DataGrip's pinned result tabs, to compare before and after. */
+    var pinned by mutableStateOf(false)
 }
 
 /** A SQL console bound to one connection, with its own dedicated session. */
@@ -60,6 +68,12 @@ class ConsoleTab(
     val config: ConnectionConfig,
     private val name: String,
     initialSql: String,
+    /** The saved query or script file the console edits, if it was opened from one. */
+    file: File? = null,
+    /** The file's content when it differs from [initialSql], i.e. the console reopens with unsaved edits. */
+    savedText: String? = null,
+    /** Where the caret starts; null puts it at the end of [initialSql]. */
+    caret: Int? = null,
 ) : WorkspaceTab {
     /** A new, empty console starts with blank lines to click into instead of a single one. */
     private val startText = initialSql.ifEmpty { "\n".repeat(BlankConsoleLines - 1) }
@@ -67,18 +81,19 @@ class ConsoleTab(
     override val connectionId: String = config.id
 
     /** Where the script was last saved; null until the first save. */
-    var file by mutableStateOf<File?>(null)
+    var file by mutableStateOf(file)
         private set
     /** The script as last saved (or as the console opened with), to tell whether there are unsaved edits. */
-    private var savedText by mutableStateOf(startText)
+    private var savedText by mutableStateOf(savedText ?: startText)
 
     override val title: String
         get() = file?.name ?: name
     val syntax = SqlDialect.of(config.type).syntax
     private val splitter = SqlSplitter(syntax)
     private val classifier = SqlClassifier(syntax)
+    private val parameters = SqlParameters(syntax)
 
-    val editor = TextFieldState(startText, TextRange(if (initialSql.isEmpty()) 0 else startText.length))
+    val editor = TextFieldState(startText, TextRange((caret ?: if (initialSql.isEmpty()) 0 else startText.length).coerceIn(0, startText.length)))
     val output = mutableStateListOf<OutputLine>()
     val results = mutableStateListOf<ResultSetView>()
 
@@ -109,6 +124,8 @@ class ConsoleTab(
     var uncommitted by mutableStateOf(0)
         private set
     var pendingConfirmation by mutableStateOf<WriteConfirmation?>(null)
+    /** Set while asking for the values of the script's `:name` / `${'$'}{name}` parameters. */
+    var pendingParameters by mutableStateOf<ParameterRequest?>(null)
     /** Set while asking what to do with an open transaction before closing the tab. */
     var pendingClose by mutableStateOf<(() -> Unit)?>(null)
     /** Set while asking whether to save the script before closing the tab. */
@@ -122,6 +139,20 @@ class ConsoleTab(
 
     override val hasUnsavedWork: Boolean
         get() = hasOpenTransaction || hasUnsavedScript
+
+    /** Unsaved text survives quitting in the session; an open transaction doesn't. */
+    override val losesWorkOnQuit: Boolean
+        get() = hasOpenTransaction
+
+    override fun confirmQuit(proceed: () -> Unit) {
+        if (hasOpenTransaction) pendingClose = proceed else proceed()
+    }
+
+    override fun toSession(): SessionTab =
+        SessionTab.Console(config.id, editor.text.toString(), file?.path, editor.selection.start, savedText.takeIf { it != editor.text.toString() })
+
+    override val activeGrid: Pair<GridModel, DataGridState>?
+        get() = results.getOrNull(selectedResultTab - 1)?.let { it.model to it.grid }
 
     private var session: QuerySession? = null
     private var job: Job? = null
@@ -158,6 +189,20 @@ class ConsoleTab(
 
     private fun run(statements: List<String>, confirmed: Boolean = false, onFinished: ((RunOutcome) -> Unit)? = null) {
         if (running || statements.isEmpty()) return
+        // Like DataGrip: parameters are asked for first, and the checks below see the statements as they will run.
+        val names = statements.flatMap(parameters::find).distinct()
+        if (names.isNotEmpty()) {
+            pendingParameters = ParameterRequest(names) { values ->
+                app.parameterValues.putAll(values)
+                runChecked(statements.map { parameters.substitute(it, values) }, confirmed, onFinished)
+            }
+            return
+        }
+        runChecked(statements, confirmed, onFinished)
+    }
+
+    /** Refuses writes on a read-only connection and asks before risky ones, then runs [statements]. */
+    private fun runChecked(statements: List<String>, confirmed: Boolean, onFinished: ((RunOutcome) -> Unit)?) {
         val infos = statements.map(classifier::classify)
 
         if (config.readOnly && infos.any { it.changesData }) {
@@ -189,7 +234,7 @@ class ConsoleTab(
     private fun start(statements: List<String>, onFinished: ((RunOutcome) -> Unit)? = null) {
         job = app.scope.launch {
             running = true
-            results.clear()
+            results.removeAll { !it.pinned }
             val firstLine = output.size
             try {
                 execute(statements)
@@ -259,9 +304,30 @@ class ConsoleTab(
         if (hasOpenTransaction) pendingClose = askAboutScript else askAboutScript()
     }
 
-    /** Writes the script to its file, asking for one first (or always, for [saveAs]); [then] runs once it is saved. */
+    /**
+     * Writes the script to its file. The first save asks for a name in the saved queries, like TablePlus; [saveAs]
+     * picks a file anywhere instead. [then] runs once it is saved.
+     */
     fun save(saveAs: Boolean = false, then: () -> Unit = {}) {
-        val target = file.takeUnless { saveAs } ?: chooseScriptFile(title) ?: return
+        val current = file
+        when {
+            saveAs -> saveToFile(then)
+            current != null -> writeTo(current, then)
+            else -> app.savedQueries.requestSave(this, then)
+        }
+    }
+
+    /** Asks for a file with the native dialog and saves there. */
+    fun saveToFile(then: () -> Unit = {}) {
+        chooseScriptFile(title)?.let { writeTo(it, then) }
+    }
+
+    /** The console's file was moved, e.g. its saved query renamed. */
+    fun moveTo(target: File) {
+        file = target
+    }
+
+    fun writeTo(target: File, then: () -> Unit = {}) {
         val text = editor.text.toString()
         app.scope.launch {
             runCatching { withContext(Dispatchers.IO) { target.writeText(text) } }
@@ -269,6 +335,7 @@ class ConsoleTab(
                     file = target
                     savedText = text
                     app.status = "Saved ${target.path}"
+                    if (app.savedQueries.contains(target)) app.savedQueries.reload()
                     then()
                 }
                 .onFailure {

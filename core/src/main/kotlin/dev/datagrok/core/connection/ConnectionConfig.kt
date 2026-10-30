@@ -56,6 +56,10 @@ data class ConnectionConfig(
     val url: String? = null,
     /** The driver jars of a [DriverId.Generic] profile: the user's, kept where they are. */
     val driverJars: List<String> = emptyList(),
+    /** The explorer folder the connection is listed in, e.g. a project or client; blank lists it at the top level. */
+    val group: String = "",
+    /** Favorites are listed first, above the groups. */
+    val favorite: Boolean = false,
 ) {
     val effectiveDriver: DriverId
         get() = driver?.takeIf { it in type.drivers } ?: type.drivers.first()

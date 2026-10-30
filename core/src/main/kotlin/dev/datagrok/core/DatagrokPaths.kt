@@ -16,6 +16,14 @@ object DatagrokPaths {
     val history: Path
         get() = home.resolve("history.jsonl")
 
+    /** Saved queries: plain `.sql` files, in folders, so they can be edited elsewhere or kept in git. */
+    val queries: Path
+        get() = home.resolve("queries")
+
+    /** Tabs and layout to reopen on the next start. */
+    val session: Path
+        get() = home.resolve("session.json")
+
     /** Downloaded JDBC drivers and the user's own driver jars. */
     val drivers: Path
         get() = home.resolve("drivers")

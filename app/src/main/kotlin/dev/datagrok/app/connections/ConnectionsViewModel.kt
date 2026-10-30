@@ -42,6 +42,23 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
         if (driverPrompt == null && dialog == null) driverPrompt = config
     }
 
+    /** Groups in use, for the Move to Group dialog to offer. */
+    val groups: List<String>
+        get() = profiles.map { it.group }.filter { it.isNotBlank() }.distinct().sortedBy { it.lowercase() }
+
+    /** A connection waiting for the user to choose its group. */
+    var moving by mutableStateOf<ConnectionConfig?>(null)
+
+    fun moveToGroup(config: ConnectionConfig, group: String) {
+        moving = null
+        updateProfile(config.copy(group = group.trim()))
+    }
+
+    fun toggleFavorite(config: ConnectionConfig) = updateProfile(config.copy(favorite = !config.favorite))
+
+    /** Saves a change that doesn't touch how to connect, e.g. its group; the live connection stays as it is. */
+    fun updateProfile(config: ConnectionConfig) = updateDriver(config)
+
     /** Saves a profile whose driver the user switched while being asked for it (e.g. to MariaDB Connector/J). */
     fun updateDriver(config: ConnectionConfig) {
         app.scope.launch {

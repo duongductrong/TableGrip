@@ -39,6 +39,12 @@ data class GridActions(
     /** Used for "Copy as SQL INSERT". */
     val dialect: SqlDialect? = null,
     val tableName: String? = null,
+    /** Columns whose values point at rows of another table (foreign keys); their cells get a link arrow. */
+    val linkedColumns: Set<String> = emptySet(),
+    /** Opens the row [column]'s value in [row] points at, like DataGrip's Go to Referenced Data. */
+    val onFollowLink: ((row: Int, column: String) -> Unit)? = null,
+    /** Extra cell menu entries for [row], e.g. the rows of other tables that reference it. */
+    val relatedRows: ((row: Int) -> List<Pair<String, () -> Unit>>)? = null,
 )
 
 internal val isMac = System.getProperty("os.name").startsWith("Mac")
@@ -249,6 +255,16 @@ internal class GridController(val state: DataGridState, private val scope: Corou
 
     // region Keyboard
 
+    /** Follows the focused cell's foreign key, if it has one and a value. */
+    fun followFocusedLink(): Boolean {
+        val focus = state.focus ?: return false
+        val follow = actions.onFollowLink ?: return false
+        val column = columnName(focus.column)
+        if (column !in actions.linkedColumns || model.value(focus.row, state.modelColumn(focus.column)) == null) return false
+        follow(focus.row, column)
+        return true
+    }
+
     fun onKey(event: KeyEvent): Boolean {
         if (event.type != KeyEventType.KeyDown || state.editing != null) return false
         val primary = if (isMac) event.isMetaPressed else event.isCtrlPressed
@@ -263,6 +279,7 @@ internal class GridController(val state: DataGridState, private val scope: Corou
             primary && (event.key == Key.Enter || event.key == Key.NumPadEnter) -> actions.onSubmit?.invoke().let { actions.onSubmit != null }
             primary && event.isAltPressed && event.key == Key.N -> setNull().let { true }
             primary && event.key == Key.N -> addRow().let { editor != null }
+            Shortcuts.GoToReferenced.matches(event) -> followFocusedLink()
             Shortcuts.FilterByValue.matches(event) -> filterByFocusedValue(exclude = false)
             Shortcuts.ExcludeValue.matches(event) -> filterByFocusedValue(exclude = true)
             // ⇧ is left to the table's Clear Filter.

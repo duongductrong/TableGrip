@@ -47,7 +47,11 @@ internal fun ToolStripe(app: AppState, modifier: Modifier = Modifier) {
         StripeButton(AllIconsKeys.Vcs.History, "Query History (${Shortcuts.History})", selected = !app.settingsOpen && app.leftTool == LeftTool.History) {
             app.toggleTool(LeftTool.History)
         }
+        StripeButton(AllIconsKeys.Nodes.Bookmark, "Saved Queries (${Shortcuts.Queries})", selected = !app.settingsOpen && app.leftTool == LeftTool.Queries) {
+            app.toggleTool(LeftTool.Queries)
+        }
         Divider(Orientation.Horizontal, Modifier.width(20.dp).padding(vertical = 2.dp))
+        StripeButton(AllIconsKeys.Actions.Search, "Go to Anything (${Shortcuts.GoToAnything})", selected = app.goToOpen) { app.goToOpen = true }
         StripeButton(AllIconsKeys.General.Add, "New Connection", selected = false, onClick = app.connections::openNew)
         Spacer(Modifier.weight(1f))
         StripeButton(AllIconsKeys.General.Keyboard, "Keyboard Shortcuts (${Shortcuts.ShowShortcuts})", selected = app.shortcutsOpen) { app.shortcutsOpen = true }

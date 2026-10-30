@@ -57,6 +57,7 @@ import org.jetbrains.jewel.ui.component.LazyTree
 import org.jetbrains.jewel.ui.component.Link
 import org.jetbrains.jewel.ui.component.OutlinedButton
 import org.jetbrains.jewel.ui.component.Text
+import org.jetbrains.jewel.ui.component.TextField
 import org.jetbrains.jewel.ui.component.Tooltip
 import org.jetbrains.jewel.ui.component.styling.LazyTreeMetrics
 import org.jetbrains.jewel.ui.component.styling.LazyTreeStyle
@@ -86,8 +87,25 @@ internal fun ExplorerPanel(app: AppState) {
             return@Column
         }
 
+        TextField(
+            explorer.search,
+            Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp),
+            placeholder = { Text("Search connections and tables") },
+            leadingIcon = { Icon(AllIconsKeys.Actions.Search, null, Modifier.padding(end = 6.dp)) },
+        )
         val tree by remember { derivedStateOf { explorer.buildTree() } }
         LaunchedEffect(explorer) { snapshotFlow { explorer.treeState.openNodes }.collect(explorer::onNodesOpened) }
+        // Groups start open, like folders in TablePlus' sidebar; closing one is remembered for the session.
+        val groups = remember { mutableSetOf<GroupKey>() }
+        LaunchedEffect(tree) {
+            val fresh = app.connections.profiles.map { GroupKey(if (it.favorite) "Favorites" else it.group.trim(), it.favorite) }.filter { it.name.isNotEmpty() && groups.add(it) }
+            if (fresh.isNotEmpty()) explorer.treeState.openNodes(fresh)
+        }
+        // While searching, open the way to every match that's already loaded.
+        LaunchedEffect(explorer.search.text.toString()) {
+            val keys = explorer.searchMatchAncestors()
+            if (keys.isNotEmpty()) explorer.treeState.openNodes(keys.toList())
+        }
 
         LazyTree(
             tree = tree,
@@ -157,6 +175,8 @@ private fun contextMenu(app: AppState, node: ExplorerNode): List<ContextMenuItem
                 ContextMenuItem("New Console") { app.workspace.openConsole(config) },
                 ContextMenuItem("Refresh") { app.explorer.refresh(node.key) },
                 ContextMenuItem("Disconnect") { app.explorer.disconnect(config.id) }.takeIf { connected },
+                ContextMenuItem(if (config.favorite) "Remove from Favorites" else "Add to Favorites") { app.connections.toggleFavorite(config) },
+                ContextMenuItem("Move to Group…") { app.connections.moving = config },
                 ContextMenuItem("Edit…") { app.connections.openEdit(config) },
                 ContextMenuItem("Delete…") { app.connections.pendingDelete = config },
             )
@@ -230,6 +250,10 @@ private fun NodeRow(app: AppState, node: ExplorerNode, modifier: Modifier = Modi
                         Text(node.config.type.displayName, color = info, maxLines = 1, softWrap = false)
                     ConnectionStatus.Disconnected -> Unit
                 }
+            }
+            is ExplorerNode.Group -> {
+                NodeIcon(if (node.favorites) AllIconsKeys.Nodes.Favorite else AllIconsKeys.Nodes.Folder)
+                NameAndDetail(node.name, node.children.size.toString(), Modifier.weight(1f))
             }
             is ExplorerNode.Schema -> {
                 NodeIcon(AllIconsKeys.Nodes.Folder)

@@ -24,16 +24,24 @@ import dev.datagrok.app.LeftTool
 import dev.datagrok.app.connections.ConnectionDialog
 import dev.datagrok.app.connections.DeleteConnectionDialog
 import dev.datagrok.app.connections.MissingDriverDialog
+import dev.datagrok.app.connections.MoveToGroupDialog
 import dev.datagrok.app.console.ConsoleTab
 import dev.datagrok.app.explorer.ExplorerPanel
 import dev.datagrok.app.export.ExportDialog
+import dev.datagrok.app.grid.SelectionStats
 import dev.datagrok.app.history.HistoryPanel
+import dev.datagrok.app.queries.DeleteQueryDialog
+import dev.datagrok.app.queries.QueriesPanel
+import dev.datagrok.app.queries.RenameQueryDialog
+import dev.datagrok.app.queries.SaveQueryDialog
+import dev.datagrok.app.search.GoToAnythingPopup
 import dev.datagrok.app.table.TableDataTab
 import dev.datagrok.app.workspace.WorkspaceView
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.component.HorizontalSplitLayout
 import org.jetbrains.jewel.ui.component.Icon
 import org.jetbrains.jewel.ui.component.Text
+import org.jetbrains.jewel.ui.component.Tooltip
 import org.jetbrains.jewel.ui.component.rememberSplitLayoutState
 import org.jetbrains.jewel.ui.component.styling.DividerMetrics
 import org.jetbrains.jewel.ui.component.styling.DividerStyle
@@ -49,6 +57,7 @@ internal val IslandGap = 6.dp
 @Composable
 internal fun MainScreen(app: AppState) {
     val islands = LocalIslands.current
+    Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize().background(islands.frame)) {
         Row(Modifier.fillMaxWidth().weight(1f)) {
             ToolStripe(app)
@@ -74,12 +83,21 @@ internal fun MainScreen(app: AppState) {
         }
         StatusBar(app)
     }
+    // Dims the window behind go-to-anything so the panel reads as its own layer; the popup itself can't cover the
+    // window, and its outside click closes it.
+    if (app.goToOpen) Box(Modifier.fillMaxSize().background(islands.scrim))
+    }
 
     app.connections.dialog?.let { ConnectionDialog(app.connections, it) }
     app.connections.pendingDelete?.let { DeleteConnectionDialog(app.connections, it) }
+    app.connections.moving?.let { MoveToGroupDialog(app.connections, it) }
     app.connections.driverPrompt?.let { MissingDriverDialog(app.connections, it) }
     if (app.shortcutsOpen) ShortcutsDialog(app)
     app.exportRequest?.let { ExportDialog(app, it) }
+    app.savedQueries.saveRequest?.let { SaveQueryDialog(app, it) }
+    app.savedQueries.renaming?.let { RenameQueryDialog(app, it) }
+    app.savedQueries.pendingDelete?.let { DeleteQueryDialog(app, it) }
+    if (app.goToOpen) GoToAnythingPopup(app)
 }
 
 /** The left tool window and the editor tabs, or the settings screen in their place. */
@@ -100,6 +118,7 @@ private fun CenterArea(app: AppState) {
                     when (tool) {
                         LeftTool.Explorer -> ExplorerPanel(app)
                         LeftTool.History -> HistoryPanel(app)
+                        LeftTool.Queries -> QueriesPanel(app)
                     }
                 }
             },
@@ -145,7 +164,15 @@ private fun StatusBar(app: AppState) {
             Text(crumb, color = if (index == crumbs.lastIndex) JewelTheme.globalColors.text.normal else info, maxLines = 1)
         }
         Box(Modifier.weight(1f))
-        Text(app.status, color = info, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        // Like a spreadsheet: several cells selected shows their aggregates instead of the last status message.
+        val stats = app.workspace.selected?.takeIf { !app.settingsOpen }?.activeGrid?.let { (model, state) -> SelectionStats.of(model, state) }
+        if (stats != null) {
+            Tooltip({ Text("${stats.cells} cell(s) selected · ${stats.numbers} numeric") }) {
+                Text(stats.summary, color = JewelTheme.globalColors.text.normal, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        } else {
+            Text(app.status, color = info, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
         connection?.let { Text(it.type.displayName, color = info) }
     }
 }

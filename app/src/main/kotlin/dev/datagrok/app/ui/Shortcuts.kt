@@ -64,6 +64,9 @@ object Shortcuts {
     val Explorer = if (isMac) Shortcut(Key.One, "1", primary = true) else Shortcut(Key.One, "1", alt = true)
     val History = if (isMac) Shortcut(Key.Two, "2", primary = true) else Shortcut(Key.Two, "2", alt = true)
     val Agent = if (isMac) Shortcut(Key.Three, "3", primary = true) else Shortcut(Key.Three, "3", alt = true)
+    val Queries = if (isMac) Shortcut(Key.Four, "4", primary = true) else Shortcut(Key.Four, "4", alt = true)
+    /** Like TablePlus' Open Anything; a double ⇧ opens it too, like JetBrains' Search Everywhere. */
+    val GoToAnything = Shortcut(Key.P, "P", primary = true)
     val Settings = if (isMac) Shortcut(Key.Comma, ",", primary = true) else Shortcut(Key.S, "S", primary = true, alt = true)
     val ShowShortcuts = Shortcut(Key.Slash, "/", primary = true, shift = true)
 
@@ -93,12 +96,15 @@ object Shortcuts {
     val CopyWithHeader = Shortcut(Key.C, "C", primary = true, shift = true)
     val SelectAll = Shortcut(Key.A, "A", primary = true)
     val EditCell = Shortcut(Key.F2, "F2")
+    val ExpandEditor = Shortcut(Key.Enter, EnterLabel, shift = true)
     val SetNull = Shortcut(Key.N, "N", primary = true, alt = true)
     val AddRow = Shortcut(Key.N, "N", primary = true)
     val DeleteRows = Shortcut(Key.Backspace, BackspaceLabel, primary = true)
     val RevertRows = Shortcut(Key.Z, "Z", primary = true)
     val Submit = Shortcut(Key.Enter, EnterLabel, primary = true)
     val Reload = Shortcut(Key.R, "R", primary = true)
+    /** DataGrip's Go to Declaration key, which on a foreign-key cell goes to the referenced row. */
+    val GoToReferenced = Shortcut(Key.B, "B", primary = true)
 
     // Table filter: anywhere in a table viewer
     val FocusFilter = Shortcut(Key.F, "F", primary = true)
@@ -131,6 +137,7 @@ object Shortcuts {
             Group(
                 "General",
                 listOf(
+                    Entry("Go to anything: tables, tabs, queries, actions", "${GoToAnything.label}  /  ${if (isMac) "⇧⇧" else "Shift Shift"}"),
                     entry("New console for the current connection", NewConsole),
                     entry("Close tab", CloseTab),
                     entry("Next tab", NextTab, NextTabAlt),
@@ -138,6 +145,7 @@ object Shortcuts {
                     entry("Connections", Explorer),
                     entry("Query History", History),
                     entry("Agent", Agent),
+                    entry("Saved Queries", Queries),
                     entry("Settings", Settings),
                     entry("Keyboard shortcuts", ShowShortcuts),
                 ),
@@ -149,8 +157,8 @@ object Shortcuts {
                     entry("Execute script", RunScript),
                     entry("Cancel running query", Cancel),
                     entry("Explain plan", Explain),
-                    entry("Save script", Save),
-                    entry("Save script as…", SaveAs),
+                    entry("Save query (the first time: name it in Saved Queries)", Save),
+                    entry("Save script to a file…", SaveAs),
                 ),
             ),
             Group(
@@ -174,12 +182,14 @@ object Shortcuts {
                     entry("Copy cells with header", CopyWithHeader),
                     entry("Select all", SelectAll),
                     Entry("Edit cell", "$EnterLabel  /  ${EditCell.label}"),
+                    entry("Expand the cell editor (${Submit.label} applies)", ExpandEditor),
                     entry("Set cell to NULL", SetNull),
                     entry("Add row", AddRow),
                     entry("Delete rows", DeleteRows),
                     entry("Revert rows", RevertRows),
                     entry("Submit changes", Submit, Save),
                     entry("Reload table", Reload),
+                    entry("Go to the row a foreign key points at", GoToReferenced),
                 ),
             ),
             Group(

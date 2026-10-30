@@ -6,6 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import dev.datagrok.app.AppState
 import dev.datagrok.app.console.ConsoleTab
+import dev.datagrok.app.grid.DataGridState
+import dev.datagrok.app.grid.GridModel
 import dev.datagrok.app.table.StructureSection
 import dev.datagrok.app.table.TableDataTab
 import dev.datagrok.app.documents.DocumentBrowserTab
@@ -13,7 +15,10 @@ import dev.datagrok.app.keyvalue.CommandConsoleTab
 import dev.datagrok.app.keyvalue.KeyBrowserTab
 import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.connection.Paradigm
+import dev.datagrok.core.metadata.Namespace
 import dev.datagrok.core.metadata.TableRef
+import dev.datagrok.core.session.SessionTab
+import java.io.File
 
 /** An editor tab in the main area. */
 interface WorkspaceTab {
@@ -26,6 +31,20 @@ interface WorkspaceTab {
 
     /** Asks the user what to do with [hasUnsavedWork]; calls [close] only once they chose to go ahead and it is done. */
     fun confirmClose(close: () -> Unit) = close()
+
+    /** Work the session can't bring back after quitting, e.g. an open transaction; unsaved console text it can. */
+    val losesWorkOnQuit: Boolean
+        get() = hasUnsavedWork
+
+    /** Like [confirmClose], before quitting: only asks about [losesWorkOnQuit]. */
+    fun confirmQuit(proceed: () -> Unit) = confirmClose(proceed)
+
+    /** How the tab reopens on the next start; null for tabs that don't. */
+    fun toSession(): SessionTab? = null
+
+    /** The grid in front, if any, with what it shows; the status bar aggregates its selection. */
+    val activeGrid: Pair<GridModel, DataGridState>?
+        get() = null
 
     /** Cancels running work and releases connections. */
     fun dispose()
@@ -55,14 +74,14 @@ class WorkspaceViewModel(private val app: AppState) {
      * A SQL console, or a command console for engines without SQL: [keyspace] picks a key-value store's database,
      * [database] a document store's; [initialSql] is the first command to show.
      */
-    fun openConsole(config: ConnectionConfig, initialSql: String = "", keyspace: Int = 0, database: String? = null) {
+    fun openConsole(config: ConnectionConfig, initialSql: String = "", keyspace: Int = 0, database: String? = null, file: File? = null) {
         consoleCount++
         val name = if (consoleCount == 1) config.name else "${config.name} ($consoleCount)"
         open(
             when (config.type.paradigm) {
                 Paradigm.KeyValue -> CommandConsoleTab(app, config, name, keyspace = keyspace)
                 Paradigm.Document -> CommandConsoleTab(app, config, name, database = database ?: config.database.ifBlank { "test" }, initial = initialSql)
-                else -> ConsoleTab(app, config, name, initialSql)
+                else -> ConsoleTab(app, config, name, initialSql, file)
             }
         )
     }
@@ -123,6 +142,29 @@ class WorkspaceViewModel(private val app: AppState) {
         }
         tabs.filter(filter).forEach(::close)
         then()
+    }
+
+    /**
+     * Before quitting: asks about each tab whose work quitting would lose, one at a time, then runs [then]. Tabs stay
+     * open, so the session still has them. Cancelling any question cancels the quit.
+     */
+    fun confirmQuit(then: () -> Unit, from: Int = 0) {
+        val next = tabs.drop(from).firstOrNull { it.losesWorkOnQuit } ?: return then()
+        selected = next
+        next.confirmQuit { confirmQuit(then, tabs.indexOf(next) + 1) }
+    }
+
+    /** Reopens a console from the last session, with its text, file and caret. */
+    fun restoreConsole(config: ConnectionConfig, saved: SessionTab.Console) {
+        consoleCount++
+        val name = if (consoleCount == 1) config.name else "${config.name} ($consoleCount)"
+        open(ConsoleTab(app, config, name, saved.text, saved.file?.let(::File), savedText = saved.savedText, caret = saved.caret))
+    }
+
+    /** Reopens a table from the last session; its rows load once it's shown. */
+    fun restoreTable(config: ConnectionConfig, saved: SessionTab.Table) {
+        val ref = TableRef(Namespace(saved.catalog, saved.schema), saved.name)
+        open(TableDataTab(app, config, ref).also { it.restore(saved.structure, saved.filter) })
     }
 
     fun close(tab: WorkspaceTab) {

@@ -371,8 +371,10 @@ private fun DataRow(
             if (state.editing == GridCell(row, column)) {
                 CellEditor(controller, cellModifier, colors)
             } else {
+                val name = model.columns[modelColumn].name
                 Cell(
                     value = model.value(row, modelColumn),
+                    link = controller.actions.onFollowLink?.takeIf { name in controller.actions.linkedColumns }?.let { follow -> { follow(row, name) } },
                     placeholder = model.placeholder(row, modelColumn),
                     numeric = model.columns[modelColumn].isNumeric,
                     selected = selection?.contains(row, column) == true,
@@ -410,6 +412,8 @@ private fun DataRow(
 @Composable
 private fun Cell(
     value: String?,
+    /** Follows the cell's foreign key; shown as an arrow at the cell's end, like TablePlus. */
+    link: (() -> Unit)?,
     placeholder: String?,
     numeric: Boolean,
     selected: Boolean,
@@ -424,7 +428,11 @@ private fun Cell(
     if (selected) cell = cell.background(colors.selection)
     cell = cell.gridLines(colors.grid)
     if (focused) cell = cell.border(1.dp, colors.focusBorder)
-    Box(cell.padding(horizontal = 8.dp), contentAlignment = if (numeric && value != null) Alignment.CenterEnd else Alignment.CenterStart) {
+    val showLink = link != null && value != null
+    Box(
+        cell.padding(start = 8.dp, end = if (showLink) 22.dp else 8.dp),
+        contentAlignment = if (numeric && value != null) Alignment.CenterEnd else Alignment.CenterStart,
+    ) {
         val base = JewelTheme.editorTextStyle
         val style =
             when {
@@ -437,6 +445,29 @@ private fun Cell(
             overflow = TextOverflow.Ellipsis,
             style = if (deleted) style.copy(textDecoration = TextDecoration.LineThrough) else style,
         )
+    }
+    if (showLink) LinkArrow(link!!, modifier.padding(end = 3.dp))
+}
+
+/** The arrow on a foreign-key cell; claims its clicks so the grid doesn't also select underneath. */
+@Composable
+private fun LinkArrow(onClick: () -> Unit, modifier: Modifier) {
+    Box(modifier, contentAlignment = Alignment.CenterEnd) {
+        val interaction = remember { MutableInteractionSource() }
+        val hovered by interaction.collectIsHoveredAsState()
+        Tooltip({ Text("Go to referenced row (${Shortcuts.GoToReferenced})") }) {
+            Box(
+                Modifier.size(16.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(if (hovered) JewelTheme.globalColors.borders.normal.copy(alpha = 0.35f) else Color.Transparent)
+                    .hoverable(interaction)
+                    .claimPointer()
+                    .pointerInput(onClick) { detectTapGestures { onClick() } },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(AllIconsKeys.General.ArrowRight, "Go to referenced row", Modifier.alpha(if (hovered) 1f else 0.6f))
+            }
+        }
     }
 }
 
@@ -626,6 +657,9 @@ private fun cellMenu(controller: GridController): List<ContextMenuItem> {
             val value = controller.model.value(focus.row, state.modelColumn(focus.column))
             ContextMenuItem("Exclude This Value (${Shortcuts.ExcludeValue})") { it(column, value, true) }
         },
+        ContextMenuItem("Go to Referenced Row (${Shortcuts.GoToReferenced})") { controller.followFocusedLink() }
+            .takeIf { single && controller.columnName(focus.column) in controller.actions.linkedColumns && controller.model.value(focus.row, state.modelColumn(focus.column)) != null },
+    ) + controller.actions.relatedRows?.takeIf { single }?.invoke(focus.row).orEmpty().map { (label, open) -> ContextMenuItem(label, open) } + listOfNotNull(
         ContextMenuItem("Set NULL (${Shortcuts.SetNull})") { controller.setNull() }.takeIf { editor != null },
         ContextMenuItem("Add Row (${Shortcuts.AddRow})") { controller.addRow() }.takeIf { editor != null },
         ContextMenuItem("Delete Row(s) (${Shortcuts.DeleteRows})") { controller.deleteSelectedRows() }.takeIf { editor != null },

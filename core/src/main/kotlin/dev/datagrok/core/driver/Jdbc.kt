@@ -75,13 +75,18 @@ private fun ResultSet.columns(): List<ResultColumn> {
     return (1..meta.columnCount).map { ResultColumn(meta.getColumnLabel(it), meta.getColumnTypeName(it).orEmpty(), meta.getColumnType(it)) }
 }
 
-private fun ResultSet.cell(index: Int, column: ResultColumn): String? =
-    if (column.isBinary) getBytes(index + 1)?.let { "<binary ${it.size} bytes>" } else getString(index + 1)
+/** Exports keep a placeholder for binary values; grids get a [BinaryText] preview of them. */
+private fun ResultSet.cell(index: Int, column: ResultColumn, binaryPreview: Boolean = false): String? =
+    when {
+        !column.isBinary -> getString(index + 1)
+        binaryPreview -> getBytes(index + 1)?.let(BinaryText::encode)
+        else -> getBytes(index + 1)?.let { "<binary ${it.size} bytes>" }
+    }
 
 internal fun ResultSet.readRows(maxRows: Int, elapsed: () -> Long): QueryResult.Rows {
     val columns = columns()
     val rows = buildList {
-        while (size <= maxRows && next()) add(columns.indices.map { cell(it, columns[it]) })
+        while (size <= maxRows && next()) add(columns.indices.map { cell(it, columns[it], binaryPreview = true) })
     }
     return QueryResult.Rows(columns, rows.take(maxRows), truncated = rows.size > maxRows, elapsedMillis = elapsed())
 }

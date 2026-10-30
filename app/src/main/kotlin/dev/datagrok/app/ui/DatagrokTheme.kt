@@ -48,6 +48,8 @@ data class IslandsPalette(
     val accent: Color,
     val stripeHover: Color,
     val chipHover: Color,
+    /** Dims the window behind a floating panel such as go-to-anything. */
+    val scrim: Color,
 )
 
 private val DarkIslands =
@@ -59,6 +61,7 @@ private val DarkIslands =
         accent = Color(0xFF3574F0),
         stripeHover = Color(0x14FFFFFF),
         chipHover = Color(0x1AFFFFFF),
+        scrim = Color(0x8C000000),
     )
 
 private val LightIslands =
@@ -70,6 +73,7 @@ private val LightIslands =
         accent = Color(0xFF3574F0),
         stripeHover = Color(0x14000000),
         chipHover = Color(0x12000000),
+        scrim = Color(0x47000000),
     )
 
 val LocalIslands = staticCompositionLocalOf { DarkIslands }

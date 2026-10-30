@@ -9,6 +9,9 @@ import androidx.compose.runtime.setValue
 import dev.datagrok.app.AppState
 import dev.datagrok.app.export.ExportRequest
 import dev.datagrok.app.grid.DataGridState
+import dev.datagrok.app.grid.GridModel
+import dev.datagrok.core.metadata.TableRelation
+import dev.datagrok.core.session.SessionTab
 import dev.datagrok.app.workspace.WorkspaceTab
 import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.dialect.SortColumn
@@ -18,6 +21,7 @@ import dev.datagrok.core.edit.ChangeSql
 import dev.datagrok.core.filter.CompiledFilter
 import dev.datagrok.core.filter.FilterColumn
 import dev.datagrok.core.filter.FilterCompiler
+import dev.datagrok.core.filter.RawCondition
 import dev.datagrok.core.filter.FilterGroup
 import dev.datagrok.core.filter.SqlFilter
 import dev.datagrok.core.filter.ValueKind
@@ -159,6 +163,96 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
     override val hasUnsavedWork: Boolean
         get() = hasChanges
 
+    override fun toSession(): SessionTab =
+        SessionTab.Table(
+            config.id,
+            table.namespace.catalog,
+            table.namespace.schema,
+            table.name,
+            structure = view == TableView.Structure,
+            filter = appliedSql ?: appliedTree?.let(::sessionFilter),
+        )
+
+    /** A lone SQL condition is kept as written, so it doesn't gain a pair of parentheses on every restart. */
+    private fun sessionFilter(tree: FilterGroup): String? {
+        val enabled = tree.children.filter { it.enabled }
+        (enabled.singleOrNull() as? RawCondition)?.takeIf { !tree.negated }?.let { return it.sql.trim().ifEmpty { null } }
+        return FilterCompiler(dialect, filterColumns).compile(tree).filter?.preview
+    }
+
+    /** Puts back the view and filter of the last session without loading anything; the view loads when shown. */
+    fun restore(structure: Boolean, filter: String?) {
+        view = if (structure) TableView.Structure else TableView.Data
+        if (filter != null) setFilterSql(filter)
+    }
+
+    /** Replaces the filter with [sql], as one SQL condition in the builder or as the SQL field's text. */
+    private fun setFilterSql(sql: String) {
+        builder.clear()
+        showFilterIssues = false
+        if (filterMode == FilterMode.Builder) {
+            builder.addRaw(builder.root, sql)
+            appliedTree = builder.toNode()
+            appliedSql = null
+        } else {
+            filter.setTextAndPlaceCursorAtEnd(sql)
+            appliedSql = sql
+            appliedTree = null
+        }
+    }
+
+    /** Foreign keys from and to this table, read once alongside the first page. */
+    var relations by mutableStateOf<List<TableRelation>>(emptyList())
+        private set
+    private var relationsRequested = false
+
+    private fun isThisTable(ref: TableRef) =
+        ref.name.equals(table.name, ignoreCase = true) && (ref.namespace.schema ?: "").equals(table.namespace.schema ?: "", ignoreCase = true)
+
+    /** Columns that point at other tables' rows. */
+    val linkedColumns: Set<String>
+        get() = relations.filter { isThisTable(it.fromTable) }.flatMapTo(mutableSetOf()) { it.fromColumns }
+
+    private fun rowValues(row: Int, columns: List<String>): List<Triple<String, String?, Boolean>>? {
+        val model = model ?: return null
+        return columns.map { name ->
+            val index = model.columns.indexOfFirst { it.name.equals(name, ignoreCase = true) }.takeIf { it >= 0 } ?: return null
+            Triple(name, model.value(row, index), model.columns[index].isNumeric)
+        }
+    }
+
+    /** Opens the table [column] of [row] points at, filtered to that row, like DataGrip's Go to Referenced Data. */
+    fun followLink(row: Int, column: String) {
+        val relation = relations.firstOrNull { isThisTable(it.fromTable) && column in it.fromColumns } ?: return
+        val values = rowValues(row, relation.fromColumns) ?: return
+        if (values.any { it.second == null }) return
+        showRows(relation.toTable, relation.toColumns.zip(values) { target, (_, value, numeric) -> Triple(target, value, numeric) })
+    }
+
+    /** Menu entries opening the rows of other tables that reference [row], e.g. a user's orders. */
+    fun referencingRows(row: Int): List<Pair<String, () -> Unit>> =
+        relations.filter { isThisTable(it.toTable) }.mapNotNull { relation ->
+            val values = rowValues(row, relation.toColumns)?.takeIf { list -> list.none { it.second == null } } ?: return@mapNotNull null
+            val label = "Show Referencing Rows: ${relation.fromTable.name} (${relation.fromColumns.joinToString()})"
+            label to { showRows(relation.fromTable, relation.fromColumns.zip(values) { source, (_, value, numeric) -> Triple(source, value, numeric) }) }
+        }
+
+    private fun showRows(target: TableRef, values: List<Triple<String, String?, Boolean>>) {
+        val sql = values.joinToString(" AND ") { (column, value, numeric) -> dialect.quoteIdentifier(column) + " = " + dialect.literal(value, numeric) }
+        app.workspace.openTable(config, target)
+        (app.workspace.selected as? TableDataTab)?.showRowsWhere(sql)
+    }
+
+    /** Shows only the rows matching [sql], replacing the filter (after asking about unsaved edits). */
+    fun showRowsWhere(sql: String) = guard {
+        view = TableView.Data
+        setFilterSql(sql)
+        reloadFiltered()
+    }
+
+    override val activeGrid: Pair<GridModel, DataGridState>?
+        get() = model?.takeIf { view == TableView.Data }?.let { it to grid }
+
     /** Navigation to resume once the pending edits are saved, when the user chose to submit them first. */
     private var afterSubmit: (() -> Unit)? = null
 
@@ -204,6 +298,10 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
 
     private fun load() {
         loadJob?.cancel()
+        if (!relationsRequested) {
+            relationsRequested = true
+            app.scope.launch { runCatching { app.databases.database(config).relations(table) }.onSuccess { relations = it } }
+        }
         val job = app.scope.launch {
             loading = true
             try {

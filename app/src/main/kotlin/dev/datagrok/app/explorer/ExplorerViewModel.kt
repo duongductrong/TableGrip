@@ -1,6 +1,7 @@
 package dev.datagrok.app.explorer
 
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.mutableStateMapOf
 import dev.datagrok.app.AppState
 import dev.datagrok.app.ui.copyToClipboard
@@ -22,6 +23,11 @@ import org.jetbrains.jewel.foundation.lazy.tree.buildTree
 /** Nodes of the database explorer tree. [key] is the stable tree id that keeps nodes open across rebuilds. */
 sealed interface ExplorerNode {
     val key: Any
+
+    /** A folder of connections: one of the user's groups, or the favorites listed above them. */
+    data class Group(val name: String, val favorites: Boolean, val children: List<ExplorerNode>) : ExplorerNode {
+        override val key = GroupKey(name, favorites)
+    }
 
     data class Connection(val config: ConnectionConfig) : ExplorerNode {
         override val key = ConnectionKey(config.id)
@@ -78,6 +84,8 @@ sealed interface ExplorerNode {
 
 data class ConnectionKey(val id: String)
 
+data class GroupKey(val name: String, val favorites: Boolean)
+
 data class TableKey(val connectionId: String, val ref: TableRef)
 
 private sealed interface Children {
@@ -96,18 +104,89 @@ class ExplorerViewModel(private val app: AppState) {
     val treeState = TreeState(SelectableLazyListState(LazyListState()))
     private val children = mutableStateMapOf<Any, Children>()
 
+    /** Narrows the tree to connections, and tables and columns already loaded, whose name matches. */
+    val search = TextFieldState()
+
     /** Reads all state it depends on eagerly, so callers can wrap it in `derivedStateOf`. */
     fun buildTree(): Tree<ExplorerNode> {
         val snapshot = children.toMap()
-        val profiles = app.connections.profiles.toList()
-        return buildTree {
-            profiles.forEach { add(ExplorerNode.Connection(it), snapshot) }
+        val query = search.text.toString().trim()
+        val roots = topLevel(app.connections.profiles.toList()).mapNotNull { filtered(it, query, snapshot) }
+        return buildTree { roots.forEach { add(it, snapshot, query) } }
+    }
+
+    /** Favorites first, then each group in name order, then connections without a group, keeping their saved order. */
+    private fun topLevel(profiles: List<ConnectionConfig>): List<ExplorerNode> = buildList {
+        val favorites = profiles.filter { it.favorite }
+        if (favorites.isNotEmpty()) add(ExplorerNode.Group("Favorites", favorites = true, favorites.map(ExplorerNode::Connection)))
+        profiles.filter { !it.favorite && it.group.isNotBlank() }
+            .groupBy { it.group.trim() }
+            .toSortedMap(String.CASE_INSENSITIVE_ORDER)
+            .forEach { (group, members) -> add(ExplorerNode.Group(group, favorites = false, members.map(ExplorerNode::Connection))) }
+        profiles.filter { !it.favorite && it.group.isBlank() }.forEach { add(ExplorerNode.Connection(it)) }
+    }
+
+    /** The node's own name, the one search matches. */
+    private fun ExplorerNode.searchName(): String? =
+        when (this) {
+            is ExplorerNode.Group -> name
+            is ExplorerNode.Connection -> config.name
+            is ExplorerNode.Schema -> namespace.displayName
+            is ExplorerNode.Table -> info.ref.name
+            is ExplorerNode.Column -> column.name
+            is ExplorerNode.DocumentDatabase -> name
+            is ExplorerNode.Collection -> info.name
+            else -> null
+        }
+
+    private fun matches(node: ExplorerNode, query: String): Boolean =
+        node.searchName()?.contains(query, ignoreCase = true) == true ||
+            (node is ExplorerNode.Connection && listOf(node.config.host, node.config.database, node.config.type.displayName).any { it.contains(query, ignoreCase = true) })
+
+    private fun childrenOf(node: ExplorerNode, snapshot: Map<Any, Children>): List<ExplorerNode> =
+        when (node) {
+            is ExplorerNode.Group -> node.children
+            is ExplorerNode.Folder -> node.children
+            else -> (snapshot[node.key] as? Children.Loaded)?.nodes.orEmpty()
+        }
+
+    /**
+     * [node] if it or something loaded under it matches [query], else null. A match shows with everything under it; a
+     * folder or group only keeps its matching children.
+     */
+    private fun filtered(node: ExplorerNode, query: String, snapshot: Map<Any, Children>): ExplorerNode? {
+        if (query.isEmpty() || (matches(node, query) && node !is ExplorerNode.Group)) return node
+        val kept = childrenOf(node, snapshot).mapNotNull { filtered(it, query, snapshot) }
+        return when {
+            node is ExplorerNode.Group -> if (matches(node, query)) node else node.copy(children = kept).takeIf { kept.isNotEmpty() }
+            node is ExplorerNode.Folder -> node.copy(children = kept).takeIf { kept.isNotEmpty() }
+            kept.isNotEmpty() -> node
+            else -> null
         }
     }
 
-    private fun TreeGeneratorScope<ExplorerNode>.add(node: ExplorerNode, snapshot: Map<Any, Children>) {
+    /** Nodes to open so every search match shows; only nodes already loaded, so searching never connects anything. */
+    fun searchMatchAncestors(): Set<Any> {
+        val query = search.text.toString().trim()
+        if (query.isEmpty()) return emptySet()
+        val snapshot = children.toMap()
+        val keys = mutableSetOf<Any>()
+        fun visit(node: ExplorerNode, path: List<Any>): Boolean {
+            val below = childrenOf(node, snapshot)
+            val childMatched = below.map { visit(it, path + node.key) }.any { it }
+            if (childMatched) keys.addAll(path + node.key)
+            return childMatched || matches(node, query)
+        }
+        topLevel(app.connections.profiles.toList()).forEach { visit(it, emptyList()) }
+        return keys
+    }
+
+    private fun TreeGeneratorScope<ExplorerNode>.add(node: ExplorerNode, snapshot: Map<Any, Children>, searched: String) {
+        // Below a match everything shows; elsewhere only the paths to matches do.
+        val query = if (searched.isNotEmpty() && matches(node, searched)) "" else searched
         val childNodes: List<ExplorerNode>? =
             when (node) {
+                is ExplorerNode.Group -> node.children
                 is ExplorerNode.Folder -> node.children
                 is ExplorerNode.Connection,
                 is ExplorerNode.Schema,
@@ -118,10 +197,10 @@ class ExplorerViewModel(private val app: AppState) {
                         is Children.Failed -> listOf(ExplorerNode.Failure(node.key, loaded.message))
                         Children.Loading,
                         null -> listOf(ExplorerNode.Loading(node.key))
-                    }
+                    }.let { loaded -> if (query.isEmpty()) loaded else loaded.mapNotNull { filtered(it, query, snapshot) } }
                 else -> null
             }
-        if (childNodes == null) addLeaf(node, node.key) else addNode(node, node.key) { childNodes.forEach { add(it, snapshot) } }
+        if (childNodes == null) addLeaf(node, node.key) else addNode(node, node.key) { childNodes.forEach { add(it, snapshot, query) } }
     }
 
     /** Called with the tree's open node ids; loads children of any newly opened lazy node. */

@@ -13,6 +13,7 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import dev.datagrok.app.console.ConsoleTab
 import dev.datagrok.app.console.handleConsoleShortcut
+import dev.datagrok.app.search.DoubleShiftDetector
 import dev.datagrok.app.table.TableDataTab
 import dev.datagrok.app.table.handleFilterShortcut
 import dev.datagrok.app.ui.DatagrokTheme
@@ -23,7 +24,13 @@ import java.awt.Desktop
 import org.jetbrains.jewel.window.DecoratedWindow
 
 fun main() = application {
-    val appState = remember { AppState() }
+    val appState = remember {
+        AppState().also {
+            it.session.restore()
+            it.session.startAutosave()
+        }
+    }
+    val doubleShift = remember { DoubleShiftDetector() }
     // ⌘Q bypasses the window's close request on macOS; route it through the same unsaved-work check.
     DisposableEffect(Unit) {
         val desktop = Desktop.getDesktop().takeIf { Desktop.isDesktopSupported() && it.isSupported(Desktop.Action.APP_QUIT_HANDLER) }
@@ -38,7 +45,10 @@ fun main() = application {
             onCloseRequest = { appState.requestExit(::exitApplication) },
             state = rememberWindowState(size = DpSize(1360.dp, 860.dp)),
             title = "Datagrok",
-            onPreviewKeyEvent = { handleTabSwitch(appState, it) },
+            onPreviewKeyEvent = {
+                if (doubleShift.onKey(it.key, it.type)) appState.goToOpen = true
+                handleTabSwitch(appState, it)
+            },
             onKeyEvent = { handleWindowShortcut(appState, it) },
         ) {
             TitleBarView(appState)
@@ -65,10 +75,12 @@ private fun handleWindowShortcut(app: AppState, event: KeyEvent): Boolean {
         app.settingsOpen && (Shortcuts.CloseTab.matches(event) || (event.type == KeyEventType.KeyDown && event.key == Key.Escape)) ->
             done { app.settingsOpen = false }
         Shortcuts.CloseTab.matches(event) -> selected?.let { workspace.requestClose(it); true } ?: false
+        Shortcuts.GoToAnything.matches(event) -> done { app.goToOpen = true }
         Shortcuts.NewConsole.matches(event) -> app.currentConnection?.let { workspace.openConsole(it); true } ?: false
         Shortcuts.Explorer.matches(event) -> done { app.toggleTool(LeftTool.Explorer) }
         Shortcuts.History.matches(event) -> done { app.toggleTool(LeftTool.History) }
         Shortcuts.Agent.matches(event) -> done { app.agentOpen = !app.agentOpen }
+        Shortcuts.Queries.matches(event) -> done { app.toggleTool(LeftTool.Queries) }
         Shortcuts.Settings.matches(event) -> done { app.settingsOpen = true }
         Shortcuts.ShowShortcuts.matches(event) -> done { app.shortcutsOpen = true }
         selected is ConsoleTab -> handleConsoleShortcut(selected, event)

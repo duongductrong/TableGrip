@@ -78,6 +78,11 @@ private val PageSizes = listOf(50, 100, 200, 500, 1000)
 
 @Composable
 internal fun TableDataView(tab: TableDataTab) {
+    // Tabs reopened from the last session load the first time they're shown.
+    LaunchedEffect(tab, tab.view) {
+        if (tab.view == TableView.Data && tab.model == null && !tab.loading && tab.error == null) tab.showData()
+        if (tab.view == TableView.Structure && tab.structure == null && !tab.structureLoading && tab.structureError == null) tab.loadStructure()
+    }
     if (tab.view == TableView.Structure) {
         Column(Modifier.fillMaxSize()) {
             StructureToolbar(tab)
@@ -122,6 +127,9 @@ private fun DataView(tab: TableDataTab) {
                                 onSubmit = tab::submit,
                                 dialect = tab.dialect,
                                 tableName = tab.dialect.qualifiedName(tab.table),
+                                linkedColumns = tab.linkedColumns,
+                                onFollowLink = tab::followLink,
+                                relatedRows = tab::referencingRows,
                             ),
                     )
                 }

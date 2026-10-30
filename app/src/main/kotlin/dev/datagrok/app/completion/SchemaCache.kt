@@ -57,6 +57,12 @@ class SchemaCache(private val scope: CoroutineScope, private val databases: Data
         return relationsByTable[key to table] ?: null.also { loadRelations(key, table) }
     }
 
+    /** Every table and view of every namespace loaded so far, with whether it's a view; starts loading the rest. */
+    fun allTables(): List<Pair<TableRef, Boolean>> {
+        val loaded = namespaceList ?: return emptyList<Pair<TableRef, Boolean>>().also { loadNamespaces() }
+        return loaded.flatMap { namespace -> tables(namespace.displayName).orEmpty().map { TableRef(namespace, it.name) to it.isView } }
+    }
+
     /** Values for a [ValueContext], e.g. distinct statuses starting with "pa". */
     suspend fun values(context: ValueContext): List<String> {
         val namespace = namespaceOf(key(context.namespace) ?: return emptyList()) ?: return emptyList()

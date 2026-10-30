@@ -15,6 +15,8 @@ import org.jetbrains.jewel.ui.component.DefaultButton
 import org.jetbrains.jewel.ui.component.ListComboBox
 import org.jetbrains.jewel.ui.component.OutlinedButton
 import org.jetbrains.jewel.ui.component.TextArea
+import androidx.compose.foundation.ContextMenuArea
+import androidx.compose.foundation.ContextMenuItem
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,6 +41,7 @@ import dev.datagrok.app.AppState
 import dev.datagrok.app.export.ExportRequest
 import dev.datagrok.app.grid.DataGrid
 import dev.datagrok.app.grid.GridActions
+import dev.datagrok.app.queries.ParametersDialog
 import dev.datagrok.core.dialect.SqlDialect
 import java.time.Instant
 import java.time.ZoneId
@@ -84,6 +87,7 @@ internal fun ConsoleView(app: AppState, tab: ConsoleTab) {
             state = rememberSplitLayoutState(0.6f),
         )
     }
+    tab.pendingParameters?.let { ParametersDialog(app, tab, it) }
     tab.pendingConfirmation?.let { ConfirmWriteDialog(tab, it) }
     if (tab.pendingClose != null) OpenTransactionDialog(tab)
     if (tab.pendingScriptClose != null) UnsavedScriptDialog(tab)
@@ -133,7 +137,7 @@ private fun Toolbar(tab: ConsoleTab, editor: SqlEditorActions) {
         Tooltip({ Text("Find (${Shortcuts.Find}) · Replace (${Shortcuts.Replace})") }) {
             IconButton(onClick = { editor.openFind() }) { Icon(AllIconsKeys.Actions.Search, "Find") }
         }
-        Tooltip({ Text("Save script (${Shortcuts.Save}) · Save as (${Shortcuts.SaveAs})") }) {
+        Tooltip({ Text("Save query (${Shortcuts.Save}) · Save to file (${Shortcuts.SaveAs})") }) {
             IconButton(onClick = { tab.save() }) { Icon(AllIconsKeys.Actions.MenuSaveall, "Save") }
         }
         if (Capability.Transactions in tab.config.type.capabilities) {
@@ -249,7 +253,22 @@ private fun ResultPanel(app: AppState, tab: ConsoleTab) {
                     val view = tab.results.getOrNull(index - 1)
                     TabData.Default(
                         selected = index == tab.selectedResultTab,
-                        content = { state -> SimpleTabContent(title, state) },
+                        content = { state ->
+                            if (view == null) {
+                                SimpleTabContent(title, state)
+                            } else {
+                                ContextMenuArea(
+                                    items = {
+                                        listOf(
+                                            ContextMenuItem(if (view.pinned) "Unpin Tab" else "Pin Tab") { view.pinned = !view.pinned },
+                                            ContextMenuItem("Close Other Unpinned Tabs") { tab.results.filter { it !== view && !it.pinned }.forEach(tab::closeResult) },
+                                        )
+                                    }
+                                ) {
+                                    SimpleTabContent(title, state, iconKey = AllIconsKeys.Actions.PinTab.takeIf { view.pinned })
+                                }
+                            }
+                        },
                         closable = view != null,
                         onClose = { view?.let(tab::closeResult) },
                         onClick = { tab.selectedResultTab = index },
@@ -279,6 +298,11 @@ private fun ResultPanel(app: AppState, tab: ConsoleTab) {
                             Modifier.weight(1f),
                             color = JewelTheme.globalColors.text.info,
                         )
+                        Tooltip({ Text(if (view.pinned) "Unpin tab" else "Pin tab: keep this result when the console runs again") }) {
+                            IconButton(onClick = { view.pinned = !view.pinned }) {
+                                Icon(if (view.pinned) AllIconsKeys.General.PinSelected else AllIconsKeys.General.Pin, "Pin")
+                            }
+                        }
                         Tooltip({ Text("Export result…") }) {
                             IconButton(onClick = {
                                 val dialect = SqlDialect.of(tab.config.type)

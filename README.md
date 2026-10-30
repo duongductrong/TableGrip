@@ -61,6 +61,30 @@ clauses from foreign keys (`JOIN orders o ON o.user_id = u.id`). Matching is fuz
 and inside `col = '…'` or `col IN (…)` it suggests real values sampled from the column. Metadata loads lazily per
 connection and refreshes after DDL or an explorer refresh.
 
+## Getting around
+
+**Go to anything** (⌘P, or Shift twice): one field that finds tables and views of connected connections, open tabs,
+saved queries, connections, actions and recent queries of the current connection. Matching is fuzzy by word starts
+(`uo` → `user_orders`). ⏎ opens; ⇧⏎ opens a table's structure.
+
+**Sessions**: open consoles (with unsaved text and the caret) and tables (with their filter and view) come back on the
+next start, from `~/.datagrok/session.json`, saved every few seconds while something changes. Quitting only asks about
+work a restart can't bring back: open transactions and unsubmitted edits. Tables load once their tab is shown.
+
+**Explorer**: the search field narrows the tree to connections, and to tables and columns already loaded, whose name
+matches. Right-click a connection → Add to Favorites (listed first) or Move to Group…; the group is also under
+Options in the connection dialog.
+
+## Saved queries
+
+⌘S in a new console names the query and saves it under Saved Queries (⌘4), like TablePlus; later ⌘S saves in place and
+⇧⌘S saves to a file anywhere. Queries are plain `.sql` files in `~/.datagrok/queries/`, folders included, so they can be
+edited elsewhere or kept in git. "Always run on <connection>" writes a `-- connection: <name>` first line, which opens
+the query on that connection; without it a query opens on the current one.
+
+**Parameters**: `:name` and `${name}` outside strings and comments (`a::int` is a cast) ask for values before running,
+as in DataGrip. Values go in as written: `'paid'` for text, `42` for a number. The last values are offered again.
+
 ## Filtering table data
 
 The table viewer's filter bar has two modes (the choice is remembered): **Builder** and **SQL**.
@@ -105,7 +129,19 @@ columns are virtualized; row numbers stay pinned.
 | Submit pending changes | ⌘Enter |
 | Sort · add secondary sort | click header · ⇧-click header |
 
-Right-click cells to copy as CSV / JSON / Markdown / SQL INSERT / IN-list or "Filter by This Value". Edits stay pending
+Right-click cells to copy as CSV / JSON / Markdown / SQL INSERT / IN-list or "Filter by This Value". Selecting several
+cells shows their count, sum, average, min and max in the status bar.
+
+**Foreign keys**: cells of a foreign-key column get an arrow; clicking it (or ⌘B) opens the referenced table filtered to
+that row. Right-click a row → Show Referencing Rows opens the rows of other tables that point at it, e.g. a user's
+orders.
+
+**Value panel** (toolbar, right): the focused cell's full value. JSON opens as a collapsible tree; binary values show as
+a hex dump, and images (PNG, JPEG, GIF, BMP up to 16 KB) as the picture; dates and timestamps also show in UTC, the local
+time zone and Unix time. Grids show binary values as `0x…` hex (the first 16 KB).
+
+In consoles, right-click a result tab → Pin Tab (or the pin in its footer) keeps that result when the console runs
+again, to compare before and after. Edits stay pending
 (highlighted) until submitted; they run in one transaction and are refused if a row changed underneath. Tables without
 a primary key only allow inserts. On Windows/Linux use Ctrl instead of ⌘.
 
@@ -121,7 +157,7 @@ double-click a column, index or foreign key to open its section. Rows only load 
 ## Connections
 
 Everything lives in `~/.datagrok/` (override with `-Ddatagrok.home`): `connections.json` (no secrets),
-`settings.json`, `history.jsonl` and `logs/`. Passwords go to the OS credential store
+`settings.json`, `history.jsonl`, `session.json`, `queries/` and `logs/`. Passwords go to the OS credential store
 via [java-keyring](https://github.com/javakeyring/java-keyring) under the service name `Datagrok`:
 macOS Keychain, Windows Credential Manager, or the Secret Service (GNOME Keyring / KWallet) on Linux.
 
@@ -188,6 +224,6 @@ manual commit to review changes and Commit/Roll back, and closing a console with
   read-only connections, confirm-before-write and dangerous-statement warnings, environment colours (PROD/STG/DEV),
   SSH tunnels (trust-on-first-use host keys), streaming export to CSV/TSV/JSON/SQL/Markdown.
 - **M3 – editor** (done): context-aware completion with FK joins and value suggestions, formatter, EXPLAIN,
-  find/replace, line actions, smart table filters. Next: snippets, parameter prompts.
+  find/replace, line actions, smart table filters, saved queries, parameter prompts. Next: snippets.
 - **M4 – schema tools**: structure editor, DDL, CSV import, more drivers.
-- **M5 – ship**: go-to-anything, session restore, signed installers, auto-update.
+- **M5 – ship**: go-to-anything and session restore (done); signed installers, auto-update.

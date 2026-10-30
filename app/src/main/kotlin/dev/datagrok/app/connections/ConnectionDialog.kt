@@ -16,6 +16,13 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -79,6 +86,8 @@ private class ConnectionForm(existing: ConnectionConfig?) {
     val connectionString = TextFieldState()
 
     var environment by mutableStateOf(existing?.environment ?: Environment.None)
+    val group = TextFieldState(existing?.group.orEmpty())
+    private val favorite = existing?.favorite ?: false
     var readOnly by mutableStateOf(existing?.readOnly ?: false)
     var confirmWrites by mutableStateOf(existing?.confirmWrites ?: false)
 
@@ -211,6 +220,8 @@ private class ConnectionForm(existing: ConnectionConfig?) {
             properties = parseProperties().getOrDefault(emptyMap()),
             url = url.text.toString().trim().takeIf { useUrl && it.isNotEmpty() },
             environment = environment,
+            group = group.text.toString().trim(),
+            favorite = favorite,
             readOnly = readOnly,
             confirmWrites = confirmWrites,
             ssh =
@@ -517,6 +528,7 @@ private fun OptionsTab(form: ConnectionForm) {
         )
     }
     Text("Colours the connection everywhere it appears, so production stands out.", color = JewelTheme.globalColors.text.info)
+    FormRow("Group") { TextField(form.group, Modifier.width(240.dp), placeholder = { Text("e.g. a project or client") }) }
     Spacer(Modifier.height(4.dp))
     CheckboxRow("Read-only: refuse statements that change data or schema", form.readOnly, onCheckedChange = { form.readOnly = it })
     CheckboxRow("Confirm before running statements that change data or schema", form.confirmWrites, onCheckedChange = { form.confirmWrites = it })
@@ -626,6 +638,41 @@ internal fun MissingDriverDialog(state: ConnectionsViewModel, config: Connection
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
                 OutlinedButton(onClick = { state.driverPrompt = null }) { Text("Cancel") }
                 DefaultButton(onClick = ::connect, enabled = ready) { Text("Connect") }
+            }
+        }
+    }
+}
+
+/** Puts a connection in a group of the explorer; a blank name takes it out of its group. */
+@Composable
+internal fun MoveToGroupDialog(state: ConnectionsViewModel, config: ConnectionConfig) {
+    val group = remember(config) { TextFieldState(config.group) }
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focus.requestFocus() }
+    AppDialog(
+        onCloseRequest = { state.moving = null },
+        size = DpSize(440.dp, 210.dp),
+        title = "Move to Group",
+        resizable = false,
+    ) {
+        Column(
+            Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp).onPreviewKeyEvent {
+                if (it.type == KeyEventType.KeyDown && (it.key == Key.Enter || it.key == Key.NumPadEnter)) true.also { state.moveToGroup(config, group.text.toString()) } else false
+            },
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            FormRow("Group") { TextField(group, Modifier.fillMaxWidth().focusRequester(focus), placeholder = { Text("Leave blank for no group") }) }
+            val existing = state.groups.filter { it != config.group }
+            if (existing.isNotEmpty()) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Existing:", color = JewelTheme.globalColors.text.info)
+                    existing.take(6).forEach { name -> Link(name, onClick = { group.setTextAndPlaceCursorAtEnd(name) }) }
+                }
+            }
+            Spacer(Modifier.weight(1f))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
+                OutlinedButton(onClick = { state.moving = null }) { Text("Cancel") }
+                DefaultButton(onClick = { state.moveToGroup(config, group.text.toString()) }) { Text("Move") }
             }
         }
     }
