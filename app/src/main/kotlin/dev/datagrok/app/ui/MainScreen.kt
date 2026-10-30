@@ -1,6 +1,8 @@
 package dev.datagrok.app.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,15 +11,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.datagrok.app.AppState
+import dev.datagrok.app.activity.ActivityTab
+import dev.datagrok.app.backup.BackupDialog
 import dev.datagrok.app.agent.AgentPanel
 import dev.datagrok.app.settings.SettingsScreen
 import dev.datagrok.app.LeftTool
@@ -39,6 +45,7 @@ import dev.datagrok.app.search.GoToAnythingPopup
 import dev.datagrok.app.schema.ImportDialog
 import dev.datagrok.app.schema.TestDataDialog
 import dev.datagrok.app.table.TableDataTab
+import dev.datagrok.app.tools.ToolDownloadDialog
 import dev.datagrok.app.workspace.WorkspaceView
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.component.HorizontalSplitLayout
@@ -104,6 +111,8 @@ internal fun MainScreen(app: AppState) {
     app.savedQueries.renaming?.let { RenameQueryDialog(app, it) }
     app.savedQueries.pendingDelete?.let { DeleteQueryDialog(app, it) }
     if (app.goToOpen) GoToAnythingPopup(app)
+    app.backup?.let { BackupDialog(app, it) }
+    app.tools.pending?.let { ToolDownloadDialog(app, it) }
 }
 
 /** The left tool window and the editor tabs, or the settings screen in their place. */
@@ -140,6 +149,23 @@ private fun CenterArea(app: AppState) {
 }
 
 /** Breadcrumbs of what's selected on the left, the latest status message on the right — all on the frame. */
+/** Sessions stuck behind a lock on a server whose Activity tab is open; clicking shows them. */
+@Composable
+private fun BlockedSessionsChip(app: AppState) {
+    val tab = app.workspace.tabs.filterIsInstance<ActivityTab>().filter { it.stuck > 0 }.maxByOrNull { it.connectionId == app.currentConnectionId } ?: return
+    val red = Color(0xFFDB4B4B)
+    Tooltip({ Text("Sessions on ${tab.config.name} waiting on a lock for more than 5 s") }) {
+        Row(
+            Modifier.clip(RoundedCornerShape(4.dp)).background(red.copy(alpha = 0.15f)).clickable(onClick = tab::showBlocked).padding(horizontal = 6.dp, vertical = 1.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(AllIconsKeys.General.Warning, null, Modifier.size(12.dp))
+            Text("${tab.stuck} blocked on ${tab.config.name}", color = red, maxLines = 1)
+        }
+    }
+}
+
 @Composable
 private fun StatusBar(app: AppState) {
     val info = JewelTheme.globalColors.text.info
@@ -170,6 +196,7 @@ private fun StatusBar(app: AppState) {
             Text(crumb, color = if (index == crumbs.lastIndex) JewelTheme.globalColors.text.normal else info, maxLines = 1)
         }
         Box(Modifier.weight(1f))
+        BlockedSessionsChip(app)
         // Like a spreadsheet: several cells selected shows their aggregates instead of the last status message.
         val stats = app.workspace.selected?.takeIf { !app.settingsOpen }?.activeGrid?.let { (model, state) -> SelectionStats.of(model, state) }
         if (stats != null) {

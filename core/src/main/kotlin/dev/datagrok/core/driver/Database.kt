@@ -3,6 +3,8 @@ package dev.datagrok.core.driver
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import com.zaxxer.hikari.pool.HikariPool
+import dev.datagrok.core.activity.ActivityMonitor
+import dev.datagrok.core.activity.ActivityReader
 import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.connection.ConnectionString
 import dev.datagrok.core.connection.DatabaseType
@@ -359,6 +361,26 @@ class Database private constructor(
             if (config.readOnly) runCatching { connection.isReadOnly = true }
             QuerySession(connection, SqlClassifier(dialect.syntax), config.readOnly)
         }
+
+    override suspend fun serverMajorVersion(): Int? = withMetadata { runCatching { it.metaData.databaseMajorVersion }.getOrNull() }
+
+    override suspend fun backupInto(target: java.nio.file.Path) {
+        val path = target.toAbsolutePath().toString().replace("'", "''")
+        val sql =
+            when (dialect) {
+                is SqlDialect.SQLiteDialect -> "VACUUM INTO '$path'"
+                is SqlDialect.DuckDBDialect -> "EXPORT DATABASE '$path' (FORMAT PARQUET)"
+                else -> throw UnsupportedOperationException("${config.type.displayName} can't back itself up")
+            }
+        withMetadata { connection -> connection.createStatement().use { it.execute(sql) } }
+    }
+
+    override suspend fun openActivityMonitor(): ActivityMonitor {
+        val reader = ActivityReader.of(config.type) ?: throw UnsupportedOperationException("${config.type.displayName} has no activity monitor")
+        return withContext(Dispatchers.IO) {
+            ActivityMonitor(newConnection(driver, jdbcUrl, config, password), reader, config.readOnly)
+        }
+    }
 
     override fun close() {
         pool.close()

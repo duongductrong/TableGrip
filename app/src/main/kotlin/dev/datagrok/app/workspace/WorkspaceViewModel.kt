@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import dev.datagrok.app.AppState
+import dev.datagrok.app.activity.ActivityTab
 import dev.datagrok.app.console.ConsoleTab
 import dev.datagrok.app.grid.DataGridState
 import dev.datagrok.app.grid.GridModel
@@ -141,6 +142,15 @@ class WorkspaceViewModel(private val app: AppState) {
             return
         }
         open(ErDiagramTab(app, config, namespace, focus))
+    }
+
+    /** The server's sessions and locks; focuses the connection's activity tab if it is already open. */
+    fun openActivity(config: ConnectionConfig) {
+        tabs.firstOrNull { it is ActivityTab && it.connectionId == config.id }?.let {
+            selected = it
+            return
+        }
+        open(ActivityTab(app, config))
     }
 
     /** Closes [tab], first asking what to do with its unsaved work; [then] runs once it is closed. */

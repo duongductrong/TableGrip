@@ -106,12 +106,17 @@ object JdbcUrls {
             DriverId.MySQL -> {
                 // Connector/J waits forever by default; fail like the other drivers do.
                 props.putIfAbsent("connectTimeout", "10000")
+                props.putIfAbsent("connectionAttributes", "program_name:Datagrok")
                 props.getProperty("sslMode")?.let { props.setProperty("sslMode", mariaToMysqlSslMode[it.lowercase()] ?: it) }
             }
             DriverId.MariaDB -> {
                 props.putIfAbsent("connectTimeout", "10000")
+                // Names Datagrok's sessions in performance_schema, like ApplicationName on PostgreSQL.
+                props.putIfAbsent("connectionAttributes", "program_name:Datagrok")
                 props.getProperty("sslMode")?.let { props.setProperty("sslMode", mysqlToMariaSslMode[it.uppercase()] ?: it) }
             }
+            // Names Datagrok's sessions in pg_stat_activity, for DBAs and for the activity monitor.
+            DriverId.PostgreSQL -> props.putIfAbsent("ApplicationName", "Datagrok")
             else -> Unit
         }
         return props

@@ -185,6 +185,43 @@ and stop at the first failure, which the dialog says up front.
   name, phone numbers, prices, past timestamps…), NULL ratios, uniqueness, foreign keys drawn from the referenced
   table's rows. Same seed, same rows. Preview before inserting.
 
+## Activity
+
+Right-click a server connection → **Activity** (⌥⌘A / Ctrl+Alt+A for the current connection) lists the server's sessions
+and what blocks what: sessions waiting on a lock sit indented under the session holding it. Filter Running / Blocked /
+All, search by user, database or query, and refresh every 2, 5 or 10 s or pause; it only refreshes while the tab is in
+front, over a connection of its own so it still works when the pool is stuck. Select a session for its full query, then
+open it in a console, **Cancel Query** or **Terminate** it. Terminating always asks first, and so does cancelling on
+Production or confirm-writes connections; read-only connections can't signal sessions at all. Datagrok's own sessions
+(named `Datagrok` in `pg_stat_activity`) are hidden unless you turn off Hide Datagrok. Supported on PostgreSQL (and
+PostgreSQL-compatible services), MySQL and MariaDB; on MySQL, lock waits come from `performance_schema.data_lock_waits`
+(or `INNODB_LOCK_WAITS` on MariaDB) and Datagrok's sessions are named by the `program_name` connection attribute. File
+and embedded databases don't offer it. While an Activity tab is open but not in front it refreshes every 15 s, and the
+status bar warns when sessions have waited on a lock for more than 5 s; click the warning to see them.
+
+## Backup and restore
+
+Right-click a connection → **Back Up…** / **Restore…**. PostgreSQL uses `pg_dump` (custom, plain SQL or parallel
+directory format), `pg_restore` (pick which tables and objects to restore from a custom or directory backup) and
+`psql`; MySQL and MariaDB use `mysqldump` / `mariadb-dump` (`--single-transaction`, with routines, triggers and events)
+and `mysql`. SQLite backs itself up with `VACUUM INTO`, DuckDB with `EXPORT DATABASE`. The dialog shows the equivalent
+command to copy. Passwords go through `PGPASSWORD` or an owner-only `--defaults-extra-file` that is deleted afterwards,
+never the command line; SSH tunnels work as for connections. Every run is logged to `~/.datagrok/logs/backup/`.
+
+Restores go into a **new database** by default. Read-only connections can't be restored into, and Production asks for
+the target database's name to be typed again. A cancelled or failed backup deletes its partial file.
+
+**Tools are never bundled.** Datagrok looks on PATH and in the usual places (Homebrew, Postgres.app, the EDB and MySQL
+installers, `/usr/lib/postgresql`), picks the newest `pg_dump` that can read the server's version, and **Settings →
+Tools** shows every copy found and lets you choose one by hand. When none fits it offers to download the official
+PostgreSQL client tools (EDB's builds for macOS and Windows, pinned by SHA-256), saying where from, how big and under
+which license, and only after you confirm; only `pg_dump`, `pg_restore`, `psql` and their libraries (~28 MB) are kept in
+`~/.datagrok/tools/`, removable from the same page. MySQL's clients are GPL and never downloaded: install them yourself.
+
+**Scheduled backups** (Settings → Backups) are off until you turn them on. Each schedule backs up one connection every
+hour, day or week while Datagrok is open, keeps its newest N backups (deleting only its own older ones), runs a missed
+backup soon after the app opens, and says what would stop it (no tools, no saved password, a folder it can't write).
+
 ## Connections
 
 Everything lives in `~/.datagrok/` (override with `-Ddatagrok.home`): `connections.json` (no secrets),

@@ -4,6 +4,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import dev.datagrok.app.agent.AgentViewModel
+import dev.datagrok.app.backup.BackupState
+import dev.datagrok.app.backup.ScheduledBackups
 import dev.datagrok.app.connections.ConnectionsViewModel
 import dev.datagrok.app.connections.DatabaseRegistry
 import dev.datagrok.app.connections.DriverDownloads
@@ -14,6 +16,7 @@ import dev.datagrok.app.queries.SavedQueries
 import dev.datagrok.app.schema.ImportWizard
 import dev.datagrok.app.schema.TestDataState
 import dev.datagrok.app.settings.SettingsPages
+import dev.datagrok.app.tools.ToolsViewModel
 import dev.datagrok.app.workspace.SessionKeeper
 import dev.datagrok.app.workspace.WorkspaceViewModel
 import dev.datagrok.core.connection.AiAccess
@@ -66,6 +69,8 @@ class AppState(
     var exportRequest by mutableStateOf<ExportRequest?>(null)
     /** The import wizard, while it's open. */
     var importWizard by mutableStateOf<ImportWizard?>(null)
+    /** The Backup or Restore dialog, while it's open; a running job keeps going when it is hidden. */
+    var backup by mutableStateOf<BackupState?>(null)
     /** The test data generator, while it's open. */
     var testData by mutableStateOf<TestDataState?>(null)
     /** Shows the go-to-anything popup (⌘P / ⇧⇧). */
@@ -90,6 +95,10 @@ class AppState(
     val secrets: SecretStore = connectionStore.secrets
     val agent = agentRegistry?.let { AgentViewModel(this, it) } ?: AgentViewModel(this)
     val savedQueries = SavedQueries(this)
+    /** pg_dump, mysqldump and the other clients backups run. */
+    val tools = ToolsViewModel(this)
+    /** Backups on a schedule while the app is open; off unless turned on in Settings → Backups. */
+    val scheduledBackups = ScheduledBackups(this)
     /** Reopens the last session's tabs; [Main] restores it, tests start empty. */
     val session = SessionKeeper(this)
 
@@ -113,6 +122,7 @@ class AppState(
         val snapshot = settings
         drivers.library.repository = snapshot.driverRepository
         agent.settingsChanged(before, snapshot)
+        if (before.scheduledBackups != snapshot.scheduledBackups || before.backupSchedules.map { it.enabled } != snapshot.backupSchedules.map { it.enabled }) scheduledBackups.sync()
         scope.launch(Dispatchers.IO) {
             runCatching { settingsStore.save(snapshot) }.onFailure { log.warn("Failed to save settings", it) }
         }

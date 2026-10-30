@@ -2,6 +2,9 @@ package dev.datagrok.app.settings
 
 import androidx.compose.runtime.Composable
 import dev.datagrok.app.AppState
+import dev.datagrok.app.backup.BackupsPanel
+import dev.datagrok.app.tools.ToolsPanel
+import dev.datagrok.core.tools.ToolFamily
 import dev.datagrok.app.AppTheme
 import dev.datagrok.core.agent.provider.AgentMode
 import dev.datagrok.core.agent.provider.ProviderProtocol
@@ -189,6 +192,26 @@ object SettingsPages {
                         ),
                         SettingsSection("Available", emptyList(), panel = { app -> DriversPanel(app, installed = false) }),
                     ),
+            ),
+            SettingsPage(
+                id = "tools",
+                group = "Database",
+                title = "Tools",
+                description =
+                    "Command-line clients Datagrok runs for backups and restores. They're never bundled: Datagrok uses the ones on this machine, " +
+                        "or downloads official builds when you agree to it.",
+                sections =
+                    listOf(
+                        SettingsSection("PostgreSQL", emptyList(), panel = { app -> ToolsPanel(app, ToolFamily.PostgreSQL) }, keywords = listOf("pg_dump", "pg_restore", "psql", "backup")),
+                        SettingsSection("MySQL and MariaDB", emptyList(), panel = { app -> ToolsPanel(app, ToolFamily.MySQL) }, keywords = listOf("mysqldump", "mariadb-dump", "mysql", "backup")),
+                    ),
+            ),
+            SettingsPage(
+                id = "backups",
+                group = "Database",
+                title = "Backups",
+                description = "Backups Datagrok makes on a schedule. Nothing runs unless you turn it on.",
+                sections = listOf(SettingsSection(null, emptyList(), panel = { app -> BackupsPanel(app) }, keywords = listOf("schedule", "backup", "pg_dump", "mysqldump"))),
             ),
             SettingsPage(
                 id = "data-editor",

@@ -1,5 +1,7 @@
 package dev.datagrok.app.explorer
 
+import dev.datagrok.core.activity.ActivitySupport
+import dev.datagrok.core.backup.BackupSupport
 import dev.datagrok.core.agent.Mention
 import dev.datagrok.app.schema.openImport
 import dev.datagrok.app.schema.openTestData
@@ -48,6 +50,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import dev.datagrok.app.AppState
+import dev.datagrok.app.backup.BackupState
 import dev.datagrok.app.connections.ConnectionStatus
 import dev.datagrok.app.connections.ProgressLine
 import dev.datagrok.app.connections.connectingText
@@ -225,6 +228,12 @@ private fun contextMenu(app: AppState, node: ExplorerNode): List<ContextMenuItem
             listOfNotNull(
                 ContextMenuItem("New Console") { app.workspace.openConsole(config) },
                 *schemaTools(app, config).toTypedArray(),
+                ContextMenuItem("Activity") { app.workspace.openActivity(config) }
+                    .takeUnless { ActivitySupport.of(config.type) == ActivitySupport.NotApplicable },
+                ContextMenuItem("Back Up…") { app.backup = BackupState(app, config, restore = false) }
+                    .takeUnless { BackupSupport.of(config.type) == BackupSupport.NotApplicable },
+                ContextMenuItem("Restore…") { app.backup = BackupState(app, config, restore = true) }
+                    .takeUnless { BackupSupport.of(config.type) == BackupSupport.NotApplicable },
                 ContextMenuItem("Refresh") { app.explorer.refresh(node.key) },
                 ContextMenuItem("Disconnect") { app.explorer.disconnect(config.id) }.takeIf { connected },
                 ContextMenuItem(if (config.favorite) "Remove from Favorites" else "Add to Favorites") { app.connections.toggleFavorite(config) },

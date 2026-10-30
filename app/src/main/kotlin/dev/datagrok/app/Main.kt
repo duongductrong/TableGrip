@@ -18,6 +18,7 @@ import dev.datagrok.app.table.TableDataTab
 import dev.datagrok.app.table.handleFilterShortcut
 import dev.datagrok.app.ui.DatagrokTheme
 import dev.datagrok.app.ui.Shortcuts
+import dev.datagrok.core.activity.ActivitySupport
 import dev.datagrok.app.ui.MainScreen
 import dev.datagrok.app.ui.PinchZoom
 import dev.datagrok.app.ui.TitleBarView
@@ -29,6 +30,7 @@ fun main() = application {
         AppState().also {
             it.session.restore()
             it.session.startAutosave()
+            it.scheduledBackups.sync()
         }
     }
     val doubleShift = remember { DoubleShiftDetector() }
@@ -88,6 +90,7 @@ private fun handleWindowShortcut(app: AppState, event: KeyEvent): Boolean {
         selected is ConsoleTab && Shortcuts.AddToChat.matches(event) -> selected.mentionInChat()
         selected is TableDataTab && Shortcuts.AddToChat.matches(event) -> selected.mentionTable()
         Shortcuts.Queries.matches(event) -> done { app.toggleTool(LeftTool.Queries) }
+        Shortcuts.Activity.matches(event) -> app.currentConnection?.takeUnless { ActivitySupport.of(it.type) == ActivitySupport.NotApplicable }?.let { workspace.openActivity(it); true } ?: false
         Shortcuts.Settings.matches(event) -> done { app.settingsOpen = true }
         Shortcuts.ShowShortcuts.matches(event) -> done { app.shortcutsOpen = true }
         selected is ConsoleTab -> handleConsoleShortcut(selected, event)

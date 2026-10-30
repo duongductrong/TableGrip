@@ -1,5 +1,6 @@
 package dev.datagrok.core.driver
 
+import dev.datagrok.core.activity.ActivityMonitor
 import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.dialect.SortColumn
 import dev.datagrok.core.dialect.SqlDialect
@@ -66,6 +67,23 @@ interface RelationalConnection : DatabaseConnection {
 
     /** A dedicated session for a console, with its own transaction state. */
     suspend fun openSession(): QuerySession
+
+    /**
+     * Watches the server's sessions over a connection of its own. Only for engines where
+     * [dev.datagrok.core.activity.ActivitySupport.of] is `Supported`.
+     */
+    /** The server's major version, e.g. 17, so a dump tool too old for it can be refused up front; null if unknown. */
+    suspend fun serverMajorVersion(): Int? = null
+
+    /**
+     * Backs the database up by its own means: SQLite copies itself into a file (`VACUUM INTO`), DuckDB exports a
+     * folder. Only for engines where [dev.datagrok.core.backup.BackupSupport.of] is `Native`. Reads, never writes.
+     */
+    suspend fun backupInto(target: java.nio.file.Path): Unit =
+        throw UnsupportedOperationException("${config.type.displayName} can't back itself up")
+
+    suspend fun openActivityMonitor(): ActivityMonitor =
+        throw UnsupportedOperationException("${config.type.displayName} has no activity monitor")
 
     /**
      * Every table of [namespace] with columns, keys and indexes, for schema compare and the ER diagram. [onProgress] gets

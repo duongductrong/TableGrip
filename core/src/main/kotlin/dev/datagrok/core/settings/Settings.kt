@@ -41,6 +41,11 @@ data class Settings(
      * name. Missing or unknown means `SchemaOnly`, so no data leaves without the user choosing it.
      */
     val aiAccess: String = "SchemaOnly",
+    /** Client tools the user chose by hand in Settings → Tools, by [dev.datagrok.core.tools.Tool] name. */
+    val toolPaths: Map<String, String> = emptyMap(),
+    /** Runs [backupSchedules] while Datagrok is open. Off unless the user turns it on. */
+    val scheduledBackups: Boolean = false,
+    val backupSchedules: List<dev.datagrok.core.backup.BackupSchedule> = emptyList(),
 )
 
 class SettingsStore(private val file: Path = DatagrokPaths.settings) {

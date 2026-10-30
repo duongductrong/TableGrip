@@ -67,6 +67,7 @@ object Shortcuts {
     val Queries = if (isMac) Shortcut(Key.Four, "4", primary = true) else Shortcut(Key.Four, "4", alt = true)
     /** Like TablePlus' Open Anything; a double ⇧ opens it too, like JetBrains' Search Everywhere. */
     val GoToAnything = Shortcut(Key.P, "P", primary = true)
+    val Activity = Shortcut(Key.A, "A", primary = true, alt = true)
     val Settings = if (isMac) Shortcut(Key.Comma, ",", primary = true) else Shortcut(Key.S, "S", primary = true, alt = true)
     val ShowShortcuts = Shortcut(Key.Slash, "/", primary = true, shift = true)
     /** Cursor's key: mentions what is selected in the agent chat. */
@@ -149,6 +150,7 @@ object Shortcuts {
                     entry("Agent", Agent),
                     entry("Mention the selection or statement in the agent chat", AddToChat),
                     entry("Saved Queries", Queries),
+                    entry("Activity: sessions and locks of the current connection", Activity),
                     entry("Settings", Settings),
                     entry("Keyboard shortcuts", ShowShortcuts),
                 ),

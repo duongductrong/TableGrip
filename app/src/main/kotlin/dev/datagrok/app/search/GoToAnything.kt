@@ -55,6 +55,7 @@ import dev.datagrok.app.table.TableDataTab
 import dev.datagrok.app.ui.Badge
 import dev.datagrok.app.ui.Shortcut
 import dev.datagrok.app.ui.Shortcuts
+import dev.datagrok.core.activity.ActivitySupport
 import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.connection.Paradigm
 import org.jetbrains.jewel.foundation.theme.JewelTheme
@@ -182,6 +183,9 @@ private fun actions(app: AppState): List<GoToItem> {
         action("Import Connections…", icon = AllIconsKeys.ToolbarDecorator.Import) { app.connections.openImport() },
         (workspace.selected as? ConsoleTab)?.let { tab -> action("Save Query…", Shortcuts.Save, AllIconsKeys.Actions.MenuSaveall) { tab.save() } },
         action("Saved Queries", Shortcuts.Queries) { app.toggleTool(LeftTool.Queries) },
+        app.currentConnection?.takeUnless { ActivitySupport.of(it.type) == ActivitySupport.NotApplicable }?.let { config ->
+            action("Activity: ${config.name}", Shortcuts.Activity) { workspace.openActivity(config) }
+        },
         action("Connections", Shortcuts.Explorer) { app.toggleTool(LeftTool.Explorer) },
         action("Query History", Shortcuts.History) { app.toggleTool(LeftTool.History) },
         action("Agent", Shortcuts.Agent) { app.agentOpen = !app.agentOpen },
