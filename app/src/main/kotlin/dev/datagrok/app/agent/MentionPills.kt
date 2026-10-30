@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -211,42 +212,45 @@ internal fun MentionPreview(mention: Mention, onDismiss: () -> Unit, onRemove: (
     val shape = RoundedCornerShape(8.dp)
     val content = previewOf(mention)
     Popup(popupPositionProvider = AboveAnchor, onDismissRequest = onDismiss, properties = PopupProperties(focusable = false)) {
-        Column(
-            Modifier.widthIn(min = 240.dp, max = 380.dp)
-                .clip(shape)
-                .background(JewelTheme.globalColors.panelBackground)
-                .border(1.dp, JewelTheme.globalColors.borders.normal, shape)
-                .padding(start = 12.dp, end = 4.dp, top = 6.dp, bottom = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text("@${mention.label}", fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(content.detail, color = JewelTheme.globalColors.text.info, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        // Opened from a sent message it would join the chat's SelectionContainer, and text in a popup layer crashes that.
+        DisableSelection {
+            Column(
+                Modifier.widthIn(min = 240.dp, max = 380.dp)
+                    .clip(shape)
+                    .background(JewelTheme.globalColors.panelBackground)
+                    .border(1.dp, JewelTheme.globalColors.borders.normal, shape)
+                    .padding(start = 12.dp, end = 4.dp, top = 6.dp, bottom = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("@${mention.label}", fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(content.detail, color = JewelTheme.globalColors.text.info, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                    if (onRemove != null) {
+                        Tooltip({ Text("Remove from message") }) { IconButton(onClick = onRemove) { Icon(AllIconsKeys.Actions.Close, "Remove from message") } }
+                    }
                 }
-                if (onRemove != null) {
-                    Tooltip({ Text("Remove from message") }) { IconButton(onClick = onRemove) { Icon(AllIconsKeys.Actions.Close, "Remove from message") } }
+                content.body?.let { body ->
+                    Text(
+                        body.trim(),
+                        Modifier.fillMaxWidth().heightIn(max = 200.dp).padding(end = 8.dp)
+                            .clip(RoundedCornerShape(6.dp)).background(islands.frame)
+                            .verticalScroll(rememberScrollState()).horizontalScroll(rememberScrollState())
+                            .padding(8.dp),
+                        style = JewelTheme.editorTextStyle,
+                        softWrap = false,
+                    )
                 }
-            }
-            content.body?.let { body ->
-                Text(
-                    body.trim(),
-                    Modifier.fillMaxWidth().heightIn(max = 200.dp).padding(end = 8.dp)
-                        .clip(RoundedCornerShape(6.dp)).background(islands.frame)
-                        .verticalScroll(rememberScrollState()).horizontalScroll(rememberScrollState())
-                        .padding(8.dp),
-                    style = JewelTheme.editorTextStyle,
-                    softWrap = false,
-                )
-            }
-            content.note?.let {
-                Text(
-                    it.trim(),
-                    Modifier.padding(end = 8.dp),
-                    color = if (content.noteIsError) JewelTheme.globalColors.text.error else JewelTheme.globalColors.text.info,
-                    maxLines = 4,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                content.note?.let {
+                    Text(
+                        it.trim(),
+                        Modifier.padding(end = 8.dp),
+                        color = if (content.noteIsError) JewelTheme.globalColors.text.error else JewelTheme.globalColors.text.info,
+                        maxLines = 4,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
         }
     }

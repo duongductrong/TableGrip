@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -272,7 +273,7 @@ private fun MessageView(app: AppState, message: ChatMessage) {
 
 @Composable
 private fun MessageAction(icon: org.jetbrains.jewel.ui.icon.IconKey, tooltip: String, onClick: () -> Unit) {
-    Tooltip({ Text(tooltip) }) { IconButton(onClick = onClick) { Icon(icon, tooltip, Modifier.size(14.dp)) } }
+    Tooltip({ DisableSelection { Text(tooltip) } }) { IconButton(onClick = onClick) { Icon(icon, tooltip, Modifier.size(14.dp)) } }
 }
 
 /** The agent asks to run a query: nothing runs until the user allows it here. */
@@ -358,14 +359,14 @@ private fun CodeBlock(app: AppState, block: MarkdownBlock.Code) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(block.language.ifEmpty { "code" }, Modifier.weight(1f), color = info)
-            Tooltip({ Text("Copy") }) { IconButton(onClick = { copyToClipboard(block.code) }) { Icon(AllIconsKeys.Actions.Copy, "Copy") } }
+            Tooltip({ DisableSelection { Text("Copy") } }) { IconButton(onClick = { copyToClipboard(block.code) }) { Icon(AllIconsKeys.Actions.Copy, "Copy") } }
             if (block.isSql && app.agent.canRunSql) {
-                Tooltip({ Text("Open in console") }) {
+                Tooltip({ DisableSelection { Text("Open in console") } }) {
                     IconButton(onClick = { app.agent.openSql(block.code) }) { Icon(AllIconsKeys.Nodes.Console, "Open in console") }
                 }
                 val running = app.agent.consoleRunning
                 val tooltip = if (running) "The console is running a query" else if (danger) "Run in console (asks first)" else "Run in console"
-                Tooltip({ Text(tooltip) }) {
+                Tooltip({ DisableSelection { Text(tooltip) } }) {
                     IconButton(onClick = { app.agent.runSql(block.code) }, enabled = !running) {
                         Icon(AllIconsKeys.Actions.Execute, "Run in console")
                     }
