@@ -299,8 +299,11 @@ private fun RunRequestCard(app: AppState, message: ChatMessage, index: Int, bloc
         )
         if (state == null) {
             Text(
-                if (risks.isEmpty()) "Runs in a console, then the result goes back to the agent."
-                else "Not run from here: it opens in a console for you to review and run yourself.",
+                when {
+                    risks.isNotEmpty() -> "Not run from here: it opens in a console for you to review and run yourself."
+                    !app.agent.sharesCurrentConnection -> "This connection isn't shared with agents: it opens in a console, and no result goes back."
+                    else -> "Runs in a console, then the result (up to ${AgentContext.ResultRows} rows) is sent to the agent."
+                },
                 Modifier.padding(horizontal = 12.dp).padding(top = 6.dp),
                 color = info,
             )
@@ -316,7 +319,7 @@ private fun RunRequestCard(app: AppState, message: ChatMessage, index: Int, bloc
                     val ready = !message.streaming && !app.agent.busy && !app.agent.consoleRunning
                     OutlinedButton(onClick = { app.agent.declineRun(message, index) }, enabled = ready) { Text("Decline") }
                     DefaultButton(onClick = { app.agent.allowRun(message, index, block.code) }, enabled = ready) {
-                        Text(if (risks.isEmpty()) "Run" else "Open in console")
+                        Text(if (risks.isEmpty() && app.agent.sharesCurrentConnection) "Run" else "Open in console")
                     }
                 }
                 RunRequestState.Running -> {
@@ -326,6 +329,7 @@ private fun RunRequestCard(app: AppState, message: ChatMessage, index: Int, bloc
                 is RunRequestState.Done -> Text(state.summary, color = info)
                 RunRequestState.Declined -> Text("Declined", color = info)
                 RunRequestState.Refused -> Text("This query changes data, so it was only opened in the console for you to review and run.", color = DangerColor)
+                RunRequestState.NotShared -> Text("Opened in the console. This connection isn't shared with agents, so no result was sent.", color = info)
             }
         }
     }

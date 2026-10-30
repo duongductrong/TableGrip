@@ -83,6 +83,15 @@ class SqlCompleter(private val dialect: SqlDialect) {
     private val lexer = SqlLexer(dialect.syntax)
     private val splitter = SqlSplitter(dialect.syntax)
 
+    /** The tables and views one statement reads or writes, as (namespace, name); CTEs are left out. */
+    fun tablesIn(statement: String): List<Pair<String?, String>> {
+        val scope = Scope.parse(statement, lexer.tokenize(statement), dialect, SchemaProvider.Empty)
+        return scope.tables
+            .filter { table -> scope.ctes.none { it.equals(table.name, ignoreCase = true) } }
+            .map { it.namespace to it.name }
+            .distinctBy { (namespace, name) -> "${namespace?.lowercase()}.${name.lowercase()}" }
+    }
+
     fun complete(text: String, caret: Int, schema: SchemaProvider, maxItems: Int = 60): CompletionResult {
         val (start, end) = statementBounds(text, caret)
         val statement = text.substring(start, end)

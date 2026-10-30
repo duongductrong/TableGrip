@@ -54,6 +54,12 @@ matching-bracket highlights, auto-paired brackets and quotes.
 
 Toolbar: execute, execute script, cancel, **Explain** (plan for the statement at the caret), reformat, find.
 
+**Fixing errors**: under a failed statement in the output, **Quick fix** replaces a misspelt table or column with the one
+closest real name (from completion's schema, nothing leaves the machine); **Fix with AI** asks the agent picked in the chat
+panel; **Ask in chat** drafts the question there. A fix is shown as a diff first and only applied when you choose:
+Apply replaces the failed statement (⌘Z undoes it), Apply & Run also runs it through the usual checks. A fix that would
+change data where the original only read is flagged and can't be run from the card.
+
 **Completion** understands the statement around the caret: tables, views and schemas after `FROM`/`JOIN`, columns of
 the tables and aliases in scope (qualified when several tables are joined), `alias.` / `schema.` members, CTE columns,
 `INSERT INTO t (` column lists, operators after a column, functions and keywords. After `JOIN` it proposes whole join
@@ -215,6 +221,10 @@ Each connection can be tagged with an environment (colours its badge everywhere;
 confirmations), made **read-only** (writes and DDL are refused before reaching the server), and set to **confirm
 writes**. DELETE/UPDATE without WHERE, DROP and TRUNCATE always ask first. Consoles default to auto-commit; switch to
 manual commit to review changes and Commit/Roll back, and closing a console with pending work asks what to do.
+
+**AI agents** only get what Settings › Agent › *Data shared with agents* allows: *Schema only* by default (names, types,
+DDL, your SQL and error messages, never values), *Schema and sample data*, or *Off*. A connection can override it under
+Options; production connections never share data unless their own Options say so.
 
 ## Roadmap
 

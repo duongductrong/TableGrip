@@ -14,6 +14,7 @@ import dev.datagrok.app.queries.SavedQueries
 import dev.datagrok.app.settings.SettingsPages
 import dev.datagrok.app.workspace.SessionKeeper
 import dev.datagrok.app.workspace.WorkspaceViewModel
+import dev.datagrok.core.connection.AiAccess
 import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.agent.AgentRegistry
 import dev.datagrok.core.connection.ConnectionStore
@@ -85,6 +86,9 @@ class AppState(
     val savedQueries = SavedQueries(this)
     /** Reopens the last session's tabs; [Main] restores it, tests start empty. */
     val session = SessionKeeper(this)
+
+    /** What [config] may send to AI agents: its own choice, else the app-wide setting. */
+    fun aiAccess(config: ConnectionConfig?): AiAccess = AiAccess.effective(AiAccess.of(settings.aiAccess), config)
 
     private val schemaCaches = mutableMapOf<String, SchemaCache>()
 

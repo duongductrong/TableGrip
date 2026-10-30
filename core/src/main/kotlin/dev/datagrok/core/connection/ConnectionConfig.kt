@@ -60,6 +60,8 @@ data class ConnectionConfig(
     val group: String = "",
     /** Favorites are listed first, above the groups. */
     val favorite: Boolean = false,
+    /** What may be sent to an AI agent; null follows the app-wide setting (see [AiAccess.effective]). */
+    val aiAccess: AiAccess? = null,
 ) {
     val effectiveDriver: DriverId
         get() = driver?.takeIf { it in type.drivers } ?: type.drivers.first()

@@ -13,10 +13,19 @@ import dev.datagrok.app.grid.DataGridState
 import dev.datagrok.app.grid.GridModel
 import dev.datagrok.app.grid.ResultGridModel
 import dev.datagrok.app.workspace.WorkspaceTab
+import dev.datagrok.core.assist.AssistResult
+import dev.datagrok.core.assist.SchemaDigest
+import dev.datagrok.core.assist.SqlErrors
+import dev.datagrok.core.assist.SqlFix
+import dev.datagrok.core.assist.SqlFixTask
+import dev.datagrok.core.assist.SqlNameFixer
+import dev.datagrok.core.assist.reviewFix
 import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.dialect.SqlDialect
+import dev.datagrok.core.driver.QueryError
 import dev.datagrok.core.driver.QueryResult
 import dev.datagrok.core.driver.QuerySession
+import dev.datagrok.core.driver.ReadOnlyViolationException
 import dev.datagrok.core.history.HistoryEntry
 import dev.datagrok.core.session.SessionTab
 import dev.datagrok.app.completion.CompletionSource
@@ -36,6 +45,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.slf4j.LoggerFactory
 
 enum class RunMode {
     /** The selection if there is one, else the statement at the caret. */
@@ -53,7 +63,23 @@ class ParameterRequest(val names: List<String>, val run: (Map<String, String>) -
 /** Statements waiting for the user to confirm, with why they need confirming. */
 data class WriteConfirmation(val statements: List<String>, val reasons: List<String>, val proceed: () -> Unit)
 
-data class OutputLine(val time: String, val text: String, val isError: Boolean)
+/** A statement the server refused, as it was sent, with why. */
+class StatementFailure(val sql: String, val error: QueryError)
+
+/** [failure] is set on the line logging a failed statement, so it can be fixed from there. */
+data class OutputLine(val time: String, val text: String, val isError: Boolean, val failure: StatementFailure? = null)
+
+/** Fixing a failed statement, one at a time per console: asking an agent, a fix to review, or why there is none. */
+sealed interface FixState {
+    val failure: StatementFailure
+
+    data class Asking(override val failure: StatementFailure, val agent: String?) : FixState
+
+    /** [sql] replaces the failed statement once the user applies it; [warnings] are what to notice first. */
+    data class Proposed(override val failure: StatementFailure, val sql: String, val explanation: String, val source: String, val warnings: List<String>) : FixState
+
+    data class NoFix(override val failure: StatementFailure, val message: String) : FixState
+}
 
 class ResultSetView(val title: String, val sql: String, val rows: QueryResult.Rows) {
     val model = ResultGridModel(rows)
@@ -166,6 +192,103 @@ class ConsoleTab(
     }
 
     private val dialect = SqlDialect.of(config.type)
+    private val nameFixer = SqlNameFixer(dialect)
+    private val completer = SqlCompleter(dialect)
+
+    /** The fix being asked for or reviewed; null when there is none. */
+    var fix by mutableStateOf<FixState?>(null)
+        private set
+    private var fixJob: Job? = null
+
+    /** A misspelt table or column in [failure] corrected from completion's schema, without asking anyone. */
+    fun quickFix(failure: StatementFailure): SqlFix? = nameFixer.fix(failure.sql, failure.error, app.schemaCache(config))
+
+    fun proposeQuickFix(failure: StatementFailure, quick: SqlFix) {
+        val sql = quick.sql ?: return
+        cancelFix()
+        fix = FixState.Proposed(failure, sql, quick.explanation, "Quick fix", reviewFix(failure.sql, sql, syntax))
+    }
+
+    /** Whether this connection may be described to an agent, which a fix needs. */
+    val canAskAgent: Boolean
+        get() = app.aiAccess(config).sharesSchema
+
+    /**
+     * Asks the chat's agent for a fix. It gets the statement, the error and, where the connection shares it, the schema
+     * with the statement's tables first; never data. The answer is only proposed: [applyFix] puts it in the editor.
+     */
+    fun askAgentToFix(failure: StatementFailure) {
+        if (!canAskAgent) return
+        cancelFix()
+        fix = FixState.Asking(failure, app.agent.selected?.descriptor?.name)
+        fixJob =
+            app.scope.launch {
+                val agent = app.agent.assistAgent()
+                if (agent == null) {
+                    fix = FixState.NoFix(failure, "No agent is available. Install a command-line agent or set up an API provider in Settings › Agent.")
+                    return@launch
+                }
+                fix = FixState.Asking(failure, agent.descriptor.name)
+                val focus = completer.tablesIn(failure.sql).map { it.second }
+                val schema =
+                    runCatching { SchemaDigest.read(app.databases.database(config), config.database, FixSchemaBudget, focus) }
+                        .onFailure { log.debug("No schema for the fix", it) }
+                        .getOrNull()
+                val nearMisses = SqlErrors.missingName(failure.error)?.let { nameFixer.nearMisses(failure.sql, it, app.schemaCache(config)) }.orEmpty()
+                val task = SqlFixTask(dialect, config.type.displayName, failure.sql, failure.error, schema, nearMisses)
+                fix =
+                    when (val result = app.agent.assist.run(agent, task)) {
+                        is AssistResult.Ok -> {
+                            val sql = result.value.sql
+                            if (sql == null) FixState.NoFix(failure, result.value.explanation)
+                            else FixState.Proposed(failure, sql, result.value.explanation, result.agent, reviewFix(failure.sql, sql, syntax))
+                        }
+                        is AssistResult.Invalid -> FixState.NoFix(failure, "${agent.descriptor.name} didn't return a usable fix: ${result.reasons.first()}")
+                        is AssistResult.Failed -> FixState.NoFix(failure, result.message)
+                    }
+            }
+    }
+
+    fun cancelFix() {
+        fixJob?.cancel()
+        fixJob = null
+        fix = null
+    }
+
+    /**
+     * Puts the proposed fix in place of the failed statement (one undo step), or at the end when that statement isn't
+     * in the editor any more; [andRun] then runs it with the usual checks.
+     */
+    fun applyFix(andRun: Boolean = false) {
+        val proposal = fix as? FixState.Proposed ?: return
+        fix = null
+        val range = locate(proposal.failure.sql)
+        if (range == null) {
+            insert(proposal.sql)
+        } else {
+            editor.edit {
+                replace(range.first, range.second, proposal.sql)
+                selection = TextRange(range.first, range.first + proposal.sql.length)
+            }
+        }
+        if (andRun) run(proposal.sql)
+    }
+
+    /** Hands the failure to the chat, as a draft the user can add to before sending. */
+    fun discussInChat(failure: StatementFailure) {
+        app.agent.draft = "This ${config.type.displayName} statement failed:\n```sql\n${failure.sql.trim()}\n```\nError: ${failure.error.message.trim()}\n\nHow do I fix it?"
+        app.agentOpen = true
+    }
+
+    /** Where [sql] is in the editor, as start until end: the occurrence nearest the caret, ignoring whitespace changes. */
+    private fun locate(sql: String): Pair<Int, Int>? {
+        val target = sql.normalized()
+        val caret = editor.selection.start
+        return splitter.split(editor.text.toString())
+            .filter { it.text.normalized() == target }
+            .minByOrNull { minOf(kotlin.math.abs(it.start - caret), kotlin.math.abs(it.end - caret)) }
+            ?.let { it.start to it.end }
+    }
 
     /** Runs the statement at the caret under EXPLAIN, in the dialect's syntax. */
     fun explain() {
@@ -232,6 +355,7 @@ class ConsoleTab(
     }
 
     private fun start(statements: List<String>, onFinished: ((RunOutcome) -> Unit)? = null) {
+        cancelFix()
         job = app.scope.launch {
             running = true
             results.removeAll { !it.pinned }
@@ -391,7 +515,8 @@ class ConsoleTab(
             } catch (e: Exception) {
                 val message = e.message ?: e.toString()
                 record(sql, startedAt, System.currentTimeMillis() - startedAt, error = message)
-                log("$message\n  in: ${sql.preview()}", isError = true)
+                val failure = if (e is ReadOnlyViolationException) null else StatementFailure(sql, QueryError.of(e))
+                log("$message\n  in: ${sql.preview()}", isError = true, failure = failure)
                 if (!session.isValid()) dropSession()
                 selectedResultTab = 0
                 return
@@ -416,8 +541,8 @@ class ConsoleTab(
         }
     }
 
-    private fun log(text: String, isError: Boolean = false) {
-        output += OutputLine(LocalTime.now().format(TimeFormat), text, isError)
+    private fun log(text: String, isError: Boolean = false, failure: StatementFailure? = null) {
+        output += OutputLine(LocalTime.now().format(TimeFormat), text, isError, failure)
     }
 
     /** The connection is gone, and with it any open transaction. */
@@ -437,6 +562,12 @@ class ConsoleTab(
 
     companion object {
         private val TimeFormat = DateTimeFormatter.ofPattern("HH:mm:ss")
+        private val log = LoggerFactory.getLogger(ConsoleTab::class.java)
+        /** Smaller than the chat's: a fix needs the statement's tables, which come first, more than the rest. */
+        private const val FixSchemaBudget = 20_000
+        private val Whitespace = Regex("\\s+")
+
+        private fun String.normalized(): String = trim().removeSuffix(";").replace(Whitespace, " ").trim()
 
         private fun String.preview(): String = lineSequence().first().let { if (it.length > 80) it.take(80) + "…" else it }
     }

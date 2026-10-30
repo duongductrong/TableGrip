@@ -16,6 +16,7 @@ import dev.datagrok.core.agent.AgentRequest
 import dev.datagrok.core.agent.provider.AgentMode
 import dev.datagrok.core.agent.provider.ProviderConfig
 import dev.datagrok.core.agent.provider.ProviderProtocol
+import dev.datagrok.core.assist.AssistRunner
 import dev.datagrok.core.connection.Environment
 import dev.datagrok.core.connection.Paradigm
 import dev.datagrok.core.dialect.SqlDialect
@@ -38,6 +39,9 @@ sealed interface RunRequestState {
 
     /** Not offered: the query changes data, which the agent may only suggest. */
     data object Refused : RunRequestState
+
+    /** Opened in a console, result kept back: the connection is not shared with agents. */
+    data object NotShared : RunRequestState
 }
 
 /** A query from the chat that could lose data, waiting for the user to confirm it on [connectionId]. */
@@ -182,6 +186,23 @@ class AgentViewModel(private val app: AppState, private val registry: AgentRegis
         turn?.cancel()
     }
 
+    /** Whether the current connection may be described to agents at all; when not, no result goes back to one. */
+    val sharesCurrentConnection: Boolean
+        get() = app.aiAccess(app.currentConnection).sharesSchema
+
+    /** Runs assists (a fix, a filter) on the selected agent; see [assistAgent]. */
+    val assist = AssistRunner(workingDirectory = DatagrokPaths.agentWorkspace)
+
+    /**
+     * The agent assists run on: the one picked in the chat, found first if the panel was never opened. Null when no
+     * agent is available.
+     */
+    suspend fun assistAgent(): AgentAdapter? {
+        discover()
+        discovery?.join()
+        return selected
+    }
+
     /** SQL blocks offer console actions only where a SQL console exists: not for key-value or document stores. */
     val canRunSql: Boolean
         get() = app.currentConnection?.type?.paradigm?.let { it != Paradigm.KeyValue && it != Paradigm.Document } == true
@@ -256,6 +277,10 @@ class AgentViewModel(private val app: AppState, private val registry: AgentRegis
         val console = openSql(sql) ?: return
         if (!console.onlyReads(sql)) {
             message.runs[block] = RunRequestState.Refused
+            return
+        }
+        if (!sharesCurrentConnection) {
+            message.runs[block] = RunRequestState.NotShared
             return
         }
         message.runs[block] = RunRequestState.Running

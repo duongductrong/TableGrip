@@ -4,9 +4,9 @@ import dev.datagrok.app.AppState
 import dev.datagrok.app.console.ConsoleTab
 import dev.datagrok.app.console.RunOutcome
 import dev.datagrok.app.table.TableDataTab
+import dev.datagrok.core.assist.SchemaDigest
 import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.connection.Paradigm
-import dev.datagrok.core.dialect.SqlDialect
 import org.slf4j.LoggerFactory
 
 /**
@@ -27,6 +27,12 @@ internal class AgentContext(private val app: AppState) {
         val connection = app.currentConnection
         if (connection == null) {
             append("\n\nNo connection is selected in Datagrok.")
+            return@buildString
+        }
+        val access = app.aiAccess(connection)
+        if (!access.sharesSchema) {
+            append("\n\nThe user has chosen not to share the selected connection (${connection.type.displayName}) with you: you know nothing about its schema or data. ")
+            append("Answer in general terms, and don't ask Datagrok to run queries.")
             return@buildString
         }
         append("\n\n# Connection\n")
@@ -59,42 +65,13 @@ internal class AgentContext(private val app: AppState) {
     }
 
     /** Tables and columns of the default namespace in a compact `table(column type, …)` form, within a budget. */
-    private suspend fun describe(config: ConnectionConfig): String {
-        val database = app.databases.database(config)
-        val namespaces = database.namespaces()
-        val names = namespaces.map { it.displayName }
-        val defaultName = SqlDialect.of(config.type).defaultNamespace(names, config.database)
-        val namespace = namespaces.firstOrNull { it.displayName == defaultName } ?: return "The database has no schemas."
-        val tables = database.tables(namespace)
-        val columns = database.columnsOf(namespace)
-        return buildString {
-            append("Default schema: ${namespace.displayName}")
-            val others = names.filter { it != namespace.displayName }
-            if (others.isNotEmpty()) append(" (others, not described: ${others.take(40).joinToString()})")
-            append(". These are all of its ${tables.size} tables and views, with every column:\n")
-            val skipped = mutableListOf<String>()
-            for (table in tables) {
-                val name = table.ref.name
-                val line =
-                    buildString {
-                        append(name)
-                        if (table.isView) append(" [view]")
-                        append('(')
-                        append(columns[name].orEmpty().joinToString { "${it.name} ${it.typeName.lowercase()}${if (it.primaryKey) " pk" else ""}" })
-                        append(')')
-                        table.remarks?.takeIf { it.isNotBlank() }?.let { append(" -- ").append(it.take(120)) }
-                    }
-                if (length + line.length > SchemaBudget) skipped += name else append(line).append('\n')
-            }
-            if (skipped.isNotEmpty()) append("Also these tables, columns not listed (request a lookup query when you need them): ${skipped.joinToString()}\n")
-        }.trimEnd()
-    }
+    private suspend fun describe(config: ConnectionConfig): String = SchemaDigest.read(app.databases.database(config), config.database, SchemaBudget)
 
     companion object {
         private val log = LoggerFactory.getLogger(AgentContext::class.java)
         private const val SchemaBudget = 40_000
         private const val ConsoleBudget = 4_000
-        private const val ResultRows = 50
+        const val ResultRows = 50
         private const val CellBudget = 200
 
         private val Rules =

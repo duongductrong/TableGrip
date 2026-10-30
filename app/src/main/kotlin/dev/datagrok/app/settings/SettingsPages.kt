@@ -5,6 +5,7 @@ import dev.datagrok.app.AppState
 import dev.datagrok.app.AppTheme
 import dev.datagrok.core.agent.provider.AgentMode
 import dev.datagrok.core.agent.provider.ProviderProtocol
+import dev.datagrok.core.connection.AiAccess
 import dev.datagrok.core.connection.DriverId
 import dev.datagrok.core.drivers.DriverLibrary
 import dev.datagrok.core.settings.Settings
@@ -259,6 +260,22 @@ object SettingsPages {
                             ),
                             panel = { app -> ApiKeyPanel(app) },
                             keywords = listOf("API key", "token", "Anthropic", "OpenAI", "Ollama"),
+                        ),
+                        SettingsSection(
+                            "Data shared with agents",
+                            listOf(
+                                ChoiceField(
+                                    "Connections share",
+                                    AiAccess.entries,
+                                    AiAccess::label,
+                                    get = { s -> AiAccess.of(s.aiAccess) },
+                                    set = { s, access -> s.copy(aiAccess = access.name) },
+                                    hint =
+                                        "What a connection may send to the agent, unless its own Options say otherwise. Schema only sends names, types and your SQL, " +
+                                            "never values from the data. Production connections never share data unless their own Options allow it.",
+                                ),
+                            ),
+                            keywords = listOf("privacy", "AI", "sample data", "sensitive"),
                         ),
                     ),
             ),

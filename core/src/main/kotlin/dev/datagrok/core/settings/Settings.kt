@@ -36,6 +36,11 @@ data class Settings(
     val agentBaseUrl: String = "",
     /** Blank means the protocol's default model. */
     val agentModel: String = "",
+    /**
+     * What connections may send to an AI agent unless they say otherwise: an [dev.datagrok.core.connection.AiAccess]
+     * name. Missing or unknown means `SchemaOnly`, so no data leaves without the user choosing it.
+     */
+    val aiAccess: String = "SchemaOnly",
 )
 
 class SettingsStore(private val file: Path = DatagrokPaths.settings) {

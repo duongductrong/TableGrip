@@ -137,4 +137,19 @@ class ConnectionDialogTest {
         System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "connection-dialog-url.png")) }
         app.dispose()
     }
+
+    @Test
+    fun `options say what the connection shares with AI agents`() = runComposeUiTest {
+        val app = app()
+        setContent {
+            DatagrokTheme(isDark = true) { Box(Modifier.size(640.dp, 600.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
+        }
+        onNodeWithText("Options").performClick()
+        waitForIdle()
+        onNodeWithText("AI agents").assertExists()
+        onNodeWithText("Use default (Settings › Agent)").assertExists()
+        onNodeWithText("Follows Settings › Agent.").assertExists()
+        System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "connection-dialog-options.png")) }
+        app.dispose()
+    }
 }

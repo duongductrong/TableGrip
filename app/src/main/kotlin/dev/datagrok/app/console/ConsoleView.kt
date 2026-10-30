@@ -279,7 +279,10 @@ private fun ResultPanel(app: AppState, tab: ConsoleTab) {
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
         val selected = tab.selectedResultTab.coerceIn(0, historyIndex)
         when (selected) {
-            0 -> OutputLog(tab)
+            0 -> Column(Modifier.fillMaxSize()) {
+                tab.fix?.let { FixCard(tab, it) }
+                Box(Modifier.weight(1f)) { OutputLog(app, tab) }
+            }
             historyIndex -> HistoryList(tab)
             else -> {
                 val view = tab.results[selected - 1]
@@ -318,7 +321,7 @@ private fun ResultPanel(app: AppState, tab: ConsoleTab) {
 }
 
 @Composable
-private fun OutputLog(tab: ConsoleTab) {
+private fun OutputLog(app: AppState, tab: ConsoleTab) {
     if (tab.output.isEmpty()) {
         ShortcutHints(
             listOf(
@@ -332,15 +335,20 @@ private fun OutputLog(tab: ConsoleTab) {
     }
     val listState = rememberLazyListState()
     LaunchedEffect(tab.output.size) { listState.animateScrollToItem(tab.output.lastIndex) }
+    // Only the latest failure offers fixes: an older one is likely fixed already, or edited away.
+    val latestFailure = tab.output.lastOrNull { it.failure != null }?.failure
     LazyColumn(Modifier.fillMaxSize().padding(8.dp), state = listState) {
         items(tab.output) { line ->
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(line.time, color = JewelTheme.globalColors.text.info, style = JewelTheme.editorTextStyle)
-                Text(
-                    line.text,
-                    color = if (line.isError) JewelTheme.globalColors.text.error else JewelTheme.globalColors.text.normal,
-                    style = JewelTheme.editorTextStyle,
-                )
+            Column {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(line.time, color = JewelTheme.globalColors.text.info, style = JewelTheme.editorTextStyle)
+                    Text(
+                        line.text,
+                        color = if (line.isError) JewelTheme.globalColors.text.error else JewelTheme.globalColors.text.normal,
+                        style = JewelTheme.editorTextStyle,
+                    )
+                }
+                line.failure?.takeIf { it === latestFailure && !tab.running }?.let { FailureActions(app, tab, it) }
             }
         }
     }

@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import dev.datagrok.app.ui.AppDialog
+import dev.datagrok.core.connection.AiAccess
 import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.connection.ConnectionKind
 import dev.datagrok.core.connection.ConnectionString
@@ -90,6 +91,8 @@ private class ConnectionForm(existing: ConnectionConfig?) {
     private val favorite = existing?.favorite ?: false
     var readOnly by mutableStateOf(existing?.readOnly ?: false)
     var confirmWrites by mutableStateOf(existing?.confirmWrites ?: false)
+    /** Null follows the app-wide setting. */
+    var aiAccess by mutableStateOf(existing?.aiAccess)
 
     var useSsh by mutableStateOf(existing?.ssh != null)
     val sshHost = TextFieldState(existing?.ssh?.host.orEmpty())
@@ -224,6 +227,7 @@ private class ConnectionForm(existing: ConnectionConfig?) {
             favorite = favorite,
             readOnly = readOnly,
             confirmWrites = confirmWrites,
+            aiAccess = aiAccess,
             ssh =
                 if (!ssh) null
                 else
@@ -533,6 +537,27 @@ private fun OptionsTab(form: ConnectionForm) {
     CheckboxRow("Read-only: refuse statements that change data or schema", form.readOnly, onCheckedChange = { form.readOnly = it })
     CheckboxRow("Confirm before running statements that change data or schema", form.confirmWrites, onCheckedChange = { form.confirmWrites = it })
     Text("Dangerous statements (DELETE/UPDATE without WHERE, DROP, TRUNCATE) always ask.", color = JewelTheme.globalColors.text.info)
+    Spacer(Modifier.height(4.dp))
+    FormRow("AI agents") {
+        val choices = listOf(null) + AiAccess.entries
+        ListComboBox(
+            items = choices.map { it?.label ?: "Use default (Settings › Agent)" },
+            selectedIndex = choices.indexOf(form.aiAccess),
+            onSelectedItemChange = { form.aiAccess = choices[it] },
+            modifier = Modifier.width(240.dp),
+        )
+    }
+    Text(
+        when {
+            form.aiAccess != null -> form.aiAccess!!.description
+            form.environment == Environment.Production -> "Follows Settings › Agent, but never shares data from a production connection."
+            else -> "Follows Settings › Agent."
+        },
+        color = JewelTheme.globalColors.text.info,
+    )
+    if (form.aiAccess == AiAccess.SchemaAndSamples && form.environment == Environment.Production) {
+        Text("Values from this production database may be sent to the agent's provider.", color = JewelTheme.globalColors.text.warning)
+    }
     Spacer(Modifier.height(4.dp))
     Text("Driver properties (${form.driver.displayName})")
     TextArea(
