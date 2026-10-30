@@ -22,8 +22,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.sp
+import org.jetbrains.jewel.ui.component.PopupMenu
+import org.jetbrains.jewel.ui.component.separator
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -55,6 +61,7 @@ import org.jetbrains.jewel.ui.component.Divider
 import org.jetbrains.jewel.ui.component.Icon
 import org.jetbrains.jewel.ui.component.IconButton
 import org.jetbrains.jewel.ui.component.LazyTree
+import org.jetbrains.jewel.ui.component.DefaultButton
 import org.jetbrains.jewel.ui.component.Link
 import org.jetbrains.jewel.ui.component.OutlinedButton
 import org.jetbrains.jewel.ui.component.Text
@@ -77,9 +84,7 @@ internal fun ExplorerPanel(app: AppState) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text("Connections", Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
-            Tooltip({ Text("New connection") }) {
-                IconButton(onClick = app.connections::openNew) { Icon(AllIconsKeys.General.Add, "New connection") }
-            }
+            AddConnectionMenu(app)
         }
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
 
@@ -433,6 +438,45 @@ private fun NameAndDetail(name: String, detail: String, modifier: Modifier = Mod
     }
 }
 
+/**
+ * The header's + button: a menu with a new connection first and, below it, importing from other tools — saying how many
+ * connections they have, so the option explains itself.
+ */
+@Composable
+private fun AddConnectionMenu(app: AppState) {
+    var open by remember { mutableStateOf(false) }
+    LaunchedEffect(open) { if (open) app.connections.lookForImports() }
+    Box {
+        Tooltip({ Text("New or imported connection") }) {
+            IconButton(onClick = { open = !open }) {
+                Row(Modifier.padding(horizontal = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(AllIconsKeys.General.Add, "Add connection")
+                    Icon(AllIconsKeys.General.ChevronDown, null, Modifier.size(10.dp))
+                }
+            }
+        }
+        if (open) {
+            PopupMenu(onDismissRequest = { open = false; true }, horizontalAlignment = Alignment.End) {
+                selectableItem(selected = false, iconKey = AllIconsKeys.General.Add, onClick = {
+                    open = false
+                    app.connections.openNew()
+                }) { Text("New Connection…") }
+                separator()
+                selectableItem(selected = false, iconKey = AllIconsKeys.ToolbarDecorator.Import, onClick = {
+                    open = false
+                    app.connections.openImport()
+                }) {
+                    val hint = app.connections.importHint
+                    Column {
+                        Text(if (hint == null) "Import from Other Tools…" else "Import ${hint.count} from ${hint.tools.joinToString(", ")}…")
+                        Text("TablePlus, DBeaver, DataGrip, .pgpass, .env", color = JewelTheme.globalColors.text.info, fontSize = 11.sp)
+                    }
+                }
+            }
+        }
+    }
+}
+
 @Composable
 private fun EmptyExplorer(app: AppState) {
     Column(
@@ -440,7 +484,20 @@ private fun EmptyExplorer(app: AppState) {
         verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        LaunchedEffect(Unit) { app.connections.lookForImports() }
         Text("No connections yet", color = JewelTheme.globalColors.text.info)
-        OutlinedButton(onClick = app.connections::openNew) { Text("New Connection…") }
+        val hint = app.connections.importHint
+        if (hint != null) {
+            Text(
+                (if (hint.count == 1) "1 connection" else "${hint.count} connections") + " found in " + hint.tools.joinToString(", "),
+                color = JewelTheme.globalColors.text.info,
+                textAlign = TextAlign.Center,
+            )
+            DefaultButton(onClick = app.connections::openImport) { Text(if (hint.count == 1) "Import It…" else "Import Them…") }
+            OutlinedButton(onClick = app.connections::openNew) { Text("New Connection…") }
+        } else {
+            OutlinedButton(onClick = app.connections::openNew) { Text("New Connection…") }
+            Link("Import from another tool…", onClick = app.connections::openImport)
+        }
     }
 }

@@ -84,6 +84,7 @@ private fun ConnectionWidget(app: AppState, current: ConnectionConfig?) {
             }
             if (app.connections.profiles.isNotEmpty()) separator()
             selectableItem(selected = false, iconKey = AllIconsKeys.General.Add, onClick = app.connections::openNew) { Text("New Connection…") }
+            selectableItem(selected = false, iconKey = AllIconsKeys.ToolbarDecorator.Import, onClick = app.connections::openImport) { Text("Import Connections…") }
             if (current != null) {
                 selectableItem(selected = false, iconKey = AllIconsKeys.Actions.Edit, onClick = { app.connections.openEdit(current) }) {
                     Text("Edit “${current.name}”…")

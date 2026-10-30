@@ -154,4 +154,20 @@ class ConnectionStringTest {
         assertEquals("jdbc:mysql://h/db" to "x", ConnectionString.stripSecrets("jdbc:mysql://h/db?password=x"))
         assertEquals("jdbc:mysql://h/db" to null, ConnectionString.stripSecrets("jdbc:mysql://h/db"))
     }
+
+    @Test
+    fun `redis and valkey URLs, with TLS and DataGrip's jdbc form`() {
+        val plain = parse("redis://:pw@cache.local:6380/2")
+        assertEquals(DatabaseType.Redis, plain.type)
+        assertEquals("cache.local", plain.host)
+        assertEquals(6380, plain.port)
+        assertEquals("pw", plain.password)
+        assertNull(plain.user)
+        assertEquals(1, plain.warnings.size)
+        val tls = parse("rediss://default:pw@host")
+        assertEquals("default", tls.user)
+        assertEquals(mapOf("ssl" to "true"), tls.properties)
+        assertEquals(DatabaseType.Valkey, parse("valkey://localhost").type)
+        assertEquals("localhost", parse("jdbc:redis://localhost:6379/0").host)
+    }
 }

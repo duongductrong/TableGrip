@@ -16,6 +16,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.Key
@@ -48,9 +49,13 @@ import dev.datagrok.core.connection.Environment
 import dev.datagrok.core.connection.SshAuth
 import dev.datagrok.core.connection.SshConfig
 import dev.datagrok.core.drivers.DriverResolution
+import dev.datagrok.core.imports.SshHost
+import dev.datagrok.core.imports.SshHosts
 import java.nio.file.Path
 import java.util.UUID
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.Orientation
 import org.jetbrains.jewel.ui.component.CheckboxRow
@@ -122,6 +127,15 @@ private class ConnectionForm(existing: ConnectionConfig?) {
         type = newType
         if (driver !in newType.drivers) driver = newType.drivers.first()
         if (urlOnly) useUrl = true
+    }
+
+    /** Fills the tunnel from a `Host` of `~/.ssh/config`, as `ssh alias` would connect. */
+    fun applySshHost(entry: SshHost) {
+        sshHost.setTextAndPlaceCursorAtEnd(entry.hostName)
+        sshPort.setTextAndPlaceCursorAtEnd((entry.port ?: 22).toString())
+        entry.user?.let { sshUser.setTextAndPlaceCursorAtEnd(it) }
+        sshAuth = SshAuth.PrivateKey
+        sshKeyPath.setTextAndPlaceCursorAtEnd(entry.identityFile.orEmpty())
     }
 
     /** Fills the form from a pasted connection string; returns warnings to show. */
@@ -482,6 +496,21 @@ private fun GeneralTab(form: ConnectionForm, drivers: DriverDownloads, onMessage
 private fun SshTab(form: ConnectionForm) {
     CheckboxRow("Connect through an SSH tunnel", form.useSsh, onCheckedChange = { form.useSsh = it })
     if (!form.useSsh) return
+    val sshHosts by produceState(emptyList<SshHost>()) { value = withContext(Dispatchers.IO) { runCatching { SshHosts.read() }.getOrDefault(emptyList()) } }
+    if (sshHosts.isNotEmpty()) {
+        var picked by remember { mutableStateOf(0) }
+        FormRow("From config") {
+            ListComboBox(
+                items = listOf("Choose a host in ~/.ssh/config…") + sshHosts.map { if (it.hostName == it.alias) it.alias else "${it.alias}  (${it.hostName})" },
+                selectedIndex = picked,
+                onSelectedItemChange = { index ->
+                    picked = index
+                    sshHosts.getOrNull(index - 1)?.let(form::applySshHost)
+                },
+                modifier = Modifier.width(320.dp),
+            )
+        }
+    }
     FormRow("Host") {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             TextField(form.sshHost, Modifier.weight(1f), placeholder = { Text("bastion.example.com") })

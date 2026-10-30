@@ -29,6 +29,7 @@ class ConnectionStringException(message: String) : IllegalArgumentException(mess
  * - MySQL/MariaDB: `mysql://`, `mariadb://`, `jdbc:mysql://`, `jdbc:mariadb://`; advanced Connector/J and MariaDB
  *   Connector/J forms are kept as raw URLs.
  * - SQLite: `jdbc:sqlite:`, `sqlite://`, `file:` URIs and plain file paths.
+ * - Redis and Valkey: `redis://`, `rediss://` (TLS), `valkey://`.
  */
 object ConnectionString {
 
@@ -54,6 +55,9 @@ object ConnectionString {
                 val (url, password) = stripSecrets(text)
                 ParsedConnection(type = DatabaseType.MongoDB, driver = DriverId.MongoDB, url = url, password = password)
             }
+            lower.startsWith("redis://") || lower.startsWith("rediss://") || lower.startsWith("valkey://") || lower.startsWith("valkeys://") -> redisUri(text)
+            // DataGrip writes Redis connections as JDBC URLs.
+            lower.startsWith("jdbc:redis:") -> redisUri(text.substringAfter(':'))
             lower.startsWith("jdbc:sqlserver:") -> rawJdbc(text, DatabaseType.SqlServer, DriverId.SqlServer)
             lower.startsWith("jdbc:clickhouse:") || lower.startsWith("jdbc:ch:") -> rawJdbc(text, DatabaseType.ClickHouse, DriverId.ClickHouse)
             lower.startsWith("jdbc:duckdb:") -> rawJdbc(text, DatabaseType.DuckDB, DriverId.DuckDB)
@@ -100,6 +104,25 @@ object ConnectionString {
             result = result.substring(0, queryStart) + if (kept.isEmpty()) "" else "?" + kept.joinToString("&")
         }
         return result to password
+    }
+
+    /** `redis://[[user]:password@]host[:port][/db]`, `rediss://` for TLS; Valkey's `valkey://` forms are the same. */
+    private fun redisUri(text: String): ParsedConnection {
+        val scheme = text.substringBefore("://").lowercase()
+        val uri = splitUri(text.substringAfter("://"))
+        val host = parseHosts(uri.hosts).singleOrNull()
+        val warnings = mutableListOf<String>()
+        uri.path?.takeIf { it != "0" }?.let { warnings += "Database $it: pick it in the key browser; connections start on database 0." }
+        return ParsedConnection(
+            type = if (scheme.startsWith("valkey")) DatabaseType.Valkey else DatabaseType.Redis,
+            driver = DriverId.Lettuce,
+            host = host?.first?.ifEmpty { null } ?: "localhost",
+            port = host?.second,
+            user = uri.user,
+            password = uri.password,
+            properties = if (scheme.endsWith("s")) mapOf("ssl" to "true") else emptyMap(),
+            warnings = warnings,
+        )
     }
 
     // region PostgreSQL

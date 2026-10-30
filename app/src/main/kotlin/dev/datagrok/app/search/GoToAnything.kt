@@ -179,6 +179,7 @@ private fun actions(app: AppState): List<GoToItem> {
     return listOfNotNull(
         app.currentConnection?.let { config -> action("New Console", Shortcuts.NewConsole, AllIconsKeys.Nodes.Console) { workspace.openConsole(config) } },
         action("New Connection…", icon = AllIconsKeys.General.Add) { app.connections.openNew() },
+        action("Import Connections…", icon = AllIconsKeys.ToolbarDecorator.Import) { app.connections.openImport() },
         (workspace.selected as? ConsoleTab)?.let { tab -> action("Save Query…", Shortcuts.Save, AllIconsKeys.Actions.MenuSaveall) { tab.save() } },
         action("Saved Queries", Shortcuts.Queries) { app.toggleTool(LeftTool.Queries) },
         action("Connections", Shortcuts.Explorer) { app.toggleTool(LeftTool.Explorer) },

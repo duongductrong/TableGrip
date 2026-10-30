@@ -23,6 +23,7 @@ import dev.datagrok.app.settings.SettingsScreen
 import dev.datagrok.app.LeftTool
 import dev.datagrok.app.connections.ConnectionDialog
 import dev.datagrok.app.connections.DeleteConnectionDialog
+import dev.datagrok.app.connections.ImportConnectionsDialog
 import dev.datagrok.app.connections.MissingDriverDialog
 import dev.datagrok.app.connections.MoveToGroupDialog
 import dev.datagrok.app.console.ConsoleTab
@@ -91,6 +92,7 @@ internal fun MainScreen(app: AppState) {
     app.connections.dialog?.let { ConnectionDialog(app.connections, it) }
     app.connections.pendingDelete?.let { DeleteConnectionDialog(app.connections, it) }
     app.connections.moving?.let { MoveToGroupDialog(app.connections, it) }
+    app.connections.importing?.let { ImportConnectionsDialog(app.connections, it) }
     app.connections.driverPrompt?.let { MissingDriverDialog(app.connections, it) }
     if (app.shortcutsOpen) ShortcutsDialog(app)
     app.exportRequest?.let { ExportDialog(app, it) }

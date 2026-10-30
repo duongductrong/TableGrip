@@ -188,6 +188,28 @@ MySQL connections use MariaDB Connector/J by default. Each driver loads in its o
 `:app:thirdPartyNotices` (also part of `check`) writes `THIRD-PARTY-NOTICES.txt` into the app jar and fails on any
 shipped library whose license hasn't been reviewed into `bundledLicenses` in `app/build.gradle.kts`.
 
+## Importing connections
+
+**Import Connections** (the explorer's **+ ▾** menu, which says how many connections other tools have, the connection
+menu in the title bar, or go-to-anything) finds connections other tools already have on this computer and lists them to tick:
+
+| Source | Read from | Passwords |
+| --- | --- | --- |
+| TablePlus | `~/Library/Application Support/com.tinyapp.TablePlus/Data/Connections.plist` (also Setapp), folders from `ConnectionGroups.plist` | stay in TablePlus' Keychain items |
+| DBeaver | every project's `.dbeaver/data-sources*.json` in `workspace6` (macOS, Linux, Windows) | from `credentials-config.json`, unless protected by a master password |
+| DataGrip and other JetBrains IDEs | `.idea/dataSources.xml` + `dataSources.local.xml` of each IDE's recent projects, global data sources, SSH configs | stay in the IDE's credential store |
+| libpq | `~/.pgpass` (`$PGPASSFILE`), `~/.pg_service.conf` (`$PGSERVICEFILE`, `$PGSYSCONFDIR`) | yes |
+| `.env` files | **Scan Project…**: any `*_URL` holding a connection URL, Laravel's `DB_*`, Docker's `POSTGRES_*` / `MYSQL_*`, libpq's `PG*` | yes |
+
+**Add File…** takes any of these files (or an exported copy) and works out which it is. Names, folders (as groups),
+environments (TablePlus tags, DBeaver connection types), read-only flags and SSH tunnels carry over. Connections that
+are already in Datagrok, or found in two tools, start unticked; PostgreSQL connections imported without a password get
+one from `~/.pgpass` when it has a matching entry. Nothing is changed in the other tools. With no connections yet, the
+explorer says how many it found and offers to import them.
+
+In the connection dialog's SSH tab, **From config** fills the tunnel from a `Host` in `~/.ssh/config` (following
+`Include` and `Host *` defaults).
+
 ## Connecting
 
 Paste any of these into **New Connection → Paste** and press Parse:
@@ -200,6 +222,7 @@ Paste any of these into **New Connection → Paste** and press Parse:
 | Advanced Connector/J, MariaDB | `jdbc:mysql:replication://…`, `address=(host=…)(port=…)` — kept as a raw JDBC URL |
 | SQLite | `jdbc:sqlite:/path/app.db` · `sqlite:///path/app.db` · `~/data/app.sqlite3` |
 | SQL Server, ClickHouse, DuckDB, H2, HSQLDB, Derby | `jdbc:sqlserver://db:1433;databaseName=shop` · `jdbc:clickhouse://ch:8123/default` · `jdbc:duckdb:/data/a.duckdb` |
+| Redis, Valkey (URL) | `redis://:pass@cache:6379` · `rediss://` (TLS) · `valkey://host` |
 | MongoDB | `mongodb://user@host:27017/shop?authSource=admin` · `mongodb+srv://user@cluster0.example.net/shop` (password goes to the keychain) |
 | etcd | host and port (2379); user and password if auth is on; `ssl=true` for HTTPS. Built in: nothing to download |
 | Redis, Valkey, KeyDB, Dragonfly | host and port in the form; properties `mode=cluster` / `mode=sentinel` + `sentinelMaster=…`, `ssl=true` |

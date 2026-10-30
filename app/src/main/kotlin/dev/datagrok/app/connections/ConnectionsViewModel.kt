@@ -12,6 +12,7 @@ import dev.datagrok.core.connection.Paradigm
 import dev.datagrok.core.driver.DocumentStore
 import dev.datagrok.core.driver.KeyValueStore
 import dev.datagrok.core.driver.Database
+import dev.datagrok.core.imports.ConnectionImport
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -93,6 +94,49 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
 
     fun closeDialog() {
         dialog = null
+    }
+
+    /** Non-null while the Import Connections dialog is open. */
+    var importing by mutableStateOf<ConnectionImportState?>(null)
+        private set
+
+    fun openImport() {
+        if (importing == null) importing = ConnectionImportState(this, app.scope).also { it.scanThisComputer() }
+    }
+
+    fun closeImport() {
+        importing = null
+    }
+
+    /** Connections other tools on this computer have and Datagrok doesn't; null until looked for, or if there are none. */
+    var importHint by mutableStateOf<ImportHint?>(null)
+        private set
+
+    /** Looks for connections to import, so the empty explorer can offer them instead of a blank form. */
+    fun lookForImports() {
+        app.scope.launch {
+            val hint =
+                withContext(Dispatchers.IO) {
+                    runCatching {
+                        val saved = profiles.map(ConnectionImport::keyOf).toSet()
+                        val found = ConnectionImport.discover().map { it to ConnectionImport.read(it).candidates }
+                        val keys = found.flatMap { (_, candidates) -> candidates.map { it.key } }.filter { it !in saved }.toSet()
+                        ImportHint(keys.size, found.filter { it.second.isNotEmpty() }.map { it.first.format.shortLabel }.distinct())
+                    }.getOrNull()
+                }
+            importHint = hint?.takeIf { it.count > 0 }
+        }
+    }
+
+    /** Saves imported profiles with the passwords and SSH secrets found for them (null: none). */
+    suspend fun saveImported(items: List<Triple<ConnectionConfig, String?, String?>>): Result<Unit> = runCatching {
+        val updated = withContext(Dispatchers.IO) { items.fold(profiles.toList()) { _, (config, password, sshSecret) -> store.save(config, password, sshSecret) } }
+        replaceAll(updated)
+        importHint = null
+        val missing = items.count { (config, password, _) -> password == null && config.type.isServer }
+        app.status =
+            (if (items.size == 1) "Imported ${items[0].first.name}" else "Imported ${items.size} connections") +
+                if (missing > 0) " · $missing without a password: add it with Edit Connection" else ""
     }
 
     /** Reads the stored password off the UI thread: the OS keychain may block or prompt. */
