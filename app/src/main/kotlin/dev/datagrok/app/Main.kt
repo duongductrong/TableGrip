@@ -58,6 +58,12 @@ fun main() = application {
                 val stop = PinchZoom.install(window.rootPane)
                 onDispose { stop?.invoke() }
             }
+            // Data files dropped anywhere on the window open as connections.
+            DisposableEffect(window) {
+                val previous = window.contentPane.dropTarget
+                window.contentPane.dropTarget = DataFileDropTarget(appState)
+                onDispose { window.contentPane.dropTarget = previous }
+            }
             TitleBarView(appState)
             MainScreen(appState)
         }
@@ -98,5 +104,22 @@ private fun handleWindowShortcut(app: AppState, event: KeyEvent): Boolean {
         selected is TableDataTab && Shortcuts.Save.matches(event) -> done { selected.submit() }
         selected is TableDataTab -> handleFilterShortcut(selected, event)
         else -> false
+    }
+}
+
+/** Accepts files dragged from the file manager and opens the data files among them. */
+private class DataFileDropTarget(private val app: AppState) : java.awt.dnd.DropTarget() {
+    override fun dragEnter(event: java.awt.dnd.DropTargetDragEvent) {
+        if (event.isDataFlavorSupported(java.awt.datatransfer.DataFlavor.javaFileListFlavor)) event.acceptDrag(java.awt.dnd.DnDConstants.ACTION_COPY) else event.rejectDrag()
+    }
+
+    @Synchronized
+    override fun drop(event: java.awt.dnd.DropTargetDropEvent) {
+        if (!event.isDataFlavorSupported(java.awt.datatransfer.DataFlavor.javaFileListFlavor)) return event.rejectDrop()
+        event.acceptDrop(java.awt.dnd.DnDConstants.ACTION_COPY)
+        val files = runCatching { (event.transferable.getTransferData(java.awt.datatransfer.DataFlavor.javaFileListFlavor) as List<*>).filterIsInstance<java.io.File>() }.getOrDefault(emptyList())
+        event.dropComplete(files.isNotEmpty())
+        // The drop arrives on the AWT thread, which is also Compose's UI thread on desktop.
+        app.connections.openDataFiles(files.filter { it.isFile })
     }
 }

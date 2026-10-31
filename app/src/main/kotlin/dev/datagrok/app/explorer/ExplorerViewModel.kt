@@ -285,10 +285,11 @@ class ExplorerViewModel(private val app: AppState) {
         if (key in treeState.openNodes) ensureLoaded(key)
     }
 
-    fun disconnect(connectionId: String) {
-        app.databases.disconnect(connectionId)
-        forget(connectionId)
-    }
+    fun disconnect(connectionId: String) =
+        app.confirmDataFiles(listOf(connectionId)) {
+            app.databases.disconnect(connectionId)
+            forget(connectionId)
+        }
 
     /** Clears everything cached for a connection and collapses it. */
     fun forget(connectionId: String, keepConnection: Boolean = false) {

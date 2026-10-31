@@ -43,6 +43,8 @@ sealed interface BackupSupport {
         fun of(type: DatabaseType): BackupSupport =
             when {
                 type.paradigm != Paradigm.Relational -> NotApplicable
+                // The file is the data; its working copy is scratch.
+                type.isDataFile -> NotApplicable
                 type == DatabaseType.SQLite -> Native(BackupFormat.SqliteCopy)
                 type == DatabaseType.DuckDB -> Native(BackupFormat.DuckDbExport)
                 // pg_dump can't read CockroachDB's catalog; TiDB and PlanetScale have their own dump tools.

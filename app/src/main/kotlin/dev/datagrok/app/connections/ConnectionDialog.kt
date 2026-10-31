@@ -39,7 +39,10 @@ import dev.datagrok.core.connection.AiAccess
 import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.connection.ConnectionKind
 import dev.datagrok.core.connection.ConnectionString
+import dev.datagrok.core.connection.DataFileOptions
 import dev.datagrok.core.connection.DatabaseFiles
+import dev.datagrok.core.datafile.DataFileFormats
+import dev.datagrok.core.datafile.DataFileStore
 import dev.datagrok.core.connection.DatabaseType
 import dev.datagrok.core.connection.DriverId
 import dev.datagrok.core.connection.JdbcUrls
@@ -99,6 +102,11 @@ private class ConnectionForm(existing: ConnectionConfig?, group: String = "") {
     /** Null follows the app-wide setting. */
     var aiAccess by mutableStateOf(existing?.aiAccess)
 
+    /** How a data file is read; null fields are detected. */
+    var delimiter by mutableStateOf(existing?.dataFile?.delimiter)
+    var charset by mutableStateOf(existing?.dataFile?.charset)
+    var hasHeader by mutableStateOf(existing?.dataFile?.hasHeader ?: true)
+
     var useSsh by mutableStateOf(existing?.ssh != null)
     val sshHost = TextFieldState(existing?.ssh?.host.orEmpty())
     val sshPort = TextFieldState(existing?.ssh?.port?.toString() ?: "22")
@@ -122,6 +130,16 @@ private class ConnectionForm(existing: ConnectionConfig?, group: String = "") {
     /** The engine has no host/file form: only a JDBC URL. */
     val urlOnly: Boolean
         get() = type.connection == ConnectionKind.Url
+
+    /** A CSV, Excel or JSON file opened as tables: a file and how to read it, nothing JDBC. */
+    val dataFile: Boolean
+        get() = type.isDataFile
+
+    /** Takes a chosen or pasted data file, switching to the type its extension names. */
+    fun useDataFile(path: String) {
+        DataFileFormats.detect(Path.of(path))?.let { changeType(it.type) }
+        database.setTextAndPlaceCursorAtEnd(path)
+    }
 
     fun changeType(newType: DatabaseType) {
         type = newType
@@ -173,6 +191,7 @@ private class ConnectionForm(existing: ConnectionConfig?, group: String = "") {
     }
 
     fun validate(drivers: DriverDownloads): String? {
+        if (dataFile) return validateDataFile()
         val port = port.text.toString()
         parseProperties().exceptionOrNull()?.let { return it.message }
         if (useUrl && document) {
@@ -209,9 +228,22 @@ private class ConnectionForm(existing: ConnectionConfig?, group: String = "") {
         }
     }
 
+    private fun validateDataFile(): String? {
+        val raw = database.text.toString().trim()
+        if (raw.isEmpty()) return "File is required."
+        val path = runCatching { DataFileStore.pathOf(raw) }.getOrNull() ?: return "That isn't a valid path."
+        if (!java.nio.file.Files.isRegularFile(path)) return "$path doesn't exist or isn't a file."
+        val format = DataFileFormats.detect(path)
+        return when {
+            format != null && format.type != type -> "${path.fileName} looks like a ${format.type.displayName}; choose that type, or rename the file."
+            charset != null && runCatching { java.nio.charset.Charset.forName(charset) }.isFailure -> "Unknown encoding \"$charset\"."
+            else -> null
+        }
+    }
+
     /** Why the chosen file isn't a database of this type (checked by content), or null. */
     private fun fileMismatch(): String? =
-        if (isServer) null else runCatching { Path.of(database.text.toString().trim()) }.getOrNull()?.let { DatabaseFiles.mismatch(it, type) }
+        if (isServer || dataFile) null else runCatching { Path.of(database.text.toString().trim()) }.getOrNull()?.let { DatabaseFiles.mismatch(it, type) }
 
     private val ssh: Boolean
         get() = useSsh && isServer
@@ -234,8 +266,9 @@ private class ConnectionForm(existing: ConnectionConfig?, group: String = "") {
             user = if (isServer) user.text.toString().trim() else "",
             driver = driver,
             driverJars = if (driver == DriverId.Generic) driverJars else emptyList(),
-            properties = parseProperties().getOrDefault(emptyMap()),
-            url = url.text.toString().trim().takeIf { useUrl && it.isNotEmpty() },
+            properties = if (dataFile) emptyMap() else parseProperties().getOrDefault(emptyMap()),
+            url = url.text.toString().trim().takeIf { useUrl && it.isNotEmpty() && !dataFile },
+            dataFile = if (dataFile) DataFileOptions(delimiter = delimiter, hasHeader = hasHeader, charset = charset) else null,
             environment = environment,
             group = group.text.toString().trim(),
             favorite = favorite,
@@ -380,6 +413,12 @@ private fun GeneralTab(form: ConnectionForm, drivers: DriverDownloads, onMessage
     fun parse() {
         val text = form.connectionString.text.toString()
         if (text.isBlank()) return
+        if (runCatching { DataFileFormats.detect(DataFileStore.pathOf(text)) }.getOrNull() != null) {
+            form.useDataFile(text.trim())
+            form.connectionString.setTextAndPlaceCursorAtEnd("")
+            onMessage(Message("Opens ${form.database.text.toString().substringAfterLast('/')} as a ${form.type.displayName}.", isError = false))
+            return
+        }
         onMessage(
             runCatching { ConnectionString.parse(text) }
                 .fold(
@@ -398,7 +437,7 @@ private fun GeneralTab(form: ConnectionForm, drivers: DriverDownloads, onMessage
                 form.connectionString,
                 Modifier.weight(1f),
                 textStyle = JewelTheme.editorTextStyle,
-                placeholder = { Text("postgres://user:pass@host/db, mongodb+srv://…, jdbc:…, path.db") },
+                placeholder = { Text("postgres://user:pass@host/db, mongodb+srv://…, jdbc:…, path.db, data.csv") },
                 onKeyboardAction = KeyboardActionHandler { parse() },
             )
             OutlinedButton(onClick = ::parse) { Text("Parse") }
@@ -432,6 +471,10 @@ private fun GeneralTab(form: ConnectionForm, drivers: DriverDownloads, onMessage
         profileJars = form.driverJars,
         onProfileJars = { form.driverJars = it },
     )
+    if (form.dataFile) {
+        DataFileFields(form)
+        return
+    }
     if (!form.urlOnly && (form.relational || form.document)) FormRow("Connect by") {
         ListComboBox(
             items = listOf(if (form.isServer) "Host and port" else "File", if (form.document) "Connection string" else "JDBC URL"),
@@ -587,6 +630,10 @@ private fun OptionsTab(form: ConnectionForm) {
     if (form.aiAccess == AiAccess.SchemaAndSamples && form.environment == Environment.Production) {
         Text("Values from this production database may be sent to the agent's provider.", color = JewelTheme.globalColors.text.warning)
     }
+    if (form.dataFile) {
+        Text("Data files are read into a working copy; every committed change is written back to the file.", color = JewelTheme.globalColors.text.info)
+        return
+    }
     Spacer(Modifier.height(4.dp))
     Text("Driver properties (${form.driver.displayName})")
     TextArea(
@@ -608,6 +655,55 @@ private val PropertyExamples =
         DriverId.Etcd to "ssl=true\nverifyPeer=false  (self-signed certificates)",
         DriverId.Lettuce to "ssl=true\nmode=cluster  (hosts are seed nodes)\nmode=sentinel + sentinelMaster=mymaster",
     )
+
+/** The file and how to read it: delimiter and encoding for CSV, whether the first row is the header. */
+@Composable
+private fun DataFileFields(form: ConnectionForm) {
+    FormRow("File") {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            TextField(form.database, Modifier.weight(1f), placeholder = { Text(form.type.databaseHint.orEmpty()) })
+            OutlinedButton(onClick = { chooseDataFile()?.let(form::useDataFile) }) { Text("Browse…") }
+        }
+    }
+    if (form.type == DatabaseType.CsvFile) {
+        FormRow("Delimiter") {
+            ListComboBox(
+                items = Delimiters.map { it.second },
+                selectedIndex = Delimiters.indexOfFirst { it.first == form.delimiter }.coerceAtLeast(0),
+                onSelectedItemChange = { form.delimiter = Delimiters[it].first },
+                modifier = Modifier.width(180.dp),
+            )
+        }
+        FormRow("Encoding") {
+            ListComboBox(
+                items = Encodings.map { it ?: "Detect" },
+                selectedIndex = Encodings.indexOf(form.charset).coerceAtLeast(0),
+                onSelectedItemChange = { form.charset = Encodings[it] },
+                modifier = Modifier.width(180.dp),
+            )
+        }
+    }
+    if (form.type != DatabaseType.JsonFile) {
+        CheckboxRow("The first row names the columns", form.hasHeader, onCheckedChange = { form.hasHeader = it })
+    }
+    Text(
+        "Opens as tables you can query with SQL and edit. Committed changes are saved to the file straight away, " +
+            "keeping its format; changes made to the file elsewhere are picked up.",
+        color = JewelTheme.globalColors.text.info,
+    )
+}
+
+private val Delimiters = listOf(null to "Detect", ',' to "Comma ,", ';' to "Semicolon ;", '\t' to "Tab", '|' to "Pipe |")
+private val Encodings = listOf(null, "UTF-8", "windows-1252", "ISO-8859-1", "UTF-16LE", "UTF-16BE", "Shift_JIS", "GB18030", "windows-1258")
+
+/** A file chooser that shows the files a data file profile opens. */
+private fun chooseDataFile(): String? {
+    val dialog = java.awt.FileDialog(null as java.awt.Frame?, "Choose a Data File", java.awt.FileDialog.LOAD)
+    val extensions = DataFileFormats.all.flatMap { it.extensions }.toSet()
+    dialog.setFilenameFilter { _, name -> name.substringAfterLast('.', "").lowercase() in extensions }
+    dialog.isVisible = true
+    return dialog.file?.let { java.io.File(dialog.directory, it).path }
+}
 
 /** Native file chooser; returns the picked path or null. */
 private fun chooseFile(title: String): String? {
@@ -677,7 +773,10 @@ internal fun MissingDriverDialog(state: ConnectionsViewModel, config: Connection
             Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("“${config.name}” uses ${driver.displayName}, which isn't on this computer yet.")
+            Text(
+                if (config.type.isDataFile) "Data files open in a SQLite working copy, and ${driver.displayName} isn't on this computer yet. It's a one-time download."
+                else "“${config.name}” uses ${driver.displayName}, which isn't on this computer yet.",
+            )
             DriverBanner(
                 driver,
                 state.drivers,

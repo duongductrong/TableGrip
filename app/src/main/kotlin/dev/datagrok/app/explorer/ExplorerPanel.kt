@@ -50,6 +50,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import dev.datagrok.app.AppState
+import dev.datagrok.app.connections.DataFileBadge
+import dev.datagrok.app.connections.dataFileMenu
 import dev.datagrok.app.backup.BackupState
 import dev.datagrok.app.connections.ConnectionStatus
 import dev.datagrok.app.connections.ProgressLine
@@ -234,6 +236,7 @@ private fun contextMenu(app: AppState, node: ExplorerNode): List<ContextMenuItem
                     .takeUnless { BackupSupport.of(config.type) == BackupSupport.NotApplicable },
                 ContextMenuItem("Restore…") { app.backup = BackupState(app, config, restore = true) }
                     .takeUnless { BackupSupport.of(config.type) == BackupSupport.NotApplicable },
+                *(if (config.type.isDataFile) dataFileMenu(app, config).toTypedArray() else emptyArray()),
                 ContextMenuItem("Refresh") { app.explorer.refresh(node.key) },
                 ContextMenuItem("Disconnect") { app.explorer.disconnect(config.id) }.takeIf { connected },
                 ContextMenuItem(if (config.favorite) "Remove from Favorites" else "Add to Favorites") { app.connections.toggleFavorite(config) },
@@ -338,6 +341,7 @@ private fun NodeRow(app: AppState, node: ExplorerNode, modifier: Modifier = Modi
                 Text(node.config.name, Modifier.weight(1f, fill = false), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 EnvironmentChip(node.config)
                 if (node.config.readOnly) Text("read-only", color = info, maxLines = 1, softWrap = false)
+                app.databases.dataFile(node.config.id)?.let { DataFileBadge(it) }
                 when (status) {
                     // The spinner stays on the row itself, so a collapsed connection still shows it's being opened.
                     is ConnectionStatus.Connecting -> Tooltip({ Text(connectingText(node.config, status)) }) { CircularProgressIndicator() }
@@ -540,6 +544,15 @@ private fun AddConnectionMenu(app: AppState) {
                     open = false
                     app.connections.openNew()
                 }) { Text("New Connection…") }
+                selectableItem(selected = false, iconKey = AllIconsKeys.Actions.MenuOpen, onClick = {
+                    open = false
+                    app.connections.chooseDataFiles()
+                }) {
+                    Column {
+                        Text("Open Data File…")
+                        Text("CSV, Excel, JSON — or drop files on the window", color = JewelTheme.globalColors.text.info, fontSize = 11.sp)
+                    }
+                }
                 separator()
                 selectableItem(selected = false, iconKey = AllIconsKeys.ToolbarDecorator.Import, onClick = {
                     open = false
@@ -574,8 +587,10 @@ private fun EmptyExplorer(app: AppState) {
             )
             DefaultButton(onClick = app.connections::openImport) { Text(if (hint.count == 1) "Import It…" else "Import Them…") }
             OutlinedButton(onClick = app.connections::openNew) { Text("New Connection…") }
+            OutlinedButton(onClick = app.connections::chooseDataFiles) { Text("Open Data File…") }
         } else {
             OutlinedButton(onClick = app.connections::openNew) { Text("New Connection…") }
+            OutlinedButton(onClick = app.connections::chooseDataFiles) { Text("Open Data File…") }
             Link("Import from another tool…", onClick = app.connections::openImport)
         }
     }

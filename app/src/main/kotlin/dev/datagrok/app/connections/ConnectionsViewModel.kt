@@ -9,10 +9,15 @@ import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.connection.ConnectionStore
 import dev.datagrok.core.connection.DatabaseType
 import dev.datagrok.core.connection.Paradigm
+import dev.datagrok.core.datafile.DataFileFormats
+import dev.datagrok.core.datafile.DataFileStore
 import dev.datagrok.core.driver.DocumentStore
 import dev.datagrok.core.driver.KeyValueStore
 import dev.datagrok.core.driver.Database
 import dev.datagrok.core.imports.ConnectionImport
+import java.io.File
+import java.nio.file.Path
+import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -198,6 +203,8 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
      * server really is when that differs from the profile's type.
      */
     suspend fun test(config: ConnectionConfig, password: String, sshSecret: String): Result<TestOutcome> = runCatching {
+        // A data file is read without its working copy, so testing it needs no driver.
+        if (config.type.isDataFile) return@runCatching TestOutcome(server = DataFileStore.test(config))
         app.drivers.ensure(config)
         when (config.type.paradigm) {
             Paradigm.KeyValue -> TestOutcome(server = KeyValueStore.test(config, password, sshSecret, app.drivers.library))
@@ -237,6 +244,57 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
                 .onFailure { app.status = "Failed to delete ${config.name}: ${it.message}" }
         }
     }
+
+    /** Asks for data files (CSV, Excel, JSON) and opens them. */
+    fun chooseDataFiles() {
+        val dialog = java.awt.FileDialog(null as java.awt.Frame?, "Open Data File", java.awt.FileDialog.LOAD)
+        dialog.isMultipleMode = true
+        val extensions = DataFileFormats.all.flatMap { it.extensions }.toSet()
+        dialog.setFilenameFilter { _, name -> name.substringAfterLast('.', "").lowercase() in extensions }
+        dialog.isVisible = true
+        openDataFiles(dialog.files.toList())
+    }
+
+    /**
+     * Opens each data file as a connection, reusing the profile already pointing at it or saving a new one, then opens
+     * its first table. Files no format claims are reported, not opened.
+     */
+    fun openDataFiles(files: List<File>) {
+        if (files.isEmpty()) return
+        app.scope.launch {
+            for (file in files) {
+                val path = file.toPath().toAbsolutePath().normalize()
+                val config =
+                    profiles.firstOrNull { it.type.isDataFile && samePath(it.database, path) }
+                        ?: DataFileStore.profileFor(path, UUID.randomUUID().toString())?.let { profile ->
+                            runCatching { withContext(Dispatchers.IO) { store.save(profile, "", "") } }
+                                .onSuccess(::replaceAll)
+                                .onFailure { app.status = "Couldn't save a connection for ${file.name}: ${it.message}" }
+                                .getOrNull()
+                                ?.let { profile }
+                        }
+                if (config == null) {
+                    if (DataFileFormats.detect(path) == null) {
+                        val known = DataFileFormats.all.flatMap { it.extensions }.sorted().joinToString(", ") { ".$it" }
+                        app.status = "${file.name} isn't a data file Datagrok opens ($known)"
+                    }
+                    continue
+                }
+                app.status = "Opening ${file.name}…"
+                runCatching {
+                    val database = app.databases.database(config)
+                    database.namespaces().firstOrNull()?.let { namespace -> database.tables(namespace).firstOrNull() }
+                }.onSuccess { table ->
+                    app.explorer.treeState.openNodes(listOf(dev.datagrok.app.explorer.ConnectionKey(config.id)))
+                    if (table != null) app.workspace.openTable(config, table.ref) else app.workspace.openConsole(config)
+                    app.status = "Opened ${file.name}"
+                }.onFailure { app.status = "Couldn't open ${file.name}: ${it.message}" }
+            }
+        }
+    }
+
+    private fun samePath(database: String, path: Path): Boolean =
+        runCatching { DataFileStore.pathOf(database) == path }.getOrDefault(false)
 
     private fun replaceAll(configs: List<ConnectionConfig>) {
         profiles.clear()

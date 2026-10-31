@@ -50,6 +50,12 @@ enum class ConnectionKind {
 
     /** Only a JDBC URL, for drivers whose URL syntax Datagrok doesn't model. */
     Url,
+
+    /**
+     * A data file (CSV, Excel, JSON…) opened as tables: read into a SQLite working copy, and every committed change
+     * written back to the file. See [dev.datagrok.core.datafile.DataFileStore].
+     */
+    DataFile,
 }
 
 /** How an engine's data is shaped, which decides the screens that browse it and the connection interface it has. */
@@ -101,8 +107,13 @@ class DatabaseType(
         require(drivers.isNotEmpty()) { "$id needs at least one driver" }
     }
 
+    /** Opens a file rather than a server: a database file or a [data file][isDataFile]. */
     val isFile: Boolean
-        get() = connection == ConnectionKind.File
+        get() = connection == ConnectionKind.File || connection == ConnectionKind.DataFile
+
+    /** A spreadsheet-like file of tables, not a database: see [ConnectionKind.DataFile]. */
+    val isDataFile: Boolean
+        get() = connection == ConnectionKind.DataFile
 
     val isServer: Boolean
         get() = connection == ConnectionKind.Server
@@ -161,6 +172,17 @@ class DatabaseType(
         val HSQLDB = DatabaseType("HSQLDB", "HSQLDB", EngineFamily.Generic, null, listOf(DriverId.HSQLDB), databaseHint = "/path/to/data (without .script) or mem:test")
         val Derby = DatabaseType("Derby", "Apache Derby", EngineFamily.Generic, null, listOf(DriverId.Derby), databaseHint = "/path/to/database directory")
 
+        /**
+         * Data files. They speak SQLite's SQL, because that's the engine their working copy runs on; the SQLite driver is
+         * what a profile needs on this machine. Each one's reader and writer is a [dev.datagrok.core.datafile.DataFileFormat].
+         */
+        val CsvFile = dataFile("CsvFile", "CSV / TSV file", "/path/to/data.csv")
+        val ExcelFile = dataFile("ExcelFile", "Excel workbook", "/path/to/workbook.xlsx")
+        val JsonFile = dataFile("JsonFile", "JSON / NDJSON file", "/path/to/records.json")
+
+        private fun dataFile(id: String, name: String, hint: String) =
+            DatabaseType(id, name, EngineFamily.SQLite, null, listOf(DriverId.SQLite), connection = ConnectionKind.DataFile, databaseHint = hint)
+
         /** Any JDBC driver: the user brings its jar and the URL. */
         val OtherJdbc =
             DatabaseType("OtherJdbc", "Other (JDBC driver)", EngineFamily.Generic, null, listOf(DriverId.Generic), connection = ConnectionKind.Url)
@@ -171,6 +193,7 @@ class DatabaseType(
                 PostgreSQL, MySQL, MariaDB, SQLite, SqlServer, ClickHouse, DuckDB, MongoDB, Redis, Valkey,
                 CockroachDB, TimescaleDB, Neon, Supabase, TiDB, PlanetScale, AzureSql,
                 KeyDB, Dragonfly, Etcd, FerretDB, H2, HSQLDB, Derby, OtherJdbc,
+                CsvFile, ExcelFile, JsonFile,
             )
 
         fun byId(id: String): DatabaseType? = entries.firstOrNull { it.id.equals(id, ignoreCase = true) }

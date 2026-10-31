@@ -39,6 +39,10 @@ internal class XlsxSource(file: File, requested: ImportOptions, previewRows: Int
     override val columns: List<String>
     override val sheets: List<String>
 
+    /** The sheet row the header was read from, when there is one. */
+    internal var headerLine: Long? = null
+        private set
+
     init {
         try {
             workbook = Workbook(zip)
@@ -58,7 +62,9 @@ internal class XlsxSource(file: File, requested: ImportOptions, previewRows: Int
                     val wanted = previewRows + if (requested.hasHeader) 1 else 0
                     while (rows.size < wanted) rows += sheetReader.nextDataRow() ?: break
                 }
-                header = if (requested.hasHeader) rows.removeFirstOrNull()?.values else null
+                val headerRow = if (requested.hasHeader) rows.removeFirstOrNull() else null
+                headerLine = headerRow?.line
+                header = headerRow?.values
                 width = maxOf(header?.let(::usedWidth) ?: 0, rows.maxOfOrNull { usedWidth(it.values) } ?: 0)
                 buffered = rows
             } else {
@@ -67,7 +73,10 @@ internal class XlsxSource(file: File, requested: ImportOptions, previewRows: Int
                 SheetReader(sheetPath).use { sheetReader ->
                     while (true) {
                         val row = sheetReader.nextDataRow() ?: break
-                        if (first == null) first = row.values
+                        if (first == null) {
+                            first = row.values
+                            if (requested.hasHeader) headerLine = row.line
+                        }
                         widest = maxOf(widest, usedWidth(row.values))
                     }
                 }
@@ -198,7 +207,7 @@ internal class XlsxSource(file: File, requested: ImportOptions, previewRows: Int
     internal enum class DateKind { Date, DateTime, Time }
 
     /** The workbook-level parts: sheet names -> paths, shared strings, date styles and the date system. */
-    private class Workbook(private val zip: ZipFile) {
+    internal class Workbook(private val zip: ZipFile) {
         val sheets = ArrayList<Pair<String, String>>()
         var date1904 = false
             private set
@@ -233,7 +242,7 @@ internal class XlsxSource(file: File, requested: ImportOptions, previewRows: Int
         fun dateKind(style: Int): DateKind? = styleKinds.getOrNull(style)
     }
 
-    private companion object {
+    internal companion object {
         val Factory: XMLInputFactory =
             XMLInputFactory.newFactory().apply {
                 // Workbooks come from anywhere: no DTDs, no external entities (XXE).

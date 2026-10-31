@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import dev.datagrok.app.AppState
+import dev.datagrok.app.connections.DataFileBanner
 import dev.datagrok.app.activity.ActivityTab
 import dev.datagrok.app.activity.ActivityView
 import dev.datagrok.app.console.ConsoleTab
@@ -86,6 +87,7 @@ internal fun WorkspaceView(app: AppState) {
     Column(Modifier.fillMaxSize()) {
         TabStrip(workspace, selected)
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
+        DataFileBanner(app, selected.connectionId)
         // Keyed so each tab keeps its own scroll positions and split sizes.
         key(selected) {
             when (selected) {

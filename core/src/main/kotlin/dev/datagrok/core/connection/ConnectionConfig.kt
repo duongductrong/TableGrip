@@ -29,6 +29,20 @@ data class SshConfig(
     val privateKeyPath: String? = null,
 )
 
+/**
+ * How to read a data file profile ([DatabaseType.isDataFile]). Null fields are detected from the file; writing back
+ * keeps whatever was detected or chosen, so a semicolon-separated windows-1252 file stays one.
+ */
+@Serializable
+data class DataFileOptions(
+    /** CSV: the field separator; null detects it among `,` `;` tab and `|`. */
+    val delimiter: Char? = null,
+    /** CSV and Excel: whether the first row names the columns; without one they're column_1, column_2… */
+    val hasHeader: Boolean = true,
+    /** CSV: the encoding's name, e.g. `windows-1252`; null detects it (byte-order mark, else UTF-8 if it decodes). */
+    val charset: String? = null,
+)
+
 /** A saved connection profile. Passwords are not part of it: they live in a [SecretStore]. */
 @Serializable
 data class ConnectionConfig(
@@ -62,6 +76,8 @@ data class ConnectionConfig(
     val favorite: Boolean = false,
     /** What may be sent to an AI agent; null follows the app-wide setting (see [AiAccess.effective]). */
     val aiAccess: AiAccess? = null,
+    /** How a data file profile reads its file; null takes the defaults. The file itself is [database]. */
+    val dataFile: DataFileOptions? = null,
 ) {
     val effectiveDriver: DriverId
         get() = driver?.takeIf { it in type.drivers } ?: type.drivers.first()

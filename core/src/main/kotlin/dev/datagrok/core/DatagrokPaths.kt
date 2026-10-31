@@ -28,6 +28,10 @@ object DatagrokPaths {
     val drivers: Path
         get() = home.resolve("drivers")
 
+    /** SQLite working copies of open data files (CSV, Excel…); each lives only while its connection is open. */
+    val workingCopies: Path
+        get() = home.resolve("cache").resolve("datafiles")
+
     /** Where CLI agents run: a directory of their own, so an agent with file tools works there, not in the user's home. */
     val agentWorkspace: Path
         get() = home.resolve("agent")

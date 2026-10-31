@@ -20,7 +20,10 @@ import dev.datagrok.app.tools.ToolsViewModel
 import dev.datagrok.app.workspace.SessionKeeper
 import dev.datagrok.app.workspace.WorkspaceViewModel
 import dev.datagrok.core.connection.AiAccess
+import dev.datagrok.app.table.TableDataTab
 import dev.datagrok.core.connection.ConnectionConfig
+import dev.datagrok.core.datafile.DataFileConnection
+import dev.datagrok.core.datafile.DataFileState
 import dev.datagrok.core.agent.AgentRegistry
 import dev.datagrok.core.connection.ConnectionStore
 import dev.datagrok.core.connection.SecretStore
@@ -88,7 +91,7 @@ class AppState(
     val drivers = DriverDownloads(scope, driverLibrary) { settings }.also { it.library.repository = settings.driverRepository }
 
     val connections = ConnectionsViewModel(this, connectionStore)
-    val databases = DatabaseRegistry(scope, connections::storedPassword, connections::storedSshSecret, drivers, connections::askForDriver)
+    val databases = DatabaseRegistry(scope, connections::storedPassword, connections::storedSshSecret, drivers, connections::askForDriver, ::dataFileReloaded)
     val explorer = ExplorerViewModel(this)
     val workspace = WorkspaceViewModel(this)
     /** Secrets kept out of settings.json, in the same store as connection passwords. */
@@ -109,6 +112,16 @@ class AppState(
 
     /** Completion metadata for a connection, shared by its consoles and table filters. */
     fun schemaCache(config: ConnectionConfig): SchemaCache = schemaCaches.getOrPut(config.id) { SchemaCache(scope, databases, config) }
+
+    /**
+     * A data file was read in again after it changed on disk: the explorer and the file's table views show it afresh.
+     * Views with unsaved edits are left alone, so the edits aren't lost.
+     */
+    private fun dataFileReloaded(config: ConnectionConfig) {
+        explorer.refresh(dev.datagrok.app.explorer.ConnectionKey(config.id))
+        workspace.tabs.filterIsInstance<TableDataTab>().filter { it.connectionId == config.id && !it.hasChanges }.forEach { it.refresh() }
+        status = "Reloaded ${config.name}: it changed on disk"
+    }
 
     /** Drops cached completion metadata, e.g. after DDL or when the connection's settings change. */
     fun forgetSchema(connectionId: String) {
@@ -149,11 +162,29 @@ class AppState(
      */
     fun requestExit(exit: () -> Unit) =
         workspace.confirmQuit({
-            session.stopAutosave()
-            session.saveNow()
-            dispose()
-            exit()
+            confirmDataFiles(null) {
+                session.stopAutosave()
+                session.saveNow()
+                dispose()
+                exit()
+            }
         })
+
+    /** Data files whose changes couldn't be written, shown before the connections holding them close. */
+    var unsavedDataFiles by mutableStateOf<UnsavedDataFiles?>(null)
+
+    /**
+     * Runs [then] once no data file among [connectionIds] (null: all) holds changes it couldn't write, asking the user
+     * first when one does: closing the connection would drop them with its working copy.
+     */
+    fun confirmDataFiles(connectionIds: Collection<String>?, then: () -> Unit) {
+        val unsaved =
+            connections.profiles
+                .filter { connectionIds == null || it.id in connectionIds }
+                .mapNotNull { databases.dataFile(it.id) }
+                .filter { it.sync.state.value.let { state -> state is DataFileState.Held || state is DataFileState.Failed } }
+        if (unsaved.isEmpty()) then() else unsavedDataFiles = UnsavedDataFiles(unsaved, then)
+    }
 
     fun dispose() {
         agent.stop()
@@ -166,3 +197,6 @@ class AppState(
         private val log = LoggerFactory.getLogger(AppState::class.java)
     }
 }
+
+/** Data files with changes that aren't in the file, and what to do once the user has decided. */
+class UnsavedDataFiles(val connections: List<DataFileConnection>, val then: () -> Unit)

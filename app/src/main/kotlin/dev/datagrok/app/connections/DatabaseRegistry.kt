@@ -2,6 +2,8 @@ package dev.datagrok.app.connections
 
 import androidx.compose.runtime.mutableStateMapOf
 import dev.datagrok.core.connection.ConnectionConfig
+import dev.datagrok.core.datafile.DataFileConnection
+import dev.datagrok.core.datafile.DataFileStore
 import dev.datagrok.core.driver.Database
 import dev.datagrok.core.connection.Paradigm
 import dev.datagrok.core.driver.DatabaseConnection
@@ -13,7 +15,10 @@ import dev.datagrok.core.driver.RelationalConnection
 import dev.datagrok.core.drivers.DriverNotInstalledException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 
 sealed interface ConnectionStatus {
@@ -43,9 +48,12 @@ class DatabaseRegistry(
     private val drivers: DriverDownloads,
     /** Called when a connection fails because its driver isn't on this machine, so the user can be asked for it. */
     private val onMissingDriver: (ConnectionConfig) -> Unit = {},
+    /** Called on the UI thread when a data file was read in again after it changed on disk, so views can refresh. */
+    private val onDataFileReloaded: (ConnectionConfig) -> Unit = {},
 ) {
     private val statuses = mutableStateMapOf<String, ConnectionStatus>()
     private val pending = mutableMapOf<String, Deferred<DatabaseConnection>>()
+    private val watchers = mutableMapOf<String, Job>()
 
     fun status(id: String): ConnectionStatus = statuses[id] ?: ConnectionStatus.Disconnected
 
@@ -77,9 +85,10 @@ class DatabaseRegistry(
                         statuses[config.id] = ConnectionStatus.Connecting(ConnectionStatus.Connecting.Step.Server, since)
                         val secret = if (config.ssh != null) sshSecret(config.id) else null
                         val connection: DatabaseConnection =
-                            when (config.type.paradigm) {
-                                Paradigm.KeyValue -> KeyValueStore.connect(config, password(config.id), secret, drivers.library)
-                                Paradigm.Document -> DocumentStore.connect(config, password(config.id), secret, drivers.library)
+                            when {
+                                config.type.isDataFile -> DataFileStore.connect(config, drivers.library).also(::watch)
+                                config.type.paradigm == Paradigm.KeyValue -> KeyValueStore.connect(config, password(config.id), secret, drivers.library)
+                                config.type.paradigm == Paradigm.Document -> DocumentStore.connect(config, password(config.id), secret, drivers.library)
                                 else -> Database.connect(config, password(config.id), secret, drivers.library)
                             }
                         connection.also {
@@ -102,7 +111,21 @@ class DatabaseRegistry(
         return attempt.await()
     }
 
+    /** The live data file connection of [id], or null when it isn't one or isn't connected. */
+    fun dataFile(id: String): DataFileConnection? = (statuses[id] as? ConnectionStatus.Connected)?.database as? DataFileConnection
+
+    /** Tells views when the file was read in again, until the connection is closed. */
+    private fun watch(connection: DataFileConnection) {
+        val id = connection.config.id
+        watchers.remove(id)?.cancel()
+        watchers[id] =
+            scope.launch {
+                connection.sync.revision.drop(1).collect { if (dataFile(id) === connection) onDataFileReloaded(connection.config) }
+            }
+    }
+
     fun disconnect(id: String) {
+        watchers.remove(id)?.cancel()
         (statuses.remove(id) as? ConnectionStatus.Connected)?.database?.close()
     }
 

@@ -113,6 +113,7 @@ internal fun MainScreen(app: AppState) {
     if (app.goToOpen) GoToAnythingPopup(app)
     app.backup?.let { BackupDialog(app, it) }
     app.tools.pending?.let { ToolDownloadDialog(app, it) }
+    app.unsavedDataFiles?.let { dev.datagrok.app.connections.UnsavedDataFilesDialog(app, it) }
 }
 
 /** The left tool window and the editor tabs, or the settings screen in their place. */
