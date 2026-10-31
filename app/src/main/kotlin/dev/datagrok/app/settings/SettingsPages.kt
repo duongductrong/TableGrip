@@ -1,6 +1,8 @@
 package dev.datagrok.app.settings
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import dev.datagrok.app.ui.parseHexColor
 import dev.datagrok.app.AppState
 import dev.datagrok.app.backup.BackupsPanel
 import dev.datagrok.app.tools.ToolsPanel
@@ -12,6 +14,18 @@ import dev.datagrok.core.connection.AiAccess
 import dev.datagrok.core.connection.DriverId
 import dev.datagrok.core.drivers.DriverLibrary
 import dev.datagrok.core.settings.Settings
+import dev.datagrok.app.LeftTool
+import dev.datagrok.app.console.SyntaxPreview
+import dev.datagrok.app.console.SyntaxScheme
+import dev.datagrok.app.console.SyntaxToken
+import dev.datagrok.app.console.syntaxColor
+import dev.datagrok.app.grid.CellFormat
+import dev.datagrok.app.ui.DefaultAccent
+import dev.datagrok.app.ui.KeymapPreset
+import dev.datagrok.app.ui.Shortcuts
+import dev.datagrok.app.ui.defaultEnvironmentColor
+import dev.datagrok.core.connection.Environment
+import dev.datagrok.core.sql.KeywordCase
 
 /** One editable setting, declared once here and rendered by the settings dialog. */
 sealed interface SettingField {
@@ -52,7 +66,42 @@ class StringField(
     val set: (Settings, String) -> Settings,
     val placeholder: String = "",
     override val hint: String? = null,
+    /** Why a text can't be applied, or null if it can; rejected text stays in the field with the error. */
+    val error: (String) -> String? = { null },
 ) : SettingField
+
+/** On or off, shown as a check box with [label] beside it. */
+class BooleanField(
+    override val label: String,
+    val get: (Settings) -> Boolean,
+    val set: (Settings, Boolean) -> Settings,
+    override val hint: String? = null,
+) : SettingField
+
+/**
+ * A colour as `#RRGGBB`, typed or picked from [swatches]. Blank means [fallback], which the field shows as its
+ * placeholder and swatch, so clearing it goes back to the built-in colour.
+ */
+class ColorField(
+    override val label: String,
+    val get: (Settings) -> String,
+    val set: (Settings, String) -> Settings,
+    val fallback: (Settings) -> Color,
+    val swatches: List<Color> = emptyList(),
+    override val hint: String? = null,
+) : SettingField {
+    fun error(text: String): String? = if (text.isBlank() || parseHexColor(text) != null) null else "A colour like #3574F0"
+}
+
+/** A list computed the first time it is read, e.g. the fonts installed here, so building the pages stays cheap. */
+fun <T> lazyList(compute: () -> List<T>): List<T> =
+    object : AbstractList<T>() {
+        private val items by lazy(compute)
+        override val size: Int
+            get() = items.size
+
+        override fun get(index: Int): T = items[index]
+    }
 
 class SettingsSection(
     val title: String?,
@@ -61,6 +110,8 @@ class SettingsSection(
     val panel: (@Composable (AppState) -> Unit)? = null,
     /** More words the sidebar search finds this section by, e.g. what [panel] lists. */
     val keywords: List<String> = emptyList(),
+    /** What "Reset to defaults" does for what [panel] edits, given the current and the default settings. */
+    val reset: ((Settings, Settings) -> Settings)? = null,
 )
 
 /** A page of the settings dialog; [group] is the sidebar heading it sits under. */
@@ -105,7 +156,142 @@ object SettingsPages {
                                     set = { s, theme -> s.copy(theme = theme.name) },
                                     hint = "\"Sync with OS\" follows the system's light or dark mode.",
                                 ),
+                                ColorField(
+                                    "Accent colour",
+                                    Settings::accentColor,
+                                    { s, v -> s.copy(accentColor = v) },
+                                    fallback = { DefaultAccent },
+                                    swatches = AccentSwatches,
+                                    hint = "Selected tool buttons, the statement marker in consoles and other highlights.",
+                                ),
                             ),
+                        ),
+                        SettingsSection(
+                            "Layout",
+                            listOf(
+                                ChoiceField(
+                                    "Font size",
+                                    listOf(0, 11, 12, 13, 14, 15, 16),
+                                    { if (it == 0) "Default" else "$it pt" },
+                                    Settings::uiFontSize,
+                                    { s, v -> s.copy(uiFontSize = v) },
+                                    hint = "Labels, menus and controls. The SQL editor has its own size.",
+                                ),
+                                ChoiceField(
+                                    "Panel corners",
+                                    listOf(0, 6, 10, 14),
+                                    { when (it) { 0 -> "Square"; 6 -> "Slightly rounded"; 10 -> "Rounded (default)"; else -> "Very rounded" } },
+                                    Settings::islandCornerRadius,
+                                    { s, v -> s.copy(islandCornerRadius = v) },
+                                ),
+                            ),
+                        ),
+                    ),
+            ),
+            SettingsPage(
+                id = "color-scheme",
+                group = "Appearance & Behavior",
+                title = "Color Scheme",
+                description = "Colours of SQL in consoles and of connection environments. Empty fields use the scheme's colour.",
+                sections =
+                    listOf(
+                        SettingsSection(
+                            "Syntax",
+                            listOf(
+                                ChoiceField(
+                                    "Scheme",
+                                    SyntaxScheme.entries,
+                                    SyntaxScheme::label,
+                                    get = { s -> SyntaxScheme.of(s.syntaxScheme) },
+                                    set = { s, scheme -> s.copy(syntaxScheme = scheme.name) },
+                                    hint = "Each scheme has a dark and a light variant, picked by the theme. The preview shows the current one.",
+                                ),
+                            ),
+                            panel = { SyntaxPreview() },
+                        ),
+                        SettingsSection("Dark theme colours", SyntaxToken.entries.map { syntaxColorField(it, dark = true) }, reset = { s, _ -> s.copy(syntaxColors = emptyMap()) }),
+                        SettingsSection("Light theme colours", SyntaxToken.entries.map { syntaxColorField(it, dark = false) }),
+                        SettingsSection(
+                            "Environments",
+                            Environment.entries.filter { it != Environment.None }.map { environment ->
+                                ColorField(
+                                    environment.name,
+                                    { s -> s.environmentColors[environment.name] ?: "" },
+                                    { s, v -> s.copy(environmentColors = if (v.isEmpty()) s.environmentColors - environment.name else s.environmentColors + (environment.name to v)) },
+                                    fallback = { defaultEnvironmentColor(environment)!! },
+                                )
+                            },
+                            keywords = listOf("production", "staging", "badge"),
+                        ),
+                    ),
+            ),
+            SettingsPage(
+                id = "behavior",
+                group = "Appearance & Behavior",
+                title = "Startup & Layout",
+                description = "What Datagrok opens with, what it remembers, and what the tool stripe and status bar show.",
+                sections =
+                    listOf(
+                        SettingsSection(
+                            "On start",
+                            listOf(
+                                BooleanField("Reopen tabs", Settings::restoreTabs, { s, v -> s.copy(restoreTabs = v) }, hint = "Consoles (with unsaved text) and tables from the last session."),
+                                ChoiceField(
+                                    "Tool window",
+                                    listOf("LastUsed", "None") + LeftTool.entries.map { it.name },
+                                    ::startupToolLabel,
+                                    Settings::startupTool,
+                                    { s, v -> s.copy(startupTool = v) },
+                                ),
+                                ChoiceField(
+                                    "Agent chat",
+                                    listOf("Closed", "Open", "LastUsed"),
+                                    { when (it) { "Open" -> "Open"; "LastUsed" -> "As last time"; else -> "Closed" } },
+                                    Settings::startupAgent,
+                                    { s, v -> s.copy(startupAgent = v) },
+                                ),
+                                BooleanField("Remember window size", Settings::rememberWindowBounds, { s, v -> s.copy(rememberWindowBounds = v) }),
+                                BooleanField("Remember panel widths", Settings::rememberPanelSizes, { s, v -> s.copy(rememberPanelSizes = v) }, hint = "The tool window's and the agent chat's."),
+                            ),
+                        ),
+                        SettingsSection(
+                            "Status bar",
+                            listOf(
+                                BooleanField("Breadcrumbs", Settings::statusBreadcrumbs, { s, v -> s.copy(statusBreadcrumbs = v) }, hint = "Connection, schema and table of the tab in front."),
+                                BooleanField("Selection summary", Settings::statusSelectionStats, { s, v -> s.copy(statusSelectionStats = v) }, hint = "Count, sum and average of the selected cells."),
+                            ),
+                        ),
+                        SettingsSection(
+                            "Tool stripe",
+                            emptyList(),
+                            panel = { app -> StripePanel(app) },
+                            keywords = listOf("sidebar", "buttons", "hide", "order"),
+                            reset = { s, d -> s.copy(stripeHidden = d.stripeHidden, stripeOrder = d.stripeOrder) },
+                        ),
+                    ),
+            ),
+            SettingsPage(
+                id = "keymap",
+                group = "Appearance & Behavior",
+                title = "Keymap",
+                description = "Keyboard shortcuts. Start from a preset, then click a shortcut to record another one.",
+                sections =
+                    listOf(
+                        SettingsSection(
+                            null,
+                            listOf(
+                                ChoiceField(
+                                    "Preset",
+                                    KeymapPreset.entries,
+                                    KeymapPreset::label,
+                                    get = { s -> KeymapPreset.of(s.keymap) },
+                                    set = { s, preset -> s.copy(keymap = preset.name) },
+                                    hint = "Your own changes stay on top of whichever preset is chosen.",
+                                ),
+                            ),
+                            panel = { app -> KeymapPanel(app) },
+                            keywords = listOf("shortcut", "keyboard", "hotkey", "binding"),
+                            reset = { s, d -> s.copy(keyBindings = d.keyBindings) },
                         ),
                     ),
             ),
@@ -118,7 +304,58 @@ object SettingsPages {
                     listOf(
                         SettingsSection(
                             "Font",
-                            listOf(IntField("Font size", 9..32, Settings::editorFontSize, { s, v -> s.copy(editorFontSize = v) }, unit = "pt")),
+                            listOf(
+                                ChoiceField(
+                                    "Font",
+                                    lazyList { listOf("") + monospaceFonts() },
+                                    { it.ifEmpty { "JetBrains Mono (built in)" } },
+                                    Settings::editorFontFamily,
+                                    { s, v -> s.copy(editorFontFamily = v) },
+                                    hint = "Monospaced fonts installed on this machine. Also used by result grids.",
+                                ),
+                                IntField("Font size", 9..32, Settings::editorFontSize, { s, v -> s.copy(editorFontSize = v) }, unit = "pt"),
+                                IntField("Line height", 100..300, Settings::editorLineHeight, { s, v -> s.copy(editorLineHeight = v) }, unit = "%", hint = "Of the font size."),
+                            ),
+                        ),
+                        SettingsSection(
+                            "Indentation",
+                            listOf(
+                                ChoiceField("Tab size", listOf(2, 4, 8), { "$it" }, Settings::tabSize, { s, v -> s.copy(tabSize = v) }),
+                                ChoiceField("Indent with", listOf(false, true), { if (it) "Tabs" else "Spaces" }, Settings::indentWithTabs, { s, v -> s.copy(indentWithTabs = v) }),
+                            ),
+                        ),
+                        SettingsSection(
+                            "Typing",
+                            listOf(
+                                BooleanField("Close brackets and quotes", Settings::autoCloseBrackets, { s, v -> s.copy(autoCloseBrackets = v) }),
+                                BooleanField(
+                                    "Complete as you type",
+                                    Settings::completionWhileTyping,
+                                    { s, v -> s.copy(completionWhileTyping = v) },
+                                    hint = "Off: suggestions only open with ${Shortcuts.Completion}.",
+                                ),
+                            ),
+                        ),
+                        SettingsSection(
+                            "Display",
+                            listOf(
+                                BooleanField("Line numbers", Settings::showLineNumbers, { s, v -> s.copy(showLineNumbers = v) }),
+                                BooleanField("Highlight the current line", Settings::highlightCurrentLine, { s, v -> s.copy(highlightCurrentLine = v) }),
+                            ),
+                        ),
+                        SettingsSection(
+                            "Reformat SQL",
+                            listOf(
+                                ChoiceField(
+                                    "Keywords",
+                                    KeywordCase.entries,
+                                    { when (it) { KeywordCase.Upper -> "UPPER CASE"; KeywordCase.Lower -> "lower case"; KeywordCase.Preserve -> "As typed" } },
+                                    get = { s -> KeywordCase.of(s.formatKeywordCase) },
+                                    set = { s, case -> s.copy(formatKeywordCase = case.name) },
+                                    hint = "Indents follow the settings above.",
+                                ),
+                            ),
+                            keywords = listOf("format", "style"),
                         ),
                     ),
             ),
@@ -217,7 +454,7 @@ object SettingsPages {
                 id = "data-editor",
                 group = "Database",
                 title = "Data Editor",
-                description = "Browsing and editing table data.",
+                description = "Browsing and editing table data, and how result grids show values.",
                 sections =
                     listOf(
                         SettingsSection(
@@ -231,6 +468,42 @@ object SettingsPages {
                                     unit = "rows",
                                     hint = "Rows loaded per page when opening a table.",
                                 ),
+                            ),
+                        ),
+                        SettingsSection(
+                            "Grid",
+                            listOf(
+                                ChoiceField("Row density", listOf("Compact", "Comfortable", "Spacious"), { it }, Settings::gridDensity, { s, v -> s.copy(gridDensity = v) }),
+                                BooleanField("Stripe alternate rows", Settings::zebraRows, { s, v -> s.copy(zebraRows = v) }),
+                            ),
+                        ),
+                        SettingsSection(
+                            "Values",
+                            listOf(
+                                StringField(
+                                    "NULL shows as",
+                                    Settings::nullText,
+                                    { s, v -> s.copy(nullText = v) },
+                                    placeholder = "(empty)",
+                                    hint = "Only how cells read; copying and editing still see NULL.",
+                                ),
+                                StringField(
+                                    "Date-time format",
+                                    Settings::dateTimeFormat,
+                                    { s, v -> s.copy(dateTimeFormat = v.trim()) },
+                                    placeholder = "As the database returns it",
+                                    hint = "A java.time pattern, e.g. yyyy-MM-dd HH:mm:ss or dd/MM/yyyy HH:mm. Copying keeps the original value.",
+                                    error = { if (CellFormat.isValidPattern(it.trim())) null else "Not a date-time pattern" },
+                                ),
+                                ChoiceField(
+                                    "Date-time zone",
+                                    listOf("Local", "Utc"),
+                                    { if (it == "Utc") "UTC" else "This computer's (${java.time.ZoneId.systemDefault().id})" },
+                                    Settings::dateTimeZone,
+                                    { s, v -> s.copy(dateTimeZone = v) },
+                                    hint = "For values that carry an offset, when a format is set. Values without one are shown as stored.",
+                                ),
+                                BooleanField("Group thousands", Settings::numberGrouping, { s, v -> s.copy(numberGrouping = v) }, hint = "1234567.5 reads 1,234,567.5."),
                             ),
                         ),
                     ),
@@ -306,3 +579,47 @@ object SettingsPages {
 
     fun byId(id: String): SettingsPage? = all.firstOrNull { it.id == id }
 }
+
+private val AccentSwatches =
+    listOf(
+        DefaultAccent,
+        Color(0xFF7C5CDB),
+        Color(0xFFD95C9A),
+        Color(0xFFDB4B4B),
+        Color(0xFFE08A3C),
+        Color(0xFF4CA35A),
+        Color(0xFF2FA6A9),
+        Color(0xFF6F7A8C),
+    )
+
+private fun syntaxColorField(token: SyntaxToken, dark: Boolean): ColorField =
+    ColorField(
+        token.label,
+        { s -> s.syntaxColors[token.settingKey(dark)] ?: "" },
+        { s, v ->
+            val key = token.settingKey(dark)
+            s.copy(syntaxColors = if (v.isEmpty()) s.syntaxColors - key else s.syntaxColors + (key to v))
+        },
+        // The scheme's colour, not a custom one already set.
+        fallback = { s -> s.copy(syntaxColors = emptyMap()).syntaxColor(token, dark) },
+    )
+
+private fun startupToolLabel(value: String): String =
+    when (value) {
+        "LastUsed" -> "As last time"
+        "None" -> "None"
+        LeftTool.Explorer.name -> "Connections"
+        LeftTool.History.name -> "Query History"
+        LeftTool.Queries.name -> "Saved Queries"
+        else -> value
+    }
+
+/** Families installed here whose narrow and wide letters are equally wide, by name. */
+private fun monospaceFonts(): List<String> =
+    runCatching {
+        val canvas = java.awt.Canvas()
+        java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().availableFontFamilyNames.filter { name ->
+            val metrics = canvas.getFontMetrics(java.awt.Font(name, java.awt.Font.PLAIN, 12))
+            metrics.charWidth('i') == metrics.charWidth('W') && metrics.charWidth('i') > 0 && !name.startsWith(".")
+        }
+    }.getOrDefault(emptyList())

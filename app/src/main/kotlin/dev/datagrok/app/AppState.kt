@@ -18,6 +18,13 @@ import dev.datagrok.app.schema.ImportWizard
 import dev.datagrok.app.schema.TestDataState
 import dev.datagrok.app.settings.SettingsPages
 import dev.datagrok.app.tools.ToolsViewModel
+import dev.datagrok.app.ui.EnvironmentColorOverrides
+import dev.datagrok.app.ui.KeymapPreset
+import dev.datagrok.app.ui.Shortcuts
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.WindowState
+import org.jetbrains.jewel.ui.component.SplitLayoutState
 import dev.datagrok.app.workspace.SessionKeeper
 import dev.datagrok.app.workspace.WorkspaceViewModel
 import dev.datagrok.core.connection.AiAccess
@@ -55,6 +62,17 @@ class AppState(
 
     var settings by mutableStateOf(settingsStore.load())
         private set
+
+    init {
+        applyAppWide(settings)
+    }
+
+    /** The main window's size and place; restored from the session when Settings → Startup & Layout keeps it. */
+    val windowState = WindowState(size = DpSize(1360.dp, 860.dp))
+    /** Divider of the left tool window, kept here so it survives hiding the tool window and restarts. */
+    val sidebarSplit = SplitLayoutState(0.24f)
+    /** Divider between the editor and the agent chat. */
+    val agentSplit = SplitLayoutState(0.68f)
 
     val theme: AppTheme
         get() = AppTheme.entries.firstOrNull { it.name == settings.theme } ?: AppTheme.System
@@ -143,12 +161,19 @@ class AppState(
         val before = settings
         settings = transform(settings)
         val snapshot = settings
+        applyAppWide(snapshot)
         drivers.library.repository = snapshot.driverRepository
         agent.settingsChanged(before, snapshot)
         if (before.scheduledBackups != snapshot.scheduledBackups || before.backupSchedules.map { it.enabled } != snapshot.backupSchedules.map { it.enabled }) scheduledBackups.sync()
         scope.launch(Dispatchers.IO) {
             runCatching { settingsStore.save(snapshot) }.onFailure { log.warn("Failed to save settings", it) }
         }
+    }
+
+    /** Settings read outside composition: shortcuts are matched in key handlers, badges drawn in plain functions. */
+    private fun applyAppWide(settings: Settings) {
+        Shortcuts.configure(KeymapPreset.of(settings.keymap), settings.keyBindings)
+        EnvironmentColorOverrides.configure(settings)
     }
 
     /** Makes [config] current: reveals it in the explorer (connecting it) without changing open tabs. */

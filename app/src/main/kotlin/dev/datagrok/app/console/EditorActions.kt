@@ -95,20 +95,22 @@ object EditorActions {
     }
 
     /** Tab with a multi-line selection indents every line; ⇧Tab outdents (also for a single line). */
-    fun indent(state: EditorText, outdent: Boolean): EditorText {
+    fun indent(state: EditorText, outdent: Boolean, unit: String = Indent): EditorText {
         val (from, to) = lineRange(state)
         val lines = state.text.substring(from, to).split('\n')
+        // Outdenting takes one tab, or up to one indent's worth of spaces (a tab indent counts as four).
+        val spaces = if (unit == "\t") Indent.length else unit.length
         var firstDelta = 0
         var total = 0
         val changed =
             lines.mapIndexed { index, line ->
                 val delta =
-                    if (outdent) -line.takeWhile { it == ' ' }.length.coerceAtMost(Indent.length).let { if (line.startsWith("\t")) 1 else it }
+                    if (outdent) (if (line.startsWith("\t")) -1 else -line.takeWhile { it == ' ' }.length.coerceAtMost(spaces))
                     else if (line.isEmpty()) 0
-                    else Indent.length
+                    else unit.length
                 if (index == 0) firstDelta = delta
                 total += delta
-                if (delta >= 0) Indent.take(delta) + line else line.substring(-delta)
+                if (delta > 0) unit + line else if (delta == 0) line else line.substring(-delta)
             }.joinToString("\n")
         val text = state.text.replaceRange(from, to, changed)
         val sel = state.selection

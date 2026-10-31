@@ -70,7 +70,10 @@ import dev.datagrok.app.completion.CompletionPopup
 import dev.datagrok.app.completion.CompletionSource
 import dev.datagrok.app.completion.handleCompletionKey
 import dev.datagrok.app.grid.isMac
+import dev.datagrok.app.ui.LocalIslands
+import dev.datagrok.app.ui.LocalSettings
 import dev.datagrok.app.ui.Shortcuts
+import dev.datagrok.core.sql.KeywordCase
 import dev.datagrok.core.sql.SqlFormatter
 import dev.datagrok.core.sql.SqlLexer
 import dev.datagrok.core.sql.SqlSplitter
@@ -123,18 +126,28 @@ internal fun SqlEditor(
     readOnly: Boolean = false,
 ) {
     val isDark = JewelTheme.isDark
-    val palette = if (isDark) DarkPalette else LightPalette
-    val highlighter = remember(syntax, isDark) { SqlHighlighter(syntax, palette) }
+    val settings = LocalSettings.current
+    val accent = LocalIslands.current.accent
+    val palette =
+        remember(isDark, settings.syntaxScheme, settings.syntaxColors, accent) {
+            (if (isDark) DarkPalette else LightPalette).withTokens { token -> settings.syntaxColor(token, isDark) }.copy(statementBar = accent)
+        }
+    val highlighter = remember(syntax, palette) { SqlHighlighter(syntax, palette) }
     val autoPair = remember(syntax) { AutoPair(syntax) }
     val splitter = remember(syntax) { SqlSplitter(syntax) }
-    val formatter = remember(syntax) { SqlFormatter(syntax) }
+    val indentUnit = if (settings.indentWithTabs) "\t" else " ".repeat(settings.tabSize.coerceIn(1, 16))
+    val formatter = remember(syntax, indentUnit, settings.formatKeywordCase) { SqlFormatter(syntax, indentUnit, KeywordCase.of(settings.formatKeywordCase)) }
+    val highlightLine = settings.highlightCurrentLine
+    val scheme = SyntaxScheme.of(settings.syntaxScheme)
+    val editorBackground = scheme.background(isDark) ?: JewelTheme.globalColors.panelBackground
+    val editorText = scheme.foreground(isDark) ?: JewelTheme.globalColors.text.normal
     // No trimming: every line — first and last included — is exactly one pitch tall, so line N always sits at N × pitch.
     val textStyle =
         JewelTheme.editorTextStyle.copy(
             fontSize = fontSize.sp,
-            lineHeight = (fontSize * 1.5).sp,
+            lineHeight = (fontSize * settings.editorLineHeight.coerceIn(100, 300) / 100f).sp,
             lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.None),
-            color = JewelTheme.globalColors.text.normal,
+            color = editorText,
         )
     val verticalScroll = rememberScrollState()
     val horizontalScroll = rememberScrollState()
@@ -188,7 +201,7 @@ internal fun SqlEditor(
         if (top < verticalScroll.value || top > verticalScroll.value + verticalScroll.viewportSize - 60) verticalScroll.animateScrollTo((top - 80).coerceAtLeast(0))
     }
 
-    Column(modifier.background(JewelTheme.globalColors.panelBackground)) {
+    Column(modifier.background(editorBackground)) {
         if (find.visible) {
             FindBar(find, state, onClose = { find.visible = false; editorFocus.requestFocus() })
             Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
@@ -203,8 +216,8 @@ internal fun SqlEditor(
             val lineCount = text.count { it == '\n' } + 1
             val caretLine = lineIndexAt(text, caret)
             // The gutter grows with the digit count (min. two), so short scripts don't waste width.
-            val digits = maxOf(2, lineCount.toString().length)
-            val digitWidth = remember(textStyle, digits) { with(density) { measurer.measure("0".repeat(digits), textStyle).size.width.toDp() } }
+            val digits = if (settings.showLineNumbers) maxOf(2, lineCount.toString().length) else 0
+            val digitWidth = remember(textStyle, digits) { if (digits == 0) 0.dp else with(density) { measurer.measure("0".repeat(digits), textStyle).size.width.toDp() } }
             val gutterWidth = GutterPaddingStart + digitWidth + GutterNumberGap + StatementBarWidth
             // From the text itself (no soft wrap), so the bar never blinks out while the layout catches up.
             val statementLines = if (statement != null) lineIndexAt(text, statement.start)..lineIndexAt(text, statement.end) else IntRange.EMPTY
@@ -218,7 +231,8 @@ internal fun SqlEditor(
                     lineHeight = lineHeight,
                     textStyle = textStyle,
                     caretLine = caretLine,
-                    highlightCaretLine = state.selection.collapsed,
+                    highlightCaretLine = highlightLine && state.selection.collapsed,
+                    showNumbers = settings.showLineNumbers,
                     statementLines = statementLines,
                     palette = palette,
                 )
@@ -226,7 +240,7 @@ internal fun SqlEditor(
                     BasicTextField(
                         state = state,
                         readOnly = readOnly,
-                        inputTransformation = autoPair,
+                        inputTransformation = autoPair.takeIf { settings.autoCloseBrackets },
                         modifier =
                             Modifier.defaultMinSize(minWidth = viewportWidth - gutterWidth, minHeight = viewportHeight)
                                 .focusRequester(editorFocus)
@@ -236,11 +250,11 @@ internal fun SqlEditor(
                                     if (onShortcut(event)) return@onPreviewKeyEvent true
                                     if (readOnly) return@onPreviewKeyEvent handleReadOnlyKey(event, state, find)
                                     // Before the edit lands, so the change it makes is completed (also for an auto-paired quote).
-                                    if (isCompletionTrigger(event)) triggerCompletion = true
-                                    handleEditorKey(event, state, syntax, ::current, ::apply, ::format, find, controller, completion)
+                                    if (settings.completionWhileTyping && isCompletionTrigger(event)) triggerCompletion = true
+                                    handleEditorKey(event, state, syntax, ::current, ::apply, ::format, find, controller, completion, indentUnit)
                                 },
                         textStyle = textStyle,
-                        cursorBrush = SolidColor(JewelTheme.globalColors.text.normal),
+                        cursorBrush = SolidColor(editorText),
                         outputTransformation = highlighter,
                         // Padding lives inside the decorator so the whole area — margins included — takes clicks, and the
                         // inner field stretches to the full width so line highlights run edge to edge.
@@ -249,7 +263,7 @@ internal fun SqlEditor(
                                 Modifier.padding(start = TextPaddingStart, top = TextPaddingTop, end = TextPaddingEnd, bottom = lineHeight * OverscrollLines)
                                     .drawBehind {
                                         // Current line, from the gutter edge to the far right — same geometry as the gutter's band.
-                                        if (state.selection.collapsed) {
+                                        if (highlightLine && state.selection.collapsed) {
                                             val left = -TextPaddingStart.toPx()
                                             drawRect(palette.currentLine, Offset(left, caretLine * linePitch), Size(size.width - left + TextPaddingEnd.toPx(), linePitch))
                                         }
@@ -315,6 +329,7 @@ private fun handleEditorKey(
     find: FindState,
     controller: CompletionController,
     completion: CompletionSource?,
+    indentUnit: String,
 ): Boolean {
     val primary = if (isMac) event.isMetaPressed else event.isCtrlPressed
     val shift = event.isShiftPressed
@@ -332,16 +347,17 @@ private fun handleEditorKey(
         Shortcuts.DeleteLine.matches(event) -> done { apply(EditorActions.deleteLines(current())) }
         Shortcuts.MoveLineUp.matches(event) -> done { apply(EditorActions.moveLines(current(), up = true)) }
         Shortcuts.MoveLineDown.matches(event) -> done { apply(EditorActions.moveLines(current(), up = false)) }
-        primary || event.isCtrlPressed -> false
-        event.key == Key.Escape && find.visible -> done { find.visible = false }
-        event.key == Key.Tab -> {
+        Shortcuts.Indent.matches(event) || Shortcuts.Outdent.matches(event) -> {
+            val outdent = Shortcuts.Outdent.matches(event)
             val text = current()
             val multiLine = !text.selection.collapsed && '\n' in text.text.substring(text.selection.min, text.selection.max)
             done {
-                if (shift || multiLine) apply(EditorActions.indent(text, outdent = shift))
-                else state.edit { replaceSelectionWith("    ") }
+                if (outdent || multiLine) apply(EditorActions.indent(text, outdent = outdent, unit = indentUnit))
+                else state.edit { replaceSelectionWith(indentUnit) }
             }
         }
+        primary || event.isCtrlPressed -> false
+        event.key == Key.Escape && find.visible -> done { find.visible = false }
         (event.key == Key.Enter || event.key == Key.NumPadEnter) && !shift && !alt -> done {
             val caret = state.selection.min
             val text = state.text
@@ -351,8 +367,8 @@ private fun handleEditorKey(
             val between = text.getOrNull(caret - 1) == '(' && text.getOrNull(caret) == ')'
             state.edit {
                 if (between) {
-                    replaceSelectionWith("\n$indent    \n$indent")
-                    selection = TextRange(caret + 1 + indent.length + 4)
+                    replaceSelectionWith("\n$indent$indentUnit\n$indent")
+                    selection = TextRange(caret + 1 + indent.length + indentUnit.length)
                 } else {
                     replaceSelectionWith("\n$indent")
                 }
@@ -547,11 +563,12 @@ private fun LineNumbers(
     textStyle: TextStyle,
     caretLine: Int,
     highlightCaretLine: Boolean,
+    showNumbers: Boolean,
     statementLines: IntRange,
     palette: SqlPalette,
 ) {
     val dimmed = textStyle.copy(color = JewelTheme.globalColors.text.info, textAlign = TextAlign.End)
-    val bright = dimmed.copy(color = JewelTheme.globalColors.text.normal)
+    val bright = dimmed.copy(color = textStyle.color)
     Box(
         Modifier.width(gutterWidth)
             .height(lineHeight * lineCount + TextPaddingTop)
@@ -569,7 +586,7 @@ private fun LineNumbers(
                 }
             }
     ) {
-        for (line in 0 until lineCount) {
+        if (showNumbers) for (line in 0 until lineCount) {
             Box(
                 Modifier.offset { IntOffset(0, (TextPaddingTop.toPx() + line * linePitch).roundToInt()) }
                     .padding(start = GutterPaddingStart)
@@ -583,7 +600,7 @@ private fun LineNumbers(
     }
 }
 
-private class SqlPalette(
+private data class SqlPalette(
     val keyword: SpanStyle,
     val string: SpanStyle,
     val number: SpanStyle,
@@ -628,6 +645,17 @@ private val LightPalette =
         findMatch = Color(0x66F2E36B),
         findCurrent = Color(0xCCF2C94C),
         statementBar = Color(0xFF3574F0),
+    )
+
+/** The palette with its token colours from [color], keeping each token's font style. */
+private fun SqlPalette.withTokens(color: (SyntaxToken) -> Color): SqlPalette =
+    copy(
+        keyword = keyword.copy(color = color(SyntaxToken.Keyword)),
+        string = string.copy(color = color(SyntaxToken.String)),
+        number = number.copy(color = color(SyntaxToken.Number)),
+        comment = comment.copy(color = color(SyntaxToken.Comment)),
+        quotedIdentifier = quotedIdentifier.copy(color = color(SyntaxToken.QuotedIdentifier)),
+        parameter = parameter.copy(color = color(SyntaxToken.Parameter)),
     )
 
 /** Colours tokens on the displayed text only; the underlying state stays plain. */

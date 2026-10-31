@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.remember
@@ -52,7 +53,6 @@ import org.jetbrains.jewel.ui.component.HorizontalSplitLayout
 import org.jetbrains.jewel.ui.component.Icon
 import org.jetbrains.jewel.ui.component.Text
 import org.jetbrains.jewel.ui.component.Tooltip
-import org.jetbrains.jewel.ui.component.rememberSplitLayoutState
 import org.jetbrains.jewel.ui.component.styling.DividerMetrics
 import org.jetbrains.jewel.ui.component.styling.DividerStyle
 import org.jetbrains.jewel.ui.icons.AllIconsKeys
@@ -85,11 +85,11 @@ internal fun MainScreen(app: AppState, dialogs: Boolean = true) {
                         draggableWidth = IslandGap,
                         firstPaneMinWidth = 480.dp,
                         secondPaneMinWidth = 300.dp,
-                        state = rememberSplitLayoutState(0.68f),
+                        state = app.agentSplit,
                     )
                 }
             }
-            RightToolStripe(app)
+            if (hasRightStripe(app)) RightToolStripe(app) else Box(Modifier.width(IslandGap))
         }
         StatusBar(app)
     }
@@ -152,7 +152,7 @@ private fun CenterArea(app: AppState) {
             draggableWidth = IslandGap,
             firstPaneMinWidth = 220.dp,
             secondPaneMinWidth = 420.dp,
-            state = rememberSplitLayoutState(0.24f),
+            state = app.sidebarSplit,
         )
     }
 }
@@ -199,15 +199,16 @@ private fun StatusBar(app: AppState) {
                     else -> connection?.let { add(it.name) }
                 }
             }
-        if (connection != null) Badge(connection, size = 14)
-        crumbs.forEachIndexed { index, crumb ->
+        val showCrumbs = app.settings.statusBreadcrumbs
+        if (connection != null && showCrumbs) Badge(connection, size = 14)
+        if (showCrumbs) crumbs.forEachIndexed { index, crumb ->
             if (index > 0) Icon(AllIconsKeys.General.ChevronRight, null, tint = info)
             Text(crumb, color = if (index == crumbs.lastIndex) JewelTheme.globalColors.text.normal else info, maxLines = 1)
         }
         Box(Modifier.weight(1f))
         BlockedSessionsChip(app)
         // Like a spreadsheet: several cells selected shows their aggregates instead of the last status message.
-        val stats = app.workspace.selected?.takeIf { !app.settingsOpen }?.activeGrid?.let { (model, state) -> SelectionStats.of(model, state) }
+        val stats = app.workspace.selected?.takeIf { !app.settingsOpen && app.settings.statusSelectionStats }?.activeGrid?.let { (model, state) -> SelectionStats.of(model, state) }
         if (stats != null) {
             Tooltip({ Text("${stats.cells} cell(s) selected · ${stats.numbers} numeric") }) {
                 Text(stats.summary, color = JewelTheme.globalColors.text.normal, maxLines = 1, overflow = TextOverflow.Ellipsis)

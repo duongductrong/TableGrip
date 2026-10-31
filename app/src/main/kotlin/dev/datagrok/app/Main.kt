@@ -9,10 +9,7 @@ import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.application
-import androidx.compose.ui.window.rememberWindowState
 import dev.datagrok.app.console.ConsoleTab
 import dev.datagrok.app.console.handleConsoleShortcut
 import dev.datagrok.app.files.DataFileWindowView
@@ -75,7 +72,7 @@ private fun runApp() = application {
     fun closedWindow() {
         if (appState.files.windows.isEmpty() && !appState.mainWindowVisible) appState.requestExit(::exitApplication)
     }
-    DatagrokTheme(isDark = appState.theme.isDark()) {
+    DatagrokTheme(isDark = appState.theme.isDark(), settings = appState.settings) {
         appState.files.windows.forEach { file ->
             key(file) { DataFileWindowView(appState, file, onClosed = ::closedWindow) }
         }
@@ -83,10 +80,12 @@ private fun runApp() = application {
             onCloseRequest = {
                 if (appState.files.windows.isEmpty()) appState.requestExit(::exitApplication) else appState.mainWindowVisible = false
             },
-            state = rememberWindowState(size = DpSize(1360.dp, 860.dp)),
+            state = appState.windowState,
             visible = appState.mainWindowVisible,
             title = "Datagrok",
             onPreviewKeyEvent = {
+                // Settings → Keymap is recording a shortcut: every key goes to it.
+                if (Shortcuts.recording) return@DecoratedWindow false
                 if (doubleShift.onKey(it.key, it.type)) appState.goToOpen = true
                 handleTabSwitch(appState, it)
             },

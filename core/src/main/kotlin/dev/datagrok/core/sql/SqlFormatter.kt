@@ -1,11 +1,29 @@
 package dev.datagrok.core.sql
 
+/** How [SqlFormatter] writes keywords. */
+enum class KeywordCase {
+    Upper,
+    Lower,
+    Preserve;
+
+    fun apply(keyword: String): String =
+        when (this) {
+            Upper -> keyword.uppercase()
+            Lower -> keyword.lowercase()
+            Preserve -> keyword
+        }
+
+    companion object {
+        fun of(name: String): KeywordCase = entries.firstOrNull { it.name == name } ?: Upper
+    }
+}
+
 /**
- * Reformats SQL in a conventional layout: upper-case keywords, one clause per line, multi-item lists one item per
+ * Reformats SQL in a conventional layout: keywords in one case (upper by default), one clause per line, multi-item lists one item per
  * line, AND/OR conditions on their own lines, and indented subqueries. Works on tokens, so strings, comments, quoted
  * identifiers and dollar-quoted bodies are never altered.
  */
-class SqlFormatter(syntax: SqlSyntax, private val indent: String = "    ") {
+class SqlFormatter(syntax: SqlSyntax, private val indent: String = "    ", private val keywordCase: KeywordCase = KeywordCase.Upper) {
     private val lexer = SqlLexer(syntax)
 
     fun format(sql: String): String {
@@ -43,7 +61,7 @@ class SqlFormatter(syntax: SqlSyntax, private val indent: String = "    ") {
                 continue
             }
             val text = token.text(sql)
-            result += Tok(token.type, if (token.type == TokenType.Keyword) text.uppercase() else text, newline)
+            result += Tok(token.type, if (token.type == TokenType.Keyword) keywordCase.apply(text) else text, newline)
             i++
         }
         return result
@@ -101,7 +119,7 @@ class SqlFormatter(syntax: SqlSyntax, private val indent: String = "    ") {
                 if (clause != null && clause.second == ClauseKind.InlineCondition) {
                     // ON stays on its JOIN's line but starts a condition list.
                     space(prev, tok, index)
-                    out.append(tok.upper).append(' ')
+                    out.append(keywordCase.apply(tok.text)).append(' ')
                     listClause = false
                     conditionClause = true
                     return index + 1
@@ -109,7 +127,7 @@ class SqlFormatter(syntax: SqlSyntax, private val indent: String = "    ") {
                 if (clause != null) {
                     val (words, kind) = clause
                     if (out.isNotEmpty()) newline(level)
-                    out.append(tokens.subList(index, index + words).joinToString(" ") { it.upper })
+                    out.append(tokens.subList(index, index + words).joinToString(" ") { keywordCase.apply(it.text) })
                     val next = index + words
                     listClause = kind == ClauseKind.List
                     conditionClause = kind == ClauseKind.Condition
@@ -125,7 +143,7 @@ class SqlFormatter(syntax: SqlSyntax, private val indent: String = "    ") {
                 }
                 if (conditionClause && (tok.upper == "AND" || tok.upper == "OR") && !isBetweenAnd(index)) {
                     newline(level + 1)
-                    out.append(tok.upper)
+                    out.append(keywordCase.apply(tok.text))
                     out.append(' ')
                     return index + 1
                 }
@@ -201,7 +219,7 @@ class SqlFormatter(syntax: SqlSyntax, private val indent: String = "    ") {
         }
 
         private fun space(prev: Tok?, tok: Tok, index: Int) {
-            if (prev == null || out.isEmpty() || out.last() == '\n' || out.last() == ' ' || out.last() == '(') return
+            if (prev == null || out.isEmpty() || out.last() == '\n' || out.last() == ' ' || out.last() == '\t' || out.last() == '(') return
             val noSpace =
                 tok.isOp(".", "::") ||
                     prev.isOp(".", "::") ||
@@ -233,7 +251,7 @@ class SqlFormatter(syntax: SqlSyntax, private val indent: String = "    ") {
         }
 
         private fun trimTrailingSpaces() {
-            while (out.isNotEmpty() && out.last() == ' ') out.setLength(out.length - 1)
+            while (out.isNotEmpty() && (out.last() == ' ' || out.last() == '\t')) out.setLength(out.length - 1)
         }
 
         private fun trimTrailing() {

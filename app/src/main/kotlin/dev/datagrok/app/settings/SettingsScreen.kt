@@ -1,6 +1,7 @@
 package dev.datagrok.app.settings
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
@@ -30,10 +32,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.datagrok.app.AppState
 import dev.datagrok.app.ui.LocalIslands
+import dev.datagrok.app.ui.parseHexColor
+import dev.datagrok.app.ui.toHex
 import kotlinx.coroutines.flow.drop
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.Orientation
 import org.jetbrains.jewel.ui.Outline
+import org.jetbrains.jewel.ui.component.Checkbox
 import org.jetbrains.jewel.ui.component.Divider
 import org.jetbrains.jewel.ui.component.Icon
 import org.jetbrains.jewel.ui.component.Link
@@ -175,8 +180,10 @@ private fun FieldRow(field: SettingField, app: AppState, form: SettingsForm, hig
                 is StringField -> {
                     val text = form.text(field)
                     LaunchedEffect(field) { snapshotFlow { text.text.toString() }.drop(1).collect { form.commit(field) } }
-                    TextField(text, Modifier.weight(1f), placeholder = { Text(field.placeholder) })
+                    TextField(text, Modifier.weight(1f), placeholder = { Text(field.placeholder) }, outline = if (error != null) Outline.Error else Outline.None)
                 }
+                is BooleanField -> Checkbox(field.get(app.settings), onCheckedChange = { form.toggle(field, it) })
+                is ColorField -> ColorControl(field, app, form, error != null)
             }
         }
         val note = error ?: field.hint
@@ -189,6 +196,33 @@ private fun FieldRow(field: SettingField, app: AppState, form: SettingsForm, hig
             )
         }
     }
+}
+
+@Composable
+private fun ColorControl(field: ColorField, app: AppState, form: SettingsForm, invalid: Boolean) {
+    val text = form.text(field)
+    LaunchedEffect(field) { snapshotFlow { text.text.toString() }.drop(1).collect { form.commit(field) } }
+    val fallback = field.fallback(app.settings)
+    val current = parseHexColor(field.get(app.settings)) ?: fallback
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+        Swatch(current, selected = false, size = 22)
+        TextField(text, Modifier.width(110.dp), placeholder = { Text(fallback.toHex()) }, outline = if (invalid) Outline.Error else Outline.None)
+        field.swatches.forEach { color ->
+            Swatch(color, selected = color == current, size = 18) { form.pick(field, if (color == fallback) null else color) }
+        }
+    }
+}
+
+@Composable
+private fun Swatch(color: Color, selected: Boolean, size: Int, onClick: (() -> Unit)? = null) {
+    val ring = if (selected) JewelTheme.globalColors.text.normal else JewelTheme.globalColors.borders.normal
+    Box(
+        Modifier.size(size.dp)
+            .clip(RoundedCornerShape(5.dp))
+            .background(color)
+            .border(if (selected) 2.dp else 1.dp, ring, RoundedCornerShape(5.dp))
+            .let { if (onClick != null) it.clickable(onClick = onClick) else it }
+    )
 }
 
 @Composable

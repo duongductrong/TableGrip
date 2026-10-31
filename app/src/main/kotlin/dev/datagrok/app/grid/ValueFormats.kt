@@ -217,3 +217,38 @@ fun timestampConversions(value: TimestampValue, zone: ZoneId = ZoneId.systemDefa
         "Local (${zone.id})" to Readable.format(value.instant.atZone(zone)),
         "Unix" to "${value.instant.epochSecond}",
     )
+
+/** How grid cells show values, from Settings → Data Editor. Only the display changes: copies and edits see the raw value. */
+data class CellFormat(
+    val nullText: String = "<null>",
+    /** Blank leaves date-times as the database returned them. */
+    val dateTimePattern: String = "",
+    /** Where date-times that carry an offset are shown; those without one keep their wall-clock time. */
+    val zone: ZoneId = ZoneId.systemDefault(),
+    val numberGrouping: Boolean = false,
+) {
+    private val dateTime: DateTimeFormatter? = dateTimePattern.takeIf { it.isNotBlank() }?.let { runCatching { DateTimeFormatter.ofPattern(it) }.getOrNull() }
+
+    fun display(value: String, numeric: Boolean): String =
+        when {
+            numeric && numberGrouping -> groupDigits(value)
+            dateTime != null && value.length >= 16 && value[4] == '-' && value[0].isDigit() ->
+                parseTimestamp(value)?.let { dateTime.format(it.instant.atZone(if (it.hadOffset) zone else ZoneOffset.UTC)) } ?: value
+            else -> value
+        }
+
+    companion object {
+        /** Whether [pattern] is blank or a pattern `java.time` accepts. */
+        fun isValidPattern(pattern: String): Boolean = pattern.isBlank() || runCatching { DateTimeFormatter.ofPattern(pattern) }.isSuccess
+    }
+}
+
+/** `1234567.89` → `1,234,567.89`; anything that isn't a plain decimal number is returned as it is. */
+internal fun groupDigits(value: String): String {
+    val match = PlainNumber.matchEntire(value) ?: return value
+    val (sign, whole, rest) = match.destructured
+    if (whole.length <= 3) return value
+    return sign + whole.reversed().chunked(3).joinToString(",").reversed() + rest
+}
+
+private val PlainNumber = Regex("""(-?)(\d+)((?:\.\d+)?)""")

@@ -52,7 +52,17 @@ data class Session(
     /** The left tool window's name, or null when it was hidden. */
     val leftTool: String? = "Explorer",
     val connectionId: String? = null,
+    val agentOpen: Boolean = false,
+    /** Where the main window was, in dp; null until it has been saved once. */
+    val window: WindowBounds? = null,
+    /** Divider positions as fractions of their split: the left tool window's and the agent chat's. */
+    val sidebarSplit: Float? = null,
+    val agentSplit: Float? = null,
 )
+
+/** The main window's place and size in dp, or just [maximized]. */
+@Serializable
+data class WindowBounds(val x: Float, val y: Float, val width: Float, val height: Float, val maximized: Boolean = false)
 
 /** Reads and writes [Session]s; a missing or unreadable file is an empty session, never an error at startup. */
 class SessionStore(private val file: Path = DatagrokPaths.session) {

@@ -84,7 +84,11 @@ import androidx.compose.ui.zIndex
 import dev.datagrok.core.dialect.SortColumn
 import dev.datagrok.core.dialect.SortDirection
 import dev.datagrok.app.ui.LocalIslands
+import dev.datagrok.app.ui.LocalSettings
 import dev.datagrok.app.ui.Shortcuts
+import dev.datagrok.core.settings.Settings
+import java.time.ZoneId
+import java.time.ZoneOffset
 import dev.datagrok.app.ui.copyToClipboard
 import dev.datagrok.core.edit.EditCheck
 import dev.datagrok.core.edit.EditKind
@@ -139,6 +143,7 @@ fun DataGrid(
     LaunchedEffect(state.focusRequests) { if (state.focusRequests > 0) runCatching { gridFocus.requestFocus() } }
     var resizeHover by remember { mutableStateOf(false) }
 
+    val settings = LocalSettings.current
     val cellStyle = JewelTheme.editorTextStyle
     val measurer = rememberTextMeasurer()
     val charWidth = remember(cellStyle, density) { measurer.measure("0123456789", cellStyle).size.width / 10f / density.density }
@@ -172,7 +177,7 @@ fun DataGrid(
                     offsets = offsetsPx,
                     widths = widthsPx,
                     headerHeight = HeaderHeight.toPx(),
-                    rowHeight = RowHeight.toPx(),
+                    rowHeight = rowHeight(settings).toPx(),
                     viewportWidth = constraints.maxWidth.toFloat(),
                     viewportHeight = constraints.maxHeight.toFloat(),
                     resizeSlop = 4.dp.toPx(),
@@ -271,10 +276,14 @@ internal class GridColors(
     val deleted: Color,
     val muted: Color,
     val text: Color,
+    /** Every other row's tint, or transparent when Settings → Data Editor doesn't ask for it. */
+    val zebra: Color,
+    val format: CellFormat,
 )
 
 @Composable
 private fun gridColors(focused: Boolean): GridColors {
+    val settings = LocalSettings.current
     val text = JewelTheme.globalColors.text.normal
     val tree = JewelTheme.treeStyle.colors
     val dark = JewelTheme.isDark
@@ -291,8 +300,26 @@ private fun gridColors(focused: Boolean): GridColors {
         deleted = if (dark) Color(0x33DB5C5C) else Color(0x33E55765),
         muted = JewelTheme.globalColors.text.info,
         text = text,
+        zebra = if (settings.zebraRows) text.copy(alpha = 0.03f) else Color.Transparent,
+        format = remember(settings.nullText, settings.dateTimeFormat, settings.dateTimeZone, settings.numberGrouping) { settings.cellFormat() },
     )
 }
+
+/** Row height for Settings → Data Editor's density. */
+internal fun rowHeight(settings: Settings): Dp =
+    when (settings.gridDensity) {
+        "Compact" -> 22.dp
+        "Spacious" -> 32.dp
+        else -> RowHeight
+    }
+
+internal fun Settings.cellFormat(): CellFormat =
+    CellFormat(
+        nullText = nullText,
+        dateTimePattern = dateTimeFormat,
+        zone = if (dateTimeZone == "Utc") ZoneOffset.UTC else ZoneId.systemDefault(),
+        numberGrouping = numberGrouping,
+    )
 
 @Composable
 private fun HeaderRow(
@@ -372,10 +399,11 @@ private fun DataRow(
             status == RowStatus.Deleted -> colors.deleted
             focus?.row == row -> colors.focusRow
             controller.hoverRow == row -> colors.hover
+            row % 2 == 1 -> colors.zebra
             else -> Color.Transparent
         }
 
-    Box(Modifier.width(totalWidth).height(RowHeight).background(rowBackground).bottomLine(colors.grid)) {
+    Box(Modifier.width(totalWidth).height(rowHeight(LocalSettings.current)).background(rowBackground).bottomLine(colors.grid)) {
         for (column in range) {
             val modelColumn = state.modelColumn(column)
             val cellModifier =
@@ -461,7 +489,7 @@ private fun Cell(
                 value == null -> base.copy(color = colors.muted, fontStyle = FontStyle.Italic)
                 else -> base.copy(color = colors.text, textAlign = if (numeric) TextAlign.End else TextAlign.Start)
             }
-        val text = value?.let(::singleLine) ?: placeholder ?: "<null>"
+        val text = value?.let { singleLine(colors.format.display(it, numeric)) } ?: placeholder ?: colors.format.nullText
         val decorated = if (deleted) style.copy(textDecoration = TextDecoration.LineThrough) else style
         val checked = value?.let(FilterValues::boolean)
         if (checkBox != null && (value == null || checked != null)) {

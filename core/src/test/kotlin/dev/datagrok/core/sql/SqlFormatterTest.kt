@@ -75,4 +75,14 @@ class SqlFormatterTest {
             pg.format("insert into t (a, b) values (1, 'x'); update t set a=1, b=2 where id=3"),
         )
     }
+
+    @Test
+    fun `keyword case and indent follow the editor's settings`() {
+        val sql = "select id, name from users where active and vip"
+        assertEquals(
+            "select\n\tid,\n\tname\nfrom users\nwhere active\n\tand vip",
+            SqlFormatter(SqlSyntax.PostgreSQL, indent = "\t", keywordCase = KeywordCase.Lower).format(sql),
+        )
+        assertEquals("Select x\nFrom t", SqlFormatter(SqlSyntax.PostgreSQL, keywordCase = KeywordCase.Preserve).format("Select x From t"))
+    }
 }

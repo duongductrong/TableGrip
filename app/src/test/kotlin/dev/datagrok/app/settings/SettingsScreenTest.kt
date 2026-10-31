@@ -12,7 +12,13 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.test.withKeyDown
+import dev.datagrok.app.ui.Shortcut
+import dev.datagrok.core.settings.KeyBinding
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -123,6 +129,32 @@ class SettingsScreenTest {
         waitForIdle()
         assertEquals(emptyList(), library.installedVersions(DriverId.SQLite))
         onNodeWithText("Not downloaded").assertExists()
+        app.dispose()
+    }
+
+    @Test
+    fun `customization pages render and a shortcut can be recorded`() = runComposeUiTest {
+        val app = app()
+        app.settingsOpen = true
+        setContent { DatagrokTheme(isDark = true, settings = app.settings) { Box(Modifier.size(1100.dp, 900.dp)) { MainScreen(app) } } }
+        for (page in listOf("appearance", "color-scheme", "behavior", "editor", "data-editor", "keymap")) {
+            app.settingsPage = page
+            waitForIdle()
+            System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "settings-$page.png")) }
+        }
+
+        // Narrow the list so the action is on screen.
+        onAllNodes(hasSetTextAction())[1].performTextInput("Reformat")
+        waitForIdle()
+        onNodeWithText(Shortcuts.Format.label).performClick()
+        waitForIdle()
+        onNodeWithText("Press keys… (Esc cancels)").performKeyInput { withKeyDown(Key.ShiftLeft) { withKeyDown(Key.AltLeft) { pressKey(Key.F) } } }
+        waitForIdle()
+        assertEquals(KeyBinding(java.awt.event.KeyEvent.VK_F, "F", shift = true, alt = true), app.settings.keyBindings["Format"])
+        assertEquals(Shortcut(Key.F, "F", shift = true, alt = true), Shortcuts.Format)
+        onNodeWithText("Reset to defaults").performClick()
+        waitForIdle()
+        assertEquals(emptyMap(), app.settings.keyBindings)
         app.dispose()
     }
 

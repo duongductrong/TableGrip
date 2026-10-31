@@ -285,22 +285,23 @@ internal class GridController(val state: DataGridState, private val scope: Corou
         val primary = if (isMac) event.isMetaPressed else event.isCtrlPressed
         val shift = event.isShiftPressed
         val rowCount = model.rowCount
-        if (rowCount == 0 && event.key != Key.N) return false
+        if (rowCount == 0 && !Shortcuts.AddRow.matches(event)) return false
         val focus = state.focus
 
         return when {
-            primary && event.key == Key.A -> state.selectAll(rowCount).let { true }
-            primary && event.key == Key.C -> copy(CopyFormat.Tsv, includeHeader = shift).let { true }
+            Shortcuts.SelectAll.matches(event) -> state.selectAll(rowCount).let { true }
+            Shortcuts.Copy.matches(event) -> copy(CopyFormat.Tsv).let { true }
+            Shortcuts.CopyWithHeader.matches(event) -> copy(CopyFormat.Tsv, includeHeader = true).let { true }
             Shortcuts.AddToChat.matches(event) -> mentionSelection()
-            primary && (event.key == Key.Enter || event.key == Key.NumPadEnter) -> actions.onSubmit?.invoke().let { actions.onSubmit != null }
-            primary && event.isAltPressed && event.key == Key.N -> setNull().let { true }
-            primary && event.key == Key.N -> addRow().let { editor != null }
+            Shortcuts.Submit.matches(event) -> actions.onSubmit?.invoke().let { actions.onSubmit != null }
+            Shortcuts.SetNull.matches(event) -> setNull().let { true }
+            Shortcuts.AddRow.matches(event) -> addRow().let { editor != null }
             Shortcuts.GoToReferenced.matches(event) -> followFocusedLink()
             Shortcuts.FilterByValue.matches(event) -> filterByFocusedValue(exclude = false)
             Shortcuts.ExcludeValue.matches(event) -> filterByFocusedValue(exclude = true)
             // ⇧ is left to the table's Clear Filter.
-            primary && !shift && (event.key == Key.Backspace || event.key == Key.Delete) -> deleteSelectedRows().let { editor != null }
-            primary && event.key == Key.Z -> revertSelectedRows().let { editor != null }
+            Shortcuts.DeleteRows.matches(event) || (primary && !shift && event.key == Key.Delete) -> deleteSelectedRows().let { editor != null }
+            Shortcuts.RevertRows.matches(event) -> revertSelectedRows().let { editor != null }
             primary && event.key == Key.DirectionUp -> moveTo(GridCell(0, focus?.column ?: 0), shift)
             primary && event.key == Key.DirectionDown -> moveTo(GridCell(rowCount - 1, focus?.column ?: 0), shift)
             primary && event.key == Key.MoveHome -> moveTo(GridCell(0, 0), shift)
@@ -316,7 +317,7 @@ internal class GridController(val state: DataGridState, private val scope: Corou
             event.key == Key.PageUp -> moveBy(-pageRows(), 0, shift)
             event.key == Key.PageDown -> moveBy(pageRows(), 0, shift)
             event.key == Key.Escape -> focus?.let { state.select(it) }.let { focus != null }
-            event.key == Key.Enter || event.key == Key.NumPadEnter || event.key == Key.F2 -> focus?.let { startEditing(it) } == true
+            event.key == Key.Enter || event.key == Key.NumPadEnter || Shortcuts.EditCell.matches(event) -> focus?.let { startEditing(it) } == true
             event.key == Key.Spacebar && focus != null && isBooleanColumn(focus.column) -> toggleBoolean()
             event.key == Key.Backspace || event.key == Key.Delete -> focus?.let { startEditing(it, replaceWith = "") } == true
             else -> {

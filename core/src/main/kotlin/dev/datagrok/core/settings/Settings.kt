@@ -48,6 +48,86 @@ data class Settings(
     /** Runs [backupSchedules] while Datagrok is open. Off unless the user turns it on. */
     val scheduledBackups: Boolean = false,
     val backupSchedules: List<dev.datagrok.core.backup.BackupSchedule> = emptyList(),
+
+    // Appearance
+    /** `#RRGGBB`; blank means the theme's own blue. */
+    val accentColor: String = "",
+    /** Points for labels and controls; 0 means Jewel's default. */
+    val uiFontSize: Int = 0,
+    /** Corner radius of the content islands, in dp. */
+    val islandCornerRadius: Int = 10,
+    /** A syntax scheme's name, e.g. `Darcula`; unknown names fall back to `Datagrok`. */
+    val syntaxScheme: String = "Datagrok",
+    /** Single token colours over the scheme, keyed `dark.keyword`, `light.string`… as `#RRGGBB`. */
+    val syntaxColors: Map<String, String> = emptyMap(),
+    /** Environment badge colours by environment name (`Production`…) as `#RRGGBB`; missing means the built-in one. */
+    val environmentColors: Map<String, String> = emptyMap(),
+
+    // SQL editor
+    /** A font family installed on this machine; blank means the bundled JetBrains Mono. */
+    val editorFontFamily: String = "",
+    /** Line height as a percentage of the font size. */
+    val editorLineHeight: Int = 150,
+    val tabSize: Int = 4,
+    val indentWithTabs: Boolean = false,
+    val autoCloseBrackets: Boolean = true,
+    /** Opens completion while typing; off leaves it to ⌃Space. */
+    val completionWhileTyping: Boolean = true,
+    val highlightCurrentLine: Boolean = true,
+    val showLineNumbers: Boolean = true,
+    /** How Reformat SQL writes keywords: `Upper`, `Lower` or `Preserve`. */
+    val formatKeywordCase: String = "Upper",
+
+    // Data grid
+    /** `Compact`, `Comfortable` or `Spacious`. */
+    val gridDensity: String = "Comfortable",
+    /** What an empty (NULL) cell reads. */
+    val nullText: String = "<null>",
+    /** A `java.time` pattern for date-time cells; blank shows them as the database returns them. */
+    val dateTimeFormat: String = "",
+    /** The zone date-times with an offset are shown in when [dateTimeFormat] is set: `Utc` or `Local`. */
+    val dateTimeZone: String = "Local",
+    /** Groups the digits of numeric cells by thousands. */
+    val numberGrouping: Boolean = false,
+    /** Tints every other row. */
+    val zebraRows: Boolean = false,
+
+    // Keymap
+    /** A keymap preset's name; unknown names fall back to `Default`. */
+    val keymap: String = "Default",
+    /** Shortcuts the user changed by hand, by action id, over [keymap]. */
+    val keyBindings: Map<String, KeyBinding> = emptyMap(),
+
+    // Behaviour
+    /** Reopens the main window at the size and place it was closed. */
+    val rememberWindowBounds: Boolean = true,
+    /** Keeps the widths of the tool window and the agent chat across restarts. */
+    val rememberPanelSizes: Boolean = true,
+    val restoreTabs: Boolean = true,
+    /** The tool window shown at start: `LastUsed`, `None` or a tool's name. */
+    val startupTool: String = "LastUsed",
+    /** Whether the agent chat is open at start: `Closed`, `Open` or `LastUsed`. */
+    val startupAgent: String = "Closed",
+    val statusBreadcrumbs: Boolean = true,
+    val statusSelectionStats: Boolean = true,
+    /** Tool stripe buttons the user hid, by id. */
+    val stripeHidden: List<String> = emptyList(),
+    /** Tool stripe buttons in the user's order, by id; ids missing here keep their place after these. */
+    val stripeOrder: List<String> = emptyList(),
+)
+
+/**
+ * A key combination in a UI-free form: [key] is the AWT key code, [label] how it reads (`E`, `⏎`). `primary` is ⌘ on
+ * macOS and Ctrl elsewhere.
+ */
+@Serializable
+data class KeyBinding(
+    val key: Int,
+    val label: String,
+    val primary: Boolean = false,
+    val shift: Boolean = false,
+    val alt: Boolean = false,
+    val ctrl: Boolean = false,
 )
 
 class SettingsStore(private val file: Path = DatagrokPaths.settings) {
