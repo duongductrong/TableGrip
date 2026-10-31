@@ -166,6 +166,21 @@ class AppState(
         settingsOpen = false
     }
 
+    /** The tool [toggleSidebar] brings back. */
+    private var hiddenTool = LeftTool.Explorer
+
+    /** Hides the left tool window, or shows the one last hidden this way. */
+    fun toggleSidebar() {
+        val tool = leftTool
+        if (tool != null && !settingsOpen) {
+            hiddenTool = tool
+            leftTool = null
+        } else {
+            leftTool = tool ?: hiddenTool
+        }
+        settingsOpen = false
+    }
+
     /**
      * Quits via [exit] once the work quitting would lose (open transactions, unsubmitted edits) has been dealt with;
      * does nothing if the user cancels. Tabs and unsaved console text are kept in the session for the next start.

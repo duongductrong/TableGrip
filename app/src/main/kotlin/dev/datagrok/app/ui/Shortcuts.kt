@@ -70,8 +70,10 @@ object Shortcuts {
     val Activity = Shortcut(Key.A, "A", primary = true, alt = true)
     val Settings = if (isMac) Shortcut(Key.Comma, ",", primary = true) else Shortcut(Key.S, "S", primary = true, alt = true)
     val ShowShortcuts = Shortcut(Key.Slash, "/", primary = true, shift = true)
-    /** Cursor's key: mentions what is selected in the agent chat. */
+    /** Cursor's key: mentions what is selected in the agent chat, or just opens it when nothing is. */
     val AddToChat = Shortcut(Key.L, "L", primary = true)
+    /** VS Code's key; a focused grid takes it first on a foreign-key cell (Go to Referenced Row). */
+    val ToggleSidebar = Shortcut(Key.B, "B", primary = true)
 
     // Console
     val RunStatement = Shortcut(Key.Enter, EnterLabel, primary = true)
@@ -148,7 +150,8 @@ object Shortcuts {
                     entry("Connections", Explorer),
                     entry("Query History", History),
                     entry("Agent", Agent),
-                    entry("Mention the selection or statement in the agent chat", AddToChat),
+                    entry("Mention the selection or statement in the agent chat, or open it", AddToChat),
+                    entry("Show / hide the sidebar", ToggleSidebar),
                     entry("Saved Queries", Queries),
                     entry("Activity: sessions and locks of the current connection", Activity),
                     entry("Settings", Settings),

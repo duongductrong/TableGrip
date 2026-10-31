@@ -131,8 +131,12 @@ private fun handleWindowShortcut(app: AppState, event: KeyEvent): Boolean {
         Shortcuts.Explorer.matches(event) -> done { app.toggleTool(LeftTool.Explorer) }
         Shortcuts.History.matches(event) -> done { app.toggleTool(LeftTool.History) }
         Shortcuts.Agent.matches(event) -> done { app.agentOpen = !app.agentOpen }
-        selected is ConsoleTab && Shortcuts.AddToChat.matches(event) -> selected.mentionInChat()
-        selected is TableDataTab && Shortcuts.AddToChat.matches(event) -> selected.mentionTable()
+        Shortcuts.AddToChat.matches(event) ->
+            done {
+                val mentioned = (selected as? ConsoleTab)?.mentionInChat() ?: (selected as? TableDataTab)?.mentionTable() ?: false
+                if (!mentioned) app.agent.focusComposer()
+            }
+        Shortcuts.ToggleSidebar.matches(event) -> done { app.toggleSidebar() }
         Shortcuts.Queries.matches(event) -> done { app.toggleTool(LeftTool.Queries) }
         Shortcuts.Activity.matches(event) -> app.currentConnection?.takeUnless { ActivitySupport.of(it.type) == ActivitySupport.NotApplicable }?.let { workspace.openActivity(it); true } ?: false
         Shortcuts.Settings.matches(event) -> done { app.settingsOpen = true }

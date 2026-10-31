@@ -188,6 +188,7 @@ private fun actions(app: AppState): List<GoToItem> {
         },
         action("Connections", Shortcuts.Explorer) { app.toggleTool(LeftTool.Explorer) },
         action("Query History", Shortcuts.History) { app.toggleTool(LeftTool.History) },
+        action("Show / Hide Sidebar", Shortcuts.ToggleSidebar) { app.toggleSidebar() },
         action("Agent", Shortcuts.Agent) { app.agentOpen = !app.agentOpen },
         action("Settings", Shortcuts.Settings, AllIconsKeys.General.Settings) { app.settingsOpen = true },
         action("Keyboard Shortcuts", Shortcuts.ShowShortcuts, AllIconsKeys.General.Keyboard) { app.shortcutsOpen = true },

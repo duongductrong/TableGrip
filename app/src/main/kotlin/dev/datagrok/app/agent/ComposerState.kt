@@ -36,6 +36,10 @@ class ComposerState(private val clipboard: TextClipboard = TextClipboard.System)
 
     fun mention(char: Char): Mention? = mentions[char]
 
+    fun requestFocus() {
+        focusRequests++
+    }
+
     /** The pill whose details are showing, if any. */
     var preview by mutableStateOf<Char?>(null)
 

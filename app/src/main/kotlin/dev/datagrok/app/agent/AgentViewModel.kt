@@ -191,6 +191,12 @@ class AgentViewModel(private val app: AppState, private val registry: AgentRegis
         send(composer.take())
     }
 
+    /** Opens the chat with the composer focused (⌘L with nothing to mention). */
+    fun focusComposer() {
+        composer.requestFocus()
+        app.agentOpen = true
+    }
+
     /** Adds [mention] where the user is typing to the agent, opening the chat (⌘L). */
     fun mention(mention: Mention) {
         composer.insert(mention)
