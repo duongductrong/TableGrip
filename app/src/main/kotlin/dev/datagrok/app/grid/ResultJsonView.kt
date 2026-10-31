@@ -35,6 +35,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.datagrok.app.table.ViewChip
+import dev.datagrok.app.table.ViewChipGroup
 import dev.datagrok.app.ui.copyToClipboard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -81,8 +82,10 @@ fun ResultJsonView(model: GridModel, state: DataGridState, modifier: Modifier = 
             horizontalArrangement = Arrangement.spacedBy(2.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            ViewChip("Text", !tree) { tree = false }
-            ViewChip("Tree", tree) { tree = true }
+            ViewChipGroup {
+                ViewChip("Text", !tree) { tree = false }
+                ViewChip("Tree", tree) { tree = true }
+            }
             Box(Modifier.weight(1f))
             content?.let { current ->
                 if (current.shortened) Text("Long values are cut here; Copy gets them in full", Modifier.padding(end = 8.dp), color = info)

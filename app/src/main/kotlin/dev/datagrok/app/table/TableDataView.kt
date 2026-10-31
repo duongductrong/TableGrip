@@ -1,7 +1,9 @@
 package dev.datagrok.app.table
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -75,7 +77,7 @@ import org.jetbrains.jewel.ui.icon.IconKey
 import org.jetbrains.jewel.ui.icons.AllIconsKeys
 import dev.datagrok.app.connections.ConnectionLoadingPlaceholder
 
-private val PageSizes = listOf(50, 100, 200, 500, 1000)
+internal val PageSizes = listOf(50, 100, 200, 500, 1000)
 
 @Composable
 internal fun TableDataView(tab: TableDataTab) {
@@ -167,14 +169,26 @@ private fun ViewSwitch(tab: TableDataTab) {
 @Composable
 internal fun ViewChip(label: String, selected: Boolean, onClick: () -> Unit) {
     val islands = LocalIslands.current
-    val shape = RoundedCornerShape(6.dp)
+    val shape = RoundedCornerShape(5.dp)
     Text(
         label,
         Modifier.clip(shape)
             .background(if (selected) islands.accent.copy(alpha = if (JewelTheme.isDark) 0.22f else 0.12f) else Color.Transparent)
             .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 3.dp),
+            .padding(horizontal = 10.dp, vertical = 2.dp),
         color = if (selected) JewelTheme.globalColors.text.normal else JewelTheme.globalColors.text.info,
+    )
+}
+
+/** Frames mutually exclusive [ViewChip]s as one segmented control, so they read as a single switch. */
+@Composable
+internal fun ViewChipGroup(content: @Composable RowScope.() -> Unit) {
+    val shape = RoundedCornerShape(7.dp)
+    Row(
+        Modifier.border(1.dp, JewelTheme.globalColors.borders.normal, shape).padding(2.dp),
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        content = content,
     )
 }
 
@@ -239,8 +253,10 @@ private fun Toolbar(tab: TableDataTab) {
 
         Box(Modifier.weight(1f))
         if (tab.loading || tab.submitting) Text(if (tab.submitting) "Saving…" else "Loading…", Modifier.padding(end = 8.dp), color = JewelTheme.globalColors.text.info)
-        ViewChip("Grid", !tab.showJson) { tab.showJson = false }
-        ViewChip("JSON", tab.showJson) { tab.showJson = true }
+        ViewChipGroup {
+            ViewChip("Grid", !tab.showJson) { tab.showJson = false }
+            ViewChip("JSON", tab.showJson) { tab.showJson = true }
+        }
         Separator()
         ToolButton(AllIconsKeys.Actions.Download, "Export…", enabled = model != null) { tab.export() }
         ToolButton(

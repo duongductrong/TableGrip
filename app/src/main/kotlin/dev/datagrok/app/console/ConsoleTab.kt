@@ -5,7 +5,9 @@ import dev.datagrok.core.agent.Mention
 import dev.datagrok.core.connection.Capability
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.placeCursorAtEnd
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -83,9 +85,35 @@ sealed interface FixState {
     data class NoFix(override val failure: StatementFailure, val message: String) : FixState
 }
 
-class ResultSetView(val title: String, val sql: String, val rows: QueryResult.Rows) {
-    val model = ResultGridModel(rows)
+/** The grid and JSON views show one page of [rows] at a time, like table viewers, so big results stay light to render. */
+class ResultSetView(val title: String, val sql: String, val rows: QueryResult.Rows, pageSize: Int) {
+    var pageSize by mutableIntStateOf(pageSize.coerceAtLeast(1))
+        private set
+    var page by mutableIntStateOf(0)
+        private set
+    val pageCount: Int
+        get() = ((rows.rows.size + pageSize - 1) / pageSize).coerceAtLeast(1)
+    /** Index in [rows] of the page's first row. */
+    val firstRow: Int
+        get() = page * pageSize
+    val model by derivedStateOf { ResultGridModel(rows, firstRow, pageSize) }
     val grid = DataGridState()
+
+    fun goToPage(index: Int) {
+        val target = index.coerceIn(0, pageCount - 1)
+        if (target == page) return
+        page = target
+        grid.selection = null
+    }
+
+    /** Keeps the current first row on screen. */
+    fun changePageSize(size: Int) {
+        val first = firstRow
+        pageSize = size.coerceAtLeast(1)
+        page = first / pageSize
+        grid.selection = null
+    }
+
     /** Pinned results survive the next run, like DataGrip's pinned result tabs, to compare before and after. */
     var pinned by mutableStateOf(false)
     /** Shows the rows as JSON instead of the grid. */
@@ -328,7 +356,7 @@ class ConsoleTab(
     fun mentionCells(view: ResultSetView, cells: GridMention) {
         val access = app.aiAccess(config)
         if (!access.sharesSchema) return
-        val rows = cells.rows.first + 1..cells.rows.last + 1
+        val rows = view.firstRow + cells.rows.first + 1..view.firstRow + cells.rows.last + 1
         app.agent.mention(Mention.Cells(view.title, config.type.displayName, cells.columns, rows, cells.values.takeIf { access.sharesData }, origin = view.sql))
     }
 
@@ -550,7 +578,7 @@ class ConsoleTab(
                     is QueryResult.Rows -> {
                         val suffix = if (result.truncated) " (first ${result.rows.size} shown)" else ""
                         log("${result.rows.size} row(s) retrieved in ${result.elapsedMillis} ms$suffix: ${sql.preview()}")
-                        results += ResultSetView("Result ${++resultCount}", sql, result)
+                        results += ResultSetView("Result ${++resultCount}", sql, result, app.settings.pageSize)
                     }
                     is QueryResult.Update -> log("${result.affectedRows} row(s) affected in ${result.elapsedMillis} ms: ${sql.preview()}")
                 }

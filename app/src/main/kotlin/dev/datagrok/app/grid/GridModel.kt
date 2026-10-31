@@ -39,9 +39,10 @@ interface GridEditor {
     fun revertRows(rows: Collection<Int>)
 }
 
-class ResultGridModel(private val result: QueryResult.Rows) : GridModel {
+/** [result]'s rows from [offset], at most [limit] of them, so a large result can be shown a page at a time. */
+class ResultGridModel(private val result: QueryResult.Rows, private val offset: Int = 0, limit: Int = Int.MAX_VALUE) : GridModel {
     override val columns: List<ResultColumn> = result.columns
-    override val rowCount: Int = result.rows.size
+    override val rowCount: Int = (result.rows.size - offset).coerceIn(0, limit)
 
-    override fun value(row: Int, column: Int): String? = result.rows[row][column]
+    override fun value(row: Int, column: Int): String? = result.rows[offset + row][column]
 }

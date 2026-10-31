@@ -44,7 +44,11 @@ import dev.datagrok.app.grid.DataGrid
 import dev.datagrok.app.grid.GridActions
 import dev.datagrok.app.grid.GridMention
 import dev.datagrok.app.grid.ResultJsonView
+import dev.datagrok.app.table.PageSizes
+import dev.datagrok.app.table.Separator
+import dev.datagrok.app.table.ToolButton
 import dev.datagrok.app.table.ViewChip
+import dev.datagrok.app.table.ViewChipGroup
 import dev.datagrok.app.queries.ParametersDialog
 import dev.datagrok.core.dialect.SqlDialect
 import java.time.Instant
@@ -296,6 +300,7 @@ private fun ResultPanel(app: AppState, tab: ConsoleTab) {
             else -> {
                 val view = tab.results[selected - 1]
                 Column(Modifier.fillMaxSize()) {
+                    LaunchedEffect(view, view.page) { view.grid.verticalScroll.scrollToItem(0) }
                     if (view.showJson) ResultJsonView(view.model, view.grid, Modifier.weight(1f))
                     else DataGrid(
                         model = view.model,
@@ -306,32 +311,66 @@ private fun ResultPanel(app: AppState, tab: ConsoleTab) {
                                 dialect = SqlDialect.of(tab.config.type),
                                 onMention = { cells: GridMention -> tab.mentionCells(view, cells) }.takeIf { tab.canAskAgent },
                             ),
+                        firstRowNumber = view.firstRow + 1L,
                     )
                     Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
-                    val suffix = if (view.rows.truncated) " (limited)" else ""
-                    Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            "${view.rows.rows.size} row(s)$suffix · ${view.rows.elapsedMillis} ms",
-                            Modifier.weight(1f),
-                            color = JewelTheme.globalColors.text.info,
-                        )
-                        ViewChip("Grid", !view.showJson) { view.showJson = false }
-                        ViewChip("JSON", view.showJson) { view.showJson = true }
-                        Tooltip({ Text(if (view.pinned) "Unpin tab" else "Pin tab: keep this result when the console runs again") }) {
-                            IconButton(onClick = { view.pinned = !view.pinned }) {
-                                Icon(if (view.pinned) AllIconsKeys.General.PinSelected else AllIconsKeys.General.Pin, "Pin")
-                            }
-                        }
-                        Tooltip({ Text("Export result…") }) {
-                            IconButton(onClick = {
-                                val dialect = SqlDialect.of(tab.config.type)
-                                app.exportRequest =
-                                    ExportRequest(view.title, "result", view.rows.columns, view.rows.rows, dialect, "table_name")
-                            }) { Icon(AllIconsKeys.Actions.Download, "Export") }
-                        }
-                    }
+                    ResultFooter(app, tab, view)
                 }
             }
+        }
+    }
+}
+
+/** Paging on the left like table viewers' toolbar; view switch, pin and export on the right. */
+@Composable
+private fun ResultFooter(app: AppState, tab: ConsoleTab, view: ResultSetView) {
+    val info = JewelTheme.globalColors.text.info
+    val total = view.rows.rows.size
+    Row(
+        Modifier.fillMaxWidth().height(34.dp).padding(horizontal = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ToolButton(AllIconsKeys.Actions.Play_first, "First page", enabled = view.page > 0) { view.goToPage(0) }
+        ToolButton(AllIconsKeys.Actions.Play_back, "Previous page", enabled = view.page > 0) { view.goToPage(view.page - 1) }
+        val shown = view.model.rowCount
+        Text(if (shown == 0) "0 rows" else "${view.firstRow + 1}–${view.firstRow + shown}", Modifier.padding(horizontal = 4.dp))
+        Text("of", color = info)
+        Text(if (view.rows.truncated) "$total+" else "$total", Modifier.padding(start = 4.dp))
+        val last = view.pageCount - 1
+        ToolButton(AllIconsKeys.Actions.Play_forward, "Next page", enabled = view.page < last) { view.goToPage(view.page + 1) }
+        ToolButton(AllIconsKeys.Actions.Play_last, "Last page", enabled = view.page < last) { view.goToPage(last) }
+        ListComboBox(
+            items = PageSizes.map { "$it rows" },
+            selectedIndex = PageSizes.indexOf(view.pageSize).coerceAtLeast(0),
+            onSelectedItemChange = { index ->
+                view.changePageSize(PageSizes[index])
+                app.updateSettings { it.copy(pageSize = PageSizes[index]) }
+            },
+            modifier = Modifier.width(110.dp).padding(horizontal = 4.dp),
+        )
+        Separator()
+        val limited =
+            if (view.rows.truncated) " · first $total fetched (Settings → Max result rows)" else ""
+        Text(
+            "${view.rows.elapsedMillis} ms$limited",
+            Modifier.weight(1f).padding(horizontal = 4.dp),
+            color = info,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        ViewChipGroup {
+            ViewChip("Grid", !view.showJson) { view.showJson = false }
+            ViewChip("JSON", view.showJson) { view.showJson = true }
+        }
+        Separator()
+        ToolButton(
+            if (view.pinned) AllIconsKeys.General.PinSelected else AllIconsKeys.General.Pin,
+            if (view.pinned) "Unpin tab" else "Pin tab: keep this result when the console runs again",
+        ) { view.pinned = !view.pinned }
+        ToolButton(AllIconsKeys.Actions.Download, "Export result…") {
+            val dialect = SqlDialect.of(tab.config.type)
+            app.exportRequest = ExportRequest(view.title, "result", view.rows.columns, view.rows.rows, dialect, "table_name")
         }
     }
 }
