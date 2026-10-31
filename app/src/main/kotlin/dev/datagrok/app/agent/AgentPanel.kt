@@ -28,6 +28,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -53,6 +54,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.isCtrlPressed
@@ -583,9 +585,9 @@ private fun Composer(agent: AgentViewModel, modifier: Modifier = Modifier) {
             ModelPicker(agent)
             Spacer(Modifier.weight(1f))
             if (agent.busy) {
-                RoundButton(AllIconsKeys.Actions.Suspend, "Stop", enabled = true, onClick = agent::stop)
+                ComposerButton("Stop", enabled = true, onClick = agent::stop) { Icon(AllIconsKeys.Actions.Suspend, "Stop", Modifier.size(16.dp), tint = it) }
             } else {
-                RoundButton(AllIconsKeys.General.ArrowUp, "Send (Enter)", enabled = canSend, onClick = ::submit)
+                ComposerButton("Send (Enter)", enabled = canSend, onClick = ::submit) { ArrowUpGlyph(it) }
             }
         }
     }
@@ -676,17 +678,32 @@ private fun AgentPicker(agent: AgentViewModel) {
 }
 
 @Composable
-private fun RoundButton(icon: org.jetbrains.jewel.ui.icon.IconKey, tooltip: String, enabled: Boolean, onClick: () -> Unit) {
+private fun ComposerButton(tooltip: String, enabled: Boolean, onClick: () -> Unit, icon: @Composable (tint: Color) -> Unit) {
     val islands = LocalIslands.current
     Tooltip({ Text(tooltip) }) {
         Box(
-            Modifier.size(28.dp)
-                .clip(CircleShape)
+            Modifier.size(26.dp)
+                .clip(RoundedCornerShape(8.dp))
                 .background(if (enabled) islands.accent else islands.chipHover)
                 .clickable(enabled = enabled, onClick = onClick),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(icon, tooltip, Modifier.size(16.dp), tint = if (enabled) Color.White else JewelTheme.globalColors.text.disabled)
+            icon(if (enabled) Color.White else JewelTheme.globalColors.text.disabled)
         }
+    }
+}
+
+/** An up arrow drawn as a stem and a head, with no base line. */
+@Composable
+private fun ArrowUpGlyph(tint: Color) {
+    Canvas(Modifier.size(16.dp)) {
+        val stroke = 1.5.dp.toPx()
+        val x = size.width / 2
+        val top = size.height * 0.22f
+        val bottom = size.height * 0.78f
+        val head = size.width * 0.28f
+        drawLine(tint, Offset(x, top), Offset(x, bottom), stroke, StrokeCap.Round)
+        drawLine(tint, Offset(x - head, top + head), Offset(x, top), stroke, StrokeCap.Round)
+        drawLine(tint, Offset(x + head, top + head), Offset(x, top), stroke, StrokeCap.Round)
     }
 }
