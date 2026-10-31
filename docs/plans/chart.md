@@ -1,45 +1,46 @@
-# Kế hoạch triển khai: Biểu đồ nhanh từ kết quả
+# Implementation plan: Quick charts from results
 
-Kế hoạch chi tiết cho giai đoạn **P4** trong [ai-assist.md](ai-assist.md) (mục 7), dựa trên mã nguồn tại commit
-`db5c2d1`, ngày 2026-10-31. Mục 7 của ai-assist.md vẫn là nguồn cho các quyết định sản phẩm; tài liệu này chia việc
-thành từng bước, chỉ rõ file nào cần sửa và khi nào thì coi là xong.
+Detailed plan for phase **P4** in [ai-assist.md](ai-assist.md) (section 7), based on the source code at commit
+`db5c2d1`, dated 2026-10-31. Section 7 of ai-assist.md remains the source for product decisions; this document breaks
+the work into steps, states which files need to change, and defines when each step counts as done.
 
-> **Trạng thái (2026-10-31):** C0–C5 đã làm xong. Những điểm khác thiết kế:
+> **Status (2026-10-31):** C0–C5 are done. Differences from the design:
 >
-> - **Renderer tự vẽ bằng Compose Canvas, không dùng Lets-Plot** (kết quả spike C0, xem mục 3.3).
-> - Tổng hợp trên server giữ nguyên câu gốc (kể cả `LIMIT` của nó) làm subquery, không bỏ `LIMIT` ngoài cùng: kết
->   quả bị cắt là do `maxResultRows`, không phải do `LIMIT` người dùng viết.
-> - Bản đầu tiên chỉ đổi tab kết quả của console sang `ResultView` (Grid/JSON/Chart). `TableDataTab` vẫn dùng
->   `showJson`, vì nó đã có thuộc tính `view` (Data/Structure) và chưa có chart.
+> - **The renderer is drawn directly with Compose Canvas, not Lets-Plot** (result of the C0 spike, see section 3.3).
+> - Server-side aggregation keeps the original statement (including its own `LIMIT`) as a subquery and does not strip
+>   the outermost `LIMIT`: a truncated result is caused by `maxResultRows`, not by a `LIMIT` the user wrote.
+> - The first version only switches the console result tab to `ResultView` (Grid/JSON/Chart). `TableDataTab` still uses
+>   `showJson`, because it already has a `view` property (Data/Structure) and has no chart yet.
 
-## 1. Hiện trạng
+## 1. Current state
 
-| Thứ | Ở đâu | Liên quan tới chart |
+| Item | Where | Relation to charts |
 | --- | --- | --- |
-| `QueryResult.Rows` | `core/.../driver/QueryResult.kt` | Giá trị là `String?`, cột có `jdbcType`, `isNumeric`. Chưa có khái niệm cột thời gian |
-| `ResultSetView` | `app/.../console/ConsoleTab.kt` | Có phân trang (`page`, `pageSize`), `pinned`, `showJson: Boolean` |
-| Chuyển view | `ResultFooter` trong `ConsoleView.kt`, `TableDataView.kt` | `ViewChipGroup` với hai chip Grid / JSON |
-| `TableDataTab` | `app/.../table/` | Cũng có `showJson`, nhưng dữ liệu là từng trang lấy từ server |
-| `AssistTask`, `SchemaDigest` | `core/.../assist/` | P0 đã xong, dùng lại được cho phần AI |
-| `SqlDialect` | `core/.../dialect/SqlDialect.kt` | Có `selectPage`, `countRows`… nhưng chưa có hàm gom nhóm theo thời gian |
-| License | `bundledLicenses` trong `app/build.gradle.kts` | Build sẽ fail nếu thư viện mới chưa được review license |
+| `QueryResult.Rows` | `core/.../driver/QueryResult.kt` | Values are `String?`, columns have `jdbcType` and `isNumeric`. There is no concept of a time column yet |
+| `ResultSetView` | `app/.../console/ConsoleTab.kt` | Has pagination (`page`, `pageSize`), `pinned`, `showJson: Boolean` |
+| View switching | `ResultFooter` in `ConsoleView.kt`, `TableDataView.kt` | `ViewChipGroup` with two chips, Grid / JSON |
+| `TableDataTab` | `app/.../table/` | Also has `showJson`, but its data is one page at a time fetched from the server |
+| `AssistTask`, `SchemaDigest` | `core/.../assist/` | P0 is done and can be reused for the AI part |
+| `SqlDialect` | `core/.../dialect/SqlDialect.kt` | Has `selectPage`, `countRows`, etc., but no function for grouping by time yet |
+| License | `bundledLicenses` in `app/build.gradle.kts` | The build fails if a new library has not had its license reviewed |
 
-## 2. Phạm vi
+## 2. Scope
 
-**Làm trong đợt này:** chart cho tab kết quả của console, gồm line, bar, area, scatter, pie. Có tự chọn trục,
-panel chỉnh trục, banner khi dữ liệu bị cắt, tổng hợp trên server, xuất PNG/SVG/clipboard, và ChartSpec do AI sinh.
+**In this round:** charts for the console result tab, including line, bar, area, scatter, and pie. This includes
+automatic axis selection, an axis editing panel, a banner when data is truncated, server-side aggregation, PNG/SVG/clipboard
+export, and an AI-generated ChartSpec.
 
-**Để sau:** chart trong Table viewer (dữ liệu ở đó chỉ là một trang nên cần tổng hợp trên server ngay từ đầu),
-histogram, box plot, facet, dashboard nhiều chart.
+**Later:** charts in the Table viewer (its data is only one page, so it needs server-side aggregation from the start),
+histogram, box plot, facets, multi-chart dashboards.
 
-## 3. Thiết kế
+## 3. Design
 
-### 3.1 Core (`dev.datagrok.core.chart`), Kotlin thuần, có unit test
+### 3.1 Core (`dev.datagrok.core.chart`), pure Kotlin, with unit tests
 
 ```kotlin
 enum class ColumnKind { Numeric, Temporal, Category, Other }
 
-/** Kết quả quét một cột: kiểu suy ra và số giá trị khác nhau (dừng đếm khi vượt ngưỡng). */
+/** Result of scanning a column: the inferred kind and the number of distinct values (counting stops past a threshold). */
 data class ColumnProfile(val index: Int, val name: String, val kind: ColumnKind, val distinct: Int, val nulls: Int)
 
 @Serializable
@@ -53,83 +54,88 @@ data class ChartSpec(
 )
 ```
 
-- `ColumnProfiler.profile(rows)`: suy kiểu từ `jdbcType` trước (DATE/TIME/TIMESTAMP → Temporal, `isNumeric` →
-  Numeric). Với cột text thì thử parse một mẫu khoảng 200 giá trị: ≥ 95% parse được thì nhận kiểu đó. Không suy kiểu
-  từ tên cột.
-- `ChartSuggest.suggest(profiles): List<ChartSpec>` cài đặt các luật của ai-assist.md 7.1, phương án đầu là mặc định.
-  Không có phương án nào hợp thì trả danh sách rỗng, UI báo "Không tự chọn được trục".
-- `ChartData.build(rows, spec): ChartSeries`: parse giá trị, gom theo `bucket`, tổng hợp, sắp xếp, tách series
-  (giữ top 10 series, phần còn lại gộp vào "Khác"). Khi số điểm vượt khoảng 5k thì downsample bằng LTTB. Dòng nào không
-  parse được thì đếm lại để hiển thị "N dòng bị bỏ qua".
-- `ChartSpec.validate(columns)` trả danh sách lỗi cụ thể. UI và phần AI cùng dùng hàm này.
+- `ColumnProfiler.profile(rows)`: infers the kind from `jdbcType` first (DATE/TIME/TIMESTAMP → Temporal, `isNumeric` →
+  Numeric). For text columns it tries to parse a sample of about 200 values: if ≥ 95% parse, it accepts that kind. It
+  never infers the kind from the column name.
+- `ChartSuggest.suggest(profiles): List<ChartSpec>` implements the rules in ai-assist.md 7.1, and the first option is
+  the default. If no option fits, it returns an empty list and the UI shows "Couldn't pick axes automatically".
+- `ChartData.build(rows, spec): ChartSeries`: parses values, groups by `bucket`, aggregates, sorts, and splits into
+  series (keeps the top 10 series and merges the rest into "Other"). When the number of points exceeds about 5k, it
+  downsamples with LTTB. Rows that cannot be parsed are counted so the UI can show "N rows skipped".
+- `ChartSpec.validate(columns)` returns a list of specific errors. The UI and the AI part both use this function.
 
-### 3.2 Tổng hợp trên server
+### 3.2 Server-side aggregation
 
-- `SqlDialect.timeBucket(expr, bucket)`: PG/DuckDB dùng `date_trunc`, MySQL/MariaDB `DATE_FORMAT`, SQLite `strftime`,
-  SQL Server `DATETRUNC` (2022) và fallback `DATEADD/DATEDIFF`, ClickHouse `toStartOfMonth`… Engine nào chưa hỗ trợ thì
-  trả `null`, và UI ẩn nút.
-- `ChartQuery.aggregate(dialect, sql, spec)` sinh `SELECT x, agg(y)… FROM (<câu gốc>) t GROUP BY … ORDER BY …`. Trước
-  khi bọc thì bỏ dấu `;` cuối và mệnh đề `LIMIT` ngoài cùng. Câu gốc phải là một câu `SELECT` duy nhất (kiểm bằng
-  `SqlClassifier`), nếu không thì không cho dùng.
-- Câu sinh ra chạy qua `ConsoleTab.run`, nên vẫn đi qua read-only và phân loại như mọi câu khác. Kết quả mở ra như một
-  tab kết quả mới, ở sẵn view Chart với spec đã đổi sang cột đã tổng hợp (agg = None).
+- `SqlDialect.timeBucket(expr, bucket)`: PG/DuckDB use `date_trunc`, MySQL/MariaDB `DATE_FORMAT`, SQLite `strftime`,
+  SQL Server `DATETRUNC` (2022) with a `DATEADD/DATEDIFF` fallback, ClickHouse `toStartOfMonth`, etc. An engine that
+  does not support it returns `null`, and the UI hides the button.
+- `ChartQuery.aggregate(dialect, sql, spec)` generates `SELECT x, agg(y)… FROM (<original statement>) t GROUP BY … ORDER BY …`.
+  Before wrapping, it removes the trailing `;` and the outermost `LIMIT` clause. The original statement must be a single
+  `SELECT` statement (checked with `SqlClassifier`); otherwise the feature is not available.
+- The generated statement runs through `ConsoleTab.run`, so it still goes through the read-only check and
+  classification like any other statement. The result opens as a new result tab, already on the Chart view, with the
+  spec switched to the aggregated columns (agg = None).
 
 ### 3.3 App (`app/.../chart`)
 
-- `ChartRenderer`: interface `@Composable fun Chart(frame, colors, modifier)` và `fun export(frame, colors, format, w, h)`.
-  Bản cài đặt là `CanvasChartRenderer`: `ChartPlot` tính bố cục (trục, tick, legend) một lần cho mỗi kích thước, rồi
-  dùng chung cho việc vẽ, hover tooltip và xuất ảnh. PNG vẽ qua `Surface` của Skia, SVG qua `SVGCanvas`, nên ảnh
-  xuất ra giống hệt trên màn hình.
-- **Kết quả spike C0:** Lets-Plot Compose 3.2.2 (MIT, khoảng 9 MB jar) resolve và compile được, nhưng **crash khi
-  vẽ** với Compose 1.12.1: `SkiaContext2d` gọi constructor `Matrix33(float[])`, mà bản Skiko đi kèm Compose 1.12.1
-  đã đổi thành private (`IllegalAccessError`). Bản Swing (`platf-awt`) thì chạy được, nhưng phải nhúng qua
-  `SwingPanel` và sẽ vẽ đè lên các popup Compose. Vì vậy chuyển sang phương án dự phòng đã ghi trong ai-assist.md
-  7.3: tự vẽ. Không thêm phụ thuộc nào, nên `bundledLicenses` giữ nguyên.
-- **Không khoá UI** (bổ sung 2026-10-31): đọc kiểu cột, dựng `ChartFrame` và dựng bố cục `ChartPlot` đều chạy trên
-  `ChartDispatcher` (`Dispatchers.Default.limitedParallelism(2)`), kiểm tra cờ huỷ sau mỗi 4096 dòng. Khi resize,
-  bố cục chỉ dựng lại sau khi kích thước đứng yên 120 ms; trong lúc chờ, chart cũ vẫn hiện, làm mờ đi, kèm vòng quay.
-  Nhãn được cắt còn 80 ký tự trước khi đo chữ: với 50 nhãn JSON dài 4 KB, thời gian dựng bố cục giảm từ khoảng 96 ms
-  xuống khoảng 9 ms, và bước này không còn chạy trên UI thread. Hover vẽ trên một lớp riêng nên không vẽ lại chart.
-  Copy và lưu ảnh cũng render ở luồng nền.
-- `ResultSetView.showJson: Boolean` → `view: ResultView` (`Grid`, `Json`, `Chart`) và `chart: ChartSpec?`. Sửa cả
-  `TableDataTab` để hai nơi dùng chung kiểu (Table viewer chưa có chip Chart).
-- `ResultChartView`: vùng chart, cột phải là `ChartEditor` (chọn loại, X, Y + phép tổng hợp, series, bucket), banner
-  trên cùng khi `truncated` ("Biểu đồ từ 500 dòng đầu" kèm nút **Tổng hợp trên server**).
-- Chart vẽ từ **tất cả dòng đã tải**, không phải trang đang xem. Banner nói rõ điều này.
-- `ResultFooter`: thêm chip **Chart**. Ở view Chart thì ẩn điều khiển phân trang.
-- Khi chạy lại câu lệnh: nếu tab mới có đủ các cột mà spec cũ dùng thì giữ spec, nếu thiếu thì gợi ý lại.
+- `ChartRenderer`: an interface with `@Composable fun Chart(frame, colors, modifier)` and `fun export(frame, colors, format, w, h)`.
+  The implementation is `CanvasChartRenderer`: `ChartPlot` computes the layout (axes, ticks, legend) once per size, then
+  shares it between drawing, hover tooltips, and image export. PNG is drawn through a Skia `Surface` and SVG through
+  `SVGCanvas`, so the exported image is identical to what is on screen.
+- **C0 spike result:** Lets-Plot Compose 3.2.2 (MIT, about 9 MB jar) resolves and compiles, but **crashes when
+  drawing** with Compose 1.12.1: `SkiaContext2d` calls the `Matrix33(float[])` constructor, which in the Skiko version
+  bundled with Compose 1.12.1 has become private (`IllegalAccessError`). The Swing build (`platf-awt`) works, but it has
+  to be embedded through `SwingPanel` and would paint over Compose popups. So we switched to the fallback recorded in
+  ai-assist.md 7.3: drawing it ourselves. No dependency is added, so `bundledLicenses` stays unchanged.
+- **Not blocking the UI** (added 2026-10-31): reading column kinds, building the `ChartFrame`, and building the
+  `ChartPlot` layout all run on `ChartDispatcher` (`Dispatchers.Default.limitedParallelism(2)`), checking the
+  cancellation flag every 4096 rows. On resize, the layout is rebuilt only after the size has been still for 120 ms;
+  while waiting, the old chart stays visible, dimmed, with a spinner. Labels are cut to 80 characters before measuring
+  text: with 50 JSON labels of 4 KB each, layout time dropped from about 96 ms to about 9 ms, and this step no longer
+  runs on the UI thread. Hover is drawn on a separate layer, so it does not redraw the chart. Copying and saving the
+  image also render on a background thread.
+- `ResultSetView.showJson: Boolean` → `view: ResultView` (`Grid`, `Json`, `Chart`) and `chart: ChartSpec?`. `TableDataTab`
+  is changed too so both places share the same type (the Table viewer has no Chart chip yet).
+- `ResultChartView`: the chart area, with the right column being `ChartEditor` (choose type, X, Y + aggregation,
+  series, bucket), and a banner at the top when `truncated` ("Chart from the first 500 rows" with a **Aggregate on server** button).
+- The chart is drawn from **all loaded rows**, not the page currently being viewed. The banner says this explicitly.
+- `ResultFooter`: adds a **Chart** chip. In the Chart view the pagination controls are hidden.
+- When the statement is re-run: if the new tab has all the columns the old spec uses, the spec is kept; if any are
+  missing, suggestions are generated again.
 
 ### 3.4 AI
 
-- `ChartSpecTask : AssistTask<ChartSpec>` trong `core/.../assist/`: prompt gồm tên cột, kiểu, `distinct`. Chỉ khi
-  `AiAccess = SchemaAndSamples` mới gửi thêm vài giá trị mẫu. `parse` gọi `ChartSpec.validate`, nên lỗi sẽ đi vào vòng
-  repair có sẵn của `AssistRunner`.
-- UI: ô ✨ phía trên `ChartEditor`. Kết quả hiện như một proposal (spec mới và các `assumptions`). Người dùng bấm Áp dụng
-  thì mới thay chart. Spec cần gom nhóm mà dữ liệu đang bị cắt thì proposal kèm luôn nút Tổng hợp trên server.
-- Khi `AiAccess = Off` hoặc không có agent nào thì ẩn ô ✨, phần còn lại vẫn chạy đầy đủ.
+- `ChartSpecTask : AssistTask<ChartSpec>` in `core/.../assist/`: the prompt contains column names, kinds, and `distinct`.
+  A few sample values are sent only when `AiAccess = SchemaAndSamples`. `parse` calls `ChartSpec.validate`, so errors go
+  into the existing repair loop of `AssistRunner`.
+- UI: a ✨ box above `ChartEditor`. The result appears as a proposal (the new spec and its `assumptions`). The chart only
+  changes when the user clicks Apply. If the spec needs grouping while the data is truncated, the proposal also includes
+  an Aggregate on server button.
+- When `AiAccess = Off` or no agent is available, the ✨ box is hidden and everything else keeps working in full.
 
-## 4. Lộ trình
+## 4. Roadmap
 
-| Bước | Nội dung | Ước tính | Điều kiện xong |
+| Step | Content | Estimate | Done when |
 | --- | --- | --- | --- |
-| **C0** | Spike Lets-Plot Compose trên nhánh riêng, trả lời 5 câu ở ai-assist.md 7.3 | 1–2 ngày | Ghi kết luận vào mục 7.3 và chốt renderer |
-| **C1** | `ColumnProfiler`, `ChartSpec`, `ChartSuggest`, `ChartData` (bucket, agg, series, LTTB) | 2 ngày | Unit test cho từng luật heuristic, cho parse ngày nhiều định dạng, cho null/NaN |
-| **C2** | `ResultView` enum, `ChartRenderer` + bản cài đặt đã chọn, `ResultChartView`, `ChartEditor`, banner | 3 ngày (thêm khoảng 3 ngày nếu phải tự vẽ bằng Canvas) | Theme sáng/tối, tooltip khi hover, 100k dòng không giật |
-| **C3** | `timeBucket` cho từng dialect, `ChartQuery.aggregate`, nút Tổng hợp trên server | 1,5 ngày | Unit test SQL sinh ra cho từng dialect; IT chạy trên PG/MySQL/SQLite/DuckDB |
-| **C4** | Xuất PNG/SVG/clipboard, giữ spec khi chạy lại | 1 ngày | Ảnh xuất ra theo đúng theme đang dùng |
-| **C5** | `ChartSpecTask` + ô ✨ + proposal | 1,5 ngày | Test với adapter giả: JSON sai thì repair, cột ảo thì bị từ chối |
+| **C0** | Spike Lets-Plot Compose on a separate branch, answer the 5 questions in ai-assist.md 7.3 | 1–2 days | Conclusion recorded in section 7.3 and renderer decided |
+| **C1** | `ColumnProfiler`, `ChartSpec`, `ChartSuggest`, `ChartData` (bucket, agg, series, LTTB) | 2 days | Unit tests for each heuristic rule, for parsing dates in multiple formats, and for null/NaN |
+| **C2** | `ResultView` enum, `ChartRenderer` + the chosen implementation, `ResultChartView`, `ChartEditor`, banner | 3 days (about 3 more days if it has to be drawn with Canvas) | Light/dark theme, hover tooltip, 100k rows without stutter |
+| **C3** | `timeBucket` for each dialect, `ChartQuery.aggregate`, Aggregate on server button | 1.5 days | Unit tests for the generated SQL per dialect; IT running on PG/MySQL/SQLite/DuckDB |
+| **C4** | Export PNG/SVG/clipboard, keep the spec on re-run | 1 day | Exported image matches the theme in use |
+| **C5** | `ChartSpecTask` + ✨ box + proposal | 1.5 days | Test with a fake adapter: invalid JSON triggers repair, a made-up column is rejected |
 
-Tổng khoảng 10 ngày nếu dùng Lets-Plot, khoảng 13 ngày nếu phải tự vẽ. C1 không phụ thuộc kết quả spike nên làm song
-song với C0 được.
+About 10 days in total if Lets-Plot is used, about 13 days if we have to draw it ourselves. C1 does not depend on the
+spike result, so it can run in parallel with C0.
 
-## 5. Kiểm thử
+## 5. Testing
 
-- `core`: test thuần cho profiler, heuristic, gom nhóm, LTTB, SQL tổng hợp theo dialect, `ChartSpecTask`.
-- IT (gated như các IT hiện có): tổng hợp trên server với dữ liệu seed thật.
-- Thủ công: kết quả rỗng, một dòng, toàn null, cột ngày dạng text, 100k dòng, đổi theme khi đang mở chart.
+- `core`: pure tests for the profiler, heuristics, grouping, LTTB, per-dialect aggregation SQL, and `ChartSpecTask`.
+- IT (gated like the existing ITs): server-side aggregation with real seed data.
+- Manual: empty result, a single row, all null, a date column stored as text, 100k rows, changing theme while a chart is open.
 
-## 6. Câu hỏi mở
+## 6. Open questions
 
-1. Renderer: chờ kết quả C0.
-2. Tổng hợp trên server mở kết quả ra **tab mới** (đề xuất, vì giữ được dữ liệu gốc) hay thay vào tab hiện tại?
-3. Có cần chart cho Table viewer trong đợt này không? Đề xuất để sau, vì ở đó cần tổng hợp trên server ngay từ đầu.
+1. Renderer: waiting for the C0 result.
+2. Should server-side aggregation open the result in a **new tab** (proposed, because it keeps the original data) or
+   replace the current tab?
+3. Do we need a chart for the Table viewer in this round? Proposed for later, because it needs server-side aggregation from the start.

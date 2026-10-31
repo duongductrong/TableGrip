@@ -1,53 +1,53 @@
-# Kế hoạch vận hành DB: Activity monitor, backup và restore
+# DB operations plan: Activity monitor, backup and restore
 
-Ngày 2026-10-31. Chốt từ trao đổi về mục "Vận hành DB" trong đề xuất tính năng.
+Dated 2026-10-31. Settled from the discussion of the "DB operations" section in the feature proposal.
 
-## 0. Quyết định đã chốt
+## 0. Decisions made
 
-| Câu hỏi | Quyết định |
+| Question | Decision |
 | --- | --- |
-| Phạm vi bản đầu | PostgreSQL và MySQL/MariaDB cho cả hai tính năng. Engine khác: ẩn hoặc disable, **luôn kèm lý do** |
-| Công cụ dump/restore | Không đóng gói vào app. Tải lazy từ nguồn chính thức, chỉ sau khi người dùng xác nhận |
-| Quản lý công cụ đã tải | Settings có trang riêng: xem, cập nhật, gỡ, đổi đường dẫn, mở thư mục |
-| Backup định kỳ | Có, nhưng **tắt mặc định**. Chỉ chạy khi người dùng bật và cấu hình đủ |
-| Vị trí Activity monitor | Tab trong workspace, một tab cho mỗi kết nối (xem §1.1) |
+| First-release scope | PostgreSQL and MySQL/MariaDB for both features. Other engines: hide or disable, **always with a reason** |
+| Dump/restore tools | Not bundled with the app. Downloaded lazily from the official source, only after the user confirms |
+| Managing downloaded tools | Settings has a dedicated page: view, update, remove, change path, open folder |
+| Scheduled backup | Yes, but **off by default**. Runs only when the user turns it on and configures it fully |
+| Activity monitor location | A tab in the workspace, one tab per connection (see §1.1) |
 
 ## 1. Activity monitor
 
-### 1.1 Vị trí và cách mở
+### 1.1 Location and how to open it
 
-Activity là **tab trong workspace**, không phải tool window. Lý do: bảng session có nhiều cột, SQL dài và cây blocking
-cần chỗ rộng, trong khi tool window bên cạnh (như History) hẹp. Tab cũng cho phép mở activity của hai kết nối cạnh
-nhau, kéo thả và đóng như mọi tab khác.
+Activity is a **tab in the workspace**, not a tool window. Reason: the session table has many columns, and long SQL and
+the blocking tree need room, while a side tool window (like History) is narrow. A tab also lets you open the activity of
+two connections side by side, and drag and close it like any other tab.
 
-Các đường mở (đều mở lại tab đã có, không tạo trùng):
+Ways to open it (all reopen an existing tab instead of creating a duplicate):
 
-- Explorer: chuột phải kết nối → **Activity**.
-- Phím tắt **⌥⌘A** (Ctrl+Alt+A), áp dụng cho kết nối đang chọn. Thêm vào `Shortcuts.kt` và `ShortcutsDialog`.
-- Status bar: khi kết nối đang mở có session bị chặn quá 5 s, hiện chip `⚠ 2 blocked`; click mở Activity, lọc sẵn
-  "Blocked". Chip chỉ chạy khi tab Activity của kết nối đó đã từng mở hoặc người dùng bật trong Settings, để không
-  tự ý query server.
+- Explorer: right-click a connection → **Activity**.
+- Shortcut **⌥⌘A** (Ctrl+Alt+A), applies to the selected connection. Add it to `Shortcuts.kt` and `ShortcutsDialog`.
+- Status bar: when an open connection has a session blocked for more than 5 s, show the chip `⚠ 2 blocked`; clicking it
+  opens Activity with the "Blocked" filter preset. The chip runs only after the Activity tab for that connection has
+  been opened at least once, or the user turns it on in Settings, so the app does not query the server on its own.
 
-Engine không hỗ trợ: mục menu vẫn hiện nhưng disable, tooltip "Activity chưa hỗ trợ SQLite — file DB không có session
-server" hoặc "… chưa hỗ trợ ClickHouse, dự kiến bản sau".
+Unsupported engine: the menu item is still shown but disabled, with the tooltip "Activity does not support SQLite yet — a
+DB file has no server sessions" or "… does not support ClickHouse yet, planned for a later release".
 
-### 1.2 Bố cục tab
+### 1.2 Tab layout
 
 ```
-┌ Toolbar: [⟳ 2s ▾] [⏸] | Lọc: [Active ▾] [User ▾] [DB ▾] [> 10s] | [Ẩn idle] [Ẩn session DataGrok]
+┌ Toolbar: [⟳ 2s ▾] [⏸] | Filter: [Active ▾] [User ▾] [DB ▾] [> 10s] | [Hide idle] [Hide DataGrok sessions]
 ├──────────────────────────────────────────────┬──────────────────────────────┐
-│ Cây session (DataGrid, cột pid/user/db/      │ Chi tiết session đã chọn:    │
-│ state/thời gian/wait/SQL rút gọn).           │ SQL đầy đủ (tô màu), client, │
-│ Session đang giữ lock ở gốc, session chờ     │ app, bắt đầu tx/query, lock  │
-│ nó thụt vào bên dưới.                        │ đang giữ/chờ.                │
-│                                              │ [Mở trong console] [EXPLAIN] │
+│ Session tree (DataGrid, columns pid/user/db/ │ Selected session details:    │
+│ state/time/wait/truncated SQL).              │ Full SQL (highlighted),      │
+│ Sessions holding a lock are at the root,     │ client, app, tx/query start, │
+│ sessions waiting on them are indented below. │ locks held/awaited.          │
+│                                              │ [Open in console] [EXPLAIN]  │
 │                                              │ [Copy] [Cancel] [Terminate]  │
 └──────────────────────────────────────────────┴──────────────────────────────┘
 ```
 
-- Tô màu: chạy lâu hơn ngưỡng (vàng → đỏ), *idle in transaction* (cam), đang chờ lock (đỏ nhạt).
-- Session của chính DataGrok có nhãn `DataGrok` và mặc định ẩn.
-- Refresh: 1 / 2 / 5 / 10 s hoặc tạm dừng. Tab không hiển thị thì ngừng refresh.
+- Coloring: running longer than the threshold (yellow → red), *idle in transaction* (orange), waiting on a lock (light red).
+- DataGrok's own sessions are labeled `DataGrok` and hidden by default.
+- Refresh: 1 / 2 / 5 / 10 s or paused. Refresh stops when the tab is not visible.
 
 ### 1.3 Core
 
@@ -61,120 +61,127 @@ data class SessionActivity(
     val waitEvent: String?,
     val query: String?, val queryStart: Instant?, val transactionStart: Instant?,
     val blockedBy: List<String>,
-    val own: Boolean,          // session của DataGrok
+    val own: Boolean,          // DataGrok's own session
 )
 
 interface ActivityReader {
     suspend fun sessions(): List<SessionActivity>
-    suspend fun cancel(id: String)     // chỉ hủy query đang chạy
-    suspend fun terminate(id: String)  // ngắt kết nối
+    suspend fun cancel(id: String)     // cancels the running query only
+    suspend fun terminate(id: String)  // closes the connection
     suspend fun missingPrivileges(): List<String>
 }
 ```
 
 | | PostgreSQL | MySQL / MariaDB |
 | --- | --- | --- |
-| Session | `pg_stat_activity` (bỏ `backend_type <> 'client backend'`) | `information_schema.PROCESSLIST` |
+| Sessions | `pg_stat_activity` (drop `backend_type <> 'client backend'`) | `information_schema.PROCESSLIST` |
 | Blocking | `pg_blocking_pids(pid)` | MySQL 8: `performance_schema.data_lock_waits`; MariaDB / 5.7: `information_schema.INNODB_LOCK_WAITS` |
 | Cancel / terminate | `pg_cancel_backend` / `pg_terminate_backend` | `KILL QUERY id` / `KILL id` |
-| Quyền thiếu | không thấy query người khác nếu thiếu `pg_read_all_stats`; kill cần `pg_signal_backend` | `PROCESS`; kill người khác cần `CONNECTION_ADMIN` / `SUPER` |
-| Nhận diện DataGrok | `application_name = 'DataGrok'` | `connection_id()` của các connection DataGrok |
+| Missing privileges | other users' queries are hidden without `pg_read_all_stats`; kill needs `pg_signal_backend` | `PROCESS`; killing other users' sessions needs `CONNECTION_ADMIN` / `SUPER` |
+| Identifying DataGrok | `application_name = 'DataGrok'` | `connection_id()` of DataGrok's connections |
 
-Monitor dùng **một connection riêng**, không lấy từ pool console, để vẫn chạy được khi pool đã kẹt. Nếu thiếu quyền,
-hiện banner nói rõ quyền nào và hệ quả (ví dụ: "Chỉ thấy session của user `app` — cần `pg_read_all_stats`").
+The monitor uses **its own dedicated connection**, not one from the console pool, so it keeps working when the pool is
+stuck. If privileges are missing, show a banner that states which privilege and the consequence (for example: "Only
+sessions of user `app` are visible — `pg_read_all_stats` is required").
 
-### 1.4 An toàn
+### 1.4 Safety
 
-- Kết nối **read-only**: nút Cancel/Terminate disable, tooltip giải thích.
-- Kết nối **Production** hoặc bật confirm writes: hỏi xác nhận, ghi rõ pid, user, câu SQL.
-- Terminate session đang *trong transaction*: cảnh báo thêm "transaction sẽ bị rollback".
-- Không cho kill session của chính tab Activity.
+- **Read-only** connection: the Cancel/Terminate buttons are disabled, with an explanatory tooltip.
+- **Production** connection, or confirm-writes turned on: ask for confirmation, stating the pid, user, and SQL statement.
+- Terminating a session that is *in a transaction*: add the warning "the transaction will be rolled back".
+- Do not allow killing the Activity tab's own session.
 
-## 2. Công cụ ngoài (pg_dump, pg_restore, mysqldump…)
+## 2. External tools (pg_dump, pg_restore, mysqldump…)
 
-### 2.1 Nguồn và cách tải
+### 2.1 Source and how to download
 
-| Công cụ | Nguồn | Ghi chú |
+| Tool | Source | Notes |
 | --- | --- | --- |
-| `pg_dump`, `pg_restore`, `psql` | Binary chính thức của PostgreSQL (EDB zip cho macOS/Windows; Linux: gói của distro) | Tải về `~/.datagrok/tools/postgresql/<version>/`, có SHA-256 pin giống `drivers.lock.json` |
-| `mysqldump`, `mysql` | **Không tải**. Dùng bản người dùng đã cài | Binary MySQL là GPL; hướng dẫn cài (Homebrew, apt, installer) thay vì phân phối |
-| `mariadb-dump` | Tương tự MySQL | |
+| `pg_dump`, `pg_restore`, `psql` | Official PostgreSQL binaries (EDB zip for macOS/Windows; Linux: distro package) | Downloaded to `~/.datagrok/tools/postgresql/<version>/`, with a SHA-256 pin like `drivers.lock.json` |
+| `mysqldump`, `mysql` | **Not downloaded**. Use the version the user has installed | MySQL binaries are GPL; show install instructions (Homebrew, apt, installer) instead of distributing them |
+| `mariadb-dump` | Same as MySQL | |
 
-Tìm công cụ có sẵn trước khi đề nghị tải: `PATH`, `/opt/homebrew/opt/libpq/bin`, `/opt/homebrew/bin`,
+Look for existing tools before offering a download: `PATH`, `/opt/homebrew/opt/libpq/bin`, `/opt/homebrew/bin`,
 `/Applications/Postgres.app/Contents/Versions/*/bin`, `C:\Program Files\PostgreSQL\*\bin`, `C:\Program Files\MySQL\*\bin`.
 
-### 2.2 Luồng xác nhận
+### 2.2 Confirmation flow
 
-Khi người dùng mở Backup mà chưa có công cụ phù hợp, dialog hiện:
+When the user opens Backup and no suitable tool is available, the dialog shows:
 
-- Cần gì: `pg_dump` / `pg_restore` 17.x (vì server là 17.2; công cụ phải cùng hoặc mới hơn server).
-- Nguồn: URL đầy đủ, nhà phát hành, license.
-- Dung lượng tải và dung lượng sau giải nén, thư mục cài.
-- Nút: **Tải về** · **Dùng bản đã cài…** (chọn file) · **Hủy**.
+- What is needed: `pg_dump` / `pg_restore` 17.x (because the server is 17.2; the tool must be the same version as the
+  server or newer).
+- Source: full URL, publisher, license.
+- Download size and size after extraction, install folder.
+- Buttons: **Download** · **Use installed version…** (choose a file) · **Cancel**.
 
-Không có tải ngầm. `autoDownloadDrivers` **không** áp dụng cho công cụ.
+No silent downloads. `autoDownloadDrivers` does **not** apply to tools.
 
 ### 2.3 Settings → Tools
 
-Trang mới, cạnh trang Drivers, dùng lại phong cách `DriversPanel`:
+A new page, next to the Drivers page, reusing the style of `DriversPanel`:
 
-- Danh sách công cụ: phiên bản, nguồn (Đã tải / Hệ thống / Người dùng chọn), đường dẫn, dung lượng.
-- Hành động: Cập nhật, Gỡ, Gỡ phiên bản cũ, Mở thư mục, Đổi đường dẫn, Kiểm tra (chạy `--version`).
-- Tổng dung lượng `~/.datagrok/tools/`.
+- Tool list: version, source (Downloaded / System / User-selected), path, size.
+- Actions: Update, Remove, Remove old versions, Open folder, Change path, Verify (runs `--version`).
+- Total size of `~/.datagrok/tools/`.
 
-## 3. Backup và restore
+## 3. Backup and restore
 
 ### 3.1 Backup
 
-Mở từ: chuột phải kết nối/database/schema → **Backup…**.
+Open from: right-click a connection/database/schema → **Backup…**.
 
-- Định dạng PG: Custom `-Fc` (mặc định), Plain SQL, Directory `-Fd -j N`.
-- Phạm vi: toàn DB · chọn schema · chọn bảng; schema only / data only.
-- Tùy chọn PG: `--no-owner`, `--no-privileges`, `--clean --if-exists`, nén.
-- MySQL: mặc định `--single-transaction --routines --triggers --events`, tùy chọn `--no-data`, chọn bảng.
-- File đích mặc định `~/Backups/<connection>/<db>_<yyyyMMdd-HHmm>.dump`.
-- Panel "Lệnh tương đương" (mật khẩu thay bằng biến), có nút Copy.
+- PG formats: Custom `-Fc` (default), Plain SQL, Directory `-Fd -j N`.
+- Scope: whole DB · selected schemas · selected tables; schema only / data only.
+- PG options: `--no-owner`, `--no-privileges`, `--clean --if-exists`, compression.
+- MySQL: default `--single-transaction --routines --triggers --events`, optional `--no-data`, table selection.
+- Default target file `~/Backups/<connection>/<db>_<yyyyMMdd-HHmm>.dump`.
+- An "Equivalent command" panel (password replaced with a variable), with a Copy button.
 
 ### 3.2 Restore
 
-- Chọn file; định dạng custom/directory thì đọc `pg_restore --list` để tick chọn object.
-- Mặc định đề xuất **database mới** (`<db>_restore_<date>`), không ghi đè.
-- Production: bắt gõ lại tên database. Read-only: từ chối.
-- Plain SQL: chạy bằng `psql` / `mysql` với `ON_ERROR_STOP`.
+- Choose a file; for custom/directory formats, read `pg_restore --list` so objects can be ticked.
+- By default, suggest a **new database** (`<db>_restore_<date>`), never overwriting.
+- Production: require retyping the database name. Read-only: refuse.
+- Plain SQL: run with `psql` / `mysql` using `ON_ERROR_STOP`.
 
-### 3.3 Thực thi
+### 3.3 Execution
 
-- Mật khẩu: PG qua `PGPASSWORD` trong env của process con; MySQL qua `--defaults-extra-file` tạm quyền 0600, xóa
-  trong `finally`. Không bao giờ để mật khẩu trên dòng lệnh.
-- SSH: mở tunnel như kết nối thường, trỏ công cụ vào `127.0.0.1:<port>`.
-- Tiến trình: đọc stderr `--verbose`, hiện object đang xử lý. Cancel = kill process, xóa file dở.
-- Log mỗi lần chạy vào `~/.datagrok/logs/backup/`.
-- Kiểm tra phiên bản trước khi chạy (`ServerIdentity` so với `--version`).
-- Engine không có công cụ ngoài: SQLite dùng `VACUUM INTO`, DuckDB dùng `EXPORT DATABASE` (không cần tải gì).
-  Engine khác: menu disable kèm lý do.
+- Password: for PG via `PGPASSWORD` in the child process env; for MySQL via a temporary `--defaults-extra-file` with
+  mode 0600, deleted in `finally`. Never put a password on the command line.
+- SSH: open a tunnel like a normal connection, and point the tool at `127.0.0.1:<port>`.
+- Progress: read stderr from `--verbose` and show the object being processed. Cancel = kill the process and delete the
+  partial file.
+- Log each run to `~/.datagrok/logs/backup/`.
+- Check the version before running (`ServerIdentity` against `--version`).
+- Engines with no external tool: SQLite uses `VACUUM INTO`, DuckDB uses `EXPORT DATABASE` (nothing to download).
+  Other engines: menu disabled with a reason.
 
-### 3.4 Backup định kỳ (tắt mặc định)
+### 3.4 Scheduled backup (off by default)
 
-- Bật trong Settings → Backups → Lịch. Mỗi lịch: kết nối, phạm vi, định dạng, thư mục, tần suất, giữ lại N bản.
-- Chỉ bật được khi đủ điều kiện: công cụ có sẵn, mật khẩu trong keychain, thư mục ghi được. Thiếu gì thì nói rõ.
-- Bản đầu chỉ chạy **khi app đang mở**; nếu lỡ lịch thì chạy bù lúc mở app (có thông báo). Chạy nền khi app đóng
-  (launchd / Task Scheduler / systemd timer) để bản sau, cũng phải người dùng bật.
-- Kết nối Production: lịch chạy được nhưng hiện cảnh báo tải lên server khi tạo lịch.
+- Turn on in Settings → Backups → Schedule. Each schedule: connection, scope, format, folder, frequency, keep the last N copies.
+- Can be turned on only when the requirements are met: tool available, password in the keychain, folder writable. Say
+  clearly which one is missing.
+- The first release runs only **while the app is open**; if a schedule is missed, it runs when the app opens (with a
+  notification). Running in the background while the app is closed (launchd / Task Scheduler / systemd timer) is left
+  for a later release, and must also be turned on by the user.
+- Production connection: the schedule can run, but show a warning about server load when the schedule is created.
 
-## 4. Thứ tự triển khai
+## 4. Implementation order
 
-1. ✅ `ActivityReader` cho PostgreSQL + tab Activity + cancel/terminate + an toàn. Test với `-Pit.postgres`.
-2. ✅ MySQL/MariaDB reader. Chip "blocked" trên status bar.
-3. ✅ `ToolLibrary` (tìm, xác minh, tải có xác nhận) + Settings → Tools.
-4. ✅ Backup/restore PostgreSQL, rồi MySQL. SQLite/DuckDB.
-5. ✅ Backup định kỳ.
+1. ✅ `ActivityReader` for PostgreSQL + Activity tab + cancel/terminate + safety. Test with `-Pit.postgres`.
+2. ✅ MySQL/MariaDB reader. "Blocked" chip on the status bar.
+3. ✅ `ToolLibrary` (find, verify, download with confirmation) + Settings → Tools.
+4. ✅ PostgreSQL backup/restore, then MySQL. SQLite/DuckDB.
+5. ✅ Scheduled backup.
 
-## 5. Khác với thiết kế khi triển khai
+## 5. Differences from the design during implementation
 
-- Chip "blocked" chỉ chạy cho kết nối đang mở tab Activity (refresh nền mỗi 15 s); chưa có tùy chọn Settings để theo dõi
-  mọi kết nối.
-- Engine "chưa hỗ trợ" vẫn hiện mục menu (Compose không disable được từng mục context menu); tab/dialog mở ra giải thích lý do.
-- Gói tải PostgreSQL là EDB 18.6-2 (macOS universal, Windows x64). Bản Windows mới chỉ được kiểm bằng hash và cấu trúc zip,
-  chưa chạy thử trên Windows. Linux: không có gói chính thức dạng zip, hướng dẫn cài từ distro.
-- Restore cho SQLite/DuckDB không có: bản backup là một database riêng, mở bằng kết nối mới.
-- Mục EXPLAIN trong chi tiết session chưa làm.
+- The "blocked" chip runs only for connections with an open Activity tab (background refresh every 15 s); there is no
+  Settings option yet to watch every connection.
+- "Unsupported" engines still show the menu item (Compose cannot disable individual context menu items); the tab/dialog
+  that opens explains the reason.
+- The PostgreSQL download package is EDB 18.6-2 (macOS universal, Windows x64). The Windows build has so far been checked
+  only by hash and zip structure, and has not been run on Windows. Linux: there is no official zip package, so show
+  instructions to install from the distro.
+- There is no restore for SQLite/DuckDB: the backup is a separate database, opened with a new connection.
+- The EXPLAIN item in the session details is not done yet.

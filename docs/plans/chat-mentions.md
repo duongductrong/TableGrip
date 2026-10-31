@@ -1,71 +1,71 @@
-# Kế hoạch Mention trong chat agent (⌘L, `@`)
+# Chat agent mention plan (⌘L, `@`)
 
-Đánh giá và thiết kế tính năng mention kiểu Cursor cho chat agent, viết ngày 2026-10-30 trên commit `185e860`.
+Evaluation and design of a Cursor-style mention feature for the chat agent, written on 2026-10-30 against commit `185e860`.
 
-> **Trạng thái (2026-10-30):** P0 và P1 xong. P1 thêm popup `@` (tab đang mở, bảng, cột, saved query), ⌘L từ grid,
-> "Add to Chat" ở Explorer, và cấu trúc bảng (cột, khoá, index) được đọc lúc gửi. Chi tiết ở mục 5.
+> **Status (2026-10-30):** P0 and P1 are done. P1 adds the `@` popup (open tabs, tables, columns, saved queries), ⌘L from the grid,
+> "Add to Chat" in Explorer, and table structure (columns, keys, indexes) read at send time. Details are in section 5.
 >
-> P0: Pill nằm ngay trong dòng chữ, ⌘L và menu chuột phải "Add to Chat" từ SQL
-> console, popup xem trước, copy/cut/paste giữ pill, "Ask in chat" chèn pill lỗi. Gõ tiếng Việt qua IME đã được thử tay
-> trên app thật và chạy ổn. Việc tiếp theo là P1.
+> P0: Pills sit inline in the text, ⌘L and the right-click "Add to Chat" menu work from the SQL
+> console, a preview popup, copy/cut/paste keep pills, and "Ask in chat" inserts an error pill. Typing Vietnamese through an IME was tried
+> by hand in the real app and works. The next step is P1.
 
-## 1. Mục tiêu
+## 1. Goals
 
-Người dùng chỉ cho agent biết đúng thứ cần hỏi, thay vì dán SQL hay mô tả bằng lời:
+Users point the agent at exactly what they want to ask about, instead of pasting SQL or describing it in words:
 
-- **⌘L / Ctrl+L** ở nơi đang làm việc: đoạn đang chọn, nếu không chọn thì câu lệnh tại caret. Thứ đó vào ô chat thành một
-  pill, ví dụ `@Console:3-5`, và người dùng gõ tiếp câu hỏi.
-- **Gõ `@`** để chọn bảng, cột, tab đang mở, saved query… (P1).
-- Pill nằm **ngay trong câu**, nên viết được kiểu "join `@orders` với `@customers` theo `@Console:3-5`". Agent biết thứ
-  nào được nhắc ở vị trí nào.
+- **⌘L / Ctrl+L** where the user is working: the current selection, or the statement at the caret if nothing is selected. That item goes into the chat box as a
+  pill, for example `@Console:3-5`, and the user keeps typing the question.
+- **Typing `@`** to pick a table, column, open tab, saved query, and so on (P1).
+- Pills sit **inline in the sentence**, so users can write things like "join `@orders` with `@customers` on `@Console:3-5`". The agent knows which
+  item is mentioned at which position.
 
-## 2. Hiện trạng trước khi làm
+## 2. State before this work
 
-| Thứ | Hiện trạng | Vấn đề |
+| Item | Current state | Problem |
 | --- | --- | --- |
-| `AgentContext.systemPrompt` | Tự gửi cả console đang mở (≤ 4k ký tự) hoặc tên bảng đang xem | Ngữ cảnh ngầm; người dùng không chỉ được "hỏi về đoạn này" |
-| Schema trong prompt | Cắt ở 40k ký tự | Với schema lớn, bảng cần hỏi có thể bị rớt |
-| "Ask in chat" (FixView) | Ghi đè `draft` | Mất phần người dùng đang gõ dở |
-| Composer | `rememberTextFieldState()` nằm trong composable | Bên ngoài (⌘L) không chèn được vào |
-| ⌘L | Chưa dùng. Reformat là ⌘⌥L | Không xung đột |
+| `AgentContext.systemPrompt` | Automatically sends the whole open console (≤ 4k characters) or the name of the table being viewed | Implicit context; users cannot say "ask about this part" |
+| Schema in the prompt | Truncated at 40k characters | With a large schema, the table being asked about can be dropped |
+| "Ask in chat" (FixView) | Overwrites `draft` | Loses what the user was in the middle of typing |
+| Composer | `rememberTextFieldState()` lives inside the composable | Outside code (⌘L) cannot insert into it |
+| ⌘L | Not used. Reformat is ⌘⌥L | No conflict |
 
-## 3. Thiết kế (đã hiện thực trong spike)
+## 3. Design (implemented in the spike)
 
-### 3.1 Mỗi mention là đúng một ký tự
+### 3.1 Each mention is exactly one character
 
-Mention được lưu trong text thành **một ký tự Private Use của Unicode** (U+E000…U+F8FF). Chính ký tự đó là id, trỏ tới
-`Mention` trong store của composer. Nhờ vậy, mọi hành vi soạn thảo tự đúng mà không phải theo dõi khoảng ký tự:
+A mention is stored in the text as **one Unicode Private Use character** (U+E000…U+F8FF). That character is the id, pointing to a
+`Mention` in the composer's store. This way, all editing behavior is correct without tracking character ranges:
 
-- Backspace xoá trọn pill, vì pill chỉ là một ký tự.
-- Caret không thể dừng giữa pill. Mũi tên trái/phải nhảy qua cả pill.
-- Undo/redo, cắt, dán trong ô soạn đều giữ đúng pill, vì store giữ mention cho tới khi gửi.
-- Ký tự Private Use dán từ ngoài vào mà store không biết thì bị `InputTransformation` lọc bỏ.
+- Backspace deletes the whole pill, because the pill is a single character.
+- The caret cannot stop in the middle of a pill. Left/right arrows jump over the whole pill.
+- Undo/redo, cut, and paste in the composer all keep pills intact, because the store keeps the mention until it is sent.
+- A Private Use character pasted from outside that the store does not know is filtered out by an `InputTransformation`.
 
-| Thành phần | Vị trí | Vai trò |
+| Component | Location | Role |
 | --- | --- | --- |
-| `Mention` (sealed): `Sql`, `Error` | `core/.../agent/Mention.kt` | Ảnh chụp thứ được nhắc, có `label` và `context`; ngữ cảnh bị cắt ở `Mention.Budget` |
-| `MentionText` | như trên | Text kèm mentions: `plain` (`@label`) và `prompt` (đánh số, kèm phần "# Mentioned") |
-| `ComposerState` | `app/.../agent/ComposerState.kt` | `TextFieldState` cùng store mention, do `AgentViewModel` giữ; `insert`, `remove`, `copy`, `paste`, `take`, `restore` |
-| `PillLayout`, `drawPills`, `MentionMessageText`, `MentionPreview` | `app/.../agent/MentionPills.kt` | Vị trí pill trong text hiển thị, vẽ nền bo góc, pill trong tin nhắn đã gửi, popup xem trước |
-| `ConsoleTab.mention()`, `mentionInChat()` | `app/.../console/ConsoleTab.kt` | Đoạn đang chọn hoặc câu lệnh tại caret, kèm số dòng |
-| `Shortcuts.AddToChat` | `app/.../ui/Shortcuts.kt` | ⌘L, có trong dialog phím tắt và trong menu chuột phải của editor |
-| `TextClipboard` | `app/.../ui/Clipboard.kt` | Clipboard hệ thống, thay được bằng bản giả trong test |
+| `Mention` (sealed): `Sql`, `Error` | `core/.../agent/Mention.kt` | Snapshot of the mentioned item, with `label` and `context`; context is truncated at `Mention.Budget` |
+| `MentionText` | same | Text with mentions: `plain` (`@label`) and `prompt` (numbered, with a "# Mentioned" section) |
+| `ComposerState` | `app/.../agent/ComposerState.kt` | `TextFieldState` plus the mention store, held by `AgentViewModel`; `insert`, `remove`, `copy`, `paste`, `take`, `restore` |
+| `PillLayout`, `drawPills`, `MentionMessageText`, `MentionPreview` | `app/.../agent/MentionPills.kt` | Pill positions in the displayed text, rounded-background drawing, pills in sent messages, preview popup |
+| `ConsoleTab.mention()`, `mentionInChat()` | `app/.../console/ConsoleTab.kt` | The current selection or the statement at the caret, with line numbers |
+| `Shortcuts.AddToChat` | `app/.../ui/Shortcuts.kt` | ⌘L, listed in the shortcuts dialog and in the editor's right-click menu |
+| `TextClipboard` | `app/.../ui/Clipboard.kt` | System clipboard, replaceable with a fake in tests |
 
-### 3.2 Hiển thị
+### 3.2 Display
 
-- **Ô soạn:** `OutputTransformation` thay mỗi ký tự mention bằng `" @label "` (hai bên là thin space) và tô màu accent.
-  `drawBehind` + `onTextLayout` vẽ nền bo góc, mỗi dòng một khối nếu pill bị xuống dòng. Đây là cùng kỹ thuật
-  `SqlEditor` đang dùng để highlight.
-- **Tin nhắn đã gửi:** `Text` chỉ đọc dùng `AnnotatedString` và cùng hàm `drawPills`. Nút Copy chép bản `plain`.
-- **Xem trước:** bấm vào pill (trong ô soạn hoặc tin nhắn đã gửi) mở popup phía trên: nhãn, engine, số dòng, SQL, và
-  thông báo lỗi với pill `Error`. Trong ô soạn, popup có nút gỡ pill khỏi tin nhắn. Esc hoặc bấm ra ngoài thì đóng.
-- **Clipboard:** ⌘C/⌘X trên vùng chọn có pill sẽ chép ra `@label`, nên dán sang chỗ khác vẫn đọc được. Dán lại chính
-  nội dung đó vào ô soạn thì pill trở lại, kể cả sau khi tin nhắn đã gửi (pill được cấp ký tự mới). Vùng chọn không có
-  pill thì để text field tự xử lý như bình thường.
+- **Composer:** an `OutputTransformation` replaces each mention character with `" @label "` (thin spaces on both sides) and colors it with the accent.
+  `drawBehind` + `onTextLayout` draw a rounded background, one block per line if the pill wraps. This is the same technique
+  `SqlEditor` already uses for highlighting.
+- **Sent messages:** a read-only `Text` uses `AnnotatedString` and the same `drawPills` function. The Copy button copies the `plain` version.
+- **Preview:** clicking a pill (in the composer or in a sent message) opens a popup above it: label, engine, line numbers, SQL, and
+  the error message for an `Error` pill. In the composer, the popup has a button to remove the pill from the message. Esc or clicking outside closes it.
+- **Clipboard:** ⌘C/⌘X on a selection that contains pills copies `@label`, so the text still reads correctly when pasted elsewhere. Pasting that same
+  content back into the composer restores the pills, even after the message has been sent (the pill gets a new character). A selection with no
+  pills is left to the text field to handle as usual.
 
-### 3.3 Gửi cho agent
+### 3.3 Sending to the agent
 
-`ChatMessage` lưu `text` (có ký tự mention) và `mentions`. Mọi chỗ dựng `AgentMessage` đều dùng `mentionText.prompt`:
+`ChatMessage` stores `text` (with mention characters) and `mentions`. Every place that builds an `AgentMessage` uses `mentionText.prompt`:
 
 ```
 @Console:3-5 [1] why is it slow?
@@ -78,83 +78,83 @@ SELECT * FROM orders WHERE total > 10
 ```
 ```
 
-- Một mention xuất hiện nhiều lần chỉ gửi một lần. Pill đã bị xoá thì không gửi.
-- `AgentMessage` vẫn là `String`, nên adapter CLI và Provider không phải sửa.
-- Rewind trả lại cả text lẫn pill vào ô soạn (`composer.restore`).
-- **Ảnh chụp tại lúc mention:** người dùng sửa editor sau đó thì lịch sử chat vẫn đúng với lúc hỏi.
+- A mention that appears several times is sent only once. A pill that was deleted is not sent.
+- `AgentMessage` is still a `String`, so the CLI and Provider adapters do not need changes.
+- Rewind puts both the text and the pills back into the composer (`composer.restore`).
+- **Snapshot at mention time:** if the user edits the editor afterward, the chat history still matches what was asked.
 
-### 3.4 Quyền riêng tư
+### 3.4 Privacy
 
-- ⌘L không làm gì khi kết nối ở mức `Off` (`ConsoleTab.canAskAgent`). Mức `SchemaOnly` vẫn cho gửi SQL, vì SQL vốn đã
-  được gửi kèm console đang mở.
-- **P1, bắt buộc trước khi mention ô grid:** ở `SchemaOnly` chỉ gửi tên/kiểu cột và số dòng, không gửi giá trị. Pill có
-  dấu cảnh báo kèm gợi ý "Bật dữ liệu mẫu cho kết nối này". Mỗi mention theo `aiAccess` của **kết nối của chính nó**.
+- ⌘L does nothing when the connection is at the `Off` level (`ConsoleTab.canAskAgent`). The `SchemaOnly` level still allows sending SQL, because SQL was
+  already sent along with the open console.
+- **P1, required before mentioning grid cells:** at `SchemaOnly`, send only column names/types and the row count, not values. The pill shows a warning
+  icon with the hint "Enable sample data for this connection". Each mention follows the `aiAccess` of **its own connection**.
 
-## 4. Kết quả spike
+## 4. Spike results
 
-| Câu hỏi | Kết quả | Kiểm bằng |
+| Question | Result | Checked by |
 | --- | --- | --- |
-| `OutputTransformation` đổi 1 ký tự thành nhãn dài hơn | Đạt | `MentionComposerTest`, ảnh chụp |
-| Mũi tên trái/phải nhảy qua cả pill | Đạt | `MentionComposerTest` |
-| Backspace xoá trọn pill, ⌘Z khôi phục | Đạt | `MentionComposerTest` |
-| Ký tự Private Use lạ khi dán bị loại | Đạt | `MentionComposerTest` |
-| Không chèn trùng cùng một mention | Đạt | `MentionComposerTest` |
-| Prompt đánh số và kèm ngữ cảnh | Đạt | `MentionTextTest` (core), `MentionComposerTest` |
-| Số dòng của câu lệnh tại caret / đoạn chọn | Đạt | `MentionComposerTest` |
-| Gõ tiếng Việt (Telex/VNI) ngay cạnh pill | Đạt | Thử tay trên app thật |
-| Click vào giữa pill: caret dừng ở mép, popup mở | Đạt | `MentionComposerTest` |
-| Copy/cut/paste giữ pill, chép ra `@label` | Đạt | `ComposerStateTest` |
-| Menu chuột phải "Add to Chat" | Đạt | `MentionComposerTest` |
-| "Ask in chat" chèn pill lỗi, giữ phần đang gõ | Đạt | `MentionComposerTest` |
+| `OutputTransformation` turns 1 character into a longer label | Pass | `MentionComposerTest`, screenshot |
+| Left/right arrows jump over the whole pill | Pass | `MentionComposerTest` |
+| Backspace deletes the whole pill, ⌘Z restores it | Pass | `MentionComposerTest` |
+| Unknown Private Use characters on paste are dropped | Pass | `MentionComposerTest` |
+| The same mention is not inserted twice | Pass | `MentionComposerTest` |
+| Prompt is numbered and includes context | Pass | `MentionTextTest` (core), `MentionComposerTest` |
+| Line numbers for the statement at the caret / selection | Pass | `MentionComposerTest` |
+| Typing Vietnamese (Telex/VNI) right next to a pill | Pass | Tried by hand in the real app |
+| Click in the middle of a pill: caret stops at the edge, popup opens | Pass | `MentionComposerTest` |
+| Copy/cut/paste keep pills, copy out as `@label` | Pass | `ComposerStateTest` |
+| Right-click "Add to Chat" menu | Pass | `MentionComposerTest` |
+| "Ask in chat" inserts an error pill, keeps what the user was typing | Pass | `MentionComposerTest` |
 
-Sau P0, toàn bộ test `app` (100) và `core` (190) qua. Trong lúc làm, `ConsoleFixTest` lộ ra một race có sẵn: test bấm
-"Fix with AI" lần hai trước khi thẻ mới ổn định. Đã sửa bằng cách chờ link sẵn sàng rồi mới bấm.
+After P0, all `app` (100) and `core` (190) tests pass. During the work, `ConsoleFixTest` exposed a pre-existing race: the test clicked
+"Fix with AI" a second time before the new card had settled. Fixed by waiting for the link to be ready before clicking.
 
-## 5. Lộ trình tiếp theo
+## 5. Next steps
 
-| Giai đoạn | Nội dung | Ước lượng |
+| Phase | Content | Estimate |
 | --- | --- | --- |
-| **P0 — xong** | IME tiếng Việt và thao tác chuột; copy/cut/paste giữ pill; bấm pill để xem trước; "Add to Chat" trong menu chuột phải; "Ask in chat" chèn pill `Error`; giới hạn độ dài mỗi mention | — |
-| **P1 — xong** | Popup `@`; ⌘L và menu chuột phải trên grid; "Add to Chat" cho bảng/cột ở Explorer; mention bảng gửi cấu trúc chi tiết; không gửi lại console đã được mention trọn vẹn | — |
-| **P2** | Thêm provider: `@history`, `@result`, `@explain`, `@connection`; ⌘⇧L mở chat mới (khi có nhiều cuộc hội thoại) | tuỳ nhu cầu |
+| **P0 — done** | Vietnamese IME and mouse handling; copy/cut/paste keep pills; click a pill to preview; "Add to Chat" in the right-click menu; "Ask in chat" inserts an `Error` pill; length limit per mention | — |
+| **P1 — done** | `@` popup; ⌘L and right-click menu on the grid; "Add to Chat" for tables/columns in Explorer; table mentions send detailed structure; do not resend a console that was fully mentioned | — |
+| **P2** | More providers: `@history`, `@result`, `@explain`, `@connection`; ⌘⇧L opens a new chat (when there are several conversations) | as needed |
 
-### P1 đã làm
+### What P1 did
 
-| Phần | Cách làm |
+| Part | Approach |
 | --- | --- |
-| Loại mention mới | `Mention.Table`, `Column`, `Query`, `Cells` trong `core/.../agent/Mention.kt` |
-| Popup `@` | `ComposerState.typing` nhận `@query` ngay trước caret (bỏ qua `@` giữa một từ, ví dụ email). `MentionSuggestions` hiện danh sách phía trên ô soạn, nhóm theo loại. ↑/↓ chọn, Enter/Tab chèn pill, Esc đóng. `bảng.` liệt kê cột của bảng đó |
-| Nguồn | `MentionSources.search`: tab đang mở (console, bảng), bảng và cột của kết nối hiện tại, saved query. Xếp hạng bằng `fuzzyScore` của Go to Anything |
-| Cấu trúc bảng | `Mention.Table` chỉ mang tên lúc chèn. Lúc gửi, `MentionSources.complete` đọc `tableDetails` và `SchemaDigest.table` viết ra cột, kiểu, PK, FK, index. Kết quả được lưu lại vào tin nhắn nên các lượt sau gửi y hệt |
-| ⌘L trên grid | `GridActions.onMention`: ⌘L hoặc menu chuột phải "Add to Chat" gửi khối ô đang chọn. Trong table viewer, ⌘L khi không có ô nào được chọn thì mention cả bảng |
-| Explorer | Mục "Add to Chat" trong menu chuột phải của node bảng và node cột |
-| Quyền | Mọi nguồn đều kiểm `AiAccess` của kết nối của chính nó. `Off`: không có gì. `SchemaOnly`: ô chỉ gửi tên/kiểu cột và số dòng. `SchemaAndSamples`: gửi cả giá trị, tối đa 50 dòng × 200 ký tự |
-| Gửi trùng | `AgentContext.systemPrompt` bỏ khối "console đang mở" khi tin nhắn đã mention toàn bộ console đó |
+| New mention types | `Mention.Table`, `Column`, `Query`, `Cells` in `core/.../agent/Mention.kt` |
+| `@` popup | `ComposerState.typing` picks up `@query` right before the caret (ignoring `@` in the middle of a word, such as an email). `MentionSuggestions` shows a list above the composer, grouped by type. ↑/↓ select, Enter/Tab insert a pill, Esc closes. `table.` lists that table's columns |
+| Sources | `MentionSources.search`: open tabs (console, table), tables and columns of the current connection, saved queries. Ranked with the `fuzzyScore` from Go to Anything |
+| Table structure | `Mention.Table` carries only the name at insert time. At send time, `MentionSources.complete` reads `tableDetails` and `SchemaDigest.table` writes out columns, types, PK, FK, indexes. The result is saved into the message, so later turns send exactly the same thing |
+| ⌘L on the grid | `GridActions.onMention`: ⌘L or the right-click "Add to Chat" sends the selected block of cells. In a table viewer, ⌘L with no cell selected mentions the whole table |
+| Explorer | An "Add to Chat" item in the right-click menu of table nodes and column nodes |
+| Access | Every source checks the `AiAccess` of its own connection. `Off`: nothing. `SchemaOnly`: cells send only column names/types and the row count. `SchemaAndSamples`: values are sent too, up to 50 rows × 200 characters |
+| Duplicate sending | `AgentContext.systemPrompt` drops the "open console" block when the message already mentions that whole console |
 
-**Khác với thiết kế ban đầu:**
-- `search` chạy đồng bộ, chỉ đọc cache, thay vì `suspend` như `MentionProvider` dự kiến. Bảng tải nền và danh sách tự cập nhật nhờ đọc `SchemaCache.version`. Chỉ phần đọc cấu trúc bảng lúc gửi là `suspend`.
-- Explorer chỉ có mục trong menu chuột phải, chưa có ⌘L, vì cây Explorer chưa có trạng thái "node đang chọn" để phím tắt dựa vào.
-- Dòng lỗi ở Output dùng lại "Ask in chat" có sẵn (đã chèn pill `Error` từ P0), không thêm đường riêng.
+**Differences from the original design:**
+- `search` runs synchronously and only reads the cache, instead of being `suspend` as the planned `MentionProvider` was. Tables load in the background and the list updates itself by reading `SchemaCache.version`. Only the read of table structure at send time is `suspend`.
+- Explorer only has the right-click menu item, with no ⌘L yet, because the Explorer tree has no "selected node" state for a shortcut to rely on.
+- The error line in Output reuses the existing "Ask in chat" (which already inserts an `Error` pill since P0), with no separate path added.
 
-### Kiểm thử P1
+### P1 testing
 
-`MentionSourcesTest` (UI, SQLite): `@ord` → Enter chèn bảng, `@orders.to` → cột, Esc đóng danh sách, prompt có cấu trúc
-bảng; tab đang mở hiện khi chưa gõ gì; `Off` thì không còn gợi ý; giá trị ô chỉ gửi khi `SchemaAndSamples`; console
-mention trọn vẹn không bị lặp trong system prompt. `ComposerStateTest`: nhận diện `@`, bỏ qua email, chọn thì thay bằng
-pill. `DataGridTest`: ⌘L trên grid trả về đúng khối ô. Sau P1, test `app` (108) và `core` (194) đều qua.
+`MentionSourcesTest` (UI, SQLite): `@ord` → Enter inserts the table, `@orders.to` → column, Esc closes the list, the prompt includes the table
+structure; open tabs show when nothing has been typed; at `Off` there are no suggestions; cell values are sent only at `SchemaAndSamples`; a fully
+mentioned console is not repeated in the system prompt. `ComposerStateTest`: `@` detection, ignoring email, selecting replaces it with a
+pill. `DataGridTest`: ⌘L on the grid returns the correct block of cells. After P1, `app` (108) and `core` (194) tests all pass.
 
-## 6. Rủi ro còn lại
+## 6. Remaining risks
 
-- **IME:** khi đang ghép chữ (composition), `OutputTransformation` vẫn áp dụng lên text. Nếu ghép chữ ngay sau pill bị
-  lỗi, phương án lùi là bỏ qua transformation trong lúc đang composition, hoặc chuyển ⌘L sang hàng pill phía trên ô soạn.
-  Model `Mention`/`MentionText` dùng được nguyên cho cả hai.
-- **Nhãn trùng:** hai console cùng tên cho ra nhãn giống nhau. Agent vẫn phân biệt được nhờ số `[n]`, nhưng người dùng
-  thì không. Cân nhắc thêm tên kết nối vào nhãn khi bị trùng.
-- **Gửi trùng một phần:** khi chỉ mention một câu trong console đang mở, system prompt vẫn gửi cả console, nên câu đó
-  xuất hiện hai lần. Chỉ trường hợp mention trọn console mới được bỏ.
-- **Popup `@` không có danh sách bảng của kết nối khác:** chỉ kết nối hiện tại. Bảng của kết nối khác vẫn mention được
-  qua Explorer hoặc tab đang mở.
-- **Copy qua menu chuột phải trong ô soạn** vẫn đi theo đường mặc định của text field, nên chép ra ký tự Private Use.
-  Chỉ phím tắt ⌘C/⌘X được chặn.
-- **Tổng độ dài:** mỗi mention đã bị cắt ở 8.000 ký tự (thông báo lỗi ở 2.000), nhưng nhiều mention trong một tin nhắn
-  thì chưa có giới hạn tổng.
+- **IME:** during composition, `OutputTransformation` is still applied to the text. If composing right after a pill
+  breaks, the fallback is to skip the transformation while composing, or to move ⌘L to a row of pills above the composer.
+  The `Mention`/`MentionText` model works unchanged for both.
+- **Duplicate labels:** two consoles with the same name produce the same label. The agent can still tell them apart by the `[n]` number, but the user
+  cannot. Consider adding the connection name to the label when there is a clash.
+- **Partial duplicate sending:** when only one statement in the open console is mentioned, the system prompt still sends the whole console, so that statement
+  appears twice. Only a mention of the whole console is dropped.
+- **The `@` popup has no table list for other connections:** only the current connection. Tables of other connections can still be mentioned
+  through Explorer or an open tab.
+- **Copy via the right-click menu in the composer** still follows the text field's default path, so it copies out the Private Use character.
+  Only the ⌘C/⌘X shortcuts are intercepted.
+- **Total length:** each mention is already truncated at 8,000 characters (error messages at 2,000), but there is no overall limit
+  for many mentions in one message.

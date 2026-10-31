@@ -1,146 +1,151 @@
-# Customization — đề xuất
+# Customization — proposal
 
-> **Trạng thái (2026-10-31): đã triển khai cả 4 đợt.** Các lựa chọn đã chốt: `Settings` giữ cấu trúc phẳng (không cần
-> migration); keymap có preset Datagrok / DataGrip / VS Code. Những mục **chưa làm**, vì đụng vào phần lõi của editor
-> hoặc grid: word wrap (editor dựa vào việc không soft-wrap), dấu phẩy đầu dòng khi format, UI density (khoảng cách
-> island), tắt hỏi khi đóng tab chưa lưu (để tránh mất dữ liệu). Cũng chưa làm kéo-thả nút trên tool stripe; thay vào
-> đó có nút lên/xuống trong Settings và menu chuột phải "Hide".
+> **Status (2026-10-31): all 4 phases implemented.** Decisions made: `Settings` keeps a flat structure (no migration
+> needed); the keymap has Datagrok / DataGrip / VS Code presets. Items **not done**, because they touch the core of the
+> editor or grid: word wrap (the editor relies on not soft-wrapping), leading comma when formatting, UI density (island
+> spacing), and turning off the prompt when closing an unsaved tab (to avoid data loss). Drag-and-drop for tool stripe
+> buttons is also not done; instead there are up/down buttons in Settings and a "Hide" right-click menu item.
 
-Mục tiêu: người dùng tự điều chỉnh app theo thói quen cá nhân. **Mọi default giữ nguyên như hiện tại**: một
-`settings.json` cũ (hoặc không có) phải cho ra đúng giao diện và hành vi của bây giờ.
+Goal: let users tailor the app to their personal habits. **All defaults stay exactly as they are today**: an old
+`settings.json` (or none at all) must produce the same look and behavior as now.
 
-## Hiện trạng
+## Current state
 
-`Settings` (core) có 18 field, Settings UI có 7 trang. Phần cá nhân hóa thực sự chỉ có **Theme** (System/Light/Dark) và
-**Editor font size**. Còn lại là hard-code:
+`Settings` (core) has 18 fields, and the Settings UI has 7 pages. The only real personalization is **Theme**
+(System/Light/Dark) and **Editor font size**. Everything else is hard-coded:
 
-| Chỗ | Giá trị cứng | File |
+| Area | Hard-coded value | File |
 | --- | --- | --- |
-| Shortcuts | ~60 phím trong `object Shortcuts` | `ui/Shortcuts.kt` |
-| Màu accent, frame, island | `DarkIslands` / `LightIslands` | `ui/DatagrokTheme.kt` |
-| Màu syntax SQL | 2 bảng màu cố định | `console/SqlEditor.kt:603` |
-| Màu environment (DEV/STG/PROD) | 4 màu cố định | `ui/DatagrokTheme.kt:150` |
-| Indent | 4 dấu cách (editor + formatter) | `SqlEditor.kt:342`, `SqlFormatter.kt:8` |
-| Keyword case khi format | luôn UPPERCASE | `SqlFormatter.kt:46` |
-| Auto-pair ngoặc/quote | luôn bật | `SqlEditor.kt:128` |
-| Font editor / UI | font mặc định của Jewel | `DatagrokTheme.kt` |
+| Shortcuts | ~60 keys in `object Shortcuts` | `ui/Shortcuts.kt` |
+| Accent, frame, island colors | `DarkIslands` / `LightIslands` | `ui/DatagrokTheme.kt` |
+| SQL syntax colors | 2 fixed palettes | `console/SqlEditor.kt:603` |
+| Environment colors (DEV/STG/PROD) | 4 fixed colors | `ui/DatagrokTheme.kt:150` |
+| Indent | 4 spaces (editor + formatter) | `SqlEditor.kt:342`, `SqlFormatter.kt:8` |
+| Keyword case when formatting | always UPPERCASE | `SqlFormatter.kt:46` |
+| Auto-pair brackets/quotes | always on | `SqlEditor.kt:128` |
+| Editor / UI font | Jewel default font | `DatagrokTheme.kt` |
 | Grid row height | 26dp | `grid/GridGeometry.kt:7` |
-| Hiển thị NULL | `<null>` | `grid/DataGrid.kt:464` |
-| Định dạng ngày giờ | `yyyy-MM-dd HH:mm:ss.SSS` | `grid/ValueFormats.kt:211` |
-| Kích thước cửa sổ, tỉ lệ split | 1360×860, 0.24 / 0.68, không nhớ | `Main.kt:86`, `MainScreen.kt` |
-| Tool window mở lúc khởi động | luôn Explorer | `AppState.kt:65` |
+| NULL display | `<null>` | `grid/DataGrid.kt:464` |
+| Date/time format | `yyyy-MM-dd HH:mm:ss.SSS` | `grid/ValueFormats.kt:211` |
+| Window size, split ratios | 1360×860, 0.24 / 0.68, not remembered | `Main.kt:86`, `MainScreen.kt` |
+| Tool window open at startup | always Explorer | `AppState.kt:65` |
 
-## Nguyên tắc
+## Principles
 
-1. **Default = hiện tại.** Mỗi field mới có default đúng bằng giá trị cứng đang dùng; `ignoreUnknownKeys` đã có sẵn nên
-   file cũ/mới đọc qua lại được.
-2. **Khai báo một lần.** Tiếp tục mô hình `SettingsPages` (field khai báo → dialog tự render). Thêm các kiểu field còn
-   thiếu: `BooleanField` (checkbox), `ColorField` (ô màu + hex), `FontField` (combo font hệ thống).
-3. **Reset được.** Mỗi trang có "Restore defaults"; field khác default hiện chấm "modified" như JetBrains.
-4. **Core giữ UI-free.** Màu lưu dạng hex string, phím lưu dạng chuỗi (`"meta+shift+E"`), app tự parse.
+1. **Default = current.** Each new field has a default equal to the value that is hard-coded today; `ignoreUnknownKeys`
+   is already enabled, so old and new files can be read in both directions.
+2. **Declare once.** Keep the `SettingsPages` model (declare a field → the dialog renders it automatically). Add the
+   missing field types: `BooleanField` (checkbox), `ColorField` (color swatch + hex), `FontField` (system font combo).
+3. **Resettable.** Each page has "Restore defaults"; a field that differs from its default shows a "modified" dot, as in
+   JetBrains.
+4. **Core stays UI-free.** Colors are stored as hex strings, keys as strings (`"meta+shift+E"`), and the app parses
+   them.
 
-## Đề xuất theo đợt
+## Proposal by phase
 
-### Đợt 1 — Editor & Grid (ít rủi ro, giá trị cao nhất)
+### Phase 1 — Editor & Grid (low risk, highest value)
 
 **Settings › SQL Editor**
 
-| Setting | Default | Tùy chọn |
+| Setting | Default | Options |
 | --- | --- | --- |
-| Font family | font hiện tại | combo các font monospace trên máy (JetBrains Mono, Fira Code, Menlo…) |
-| Font size | 13 | (đã có) |
+| Font family | current font | combo of monospace fonts on the machine (JetBrains Mono, Fira Code, Menlo…) |
+| Font size | 13 | (already exists) |
 | Line height | 1.0× | 1.0–2.0 |
 | Tab size | 4 | 2 / 4 / 8 |
-| Indent bằng | Spaces | Spaces / Tab |
-| Auto-close brackets & quotes | bật | bật / tắt |
-| Completion tự bật khi gõ | bật | bật / chỉ khi ⌃Space |
-| Highlight dòng hiện tại | bật | bật / tắt |
-| Word wrap | tắt | bật / tắt |
+| Indent using | Spaces | Spaces / Tab |
+| Auto-close brackets & quotes | on | on / off |
+| Auto-popup completion while typing | on | on / only on ⌃Space |
+| Highlight current line | on | on / off |
+| Word wrap | off | on / off |
 
-**Settings › SQL Formatter** (trang mới)
+**Settings › SQL Formatter** (new page)
 
-| Setting | Default | Tùy chọn |
+| Setting | Default | Options |
 | --- | --- | --- |
-| Keyword case | UPPER | UPPER / lower / giữ nguyên |
-| Indent | theo Tab size của editor | |
-| Comma | cuối dòng | cuối dòng / đầu dòng |
+| Keyword case | UPPER | UPPER / lower / keep as is |
+| Indent | follows the editor's Tab size | |
+| Comma | trailing | trailing / leading |
 
 **Settings › Data Editor**
 
-| Setting | Default | Tùy chọn |
+| Setting | Default | Options |
 | --- | --- | --- |
 | Row density | Comfortable (26dp) | Compact (22) / Comfortable (26) / Spacious (32) |
-| Hiển thị NULL | `<null>` | text tùy ý (`NULL`, `∅`, rỗng…) |
-| Định dạng ngày giờ | `yyyy-MM-dd HH:mm:ss.SSS` | preset ISO / bỏ milliseconds / pattern tùy chỉnh (có preview) |
-| Múi giờ hiển thị | như hiện tại | UTC / Local / theo server |
-| Số: dấu phân cách hàng nghìn | tắt | bật / tắt |
-| Màu xen kẽ dòng (zebra) | tắt | bật / tắt |
-| Page size | 200 | (đã có) |
+| NULL display | `<null>` | any text (`NULL`, `∅`, empty…) |
+| Date/time format | `yyyy-MM-dd HH:mm:ss.SSS` | ISO preset / without milliseconds / custom pattern (with preview) |
+| Display time zone | as today | UTC / Local / per server |
+| Numbers: thousands separator | off | on / off |
+| Alternating row color (zebra) | off | on / off |
+| Page size | 200 | (already exists) |
 
-### Đợt 2 — Giao diện
+### Phase 2 — Appearance
 
 **Settings › Appearance**
 
-| Setting | Default | Tùy chọn |
+| Setting | Default | Options |
 | --- | --- | --- |
-| Theme | Sync with OS | (đã có) |
-| Accent color | `#3574F0` | 8 preset + màu tùy chỉnh |
-| UI font size | mặc định Jewel | 11–16 |
-| UI density | Default | Compact / Default (khoảng cách island, stripe) |
-| Bo góc island | 10dp | 0 / 6 / 10 |
+| Theme | Sync with OS | (already exists) |
+| Accent color | `#3574F0` | 8 presets + custom color |
+| UI font size | Jewel default | 11–16 |
+| UI density | Default | Compact / Default (island and stripe spacing) |
+| Island corner radius | 10dp | 0 / 6 / 10 |
 
-**Settings › Color Scheme** (trang mới)
+**Settings › Color Scheme** (new page)
 
-- Bảng màu syntax SQL cho Light và Dark riêng: keyword, string, number, comment, quoted identifier, parameter.
-- Vài scheme có sẵn để chọn nhanh: **Datagrok (default)**, Darcula, GitHub, Solarized, Monokai.
-- Màu environment: LOCAL / DEV / STG / PROD (một số team dùng màu khác cho PROD).
+- Separate SQL syntax palettes for Light and Dark: keyword, string, number, comment, quoted identifier, parameter.
+- A few built-in schemes for quick selection: **Datagrok (default)**, Darcula, GitHub, Solarized, Monokai.
+- Environment colors: LOCAL / DEV / STG / PROD (some teams use a different color for PROD).
 
-### Đợt 3 — Phím tắt
+### Phase 3 — Shortcuts
 
-**Settings › Keymap** (trang mới)
+**Settings › Keymap** (new page)
 
-- Bảng toàn bộ action (lấy từ `Shortcuts.groups`, đã có sẵn mô tả), tìm kiếm theo tên hoặc theo phím.
-- Click vào một dòng → bấm tổ hợp mới để gán; báo **xung đột** khi phím đã dùng trong cùng ngữ cảnh.
-- Preset: **Datagrok (default)**, JetBrains/DataGrip, VS Code, TablePlus.
-- Chỉ lưu phần người dùng ghi đè (`keymapOverrides: Map<actionId, String>`), nên đổi default sau này vẫn tới được người
-  dùng chưa chỉnh.
-- Kỹ thuật: `Shortcuts` từ `object` các `val` → registry tra theo id, đọc qua `CompositionLocal`; tooltip và dialog
-  Shortcuts tự cập nhật vì đã cùng nguồn.
+- A table of all actions (taken from `Shortcuts.groups`, which already has descriptions), searchable by name or by key.
+- Click a row → press a new key combination to assign it; report a **conflict** when the key is already used in the same
+  context.
+- Presets: **Datagrok (default)**, JetBrains/DataGrip, VS Code, TablePlus.
+- Store only the user's overrides (`keymapOverrides: Map<actionId, String>`), so later changes to the defaults still
+  reach users who haven't customized anything.
+- Technical: change `Shortcuts` from an `object` of `val`s to a registry looked up by id, read through a
+  `CompositionLocal`; tooltips and the Shortcuts dialog update automatically because they share the same source.
 
-### Đợt 4 — Bố cục & khởi động
+### Phase 4 — Layout & startup
 
-**Settings › Behavior** (trang mới)
+**Settings › Behavior** (new page)
 
-| Setting | Default | Tùy chọn |
+| Setting | Default | Options |
 | --- | --- | --- |
-| Nhớ kích thước/vị trí cửa sổ | bật (mới) | bật / tắt |
-| Nhớ độ rộng sidebar và panel Agent | bật (mới) | bật / tắt |
-| Tool window khi mở app | Connections | Connections / History / Saved Queries / ẩn |
-| Panel Agent khi mở app | đóng | mở / đóng / như lần trước |
-| Khôi phục tab phiên trước | bật | (hiện luôn bật) bật / tắt |
-| Xác nhận khi đóng tab console chưa lưu | như hiện tại | bật / tắt |
-| Status bar | breadcrumbs + thống kê | bật/tắt từng phần |
+| Remember window size/position | on (new) | on / off |
+| Remember sidebar and Agent panel width | on (new) | on / off |
+| Tool window on app start | Connections | Connections / History / Saved Queries / hidden |
+| Agent panel on app start | closed | open / closed / as last time |
+| Restore tabs from previous session | on | (currently always on) on / off |
+| Confirm when closing an unsaved console tab | as today | on / off |
+| Status bar | breadcrumbs + statistics | toggle each part on/off |
 
-Cùng đợt: **ẩn/hiện và sắp xếp nút trên tool stripe** (chuột phải → Hide; kéo để đổi thứ tự).
+Same phase: **show/hide and reorder buttons on the tool stripe** (right-click → Hide; drag to reorder).
 
-### Ngoài phạm vi (đề xuất để sau)
+### Out of scope (proposed for later)
 
-- Import/Export settings ra file (chia sẻ cấu hình trong team) — dễ làm khi đã có schema ổn định.
-- Settings theo từng connection (page size, timeout riêng) — `ConnectionConfig` đã có một phần (`confirmWrites`, AI access).
-- Plugin/theme bên ngoài dạng file `.json`.
+- Import/Export settings to a file (share configuration within a team) — easy once the schema is stable.
+- Per-connection settings (own page size, timeout) — `ConnectionConfig` already has some (`confirmWrites`, AI access).
+- External plugins/themes as `.json` files.
 
-## Thay đổi kỹ thuật chung
+## Common technical changes
 
-- `core/settings/Settings.kt`: thêm field mới, nhóm lại thành sub-object (`editor`, `grid`, `appearance`, `keymap`,
-  `layout`) **với migration** từ field phẳng cũ (`editorFontSize`, `pageSize`…) để file cũ vẫn đọc đúng. Hoặc giữ phẳng
-  cho đơn giản — cần chốt.
-- `settings/SettingsForm.kt`: thêm `BooleanField`, `ColorField`, `FontField`, "Restore defaults", dấu modified.
-- `ui/DatagrokTheme.kt`: `IslandsPalette`, syntax colors và font lấy từ settings thay vì hằng số.
-- Test: mỗi setting có test "default = giá trị cũ" và round-trip JSON; test parse/format chuỗi phím.
+- `core/settings/Settings.kt`: add new fields and group them into sub-objects (`editor`, `grid`, `appearance`, `keymap`,
+  `layout`) **with migration** from the old flat fields (`editorFontSize`, `pageSize`…) so old files are still read
+  correctly. Or keep it flat for simplicity — to be decided.
+- `settings/SettingsForm.kt`: add `BooleanField`, `ColorField`, `FontField`, "Restore defaults", and the modified dot.
+- `ui/DatagrokTheme.kt`: `IslandsPalette`, syntax colors, and fonts come from settings instead of constants.
+- Tests: each setting has a "default = old value" test and a JSON round-trip test; tests for parsing/formatting key
+  strings.
 
-## Cần anh/chị chốt
+## Decisions needed from you
 
-1. Thứ tự đợt: 1 → 2 → 3 → 4 như trên, hay ưu tiên Keymap sớm hơn?
-2. `Settings` giữ cấu trúc phẳng hay tách nhóm (kèm migration)?
-3. Có cần preset keymap cho DataGrip / VS Code / TablePlus ngay ở đợt 3, hay chỉ cho tự gán trước?
-4. Các mục nhỏ nào muốn bỏ / thêm (ví dụ zebra rows, comma đầu dòng, bo góc island)?
+1. Phase order: 1 → 2 → 3 → 4 as above, or prioritize Keymap earlier?
+2. Keep `Settings` flat, or split into groups (with migration)?
+3. Do we need keymap presets for DataGrip / VS Code / TablePlus already in phase 3, or only allow manual assignment at
+   first?
+4. Which small items should be dropped / added (for example zebra rows, leading comma, island corner radius)?
