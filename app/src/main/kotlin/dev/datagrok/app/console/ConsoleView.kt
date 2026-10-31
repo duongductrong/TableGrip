@@ -39,6 +39,9 @@ import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.datagrok.app.AppState
+import dev.datagrok.app.chart.ChartExport
+import dev.datagrok.app.chart.CanvasChartRenderer
+import dev.datagrok.app.chart.ResultChartColors
 import dev.datagrok.app.export.ExportRequest
 import dev.datagrok.app.grid.DataGrid
 import dev.datagrok.app.grid.GridActions
@@ -52,6 +55,7 @@ import dev.datagrok.app.table.ViewChipGroup
 import dev.datagrok.app.queries.ParametersDialog
 import dev.datagrok.core.dialect.SqlDialect
 import java.time.Instant
+import kotlinx.coroutines.launch
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import org.jetbrains.jewel.foundation.theme.JewelTheme
@@ -301,8 +305,10 @@ private fun ResultPanel(app: AppState, tab: ConsoleTab) {
                 val view = tab.results[selected - 1]
                 Column(Modifier.fillMaxSize()) {
                     LaunchedEffect(view, view.page) { view.grid.verticalScroll.scrollToItem(0) }
-                    if (view.showJson) ResultJsonView(view.model, view.grid, Modifier.weight(1f))
-                    else DataGrid(
+                    when (view.view) {
+                        ResultView.Json -> ResultJsonView(view.model, view.grid, Modifier.weight(1f))
+                        ResultView.Chart -> ResultChartView(tab, view, Modifier.weight(1f))
+                        ResultView.Grid -> DataGrid(
                         model = view.model,
                         state = view.grid,
                         modifier = Modifier.weight(1f),
@@ -313,6 +319,7 @@ private fun ResultPanel(app: AppState, tab: ConsoleTab) {
                             ),
                         firstRowNumber = view.firstRow + 1L,
                     )
+                    }
                     Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
                     ResultFooter(app, tab, view)
                 }
@@ -321,7 +328,7 @@ private fun ResultPanel(app: AppState, tab: ConsoleTab) {
     }
 }
 
-/** Paging on the left like table viewers' toolbar; view switch, pin and export on the right. */
+/** Paging on the left like table viewers' toolbar (row counts alone for a chart, which draws them all); view switch, pin and export on the right. */
 @Composable
 private fun ResultFooter(app: AppState, tab: ConsoleTab, view: ResultSetView) {
     val info = JewelTheme.globalColors.text.info
@@ -331,24 +338,8 @@ private fun ResultFooter(app: AppState, tab: ConsoleTab, view: ResultSetView) {
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        ToolButton(AllIconsKeys.Actions.Play_first, "First page", enabled = view.page > 0) { view.goToPage(0) }
-        ToolButton(AllIconsKeys.Actions.Play_back, "Previous page", enabled = view.page > 0) { view.goToPage(view.page - 1) }
-        val shown = view.model.rowCount
-        Text(if (shown == 0) "0 rows" else "${view.firstRow + 1}–${view.firstRow + shown}", Modifier.padding(horizontal = 4.dp))
-        Text("of", color = info)
-        Text(if (view.rows.truncated) "$total+" else "$total", Modifier.padding(start = 4.dp))
-        val last = view.pageCount - 1
-        ToolButton(AllIconsKeys.Actions.Play_forward, "Next page", enabled = view.page < last) { view.goToPage(view.page + 1) }
-        ToolButton(AllIconsKeys.Actions.Play_last, "Last page", enabled = view.page < last) { view.goToPage(last) }
-        ListComboBox(
-            items = PageSizes.map { "$it rows" },
-            selectedIndex = PageSizes.indexOf(view.pageSize).coerceAtLeast(0),
-            onSelectedItemChange = { index ->
-                view.changePageSize(PageSizes[index])
-                app.updateSettings { it.copy(pageSize = PageSizes[index]) }
-            },
-            modifier = Modifier.width(110.dp).padding(horizontal = 4.dp),
-        )
+        if (view.view == ResultView.Chart) Text(if (view.rows.truncated) "$total+ rows" else "$total rows", Modifier.padding(horizontal = 4.dp))
+        else Pager(app, view)
         Separator()
         val limited =
             if (view.rows.truncated) " · first $total fetched (Settings → Max result rows)" else ""
@@ -360,19 +351,67 @@ private fun ResultFooter(app: AppState, tab: ConsoleTab, view: ResultSetView) {
             overflow = TextOverflow.Ellipsis,
         )
         ViewChipGroup {
-            ViewChip("Grid", !view.showJson) { view.showJson = false }
-            ViewChip("JSON", view.showJson) { view.showJson = true }
+            ResultView.entries.forEach { mode -> ViewChip(mode.label, view.view == mode) { view.view = mode } }
         }
         Separator()
         ToolButton(
             if (view.pinned) AllIconsKeys.General.PinSelected else AllIconsKeys.General.Pin,
             if (view.pinned) "Unpin tab" else "Pin tab: keep this result when the console runs again",
         ) { view.pinned = !view.pinned }
+        if (view.view == ResultView.Chart) {
+            val frame = view.chart.frame
+            val colors = ResultChartColors.current()
+            ToolButton(AllIconsKeys.Actions.Copy, "Copy chart as image", enabled = frame != null) {
+                frame ?: return@ToolButton
+                val size = view.chart.drawnSize
+                app.status = "Copying chart…"
+                app.scope.launch {
+                    runCatching { ChartExport.copy(CanvasChartRenderer, frame, colors, size.width, size.height) }
+                        .onSuccess { app.status = "Chart copied as an image" }
+                        .onFailure { app.status = "Could not copy the chart: ${it.message}" }
+                }
+            }
+            ToolButton(AllIconsKeys.Actions.MenuSaveall, "Save chart as PNG or SVG…", enabled = frame != null) {
+                frame ?: return@ToolButton
+                val size = view.chart.drawnSize
+                val file = ChartExport.chooseFile(view.title) ?: return@ToolButton
+                app.status = "Saving chart…"
+                app.scope.launch {
+                    runCatching { ChartExport.save(CanvasChartRenderer, frame, colors, size.width, size.height, file) }
+                        .onSuccess { app.status = "Saved ${file.path}" }
+                        .onFailure { app.status = "Could not save the chart: ${it.message}" }
+                }
+            }
+        }
         ToolButton(AllIconsKeys.Actions.Download, "Export result…") {
             val dialect = SqlDialect.of(tab.config.type)
             app.exportRequest = ExportRequest(view.title, "result", view.rows.columns, view.rows.rows, dialect, "table_name")
         }
     }
+}
+
+/** Page buttons, the rows shown of the result's, and the page size. */
+@Composable
+private fun Pager(app: AppState, view: ResultSetView) {
+    val total = view.rows.rows.size
+    ToolButton(AllIconsKeys.Actions.Play_first, "First page", enabled = view.page > 0) { view.goToPage(0) }
+    ToolButton(AllIconsKeys.Actions.Play_back, "Previous page", enabled = view.page > 0) { view.goToPage(view.page - 1) }
+    val shown = view.model.rowCount
+    Text(if (shown == 0) "0 rows" else "${view.firstRow + 1}–${view.firstRow + shown}", Modifier.padding(horizontal = 4.dp))
+    Text("of", color = JewelTheme.globalColors.text.info)
+    Text(if (view.rows.truncated) "$total+" else "$total", Modifier.padding(start = 4.dp))
+    val last = view.pageCount - 1
+    ToolButton(AllIconsKeys.Actions.Play_forward, "Next page", enabled = view.page < last) { view.goToPage(view.page + 1) }
+    ToolButton(AllIconsKeys.Actions.Play_last, "Last page", enabled = view.page < last) { view.goToPage(last) }
+    ListComboBox(
+        items = PageSizes.map { "$it rows" },
+        selectedIndex = PageSizes.indexOf(view.pageSize).coerceAtLeast(0),
+        onSelectedItemChange = { index ->
+            view.changePageSize(PageSizes[index])
+            app.updateSettings { it.copy(pageSize = PageSizes[index]) }
+        },
+        modifier = Modifier.width(110.dp).padding(horizontal = 4.dp),
+    )
 }
 
 @Composable

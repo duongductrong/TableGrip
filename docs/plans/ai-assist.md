@@ -3,7 +3,7 @@
 Đánh giá và thiết kế triển khai 4 tính năng AI ở mức production-ready, dựa trên mã nguồn tại commit `da09586`,
 ngày 2026-10-30.
 
-> **Trạng thái (2026-10-30):** P0 và P1 đã làm xong. Khác với thiết kế: bản sửa hiển thị dạng diff trong thẻ ở tab
+> **Trạng thái (2026-10-31):** P0, P1 và P4 (chart, xem [chart.md](chart.md)) đã làm xong. Khác với thiết kế: bản sửa hiển thị dạng diff trong thẻ ở tab
 > Output (không phải diff inline trong editor), và chưa có phím tắt riêng cho Fix.
 
 ## 1. Tóm tắt
@@ -355,5 +355,5 @@ Tổng khoảng 7–8 tuần cho một người, có thể song song P2 và P4 v
 
 1. ~~Mức `AiAccess` mặc định~~: đã chốt, cấu hình trong Settings, mặc định `SchemaOnly` (mục 3.2).
 2. ~~Explain Analyze cho câu ghi~~: đã chốt, chỉ cho câu đọc (mục 6.3).
-3. Chart: chờ kết quả spike Lets-Plot Compose (mục 7.3).
+3. ~~Chart~~: spike Lets-Plot Compose không đạt câu 1 (crash với Compose 1.12.1), nên tự vẽ bằng Compose Canvas (chi tiết ở [chart.md](chart.md) 3.3).
 4. ~~`RawCondition` trong NL filter~~: đã chốt, cấm hẳn (mục 5).

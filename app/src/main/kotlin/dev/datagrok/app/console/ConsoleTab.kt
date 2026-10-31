@@ -13,17 +13,21 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.TextRange
 import dev.datagrok.app.AppState
+import dev.datagrok.app.chart.ChartAssistState
+import dev.datagrok.app.chart.ChartState
 import dev.datagrok.app.grid.DataGridState
 import dev.datagrok.app.grid.GridModel
 import dev.datagrok.app.grid.ResultGridModel
 import dev.datagrok.app.workspace.WorkspaceTab
 import dev.datagrok.core.assist.AssistResult
+import dev.datagrok.core.assist.ChartSpecTask
 import dev.datagrok.core.assist.SchemaDigest
 import dev.datagrok.core.assist.SqlErrors
 import dev.datagrok.core.assist.SqlFix
 import dev.datagrok.core.assist.SqlFixTask
 import dev.datagrok.core.assist.SqlNameFixer
 import dev.datagrok.core.assist.reviewFix
+import dev.datagrok.core.chart.ChartQuery
 import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.dialect.SqlDialect
 import dev.datagrok.core.driver.QueryError
@@ -85,7 +89,17 @@ sealed interface FixState {
     data class NoFix(override val failure: StatementFailure, val message: String) : FixState
 }
 
-/** The grid and JSON views show one page of [rows] at a time, like table viewers, so big results stay light to render. */
+/** How a result is shown in its tab. */
+enum class ResultView(val label: String) {
+    Grid("Grid"),
+    Json("JSON"),
+    Chart("Chart"),
+}
+
+/**
+ * The grid and JSON views show one page of [rows] at a time, like table viewers, so big results stay light to render;
+ * the chart draws all of them.
+ */
 class ResultSetView(val title: String, val sql: String, val rows: QueryResult.Rows, pageSize: Int) {
     var pageSize by mutableIntStateOf(pageSize.coerceAtLeast(1))
         private set
@@ -116,8 +130,14 @@ class ResultSetView(val title: String, val sql: String, val rows: QueryResult.Ro
 
     /** Pinned results survive the next run, like DataGrip's pinned result tabs, to compare before and after. */
     var pinned by mutableStateOf(false)
-    /** Shows the rows as JSON instead of the grid. */
-    var showJson by mutableStateOf(false)
+    var view by mutableStateOf(ResultView.Grid)
+    val chart = ChartState(rows)
+
+    /** Shows what [previous], the same statement's result from the last run, showed: its view and its chart. */
+    fun continueFrom(previous: ResultSetView) {
+        view = previous.view
+        previous.chart.spec?.let(chart::show)
+    }
 }
 
 /** A SQL console bound to one connection, with its own dedicated session. */
@@ -352,6 +372,69 @@ class ConsoleTab(
         return Mention.Sql(title, 1..text.trimEnd().count { it == '\n' } + 1, config.type.displayName, text.trim())
     }
 
+    /** Whether [view]'s chart can be aggregated on the server instead of from the rows fetched. */
+    fun canAggregateChart(view: ResultSetView): Boolean = view.chart.spec?.let { ChartQuery.aggregate(dialect, view.sql, it) } != null
+
+    /**
+     * Runs [view]'s statement grouped as its chart groups, so the chart covers every row rather than the first ones
+     * fetched. The result opens as a new chart; [view] is pinned to stay for comparison.
+     */
+    fun aggregateChart(view: ResultSetView) {
+        val spec = view.chart.spec ?: return
+        val aggregate = ChartQuery.aggregate(dialect, view.sql, spec) ?: return
+        view.pinned = true
+        run(aggregate.sql) { outcome ->
+            val result = outcome.results.lastOrNull { it.sql == aggregate.sql } ?: return@run
+            result.view = ResultView.Chart
+            result.chart.show(aggregate.spec)
+        }
+    }
+
+    /**
+     * Asks the chat's agent for a chart of [view] matching [request]. It gets the statement and the columns' kinds; a few
+     * values per column only when the connection shares data. The answer is proposed, and only drawn once applied.
+     */
+    fun askForChart(view: ResultSetView, request: String) {
+        val chart = view.chart
+        val profiles = chart.profiles ?: return
+        if (!canAskAgent || request.isBlank()) return
+        chart.assistJob?.cancel()
+        chart.assist = ChartAssistState.Asking(app.agent.selected?.descriptor?.name)
+        chart.assistJob =
+            app.scope.launch {
+                val agent = app.agent.assistAgent()
+                if (agent == null) {
+                    chart.assist = ChartAssistState.Failed("No agent is available. Install a command-line agent or set up an API provider in Settings › Agent.")
+                    return@launch
+                }
+                chart.assist = ChartAssistState.Asking(agent.descriptor.name)
+                val samples =
+                    if (!app.aiAccess(config).sharesData) emptyMap()
+                    else profiles.associate { column ->
+                        column.name to view.rows.rows.asSequence().mapNotNull { it[column.index]?.take(SampleLength) }.distinct().take(ChartSamples).toList()
+                    }
+                val task = ChartSpecTask(request, config.type.displayName, view.sql, profiles, samples, view.rows.truncated)
+                chart.assist =
+                    when (val result = app.agent.assist.run(agent, task)) {
+                        is AssistResult.Ok -> ChartAssistState.Proposed(result.value, result.agent)
+                        is AssistResult.Invalid -> ChartAssistState.Failed("${agent.descriptor.name} didn't return a usable chart: ${result.reasons.first()}")
+                        is AssistResult.Failed -> ChartAssistState.Failed(result.message)
+                    }
+            }
+    }
+
+    fun applyChartProposal(view: ResultSetView) {
+        val proposed = view.chart.assist as? ChartAssistState.Proposed ?: return
+        view.chart.show(proposed.proposal.spec)
+        dismissChartAssist(view)
+    }
+
+    fun dismissChartAssist(view: ResultSetView) {
+        view.chart.assistJob?.cancel()
+        view.chart.assistJob = null
+        view.chart.assist = null
+    }
+
     /** Cells selected in result [view] as a mention in the agent chat (⌘L), with the query; their values only when the connection shares data. */
     fun mentionCells(view: ResultSetView, cells: GridMention) {
         val access = app.aiAccess(config)
@@ -431,10 +514,11 @@ class ConsoleTab(
         cancelFix()
         job = app.scope.launch {
             running = true
-            results.removeAll { !it.pinned }
+            val replaced = results.filter { !it.pinned }
+            results.removeAll(replaced)
             val firstLine = output.size
             try {
-                execute(statements)
+                execute(statements, replaced)
             } finally {
                 running = false
                 onFinished?.invoke(RunOutcome(results.toList(), output.drop(firstLine)))
@@ -556,7 +640,8 @@ class ConsoleTab(
         endTransaction(commit, close)
     }
 
-    private suspend fun execute(statements: List<String>) {
+    /** The n-th result of [statements] shows what the n-th of [replaced] did, so re-running keeps a chart in place. */
+    private suspend fun execute(statements: List<String>, replaced: List<ResultSetView>) {
         val session =
             try {
                 session()
@@ -578,7 +663,9 @@ class ConsoleTab(
                     is QueryResult.Rows -> {
                         val suffix = if (result.truncated) " (first ${result.rows.size} shown)" else ""
                         log("${result.rows.size} row(s) retrieved in ${result.elapsedMillis} ms$suffix: ${sql.preview()}")
-                        results += ResultSetView("Result ${++resultCount}", sql, result, app.settings.pageSize)
+                        val view = ResultSetView("Result ${++resultCount}", sql, result, app.settings.pageSize)
+                        replaced.getOrNull(results.count { !it.pinned })?.let(view::continueFrom)
+                        results += view
                     }
                     is QueryResult.Update -> log("${result.affectedRows} row(s) affected in ${result.elapsedMillis} ms: ${sql.preview()}")
                 }
@@ -638,6 +725,9 @@ class ConsoleTab(
         private val log = LoggerFactory.getLogger(ConsoleTab::class.java)
         /** Smaller than the chat's: a fix needs the statement's tables, which come first, more than the rest. */
         private const val FixSchemaBudget = 20_000
+        /** Values per column a chart request shows the agent, when the connection shares data, and their length. */
+        private const val ChartSamples = 5
+        private const val SampleLength = 40
         private val Whitespace = Regex("\\s+")
 
         private fun String.normalized(): String = trim().removeSuffix(";").replace(Whitespace, " ").trim()

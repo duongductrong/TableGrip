@@ -1,5 +1,6 @@
 package dev.datagrok.core.dialect
 
+import dev.datagrok.core.chart.TimeBucket
 import dev.datagrok.core.connection.DatabaseType
 import dev.datagrok.core.connection.EngineFamily
 import dev.datagrok.core.filter.FilterValues
@@ -141,8 +142,16 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
     open fun countRows(table: TableRef, filter: String?): String =
         "SELECT COUNT(*) FROM ${qualifiedName(table)}" + (filter?.takeIf { it.isNotBlank() }?.let { " WHERE $it" } ?: "")
 
+    /**
+     * [expression], a date or timestamp, rounded down to the start of its [bucket] (weeks start on Monday), for charts
+     * grouped on the server; null when the engine's date functions aren't known.
+     */
+    open fun timeBucket(expression: String, bucket: TimeBucket): String? = null
+
     open class PostgreSQLDialect : SqlDialect(SqlSyntax.PostgreSQL) {
         override fun toString() = "PostgreSQL"
+
+        override fun timeBucket(expression: String, bucket: TimeBucket) = "date_trunc('${bucket.name.lowercase()}', $expression)"
 
         override fun defaultNamespace(names: List<String>, database: String): String? = "public".takeIf { it in names } ?: names.firstOrNull()
 
@@ -201,6 +210,16 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
     open class MySQLDialect : SqlDialect(SqlSyntax.MySQL) {
         override fun toString() = "MySQL"
 
+        override fun timeBucket(expression: String, bucket: TimeBucket) =
+            when (bucket) {
+                TimeBucket.Hour -> "STR_TO_DATE(DATE_FORMAT($expression, '%Y-%m-%d %H:00:00'), '%Y-%m-%d %H:%i:%s')"
+                TimeBucket.Day -> "DATE($expression)"
+                TimeBucket.Week -> "DATE(DATE_SUB($expression, INTERVAL WEEKDAY($expression) DAY))"
+                TimeBucket.Month -> "DATE(DATE_FORMAT($expression, '%Y-%m-01'))"
+                TimeBucket.Quarter -> "MAKEDATE(YEAR($expression), 1) + INTERVAL (QUARTER($expression) - 1) QUARTER"
+                TimeBucket.Year -> "MAKEDATE(YEAR($expression), 1)"
+            }
+
         /** A namespace is a database here; the one connected to comes first. */
         override fun defaultNamespace(names: List<String>, database: String): String? = database.takeIf { it in names } ?: names.firstOrNull()
 
@@ -230,6 +249,18 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
 
     open class SQLiteDialect : SqlDialect(SqlSyntax.SQLite) {
         override fun toString() = "SQLite"
+
+        /** SQLite has no date type: dates are text, and these return text in the same ISO form. */
+        override fun timeBucket(expression: String, bucket: TimeBucket) =
+            when (bucket) {
+                TimeBucket.Hour -> "strftime('%Y-%m-%d %H:00:00', $expression)"
+                TimeBucket.Day -> "date($expression)"
+                // To the next Sunday (or the same day), then back to that week's Monday.
+                TimeBucket.Week -> "date($expression, 'weekday 0', '-6 days')"
+                TimeBucket.Month -> "strftime('%Y-%m-01', $expression)"
+                TimeBucket.Quarter -> "printf('%s-%02d-01', strftime('%Y', $expression), (CAST(strftime('%m', $expression) AS INTEGER) - 1) / 3 * 3 + 1)"
+                TimeBucket.Year -> "strftime('%Y-01-01', $expression)"
+            }
 
         /** Plain EXPLAIN shows bytecode; this is the readable plan. */
         override fun explain(sql: String): List<String> = listOf("EXPLAIN QUERY PLAN $sql")
@@ -327,6 +358,18 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
     open class SqlServerDialect : SqlDialect(SqlSyntax.TSql) {
         override fun toString() = "SQL Server"
 
+        /** Without DATETRUNC, which needs SQL Server 2022. */
+        override fun timeBucket(expression: String, bucket: TimeBucket) =
+            when (bucket) {
+                TimeBucket.Hour -> "DATEADD(hour, DATEDIFF(hour, 0, $expression), 0)"
+                TimeBucket.Day -> "CAST($expression AS date)"
+                // Independent of SET DATEFIRST: days since a known Monday (1900-01-01), modulo 7.
+                TimeBucket.Week -> "DATEADD(day, -(DATEDIFF(day, 0, $expression) % 7), CAST($expression AS date))"
+                TimeBucket.Month -> "DATEFROMPARTS(YEAR($expression), MONTH($expression), 1)"
+                TimeBucket.Quarter -> "DATEFROMPARTS(YEAR($expression), (DATEPART(quarter, $expression) - 1) * 3 + 1, 1)"
+                TimeBucket.Year -> "DATEFROMPARTS(YEAR($expression), 1, 1)"
+            }
+
         override fun quoteIdentifier(name: String) = "[${name.replace("]", "]]")}]"
 
         override fun selectPage(table: TableRef, filter: String?, orderBy: List<SortColumn>, limit: Int, offset: Long): String =
@@ -373,6 +416,16 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
     /** ClickHouse: databases as namespaces, ILIKE and RE2 regexes, no transactions. */
     open class ClickHouseDialect : SqlDialect(SqlSyntax.ClickHouse) {
         override fun toString() = "ClickHouse"
+
+        override fun timeBucket(expression: String, bucket: TimeBucket) =
+            when (bucket) {
+                TimeBucket.Hour -> "toStartOfHour($expression)"
+                TimeBucket.Day -> "toDate($expression)"
+                TimeBucket.Week -> "toMonday($expression)"
+                TimeBucket.Month -> "toStartOfMonth($expression)"
+                TimeBucket.Quarter -> "toStartOfQuarter($expression)"
+                TimeBucket.Year -> "toStartOfYear($expression)"
+            }
 
         override fun quoteIdentifier(name: String) = "`${name.replace("\\", "\\\\").replace("`", "\\`")}`"
 
@@ -433,6 +486,8 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
     /** DuckDB: PostgreSQL-like SQL in an embedded engine; namespaces are schemas, `main` by default. */
     open class DuckDBDialect : SqlDialect(SqlSyntax.PostgreSQL) {
         override fun toString() = "DuckDB"
+
+        override fun timeBucket(expression: String, bucket: TimeBucket) = "date_trunc('${bucket.name.lowercase()}', $expression)"
 
         override fun quoteIdentifier(name: String) = "\"${name.replace("\"", "\"\"")}\""
 
