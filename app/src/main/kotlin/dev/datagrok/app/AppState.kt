@@ -11,6 +11,7 @@ import dev.datagrok.app.connections.DatabaseRegistry
 import dev.datagrok.app.connections.DriverDownloads
 import dev.datagrok.app.completion.SchemaCache
 import dev.datagrok.app.explorer.ExplorerViewModel
+import dev.datagrok.app.files.FileWindows
 import dev.datagrok.app.export.ExportRequest
 import dev.datagrok.app.queries.SavedQueries
 import dev.datagrok.app.schema.ImportWizard
@@ -94,6 +95,14 @@ class AppState(
     val databases = DatabaseRegistry(scope, connections::storedPassword, connections::storedSshSecret, drivers, connections::askForDriver, ::dataFileReloaded)
     val explorer = ExplorerViewModel(this)
     val workspace = WorkspaceViewModel(this)
+    /** Data files open in windows of their own, e.g. from the file manager. */
+    val files = FileWindows(this)
+
+    /**
+     * Whether the main window is shown. A data file opened from the file manager shows only its own window; the main
+     * window comes up when something opens in it, and hides rather than quits while file windows remain.
+     */
+    var mainWindowVisible by mutableStateOf(false)
     /** Secrets kept out of settings.json, in the same store as connection passwords. */
     val secrets: SecretStore = connectionStore.secrets
     val agent = agentRegistry?.let { AgentViewModel(this, it) } ?: AgentViewModel(this)
@@ -120,6 +129,7 @@ class AppState(
     private fun dataFileReloaded(config: ConnectionConfig) {
         explorer.refresh(dev.datagrok.app.explorer.ConnectionKey(config.id))
         workspace.tabs.filterIsInstance<TableDataTab>().filter { it.connectionId == config.id && !it.hasChanges }.forEach { it.refresh() }
+        files.reloaded(config.id)
         status = "Reloaded ${config.name}: it changed on disk"
     }
 
@@ -161,13 +171,15 @@ class AppState(
      * does nothing if the user cancels. Tabs and unsaved console text are kept in the session for the next start.
      */
     fun requestExit(exit: () -> Unit) =
-        workspace.confirmQuit({
-            confirmDataFiles(null) {
-                session.stopAutosave()
-                session.saveNow()
-                dispose()
-                exit()
-            }
+        files.confirmQuit({
+            workspace.confirmQuit({
+                confirmDataFiles(null) {
+                    session.stopAutosave()
+                    session.saveNow()
+                    dispose()
+                    exit()
+                }
+            })
         })
 
     /** Data files whose changes couldn't be written, shown before the connections holding them close. */
@@ -189,6 +201,7 @@ class AppState(
     fun dispose() {
         agent.stop()
         workspace.disposeAll()
+        files.disposeAll()
         databases.closeAll()
         scope.cancel()
     }

@@ -129,7 +129,7 @@ internal fun EnvironmentChip(config: ConnectionConfig) {
 }
 
 @Composable
-private fun HeaderButton(region: String, icon: IconKey, tooltip: String, enabled: Boolean = true, onClick: () -> Unit) {
+internal fun HeaderButton(region: String, icon: IconKey, tooltip: String, enabled: Boolean = true, onClick: () -> Unit) {
     Tooltip({ Text(tooltip) }) {
         IconButton(onClick = onClick, enabled = enabled, modifier = Modifier.size(32.dp).padding(3.dp).clientRegion(region)) {
             Icon(icon, tooltip)

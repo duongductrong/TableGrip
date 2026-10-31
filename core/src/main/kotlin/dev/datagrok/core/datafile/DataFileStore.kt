@@ -7,6 +7,7 @@ import dev.datagrok.core.connection.DriverId
 import dev.datagrok.core.connection.Environment
 import dev.datagrok.core.ddl.DdlScript
 import dev.datagrok.core.driver.Database
+import dev.datagrok.core.driver.QueryResult
 import dev.datagrok.core.driver.RelationalConnection
 import dev.datagrok.core.drivers.DriverLibrary
 import dev.datagrok.core.edit.ChangeStatement
@@ -43,6 +44,13 @@ class DataFileConnection internal constructor(
         describe: (index: Long, row: T) -> String,
         onProgress: (Long) -> Unit,
     ): Long = database.insertRows(table, columns, rows, values, describe, onProgress).also { sync.save() }
+
+    /** The tables' names in the file's own order (a workbook's sheets as its tabs list them), then those added since. */
+    suspend fun tableOrder(): List<String> =
+        openSession().use { session ->
+            val result = session.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite\\_%' ESCAPE '\\' ORDER BY rowid")
+            (result as? QueryResult.Rows)?.rows?.mapNotNull { it.firstOrNull() }.orEmpty()
+        }
 
     override suspend fun backupInto(target: Path): Unit = throw UnsupportedOperationException("${config.type.displayName} is a file of its own; copy it to back it up")
 

@@ -245,14 +245,14 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
         }
     }
 
-    /** Asks for data files (CSV, Excel, JSON) and opens them. */
-    fun chooseDataFiles() {
+    /** Asks for data files (CSV, Excel, JSON) and hands them to [open]: as connections in the main window by default. */
+    fun chooseDataFiles(open: (List<File>) -> Unit = ::openDataFiles) {
         val dialog = java.awt.FileDialog(null as java.awt.Frame?, "Open Data File", java.awt.FileDialog.LOAD)
         dialog.isMultipleMode = true
         val extensions = DataFileFormats.all.flatMap { it.extensions }.toSet()
         dialog.setFilenameFilter { _, name -> name.substringAfterLast('.', "").lowercase() in extensions }
         dialog.isVisible = true
-        openDataFiles(dialog.files.toList())
+        open(dialog.files.toList())
     }
 
     /**
@@ -263,23 +263,7 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
         if (files.isEmpty()) return
         app.scope.launch {
             for (file in files) {
-                val path = file.toPath().toAbsolutePath().normalize()
-                val config =
-                    profiles.firstOrNull { it.type.isDataFile && samePath(it.database, path) }
-                        ?: DataFileStore.profileFor(path, UUID.randomUUID().toString())?.let { profile ->
-                            runCatching { withContext(Dispatchers.IO) { store.save(profile, "", "") } }
-                                .onSuccess(::replaceAll)
-                                .onFailure { app.status = "Couldn't save a connection for ${file.name}: ${it.message}" }
-                                .getOrNull()
-                                ?.let { profile }
-                        }
-                if (config == null) {
-                    if (DataFileFormats.detect(path) == null) {
-                        val known = DataFileFormats.all.flatMap { it.extensions }.sorted().joinToString(", ") { ".$it" }
-                        app.status = "${file.name} isn't a data file Datagrok opens ($known)"
-                    }
-                    continue
-                }
+                val config = dataFileProfile(file) ?: continue
                 app.status = "Opening ${file.name}…"
                 runCatching {
                     val database = app.databases.database(config)
@@ -291,6 +275,26 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
                 }.onFailure { app.status = "Couldn't open ${file.name}: ${it.message}" }
             }
         }
+    }
+
+    /**
+     * The profile of the data file at [file]: the one already pointing at it, or a new one, saved. Null, with the reason
+     * in the status, when no format claims the file or the profile couldn't be saved.
+     */
+    suspend fun dataFileProfile(file: File): ConnectionConfig? {
+        val path = file.toPath().toAbsolutePath().normalize()
+        profiles.firstOrNull { it.type.isDataFile && samePath(it.database, path) }?.let { return it }
+        val profile = DataFileStore.profileFor(path, UUID.randomUUID().toString())
+        if (profile == null) {
+            val known = DataFileFormats.all.flatMap { it.extensions }.sorted().joinToString(", ") { ".$it" }
+            app.status = "${file.name} isn't a data file Datagrok opens ($known)"
+            return null
+        }
+        return runCatching { withContext(Dispatchers.IO) { store.save(profile, "", "") } }
+            .onSuccess(::replaceAll)
+            .onFailure { app.status = "Couldn't save a connection for ${file.name}: ${it.message}" }
+            .getOrNull()
+            ?.let { profile }
     }
 
     private fun samePath(database: String, path: Path): Boolean =

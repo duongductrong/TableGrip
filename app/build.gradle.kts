@@ -73,6 +73,15 @@ compose.desktop {
                 "java.security.jgss", "java.security.sasl", "java.xml",
             )
 
+            // Lets the file manager open data files with Datagrok (Open With, or double-click once it's the default),
+            // each in a window of its own. Plain .json and .txt are left out: too many of them aren't tables.
+            fileAssociation("text/csv", "csv", "CSV Document")
+            fileAssociation("text/tab-separated-values", "tsv", "TSV Document")
+            fileAssociation("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx", "Excel Workbook")
+            fileAssociation("application/vnd.ms-excel.sheet.macroEnabled.12", "xlsm", "Excel Macro-Enabled Workbook")
+            fileAssociation("application/x-ndjson", "ndjson", "NDJSON Document")
+            fileAssociation("application/jsonl", "jsonl", "JSON Lines Document")
+
             macOS {
                 dockName = "Datagrok"
                 bundleID = "dev.datagrok.app"

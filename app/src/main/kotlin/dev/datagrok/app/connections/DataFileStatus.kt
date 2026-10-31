@@ -112,6 +112,7 @@ internal fun dataFileMenu(app: AppState, config: ConnectionConfig): List<Context
     val connection = app.databases.dataFile(config.id)
     val file = runCatching { dev.datagrok.core.datafile.DataFileStore.pathOf(config.database).toFile() }.getOrNull()
     return listOfNotNull(
+        file?.let { ContextMenuItem("Open in Separate Window") { app.files.open(listOf(it)) } },
         connection?.takeIf { it.sync.readOnlyReason == null }?.let { ContextMenuItem("Save to File Now") { app.scope.launch { it.sync.save() } } },
         connection?.let { ContextMenuItem("Reload from File") { app.scope.launch { it.sync.reload() } } },
         file?.takeIf { Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE_FILE_DIR) }?.let {

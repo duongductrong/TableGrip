@@ -1,6 +1,8 @@
 package dev.datagrok.app
 
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
@@ -13,6 +15,9 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import dev.datagrok.app.console.ConsoleTab
 import dev.datagrok.app.console.handleConsoleShortcut
+import dev.datagrok.app.files.DataFileWindowView
+import dev.datagrok.app.files.FileDropTarget
+import dev.datagrok.app.files.FileOpenRequests
 import dev.datagrok.app.search.DoubleShiftDetector
 import dev.datagrok.app.table.TableDataTab
 import dev.datagrok.app.table.handleFilterShortcut
@@ -23,9 +28,22 @@ import dev.datagrok.app.ui.MainScreen
 import dev.datagrok.app.ui.PinchZoom
 import dev.datagrok.app.ui.TitleBarView
 import java.awt.Desktop
+import kotlinx.coroutines.delay
 import org.jetbrains.jewel.window.DecoratedWindow
 
-fun main() = application {
+/**
+ * How long a start without arguments waits for macOS to say which files it was launched to open, before showing the
+ * main window. Finder sends them as an Apple Event just after launch.
+ */
+private const val LaunchFileGrace = 400L
+
+fun main(args: Array<String>) {
+    // Before the UI, so the file the app was launched to open (from Finder or a file association) isn't missed.
+    FileOpenRequests.install(args)
+    runApp()
+}
+
+private fun runApp() = application {
     val appState = remember {
         AppState().also {
             it.session.restore()
@@ -43,10 +61,30 @@ fun main() = application {
         }
         onDispose { desktop?.setQuitHandler(null) }
     }
+    // Data files opened from the file manager each get a window of their own.
+    DisposableEffect(Unit) {
+        FileOpenRequests.listen { appState.files.open(it) }
+        onDispose { FileOpenRequests.listen(null) }
+    }
+    // Opening a file from Finder shows just that file; a plain start shows the main window.
+    LaunchedEffect(Unit) {
+        if (!FileOpenRequests.launchedWithFiles) delay(LaunchFileGrace)
+        if (appState.files.windows.isEmpty()) appState.mainWindowVisible = true
+    }
+    // Quits once no window is left; the main window only hides while file windows remain.
+    fun closedWindow() {
+        if (appState.files.windows.isEmpty() && !appState.mainWindowVisible) appState.requestExit(::exitApplication)
+    }
     DatagrokTheme(isDark = appState.theme.isDark()) {
+        appState.files.windows.forEach { file ->
+            key(file) { DataFileWindowView(appState, file, onClosed = ::closedWindow) }
+        }
         DecoratedWindow(
-            onCloseRequest = { appState.requestExit(::exitApplication) },
+            onCloseRequest = {
+                if (appState.files.windows.isEmpty()) appState.requestExit(::exitApplication) else appState.mainWindowVisible = false
+            },
             state = rememberWindowState(size = DpSize(1360.dp, 860.dp)),
+            visible = appState.mainWindowVisible,
             title = "Datagrok",
             onPreviewKeyEvent = {
                 if (doubleShift.onKey(it.key, it.type)) appState.goToOpen = true
@@ -61,11 +99,11 @@ fun main() = application {
             // Data files dropped anywhere on the window open as connections.
             DisposableEffect(window) {
                 val previous = window.contentPane.dropTarget
-                window.contentPane.dropTarget = DataFileDropTarget(appState)
+                window.contentPane.dropTarget = FileDropTarget(appState.connections::openDataFiles)
                 onDispose { window.contentPane.dropTarget = previous }
             }
             TitleBarView(appState)
-            MainScreen(appState)
+            MainScreen(appState, dialogs = appState.mainWindowVisible)
         }
     }
 }
@@ -104,22 +142,5 @@ private fun handleWindowShortcut(app: AppState, event: KeyEvent): Boolean {
         selected is TableDataTab && Shortcuts.Save.matches(event) -> done { selected.submit() }
         selected is TableDataTab -> handleFilterShortcut(selected, event)
         else -> false
-    }
-}
-
-/** Accepts files dragged from the file manager and opens the data files among them. */
-private class DataFileDropTarget(private val app: AppState) : java.awt.dnd.DropTarget() {
-    override fun dragEnter(event: java.awt.dnd.DropTargetDragEvent) {
-        if (event.isDataFlavorSupported(java.awt.datatransfer.DataFlavor.javaFileListFlavor)) event.acceptDrag(java.awt.dnd.DnDConstants.ACTION_COPY) else event.rejectDrag()
-    }
-
-    @Synchronized
-    override fun drop(event: java.awt.dnd.DropTargetDropEvent) {
-        if (!event.isDataFlavorSupported(java.awt.datatransfer.DataFlavor.javaFileListFlavor)) return event.rejectDrop()
-        event.acceptDrop(java.awt.dnd.DnDConstants.ACTION_COPY)
-        val files = runCatching { (event.transferable.getTransferData(java.awt.datatransfer.DataFlavor.javaFileListFlavor) as List<*>).filterIsInstance<java.io.File>() }.getOrDefault(emptyList())
-        event.dropComplete(files.isNotEmpty())
-        // The drop arrives on the AWT thread, which is also Compose's UI thread on desktop.
-        app.connections.openDataFiles(files.filter { it.isFile })
     }
 }

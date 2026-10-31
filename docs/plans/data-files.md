@@ -45,6 +45,23 @@ DatabaseType (ConnectionKind.DataFile)  ──►  DataFileStore.connect
   "overwrite" or "reload". Failures (a file locked by another program) are retried with backoff.
 - Quitting or disconnecting with held or failed changes asks first.
 
+## Opening from the file manager
+
+- **File associations.** The installers register `.csv`, `.tsv`, `.xlsx`, `.xlsm`, `.ndjson` and `.jsonl` (`fileAssociation`
+  in `app/build.gradle.kts`), so Finder's Open With, double-click once Datagrok is the default, and a file dropped on the
+  Dock icon open them. Plain `.json` and `.txt` are left out: most aren't tables.
+- **One app, one window per file.** `FileOpenRequests` takes files from the command line (Windows, Linux) and from
+  macOS's open-file events, installed before the UI so the launching file isn't missed. Each file gets a
+  `DataFileWindow`: its grid with editing, filters and saving, and a workbook's sheets as tabs along the bottom in the
+  workbook's order. Opening the same file again raises its window. Files dropped on a file window open in windows too.
+- **Same connection as the main window.** The window uses the file's data file connection (saving a profile the first
+  time), so the file is in the explorer as well, and its SQL console, structure and links open in the main window.
+- **The main window comes when it's needed.** A launch to open a file shows only that file; the main window appears
+  when something opens in it. Closing it while file windows remain hides it; the app quits once no window is left.
+  The app's dialogs (driver download, export, unsaved files) show in the file window in front while it's hidden.
+
 ## Not yet
 
-Legacy `.xls`, `.ods`, Parquet; a folder of CSVs as one connection; keeping formulas when their sheet changes.
+Legacy `.xls`, `.ods`, Parquet; a folder of CSVs as one connection; keeping formulas when their sheet changes; hiding
+the `_row` key column in the grid; a single running instance on Windows and Linux (each file opened from the file
+manager starts its own process there).

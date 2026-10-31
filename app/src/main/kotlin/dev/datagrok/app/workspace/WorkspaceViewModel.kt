@@ -93,7 +93,7 @@ class WorkspaceViewModel(private val app: AppState) {
     /** Focuses the collection's document browser if it is already open. */
     fun openCollection(config: ConnectionConfig, database: String, collection: String) {
         tabs.firstOrNull { it is DocumentBrowserTab && it.connectionId == config.id && it.database == database && it.collection == collection }?.let {
-            selected = it
+            bringToFront(it)
             return
         }
         open(DocumentBrowserTab(app, config, database, collection))
@@ -102,7 +102,7 @@ class WorkspaceViewModel(private val app: AppState) {
     /** Focuses the key browser of [keyspace] if it is already open. */
     fun openKeys(config: ConnectionConfig, keyspace: Int) {
         tabs.firstOrNull { it is KeyBrowserTab && it.connectionId == config.id && it.keyspace == keyspace }?.let {
-            selected = it
+            bringToFront(it)
             return
         }
         open(KeyBrowserTab(app, config, keyspace))
@@ -111,7 +111,7 @@ class WorkspaceViewModel(private val app: AppState) {
     /** Focuses the table's tab if it is already open; [structure] switches it to the structure view. */
     fun openTable(config: ConnectionConfig, table: TableRef, structure: StructureSection? = null) {
         val existing = tabs.firstOrNull { it is TableDataTab && it.connectionId == config.id && it.table == table } as TableDataTab?
-        if (existing != null) selected = existing
+        if (existing != null) bringToFront(existing)
         val tab = existing ?: TableDataTab(app, config, table).also(::open)
         when {
             structure != null -> tab.showStructure(structure)
@@ -123,7 +123,7 @@ class WorkspaceViewModel(private val app: AppState) {
     fun openTableDesigner(config: ConnectionConfig, namespace: Namespace, table: TableRef? = null) {
         if (table != null) {
             tabs.firstOrNull { it is TableDesignerTab && it.connectionId == config.id && it.tableRef == table }?.let {
-                selected = it
+                bringToFront(it)
                 return
             }
         }
@@ -138,7 +138,7 @@ class WorkspaceViewModel(private val app: AppState) {
     /** An ER diagram of [namespace], or of the tables around [focus]; focuses one already open for the same. */
     fun openErDiagram(config: ConnectionConfig, namespace: Namespace, focus: TableRef? = null) {
         tabs.firstOrNull { it is ErDiagramTab && it.connectionId == config.id && it.namespace == namespace && it.focus == focus }?.let {
-            selected = it
+            bringToFront(it)
             return
         }
         open(ErDiagramTab(app, config, namespace, focus))
@@ -147,7 +147,7 @@ class WorkspaceViewModel(private val app: AppState) {
     /** The server's sessions and locks; focuses the connection's activity tab if it is already open. */
     fun openActivity(config: ConnectionConfig) {
         tabs.firstOrNull { it is ActivityTab && it.connectionId == config.id }?.let {
-            selected = it
+            bringToFront(it)
             return
         }
         open(ActivityTab(app, config))
@@ -196,13 +196,13 @@ class WorkspaceViewModel(private val app: AppState) {
     fun restoreConsole(config: ConnectionConfig, saved: SessionTab.Console) {
         consoleCount++
         val name = if (consoleCount == 1) config.name else "${config.name} ($consoleCount)"
-        open(ConsoleTab(app, config, name, saved.text, saved.file?.let(::File), savedText = saved.savedText, caret = saved.caret))
+        open(ConsoleTab(app, config, name, saved.text, saved.file?.let(::File), savedText = saved.savedText, caret = saved.caret), reveal = false)
     }
 
     /** Reopens a table from the last session; its rows load once it's shown. */
     fun restoreTable(config: ConnectionConfig, saved: SessionTab.Table) {
         val ref = TableRef(Namespace(saved.catalog, saved.schema), saved.name)
-        open(TableDataTab(app, config, ref).also { it.restore(saved.structure, saved.filter) })
+        open(TableDataTab(app, config, ref).also { it.restore(saved.structure, saved.filter) }, reveal = false)
     }
 
     fun close(tab: WorkspaceTab) {
@@ -229,9 +229,17 @@ class WorkspaceViewModel(private val app: AppState) {
 
     fun disposeAll() = tabs.forEach { it.dispose() }
 
-    private fun open(tab: WorkspaceTab) {
+    /** Brings an open tab to the front, showing the main window if only file windows were showing. */
+    private fun bringToFront(tab: WorkspaceTab) {
+        selected = tab
+        app.mainWindowVisible = true
+    }
+
+    /** [reveal] shows the main window if only file windows were showing; restoring the session leaves it as it is. */
+    private fun open(tab: WorkspaceTab, reveal: Boolean = true) {
         keys[tab] = tabCount++
         tabs += tab
         selected = tab
+        if (reveal) app.mainWindowVisible = true
     }
 }

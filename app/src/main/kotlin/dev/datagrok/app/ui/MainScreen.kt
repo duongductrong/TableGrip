@@ -65,7 +65,7 @@ internal val IslandGap = 6.dp
  * and the editor tabs float on it as rounded islands.
  */
 @Composable
-internal fun MainScreen(app: AppState) {
+internal fun MainScreen(app: AppState, dialogs: Boolean = true) {
     val islands = LocalIslands.current
     Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize().background(islands.frame)) {
@@ -97,7 +97,15 @@ internal fun MainScreen(app: AppState) {
     // window, and its outside click closes it.
     if (app.goToOpen) Box(Modifier.fillMaxSize().background(islands.scrim))
     }
+    if (dialogs) AppDialogs(app)
+}
 
+/**
+ * Dialogs any window can lead to (a driver to download, an export, unsaved data files). One window shows them: the main
+ * window, or while it's hidden, the data file window in front.
+ */
+@Composable
+internal fun AppDialogs(app: AppState) {
     app.connections.dialog?.let { ConnectionDialog(app.connections, it) }
     app.connections.pendingDelete?.let { DeleteConnectionDialog(app.connections, it) }
     app.connections.groupRequest?.let { GroupDialog(app.connections, it) }
