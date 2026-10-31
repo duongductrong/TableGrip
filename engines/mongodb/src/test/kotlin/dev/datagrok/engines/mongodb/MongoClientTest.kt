@@ -88,6 +88,28 @@ class MongoClientTest {
         mongo.replace(db, "orders", id, "{customer: 'renamed', total: 2}")
         assertTrue("renamed" in mongo.find(db, "orders", "{_id: $id}", "", 0, 1).documents.single())
         assertFailsWith<IllegalArgumentException> { mongo.replace(db, "orders", id, "{_id: 99, customer: 'x'}") }
+
+        // Field edits: written only while the fields still hold what was read, and other fields keep their exact types.
+        mongo.command(db, "db.orders.insertOne({_id: 10, n: NumberLong(5), d: 1.0, tags: ['a', 'b'], keep: 'x'})")
+        val read = mongo.find(db, "orders", "{_id: 10}", "", 0, 1).documents.single()
+        assertTrue("\"n\": {\"\$numberLong\": \"5\"}" in read, read)
+        assertTrue(mongo.update(db, "orders", "10", mapOf("keep" to "'y'"), setOf("d"), mapOf("keep" to "'x'", "d" to "1.0")))
+        assertEquals(false, mongo.update(db, "orders", "10", mapOf("keep" to "'z'"), emptySet(), mapOf("keep" to "'x'")), "a stale edit doesn't overwrite")
+        assertEquals(false, mongo.update(db, "orders", "10", mapOf("tags" to "[]"), emptySet(), mapOf("tags" to "['a']")), "arrays match whole, not by element")
+        assertTrue(mongo.update(db, "orders", "10", mapOf("added" to "true"), emptySet(), mapOf("added" to null)))
+        // The JSON editor's save writes only what changed: n stays a 64-bit integer.
+        val edited = mongo.find(db, "orders", "{_id: 10}", "", 0, 1).documents.single()
+        mongo.replace(db, "orders", "10", edited.replace("\"y\"", "\"w\""), original = edited)
+        assertEquals("1", mongo.command(db, "db.orders.countDocuments({_id: 10, n: {\$type: 'long'}, keep: 'w', added: true, d: {\$exists: false}})"))
+        assertFailsWith<IllegalStateException> { mongo.replace(db, "orders", "10", edited.replace("\"y\"", "\"v\""), original = edited) }
+        mongo.command(db, "db.orders.deleteOne({_id: 10})")
+
+        // A sort with ties still pages through every document exactly once.
+        mongo.command(db, "db.ties.insertMany([" + (1..25).joinToString { "{_id: $it, g: ${it % 2}}" } + "])")
+        val paged = (0 until 5).flatMap { mongo.find(db, "ties", "{}", "{g: 1}", it * 5L, 5).documents }
+        assertEquals((1..25).toSet(), paged.map { Regex("\"_id\": (\\d+)").find(it)!!.groupValues[1].toInt() }.toSet())
+        assertEquals(10, mongo.sample(db, "ties", 10).size)
+
         assertEquals(2L, mongo.delete(db, "orders", listOf(id, "2")))
         assertFailsWith<IllegalStateException> { mongo.replace(db, "orders", "2", "{customer: 'gone'}") }
 
@@ -121,6 +143,7 @@ class MongoClientTest {
     fun `read-only profiles refuse writes, also from the console`() = server(readOnly = true) { mongo ->
         assertFailsWith<ReadOnlyViolationException> { mongo.insert(db, "x", "{a: 1}") }
         assertFailsWith<ReadOnlyViolationException> { mongo.command(db, "db.x.insertOne({a: 1})") }
+        assertFailsWith<ReadOnlyViolationException> { mongo.update(db, "x", "1", mapOf("a" to "2"), emptySet(), emptyMap()) }
         assertFailsWith<ReadOnlyViolationException> { mongo.command(db, "db.x.aggregate([{\$out: 'y'}])") }
         assertFailsWith<ReadOnlyViolationException> { mongo.command(db, "db.runCommand({drop: 'x'})") }
         assertEquals("(no documents)", mongo.command(db, "db.x.find()"))

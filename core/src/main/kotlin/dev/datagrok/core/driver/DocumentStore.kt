@@ -70,8 +70,11 @@ object DocumentStore {
         override suspend fun insert(database: String, collection: String, document: String): String =
             if (readOnly) refuse("inserting documents") else inner.insert(database, collection, document)
 
-        override suspend fun replace(database: String, collection: String, id: String, document: String) =
-            if (readOnly) refuse("changing documents") else inner.replace(database, collection, id, document)
+        override suspend fun replace(database: String, collection: String, id: String, document: String, original: String?) =
+            if (readOnly) refuse("changing documents") else inner.replace(database, collection, id, document, original)
+
+        override suspend fun update(database: String, collection: String, id: String, set: Map<String, String>, unset: Set<String>, expected: Map<String, String?>): Boolean =
+            if (readOnly) refuse("changing documents") else inner.update(database, collection, id, set, unset, expected)
 
         override suspend fun delete(database: String, collection: String, ids: List<String>): Long =
             if (readOnly) refuse("deleting documents") else inner.delete(database, collection, ids)

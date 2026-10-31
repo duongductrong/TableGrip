@@ -16,6 +16,7 @@ import dev.datagrok.app.files.DataFileWindowView
 import dev.datagrok.app.files.FileDropTarget
 import dev.datagrok.app.files.FileOpenRequests
 import dev.datagrok.app.search.DoubleShiftDetector
+import dev.datagrok.app.documents.DocumentBrowserTab
 import dev.datagrok.app.table.TableDataTab
 import dev.datagrok.app.table.handleFilterShortcut
 import dev.datagrok.app.ui.DatagrokTheme
@@ -147,6 +148,8 @@ private fun handleWindowShortcut(app: AppState, event: KeyEvent): Boolean {
         selected is TableDataTab && Shortcuts.Reload.matches(event) -> done { selected.refresh() }
         selected is TableDataTab && Shortcuts.Save.matches(event) -> done { selected.submit() }
         selected is TableDataTab -> handleFilterShortcut(selected, event)
+        selected is DocumentBrowserTab && Shortcuts.Reload.matches(event) -> done { selected.refresh() }
+        selected is DocumentBrowserTab && Shortcuts.Save.matches(event) -> done { selected.submit() }
         else -> false
     }
 }

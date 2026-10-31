@@ -8,15 +8,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import dev.datagrok.app.AppState
 import dev.datagrok.app.grid.DataGridState
-import dev.datagrok.app.grid.ResultGridModel
+import dev.datagrok.app.grid.GridModel
 import dev.datagrok.app.workspace.WorkspaceTab
+import dev.datagrok.core.completion.DocumentCompleter
+import dev.datagrok.core.completion.DocumentField
 import dev.datagrok.core.connection.ConnectionConfig
+import dev.datagrok.core.dialect.SortColumn
+import dev.datagrok.core.dialect.SortDirection
 import dev.datagrok.core.driver.DocumentConnection
 import dev.datagrok.core.driver.QueryResult
 import dev.datagrok.core.driver.ResultColumn
 import java.sql.Types
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -28,8 +33,9 @@ import kotlinx.serialization.json.jsonObject
 import dev.datagrok.app.connections.ConnectionStatus
 
 /**
- * One collection's documents, a page at a time: a grid with a column per top-level field, and the selected document as
- * JSON to edit. Filter and sort are shell-style Extended JSON, as in `find()`.
+ * One collection's documents, a page at a time: an editable grid with a column per top-level field, and the selected
+ * document as JSON to edit as a whole. Filter and sort are shell-style Extended JSON, as in `find()`; they apply on
+ * Enter, and paging keeps to what was applied, not to what's half typed in the fields.
  */
 class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig, val database: String, val collection: String) : WorkspaceTab {
     override val connectionId = config.id
@@ -41,8 +47,18 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
     val filter = TextFieldState("{}")
     val sort = TextFieldState("{}")
 
+    /** The filter and sort the rows reflect, normalized: braces added when left out. */
+    var appliedFilter by mutableStateOf("{}")
+        private set
+    var appliedSort by mutableStateOf("{}")
+        private set
+
+    /** Documents before the page shown; changes only once a page has loaded. */
     var skip by mutableLongStateOf(0)
         private set
+
+    val pageSize: Int
+        get() = app.settings.pageSize
 
     var hasMore by mutableStateOf(false)
         private set
@@ -56,14 +72,21 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
     var total by mutableStateOf<Long?>(null)
         private set
 
-    /** The page's documents, parsed; [raw] keeps the server's text. */
+    /** The page's documents, parsed. */
     var documents by mutableStateOf<List<JsonObject>>(emptyList())
         private set
 
-    var model by mutableStateOf(ResultGridModel(QueryResult.Rows(emptyList(), emptyList(), truncated = false, elapsedMillis = 0)))
+    /** The page as an editable grid, with any unsaved edits. */
+    internal var model by mutableStateOf(DocumentEditModel(emptyList(), readOnly = true))
         private set
 
     val grid = DataGridState()
+
+    /** Fields seen so far, for completing the filter and sort. */
+    internal val schema = DocumentSchema()
+
+    val completionFields: List<DocumentField>
+        get() = schema.version.let { schema.fields() }
 
     /** The document shown in the editor: an index into [documents], or null for a new one or none. */
     var shown by mutableStateOf<Int?>(null)
@@ -79,52 +102,107 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
 
     data class Message(val text: String, val isError: Boolean)
 
+    /** Navigation waiting for the user to confirm discarding unsaved edits. */
+    var pendingDiscard by mutableStateOf<(() -> Unit)?>(null)
+    /** The writes about to run, while the preview is open (connections that confirm writes). */
+    var preview by mutableStateOf<String?>(null)
+    var submitting by mutableStateOf(false)
+        private set
+
+    val hasChanges: Boolean
+        get() = model.hasChanges
+
+    override val hasUnsavedWork: Boolean
+        get() = hasChanges
+
+    override val activeGrid: Pair<GridModel, DataGridState>
+        get() = model to grid
+
+    /** The applied sort as the grid's header arrows show it, when it is a plain `{field: ±1, …}`. */
+    val sortColumns: List<SortColumn>
+        get() = parseSort(appliedSort)
+
     private val jobs = mutableListOf<Job>()
+    private var loadJob: Job? = null
+    /** Edits that failed to save, to put back onto the page once it reloads. */
+    private var carry: Pending? = null
+    private var sampled = false
 
     init {
-        reload()
+        load(0)
     }
 
     private suspend fun connection(): DocumentConnection = app.databases.documents(config)
 
-    /** Runs the filter again from the first page. */
-    fun reload() {
-        skip = 0
+    /** Applies the filter and sort fields and loads the first page. */
+    fun reload() = guard {
+        appliedFilter = normalize(filter.text.toString())
+        appliedSort = normalize(sort.text.toString())
         total = null
-        load()
+        load(0)
     }
+
+    /** Loads the current page again, with what's applied. */
+    fun refresh() = guard { load(skip) }
 
     fun nextPage() {
         if (!hasMore || loading) return
-        skip += PageSize
-        load()
+        guard { load(skip + pageSize) }
     }
 
     fun previousPage() {
         if (skip == 0L || loading) return
-        skip = (skip - PageSize).coerceAtLeast(0)
-        load()
+        guard { load((skip - pageSize).coerceAtLeast(0)) }
     }
 
-    private fun load() =
-        launch {
+    fun firstPage() {
+        if (skip == 0L || loading) return
+        guard { load(0) }
+    }
+
+    fun setPageSize(size: Int) = guard {
+        app.updateSettings { it.copy(pageSize = size) }
+        load(0)
+    }
+
+    /** Loads the page starting at [target]; [skip] moves only once it's there, so a failed load leaves paging intact. */
+    private fun load(target: Long): Job {
+        loadJob?.cancel()
+        val job = launch {
             loading = true
             try {
-                val page = connection().find(database, collection, filter.text.toString(), sort.text.toString(), skip, PageSize)
-                documents = page.documents.map { Json.parseToJsonElement(it).jsonObject }
+                val page = connection().find(database, collection, appliedFilter, appliedSort, target, pageSize)
+                val parsed = page.documents.map { Json.parseToJsonElement(it).jsonObject }
+                val restore = carry
+                carry = null
+                val next = DocumentEditModel(parsed, readOnly = readOnly, extraFields = restore?.fields.orEmpty())
+                val lost = restore?.let(next::restore) ?: 0
+                skip = target
+                documents = parsed
                 hasMore = page.hasMore
-                model = ResultGridModel(rows(documents))
+                model = next
+                schema.add(parsed)
                 grid.selection = null
+                grid.verticalScroll.requestScrollToItem(0)
                 shown = null
                 if (!creating) editor.setTextAndPlaceCursorAtEnd("")
+                if (lost > 0) message = Message("$lost unsaved ${if (lost == 1) "document isn't" else "documents aren't"} on this page any more; their edits were dropped.", isError = true)
+                if (!sampled) {
+                    sampled = true
+                    launch { schema.add(connection().sample(database, collection, SampleSize).map { Json.parseToJsonElement(it).jsonObject }) }
+                }
             } finally {
-                loading = false
+                // A load replaced by a newer one leaves the indicator to it.
+                if (loadJob === currentCoroutineContext()[Job]) loading = false
             }
         }
+        loadJob = job
+        return job
+    }
 
-    fun count() = launch { total = connection().count(database, collection, filter.text.toString()) }
+    fun count() = launch { total = connection().count(database, collection, appliedFilter) }
 
-    /** Shows document [index] of the page in the editor. */
+    /** Shows document [index] of the page in the editor; new, unsaved rows have nothing to show. */
     fun show(index: Int?) {
         if (index == shown && !creating) return
         creating = false
@@ -138,8 +216,16 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
         editor.setTextAndPlaceCursorAtEnd("{\n  \n}")
     }
 
-    /** Inserts the editor's document, or replaces the shown one with it. */
-    fun save() =
+    /**
+     * Inserts the editor's document, or saves it over the shown one. Only the fields that differ from the document as
+     * loaded are written, and only while they still hold those values, so a newer change made elsewhere isn't lost.
+     */
+    fun save() {
+        val index = shown
+        if (!creating && index != null && model.hasEdits(index)) {
+            message = Message("This document has unsaved edits in the grid; submit or revert them first.", isError = true)
+            return
+        }
         launch {
             val text = editor.text.toString()
             if (creating) {
@@ -147,26 +233,158 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
                 creating = false
                 message = Message("Inserted $id.", isError = false)
             } else {
-                val index = shown ?: return@launch
-                connection().replace(database, collection, idOf(documents[index]), text)
+                index ?: return@launch
+                connection().replace(database, collection, idOf(documents[index]), text, original = documents[index].toString())
                 message = Message("Saved.", isError = false)
             }
-            val keep = shown
-            load().join()
-            show(keep)
-        }
-
-    /** Deletes the documents of the selected grid rows. */
-    fun deleteSelected() {
-        val rows = grid.selection?.rows?.filter { it in documents.indices } ?: shown?.let { listOf(it) } ?: return
-        val ids = rows.map { idOf(documents[it]) }
-        launch {
-            val deleted = connection().delete(database, collection, ids)
-            message = Message("Deleted $deleted ${if (deleted == 1L) "document" else "documents"}.", isError = false)
-            total = total?.minus(deleted)
-            load()
+            total = null
+            load(skip).join()
+            show(index)
         }
     }
+
+    /** Marks the selected documents (or the shown one) for deletion; Submit deletes them. */
+    fun deleteSelected() {
+        val rows = grid.selection?.rows?.toList() ?: shown?.let { listOf(it) } ?: return
+        model.deleteRows(rows)
+        grid.clamp(model.rowCount)
+        message = Message("Marked for deletion; submit to delete.", isError = false)
+    }
+
+    // region Grid edits
+
+    /** Saves the grid's edits, after showing them first on connections that confirm writes. */
+    fun submit() {
+        if (!hasChanges || submitting || !readyToSave()) return
+        if (config.confirmWrites && preview == null) openPreview() else submitNow()
+    }
+
+    fun openPreview() {
+        if (!readyToSave()) return
+        preview = model.preview(collection)
+    }
+
+    fun closePreview() {
+        preview = null
+        afterSubmit = null
+    }
+
+    /** Navigation to resume once the edits are saved, when the user chose to submit them first. */
+    private var afterSubmit: (() -> Unit)? = null
+
+    /** A value that can't be converted to its field's type stops the save before anything is written. */
+    private fun readyToSave(): Boolean {
+        val problem = model.firstProblem() ?: return true
+        message = Message("Can't save yet. $problem", isError = true)
+        return false
+    }
+
+    /**
+     * Writes the edits document by document: each one stands alone, so one that fails (changed by someone else since it
+     * was loaded, a duplicate `_id`…) doesn't stop the others. Failed edits stay pending on the reloaded page.
+     */
+    fun submitNow() {
+        val current = model.takeIf { it.hasChanges } ?: return
+        if (!readyToSave()) return
+        preview = null
+        val changes = runCatching { current.toChanges() }.getOrElse {
+            message = Message(it.message ?: it.toString(), isError = true)
+            return
+        }
+        launch {
+            submitting = true
+            try {
+                val mongo = connection()
+                val failed = linkedMapOf<Int, String>()
+                for (change in changes) {
+                    try {
+                        when (change) {
+                            is DocumentEditModel.Change.Delete -> if (mongo.delete(database, collection, listOf(change.id)) == 0L) failed[change.row] = "already deleted"
+                            is DocumentEditModel.Change.Update ->
+                                if (!mongo.update(database, collection, change.id, change.set, change.unset, change.expected)) {
+                                    failed[change.row] = "changed or deleted by someone else since it was loaded"
+                                }
+                            is DocumentEditModel.Change.Insert -> mongo.insert(database, collection, change.document)
+                        }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        failed[change.row] = e.message ?: e.toString()
+                    }
+                }
+                val saved = changes.size - failed.size
+                // A deletion that found nothing has nothing left to retry.
+                val retry = failed.filterValues { it != "already deleted" }.keys
+                carry = current.pending(retry).takeIf { !it.isEmpty }
+                total = null
+                message =
+                    if (failed.isEmpty()) Message("Saved $saved ${if (saved == 1) "change" else "changes"}.", isError = false)
+                    else Message(
+                        "Saved $saved of ${changes.size}. " + failed.entries.take(3).joinToString("; ") { (row, why) -> "Row ${skip + row + 1}: $why" } +
+                            (if (failed.size > 3) "; …" else "") + if (retry.isNotEmpty()) ". Those edits are still pending, over the current values." else "",
+                        isError = true,
+                    )
+                app.status = "Saved $saved change(s) to $database.$collection"
+                val next = afterSubmit.takeIf { failed.isEmpty() }
+                afterSubmit = null
+                if (next != null) {
+                    carry = null
+                    next()
+                } else load(skip)
+            } finally {
+                submitting = false
+            }
+        }
+    }
+
+    fun revert() {
+        model.revertAll()
+        message = null
+    }
+
+    /** Runs [action] now, or after the user agrees to discard unsaved edits. */
+    fun guard(action: () -> Unit) {
+        if (hasChanges) pendingDiscard = action else action()
+    }
+
+    fun confirmDiscard() {
+        val action = pendingDiscard ?: return
+        pendingDiscard = null
+        model.revertAll()
+        action()
+    }
+
+    /** Answers [pendingDiscard] with "submit": saves the edits, then carries on with the navigation that asked. */
+    fun submitAndContinue() {
+        afterSubmit = pendingDiscard ?: return
+        pendingDiscard = null
+        submit()
+    }
+
+    override fun confirmClose(close: () -> Unit) = guard(close)
+
+    /** Sorts by a header click: `{field: 1}`, or added to the sort with Shift. */
+    fun setSort(column: String, direction: SortDirection?, additive: Boolean) = guard {
+        val current = if (additive) sortColumns.filterNot { it.column == column } else emptyList()
+        val next = if (direction == null) sortColumns.filterNot { it.column == column } else current + SortColumn(column, direction)
+        val text = if (next.isEmpty()) "{}" else next.joinToString(", ", "{", "}") { "${DocumentCompleter.quoteKey(it.column)}: ${if (it.direction == SortDirection.Asc) 1 else -1}" }
+        sort.setTextAndPlaceCursorAtEnd(text)
+        appliedSort = text
+        load(0)
+    }
+
+    /** Adds `field: value` (or `$ne`) to the filter, typed like the column's values; like "Filter by This Value". */
+    fun filterByValue(column: String, value: String?, exclude: Boolean = false) {
+        val index = model.fields.indexOf(column).takeIf { it >= 0 } ?: return
+        val kind = documents.firstNotNullOfOrNull { it[column]?.let(BsonKind::of)?.takeIf { k -> k != BsonKind.Null } } ?: model.kind(0, index)
+        val literal = if (value == null) "null" else (convert(kind, value) as? Converted.Ok)?.literal ?: return
+        val condition = "{${DocumentCompleter.quoteKey(column)}: ${if (exclude) "{\$ne: $literal}" else literal}}"
+        val current = normalize(filter.text.toString())
+        filter.setTextAndPlaceCursorAtEnd(if (current.replace(" ", "") == "{}") condition else "{\$and: [$current, $condition]}")
+        reload()
+    }
+
+    // endregion
 
     private fun launch(block: suspend () -> Unit): Job =
         app.scope.launch {
@@ -187,9 +405,28 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
     }
 
     companion object {
-        const val PageSize = 100
+        const val SampleSize = 300
 
         private val Pretty = Json { prettyPrint = true }
+
+        /** A filter or sort as `find()` takes it: blank is `{}`, and braces left out are added. */
+        internal fun normalize(text: String): String {
+            val trimmed = text.trim()
+            return when {
+                trimmed.isEmpty() -> "{}"
+                trimmed.startsWith("{") -> trimmed
+                else -> "{$trimmed}"
+            }
+        }
+
+        private val SortEntry = Regex("""(['"]?)([^'",:{}\s]+)\1\s*:\s*(-?1)\b""")
+
+        /** A plain sort's fields and directions, for the grid's header arrows; empty for anything fancier. */
+        internal fun parseSort(text: String): List<SortColumn> {
+            val body = text.trim().removePrefix("{").removeSuffix("}")
+            if (body.isBlank() || '{' in body) return emptyList()
+            return SortEntry.findAll(body).map { SortColumn(it.groupValues[2], if (it.groupValues[3] == "1") SortDirection.Asc else SortDirection.Desc) }.toList()
+        }
 
         /** The `_id` as Extended JSON, the form the connection takes it back in. */
         internal fun idOf(document: JsonObject): String = document["_id"]?.toString() ?: throw IllegalStateException("This document has no _id.")

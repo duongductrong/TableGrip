@@ -163,7 +163,7 @@ internal class GridController(val state: DataGridState, private val scope: Corou
                     if (state.selection?.contains(cell.row, cell.column) != true) state.select(cell)
                     return
                 }
-                if (!shift && isOnCheckBox(hit.column, lastPointerContentX) && canEdit(cell)) {
+                if (!shift && isOnCheckBox(cell, lastPointerContentX) && canEdit(cell)) {
                     state.select(cell)
                     toggleBoolean()
                     return
@@ -318,7 +318,7 @@ internal class GridController(val state: DataGridState, private val scope: Corou
             event.key == Key.PageDown -> moveBy(pageRows(), 0, shift)
             event.key == Key.Escape -> focus?.let { state.select(it) }.let { focus != null }
             event.key == Key.Enter || event.key == Key.NumPadEnter || Shortcuts.EditCell.matches(event) -> focus?.let { startEditing(it) } == true
-            event.key == Key.Spacebar && focus != null && isBooleanColumn(focus.column) -> toggleBoolean()
+            event.key == Key.Spacebar && focus != null && isBooleanCell(focus) -> toggleBoolean()
             event.key == Key.Backspace || event.key == Key.Delete -> focus?.let { startEditing(it, replaceWith = "") } == true
             else -> {
                 val text = typedText(event.utf16CodePoint)
@@ -384,6 +384,9 @@ internal class GridController(val state: DataGridState, private val scope: Corou
     /** What the display [column] takes when edited; null for read-only grids. */
     fun columnEdit(column: Int): ColumnEdit? = editor?.columnEdit(state.modelColumn(column))
 
+    /** What the display [cell] takes when edited; null for read-only grids. */
+    fun cellEdit(cell: GridCell): ColumnEdit? = editor?.cellEdit(cell.row, state.modelColumn(cell.column))
+
     /**
      * Starts inline editing; [replaceWith] replaces the value (typing over a cell) instead of editing it. JSON and
      * multi-line text open straight in the roomier editor, since one line can't show them.
@@ -393,7 +396,7 @@ internal class GridController(val state: DataGridState, private val scope: Corou
         state.select(cell)
         scrollIntoView(cell)
         val current = model.value(cell.row, state.modelColumn(cell.column)).orEmpty()
-        val kind = columnEdit(cell.column)?.kind
+        val kind = cellEdit(cell)?.kind
         val popup = if (replaceWith == null && (kind == EditKind.Json || '\n' in current)) EditPopup.Expanded else EditPopup.None
         state.startEditing(cell, replaceWith ?: current, initial = current, popup = popup)
         return true
@@ -402,8 +405,9 @@ internal class GridController(val state: DataGridState, private val scope: Corou
     /** Checks the open editor's text against its column: what would be stored, or why it can't be. */
     fun editCheck(): EditCheck? {
         val cell = state.editing ?: return null
-        val edit = columnEdit(cell.column) ?: return null
-        val check = edit.check(state.editText.text.toString())
+        val editor = editor ?: return null
+        val edit = cellEdit(cell) ?: return null
+        val check = editor.check(cell.row, state.modelColumn(cell.column), state.editText.text.toString())
         if (check == EditCheck.Empty && !edit.nullable && model.rowStatus(cell.row) != RowStatus.Inserted) {
             return EditCheck.Invalid("${columnName(cell.column)} is NOT NULL: enter a value")
         }
@@ -463,7 +467,8 @@ internal class GridController(val state: DataGridState, private val scope: Corou
     }
 
     /** Whether the display [column] shows check boxes: an editable boolean column. */
-    fun isBooleanColumn(column: Int): Boolean = columnEdit(column)?.kind == EditKind.Boolean
+    /** Whether the display [cell] shows a check box: an editable boolean. */
+    fun isBooleanCell(cell: GridCell): Boolean = cellEdit(cell)?.kind == EditKind.Boolean
 
     /**
      * Flips the selected boolean cells, following the focused one: true → false → NULL (when the column takes it) →
@@ -472,8 +477,8 @@ internal class GridController(val state: DataGridState, private val scope: Corou
     fun toggleBoolean(): Boolean {
         val editor = editor ?: return false
         val focus = state.focus ?: return false
-        if (!isBooleanColumn(focus.column) || !canEdit(focus)) return false
-        val edit = columnEdit(focus.column)!!
+        if (!isBooleanCell(focus) || !canEdit(focus)) return false
+        val edit = cellEdit(focus)!!
         val next =
             when (edit.booleanOf(model.value(focus.row, state.modelColumn(focus.column)))) {
                 true -> false
@@ -481,7 +486,7 @@ internal class GridController(val state: DataGridState, private val scope: Corou
                 null -> true
             }
         forEachSelectedCell { row, column ->
-            val cellEdit = editor.columnEdit(column)
+            val cellEdit = editor.cellEdit(row, column)
             if (cellEdit.kind == EditKind.Boolean && editor.canEdit(row, column)) {
                 if (next == null) {
                     if (editor.canSetNull(row, column)) editor.setValue(row, column, null)
@@ -509,9 +514,9 @@ internal class GridController(val state: DataGridState, private val scope: Corou
     }
 
     /** Whether a press at content x [contentX] in display [column] lands on a boolean cell's check box. */
-    fun isOnCheckBox(column: Int, contentX: Float): Boolean {
-        if (!isBooleanColumn(column)) return false
-        val left = geometry.offsets[column] + CheckBoxInset.value * density
+    fun isOnCheckBox(cell: GridCell, contentX: Float): Boolean {
+        if (!isBooleanCell(cell)) return false
+        val left = geometry.offsets[cell.column] + CheckBoxInset.value * density
         return contentX >= left - 4 * density && contentX <= left + (CheckBoxSize.value + 4) * density
     }
 

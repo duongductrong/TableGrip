@@ -8,6 +8,17 @@ import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.isRoot
+import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performTextReplacement
+import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.test.withKeyDown
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
@@ -102,6 +113,124 @@ class DocumentBrowserUiTest {
         tab.count()
         waitUntil(timeoutMillis = 10_000) { tab.total == 1L }
         onNodeWithText("grace hopper").assertExists()
+        runBlocking { DocumentStore.connect(config, null).use { it.command(db, "db.dropDatabase()") } }
+        app.dispose()
+    }
+
+    @Test
+    fun `pages move back and forth over what was applied`() = runComposeUiTest {
+        if (server == null) return@runComposeUiTest
+        val (app, config) = app()
+        runBlocking {
+            DocumentStore.connect(config, null).use { mongo ->
+                mongo.command(db, "db.many.insertMany([" + (1..120).joinToString { "{_id: $it, g: ${it % 3}}" } + "])")
+            }
+        }
+        app.updateSettings { it.copy(pageSize = 50) }
+        val tab = DocumentBrowserTab(app, config, db, "many")
+        setContent { DatagrokTheme(isDark = true) { Box(Modifier.size(1300.dp, 600.dp)) { DocumentBrowserView(tab) } } }
+        waitUntil(timeoutMillis = 10_000) { tab.documents.size == 50 }
+        // Half-typed text in the filter doesn't leak into paging; it applies on Enter.
+        tab.filter.setTextAndPlaceCursorAtEnd("{g: 99}")
+        onNodeWithContentDescription("Next page").performClick()
+        waitUntil(timeoutMillis = 10_000) { tab.skip == 50L && !tab.loading }
+        assertEquals(51, tab.documents.first()["_id"].toString().toInt())
+        onNodeWithContentDescription("Next page").performClick()
+        waitUntil(timeoutMillis = 10_000) { tab.skip == 100L && !tab.loading }
+        assertEquals(20, tab.documents.size)
+        assertEquals(false, tab.hasMore)
+        onNodeWithContentDescription("Previous page").performClick()
+        waitUntil(timeoutMillis = 10_000) { tab.skip == 50L && !tab.loading }
+        onNodeWithContentDescription("First page").performClick()
+        waitUntil(timeoutMillis = 10_000) { tab.skip == 0L && !tab.loading }
+        assertEquals(1, tab.documents.first()["_id"].toString().toInt())
+
+        // A sort with ties still shows every document once across the pages.
+        tab.filter.setTextAndPlaceCursorAtEnd("")
+        tab.sort.setTextAndPlaceCursorAtEnd("g: 1")
+        tab.reload()
+        val seen = mutableListOf<Int>()
+        while (true) {
+            waitUntil(timeoutMillis = 10_000) { !tab.loading && tab.appliedSort == "{g: 1}" }
+            seen += tab.documents.map { it["_id"].toString().toInt() }
+            if (!tab.hasMore) break
+            val before = tab.skip
+            tab.nextPage()
+            waitUntil(timeoutMillis = 10_000) { tab.skip == before + 50 && !tab.loading }
+        }
+        assertEquals((1..120).toList(), seen.sorted())
+        runBlocking { DocumentStore.connect(config, null).use { it.command(db, "db.dropDatabase()") } }
+        app.dispose()
+    }
+
+    @Test
+    fun `grid edits save field by field, keep types and never overwrite newer changes`() = runComposeUiTest {
+        if (server == null) return@runComposeUiTest
+        val (app, config) = app()
+        runBlocking { DocumentStore.connect(config, null).use { it.command(db, "db.orders.updateOne({_id: 1}, {\$set: {qty: NumberLong(7)}})") } }
+        val tab = DocumentBrowserTab(app, config, db, "orders")
+        setContent { DatagrokTheme(isDark = true) { Box(Modifier.size(1300.dp, 600.dp)) { DocumentBrowserView(tab) } } }
+        waitUntil(timeoutMillis = 10_000) { tab.documents.size == 3 }
+        val model = tab.model
+        val column = { name: String -> model.fields.indexOf(name) }
+        model.setValue(0, column("qty"), "8")
+        model.setValue(0, column("total"), "31")
+        model.setDefault(0, column("items"))
+        model.setValue(1, column("vip"), "true")
+        val row = model.addRow()
+        model.setValue(row, column("customer"), "new")
+        model.setValue(row, column("total"), "5")
+        System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "documents-edits.png")) }
+        tab.submit()
+        waitUntil(timeoutMillis = 10_000) { !tab.submitting && !tab.loading && tab.documents.size == 4 }
+        assertEquals(false, tab.message?.isError, tab.message?.text)
+        runBlocking {
+            DocumentStore.connect(config, null).use { mongo ->
+                assertEquals("1", mongo.command(db, "db.orders.countDocuments({_id: 1, qty: {\$type: 'long'}, qty: 8, total: 31, items: {\$exists: false}, placed: {\$type: 'date'}})"))
+                assertEquals("1", mongo.command(db, "db.orders.countDocuments({_id: 2, vip: true})"))
+                assertEquals("1", mongo.command(db, "db.orders.countDocuments({customer: 'new', total: {\$type: 'int'}})"))
+                // Someone else changes order 3 after the page was loaded.
+                mongo.command(db, "db.orders.updateOne({_id: 3}, {\$set: {total: 99}})")
+            }
+        }
+        val stale = tab.model
+        stale.setValue(2, stale.fields.indexOf("total"), "51")
+        stale.setValue(1, stale.fields.indexOf("status"), "C")
+        tab.submit()
+        waitUntil(timeoutMillis = 10_000) { !tab.submitting && !tab.loading && tab.model !== stale }
+        assertEquals(true, tab.message?.isError)
+        assertTrue("Row 3" in tab.message!!.text, tab.message!!.text)
+        runBlocking {
+            DocumentStore.connect(config, null).use { mongo ->
+                assertEquals("1", mongo.command(db, "db.orders.countDocuments({_id: 3, total: 99})"), "the newer change survives")
+                assertEquals("1", mongo.command(db, "db.orders.countDocuments({_id: 2, status: 'C'})"), "the other document saved")
+            }
+        }
+        // The edit that didn't apply is still pending, now over the current value.
+        assertEquals("51", tab.model.value(2, tab.model.fields.indexOf("total")))
+        assertTrue(tab.hasChanges)
+        runBlocking { DocumentStore.connect(config, null).use { it.command(db, "db.dropDatabase()") } }
+        app.dispose()
+    }
+
+    @Test
+    fun `the filter completes fields, operators and values`() = runComposeUiTest {
+        if (server == null) return@runComposeUiTest
+        val (app, config) = app()
+        val tab = DocumentBrowserTab(app, config, db, "orders")
+        setContent { DatagrokTheme(isDark = true) { Box(Modifier.size(1300.dp, 600.dp)) { DocumentBrowserView(tab) } } }
+        waitUntil(timeoutMillis = 10_000) { tab.documents.size == 3 }
+        val field = onAllNodes(hasSetTextAction())[0]
+        field.performClick()
+        field.performTextReplacement("{address.c")
+        field.performKeyInput { withKeyDown(Key.CtrlLeft) { pressKey(Key.Spacebar) } }
+        waitUntil(timeoutMillis = 5_000) { onAllNodesWithText("address.city").fetchSemanticsNodes().isNotEmpty() }
+        System.getProperty("snapshot.dir")?.let { ImageIO.write(onAllNodes(isRoot()).onLast().captureToImage().toAwtImage(), "png", File(it, "documents-completion.png")) }
+        field.performKeyInput { pressKey(Key.Enter) }
+        waitForIdle()
+        assertEquals("{'address.city': ", tab.filter.text.toString())
+        // Right after the key, the field's values are offered.
+        waitUntil(timeoutMillis = 5_000) { onAllNodesWithText("'Helsinki'").fetchSemanticsNodes().isNotEmpty() }
         runBlocking { DocumentStore.connect(config, null).use { it.command(db, "db.dropDatabase()") } }
         app.dispose()
     }

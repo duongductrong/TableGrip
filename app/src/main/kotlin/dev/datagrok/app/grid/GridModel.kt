@@ -3,6 +3,7 @@ package dev.datagrok.app.grid
 import dev.datagrok.core.driver.QueryResult
 import dev.datagrok.core.driver.ResultColumn
 import dev.datagrok.core.edit.ColumnEdit
+import dev.datagrok.core.edit.EditCheck
 
 enum class RowStatus { Normal, Inserted, Deleted }
 
@@ -33,6 +34,19 @@ interface GridEditor {
 
     /** What input [column] takes, so the grid can offer a fitting editor and check what's typed. */
     fun columnEdit(column: Int): ColumnEdit
+
+    /**
+     * What input one cell takes. A table's cells take their column's; a document's fields can hold a different type in
+     * every row.
+     */
+    fun cellEdit(row: Int, column: Int): ColumnEdit = columnEdit(column)
+
+    /** Checks [text] typed into a cell: what would be stored, or why it can't be. */
+    fun check(row: Int, column: Int, text: String): EditCheck = cellEdit(row, column).check(text)
+
+    /** The cell menu's name for [setDefault]. */
+    val setDefaultLabel: String
+        get() = "Set DEFAULT"
 
     fun setValue(row: Int, column: Int, value: String?)
 

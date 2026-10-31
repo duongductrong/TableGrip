@@ -27,8 +27,22 @@ interface DocumentConnection : DatabaseConnection {
     /** Inserts [document], returning its `_id` as Extended JSON. */
     suspend fun insert(database: String, collection: String, document: String): String
 
-    /** Replaces the document whose `_id` is [id] (Extended JSON) with [document]. */
-    suspend fun replace(database: String, collection: String, id: String, document: String)
+    /**
+     * Replaces the document whose `_id` is [id] (Extended JSON) with [document]. With [original], the document as it was
+     * read, only the top-level fields that differ are written, and only while they still hold their original values: a
+     * field changed by someone else since is never overwritten, and fields left alone keep their exact BSON types.
+     */
+    suspend fun replace(database: String, collection: String, id: String, document: String, original: String? = null)
+
+    /**
+     * Sets and removes top-level fields of the document whose `_id` is [id]. Values are Extended JSON. The write only
+     * happens while every field in [expected] still holds the value it maps to (null: the field was missing), so an edit
+     * made from a stale page never overwrites a newer change; returns false when it didn't match.
+     */
+    suspend fun update(database: String, collection: String, id: String, set: Map<String, String>, unset: Set<String>, expected: Map<String, String?>): Boolean
+
+    /** Up to [size] documents picked at random, e.g. to learn the fields a collection's documents have. */
+    suspend fun sample(database: String, collection: String, size: Int): List<String> = find(database, collection, "{}", "{}", 0, size).documents
 
     /** Deletes the documents with these `_id`s (Extended JSON each), returning how many were deleted. */
     suspend fun delete(database: String, collection: String, ids: List<String>): Long

@@ -72,11 +72,11 @@ fun ValuePanel(model: GridModel, state: DataGridState, modifier: Modifier = Modi
         val info = model.columns[column]
         val value = model.value(focus.row, column)
         val editor = model.editor?.takeIf { it.canEdit(focus.row, column) }
-        val edit = editor?.columnEdit(column)
+        val edit = editor?.cellEdit(focus.row, column)
         val kind = edit?.kind
         val text = remember(focus, value) { TextFieldState(value.orEmpty()) }
         val typed = text.text.toString()
-        val check = remember(edit, typed) { edit?.takeIf { typed != value.orEmpty() }?.check(typed) }
+        val check = remember(edit, typed) { editor?.takeIf { typed != value.orEmpty() }?.check(focus.row, column, typed) }
         val problem = model.problem(focus.row, column)
         val json = remember(value) { value?.takeIf { it.trimStart().startsWith('{') || it.trimStart().startsWith('[') }?.let { runCatching { PrettyJson.parseToJsonElement(it) }.getOrNull() } }
         val binary = remember(value) { value?.takeIf { info.isBinary }?.let(BinaryText::decode) }

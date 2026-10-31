@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.bson.BsonArray
+import org.bson.BsonBoolean
 import org.bson.BsonDocument
 import org.bson.BsonInt32
 import org.bson.BsonString
@@ -105,10 +106,12 @@ class MongoClient : DocumentClient {
 
         override suspend fun find(database: String, collection: String, filter: String, sort: String, skip: Long, limit: Int): DocumentPage =
             io {
+                // Ties in the sort would let skip() hand out a document on two pages and none on another: break them by _id.
+                val order = Shell.document(sort).apply { if (isNotEmpty() && "_id" !in this && "\$natural" !in this) append("_id", BsonInt32(1)) }
                 val documents =
                     db(database).getCollection(collection, BsonDocument::class.java)
                         .find(Shell.document(filter))
-                        .sort(Shell.document(sort))
+                        .sort(order)
                         .skip(skip.toInt())
                         .limit(limit + 1)
                         .map { it.toJson(Json) }
@@ -126,13 +129,38 @@ class MongoClient : DocumentClient {
                 idJson(id!!)
             }
 
-        override suspend fun replace(database: String, collection: String, id: String, document: String) =
+        override suspend fun replace(database: String, collection: String, id: String, document: String, original: String?) =
             io {
                 val key = Shell.value(id)
                 val replacement = Shell.document(document)
                 replacement["_id"]?.let { if (it != key) throw IllegalArgumentException("A document's _id can't change; insert a new document instead.") }
-                val result = db(database).getCollection(collection, BsonDocument::class.java).replaceOne(Filters.eq("_id", key), replacement)
-                if (result.matchedCount == 0L) throw IllegalStateException("The document no longer exists.")
+                val coll = db(database).getCollection(collection, BsonDocument::class.java)
+                if (original == null) {
+                    val result = coll.replaceOne(Filters.eq("_id", key), replacement)
+                    if (result.matchedCount == 0L) throw IllegalStateException("The document no longer exists.")
+                    return@io
+                }
+                val before = Shell.document(original)
+                val set = replacement.filter { (field, value) -> field != "_id" && before[field] != value }
+                val unset = before.keys.filter { it != "_id" && it !in replacement }.toSet()
+                if (set.isEmpty() && unset.isEmpty()) return@io
+                val expected = (set.keys + unset).associateWith { before[it] }
+                if (!updateFields(coll, key, set, unset, expected)) {
+                    throw IllegalStateException("The document was changed or deleted since it was loaded; nothing was saved. Reload it and try again.")
+                }
+            }
+
+        override suspend fun update(database: String, collection: String, id: String, set: Map<String, String>, unset: Set<String>, expected: Map<String, String?>): Boolean =
+            io {
+                val coll = db(database).getCollection(collection, BsonDocument::class.java)
+                updateFields(coll, Shell.value(id), set.mapValues { Shell.value(it.value) }, unset, expected.mapValues { (_, value) -> value?.let(Shell::value) })
+            }
+
+        override suspend fun sample(database: String, collection: String, size: Int): List<String> =
+            io {
+                val coll = db(database).getCollection(collection, BsonDocument::class.java)
+                runCatching { coll.aggregate(listOf(BsonDocument("\$sample", BsonDocument("size", BsonInt32(size))))).map { it.toJson(Json) }.toList() }
+                    .getOrElse { coll.find().limit(size).map { it.toJson(Json) }.toList() }
             }
 
         override suspend fun delete(database: String, collection: String, ids: List<String>): Long =
@@ -160,8 +188,53 @@ class MongoClient : DocumentClient {
     internal companion object {
         val SystemDatabases = setOf("admin", "config", "local")
 
-        val Json: JsonWriterSettings = JsonWriterSettings.builder().outputMode(JsonMode.RELAXED).build()
+        /**
+         * Relaxed Extended JSON, except that 64-bit integers keep their `$numberLong` wrapper: relaxed mode prints them
+         * as plain numbers, which read back as 32-bit integers, so a document saved from the browser would lose the type.
+         */
+        val Json: JsonWriterSettings =
+            JsonWriterSettings.builder().outputMode(JsonMode.RELAXED)
+                .int64Converter { value, writer ->
+                    writer.writeStartObject()
+                    writer.writeString("\$numberLong", value.toString())
+                    writer.writeEndObject()
+                }
+                .build()
         val PrettyJson: JsonWriterSettings = JsonWriterSettings.builder().outputMode(JsonMode.RELAXED).indent(true).build()
+
+        /**
+         * Applies `$set` and `$unset` to the document with [key], only while each field of [expected] still holds its
+         * value (null: missing). Matches by `$eq`, so a value that is itself a document of `$` keys isn't read as
+         * operators, and arrays by size too, as `$eq` alone also matches an array holding the value as an element.
+         */
+        fun updateFields(
+            coll: com.mongodb.client.MongoCollection<BsonDocument>,
+            key: BsonValue,
+            set: Map<String, BsonValue>,
+            unset: Set<String>,
+            expected: Map<String, BsonValue?>,
+        ): Boolean {
+            (set.keys + unset).forEach { field ->
+                require(field.isNotEmpty() && '.' !in field && !field.startsWith('$')) { "Field “$field” can't be edited here: names with dots or a leading $ need the console." }
+                require(field != "_id") { "A document's _id can't change; insert a new document instead." }
+            }
+            val filter = BsonDocument("_id", key)
+            expected.forEach { (field, value) ->
+                if (field == "_id") return@forEach
+                filter[field] =
+                    when {
+                        value == null -> BsonDocument("\$exists", BsonBoolean.FALSE)
+                        value.isNull -> BsonDocument("\$type", BsonString("null"))
+                        value.isArray -> BsonDocument("\$eq", value).append("\$size", BsonInt32(value.asArray().size))
+                        else -> BsonDocument("\$eq", value)
+                    }
+            }
+            val update = BsonDocument()
+            if (set.isNotEmpty()) update["\$set"] = BsonDocument().apply { set.forEach { (field, value) -> append(field, value) } }
+            if (unset.isNotEmpty()) update["\$unset"] = BsonDocument().apply { unset.forEach { append(it, BsonString("")) } }
+            if (update.isEmpty()) return coll.countDocuments(filter) > 0
+            return coll.updateOne(filter, update).matchedCount > 0
+        }
 
         /** An `_id` as Extended JSON, the form the browser passes back to replace or delete it. */
         fun idJson(id: BsonValue): String = BsonDocument("_id", id).toJson(Json).let { it.substringAfter(':').removeSuffix("}").trim() }

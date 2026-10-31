@@ -412,7 +412,7 @@ private fun DataRow(
                 CellEditor(controller, cellModifier, colors)
             } else {
                 val name = model.columns[modelColumn].name
-                val edit = model.editor?.columnEdit(modelColumn)
+                val edit = model.editor?.cellEdit(row, modelColumn)
                 Cell(
                     value = model.value(row, modelColumn),
                     checkBox = edit?.takeIf { it.kind == EditKind.Boolean }?.let { CheckBoxCell(model.editor?.canEdit(row, modelColumn) == true) },
@@ -536,7 +536,7 @@ private fun CellEditor(controller: GridController, modifier: Modifier, colors: G
     // typed; while one is open, the inline field losing focus to it doesn't commit.
     val popup = state.editPopup
     LaunchedEffect(popup) { if (popup == EditPopup.None) runCatching { focus.requestFocus() } }
-    val kind = state.editing?.let { controller.columnEdit(it.column)?.kind }
+    val kind = state.editing?.let { controller.cellEdit(it)?.kind }
     val hasPicker = kind?.isTemporal == true
     val check by remember { derivedStateOf { controller.editCheck() } }
     val changed by remember { derivedStateOf { state.editText.text.toString() != state.editInitial } }
@@ -754,9 +754,9 @@ private fun cellMenu(controller: GridController): List<ContextMenuItem> {
         ContextMenuItem("Go to Referenced Row (${Shortcuts.GoToReferenced})") { controller.followFocusedLink() }
             .takeIf { single && controller.columnName(focus.column) in controller.actions.linkedColumns && controller.model.value(focus.row, state.modelColumn(focus.column)) != null },
     ) + controller.actions.relatedRows?.takeIf { single }?.invoke(focus.row).orEmpty().map { (label, open) -> ContextMenuItem(label, open) } + listOfNotNull(
-        ContextMenuItem("Toggle (Space)") { controller.toggleBoolean() }.takeIf { single && controller.isBooleanColumn(focus.column) && controller.canEdit(focus) },
+        ContextMenuItem("Toggle (Space)") { controller.toggleBoolean() }.takeIf { single && controller.isBooleanCell(focus) && controller.canEdit(focus) },
         ContextMenuItem("Set NULL (${Shortcuts.SetNull})") { controller.setNull() }.takeIf { editor != null },
-        ContextMenuItem("Set DEFAULT") { controller.setDefault() }.takeIf { controller.canSetDefault() },
+        ContextMenuItem(editor?.setDefaultLabel ?: "Set DEFAULT") { controller.setDefault() }.takeIf { controller.canSetDefault() },
         ContextMenuItem("Generate UUID") { controller.generateUuids(timeOrdered = false) }.takeIf { controller.hasUuidSelection() },
         ContextMenuItem("Generate UUID v7 (time-ordered)") { controller.generateUuids(timeOrdered = true) }.takeIf { controller.hasUuidSelection() },
         ContextMenuItem("Add Row (${Shortcuts.AddRow})") { controller.addRow() }.takeIf { editor != null },
