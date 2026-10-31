@@ -74,6 +74,7 @@ import org.jetbrains.jewel.ui.component.CircularProgressIndicator
 import org.jetbrains.jewel.ui.component.Divider
 import org.jetbrains.jewel.ui.component.Icon
 import org.jetbrains.jewel.ui.component.IconButton
+import org.jetbrains.jewel.foundation.lazy.tree.Tree
 import org.jetbrains.jewel.ui.component.LazyTree
 import org.jetbrains.jewel.ui.component.DefaultButton
 import org.jetbrains.jewel.ui.component.Link
@@ -142,7 +143,11 @@ internal fun ExplorerPanel(app: AppState) {
                             style = explorerTreeStyle(),
                             onElementDoubleClick = { element -> openNode(app, element.data) },
                         ) { element ->
-                            ContextMenuArea(items = { contextMenu(app, element.data) }) { NodeRow(app, element.data, Modifier.fillMaxWidth().dragAndDrop(drag, element.data)) }
+                            // Jewel draws no chevron for leaves, so their icons would sit under their siblings' chevrons.
+                            val leafInset = if (element is Tree.Element.Leaf) TreeChevronSize + TreeChevronGap else 0.dp
+                            ContextMenuArea(items = { contextMenu(app, element.data) }) {
+                                NodeRow(app, element.data, Modifier.fillMaxWidth().dragAndDrop(drag, element.data).padding(start = leafInset))
+                            }
                         }
                     }
                     VerticalScrollbar(
@@ -160,6 +165,8 @@ internal fun ExplorerPanel(app: AppState) {
 private val TreeRowOuterPadding = 6.dp
 private val TreeRowInnerPadding = 4.dp
 private val TreeRowInset = TreeRowOuterPadding + TreeRowInnerPadding
+private val TreeChevronSize = 16.dp
+private val TreeChevronGap = 4.dp
 
 /**
  * Int UI's tree metrics are tuned for IntelliJ's project view: a 23dp indent and 12dp side gutters push deep schemas
@@ -177,7 +184,7 @@ private fun explorerTreeStyle(): LazyTreeStyle {
                 elementPadding = PaddingValues(horizontal = TreeRowOuterPadding),
                 elementContentPadding = PaddingValues(horizontal = TreeRowInnerPadding, vertical = 2.dp),
                 elementMinHeight = 26.dp,
-                chevronContentGap = 4.dp,
+                chevronContentGap = TreeChevronGap,
             ),
         icons = base.icons,
     )
