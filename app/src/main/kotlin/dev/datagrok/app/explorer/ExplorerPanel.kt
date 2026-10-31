@@ -38,6 +38,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.sp
+import org.jetbrains.jewel.ui.component.ContextMenuDivider
 import org.jetbrains.jewel.ui.component.PopupMenu
 import org.jetbrains.jewel.ui.component.separator
 import androidx.compose.runtime.remember
@@ -103,7 +104,7 @@ internal fun ExplorerPanel(app: AppState) {
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
 
         if (app.connections.profiles.isEmpty()) {
-            EmptyExplorer(app)
+            ContextMenuArea(items = { sidebarMenu(app) }) { EmptyExplorer(app) }
             return@Column
         }
 
@@ -132,14 +133,17 @@ internal fun ExplorerPanel(app: AppState) {
         Box(Modifier.weight(1f).fillMaxWidth().onGloballyPositioned { origin = it.positionInRoot() }) {
             Column(Modifier.fillMaxSize()) {
                 Box(Modifier.weight(1f).fillMaxWidth()) {
-                    LazyTree(
-                        tree = tree,
-                        treeState = explorer.treeState,
-                        modifier = Modifier.fillMaxSize().padding(vertical = 4.dp),
-                        style = explorerTreeStyle(),
-                        onElementDoubleClick = { element -> openNode(app, element.data) },
-                    ) { element ->
-                        ContextMenuArea(items = { contextMenu(app, element.data) }) { NodeRow(app, element.data, Modifier.fillMaxWidth().dragAndDrop(drag, element.data)) }
+                    // Right-clicking blank space below the rows offers the sidebar's own actions; rows keep their own menus.
+                    ContextMenuArea(items = { sidebarMenu(app) }) {
+                        LazyTree(
+                            tree = tree,
+                            treeState = explorer.treeState,
+                            modifier = Modifier.fillMaxSize().padding(vertical = 4.dp),
+                            style = explorerTreeStyle(),
+                            onElementDoubleClick = { element -> openNode(app, element.data) },
+                        ) { element ->
+                            ContextMenuArea(items = { contextMenu(app, element.data) }) { NodeRow(app, element.data, Modifier.fillMaxWidth().dragAndDrop(drag, element.data)) }
+                        }
                     }
                     VerticalScrollbar(
                         explorer.treeState.lazyListState.lazyListState,
@@ -220,6 +224,23 @@ private fun openNode(app: AppState, node: ExplorerNode) {
             else -> return
         }
     app.connections.byId(table.connectionId)?.let { app.workspace.openTable(it, table.ref, section) }
+}
+
+/** The menu on the sidebar's blank space: adding connections, then actions on the whole tree. */
+private fun sidebarMenu(app: AppState): List<ContextMenuItem> {
+    val connected = app.connections.profiles.map { it.id }.filter { app.databases.status(it) is ConnectionStatus.Connected }
+    val tree =
+        listOfNotNull(
+            ContextMenuItem("Collapse All") { app.explorer.treeState.openNodes = emptySet() }.takeIf { app.explorer.treeState.openNodes.isNotEmpty() },
+            ContextMenuItem("Disconnect All") {
+                app.confirmDataFiles(connected) { connected.forEach(app.explorer::disconnectNow) }
+            }.takeIf { connected.isNotEmpty() },
+        )
+    return listOf(
+        ContextMenuItem("New Connection…") { app.connections.openNew() },
+        ContextMenuItem("Open Data File…") { app.connections.chooseDataFiles() },
+        ContextMenuItem("Import from Other Tools…") { app.connections.openImport() },
+    ) + (if (tree.isEmpty()) emptyList() else listOf(ContextMenuDivider) + tree)
 }
 
 private fun contextMenu(app: AppState, node: ExplorerNode): List<ContextMenuItem> =
