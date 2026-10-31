@@ -11,10 +11,12 @@ import dev.datagrok.core.DatagrokPaths
 import dev.datagrok.core.agent.AgentAdapter
 import dev.datagrok.core.agent.AgentEvent
 import dev.datagrok.core.agent.AgentMessage
+import dev.datagrok.core.agent.AgentModel
 import dev.datagrok.core.agent.AgentRegistry
 import dev.datagrok.core.agent.AgentRequest
 import dev.datagrok.core.agent.Mention
 import dev.datagrok.core.agent.MentionText
+import dev.datagrok.core.agent.withModel
 import dev.datagrok.core.agent.provider.AgentMode
 import dev.datagrok.core.agent.provider.ProviderConfig
 import dev.datagrok.core.agent.provider.ProviderProtocol
@@ -28,6 +30,7 @@ import dev.datagrok.core.sql.SqlSplitter
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -64,6 +67,14 @@ class ChatMessage(val role: AgentMessage.Role, text: String = "", val kind: Kind
     /** Completed when the message is first sent (see [MentionSources.complete]), so every later turn sends the same. */
     var mentions by mutableStateOf(mentions)
     var streaming by mutableStateOf(false)
+    /** When the agent was asked, from [System.nanoTime]; the panel counts the wait from here. */
+    var startedAt = 0L
+    /** The agent's reasoning, shown folded above the answer; never sent back to it. */
+    var reasoning by mutableStateOf("")
+    /** How long the agent reasoned, set once the answer starts or the turn ends; null while it is still thinking. */
+    var thoughtSeconds by mutableStateOf<Int?>(null)
+    /** What the agent did besides writing (tool calls, commands), in the order it started them. */
+    val activities = mutableStateListOf<AgentEvent.Activity>()
     var error by mutableStateOf<String?>(null)
     /** The note's line in the chat, when [text] is what the agent reads. */
     var label by mutableStateOf<String?>(null)
@@ -104,6 +115,20 @@ class AgentViewModel(private val app: AppState, private val registry: AgentRegis
         get() = agents.firstOrNull { it.descriptor.id == app.settings.agent } ?: agents.firstOrNull()
 
     fun select(agent: AgentAdapter) = app.updateSettings { it.copy(agent = agent.descriptor.id) }
+
+    /** The model picked for the selected agent; null means the agent's own default, as does an agent that can't choose. */
+    val model: String?
+        get() = selected?.takeIf { it.choosesModel }?.let { app.settings.agentModels[it.descriptor.id] }
+
+    /** Picks [model] for the selected agent from the next turn on; blank goes back to the agent's own default. */
+    fun chooseModel(model: String?) {
+        val id = selected?.takeIf { it.choosesModel }?.descriptor?.id ?: return
+        val chosen = model?.trim().orEmpty()
+        app.updateSettings { it.copy(agentModels = if (chosen.isEmpty()) it.agentModels - id else it.agentModels + (id to chosen)) }
+    }
+
+    /** The models [agent] says it offers; empty when it can't tell, and the user types one. */
+    suspend fun models(agent: AgentAdapter): List<AgentModel> = agent.models()
 
     /** Finds installed agents the first time the panel opens; [rescan] re-reads the shell's PATH. */
     fun discover(rescan: Boolean = false) {
@@ -173,15 +198,33 @@ class AgentViewModel(private val app: AppState, private val registry: AgentRegis
     }
 
     private fun startTurn(message: ChatMessage) {
-        val agent = selected ?: return
+        val agent = selected?.withModel(model) ?: return
         if (busy) return
         val history = messages.filter { it.error == null && it.text.isNotBlank() }.map { AgentMessage(it.role, it.mentionText.prompt) }
         messages += message
-        val reply = ChatMessage(AgentMessage.Role.Assistant).apply { streaming = true }
+        val reply = ChatMessage(AgentMessage.Role.Assistant).apply {
+            streaming = true
+            startedAt = System.nanoTime()
+        }
         messages += reply
         busy = true
         turn =
             app.scope.launch {
+                val reveal = TextReveal()
+                val thought = TextReveal()
+                var thinking = false
+                var answered = false
+                // Counted from the request, as the wait before the answer is what the user sat through.
+                fun endThinking() {
+                    if (thinking && reply.thoughtSeconds == null) reply.thoughtSeconds = ((System.nanoTime() - reply.startedAt) / 1_000_000_000).toInt()
+                }
+                val pacing = launch {
+                    while (true) {
+                        delay(TextReveal.FrameMillis)
+                        thought.step()?.let { reply.reasoning = it }
+                        reveal.step()?.let { reply.text = it }
+                    }
+                }
                 try {
                     if (message.mentions.isNotEmpty()) message.mentions = message.mentions.mapValues { (_, mention) -> sources.complete(mention) }
                     val request =
@@ -194,16 +237,38 @@ class AgentViewModel(private val app: AppState, private val registry: AgentRegis
                     agent.send(request).collect { event ->
                         when (event) {
                             AgentEvent.Thinking -> Unit
-                            is AgentEvent.TextDelta -> reply.text += event.text
-                            is AgentEvent.Completed -> reply.text = event.text
+                            is AgentEvent.ReasoningDelta -> {
+                                thinking = true
+                                thought.append(event.text)
+                            }
+                            is AgentEvent.Activity -> {
+                                val index = reply.activities.indexOfFirst { it.id == event.id }
+                                if (index < 0) reply.activities += event else reply.activities[index] = event
+                            }
+                            is AgentEvent.TextDelta -> {
+                                endThinking()
+                                reveal.append(event.text)
+                            }
+                            is AgentEvent.Completed -> reveal.complete(event.text)
                         }
                     }
+                    // Let the rest flow out rather than land at once; it speeds up now the answer is complete.
+                    while (reveal.pending > 0 || thought.pending > 0) delay(TextReveal.FrameMillis)
+                    answered = true
                 } catch (e: CancellationException) {
+                    reply.text = reveal.flush()
                     if (reply.text.isBlank()) reply.error = "Stopped."
                     throw e
                 } catch (e: Exception) {
                     reply.error = e.message ?: "The agent failed."
                 } finally {
+                    pacing.cancel()
+                    endThinking()
+                    reply.reasoning = thought.flush()
+                    reply.text = reveal.flush()
+                    // An activity the agent never reported back on: done if the turn succeeded, cut short if not.
+                    val end = if (answered) AgentEvent.Activity.State.Done else AgentEvent.Activity.State.Failed
+                    for (i in reply.activities.indices) if (reply.activities[i].state == AgentEvent.Activity.State.Running) reply.activities[i] = reply.activities[i].copy(state = end)
                     reply.streaming = false
                     busy = false
                 }
@@ -228,7 +293,7 @@ class AgentViewModel(private val app: AppState, private val registry: AgentRegis
     suspend fun assistAgent(): AgentAdapter? {
         discover()
         discovery?.join()
-        return selected
+        return selected?.withModel(model)
     }
 
     /** SQL blocks offer console actions only where a SQL console exists: not for key-value or document stores. */

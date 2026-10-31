@@ -108,6 +108,33 @@ class ProviderAgentTest {
     }
 
     @Test
+    fun `reasoning streams apart from the answer in both protocols`() {
+        fun reasoning(protocol: ProviderProtocol, vararg payloads: String): Pair<String, String> {
+            val decoder = protocol.decoder("Provider")
+            val thought = payloads.flatMap(decoder::data).filterIsInstance<AgentEvent.ReasoningDelta>().joinToString("") { it.text }
+            return thought to decoder.finish()
+        }
+        assertEquals(
+            "Count rows." to "42",
+            reasoning(
+                ProviderProtocol.Anthropic,
+                """{"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":"Count rows."}}""",
+                """{"type":"content_block_delta","index":1,"delta":{"type":"text_delta","text":"42"}}""",
+            ),
+        )
+        assertEquals(
+            "Count rows." to "42",
+            reasoning(
+                ProviderProtocol.OpenAi,
+                """{"choices":[{"index":0,"delta":{"reasoning_content":"Count "}}]}""",
+                """{"choices":[{"index":0,"delta":{"reasoning":"rows."}}]}""",
+                """{"choices":[{"index":0,"delta":{"content":"42"}}]}""",
+                "[DONE]",
+            ),
+        )
+    }
+
+    @Test
     fun `anthropic request carries system, alternating turns and the reminder`() = runBlocking {
         val base =
             serve(

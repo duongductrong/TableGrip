@@ -48,6 +48,8 @@ private abstract class TextStreamDecoder(protected val title: String) : Provider
         return listOf(AgentEvent.TextDelta(chunk))
     }
 
+    protected fun reasoning(chunk: String?): List<AgentEvent> = if (chunk.isNullOrEmpty()) emptyList() else listOf(AgentEvent.ReasoningDelta(chunk))
+
     override fun finish(): String {
         val answer = text.toString().trim()
         return when {
@@ -63,7 +65,14 @@ private class AnthropicStreamDecoder(title: String) : TextStreamDecoder(title) {
     override fun data(payload: String): List<AgentEvent> {
         val json = parse(payload) ?: return emptyList()
         return when (json.string("type")) {
-            "content_block_delta" -> json.obj("delta")?.takeIf { it.string("type") == "text_delta" }?.let { delta(it.string("text")) }.orEmpty()
+            "content_block_delta" -> {
+                val delta = json.obj("delta")
+                when (delta?.string("type")) {
+                    "text_delta" -> delta(delta.string("text"))
+                    "thinking_delta" -> reasoning(delta.string("thinking"))
+                    else -> emptyList()
+                }
+            }
             "message_delta" -> emptyList<AgentEvent>().also { if (json.obj("delta")?.string("stop_reason") == "refusal") refused = true }
             "error" -> throw AgentException(json.obj("error")?.string("message") ?: "$title failed.")
             else -> emptyList()
@@ -71,7 +80,10 @@ private class AnthropicStreamDecoder(title: String) : TextStreamDecoder(title) {
     }
 }
 
-/** Chat Completions chunks: text in `choices[0].delta.content`, then a literal `[DONE]`. */
+/**
+ * Chat Completions chunks: text in `choices[0].delta.content`, then a literal `[DONE]`. Reasoning models served this way
+ * put their thinking in `reasoning_content` (DeepSeek, vLLM) or `reasoning` (OpenRouter).
+ */
 private class OpenAiStreamDecoder(title: String) : TextStreamDecoder(title) {
     override fun data(payload: String): List<AgentEvent> {
         if (payload == "[DONE]") return emptyList()
@@ -79,6 +91,7 @@ private class OpenAiStreamDecoder(title: String) : TextStreamDecoder(title) {
         json.obj("error")?.let { throw AgentException(it.string("message") ?: "$title failed.") }
         val choice = (json["choices"] as? JsonArray)?.firstOrNull() as? JsonObject ?: return emptyList()
         if (choice.string("finish_reason") == "content_filter") refused = true
-        return delta(choice.obj("delta")?.string("content"))
+        val delta = choice.obj("delta")
+        return reasoning(delta?.string("reasoning_content") ?: delta?.string("reasoning")) + delta(delta?.string("content"))
     }
 }

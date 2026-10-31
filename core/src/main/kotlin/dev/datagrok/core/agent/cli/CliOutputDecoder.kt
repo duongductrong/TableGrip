@@ -23,7 +23,9 @@ enum class CliOutputFormat {
     GeminiStreamJson,
     /** `codex exec --json`: whole messages, no token deltas. */
     CodexJson,
-    AntigravityStreamJson;
+    AntigravityStreamJson,
+    /** `opencode run --format json`: each text part whole once it is finished. */
+    OpenCodeJson;
 
     fun decoder(title: String): CliOutputDecoder =
         when (this) {
@@ -32,6 +34,7 @@ enum class CliOutputFormat {
             GeminiStreamJson -> GeminiStreamDecoder(title)
             CodexJson -> CodexJsonDecoder(title)
             AntigravityStreamJson -> AntigravityStreamDecoder(title)
+            OpenCodeJson -> OpenCodeJsonDecoder(title)
         }
 }
 
@@ -91,6 +94,16 @@ private abstract class NdjsonDecoder(protected val title: String) : CliOutputDec
         return listOf(AgentEvent.TextDelta(text))
     }
 
+    protected fun reasoning(text: String): List<AgentEvent> = if (text.isEmpty()) emptyList() else listOf(AgentEvent.ReasoningDelta(text))
+
+    /** Labels by id, so an update that only says how an activity ended still names it. */
+    private val labels = mutableMapOf<String, String>()
+
+    protected fun activity(id: String, label: String?, state: AgentEvent.Activity.State): List<AgentEvent> {
+        val name = label?.takeIf { it.isNotBlank() }?.let(::oneLine)?.also { labels[id] = it } ?: labels[id] ?: return emptyList()
+        return listOf(AgentEvent.Activity(id, name, state))
+    }
+
     protected abstract fun event(json: JsonObject): List<AgentEvent>
 
     /** Nothing parsed means the CLI failed before it streamed anything; that story is in stderr. */
@@ -109,6 +122,17 @@ private fun JsonObject.string(key: String): String? = (this[key] as? JsonPrimiti
 
 private fun JsonObject.obj(key: String): JsonObject? = this[key] as? JsonObject
 
+private fun JsonObject.array(key: String): List<JsonObject> = (this[key] as? JsonArray).orEmpty().filterIsInstance<JsonObject>()
+
+/** An activity's label fits one row of the chat. */
+private fun oneLine(text: String): String = text.lineSequence().first().trim().let { if (it.length > 80) it.take(79) + "…" else it }
+
+/** What a tool call was about, from the argument that usually says it: a path, a command, a query. */
+private fun toolLabel(tool: String, input: JsonObject?): String {
+    val detail = listOf("file_path", "path", "command", "pattern", "query", "url", "description").firstNotNullOfOrNull { input?.string(it) }
+    return if (detail.isNullOrBlank()) tool else "$tool · $detail"
+}
+
 /**
  * `--output-format stream-json`. Claude Code sends token deltas as `stream_event`s (with `--include-partial-messages`)
  * and whole `assistant` messages besides. Cursor Agent sends its deltas as `assistant` messages carrying `timestamp_ms`,
@@ -124,11 +148,39 @@ private class ClaudeStreamDecoder(title: String) : NdjsonDecoder(title) {
             "stream_event" -> {
                 val event = json.obj("event")
                 val delta = event?.obj("delta")
-                if (event?.string("type") == "content_block_delta" && delta?.string("type") == "text_delta") delta(delta.string("text").orEmpty()) else emptyList()
+                when {
+                    event?.string("type") != "content_block_delta" -> emptyList()
+                    delta?.string("type") == "text_delta" -> delta(delta.string("text").orEmpty())
+                    delta?.string("type") == "thinking_delta" -> reasoning(delta.string("thinking").orEmpty())
+                    else -> emptyList()
+                }
             }
             "assistant" -> {
-                val text = json.obj("message")?.let(::textOf).orEmpty()
-                if (json.containsKey("timestamp_ms")) delta(text) else emptyList<AgentEvent>().also { whole.append(text) }
+                val message = json.obj("message")
+                val text = message?.let(::textOf).orEmpty()
+                val tools = message?.array("content").orEmpty().filter { it.string("type") == "tool_use" }.flatMap { use ->
+                    activity(use.string("id").orEmpty(), toolLabel(use.string("name").orEmpty(), use.obj("input")), AgentEvent.Activity.State.Running)
+                }
+                tools + if (json.containsKey("timestamp_ms")) delta(text) else emptyList<AgentEvent>().also { whole.append(text) }
+            }
+            // Tool results come back as the user's turn.
+            "user" -> json.obj("message")?.array("content").orEmpty().filter { it.string("type") == "tool_result" }.flatMap { result ->
+                val failed = (result["is_error"] as? JsonPrimitive)?.booleanOrNull == true
+                activity(result.string("tool_use_id").orEmpty(), null, if (failed) AgentEvent.Activity.State.Failed else AgentEvent.Activity.State.Done)
+            }
+            // Cursor Agent's own events: reasoning deltas, and tool calls named by their key, e.g. `readToolCall`.
+            "thinking" -> if (json.string("subtype") == "delta") reasoning(json.string("text").orEmpty()) else emptyList()
+            "tool_call" -> {
+                val call = json.obj("tool_call")?.entries?.firstOrNull()
+                val body = call?.value as? JsonObject
+                val name = call?.key?.removeSuffix("ToolCall")
+                val result = body?.obj("result")
+                val state = when {
+                    json.string("subtype") != "completed" -> AgentEvent.Activity.State.Running
+                    result != null && (result.containsKey("error") || result.containsKey("rejected")) -> AgentEvent.Activity.State.Failed
+                    else -> AgentEvent.Activity.State.Done
+                }
+                activity(json.string("call_id").orEmpty(), name?.let { toolLabel(it, body?.obj("args")) }, state)
             }
             "result" -> {
                 val text = json.string("result").orEmpty()
@@ -163,6 +215,8 @@ private class GeminiStreamDecoder(title: String) : NdjsonDecoder(title) {
     override fun event(json: JsonObject): List<AgentEvent> =
         when (json.string("type")) {
             "message" -> if (json.string("role") == "assistant") delta(json.string("content").orEmpty()) else emptyList()
+            "tool_use" -> activity(json.string("tool_id").orEmpty(), toolLabel(json.string("tool_name").orEmpty(), json.obj("parameters")), AgentEvent.Activity.State.Running)
+            "tool_result" -> activity(json.string("tool_id").orEmpty(), null, if (json.string("status") == "error") AgentEvent.Activity.State.Failed else AgentEvent.Activity.State.Done)
             "error" -> emptyList<AgentEvent>().also { error = json.string("message") ?: error }
             "result" -> {
                 if (json.string("status") == "error") error = json.obj("error")?.string("message") ?: json.string("error") ?: "$title failed."
@@ -185,17 +239,25 @@ private class GeminiStreamDecoder(title: String) : NdjsonDecoder(title) {
 private class CodexJsonDecoder(title: String) : NdjsonDecoder(title) {
     private var error: String? = null
 
+    private var reasoned = false
+
     override fun event(json: JsonObject): List<AgentEvent> =
         when (json.string("type")) {
             "item.completed" -> {
                 val item = json.obj("item")
-                if (item?.string("type") == "agent_message") {
-                    val text = item.string("text").orEmpty()
-                    delta(if (streamed.isEmpty()) text else "\n\n$text")
-                } else {
-                    emptyList()
+                when (item?.string("type")) {
+                    "agent_message" -> {
+                        val text = item.string("text").orEmpty()
+                        delta(if (streamed.isEmpty()) text else "\n\n$text")
+                    }
+                    "reasoning" -> {
+                        val text = item.string("text").orEmpty().trim()
+                        reasoning(if (reasoned) "\n\n$text" else text).also { if (text.isNotEmpty()) reasoned = true }
+                    }
+                    else -> work(item, done = true)
                 }
             }
+            "item.started", "item.updated" -> work(json.obj("item"), done = false)
             "turn.failed" -> emptyList<AgentEvent>().also { error = json.obj("error")?.string("message") ?: "$title failed." }
             "error" -> emptyList<AgentEvent>().also { error = error ?: json.string("message") }
             else -> emptyList()
@@ -205,6 +267,26 @@ private class CodexJsonDecoder(title: String) : NdjsonDecoder(title) {
         flush()
         if (streamed.isBlank()) error?.let { throw AgentException(unwrapApiError(it)) }
         return noOutcome(stderr)
+    }
+
+    /** Commands, tool calls, searches and edits, as activities. */
+    private fun work(item: JsonObject?, done: Boolean): List<AgentEvent> {
+        item ?: return emptyList()
+        val label = when (item.string("type")) {
+            "command_execution" -> item.string("command")?.let { "Ran $it" }
+            "mcp_tool_call" -> listOfNotNull(item.string("server"), item.string("tool")).joinToString(".").ifEmpty { null }
+            "web_search" -> item.string("query")?.let { "Searched $it" }
+            "file_change" -> item.array("changes").mapNotNull { it.string("path") }.joinToString().ifEmpty { null }?.let { "Edited $it" }
+            else -> return emptyList()
+        }
+        val status = item.string("status")
+        val exit = (item["exit_code"] as? JsonPrimitive)?.contentOrNull?.toIntOrNull()
+        val state = when {
+            status == "failed" || status == "declined" || (exit != null && exit != 0) -> AgentEvent.Activity.State.Failed
+            done || status == "completed" -> AgentEvent.Activity.State.Done
+            else -> AgentEvent.Activity.State.Running
+        }
+        return activity(item.string("id").orEmpty(), label, state)
     }
 
     /** Codex passes the API's error body through as a string of JSON; its `message` is the readable part. */
@@ -220,7 +302,7 @@ private class AntigravityStreamDecoder(title: String) : NdjsonDecoder(title) {
 
     override fun event(json: JsonObject): List<AgentEvent> =
         when (json.string("event")) {
-            "step_update" -> delta(json.obj("step_update")?.string("text_delta").orEmpty())
+            "step_update" -> step(json.obj("step_update"))
             "result" -> {
                 val result = json.obj("result")
                 status = result?.string("status") ?: "INVALID"
@@ -230,6 +312,22 @@ private class AntigravityStreamDecoder(title: String) : NdjsonDecoder(title) {
             }
             else -> emptyList()
         }
+
+    /** The answer streams in `agent_response` steps; any other step but the user's own is work worth showing. */
+    private fun step(update: JsonObject?): List<AgentEvent> {
+        update ?: return emptyList()
+        val type = update.string("step_type").orEmpty()
+        val text = update.string("text_delta").orEmpty()
+        if (type.contains("thinking")) return reasoning(text)
+        if (type.isEmpty() || type == "agent_response" || type == "user_input") return delta(text)
+        val state = when (update.string("state")) {
+            "DONE" -> AgentEvent.Activity.State.Done
+            "ERROR", "FAILED", "CANCELED", "CANCELLED" -> AgentEvent.Activity.State.Failed
+            else -> AgentEvent.Activity.State.Running
+        }
+        val label = type.replace('_', ' ').replaceFirstChar { it.uppercase() }
+        return activity("step-${update.string("step_index")}", label, state) + delta(text)
+    }
 
     override fun finish(exitStatus: Int, stderr: String): String {
         flush()
@@ -241,5 +339,49 @@ private class AntigravityStreamDecoder(title: String) : NdjsonDecoder(title) {
             answer.isNotEmpty() && error == null -> answer
             else -> throw AgentException(error ?: "$title ended in state $status.")
         }
+    }
+}
+
+/**
+ * `opencode run --format json`: `text` and `reasoning` parts arrive whole once finished, tool calls as `tool_use` parts
+ * with their state, and a failure as an `error` event while the process still exits 0.
+ */
+private class OpenCodeJsonDecoder(title: String) : NdjsonDecoder(title) {
+    private var error: String? = null
+    private var reasoned = false
+
+    override fun event(json: JsonObject): List<AgentEvent> {
+        val part = json.obj("part")
+        return when (json.string("type")) {
+            "text" -> {
+                val text = part?.string("text").orEmpty()
+                delta(if (streamed.isEmpty() || text.isEmpty()) text else "\n\n$text")
+            }
+            "reasoning" -> {
+                val text = part?.string("text").orEmpty().trim()
+                reasoning(if (reasoned) "\n\n$text" else text).also { if (text.isNotEmpty()) reasoned = true }
+            }
+            "tool_use" -> {
+                val state = part?.obj("state")
+                val status = when (state?.string("status")) {
+                    "completed" -> AgentEvent.Activity.State.Done
+                    "error" -> AgentEvent.Activity.State.Failed
+                    else -> AgentEvent.Activity.State.Running
+                }
+                val label = state?.string("title")?.takeIf { it.isNotBlank() }?.let { "${part?.string("tool")} · $it" } ?: toolLabel(part?.string("tool").orEmpty(), state?.obj("input"))
+                activity(part?.string("callID") ?: part?.string("id").orEmpty(), label, status)
+            }
+            "error" -> emptyList<AgentEvent>().also {
+                val body = json.obj("error")
+                error = body?.string("message") ?: body?.obj("data")?.string("message") ?: "$title failed."
+            }
+            else -> emptyList()
+        }
+    }
+
+    override fun finish(exitStatus: Int, stderr: String): String {
+        flush()
+        if (streamed.isBlank()) error?.let { throw AgentException(it) }
+        return noOutcome(stderr)
     }
 }

@@ -4,6 +4,7 @@ import dev.datagrok.core.agent.AgentAdapter
 import dev.datagrok.core.agent.AgentDescriptor
 import dev.datagrok.core.agent.AgentEvent
 import dev.datagrok.core.agent.AgentException
+import dev.datagrok.core.agent.AgentModel
 import dev.datagrok.core.agent.AgentRequest
 import dev.datagrok.core.agent.AgentSource
 import dev.datagrok.core.agent.AgentTransport
@@ -19,7 +20,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 /** The CLI agents installed on this machine. */
 class CliAgentSource(private val presets: List<CliAgentPreset> = CliAgentPreset.entries) : AgentSource {
@@ -38,6 +42,40 @@ class CliAgentSource(private val presets: List<CliAgentPreset> = CliAgentPreset.
  */
 class CliAgentAdapter(private val preset: CliAgentPreset, private val executable: Path) : AgentAdapter {
     override val descriptor = AgentDescriptor(preset.id, preset.title, AgentTransport.Cli, executable.toString())
+
+    override val choosesModel: Boolean
+        get() = preset.choosesModel
+
+    private val modelsLock = Mutex()
+    private var listed: List<AgentModel>? = null
+
+    /**
+     * Asked once per adapter, so a rescan asks again (a CLI may have been logged in or updated since). A list that
+     * fails or comes back empty isn't kept, so the next look tries again.
+     */
+    override suspend fun models(): List<AgentModel> {
+        if (!preset.choosesModel) return emptyList()
+        if (!preset.models.runs) return preset.models.parse("")
+        return modelsLock.withLock {
+            listed ?: listModels().also { if (it.isNotEmpty()) listed = it }
+        }
+    }
+
+    private suspend fun listModels(): List<AgentModel> =
+        withContext(Dispatchers.IO) {
+            val process =
+                runCatching { command(preset.models.arguments, workingDirectory = null).start() }.getOrNull() ?: return@withContext emptyList()
+            try {
+                val stderr = async { process.errorStream.bufferedReader().readBounded(STDERR_CAP) }
+                val stdout = withTimeoutOrNull(MODELS_TIMEOUT_SECONDS * 1_000) {
+                    async { process.inputStream.bufferedReader().readBounded(MODELS_CAP) }.await()
+                }
+                stderr.cancel()
+                stdout?.let { runCatching { preset.models.parse(it) }.getOrDefault(emptyList()) }.orEmpty()
+            } finally {
+                withContext(NonCancellable) { terminate(process) }
+            }
+        }
 
     override fun send(request: AgentRequest): Flow<AgentEvent> =
         channelFlow {
@@ -91,10 +129,20 @@ class CliAgentAdapter(private val preset: CliAgentPreset, private val executable
 
     private suspend fun start(request: AgentRequest): Process {
         val directory = request.workingDirectory?.also { Files.createDirectories(it) }
+        val builder = command(preset.arguments(request.toPrompt(), request.model), directory)
+        return try {
+            builder.start()
+        } catch (e: Exception) {
+            throw AgentException("Couldn't start ${preset.title} (${preset.binary}).", e)
+        }
+    }
+
+    /** The binary with [arguments], stdin closed and the variables that turn a terminal tool into a quiet one. */
+    private suspend fun command(arguments: List<String>, workingDirectory: Path?): ProcessBuilder {
         val builder =
-            ProcessBuilder(listOf(executable.toString()) + preset.arguments(request.toPrompt()))
+            ProcessBuilder(listOf(executable.toString()) + arguments)
                 .redirectInput(ProcessBuilder.Redirect.from(File(if (isWindows) "NUL" else "/dev/null")))
-        directory?.let { builder.directory(it.toFile()) }
+        workingDirectory?.let { builder.directory(it.toFile()) }
         builder.environment().apply {
             put("PATH", ShellEnvironment.path())
             put("CI", "1")
@@ -104,11 +152,7 @@ class CliAgentAdapter(private val preset: CliAgentPreset, private val executable
             put("PAGER", "cat")
             put("GIT_PAGER", "cat")
         }
-        return try {
-            builder.start()
-        } catch (e: Exception) {
-            throw AgentException("Couldn't start ${preset.title} (${preset.binary}).", e)
-        }
+        return builder
     }
 
     private fun terminate(process: Process) {
@@ -125,6 +169,10 @@ class CliAgentAdapter(private val preset: CliAgentPreset, private val executable
     private companion object {
         val isWindows = System.getProperty("os.name").startsWith("Windows")
         const val STDERR_CAP = 64 * 1024
+        /** Codex's catalog carries each model's whole system prompt. */
+        const val MODELS_CAP = 8 * 1024 * 1024
+        /** Some list over the network; a slow one just leaves the model to be typed. */
+        const val MODELS_TIMEOUT_SECONDS = 30L
         val Ansi = Regex("\u001B\\[[0-9;]*[A-Za-z]")
 
         fun java.io.Reader.readBounded(cap: Int): String {

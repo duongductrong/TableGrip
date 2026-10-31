@@ -95,7 +95,7 @@ class AssistRunner(private val timeout: Duration = 3.minutes, private val workin
         var completed: String? = null
         agent.send(request).collect { event ->
             when (event) {
-                AgentEvent.Thinking -> Unit
+                AgentEvent.Thinking, is AgentEvent.ReasoningDelta, is AgentEvent.Activity -> Unit
                 is AgentEvent.TextDelta -> streamed.append(event.text)
                 is AgentEvent.Completed -> completed = event.text
             }

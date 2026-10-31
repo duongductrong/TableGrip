@@ -1,5 +1,10 @@
 package dev.datagrok.app.agent
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -34,8 +39,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,6 +50,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.Key
@@ -54,7 +62,11 @@ import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -67,6 +79,7 @@ import dev.datagrok.app.ui.AppDialog
 import dev.datagrok.app.ui.LocalIslands
 import dev.datagrok.app.ui.Shortcuts
 import dev.datagrok.app.ui.copyToClipboard
+import dev.datagrok.core.agent.AgentEvent
 import dev.datagrok.core.agent.AgentMessage
 import dev.datagrok.core.agent.provider.AgentMode
 import org.jetbrains.jewel.foundation.theme.JewelTheme
@@ -84,6 +97,7 @@ import org.jetbrains.jewel.ui.component.Tooltip
 import org.jetbrains.jewel.ui.component.VerticalScrollbar
 import org.jetbrains.jewel.ui.component.separator
 import org.jetbrains.jewel.ui.icons.AllIconsKeys
+import kotlinx.coroutines.delay
 
 private val ComposerShape = RoundedCornerShape(10.dp)
 
@@ -182,9 +196,15 @@ private fun EmptyState(agent: AgentViewModel) {
 private fun Conversation(app: AppState, agent: AgentViewModel) {
     val listState = rememberLazyListState()
     val last = agent.messages.lastOrNull()
-    // Follow the answer as it streams in.
-    LaunchedEffect(agent.messages.size, last?.text?.length, last?.error) {
-        if (agent.messages.isNotEmpty()) listState.scrollToItem(agent.messages.lastIndex, Int.MAX_VALUE)
+    // Follow the answer as it streams in, while the view is at the bottom: scrolling up to read stops that until the
+    // user scrolls back down, jumps to the latest, or sends something.
+    var follow by remember { mutableStateOf(true) }
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.isScrollInProgress to listState.canScrollForward }.collect { (scrolling, more) -> if (scrolling) follow = !more }
+    }
+    LaunchedEffect(agent.messages.size) { follow = true }
+    LaunchedEffect(agent.messages.size, last?.text?.length, last?.error, follow) {
+        if (follow && agent.messages.isNotEmpty()) listState.scrollToItem(agent.messages.lastIndex, Int.MAX_VALUE)
     }
     Box(Modifier.fillMaxSize()) {
         SelectionContainer {
@@ -194,7 +214,103 @@ private fun Conversation(app: AppState, agent: AgentViewModel) {
             }
         }
         VerticalScrollbar(listState, Modifier.align(Alignment.TopEnd).padding(vertical = 2.dp))
+        if (!follow && listState.canScrollForward) JumpToLatest(Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp)) { follow = true }
     }
+}
+
+@Composable
+private fun JumpToLatest(modifier: Modifier, onClick: () -> Unit) {
+    val islands = LocalIslands.current
+    Text(
+        "↓  Latest",
+        modifier
+            .clip(CircleShape)
+            .background(islands.island)
+            .border(1.dp, islands.islandBorder, CircleShape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 5.dp),
+    )
+}
+
+/**
+ * The agent's reasoning, under a header that says how long it took. Open while the agent thinks, showing its latest
+ * lines; folded once the answer starts, until the user opens it to read the whole.
+ */
+@Composable
+private fun ReasoningBlock(message: ChatMessage) {
+    val info = JewelTheme.globalColors.text.info
+    val rule = LocalIslands.current.divider
+    val thinking = message.streaming && message.thoughtSeconds == null
+    var chosen by remember(message) { mutableStateOf<Boolean?>(null) }
+    val open = chosen ?: thinking
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        DisableSelection {
+            Row(Modifier.clickable { chosen = !open }, horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(if (open) AllIconsKeys.General.ChevronDown else AllIconsKeys.General.ChevronRight, null, Modifier.size(14.dp))
+                val label =
+                    when {
+                        thinking -> elapsedSeconds(message.startedAt).let { if (it > 0) "Thinking… ${it}s" else "Thinking…" }
+                        message.thoughtSeconds != null -> "Thought for ${maxOf(1, message.thoughtSeconds ?: 1)}s"
+                        else -> "Thought"
+                    }
+                Text(label, color = info)
+            }
+        }
+        if (open) {
+            val text = if (chosen == null) message.reasoning.trimEnd().lines().takeLast(ReasoningPreviewLines).joinToString("\n") else message.reasoning.trim()
+            Text(
+                text,
+                Modifier.drawBehind { drawLine(rule, Offset(0f, 0f), Offset(0f, size.height), strokeWidth = 2f) }.padding(start = 12.dp),
+                color = info,
+                lineHeight = ProseLineHeight,
+            )
+        }
+    }
+}
+
+private const val ReasoningPreviewLines = 6
+
+/** What the agent did besides writing, one row each: running, done or failed. */
+@Composable
+private fun Activities(activities: List<AgentEvent.Activity>) {
+    val info = JewelTheme.globalColors.text.info
+    DisableSelection {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            activities.forEach { activity ->
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(16.dp), contentAlignment = Alignment.Center) {
+                        when (activity.state) {
+                            AgentEvent.Activity.State.Running -> CircularProgressIndicator()
+                            AgentEvent.Activity.State.Done -> Icon(AllIconsKeys.General.InspectionsOK, null, Modifier.size(14.dp))
+                            AgentEvent.Activity.State.Failed -> Icon(AllIconsKeys.General.Error, null, Modifier.size(14.dp))
+                        }
+                    }
+                    Text(activity.label, color = info, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+        }
+    }
+}
+
+/** The blinking end-of-text marker a streaming answer carries, so it reads as still being written. */
+@Composable
+private fun rememberCaret(): AnnotatedString {
+    val blink = rememberInfiniteTransition()
+    val alpha by blink.animateFloat(1f, 0.15f, infiniteRepeatable(tween(530), RepeatMode.Reverse))
+    val color = JewelTheme.globalColors.text.normal.copy(alpha = alpha)
+    return remember(color) { buildAnnotatedString { withStyle(SpanStyle(color = color)) { append(" ▍") } } }
+}
+
+/** Whole seconds since [startedAt] (a [System.nanoTime]), counting while shown. */
+@Composable
+private fun elapsedSeconds(startedAt: Long): Int {
+    val seconds by produceState(0, startedAt) {
+        while (true) {
+            value = ((System.nanoTime() - startedAt) / 1_000_000_000).toInt()
+            delay(1_000)
+        }
+    }
+    return seconds
 }
 
 /** Prose line height: a touch looser than labels, so longer answers read comfortably. */
@@ -238,18 +354,26 @@ private fun MessageView(app: AppState, message: ChatMessage) {
         }
         return
     }
+    val markdown = remember(message) { StreamingMarkdown() }
+    val blocks = remember(message.text, message.streaming) { if (message.streaming) markdown.parse(message.text, open = true) else parseMarkdown(message.text) }
+    val caret = if (message.streaming && blocks.lastOrNull() is MarkdownBlock.Paragraph) rememberCaret() else null
     Column(Modifier.fillMaxWidth().hoverable(interaction).padding(horizontal = 16.dp).padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        parseMarkdown(message.text).forEachIndexed { index, block ->
+        if (message.reasoning.isNotEmpty()) ReasoningBlock(message)
+        if (message.activities.isNotEmpty()) Activities(message.activities)
+        blocks.forEachIndexed { index, block ->
             when {
+                block is MarkdownBlock.Paragraph && caret != null && index == blocks.lastIndex -> Text(block.text + caret, lineHeight = ProseLineHeight)
                 block is MarkdownBlock.Paragraph -> Text(block.text, lineHeight = ProseLineHeight)
                 block is MarkdownBlock.Code && block.runRequest && block.isSql && app.agent.canRunSql -> RunRequestCard(app, message, index, block)
                 block is MarkdownBlock.Code -> CodeBlock(app, block)
             }
         }
-        if (message.streaming && message.text.isEmpty()) {
+        val working = message.reasoning.isNotEmpty() || message.activities.any { it.state == AgentEvent.Activity.State.Running }
+        if (message.streaming && message.text.isEmpty() && !working) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 CircularProgressIndicator()
-                Text("Thinking…", color = JewelTheme.globalColors.text.info)
+                val seconds = elapsedSeconds(message.startedAt)
+                Text(if (seconds > 0) "Thinking… ${seconds}s" else "Thinking…", color = JewelTheme.globalColors.text.info)
             }
         }
         message.error?.let { error ->
@@ -456,6 +580,7 @@ private fun Composer(agent: AgentViewModel, modifier: Modifier = Modifier) {
         }
         Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             AgentPicker(agent)
+            ModelPicker(agent)
             Spacer(Modifier.weight(1f))
             if (agent.busy) {
                 RoundButton(AllIconsKeys.Actions.Suspend, "Stop", enabled = true, onClick = agent::stop)
