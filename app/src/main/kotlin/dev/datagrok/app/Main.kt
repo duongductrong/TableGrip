@@ -19,6 +19,7 @@ import dev.datagrok.app.search.DoubleShiftDetector
 import dev.datagrok.app.table.TableDataTab
 import dev.datagrok.app.table.handleFilterShortcut
 import dev.datagrok.app.ui.DatagrokTheme
+import dev.datagrok.app.ui.FollowThemeAppearance
 import dev.datagrok.app.ui.Shortcuts
 import dev.datagrok.core.activity.ActivitySupport
 import dev.datagrok.core.agent.ChatStore
@@ -92,6 +93,7 @@ private fun runApp() = application {
             },
             onKeyEvent = { handleWindowShortcut(appState, it) },
         ) {
+            FollowThemeAppearance(window)
             DisposableEffect(window) {
                 val stop = PinchZoom.install(window.rootPane)
                 onDispose { stop?.invoke() }

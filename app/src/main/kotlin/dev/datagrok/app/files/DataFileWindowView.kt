@@ -32,6 +32,7 @@ import dev.datagrok.app.table.TableDataView
 import dev.datagrok.app.table.ViewChip
 import dev.datagrok.app.table.handleFilterShortcut
 import dev.datagrok.app.ui.AppDialogs
+import dev.datagrok.app.ui.FollowThemeAppearance
 import dev.datagrok.app.ui.HeaderButton
 import dev.datagrok.app.ui.Island
 import dev.datagrok.app.ui.IslandGap
@@ -63,6 +64,7 @@ internal fun DataFileWindowView(app: AppState, file: DataFileWindow, onClosed: (
         title = file.title,
         onKeyEvent = { handleShortcut(app, file, it, onClosed) },
     ) {
+        FollowThemeAppearance(window)
         // Opening the same file again brings this window up instead of a second one.
         LaunchedEffect(file.raiseRequests) {
             if (file.raiseRequests > 0) {

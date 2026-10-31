@@ -61,6 +61,7 @@ internal fun AppDialog(
         resizable = resizable,
         onKeyEvent = { onKeyEvent(it) || (closeOnEscape && isCloseKey(it)).also { close -> if (close) onCloseRequest() } },
     ) {
+        FollowThemeAppearance(window)
         val customTitleBar = rememberCustomTitleBar(window, titleBarHeight)
         // Like the main window: the title bar sits on the frame and the content floats on it as an island.
         Column(Modifier.fillMaxSize().background(LocalIslands.current.frame)) {
