@@ -32,6 +32,10 @@ object DatagrokPaths {
     val workingCopies: Path
         get() = home.resolve("cache").resolve("datafiles")
 
+    /** Agent chats kept for the chat history, one file each. */
+    val chats: Path
+        get() = home.resolve("chats")
+
     /** Where CLI agents run: a directory of their own, so an agent with file tools works there, not in the user's home. */
     val agentWorkspace: Path
         get() = home.resolve("agent")

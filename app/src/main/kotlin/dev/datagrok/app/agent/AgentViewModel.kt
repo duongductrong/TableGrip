@@ -14,8 +14,11 @@ import dev.datagrok.core.agent.AgentMessage
 import dev.datagrok.core.agent.AgentModel
 import dev.datagrok.core.agent.AgentRegistry
 import dev.datagrok.core.agent.AgentRequest
+import dev.datagrok.core.agent.ChatSummary
 import dev.datagrok.core.agent.Mention
 import dev.datagrok.core.agent.MentionText
+import dev.datagrok.core.agent.SavedChat
+import dev.datagrok.core.agent.SavedChatMessage
 import dev.datagrok.core.agent.withModel
 import dev.datagrok.core.agent.provider.AgentMode
 import dev.datagrok.core.agent.provider.ProviderConfig
@@ -27,12 +30,16 @@ import dev.datagrok.core.dialect.SqlDialect
 import dev.datagrok.core.settings.Settings
 import dev.datagrok.core.sql.SqlClassifier
 import dev.datagrok.core.sql.SqlSplitter
+import java.util.UUID
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import org.slf4j.LoggerFactory
 
 /** Where a query the agent asked to run stands; absent means the user hasn't answered yet. */
 sealed interface RunRequestState {
@@ -102,6 +109,21 @@ class AgentViewModel(private val app: AppState, private val registry: AgentRegis
 
     /** What `@` and ⌘L can mention. */
     val sources = MentionSources(app)
+
+    /** Earlier chats, newest first, as [refreshChats] last read them. */
+    var chats by mutableStateOf(emptyList<ChatSummary>())
+        private set
+    /** The open chat; a new one has an id from the start, and is kept once something is sent in it. */
+    var chatId by mutableStateOf(newChatId())
+        private set
+    /** What the open chat is called: its first message until the user renames it; null before anything is sent. */
+    var chatTitle by mutableStateOf<String?>(null)
+        private set
+    private var chatCreatedAt = 0L
+    /** The conversation as last written, so a chat only moves up the history when something in it changed. */
+    private var lastSaved: List<SavedChatMessage>? = emptyList()
+    /** Writes go one at a time and in order, so an older version never lands over a newer one. */
+    private val saving = Mutex()
 
     private val context = AgentContext(app)
     private var discovered = false
@@ -214,6 +236,9 @@ class AgentViewModel(private val app: AppState, private val registry: AgentRegis
         }
         messages += reply
         busy = true
+        // Kept now, so the chat is in the history from its first message even if the app quits mid-answer.
+        save()
+        val chat = chatId
         turn =
             app.scope.launch {
                 val reveal = TextReveal()
@@ -277,6 +302,7 @@ class AgentViewModel(private val app: AppState, private val registry: AgentRegis
                     for (i in reply.activities.indices) if (reply.activities[i].state == AgentEvent.Activity.State.Running) reply.activities[i] = reply.activities[i].copy(state = end)
                     reply.streaming = false
                     busy = false
+                    if (chatId == chat) save()
                 }
             }
     }
@@ -431,17 +457,119 @@ class AgentViewModel(private val app: AppState, private val registry: AgentRegis
         val removed = messages.subList(from, messages.size).toList()
         messages.removeRange(from, messages.size)
         removed.forEach { gone -> gone.origin?.let { (request, block) -> if (request in messages) request.runs.remove(block) } }
+        save()
     }
 
     fun forgetSchema(connectionId: String) = context.forget(connectionId)
 
+    /** Starts over in a new chat; the one open stays in the history. */
     fun newChat() {
         stop()
+        save()
+        clear()
+    }
+
+    private fun clear() {
         messages.clear()
         context.forget()
+        chatId = newChatId()
+        chatTitle = null
+        chatCreatedAt = 0L
+        lastSaved = emptyList()
+    }
+
+    /** Re-reads the history, e.g. when its list opens. */
+    fun refreshChats() {
+        val store = app.chatStore ?: return
+        app.scope.launch { chats = withContext(Dispatchers.IO) { runCatching { store.list() }.getOrDefault(emptyList()) } }
+    }
+
+    /**
+     * Switches to the chat [id] from the history, as it was left. A turn still running in the open one is stopped and
+     * what it wrote so far is kept.
+     */
+    fun openChat(id: String) {
+        val store = app.chatStore ?: return
+        if (id == chatId && messages.isNotEmpty()) return
+        app.scope.launch {
+            val chat = withContext(Dispatchers.IO) { store.load(id) }
+            if (chat == null) {
+                refreshChats()
+                return@launch
+            }
+            stop()
+            save()
+            messages.clear()
+            messages += chat.messages.toChat()
+            context.forget()
+            chatId = chat.id
+            chatTitle = chat.title
+            chatCreatedAt = chat.createdAt
+            lastSaved = chat.messages
+        }
+    }
+
+    fun renameChat(id: String, title: String) {
+        val store = app.chatStore ?: return
+        val name = title.trim().takeIf { it.isNotEmpty() } ?: return
+        if (id == chatId) chatTitle = name
+        chats = chats.map { if (it.id == id) it.copy(title = name) else it }
+        app.scope.launch { saving.withLock { withContext(Dispatchers.IO) { runCatching { store.rename(id, name) }.onFailure { log.warn("Failed to rename a chat", it) } } } }
+    }
+
+    /** Removes [id] from the history for good; deleting the open chat starts a new one. */
+    fun deleteChat(id: String) {
+        val store = app.chatStore ?: return
+        if (id == chatId) {
+            stop()
+            clear()
+        }
+        chats = chats.filter { it.id != id }
+        app.scope.launch { saving.withLock { withContext(Dispatchers.IO) { runCatching { store.delete(id) }.onFailure { log.warn("Failed to delete a chat", it) } } } }
+    }
+
+    /** The open chat as it is kept, from [saved]; null when there is nothing in it to keep. */
+    private fun snapshot(saved: List<SavedChatMessage>): SavedChat? {
+        if (saved.isEmpty()) return null
+        val title = chatTitle ?: chatTitle(messages) ?: return null
+        chatTitle = title
+        val now = System.currentTimeMillis()
+        if (chatCreatedAt == 0L) chatCreatedAt = now
+        return SavedChat(chatId, title, chatCreatedAt, now, selected?.descriptor?.id, saved)
+    }
+
+    /** Keeps the open chat in the history, off the UI thread. Rewound to nothing, it leaves the history. */
+    private fun save() {
+        val store = app.chatStore ?: return
+        val id = chatId
+        val saved = messages.toSaved()
+        if (saved == lastSaved) return
+        lastSaved = saved
+        val chat = snapshot(saved)
+        app.scope.launch {
+            saving.withLock {
+                withContext(Dispatchers.IO) {
+                    runCatching { if (chat != null) store.save(chat) else store.delete(id) }.onFailure { log.warn("Failed to save the chat", it) }
+                }
+            }
+            refreshChats()
+        }
+    }
+
+    /** Writes the open chat now, on the calling thread; for quitting, with an answer perhaps still arriving. */
+    fun saveNow() {
+        val store = app.chatStore ?: return
+        val saved = messages.toSaved()
+        if (saved == lastSaved) return
+        val chat = snapshot(saved) ?: return
+        runCatching { store.save(chat) }.onFailure { log.warn("Failed to save the chat", it) }
     }
 
     companion object {
+        private val log = LoggerFactory.getLogger(AgentViewModel::class.java)
+
+        private fun newChatId(): String = UUID.randomUUID().toString()
+
         /** Agents as settings describe them; read at each discovery, so switching needs no restart. */
         fun configured(app: AppState): AgentRegistry =
             AgentRegistry.default(

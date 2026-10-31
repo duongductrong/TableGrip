@@ -33,6 +33,7 @@ import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.datafile.DataFileConnection
 import dev.datagrok.core.datafile.DataFileState
 import dev.datagrok.core.agent.AgentRegistry
+import dev.datagrok.core.agent.ChatStore
 import dev.datagrok.core.connection.ConnectionStore
 import dev.datagrok.core.connection.SecretStore
 import dev.datagrok.core.drivers.DriverLibrary
@@ -56,6 +57,8 @@ class AppState(
     driverLibrary: DriverLibrary = DriverLibrary.shared,
     /** Null picks agents by the settings: the CLIs on this machine, or the configured provider. */
     agentRegistry: AgentRegistry? = null,
+    /** Where agent chats are kept; null keeps them only while the app runs, as tests do. [Main] passes the real one. */
+    val chatStore: ChatStore? = null,
 ) {
     /** Lives as long as the app; everything here runs on the UI thread unless it hops to IO itself. */
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -216,6 +219,7 @@ class AppState(
                 confirmDataFiles(null) {
                     session.stopAutosave()
                     session.saveNow()
+                    agent.saveNow()
                     dispose()
                     exit()
                 }

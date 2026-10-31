@@ -111,6 +111,9 @@ sealed interface Mention {
             })
     }
 
+    /** A mention in a chat reopened from history: what it read as and what the agent read for it, nothing more. */
+    data class Saved(override val label: String, override val context: String) : Mention
+
     companion object {
         /** Rows of a [Cells] mention that are kept and sent, and how much of each value. */
         const val CellRows = 50

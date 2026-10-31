@@ -21,6 +21,7 @@ import dev.datagrok.app.table.handleFilterShortcut
 import dev.datagrok.app.ui.DatagrokTheme
 import dev.datagrok.app.ui.Shortcuts
 import dev.datagrok.core.activity.ActivitySupport
+import dev.datagrok.core.agent.ChatStore
 import dev.datagrok.app.ui.MainScreen
 import dev.datagrok.app.ui.PinchZoom
 import dev.datagrok.app.ui.TitleBarView
@@ -42,7 +43,7 @@ fun main(args: Array<String>) {
 
 private fun runApp() = application {
     val appState = remember {
-        AppState().also {
+        AppState(chatStore = ChatStore()).also {
             it.session.restore()
             it.session.startAutosave()
             it.scheduledBackups.sync()

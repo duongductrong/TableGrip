@@ -190,6 +190,7 @@ private fun previewOf(mention: Mention): PreviewContent =
         is Mention.Table -> PreviewContent("${mention.engine} · ${mention.connection} · ${mention.qualified}", mention.details, if (mention.details == null) "Its columns, keys and indexes are read when the message is sent." else null)
         is Mention.Column -> PreviewContent("${mention.engine} · ${mention.connection}", "${mention.type.lowercase()}${if (mention.primaryKey) ", primary key" else ""}")
         is Mention.Query -> PreviewContent("Saved query", mention.sql)
+        is Mention.Saved -> PreviewContent("As the agent read it", mention.context)
         is Mention.Cells -> {
             val header = mention.columns.joinToString(" | ") { it.name }
             val body = mention.values?.take(PreviewRows)?.joinToString("\n", prefix = "$header\n") { row -> row.joinToString(" | ") { it?.take(40) ?: "NULL" } } ?: header

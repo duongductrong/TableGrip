@@ -110,7 +110,14 @@ internal fun AgentPanel(app: AppState) {
     LaunchedEffect(Unit) { agent.discover() }
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().height(36.dp).padding(start = 12.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Agent", Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
+            Text(agent.chatTitle ?: "New chat", Modifier.weight(1f), fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (app.chatStore != null) {
+                var history by remember { mutableStateOf(false) }
+                Box {
+                    Tooltip({ Text("Chat history") }) { IconButton(onClick = { history = !history }) { Icon(AllIconsKeys.Vcs.History, "Chat history") } }
+                    if (history) ChatHistoryPopup(agent, onDismiss = { history = false })
+                }
+            }
             Tooltip({ Text("New chat") }) {
                 IconButton(onClick = agent::newChat, enabled = agent.messages.isNotEmpty()) { Icon(AllIconsKeys.General.Add, "New chat") }
             }

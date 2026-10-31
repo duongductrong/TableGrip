@@ -53,6 +53,8 @@ data class Session(
     val leftTool: String? = "Explorer",
     val connectionId: String? = null,
     val agentOpen: Boolean = false,
+    /** The agent chat that was open, reopened from the chat history. */
+    val agentChat: String? = null,
     /** Where the main window was, in dp; null until it has been saved once. */
     val window: WindowBounds? = null,
     /** Divider positions as fractions of their split: the left tool window's and the agent chat's. */

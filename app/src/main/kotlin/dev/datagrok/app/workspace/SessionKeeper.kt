@@ -36,6 +36,7 @@ class SessionKeeper(private val app: AppState, private val store: SessionStore =
             leftTool = app.leftTool?.name,
             connectionId = app.currentConnectionId,
             agentOpen = app.agentOpen,
+            agentChat = app.agent.chatId.takeIf { app.agent.messages.isNotEmpty() },
             window = windowBounds(),
             sidebarSplit = app.sidebarSplit.dividerPosition,
             agentSplit = app.agentSplit.dividerPosition,
@@ -69,6 +70,7 @@ class SessionKeeper(private val app: AppState, private val store: SessionStore =
                 "LastUsed" -> session.agentOpen
                 else -> false
             }
+        session.agentChat?.let(app.agent::openChat)
         if (settings.rememberPanelSizes) {
             session.sidebarSplit?.let { app.sidebarSplit.dividerPosition = it.coerceIn(0.1f, 0.6f) }
             session.agentSplit?.let { app.agentSplit.dividerPosition = it.coerceIn(0.3f, 0.9f) }
