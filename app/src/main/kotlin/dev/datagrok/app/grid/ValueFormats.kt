@@ -1,5 +1,7 @@
 package dev.datagrok.app.grid
 
+import dev.datagrok.core.driver.ResultColumn
+import java.sql.Types
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -8,6 +10,7 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 import java.time.temporal.ChronoField
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -26,9 +29,55 @@ data class JsonLine(val path: String, val depth: Int, val label: String?, val el
                 is JsonObject -> "{${element.size}}"
                 is JsonArray -> "[${element.size}]"
                 is JsonNull -> "null"
-                is JsonPrimitive -> if (element.isString) "\"${element.content}\"" else element.content
+                is JsonPrimitive -> if (element.isString) "\"${shorten(element.content)}\"" else element.content
             }
 }
+
+enum class JsonTokenType { Key, String, Number, Literal }
+
+/** A coloured span of a JSON line: [start] inclusive, [end] exclusive. */
+data class JsonToken(val type: JsonTokenType, val start: Int, val end: Int)
+
+/**
+ * Tokens of one line of pretty-printed JSON, for colouring. Lines may be cut mid-value for display, so an unterminated
+ * string runs to the end of the line; a string followed by `:` is a key.
+ */
+fun jsonTokens(line: String): List<JsonToken> = buildList {
+    var i = 0
+    while (i < line.length) {
+        val c = line[i]
+        when {
+            c == '"' -> {
+                var end = i + 1
+                while (end < line.length && line[end] != '"') end += if (line[end] == '\\') 2 else 1
+                end = minOf(end + 1, line.length)
+                var next = end
+                while (next < line.length && line[next] == ' ') next++
+                add(JsonToken(if (next < line.length && line[next] == ':') JsonTokenType.Key else JsonTokenType.String, i, end))
+                i = end
+            }
+            c == '-' || c.isDigit() -> {
+                var end = i + 1
+                while (end < line.length && (line[end].isDigit() || line[end] in ".eE+-")) end++
+                add(JsonToken(JsonTokenType.Number, i, end))
+                i = end
+            }
+            c.isLetter() -> {
+                var end = i + 1
+                while (end < line.length && line[end].isLetter()) end++
+                if (line.substring(i, end) in JsonLiterals) add(JsonToken(JsonTokenType.Literal, i, end))
+                i = end
+            }
+            else -> i++
+        }
+    }
+}
+
+private val JsonLiterals = setOf("true", "false", "null")
+
+/** Keeps tree rows to one short line; the full value is in the text view and on the clipboard. */
+private fun shorten(value: String, maxChars: Int = 200): String =
+    (if (value.length > maxChars) value.take(maxChars) + "…" else value).replace("\r\n", "⏎").replace('\n', '⏎')
 
 /** The lines of [root] shown when the containers in [expanded] (by path) are open; the root is always open. */
 fun jsonLines(root: JsonElement, expanded: Set<String>): List<JsonLine> = buildList {
@@ -55,6 +104,46 @@ fun jsonContainerPaths(root: JsonElement): Set<String> = buildSet {
     }
     visit(root, "$")
 }
+
+/** The grid's rows and columns at one moment, so [rowsJson] can run off the UI thread. */
+data class RowsSnapshot(val columns: List<ResultColumn>, val rows: List<List<String?>>)
+
+/** Captures the rows of [model] in the display [columns], leaving out rows marked for deletion. */
+fun rowsSnapshot(model: GridModel, columns: List<Int>): RowsSnapshot =
+    RowsSnapshot(
+        columns.map { model.columns[it] },
+        (0 until model.rowCount).filter { model.rowStatus(it) != RowStatus.Deleted }.map { row -> columns.map { model.value(row, it) } },
+    )
+
+/**
+ * The rows as a JSON array of objects keyed by column name. Numbers and booleans keep their type, and `json`/`jsonb`
+ * values are embedded rather than quoted.
+ */
+fun rowsJson(snapshot: RowsSnapshot): JsonArray =
+    JsonArray(snapshot.rows.map { row -> JsonObject(snapshot.columns.zip(row).associate { (column, value) -> column.name to cellJson(value, column) }) })
+
+fun rowsJson(model: GridModel, columns: List<Int>): JsonArray = rowsJson(rowsSnapshot(model, columns))
+
+/**
+ * Splits [text] into lines for display, cutting each at [maxChars]: a long value (an HTML document, say) is one line
+ * of pretty JSON, and laying it out in full is what makes a text view crawl.
+ */
+fun displayLines(text: String, maxChars: Int = 1000): List<String> =
+    text.lineSequence().map { if (it.length > maxChars) it.take(maxChars) + "… (+${it.length - maxChars} chars)" else it }.toList()
+
+private fun cellJson(value: String?, column: ResultColumn): JsonElement =
+    when {
+        value == null -> JsonNull
+        column.isNumeric -> value.toBigDecimalOrNull()?.let(::JsonPrimitive) ?: JsonPrimitive(value)
+        column.jdbcType == Types.BOOLEAN || column.jdbcType == Types.BIT ->
+            when (value.lowercase()) {
+                "true", "t", "1" -> JsonPrimitive(true)
+                "false", "f", "0" -> JsonPrimitive(false)
+                else -> JsonPrimitive(value)
+            }
+        "json" in column.typeName.lowercase() -> runCatching { Json.parseToJsonElement(value) }.getOrElse { JsonPrimitive(value) }
+        else -> JsonPrimitive(value)
+    }
 
 /** `offset  hex bytes  ascii`, 16 bytes per line, like `xxd`. */
 fun hexDump(bytes: ByteArray, limit: Int = 4096): String = buildString {

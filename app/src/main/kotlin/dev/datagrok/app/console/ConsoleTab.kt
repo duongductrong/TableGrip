@@ -88,6 +88,8 @@ class ResultSetView(val title: String, val sql: String, val rows: QueryResult.Ro
     val grid = DataGridState()
     /** Pinned results survive the next run, like DataGrip's pinned result tabs, to compare before and after. */
     var pinned by mutableStateOf(false)
+    /** Shows the rows as JSON instead of the grid. */
+    var showJson by mutableStateOf(false)
 }
 
 /** A SQL console bound to one connection, with its own dedicated session. */

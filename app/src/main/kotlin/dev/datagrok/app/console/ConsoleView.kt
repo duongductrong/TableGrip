@@ -43,6 +43,8 @@ import dev.datagrok.app.export.ExportRequest
 import dev.datagrok.app.grid.DataGrid
 import dev.datagrok.app.grid.GridActions
 import dev.datagrok.app.grid.GridMention
+import dev.datagrok.app.grid.ResultJsonView
+import dev.datagrok.app.table.ViewChip
 import dev.datagrok.app.queries.ParametersDialog
 import dev.datagrok.core.dialect.SqlDialect
 import java.time.Instant
@@ -294,7 +296,8 @@ private fun ResultPanel(app: AppState, tab: ConsoleTab) {
             else -> {
                 val view = tab.results[selected - 1]
                 Column(Modifier.fillMaxSize()) {
-                    DataGrid(
+                    if (view.showJson) ResultJsonView(view.model, view.grid, Modifier.weight(1f))
+                    else DataGrid(
                         model = view.model,
                         state = view.grid,
                         modifier = Modifier.weight(1f),
@@ -312,6 +315,8 @@ private fun ResultPanel(app: AppState, tab: ConsoleTab) {
                             Modifier.weight(1f),
                             color = JewelTheme.globalColors.text.info,
                         )
+                        ViewChip("Grid", !view.showJson) { view.showJson = false }
+                        ViewChip("JSON", view.showJson) { view.showJson = true }
                         Tooltip({ Text(if (view.pinned) "Unpin tab" else "Pin tab: keep this result when the console runs again") }) {
                             IconButton(onClick = { view.pinned = !view.pinned }) {
                                 Icon(if (view.pinned) AllIconsKeys.General.PinSelected else AllIconsKeys.General.Pin, "Pin")

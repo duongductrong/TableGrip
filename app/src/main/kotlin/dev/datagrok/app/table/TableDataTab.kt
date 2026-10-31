@@ -138,6 +138,8 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
     var totalRows by mutableStateOf<Long?>(null)
         private set
     var showValuePanel by mutableStateOf(false)
+    /** Shows the page's rows as JSON instead of the grid. */
+    var showJson by mutableStateOf(false)
 
     var view by mutableStateOf(TableView.Data)
         private set

@@ -51,6 +51,7 @@ import dev.datagrok.app.ui.AppDialog
 import dev.datagrok.app.grid.DataGrid
 import dev.datagrok.app.grid.GridActions
 import dev.datagrok.app.grid.GridCell
+import dev.datagrok.app.grid.ResultJsonView
 import dev.datagrok.app.grid.ValuePanel
 import dev.datagrok.app.ui.LocalIslands
 import dev.datagrok.app.ui.Shortcuts
@@ -134,7 +135,9 @@ private fun DataView(tab: TableDataTab) {
                             ),
                     )
                 }
-            if (tab.showValuePanel) {
+            if (tab.showJson) {
+                ResultJsonView(model, tab.grid)
+            } else if (tab.showValuePanel) {
                 HorizontalSplitLayout(
                     first = { grid() },
                     second = { ValuePanel(model, tab.grid) },
@@ -236,8 +239,15 @@ private fun Toolbar(tab: TableDataTab) {
 
         Box(Modifier.weight(1f))
         if (tab.loading || tab.submitting) Text(if (tab.submitting) "Saving…" else "Loading…", Modifier.padding(end = 8.dp), color = JewelTheme.globalColors.text.info)
+        ViewChip("Grid", !tab.showJson) { tab.showJson = false }
+        ViewChip("JSON", tab.showJson) { tab.showJson = true }
+        Separator()
         ToolButton(AllIconsKeys.Actions.Download, "Export…", enabled = model != null) { tab.export() }
-        ToolButton(AllIconsKeys.Actions.PreviewDetails, if (tab.showValuePanel) "Hide value panel" else "Show value panel") {
+        ToolButton(
+            AllIconsKeys.Actions.PreviewDetails,
+            if (tab.showValuePanel) "Hide value panel" else "Show value panel",
+            enabled = !tab.showJson,
+        ) {
             tab.showValuePanel = !tab.showValuePanel
         }
     }

@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
@@ -24,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import dev.datagrok.app.table.ViewChip
 import dev.datagrok.app.ui.copyToClipboard
@@ -33,6 +33,9 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.Orientation
 import org.jetbrains.jewel.ui.component.DefaultButton
@@ -153,16 +156,25 @@ private fun TimestampInfo(value: TimestampValue) {
 
 /** A collapsible JSON tree; objects and arrays open on click. */
 @Composable
-private fun JsonTree(root: JsonElement) {
+internal fun JsonTree(root: JsonElement) {
     var expanded by remember(root) { mutableStateOf(jsonContainerPaths(root).filter { path -> path.count { it == '.' || it == '[' } < 2 }.toSet()) }
     val lines = remember(root, expanded) { jsonLines(root, expanded) }
     val info = JewelTheme.globalColors.text.info
+    val palette = jsonPalette()
+    // Indent and chevron, plus "label: summary" in the monospace font; long values are already cut in the summary.
+    val charWidth = editorCharWidth()
+    val density = LocalDensity.current
+    val width = remember(lines, charWidth, density) {
+        with(density) {
+            lines.maxOfOrNull { (it.depth * 14 + 26).dp + ((it.label?.length?.plus(2) ?: 0) + it.summary.length).times(charWidth).toDp() } ?: 0.dp
+        } + 16.dp
+    }
     Column(Modifier.fillMaxSize()) {
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             OutlinedButton(onClick = { expanded = jsonContainerPaths(root) }) { Text("Expand All") }
             OutlinedButton(onClick = { expanded = emptySet() }) { Text("Collapse All") }
         }
-        LazyColumn(Modifier.fillMaxSize().padding(top = 6.dp)) {
+        ScrollableLines(width, Modifier.padding(top = 6.dp)) {
             items(lines, key = { it.path }) { line ->
                 val open = line.path == "$" || line.path in expanded
                 Row(
@@ -179,13 +191,20 @@ private fun JsonTree(root: JsonElement) {
                             Icon(if (open) AllIconsKeys.General.ChevronDown else AllIconsKeys.General.ChevronRight, null, tint = info)
                         }
                     }
-                    line.label?.let { Text("$it:", style = JewelTheme.editorTextStyle, color = info) }
-                    Text(
-                        line.summary,
-                        style = JewelTheme.editorTextStyle,
-                        color = if (line.isContainer) info else JewelTheme.globalColors.text.normal,
-                        maxLines = 1,
-                    )
+                    line.label?.let { label ->
+                        // Array indexes stay muted; object keys take the key colour.
+                        val color = if (line.path.endsWith("]")) info else palette.key.color
+                        Text("$label:", style = JewelTheme.editorTextStyle, color = color)
+                    }
+                    val element = line.element
+                    val color =
+                        when {
+                            line.isContainer -> info
+                            element is JsonPrimitive && element.isString -> palette.string.color
+                            element is JsonNull || (element is JsonPrimitive && element.booleanOrNull != null) -> palette.literal.color
+                            else -> palette.number.color
+                        }
+                    Text(line.summary, style = JewelTheme.editorTextStyle, color = color, softWrap = false, maxLines = 1)
                 }
             }
         }

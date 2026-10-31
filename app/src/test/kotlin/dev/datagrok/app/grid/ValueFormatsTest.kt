@@ -1,5 +1,8 @@
 package dev.datagrok.app.grid
 
+import dev.datagrok.core.driver.QueryResult
+import dev.datagrok.core.driver.ResultColumn
+import java.sql.Types
 import java.time.Instant
 import java.time.ZoneId
 import kotlin.test.Test
@@ -17,6 +20,49 @@ class ValueFormatsTest {
         assertEquals("{1}", open.first { it.path == "$.b" }.summary)
         assertEquals("\"x\"", open.last().summary)
         assertEquals(setOf("$", "$.b", "$.b.c"), jsonContainerPaths(root))
+    }
+
+    @Test
+    fun `rows json keeps types and display order`() {
+        val columns =
+            listOf(
+                ResultColumn("id", "int4", Types.INTEGER),
+                ResultColumn("name", "text"),
+                ResultColumn("active", "bool", Types.BOOLEAN),
+                ResultColumn("meta", "jsonb", Types.OTHER),
+            )
+        val rows = listOf(listOf("1", "a", "true", "{\"k\":[1]}"), listOf("2", null, "f", "not json"))
+        val model = ResultGridModel(QueryResult.Rows(columns, rows, truncated = false, elapsedMillis = 0))
+        assertEquals(
+            """[{"meta":{"k":[1]},"id":1,"name":"a","active":true},{"meta":"not json","id":2,"name":null,"active":false}]""",
+            rowsJson(model, listOf(3, 0, 1, 2)).toString(),
+        )
+    }
+
+    @Test
+    fun `long lines and tree values are cut for display`() {
+        val html = "<p>" + "x".repeat(5000) + "</p>"
+        assertEquals(listOf("[", "  \"<p>xxxx… (+5001 chars)", "]"), displayLines("[\n  \"$html\"\n]", maxChars = 10))
+        val line = jsonLines(Json.parseToJsonElement("""{"body":"${"y".repeat(500)}"}"""), emptySet()).last()
+        assertEquals(203, line.summary.length)
+    }
+
+    @Test
+    fun `json lines are tokenized for colouring`() {
+        val line = """  "a\"b": [1.5e3, -2, true, null, "x, y"],"""
+        assertEquals(
+            listOf(
+                JsonTokenType.Key to "\"a\\\"b\"",
+                JsonTokenType.Number to "1.5e3",
+                JsonTokenType.Number to "-2",
+                JsonTokenType.Literal to "true",
+                JsonTokenType.Literal to "null",
+                JsonTokenType.String to "\"x, y\"",
+            ),
+            jsonTokens(line).map { it.type to line.substring(it.start, it.end) },
+        )
+        // A line cut for display leaves its last string open.
+        assertEquals(listOf(JsonToken(JsonTokenType.String, 10, 18)), jsonTokens("  \"html\": \"<p>xxx…").drop(1))
     }
 
     @Test
