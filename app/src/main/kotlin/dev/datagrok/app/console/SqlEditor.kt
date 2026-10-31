@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.KeyboardActionHandler
 import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextFieldBuffer
@@ -124,6 +125,7 @@ internal fun SqlEditor(
     val isDark = JewelTheme.isDark
     val palette = if (isDark) DarkPalette else LightPalette
     val highlighter = remember(syntax, isDark) { SqlHighlighter(syntax, palette) }
+    val autoPair = remember(syntax) { AutoPair(syntax) }
     val splitter = remember(syntax) { SqlSplitter(syntax) }
     val formatter = remember(syntax) { SqlFormatter(syntax) }
     // No trimming: every line — first and last included — is exactly one pitch tall, so line N always sits at N × pitch.
@@ -167,13 +169,16 @@ internal fun SqlEditor(
     // Recompute suggestions as the text or caret changes while the popup is open (or typing asked for it), and when
     // schema metadata arrives.
     LaunchedEffect(state, completion) {
-        snapshotFlow { Triple(state.text.toString(), state.selection, completionVersion) }.collect {
+        snapshotFlow { state.text.toString() to state.selection }.collect {
             val source = completion ?: return@collect
-            if (triggerCompletion || controller.isOpen) controller.update(state, source, explicit = false)
+            if (triggerCompletion || controller.isActive) controller.update(state, source, explicit = false)
             triggerCompletion = false
         }
     }
-    LaunchedEffect(completionVersion) { if (controller.isOpen && completion != null) controller.update(state, completion, explicit = false) }
+    LaunchedEffect(completionVersion) { if (controller.isActive && completion != null) controller.update(state, completion, explicit = false) }
+    fun accept(index: Int = controller.selected) {
+        if (controller.accept(state, index)) triggerCompletion = true
+    }
 
     // Keep the current find match on screen.
     LaunchedEffect(find.current, layout) {
@@ -221,17 +226,18 @@ internal fun SqlEditor(
                     BasicTextField(
                         state = state,
                         readOnly = readOnly,
+                        inputTransformation = autoPair,
                         modifier =
                             Modifier.defaultMinSize(minWidth = viewportWidth - gutterWidth, minHeight = viewportHeight)
                                 .focusRequester(editorFocus)
                                 .onPreviewKeyEvent { event ->
                                     if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
-                                    if (handleCompletionKey(controller, event.key) { controller.accept(state) }) return@onPreviewKeyEvent true
+                                    if (handleCompletionKey(controller, event.key) { accept() }) return@onPreviewKeyEvent true
                                     if (onShortcut(event)) return@onPreviewKeyEvent true
                                     if (readOnly) return@onPreviewKeyEvent handleReadOnlyKey(event, state, find)
-                                    val handled = handleEditorKey(event, state, syntax, ::current, ::apply, ::format, find, controller, completion)
-                                    if (!handled && isCompletionTrigger(event)) triggerCompletion = true
-                                    handled
+                                    // Before the edit lands, so the change it makes is completed (also for an auto-paired quote).
+                                    if (isCompletionTrigger(event)) triggerCompletion = true
+                                    handleEditorKey(event, state, syntax, ::current, ::apply, ::format, find, controller, completion)
                                 },
                         textStyle = textStyle,
                         cursorBrush = SolidColor(JewelTheme.globalColors.text.normal),
@@ -283,7 +289,7 @@ internal fun SqlEditor(
                     if (cursor != null) {
                         val offset =
                             with(density) { IntOffset((cursor.left + TextPaddingStart.toPx()).toInt(), (cursor.bottom + TextPaddingTop.toPx() + 2).toInt()) }
-                        CompletionPopup(controller, offset) { index -> controller.accept(state, index) }
+                        CompletionPopup(controller, offset) { index -> accept(index) }
                     }
                 }
             }
@@ -353,24 +359,50 @@ private fun handleEditorKey(
             }
         }
         event.key == Key.Backspace && !alt -> EditorActions.backspace(current())?.let { apply(it); true } ?: false
-        else -> {
-            val code = event.utf16CodePoint
-            if (code <= 0 || alt) return false
-            val char = code.toChar()
-            if (char !in "()[]'\"`") return false
-            EditorActions.typeChar(current(), char, syntax)?.let {
-                apply(it)
-                true
-            } ?: false
-        }
+        // Brackets and quotes are paired by [AutoPair], on the text that arrives rather than the key.
+        else -> false
     }
 }
 
-/** Letters, digits, `_` and `.` keep the completion popup coming as you type. */
+/**
+ * Pairs brackets and quotes, steps over closers and wraps selections as the typed character lands. Working on the edit
+ * itself rather than the key press means a character committed by an input method (Telex, dead keys, …) is handled
+ * once, instead of being paired on the key and then inserted again by the input method.
+ */
+private class AutoPair(private val syntax: SqlSyntax) : InputTransformation {
+    override fun TextFieldBuffer.transformInput() {
+        if (changes.changeCount != 1) return
+        val inserted = changes.getRange(0)
+        val replaced = changes.getOriginalRange(0)
+        // Exactly one character typed over the selection (or at the caret), caret right after it.
+        if (inserted.length != 1 || replaced.min != originalSelection.min || replaced.max != originalSelection.max) return
+        if (!selection.collapsed || selection.start != inserted.end) return
+        val char = asCharSequence()[inserted.start]
+        if (char !in "()[]'\"`") return
+        val edit = EditorActions.typeChar(EditorText(originalText.toString(), originalSelection), char, syntax) ?: return
+        replaceMinimal(edit.text)
+        selection = edit.selection
+    }
+}
+
+/** Replaces the buffer's text with [new], touching only the part that differs. */
+private fun TextFieldBuffer.replaceMinimal(new: String) {
+    val old = asCharSequence()
+    var prefix = 0
+    while (prefix < old.length && prefix < new.length && old[prefix] == new[prefix]) prefix++
+    var suffix = 0
+    while (suffix < old.length - prefix && suffix < new.length - prefix && old[old.length - 1 - suffix] == new[new.length - 1 - suffix]) suffix++
+    if (prefix + suffix < old.length || prefix + suffix < new.length) replace(prefix, old.length - suffix, new.substring(prefix, new.length - suffix))
+}
+
+/**
+ * Letters, digits, `_`, `.` and quotes open the completion popup as you type. Deleting doesn't: Backspace only keeps an
+ * already open popup in step.
+ */
 private fun isCompletionTrigger(event: KeyEvent): Boolean {
     if (event.isMetaPressed || event.isCtrlPressed) return false
     val code = event.utf16CodePoint
-    if (code <= 0) return event.key == Key.Backspace
+    if (code <= 0) return false
     val char = code.toChar()
     return char.isLetterOrDigit() || char == '_' || char == '.' || char == '\'' || char == '$' || char == ' '
 }

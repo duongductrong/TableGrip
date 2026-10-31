@@ -51,7 +51,7 @@ fun CompletionPopup(controller: CompletionController, offset: IntOffset, onAccep
     Popup(offset = offset, properties = PopupProperties(focusable = false)) {
         val shape = RoundedCornerShape(8.dp)
         val listState = rememberLazyListState()
-        LaunchedEffect(controller.selected) {
+        LaunchedEffect(controller.selected, items) {
             val visible = listState.layoutInfo.visibleItemsInfo
             if (visible.none { it.index == controller.selected && it.offset >= 0 && it.offset + it.size <= listState.layoutInfo.viewportEndOffset }) {
                 listState.scrollToItem((controller.selected - 3).coerceAtLeast(0))
@@ -126,8 +126,9 @@ fun handleCompletionKey(controller: CompletionController, key: Key, accept: () -
         Key.DirectionUp -> controller.move(-1).let { true }
         Key.PageDown -> controller.move(8).let { true }
         Key.PageUp -> controller.move(-8).let { true }
+        // Enter on a word that's already typed out in full just breaks the line.
         Key.Enter,
-        Key.NumPadEnter,
+        Key.NumPadEnter -> if (controller.selectedIsTyped) controller.close().let { false } else accept().let { true }
         Key.Tab -> accept().let { true }
         Key.Escape -> controller.close().let { true }
         else -> false

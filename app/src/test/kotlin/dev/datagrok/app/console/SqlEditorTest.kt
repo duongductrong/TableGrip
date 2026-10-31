@@ -140,6 +140,28 @@ class SqlEditorTest {
     }
 
     @Test
+    fun `quotes and brackets are paired once, also when text comes from an input method`() = runComposeUiTest {
+        val state = editorState("SELECT * FROM t WHERE a = 'x' and ")
+        setContent { DatagrokTheme(isDark = true) { Box(Modifier.size(800.dp, 400.dp)) { SqlEditor(state, SqlSyntax.PostgreSQL, 13, completion = source) } } }
+        editor().performClick()
+        state.edit { selection = TextRange(length) }
+        // performTextInput commits text the way an input method does, without key events.
+        editor().performTextInput("'")
+        waitForIdle()
+        assertEquals("SELECT * FROM t WHERE a = 'x' and ''", state.text.toString())
+        assertEquals(TextRange(state.text.length - 1), state.selection)
+        editor().performTextInput("b")
+        editor().performTextInput("'")
+        waitForIdle()
+        assertEquals("SELECT * FROM t WHERE a = 'x' and 'b'", state.text.toString(), "the closing quote is stepped over")
+        assertEquals(TextRange(state.text.length), state.selection)
+        editor().performTextInput(" in ")
+        editor().performTextInput("(")
+        waitForIdle()
+        assertEquals("SELECT * FROM t WHERE a = 'x' and 'b' in ()", state.text.toString())
+    }
+
+    @Test
     fun `line index counts newlines before the offset`() {
         assertEquals(0, lineIndexAt("abc", 2))
         assertEquals(1, lineIndexAt("a\nb", 2))

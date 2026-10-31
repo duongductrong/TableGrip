@@ -282,11 +282,11 @@ private fun SqlFilterBar(tab: TableDataTab) {
 
     LaunchedEffect(tab) {
         snapshotFlow { tab.filter.text.toString() to tab.filter.selection }.collect {
-            if (trigger || controller.isOpen) controller.update(tab.filter, tab.filterCompletion, explicit = false)
+            if (trigger || controller.isActive) controller.update(tab.filter, tab.filterCompletion, explicit = false)
             trigger = false
         }
     }
-    LaunchedEffect(tab.schemaVersion) { if (controller.isOpen) controller.update(tab.filter, tab.filterCompletion, explicit = false) }
+    LaunchedEffect(tab.schemaVersion) { if (controller.isActive) controller.update(tab.filter, tab.filterCompletion, explicit = false) }
     val focus = remember { FocusRequester() }
     LaunchedEffect(tab.focusSqlFilter) {
         if (tab.focusSqlFilter) {

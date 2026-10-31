@@ -41,6 +41,21 @@ class CompletionController(private val scope: CoroutineScope) {
     val isOpen: Boolean
         get() = result != null && items.isNotEmpty()
 
+    /**
+     * Completing, even with nothing to show right now: keeps following the caret and refreshes when schema metadata or
+     * values arrive, so a list that was empty while tables were loading fills in by itself.
+     */
+    val isActive: Boolean
+        get() = result != null
+
+    /** Whether the highlighted item is exactly what's already typed, so Enter should just break the line. */
+    val selectedIsTyped: Boolean
+        get() {
+            val typed = result?.prefix?.trimStart('"', '`', '\'', '[') ?: return false
+            val item = items.getOrNull(selected) ?: return false
+            return typed.isNotEmpty() && item.kind != CompletionKind.Value && item.insertText.trimEnd().equals(typed, ignoreCase = true)
+        }
+
     /** Recomputes for the caret; [explicit] (⌃Space) also opens with an empty prefix. */
     fun update(state: TextFieldState, source: CompletionSource, explicit: Boolean) {
         val caret = state.selection.start
@@ -85,18 +100,25 @@ class CompletionController(private val scope: CoroutineScope) {
         selected = index
     }
 
-    /** Inserts the highlighted (or given) item over the typed prefix. */
-    fun accept(state: TextFieldState, index: Int = selected) {
-        val result = result ?: return
-        val item = items.getOrNull(index) ?: return
+    /**
+     * Inserts the highlighted (or given) item over the typed prefix. Returns true when completion should continue right
+     * away, e.g. with the tables of a just-inserted `schema.`.
+     */
+    fun accept(state: TextFieldState, index: Int = selected): Boolean {
+        val result = result ?: return false
+        val item = items.getOrNull(index) ?: return false
         var end = result.replaceEnd
         // Completing inside 'pa|' replaces the whole literal, including an auto-inserted closing quote.
         if (item.kind == CompletionKind.Value && result.value?.quoted == true && state.text.getOrNull(end) == '\'') end++
+        // A keyword's trailing space isn't doubled, nor put before a closing bracket or separator.
+        val next = state.text.getOrNull(end)
+        val text = if (item.insertText.endsWith(' ') && next != null && (next.isWhitespace() || next in ",);")) item.insertText.trimEnd(' ') else item.insertText
         state.edit {
-            replace(result.replaceStart, end, item.insertText)
-            selection = TextRange(result.replaceStart + item.caretOffset)
+            replace(result.replaceStart, end, text)
+            selection = TextRange(result.replaceStart + item.caretOffset.coerceAtMost(text.length))
         }
         close()
+        return text.endsWith('.')
     }
 
     fun close() {

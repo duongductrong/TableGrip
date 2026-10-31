@@ -55,7 +55,7 @@ class SqlCompleterTest {
     @Test
     fun `statement keywords at the start`() {
         assertEquals("SELECT", labels("sel|").first())
-        assertEquals("select", complete("sel|").items.first().insertText, "keyword case follows what was typed")
+        assertEquals("select ", complete("sel|").items.first().insertText, "keyword case follows what was typed")
     }
 
     @Test
@@ -152,5 +152,60 @@ class SqlCompleterTest {
                 },
             )
         assertEquals(setOf<Pair<String?, String>>(null to "mystery"), unknown.pendingTables)
+    }
+
+    @Test
+    fun `statements after existing ones without a delimiter`() {
+        assertEquals("SELECT", labels("SELECT * FROM users\n\nsel|").first())
+        assertEquals("SELECT", labels("SELECT * FROM users\nsel|").first(), "a new line may start a new statement")
+        // The earlier statement's tables don't leak into the next one.
+        assertEquals(listOf("id", "user_id", "total", "status"), complete("SELECT * FROM teams t\n\nSELECT * FROM orders WHERE |").items.filter { it.kind == CompletionKind.Column }.map { it.label })
+        assertEquals(listOf("id", "user_id", "total", "status"), complete("SELECT * FROM users WHERE id = 1\n\nSELECT | FROM orders").items.filter { it.kind == CompletionKind.Column }.map { it.label })
+        // ... but a blank line inside one statement doesn't split it.
+        assertTrue("email" in labels("SELECT *\nFROM users\n\nWHERE em|"))
+        assertTrue("name" in labels("SELECT name FROM users\nUNION\n\nSELECT | FROM teams"))
+    }
+
+    @Test
+    fun `subqueries and union branches have their own scope`() {
+        val outer = complete("SELECT * FROM users WHERE id IN (SELECT user_id FROM orders) AND |").items.filter { it.kind == CompletionKind.Column }.map { it.label }
+        assertEquals(listOf("id", "name", "email", "team_id"), outer)
+        // A correlated subquery sees the outer query's tables too.
+        val inner = complete("SELECT * FROM users u WHERE EXISTS (SELECT 1 FROM orders o WHERE o.user_id = |").items.map { it.insertText }
+        assertTrue("u.email" in inner && "o.total" in inner, inner.toString())
+        assertEquals(listOf("id", "user_id", "total", "status"), complete("SELECT * FROM users UNION SELECT | FROM orders").items.filter { it.kind == CompletionKind.Column }.map { it.label })
+        // Derived tables expose their select list.
+        assertEquals(listOf("id", "n"), labels("SELECT t.| FROM (SELECT id, name AS n FROM users) t").filter { it != "*" })
+    }
+
+    @Test
+    fun `keywords that complete a phrase`() {
+        assertEquals(listOf("BY"), labels("SELECT * FROM users ORDER |"))
+        assertEquals(listOf("BY"), labels("SELECT * FROM users GROUP |"))
+        assertEquals(listOf("JOIN", "OUTER JOIN"), labels("SELECT * FROM users u LEFT |"))
+        assertEquals("NULL", labels("SELECT * FROM users WHERE name IS |").first())
+        assertEquals("NULL", labels("SELECT * FROM users WHERE name IS NOT |").first())
+        assertEquals(listOf("SELECT", "ALL"), labels("SELECT 1 UNION |"))
+        assertEquals("OFFSET", labels("SELECT * FROM users LIMIT 10 |").first())
+        assertEquals("VALUES", labels("INSERT INTO users (id, name) |").first())
+        assertTrue(labels("SELECT id AS |").isEmpty(), "an alias is being made up")
+        assertEquals("WHERE ", complete("SELECT * FROM users WH|").items.first().insertText, "keywords insert a trailing space")
+    }
+
+    @Test
+    fun `the word around the caret is completed and replaced`() {
+        val result = complete("SELECT * FROM users u WHERE u.na|me = 1")
+        assertEquals("na", result.prefix)
+        assertEquals(listOf("name"), result.items.map { it.label })
+        val text = "SELECT * FROM users u WHERE u.name = 1"
+        assertEquals("name", text.substring(result.replaceStart, result.replaceEnd))
+    }
+
+    @Test
+    fun `lists that aren't values and parameters`() {
+        assertNull(complete("UPDATE users SET name = 'a', |").value)
+        assertTrue(labels("UPDATE users SET name = 'a', |").contains("email"))
+        assertTrue(labels("INSERT INTO users (id, |").containsAll(listOf("name", "email")))
+        assertTrue(complete("SELECT * FROM users WHERE name = :na|").items.isEmpty())
     }
 }
