@@ -3,8 +3,11 @@ package dev.datagrok.core.edit
 import dev.datagrok.core.dialect.SqlDialect
 import dev.datagrok.core.metadata.TableRef
 
-/** A column value to bind; [jdbcType] is a [java.sql.Types] constant used for NULLs and dialect binding. */
-data class BoundValue(val value: String?, val jdbcType: Int, val numeric: Boolean)
+/**
+ * A column value to bind; [jdbcType] is a [java.sql.Types] constant used for NULLs and dialect binding. With [isDefault]
+ * an update sets the column back to its default instead, and [value] is ignored.
+ */
+data class BoundValue(val value: String?, val jdbcType: Int, val numeric: Boolean, val isDefault: Boolean = false)
 
 sealed interface RowChange {
     /** Identifies the row by its primary key values as they were read. */
@@ -50,8 +53,9 @@ object ChangeSql {
                 }
                 is RowChange.Update -> {
                     val (condition, keyParameters) = where(change.key)
-                    val assignments = change.values.keys.joinToString(", ") { "${q(it)} = ?" }
-                    ChangeStatement("UPDATE $target SET $assignments WHERE $condition", change.values.values + keyParameters, expectedRows = 1)
+                    val assignments = change.values.entries.joinToString(", ") { (column, bound) -> "${q(column)} = " + if (bound.isDefault) "DEFAULT" else "?" }
+                    val values = change.values.values.filterNot { it.isDefault }
+                    ChangeStatement("UPDATE $target SET $assignments WHERE $condition", values + keyParameters, expectedRows = 1)
                 }
                 is RowChange.Insert ->
                     if (change.values.isEmpty()) ChangeStatement("INSERT INTO $target DEFAULT VALUES", emptyList(), expectedRows = null)

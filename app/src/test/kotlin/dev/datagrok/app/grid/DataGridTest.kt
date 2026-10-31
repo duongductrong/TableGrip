@@ -21,6 +21,12 @@ import dev.datagrok.app.table.TableEditModel
 import dev.datagrok.core.dialect.SortDirection
 import dev.datagrok.core.driver.QueryResult
 import dev.datagrok.core.driver.ResultColumn
+import dev.datagrok.core.dialect.SqlDialect
+import dev.datagrok.core.edit.RowChange
+import dev.datagrok.core.metadata.ColumnInfo
+import dev.datagrok.core.metadata.Namespace
+import dev.datagrok.core.metadata.TableDetails
+import dev.datagrok.core.metadata.TableRef
 import java.sql.Types
 import dev.datagrok.core.agent.Mention
 import kotlin.test.Test
@@ -206,5 +212,107 @@ class DataGridTest {
         assertEquals(RowStatus.Inserted, model.rowStatus(5))
         // One updated row plus one inserted row.
         assertEquals(2, model.changeCount)
+    }
+
+    /** id, a nullable boolean, a NOT NULL integer with no default, a date, and a timestamp defaulting to now(). */
+    private fun typed(): TableEditModel {
+        val columns =
+            listOf(
+                ResultColumn("id", "int4", Types.INTEGER),
+                ResultColumn("done", "bool", Types.BIT),
+                ResultColumn("qty", "int2", Types.SMALLINT),
+                ResultColumn("due", "date", Types.DATE),
+                ResultColumn("at", "timestamp", Types.TIMESTAMP),
+            )
+        fun info(name: String, type: String, jdbcType: Int, nullable: Boolean = true, default: String? = null) =
+            ColumnInfo(name, type, null, nullable, default, autoIncrement = false, primaryKey = name == "id", jdbcType = jdbcType)
+        val details =
+            TableDetails(
+                TableRef(Namespace(null, "public"), "t"),
+                listOf(
+                    info("id", "int4", Types.INTEGER, nullable = false),
+                    info("done", "bool", Types.BIT),
+                    info("qty", "int2", Types.SMALLINT, nullable = false),
+                    info("due", "date", Types.DATE),
+                    info("at", "timestamp", Types.TIMESTAMP, default = "now()"),
+                ),
+                emptyList(),
+                emptyList(),
+            )
+        val rows = listOf(listOf("1", "t", "5", "2026-10-01", "2026-10-01 09:00:00"), listOf("2", "f", "7", null, "2026-10-02 09:00:00"))
+        return TableEditModel(QueryResult.Rows(columns, rows, false, 1), listOf("id"), details = details, dialect = SqlDialect.PostgreSQLDialect())
+    }
+
+    @Test
+    fun `space toggles boolean cells through true, false and NULL`() = runComposeUiTest {
+        val state = DataGridState()
+        val model = typed()
+        setContent { IntUiTheme(isDark = false) { Box(Modifier.size(900.dp, 400.dp)) { DataGrid(model, state) } } }
+
+        onNodeWithText("t").performMouseInput { click(centerRight - Offset(4f, 0f)) }
+        waitForIdle()
+        onRoot().performKeyInput { pressKey(Key.Spacebar) }
+        waitForIdle()
+        assertEquals(null, state.editing)
+        assertEquals("false", model.value(0, 1))
+        onRoot().performKeyInput { pressKey(Key.Spacebar) }
+        waitForIdle()
+        assertEquals(null, model.value(0, 1))
+        onRoot().performKeyInput { pressKey(Key.Spacebar) }
+        waitForIdle()
+        // Back to the value it was read as ("t"): no pending change.
+        assertEquals("t", model.value(0, 1))
+        assertEquals(0, model.changeCount)
+    }
+
+    @Test
+    fun `enter refuses a value the column can't take, and blank typed input means NULL`() = runComposeUiTest {
+        val state = DataGridState()
+        val model = typed()
+        setContent { IntUiTheme(isDark = false) { Box(Modifier.size(900.dp, 400.dp)) { DataGrid(model, state) } } }
+
+        onNodeWithText("5").performMouseInput { doubleClick(center) }
+        waitForIdle()
+        onNodeWithText("5").performTextInput("00000")
+        // The hint under the cell is a popup, a second root; keys go to the editor itself.
+        onNodeWithText("500000").performKeyInput { pressKey(Key.Enter) }
+        waitForIdle()
+        assertEquals(GridCell(0, 2), state.editing)
+        onNodeWithText("Out of range for int2: -32768 to 32767").assertExists()
+
+        onNodeWithText("500000").performKeyInput { pressKey(Key.Escape) }
+        waitForIdle()
+        assertEquals("5", model.value(0, 2))
+
+        // A date typed as an expression is stored resolved.
+        onNodeWithText("2026-10-01").performMouseInput { click(center) }
+        waitForIdle()
+        onRoot().performKeyInput { pressKey(Key.Delete) }
+        waitForIdle()
+        onRoot().performKeyInput { pressKey(Key.Enter) }
+        waitForIdle()
+        assertEquals(null, model.value(0, 3))
+        assertTrue(model.isModified(0, 3))
+    }
+
+    @Test
+    fun `new rows show what left-out columns get and refuse to save without required ones`() = runComposeUiTest {
+        val state = DataGridState()
+        val model = typed()
+        setContent { IntUiTheme(isDark = false) { Box(Modifier.size(900.dp, 400.dp)) { DataGrid(model, state) } } }
+
+        model.addRow()
+        waitForIdle()
+        onNodeWithText("<default: now()>").assertExists()
+        assertEquals("Row 3, id: id is required: it is NOT NULL and has no default", model.firstProblem())
+        model.setValue(2, 0, "3")
+        model.setValue(2, 2, "1")
+        assertEquals(null, model.firstProblem())
+
+        // Existing rows can go back to the column's default.
+        assertTrue(model.canSetDefault(0, 4))
+        model.setDefault(0, 4)
+        val update = model.toChanges().filterIsInstance<RowChange.Update>().single()
+        assertTrue(update.values.getValue("at").isDefault)
     }
 }

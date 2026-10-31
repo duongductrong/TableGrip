@@ -369,7 +369,14 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
                     database.fetchPage(table, resolveFilter(), sort, pageSize, page.toLong() * pageSize, app.settings.queryTimeoutSeconds)
                 columns?.let { details = it.await() }
                 hasNextPage = result.truncated
-                model = TableEditModel(result, details?.primaryKey.orEmpty(), readOnly = config.readOnly || Capability.EditRows !in config.type.capabilities)
+                model =
+                    TableEditModel(
+                        result,
+                        details?.primaryKey.orEmpty(),
+                        readOnly = config.readOnly || Capability.EditRows !in config.type.capabilities,
+                        details = details,
+                        dialect = dialect,
+                    )
                 error = null
             } catch (e: CancellationException) {
                 throw e
@@ -553,7 +560,7 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
 
     /** Connections that confirm writes show the SQL first; [submitNow] runs it. */
     fun submit() {
-        if (!hasChanges) return
+        if (!hasChanges || !readyToSave()) return
         if (config.confirmWrites && preview == null) openPreview() else submitNow()
     }
 
@@ -569,8 +576,16 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
         afterSubmit = null
     }
 
+    /** A value the server would reject stops the whole batch; says which one before anything is sent. */
+    private fun readyToSave(): Boolean {
+        val problem = model?.firstProblem() ?: return true
+        error = "Can't save yet. $problem"
+        return false
+    }
+
     fun submitNow() {
         val model = model?.takeIf { it.hasChanges } ?: return
+        if (!readyToSave()) return
         preview = null
         app.scope.launch {
             submitting = true

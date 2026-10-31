@@ -23,6 +23,10 @@ import dev.datagrok.core.dialect.SortDirection
 import dev.datagrok.core.dialect.SqlDialect
 import dev.datagrok.core.agent.Mention
 import dev.datagrok.core.driver.ResultColumn
+import dev.datagrok.core.edit.ColumnEdit
+import dev.datagrok.core.edit.EditCheck
+import dev.datagrok.core.edit.EditKind
+import dev.datagrok.core.edit.Uuids
 import dev.datagrok.core.export.CopyFormat
 import dev.datagrok.core.export.ResultFormats
 import androidx.compose.foundation.gestures.scrollBy
@@ -157,6 +161,11 @@ internal class GridController(val state: DataGridState, private val scope: Corou
                 if (state.editing != null && state.editing != cell) commitEdit()
                 if (!primary) {
                     if (state.selection?.contains(cell.row, cell.column) != true) state.select(cell)
+                    return
+                }
+                if (!shift && isOnCheckBox(hit.column, lastPointerContentX) && canEdit(cell)) {
+                    state.select(cell)
+                    toggleBoolean()
                     return
                 }
                 if (isDouble) {
@@ -308,6 +317,7 @@ internal class GridController(val state: DataGridState, private val scope: Corou
             event.key == Key.PageDown -> moveBy(pageRows(), 0, shift)
             event.key == Key.Escape -> focus?.let { state.select(it) }.let { focus != null }
             event.key == Key.Enter || event.key == Key.NumPadEnter || event.key == Key.F2 -> focus?.let { startEditing(it) } == true
+            event.key == Key.Spacebar && focus != null && isBooleanColumn(focus.column) -> toggleBoolean()
             event.key == Key.Backspace || event.key == Key.Delete -> focus?.let { startEditing(it, replaceWith = "") } == true
             else -> {
                 val text = typedText(event.utf16CodePoint)
@@ -370,21 +380,60 @@ internal class GridController(val state: DataGridState, private val scope: Corou
 
     fun canEdit(cell: GridCell): Boolean = editor?.canEdit(cell.row, state.modelColumn(cell.column)) == true
 
-    /** Starts inline editing; [replaceWith] replaces the value (typing over a cell) instead of editing it. */
+    /** What the display [column] takes when edited; null for read-only grids. */
+    fun columnEdit(column: Int): ColumnEdit? = editor?.columnEdit(state.modelColumn(column))
+
+    /**
+     * Starts inline editing; [replaceWith] replaces the value (typing over a cell) instead of editing it. JSON and
+     * multi-line text open straight in the roomier editor, since one line can't show them.
+     */
     fun startEditing(cell: GridCell, replaceWith: String? = null): Boolean {
         if (!canEdit(cell)) return false
         state.select(cell)
         scrollIntoView(cell)
         val current = model.value(cell.row, state.modelColumn(cell.column)).orEmpty()
-        state.startEditing(cell, replaceWith ?: current, initial = current)
+        val kind = columnEdit(cell.column)?.kind
+        val popup = if (replaceWith == null && (kind == EditKind.Json || '\n' in current)) EditPopup.Expanded else EditPopup.None
+        state.startEditing(cell, replaceWith ?: current, initial = current, popup = popup)
         return true
     }
 
-    fun commitEdit(moveDown: Boolean = false, moveRight: Int = 0) {
+    /** Checks the open editor's text against its column: what would be stored, or why it can't be. */
+    fun editCheck(): EditCheck? {
+        val cell = state.editing ?: return null
+        val edit = columnEdit(cell.column) ?: return null
+        val check = edit.check(state.editText.text.toString())
+        if (check == EditCheck.Empty && !edit.nullable && model.rowStatus(cell.row) != RowStatus.Inserted) {
+            return EditCheck.Invalid("${columnName(cell.column)} is NOT NULL: enter a value")
+        }
+        return check
+    }
+
+    /**
+     * Stores the open editor's text. With [strict] (Enter, Tab) a value that doesn't fit the column keeps the editor
+     * open instead; otherwise (clicking away) it is kept as typed and flagged until fixed, so nothing typed is lost.
+     */
+    fun commitEdit(moveDown: Boolean = false, moveRight: Int = 0, strict: Boolean = false) {
         val cell = state.editing ?: return
         val text = state.editText.text.toString()
+        val editor = editor
+        if (editor != null && text != state.editInitial) {
+            val row = cell.row
+            val column = state.modelColumn(cell.column)
+            when (val check = editCheck()) {
+                is EditCheck.Invalid ->
+                    if (strict) {
+                        state.editRejections++
+                        return
+                    } else editor.setValue(row, column, text)
+                EditCheck.Empty ->
+                    if (model.rowStatus(row) == RowStatus.Inserted && editor.canSetDefault(row, column)) editor.setDefault(row, column)
+                    else editor.setValue(row, column, null)
+                is EditCheck.Ok -> editor.setValue(row, column, check.value)
+                null -> editor.setValue(row, column, text)
+            }
+        }
         state.stopEditing()
-        if (text != state.editInitial) editor?.setValue(cell.row, state.modelColumn(cell.column), text)
         gridFocus.requestFocus()
         if (moveDown) moveBy(1, 0, false)
         if (moveRight != 0) moveBy(0, moveRight, false)
@@ -397,7 +446,72 @@ internal class GridController(val state: DataGridState, private val scope: Corou
 
     fun setNull() {
         val editor = editor ?: return
-        forEachSelectedCell { row, column -> if (editor.canEdit(row, column)) editor.setValue(row, column, null) }
+        forEachSelectedCell { row, column -> if (editor.canSetNull(row, column)) editor.setValue(row, column, null) }
+    }
+
+    fun canSetDefault(): Boolean {
+        val editor = editor ?: return false
+        var any = false
+        forEachSelectedCell { row, column -> any = any || editor.canSetDefault(row, column) }
+        return any
+    }
+
+    fun setDefault() {
+        val editor = editor ?: return
+        forEachSelectedCell { row, column -> editor.setDefault(row, column) }
+    }
+
+    /** Whether the display [column] shows check boxes: an editable boolean column. */
+    fun isBooleanColumn(column: Int): Boolean = columnEdit(column)?.kind == EditKind.Boolean
+
+    /**
+     * Flips the selected boolean cells, following the focused one: true → false → NULL (when the column takes it) →
+     * true.
+     */
+    fun toggleBoolean(): Boolean {
+        val editor = editor ?: return false
+        val focus = state.focus ?: return false
+        if (!isBooleanColumn(focus.column) || !canEdit(focus)) return false
+        val edit = columnEdit(focus.column)!!
+        val next =
+            when (edit.booleanOf(model.value(focus.row, state.modelColumn(focus.column)))) {
+                true -> false
+                false -> if (edit.nullable) null else true
+                null -> true
+            }
+        forEachSelectedCell { row, column ->
+            val cellEdit = editor.columnEdit(column)
+            if (cellEdit.kind == EditKind.Boolean && editor.canEdit(row, column)) {
+                if (next == null) {
+                    if (editor.canSetNull(row, column)) editor.setValue(row, column, null)
+                } else editor.setValue(row, column, cellEdit.booleanText(next))
+            }
+        }
+        return true
+    }
+
+    fun hasUuidSelection(): Boolean {
+        val editor = editor ?: return false
+        var any = false
+        forEachSelectedCell { row, column -> any = any || (editor.columnEdit(column).kind == EditKind.Uuid && editor.canEdit(row, column)) }
+        return any
+    }
+
+    /** Fills the selected UUID cells with new, distinct UUIDs. */
+    fun generateUuids(timeOrdered: Boolean) {
+        val editor = editor ?: return
+        forEachSelectedCell { row, column ->
+            if (editor.columnEdit(column).kind == EditKind.Uuid && editor.canEdit(row, column)) {
+                editor.setValue(row, column, (if (timeOrdered) Uuids.v7() else Uuids.v4()).toString())
+            }
+        }
+    }
+
+    /** Whether a press at content x [contentX] in display [column] lands on a boolean cell's check box. */
+    fun isOnCheckBox(column: Int, contentX: Float): Boolean {
+        if (!isBooleanColumn(column)) return false
+        val left = geometry.offsets[column] + CheckBoxInset.value * density
+        return contentX >= left - 4 * density && contentX <= left + (CheckBoxSize.value + 4) * density
     }
 
     fun addRow() {

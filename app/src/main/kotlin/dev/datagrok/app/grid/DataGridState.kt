@@ -12,6 +12,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.Dp
 import dev.datagrok.core.driver.ResultColumn
 
+/** What floats over the cell being edited, besides its inline text field. */
+enum class EditPopup { None, Expanded, Picker }
+
 /** A cell in display coordinates: [column] indexes [DataGridState.visibleColumns]. */
 data class GridCell(val row: Int, val column: Int)
 
@@ -54,6 +57,9 @@ class DataGridState {
     /** The text editing started from, to tell real edits from Enter-then-Escape. */
     var editInitial: String = ""
         private set
+    var editPopup by mutableStateOf(EditPopup.None)
+    /** Bumped when a commit is refused because the text doesn't fit the column, so the editor can say so. */
+    var editRejections by mutableIntStateOf(0)
 
     /** Bumped by [requestFocus] so the grid takes keyboard focus, e.g. on Esc from the filter bar. */
     var focusRequests by mutableIntStateOf(0)
@@ -116,9 +122,10 @@ class DataGridState {
         selection = current.copy(anchor = current.anchor.clamped(), focus = current.focus.clamped())
     }
 
-    fun startEditing(cell: GridCell, text: String, initial: String = text) {
+    fun startEditing(cell: GridCell, text: String, initial: String = text, popup: EditPopup = EditPopup.None) {
         editing = cell
         editInitial = initial
+        editPopup = popup
         editText.edit {
             replace(0, length, text)
             selection = androidx.compose.ui.text.TextRange(length)
@@ -127,6 +134,7 @@ class DataGridState {
 
     fun stopEditing() {
         editing = null
+        editPopup = EditPopup.None
     }
 
     fun hide(modelColumn: Int) {

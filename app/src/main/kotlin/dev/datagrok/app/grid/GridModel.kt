@@ -2,6 +2,7 @@ package dev.datagrok.app.grid
 
 import dev.datagrok.core.driver.QueryResult
 import dev.datagrok.core.driver.ResultColumn
+import dev.datagrok.core.edit.ColumnEdit
 
 enum class RowStatus { Normal, Inserted, Deleted }
 
@@ -19,6 +20,9 @@ interface GridModel {
     /** Text shown instead of NULL for cells with no value yet, e.g. `<default>` in a new row. */
     fun placeholder(row: Int, column: Int): String? = null
 
+    /** Why a pending edit can't be saved as it is, e.g. a date that doesn't parse; null when it's fine. */
+    fun problem(row: Int, column: Int): String? = null
+
     /** Null for read-only grids. */
     val editor: GridEditor?
         get() = null
@@ -27,7 +31,18 @@ interface GridModel {
 interface GridEditor {
     fun canEdit(row: Int, column: Int): Boolean
 
+    /** What input [column] takes, so the grid can offer a fitting editor and check what's typed. */
+    fun columnEdit(column: Int): ColumnEdit
+
     fun setValue(row: Int, column: Int, value: String?)
+
+    fun canSetNull(row: Int, column: Int): Boolean = canEdit(row, column)
+
+    /** Whether [setDefault] applies: a new row's left-out column, or an update to a column that has a default. */
+    fun canSetDefault(row: Int, column: Int): Boolean = false
+
+    /** Leaves a new row's column out, or sets an existing row's column back to its default. */
+    fun setDefault(row: Int, column: Int) {}
 
     /** Appends a new row and returns its index. */
     fun addRow(): Int

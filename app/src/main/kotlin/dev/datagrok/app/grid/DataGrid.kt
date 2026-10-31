@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,6 +28,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -49,6 +51,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isAltPressed
 import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
@@ -83,7 +86,10 @@ import dev.datagrok.core.dialect.SortDirection
 import dev.datagrok.app.ui.LocalIslands
 import dev.datagrok.app.ui.Shortcuts
 import dev.datagrok.app.ui.copyToClipboard
+import dev.datagrok.core.edit.EditCheck
+import dev.datagrok.core.edit.EditKind
 import dev.datagrok.core.export.CopyFormat
+import dev.datagrok.core.filter.FilterValues
 import java.awt.Cursor
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.component.HorizontalScrollbar
@@ -224,7 +230,13 @@ fun DataGrid(
                     }
             ) {
                 Box(Modifier.fillMaxSize().horizontalScroll(state.horizontalScroll)) {
-                    LazyColumn(Modifier.width(totalWidth).fillMaxHeight(), state = state.verticalScroll) {
+                    // A scrollbar-wide gutter past the last row and column, so scrolling to the end (e.g. onto the
+                    // insert row) leaves them clear of the overlay scrollbars instead of underneath them.
+                    LazyColumn(
+                        Modifier.width(totalWidth + ScrollbarAllowance).fillMaxHeight(),
+                        state = state.verticalScroll,
+                        contentPadding = PaddingValues(bottom = ScrollbarAllowance),
+                    ) {
                         stickyHeader(key = "header") { HeaderRow(controller, geometry, widths, totalWidth, rowNumberWidth, range, colors) }
                         items(model.rowCount, key = { it }) { row ->
                             DataRow(controller, row, geometry, widths, totalWidth, rowNumberWidth, range, colors, firstRowNumber)
@@ -372,8 +384,11 @@ private fun DataRow(
                 CellEditor(controller, cellModifier, colors)
             } else {
                 val name = model.columns[modelColumn].name
+                val edit = model.editor?.columnEdit(modelColumn)
                 Cell(
                     value = model.value(row, modelColumn),
+                    checkBox = edit?.takeIf { it.kind == EditKind.Boolean }?.let { CheckBoxCell(model.editor?.canEdit(row, modelColumn) == true) },
+                    problem = model.problem(row, modelColumn) != null,
                     link = controller.actions.onFollowLink?.takeIf { name in controller.actions.linkedColumns }?.let { follow -> { follow(row, name) } },
                     placeholder = model.placeholder(row, modelColumn),
                     numeric = model.columns[modelColumn].isNumeric,
@@ -409,9 +424,15 @@ private fun DataRow(
     }
 }
 
+/** A boolean cell shown as a check box; [editable] cells toggle on click and Space. */
+private class CheckBoxCell(val editable: Boolean)
+
 @Composable
 private fun Cell(
     value: String?,
+    checkBox: CheckBoxCell?,
+    /** The pending value can't be saved as it is: tinted, and the value panel says why. */
+    problem: Boolean,
     /** Follows the cell's foreign key; shown as an arrow at the cell's end, like TablePlus. */
     link: (() -> Unit)?,
     placeholder: String?,
@@ -425,6 +446,7 @@ private fun Cell(
 ) {
     var cell = modifier
     if (modified) cell = cell.background(colors.modified)
+    if (problem) cell = cell.background(ErrorColor.copy(alpha = 0.22f))
     if (selected) cell = cell.background(colors.selection)
     cell = cell.gridLines(colors.grid)
     if (focused) cell = cell.border(1.dp, colors.focusBorder)
@@ -439,12 +461,18 @@ private fun Cell(
                 value == null -> base.copy(color = colors.muted, fontStyle = FontStyle.Italic)
                 else -> base.copy(color = colors.text, textAlign = if (numeric) TextAlign.End else TextAlign.Start)
             }
-        Text(
-            text = value?.let(::singleLine) ?: placeholder ?: "<null>",
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            style = if (deleted) style.copy(textDecoration = TextDecoration.LineThrough) else style,
-        )
+        val text = value?.let(::singleLine) ?: placeholder ?: "<null>"
+        val decorated = if (deleted) style.copy(textDecoration = TextDecoration.LineThrough) else style
+        val checked = value?.let(FilterValues::boolean)
+        if (checkBox != null && (value == null || checked != null)) {
+            // The value stays next to the box: NULL and engine spellings (t, 1) remain visible.
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                CheckBoxGlyph(checked, enabled = checkBox.editable && !deleted)
+                Text(text, maxLines = 1, overflow = TextOverflow.Ellipsis, style = decorated.copy(color = colors.muted))
+            }
+        } else {
+            Text(text = text, maxLines = 1, overflow = TextOverflow.Ellipsis, style = decorated)
+        }
     }
     if (showLink) LinkArrow(link!!, modifier.padding(end = 3.dp))
 }
@@ -473,46 +501,71 @@ private fun LinkArrow(onClick: () -> Unit, modifier: Modifier) {
 
 @Composable
 private fun CellEditor(controller: GridController, modifier: Modifier, colors: GridColors) {
+    val state = controller.state
     val focus = remember { FocusRequester() }
     var hadFocus by remember { mutableStateOf(false) }
-    // The expanded editor floats over the grid and edits the same text, so collapsing it keeps what was typed.
-    var expanded by remember { mutableStateOf(false) }
-    LaunchedEffect(expanded) { if (!expanded) runCatching { focus.requestFocus() } }
-    Box(modifier.background(JewelTheme.globalColors.panelBackground).border(1.dp, colors.focusBorder)) {
+    // The expanded editor and the picker float over the grid and edit the same text, so closing them keeps what was
+    // typed; while one is open, the inline field losing focus to it doesn't commit.
+    val popup = state.editPopup
+    LaunchedEffect(popup) { if (popup == EditPopup.None) runCatching { focus.requestFocus() } }
+    val kind = state.editing?.let { controller.columnEdit(it.column)?.kind }
+    val hasPicker = kind?.isTemporal == true
+    val check by remember { derivedStateOf { controller.editCheck() } }
+    val changed by remember { derivedStateOf { state.editText.text.toString() != state.editInitial } }
+    Box(modifier.background(JewelTheme.globalColors.panelBackground).border(1.dp, if (check is EditCheck.Invalid && changed) ErrorColor else colors.focusBorder)) {
         BasicTextField(
-            state = controller.state.editText,
+            state = state.editText,
             modifier =
                 Modifier.fillMaxSize()
                     .padding(start = 8.dp, end = ExpandButtonSize + 4.dp, top = 4.dp, bottom = 4.dp)
                     .focusRequester(focus)
                     .onFocusChanged {
-                        // Clicking elsewhere commits, like DataGrip; moving into the expanded editor does not.
-                        if (hadFocus && !it.isFocused && !expanded) controller.commitEdit()
+                        // Clicking elsewhere commits, like DataGrip; moving into a floating editor does not.
+                        if (hadFocus && !it.isFocused && state.editPopup == EditPopup.None) controller.commitEdit()
                         hadFocus = it.isFocused
                     }
                     .onPreviewKeyEvent { event ->
                         if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                        val step = if (event.key == Key.DirectionUp) 1 else if (event.key == Key.DirectionDown) -1 else 0
                         when {
-                            Shortcuts.ExpandEditor.matches(event) -> expanded = true
-                            event.key == Key.Enter || event.key == Key.NumPadEnter -> controller.commitEdit(moveDown = true)
-                            event.key == Key.Tab -> controller.commitEdit(moveRight = if (event.isShiftPressed) -1 else 1)
+                            Shortcuts.ExpandEditor.matches(event) -> state.editPopup = EditPopup.Expanded
+                            hasPicker && event.isAltPressed && event.key == Key.DirectionDown -> state.editPopup = EditPopup.Picker
+                            kind?.isNumeric == true && event.isAltPressed && step != 0 ->
+                                stepNumber(state.editText.text.toString(), step)?.let(state.editText::setTextAndPlaceCursorAtEnd)
+                            event.key == Key.Enter || event.key == Key.NumPadEnter -> controller.commitEdit(moveDown = true, strict = true)
+                            event.key == Key.Tab -> controller.commitEdit(moveRight = if (event.isShiftPressed) -1 else 1, strict = true)
                             event.key == Key.Escape -> controller.cancelEdit()
                             else -> return@onPreviewKeyEvent false
                         }
                         true
                     },
-            textStyle = JewelTheme.editorTextStyle.copy(color = colors.text),
+            textStyle = JewelTheme.editorTextStyle.copy(color = colors.text, textAlign = if (kind?.isNumeric == true) TextAlign.End else TextAlign.Start),
             cursorBrush = SolidColor(colors.text),
             lineLimits = TextFieldLineLimits.SingleLine,
         )
-        EditorIconButton(
-            icon = AllIconsKeys.General.ExpandComponent,
-            tooltip = "Expand (${Shortcuts.ExpandEditor.label})",
-            modifier = Modifier.align(Alignment.CenterEnd).padding(end = 2.dp),
-        ) {
-            expanded = true
+        if (hasPicker) {
+            EditorIconButton(
+                icon = AllIconsKeys.General.ChevronDown,
+                tooltip = "Pick (⌥↓)",
+                modifier = Modifier.align(Alignment.CenterEnd).padding(end = 2.dp),
+            ) {
+                state.editPopup = EditPopup.Picker
+            }
+        } else {
+            EditorIconButton(
+                icon = AllIconsKeys.General.ExpandComponent,
+                tooltip = "Expand (${Shortcuts.ExpandEditor.label})",
+                modifier = Modifier.align(Alignment.CenterEnd).padding(end = 2.dp),
+            ) {
+                state.editPopup = EditPopup.Expanded
+            }
         }
-        if (expanded) ExpandedCellEditor(controller, colors, onCollapse = { expanded = false })
+        when (popup) {
+            EditPopup.Expanded -> ExpandedCellEditor(controller, colors, kind, onCollapse = { state.editPopup = EditPopup.None })
+            EditPopup.Picker ->
+                TemporalPicker(kind!!, state.editText, onApply = { controller.commitEdit(strict = true) }, onClose = { state.editPopup = EditPopup.None })
+            EditPopup.None -> if (changed) check?.hint()?.let { (text, color) -> EditHint(text, color) }
+        }
     }
 }
 
@@ -544,7 +597,9 @@ private fun EditorIconButton(icon: IconKey, tooltip: String, modifier: Modifier 
  * break, [Shortcuts.Submit] applies, Escape collapses back to the inline editor and clicking outside applies.
  */
 @Composable
-private fun ExpandedCellEditor(controller: GridController, colors: GridColors, onCollapse: () -> Unit) {
+private fun ExpandedCellEditor(controller: GridController, colors: GridColors, kind: EditKind?, onCollapse: () -> Unit) {
+    val check by remember { derivedStateOf { controller.editCheck() } }
+    val json = kind == EditKind.Json
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
     val shape = RoundedCornerShape(6.dp)
@@ -554,7 +609,7 @@ private fun ExpandedCellEditor(controller: GridController, colors: GridColors, o
         properties = PopupProperties(focusable = true),
     ) {
         Column(
-            Modifier.width(ExpandedEditorWidth)
+            Modifier.width(if (json) ExpandedEditorWidth * 1.4f else ExpandedEditorWidth)
                 .clip(shape)
                 .background(JewelTheme.globalColors.panelBackground)
                 .border(1.dp, colors.focusBorder, shape)
@@ -563,13 +618,13 @@ private fun ExpandedCellEditor(controller: GridController, colors: GridColors, o
                 state = controller.state.editText,
                 modifier =
                     Modifier.fillMaxWidth()
-                        .height(ExpandedEditorHeight)
+                        .height(if (json) ExpandedEditorHeight * 1.5f else ExpandedEditorHeight)
                         .padding(horizontal = 8.dp, vertical = 6.dp)
                         .focusRequester(focus)
                         .onPreviewKeyEvent { event ->
                             if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
                             when {
-                                Shortcuts.Submit.matches(event) -> controller.commitEdit()
+                                Shortcuts.Submit.matches(event) -> controller.commitEdit(strict = true)
                                 event.key == Key.Escape -> onCollapse()
                                 else -> return@onPreviewKeyEvent false
                             }
@@ -583,14 +638,24 @@ private fun ExpandedCellEditor(controller: GridController, colors: GridColors, o
                 Modifier.fillMaxWidth().topLine(colors.grid).padding(start = 8.dp, end = 4.dp, top = 3.dp, bottom = 3.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                val hint = check?.hint()
                 Text(
-                    "${Shortcuts.Submit.label} to apply · Esc to collapse",
+                    hint?.first ?: "${Shortcuts.Submit.label} to apply · Esc to collapse",
                     Modifier.weight(1f),
-                    color = colors.muted,
+                    color = hint?.second ?: colors.muted,
                     fontSize = 11.sp,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
+                if (json) {
+                    val text = controller.state.editText
+                    EditorIconButton(AllIconsKeys.Actions.ReformatCode, "Format JSON") {
+                        reformatJson(text.text.toString(), pretty = true)?.let(text::setTextAndPlaceCursorAtEnd)
+                    }
+                    EditorIconButton(AllIconsKeys.Actions.Collapseall, "Minify JSON") {
+                        reformatJson(text.text.toString(), pretty = false)?.let(text::setTextAndPlaceCursorAtEnd)
+                    }
+                }
                 EditorIconButton(AllIconsKeys.General.CollapseComponent, "Collapse (Esc)", onClick = onCollapse)
             }
         }
@@ -661,7 +726,11 @@ private fun cellMenu(controller: GridController): List<ContextMenuItem> {
         ContextMenuItem("Go to Referenced Row (${Shortcuts.GoToReferenced})") { controller.followFocusedLink() }
             .takeIf { single && controller.columnName(focus.column) in controller.actions.linkedColumns && controller.model.value(focus.row, state.modelColumn(focus.column)) != null },
     ) + controller.actions.relatedRows?.takeIf { single }?.invoke(focus.row).orEmpty().map { (label, open) -> ContextMenuItem(label, open) } + listOfNotNull(
+        ContextMenuItem("Toggle (Space)") { controller.toggleBoolean() }.takeIf { single && controller.isBooleanColumn(focus.column) && controller.canEdit(focus) },
         ContextMenuItem("Set NULL (${Shortcuts.SetNull})") { controller.setNull() }.takeIf { editor != null },
+        ContextMenuItem("Set DEFAULT") { controller.setDefault() }.takeIf { controller.canSetDefault() },
+        ContextMenuItem("Generate UUID") { controller.generateUuids(timeOrdered = false) }.takeIf { controller.hasUuidSelection() },
+        ContextMenuItem("Generate UUID v7 (time-ordered)") { controller.generateUuids(timeOrdered = true) }.takeIf { controller.hasUuidSelection() },
         ContextMenuItem("Add Row (${Shortcuts.AddRow})") { controller.addRow() }.takeIf { editor != null },
         ContextMenuItem("Delete Row(s) (${Shortcuts.DeleteRows})") { controller.deleteSelectedRows() }.takeIf { editor != null },
         ContextMenuItem("Revert Row(s) (${Shortcuts.RevertRows})") { controller.revertSelectedRows() }.takeIf { editor != null },

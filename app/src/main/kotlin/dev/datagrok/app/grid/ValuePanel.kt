@@ -28,6 +28,10 @@ import androidx.compose.ui.unit.dp
 import dev.datagrok.app.table.ViewChip
 import dev.datagrok.app.ui.copyToClipboard
 import dev.datagrok.core.driver.BinaryText
+import dev.datagrok.core.edit.ColumnEdit
+import dev.datagrok.core.edit.EditCheck
+import dev.datagrok.core.edit.EditKind
+import dev.datagrok.core.edit.Uuids
 import dev.datagrok.core.filter.ValueKind
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -42,8 +46,10 @@ import org.jetbrains.jewel.ui.component.DefaultButton
 import org.jetbrains.jewel.ui.component.Divider
 import org.jetbrains.jewel.ui.component.Icon
 import org.jetbrains.jewel.ui.component.OutlinedButton
+import org.jetbrains.jewel.ui.component.RadioButtonRow
 import org.jetbrains.jewel.ui.component.Text
 import org.jetbrains.jewel.ui.component.TextArea
+import org.jetbrains.jewel.ui.component.TextField
 import org.jetbrains.jewel.ui.icons.AllIconsKeys
 
 private val PrettyJson = Json { prettyPrint = true }
@@ -66,7 +72,12 @@ fun ValuePanel(model: GridModel, state: DataGridState, modifier: Modifier = Modi
         val info = model.columns[column]
         val value = model.value(focus.row, column)
         val editor = model.editor?.takeIf { it.canEdit(focus.row, column) }
+        val edit = editor?.columnEdit(column)
+        val kind = edit?.kind
         val text = remember(focus, value) { TextFieldState(value.orEmpty()) }
+        val typed = text.text.toString()
+        val check = remember(edit, typed) { edit?.takeIf { typed != value.orEmpty() }?.check(typed) }
+        val problem = model.problem(focus.row, column)
         val json = remember(value) { value?.takeIf { it.trimStart().startsWith('{') || it.trimStart().startsWith('[') }?.let { runCatching { PrettyJson.parseToJsonElement(it) }.getOrNull() } }
         val binary = remember(value) { value?.takeIf { info.isBinary }?.let(BinaryText::decode) }
         val image = remember(binary) { binary?.takeIf { it.complete }?.let { runCatching { org.jetbrains.skia.Image.makeFromEncoded(it.bytes).toComposeImageBitmap() }.getOrNull() } }
@@ -107,6 +118,9 @@ fun ValuePanel(model: GridModel, state: DataGridState, modifier: Modifier = Modi
             }
         }
         if (timestamp != null) TimestampInfo(timestamp)
+        (check?.hint() ?: problem?.let { it to ErrorColor })?.let { (message, color) ->
+            Text(message, Modifier.padding(horizontal = 8.dp, vertical = 2.dp), color = color ?: JewelTheme.globalColors.text.info)
+        }
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth().padding(top = 4.dp))
         Box(Modifier.weight(1f).fillMaxWidth().padding(8.dp)) {
             when (view) {
@@ -114,30 +128,74 @@ fun ValuePanel(model: GridModel, state: DataGridState, modifier: Modifier = Modi
                 ValueView.Hex -> HexView(binary!!)
                 ValueView.Image -> Image(image!!, contentDescription = info.name, modifier = Modifier.fillMaxSize())
                 ValueView.Text ->
-                    TextArea(
-                        state = text,
-                        modifier = Modifier.fillMaxSize(),
-                        readOnly = editor == null,
-                        textStyle = JewelTheme.editorTextStyle,
-                        placeholder = { Text(if (value == null) "<null>" else "") },
-                    )
+                    when {
+                        editor != null && kind == EditKind.Boolean -> BooleanChoice(edit, value) { editor.setValue(focus.row, column, it) }
+                        editor != null && kind?.isTemporal == true ->
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                TextField(text, Modifier.fillMaxWidth(), textStyle = JewelTheme.editorTextStyle, placeholder = { Text(if (value == null) "<null>" else "") })
+                                TemporalPickerContent(kind, text, onApply = { apply(editor, focus.row, column, check) })
+                            }
+                        else ->
+                            TextArea(
+                                state = text,
+                                modifier = Modifier.fillMaxSize(),
+                                readOnly = editor == null,
+                                textStyle = JewelTheme.editorTextStyle,
+                                placeholder = { Text(if (value == null) "<null>" else "") },
+                            )
+                    }
             }
         }
         Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            if (json != null && view == ValueView.Text) {
-                OutlinedButton(onClick = { text.setTextAndPlaceCursorAtEnd(PrettyJson.encodeToString(JsonElement.serializer(), json)) }) {
+            if ((json != null || kind == EditKind.Json) && view == ValueView.Text) {
+                OutlinedButton(onClick = { reformatJson(text.text.toString(), pretty = true)?.let(text::setTextAndPlaceCursorAtEnd) }) {
                     Text("Format JSON")
                 }
+                if (editor != null) {
+                    OutlinedButton(onClick = { reformatJson(text.text.toString(), pretty = false)?.let(text::setTextAndPlaceCursorAtEnd) }) {
+                        Text("Minify")
+                    }
+                }
+            }
+            if (editor != null && kind == EditKind.Uuid) {
+                OutlinedButton(onClick = { text.setTextAndPlaceCursorAtEnd(Uuids.v4().toString()) }) { Text("New UUID") }
+                OutlinedButton(onClick = { text.setTextAndPlaceCursorAtEnd(Uuids.v7().toString()) }) { Text("New v7") }
             }
             OutlinedButton(onClick = { copyToClipboard(text.text.toString()) }) { Text("Copy") }
             Box(Modifier.weight(1f))
             if (editor != null) {
-                OutlinedButton(onClick = { editor.setValue(focus.row, column, null) }) { Text("Set NULL") }
-                DefaultButton(onClick = { editor.setValue(focus.row, column, text.text.toString()) }, enabled = text.text.toString() != value) {
-                    Text("Apply")
+                if (editor.canSetDefault(focus.row, column)) OutlinedButton(onClick = { editor.setDefault(focus.row, column) }) { Text("Set DEFAULT") }
+                // In a text column, empty and NULL are different values; the text area alone can't say which.
+                if (kind == EditKind.Text && value != "") OutlinedButton(onClick = { editor.setValue(focus.row, column, "") }) { Text("Empty") }
+                if (editor.canSetNull(focus.row, column)) OutlinedButton(onClick = { editor.setValue(focus.row, column, null) }) { Text("Set NULL") }
+                if (kind != EditKind.Boolean || view != ValueView.Text) {
+                    DefaultButton(onClick = { apply(editor, focus.row, column, check) }, enabled = typed != value.orEmpty() && check !is EditCheck.Invalid) {
+                        Text("Apply")
+                    }
                 }
             }
         }
+    }
+}
+
+/** Stores what the panel's text [check]ed to: its canonical form, or NULL for blank input in a typed column. */
+private fun apply(editor: GridEditor, row: Int, column: Int, check: EditCheck?) {
+    when (check) {
+        is EditCheck.Ok -> editor.setValue(row, column, check.value)
+        EditCheck.Empty -> editor.setValue(row, column, null)
+        is EditCheck.Invalid, null -> {}
+    }
+}
+
+/** True, false and (when the column takes it) NULL, for boolean cells. */
+@Composable
+private fun BooleanChoice(edit: ColumnEdit, value: String?, onChange: (String?) -> Unit) {
+    val current = edit.booleanOf(value)
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        RadioButtonRow("True", selected = value != null && current == true, onClick = { onChange(edit.booleanText(true)) })
+        RadioButtonRow("False", selected = value != null && current == false, onClick = { onChange(edit.booleanText(false)) })
+        if (edit.nullable) RadioButtonRow("NULL", selected = value == null, onClick = { onChange(null) })
+        if (value != null && current == null) Text("“$value” isn't a boolean", color = ErrorColor)
     }
 }
 
