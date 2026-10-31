@@ -564,29 +564,33 @@ private fun AddConnectionMenu(app: AppState) {
                 selectableItem(selected = false, iconKey = AllIconsKeys.General.Add, onClick = {
                     open = false
                     app.connections.openNew()
-                }) { Text("New Connection…") }
+                }) { MenuEntry("New Connection…", "Connect to a database server") }
                 selectableItem(selected = false, iconKey = AllIconsKeys.Actions.MenuOpen, onClick = {
                     open = false
                     app.connections.chooseDataFiles()
-                }) {
-                    Column {
-                        Text("Open Data File…")
-                        Text("CSV, Excel, JSON — or drop files on the window", color = JewelTheme.globalColors.text.info, fontSize = 11.sp)
-                    }
-                }
+                }) { MenuEntry("Open Data File…", "CSV, Excel, JSON — or drop files on the window") }
                 separator()
                 selectableItem(selected = false, iconKey = AllIconsKeys.ToolbarDecorator.Import, onClick = {
                     open = false
                     app.connections.openImport()
                 }) {
                     val hint = app.connections.importHint
-                    Column {
-                        Text(if (hint == null) "Import from Other Tools…" else "Import ${hint.count} from ${hint.tools.joinToString(", ")}…")
-                        Text("TablePlus, DBeaver, DataGrip, .pgpass, .env", color = JewelTheme.globalColors.text.info, fontSize = 11.sp)
-                    }
+                    MenuEntry(
+                        if (hint == null) "Import from Other Tools…" else "Import ${hint.count} from ${hint.tools.joinToString(", ")}…",
+                        "TablePlus, DBeaver, DataGrip, .pgpass, .env",
+                    )
                 }
             }
         }
+    }
+}
+
+/** A menu item's title over a one-line hint, padded so every entry in the menu has the same height. */
+@Composable
+private fun MenuEntry(title: String, detail: String) {
+    Column(Modifier.padding(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(title)
+        Text(detail, color = JewelTheme.globalColors.text.info, fontSize = 11.sp)
     }
 }
 
