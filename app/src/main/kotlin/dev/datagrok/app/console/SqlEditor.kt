@@ -58,7 +58,6 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -72,7 +71,10 @@ import dev.datagrok.app.completion.handleCompletionKey
 import dev.datagrok.app.grid.isMac
 import dev.datagrok.app.ui.LocalIslands
 import dev.datagrok.app.ui.LocalSettings
+import dev.datagrok.app.ui.theme.ColorTheme
+import dev.datagrok.app.ui.theme.LocalColorTheme
 import dev.datagrok.app.ui.Shortcuts
+import dev.datagrok.core.settings.Settings
 import dev.datagrok.core.sql.KeywordCase
 import dev.datagrok.core.sql.SqlFormatter
 import dev.datagrok.core.sql.SqlLexer
@@ -128,10 +130,8 @@ internal fun SqlEditor(
     val isDark = JewelTheme.isDark
     val settings = LocalSettings.current
     val accent = LocalIslands.current.accent
-    val palette =
-        remember(isDark, settings.syntaxScheme, settings.syntaxColors, accent) {
-            (if (isDark) DarkPalette else LightPalette).withTokens { token -> settings.syntaxColor(token, isDark) }.copy(statementBar = accent)
-        }
+    val colorTheme = LocalColorTheme.current
+    val palette = remember(colorTheme, settings.syntaxScheme, settings.syntaxColors, accent) { sqlPalette(colorTheme, settings, accent) }
     val highlighter = remember(syntax, palette) { SqlHighlighter(syntax, palette) }
     val autoPair = remember(syntax) { AutoPair(syntax) }
     val splitter = remember(syntax) { SqlSplitter(syntax) }
@@ -139,8 +139,8 @@ internal fun SqlEditor(
     val formatter = remember(syntax, indentUnit, settings.formatKeywordCase) { SqlFormatter(syntax, indentUnit, KeywordCase.of(settings.formatKeywordCase)) }
     val highlightLine = settings.highlightCurrentLine
     val scheme = SyntaxScheme.of(settings.syntaxScheme)
-    val editorBackground = scheme.background(isDark) ?: JewelTheme.globalColors.panelBackground
-    val editorText = scheme.foreground(isDark) ?: JewelTheme.globalColors.text.normal
+    val editorBackground = scheme.background(isDark) ?: colorTheme.editor.background ?: JewelTheme.globalColors.panelBackground
+    val editorText = scheme.foreground(isDark) ?: colorTheme.editor.foreground ?: JewelTheme.globalColors.text.normal
     // No trimming: every line — first and last included — is exactly one pitch tall, so line N always sits at N × pitch.
     val textStyle =
         JewelTheme.editorTextStyle.copy(
@@ -615,48 +615,25 @@ private data class SqlPalette(
     val statementBar: Color,
 )
 
-private val DarkPalette =
-    SqlPalette(
-        keyword = SpanStyle(color = Color(0xFFCF8E6D)),
-        string = SpanStyle(color = Color(0xFF6AAB73)),
-        number = SpanStyle(color = Color(0xFF2AACB8)),
-        comment = SpanStyle(color = Color(0xFF7A7E85), fontStyle = FontStyle.Italic),
-        quotedIdentifier = SpanStyle(color = Color(0xFFC77DBB)),
-        parameter = SpanStyle(color = Color(0xFF56A8F5)),
-        currentLine = Color(0x0FFFFFFF),
-        bracket = Color(0x3343A047),
-        bracketBorder = Color(0x9943A047),
-        findMatch = Color(0x4D3D6185),
-        findCurrent = Color(0x996F8FBF),
-        statementBar = Color(0xFF3574F0),
+/** The editor's colours from [theme], with the user's syntax scheme and token colours over its tokens. */
+private fun sqlPalette(theme: ColorTheme, settings: Settings, accent: Color): SqlPalette {
+    fun style(token: SyntaxToken) = theme.syntax.getValue(token).copy(color = settings.syntaxColor(token, theme))
+    val e = theme.editor
+    return SqlPalette(
+        keyword = style(SyntaxToken.Keyword),
+        string = style(SyntaxToken.String),
+        number = style(SyntaxToken.Number),
+        comment = style(SyntaxToken.Comment),
+        quotedIdentifier = style(SyntaxToken.QuotedIdentifier),
+        parameter = style(SyntaxToken.Parameter),
+        currentLine = e.currentLine,
+        bracket = e.bracket,
+        bracketBorder = e.bracketBorder,
+        findMatch = e.findMatch,
+        findCurrent = e.findCurrent,
+        statementBar = accent,
     )
-
-private val LightPalette =
-    SqlPalette(
-        keyword = SpanStyle(color = Color(0xFF0033B3)),
-        string = SpanStyle(color = Color(0xFF067D17)),
-        number = SpanStyle(color = Color(0xFF1750EB)),
-        comment = SpanStyle(color = Color(0xFF8C8C8C), fontStyle = FontStyle.Italic),
-        quotedIdentifier = SpanStyle(color = Color(0xFF871094)),
-        parameter = SpanStyle(color = Color(0xFF00627A)),
-        currentLine = Color(0x0A000000),
-        bracket = Color(0x3393D9A3),
-        bracketBorder = Color(0x9943A047),
-        findMatch = Color(0x66F2E36B),
-        findCurrent = Color(0xCCF2C94C),
-        statementBar = Color(0xFF3574F0),
-    )
-
-/** The palette with its token colours from [color], keeping each token's font style. */
-private fun SqlPalette.withTokens(color: (SyntaxToken) -> Color): SqlPalette =
-    copy(
-        keyword = keyword.copy(color = color(SyntaxToken.Keyword)),
-        string = string.copy(color = color(SyntaxToken.String)),
-        number = number.copy(color = color(SyntaxToken.Number)),
-        comment = comment.copy(color = color(SyntaxToken.Comment)),
-        quotedIdentifier = quotedIdentifier.copy(color = color(SyntaxToken.QuotedIdentifier)),
-        parameter = parameter.copy(color = color(SyntaxToken.Parameter)),
-    )
+}
 
 /** Colours tokens on the displayed text only; the underlying state stays plain. */
 private class SqlHighlighter(syntax: SqlSyntax, private val palette: SqlPalette) : OutputTransformation {

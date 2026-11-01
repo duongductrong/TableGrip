@@ -13,6 +13,10 @@ object DatagrokPaths {
     val settings: Path
         get() = home.resolve("settings.json")
 
+    /** The user's own theme files, read next to the built-in ones (see `dev.datagrok.core.theme.ThemeFamily`). */
+    val themes: Path
+        get() = home.resolve("themes")
+
     val history: Path
         get() = home.resolve("history.jsonl")
 

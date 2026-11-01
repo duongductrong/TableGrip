@@ -2,9 +2,9 @@ package dev.datagrok.app.chart
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import org.jetbrains.jewel.foundation.theme.JewelTheme
+import dev.datagrok.app.ui.theme.LocalColorTheme
 
-/** Chart colours for the islands theme: the island's background, so a chart sits in the result panel like the grid does. */
+/** Chart colours: the island's background, so a chart sits in the result panel like the grid does. [dark] and [light] are Graphite's. */
 object ResultChartColors {
     /** Ten hues told apart in both themes, the first few the most distinct (after IntelliJ's chart palette). */
     private val DarkPalette =
@@ -15,6 +15,7 @@ object ResultChartColors {
     val dark = ChartColors(Color(0xFF1E1F22), Color(0xFFDFE1E5), Color(0xFF9DA0A8), Color(0xFF2E3034), DarkPalette)
     val light = ChartColors(Color(0xFFFFFFFF), Color(0xFF1E1F22), Color(0xFF6C707E), Color(0xFFEBECF0), LightPalette)
 
+    /** The colour theme's chart colours. */
     @Composable
-    fun current(): ChartColors = if (JewelTheme.isDark) dark else light
+    fun current(): ChartColors = LocalColorTheme.current.chart
 }

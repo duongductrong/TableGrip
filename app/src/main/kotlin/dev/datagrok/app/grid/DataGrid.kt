@@ -1,5 +1,6 @@
 package dev.datagrok.app.grid
 
+import dev.datagrok.app.ui.theme.LocalColorTheme
 import androidx.compose.foundation.ContextMenuArea
 import androidx.compose.foundation.ContextMenuItem
 import androidx.compose.foundation.background
@@ -307,7 +308,7 @@ private fun gridColors(focused: Boolean): GridColors {
     val settings = LocalSettings.current
     val text = JewelTheme.globalColors.text.normal
     val tree = JewelTheme.treeStyle.colors
-    val dark = JewelTheme.isDark
+    val changes = LocalColorTheme.current.grid
     return GridColors(
         // Int UI's border colour equals the dark island background, so the grid uses the islands' separator instead.
         grid = LocalIslands.current.divider,
@@ -316,9 +317,9 @@ private fun gridColors(focused: Boolean): GridColors {
         focusRow = text.copy(alpha = 0.07f),
         selection = if (focused) tree.backgroundSelectedActive else tree.backgroundSelected,
         focusBorder = JewelTheme.globalColors.outlines.focused,
-        modified = if (dark) Color(0x403574F0) else Color(0x333574F0),
-        inserted = if (dark) Color(0x3349A35B) else Color(0x3355A76A),
-        deleted = if (dark) Color(0x33DB5C5C) else Color(0x33E55765),
+        modified = changes.modified,
+        inserted = changes.inserted,
+        deleted = changes.deleted,
         muted = JewelTheme.globalColors.text.info,
         text = text,
         zebra = if (settings.zebraRows) text.copy(alpha = 0.03f) else Color.Transparent,

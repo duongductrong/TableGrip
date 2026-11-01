@@ -49,6 +49,7 @@ private fun runApp() = application {
             it.session.restore()
             it.session.startAutosave()
             it.scheduledBackups.sync()
+            it.watchConfigFiles()
         }
     }
     val doubleShift = remember { DoubleShiftDetector() }

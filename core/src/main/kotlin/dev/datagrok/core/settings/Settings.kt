@@ -6,13 +6,20 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
+import dev.datagrok.core.theme.ThemeOverride
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.JsonTransformingSerializer
+import kotlinx.serialization.json.buildJsonObject
 
 @Serializable
 data class Settings(
-    /** One of the app's theme names; kept as a string so core stays UI-free. */
-    val theme: String = "System",
+    /** Light or dark (or the OS's choice), and the theme used for each; a bare string from older files is the mode. */
+    val theme: @Serializable(with = ThemeSelectionSerializer::class) ThemeSelection = ThemeSelection(),
     val editorFontSize: Int = 13,
     /** Rows fetched per page in table viewers. */
     val pageSize: Int = 200,
@@ -50,14 +57,16 @@ data class Settings(
     val backupSchedules: List<dev.datagrok.core.backup.BackupSchedule> = emptyList(),
 
     // Appearance
-    /** `#RRGGBB`; blank means the theme's own blue. */
+    /** `#RRGGBB`; blank means the theme's own accent. */
     val accentColor: String = "",
+    /** Keys laid over a theme, by the theme's name, e.g. `{ "One Dark": { "colors": { "accent": "#E5C07B" } } }`. */
+    val themeOverrides: Map<String, ThemeOverride> = emptyMap(),
     /** Points for labels and controls; 0 means Jewel's default. */
     val uiFontSize: Int = 0,
     /** Corner radius of the content islands, in dp. */
     val islandCornerRadius: Int = 10,
-    /** A syntax scheme's name, e.g. `Darcula`; unknown names fall back to `Datagrok`. */
-    val syntaxScheme: String = "Datagrok",
+    /** A syntax scheme's name, e.g. `Darcula`; `Theme` (and unknown names) use the theme's own token colours. */
+    val syntaxScheme: String = "Theme",
     /** Single token colours over the scheme, keyed `dark.keyword`, `light.string`… as `#RRGGBB`. */
     val syntaxColors: Map<String, String> = emptyMap(),
     /** Environment badge colours by environment name (`Production`…) as `#RRGGBB`; missing means the built-in one. */
@@ -117,6 +126,28 @@ data class Settings(
 )
 
 /**
+ * Which themes the app uses, after Zed's `"theme": { "mode", "light", "dark" }`. [mode] is `System`, `Light` or `Dark`;
+ * [dark] and [light] are theme names, e.g. `One Dark`. Names that no theme has fall back to Graphite.
+ */
+@Serializable
+data class ThemeSelection(
+    val mode: String = "System",
+    val dark: String = DefaultDarkTheme,
+    val light: String = DefaultLightTheme,
+) {
+    companion object {
+        const val DefaultDarkTheme = "Graphite Dark"
+        const val DefaultLightTheme = "Graphite Light"
+    }
+}
+
+/** Reads `"theme": "Dark"` from files written before themes had names as `{ "mode": "Dark" }`. */
+object ThemeSelectionSerializer : JsonTransformingSerializer<ThemeSelection>(ThemeSelection.serializer()) {
+    override fun transformDeserialize(element: JsonElement): JsonElement =
+        if (element is JsonPrimitive) buildJsonObject { put("mode", element) } else element
+}
+
+/**
  * A key combination in a UI-free form: [key] is the AWT key code, [label] how it reads (`E`, `⏎`). `primary` is ⌘ on
  * macOS and Ctrl elsewhere.
  */
@@ -130,18 +161,64 @@ data class KeyBinding(
     val ctrl: Boolean = false,
 )
 
-class SettingsStore(private val file: Path = DatagrokPaths.settings) {
+/**
+ * settings.json, which people may also edit by hand like VS Code's or Zed's: comments and trailing commas are allowed,
+ * and only the settings that differ from the defaults are written, so the file stays short.
+ */
+class SettingsStore(val file: Path = DatagrokPaths.settings) {
+    @OptIn(ExperimentalSerializationApi::class)
     private val json = Json {
         prettyPrint = true
+        prettyPrintIndent = "  "
         ignoreUnknownKeys = true
-        encodeDefaults = true
+        encodeDefaults = false
+        allowComments = true
+        allowTrailingComma = true
     }
+
+    /**
+     * Why the file couldn't be read the last time [load] tried, or null. While it is set, [save] leaves the file alone,
+     * so a typo made by hand is never replaced by defaults: the user fixes the file and the app picks it up again.
+     */
+    @Volatile
+    var loadError: String? = null
+        private set
 
     /** Falls back to defaults when the file is missing or unreadable, so a bad edit never blocks startup. */
-    fun load(): Settings = runCatching { if (file.exists()) json.decodeFromString<Settings>(file.readText()) else null }.getOrNull() ?: Settings()
-
-    fun save(settings: Settings) {
-        file.parent?.createDirectories()
-        file.writeText(json.encodeToString(settings))
+    fun load(): Settings {
+        if (!file.exists()) {
+            loadError = null
+            return Settings()
+        }
+        return try {
+            json.decodeFromString<Settings>(file.readText()).also { loadError = null }
+        } catch (e: SerializationException) {
+            loadError = e.message?.lineSequence()?.firstOrNull() ?: e.toString()
+            Settings()
+        } catch (e: IllegalArgumentException) {
+            loadError = e.message?.lineSequence()?.firstOrNull() ?: e.toString()
+            Settings()
+        }
     }
+
+    /** The text this store last wrote, so a watcher can tell the app's own saves from edits made by hand. */
+    @Volatile
+    var lastWritten: String? = null
+        private set
+
+    /** Writes [settings]; false, leaving the file as it is, while it holds an edit that doesn't parse (see [loadError]). */
+    @Synchronized
+    fun save(settings: Settings): Boolean {
+        if (loadError != null) return false
+        file.parent?.createDirectories()
+        val text = encode(settings)
+        lastWritten = text
+        file.writeText(text)
+        return true
+    }
+
+    /** The file's text, or null when there is none. */
+    fun readText(): String? = if (file.exists()) runCatching { file.readText() }.getOrNull() else null
+
+    fun encode(settings: Settings): String = json.encodeToString(settings) + "\n"
 }

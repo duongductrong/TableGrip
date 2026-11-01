@@ -142,6 +142,7 @@ private fun PageContent(page: SettingsPage, app: AppState, form: SettingsForm, q
                 Link("Reset to defaults", onClick = { form.reset(page) })
             }
             Text(page.description, color = JewelTheme.globalColors.text.info)
+            SettingsFileError(app)
             page.sections.forEach { section ->
                 Spacer(Modifier.height(10.dp))
                 section.title?.let {

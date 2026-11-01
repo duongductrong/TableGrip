@@ -4,6 +4,7 @@ import dev.datagrok.core.history.HistoryEntry
 import dev.datagrok.core.history.QueryHistory
 import dev.datagrok.core.settings.Settings
 import dev.datagrok.core.settings.SettingsStore
+import dev.datagrok.core.settings.ThemeSelection
 import java.nio.file.Path
 import kotlin.io.path.appendText
 import kotlin.io.path.writeText
@@ -20,8 +21,8 @@ class StorageTest {
         val store = SettingsStore(file)
         assertEquals(Settings(), store.load())
 
-        store.save(Settings(theme = "Dark", pageSize = 50))
-        assertEquals(Settings(theme = "Dark", pageSize = 50), store.load())
+        store.save(Settings(theme = ThemeSelection(mode = "Dark"), pageSize = 50))
+        assertEquals(Settings(theme = ThemeSelection(mode = "Dark"), pageSize = 50), store.load())
 
         file.writeText("{ not json")
         assertEquals(Settings(), store.load())

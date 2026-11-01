@@ -225,7 +225,9 @@ backup soon after the app opens, and says what would stop it (no tools, no saved
 ## Connections
 
 Everything lives in `~/.datagrok/` (override with `-Ddatagrok.home`): `connections.json` (no secrets),
-`settings.json`, `history.jsonl`, `session.json`, `queries/` and `logs/`. Passwords go to the OS credential store
+`settings.json`, `themes/`, `history.jsonl`, `session.json`, `queries/` and `logs/`. `settings.json` can be edited by
+hand (comments allowed; edits apply while the app runs), and `themes/` holds your own colour themes; see
+[docs/plans/themes.md](docs/plans/themes.md). Passwords go to the OS credential store
 via [java-keyring](https://github.com/javakeyring/java-keyring) under the service name `Datagrok`:
 macOS Keychain, Windows Credential Manager, or the Secret Service (GNOME Keyring / KWallet) on Linux.
 

@@ -27,7 +27,16 @@ import androidx.compose.ui.unit.sp
 import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.connection.Environment
 import dev.datagrok.core.settings.Settings
+import dev.datagrok.app.ui.theme.ColorTheme
+import dev.datagrok.app.ui.theme.LocalColorTheme
+import dev.datagrok.app.ui.theme.ThemeRegistry
+import dev.datagrok.app.ui.theme.ThemedControls
+import dev.datagrok.app.ui.theme.colorTheme
+import dev.datagrok.core.settings.ThemeSelection
+import org.jetbrains.jewel.foundation.BorderColors
 import org.jetbrains.jewel.foundation.GlobalColors
+import org.jetbrains.jewel.foundation.OutlineColors
+import org.jetbrains.jewel.foundation.TextColors
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.intui.standalone.theme.IntUiTheme
 import org.jetbrains.jewel.intui.standalone.theme.createDefaultTextStyle
@@ -49,7 +58,7 @@ import org.jetbrains.jewel.window.styling.TitleBarStyle
 
 /**
  * Colours of the "Islands" look (JetBrains' new UI): a tinted frame that the title bar, tool stripe and status bar sit
- * on seamlessly, and rounded content islands floating on it.
+ * on seamlessly, and rounded content islands floating on it. Comes from the [ColorTheme] in use.
  */
 data class IslandsPalette(
     val frame: Color,
@@ -58,6 +67,8 @@ data class IslandsPalette(
     /** Separators inside an island; Int UI's default dark divider is the island colour itself, i.e. invisible. */
     val divider: Color,
     val accent: Color,
+    /** Text and icons on [accent]. */
+    val accentForeground: Color = Color.White,
     val stripeHover: Color,
     val chipHover: Color,
     /** Dims the window behind a floating panel such as go-to-anything. */
@@ -65,36 +76,12 @@ data class IslandsPalette(
     val cornerRadius: Dp = 10.dp,
 )
 
-private val DarkIslands =
-    IslandsPalette(
-        frame = Color(0xFF27292E),
-        island = Color(0xFF1E1F22),
-        islandBorder = Color(0x14FFFFFF),
-        divider = Color(0xFF393B40),
-        accent = Color(0xFF3574F0),
-        stripeHover = Color(0x14FFFFFF),
-        chipHover = Color(0x1AFFFFFF),
-        scrim = Color(0x8C000000),
-    )
-
-private val LightIslands =
-    IslandsPalette(
-        frame = Color(0xFFE9EBF0),
-        island = Color(0xFFFFFFFF),
-        islandBorder = Color(0x14000000),
-        divider = Color(0xFFE4E5EA),
-        accent = Color(0xFF3574F0),
-        stripeHover = Color(0x14000000),
-        chipHover = Color(0x12000000),
-        scrim = Color(0x47000000),
-    )
-
-val LocalIslands = staticCompositionLocalOf { DarkIslands }
+val LocalIslands = staticCompositionLocalOf { ThemeRegistry.resolve(ThemeSelection.DefaultDarkTheme, dark = true).islands }
 
 /** The user's settings, for views that adapt to them (the editor, the grid) without threading them through. */
 val LocalSettings = compositionLocalOf { Settings() }
 
-/** The accent used when the settings don't name one. */
+/** Graphite's accent, the first of the accent swatches. */
 val DefaultAccent = Color(0xFF3574F0)
 
 /** `#RRGGBB` or `#AARRGGBB` (the `#` optional) as a colour; null when it isn't one. */
@@ -112,30 +99,25 @@ fun Color.toHex(): String = "#%06X".format(toArgb() and 0xFFFFFF)
 @OptIn(ExperimentalTextApi::class)
 fun systemFontFamily(name: String): FontFamily? = name.takeIf { it.isNotBlank() }?.let { FontFamily(SystemFont(it)) }
 
-/** Jewel's Int UI theme with panels recoloured as islands and a title bar that blends into the frame. */
+/**
+ * Jewel's Int UI theme recoloured by the [ColorTheme] that [settings] pick for [isDark]: panels as islands, a title bar
+ * that blends into the frame, and Jewel's text and controls in the theme's colours where the theme sets them.
+ */
 @Composable
 fun DatagrokTheme(isDark: Boolean, settings: Settings = Settings(), content: @Composable () -> Unit) {
-    val accent = parseHexColor(settings.accentColor) ?: DefaultAccent
-    val islands = (if (isDark) DarkIslands else LightIslands).copy(accent = accent, cornerRadius = settings.islandCornerRadius.coerceIn(0, 24).dp)
+    val userThemes = ThemeRegistry.userFiles
+    val colorTheme = remember(isDark, settings.theme, settings.themeOverrides, settings.accentColor, userThemes) { settings.colorTheme(isDark) }
+    val islands = colorTheme.islands.copy(cornerRadius = settings.islandCornerRadius.coerceIn(0, 24).dp)
+    val dark = colorTheme.isDark
     val textStyle = if (settings.uiFontSize > 0) JewelTheme.createDefaultTextStyle(fontSize = settings.uiFontSize.sp) else JewelTheme.createDefaultTextStyle()
     val editorFont = remember(settings.editorFontFamily) { systemFontFamily(settings.editorFontFamily) }
     val editorStyle = if (editorFont != null) JewelTheme.createEditorTextStyle(fontFamily = editorFont) else JewelTheme.createEditorTextStyle()
+    val colors = globalColors(colorTheme, islands.island)
     val theme =
-        if (isDark) {
-            JewelTheme.darkThemeDefinition(
-                colors = GlobalColors.dark(panelBackground = islands.island),
-                defaultTextStyle = textStyle,
-                editorTextStyle = editorStyle,
-            )
-        } else {
-            JewelTheme.lightThemeDefinition(
-                colors = GlobalColors.light(panelBackground = islands.island),
-                defaultTextStyle = textStyle,
-                editorTextStyle = editorStyle,
-            )
-        }
+        if (dark) JewelTheme.darkThemeDefinition(colors = colors, defaultTextStyle = textStyle, editorTextStyle = editorStyle)
+        else JewelTheme.lightThemeDefinition(colors = colors, defaultTextStyle = textStyle, editorTextStyle = editorStyle)
     val titleBarStyle =
-        if (isDark) {
+        if (dark) {
             TitleBarStyle.dark(
                 colors = TitleBarColors.dark(backgroundColor = islands.frame, inactiveBackground = islands.frame, borderColor = islands.frame)
             )
@@ -154,8 +136,40 @@ fun DatagrokTheme(isDark: Boolean, settings: Settings = Settings(), content: @Co
             .decoratedWindow(titleBarStyle = titleBarStyle)
             .provide(LocalDividerStyle provides DividerStyle(islands.divider, DividerMetrics.defaults()))
     IntUiTheme(theme = theme, styling = styling) {
-        CompositionLocalProvider(LocalIslands provides islands, LocalSettings provides settings, content = content)
+        CompositionLocalProvider(LocalIslands provides islands, LocalColorTheme provides colorTheme, LocalSettings provides settings) {
+            ThemedControls(colorTheme.controls, dark, islands.accent, content)
+        }
     }
+}
+
+/** Int UI's global colours with the theme's text, borders and focus ring where it sets them. */
+private fun globalColors(theme: ColorTheme, panel: Color): GlobalColors {
+    val d = if (theme.isDark) GlobalColors.dark(panelBackground = panel) else GlobalColors.light(panelBackground = panel)
+    val o = theme.jewel
+    val normal = o.text ?: d.text.normal
+    return GlobalColors(
+        borders = BorderColors(normal = o.border ?: d.borders.normal, focused = o.focus ?: d.borders.focused, disabled = d.borders.disabled),
+        outlines =
+            OutlineColors(
+                focused = o.focus ?: d.outlines.focused,
+                focusedWarning = d.outlines.focusedWarning,
+                focusedError = d.outlines.focusedError,
+                warning = d.outlines.warning,
+                error = d.outlines.error,
+            ),
+        text =
+            TextColors(
+                normal = normal,
+                selected = o.text ?: d.text.selected,
+                disabled = o.textDisabled ?: d.text.disabled,
+                disabledSelected = o.textDisabled ?: d.text.disabledSelected,
+                info = o.textMuted ?: d.text.info,
+                error = o.error ?: d.text.error,
+                warning = o.warning ?: d.text.warning,
+            ),
+        panelBackground = d.panelBackground,
+        toolwindowBackground = d.toolwindowBackground,
+    )
 }
 
 

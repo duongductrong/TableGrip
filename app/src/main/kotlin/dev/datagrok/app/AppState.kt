@@ -1,6 +1,12 @@
 package dev.datagrok.app
 
 import androidx.compose.runtime.getValue
+import dev.datagrok.app.settings.ConfigFileWatcher
+import dev.datagrok.app.settings.openInSystem
+import dev.datagrok.app.ui.theme.ThemeRegistry
+import dev.datagrok.core.DatagrokPaths
+import java.nio.file.Path
+import kotlin.io.path.exists
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import dev.datagrok.app.agent.AgentViewModel
@@ -66,6 +72,14 @@ class AppState(
     var settings by mutableStateOf(settingsStore.load())
         private set
 
+    /** Why settings.json couldn't be read, while it can't: the app runs on defaults and leaves the file for the user to fix. */
+    var settingsError by mutableStateOf(settingsStore.loadError)
+        private set
+
+    /** Where settings live, for Settings → Appearance's "Open settings.json". */
+    val settingsFile: Path
+        get() = settingsStore.file
+
     init {
         applyAppWide(settings)
     }
@@ -78,7 +92,7 @@ class AppState(
     val agentSplit = SplitLayoutState(0.68f)
 
     val theme: AppTheme
-        get() = AppTheme.entries.firstOrNull { it.name == settings.theme } ?: AppTheme.System
+        get() = AppTheme.of(settings.theme.mode)
 
     var status by mutableStateOf("Ready")
 
@@ -161,16 +175,69 @@ class AppState(
     }
 
     fun updateSettings(transform: (Settings) -> Settings) {
-        val before = settings
-        settings = transform(settings)
-        val snapshot = settings
-        applyAppWide(snapshot)
-        drivers.library.repository = snapshot.driverRepository
-        agent.settingsChanged(before, snapshot)
-        if (before.scheduledBackups != snapshot.scheduledBackups || before.backupSchedules.map { it.enabled } != snapshot.backupSchedules.map { it.enabled }) scheduledBackups.sync()
+        val snapshot = apply(transform(settings))
         scope.launch(Dispatchers.IO) {
-            runCatching { settingsStore.save(snapshot) }.onFailure { log.warn("Failed to save settings", it) }
+            runCatching { if (!settingsStore.save(snapshot)) log.warn("Not saving settings: settings.json has an error to fix first") }
+                .onFailure { log.warn("Failed to save settings", it) }
         }
+    }
+
+    /** Makes [next] the settings everywhere, without saving them. */
+    private fun apply(next: Settings): Settings {
+        val before = settings
+        settings = next
+        applyAppWide(next)
+        drivers.library.repository = next.driverRepository
+        agent.settingsChanged(before, next)
+        if (before.scheduledBackups != next.scheduledBackups || before.backupSchedules.map { it.enabled } != next.backupSchedules.map { it.enabled }) scheduledBackups.sync()
+        return next
+    }
+
+    /**
+     * Reads settings.json again after it changed on disk, e.g. edited by hand: a valid file is applied at once, an
+     * invalid one is reported in [settingsError] and left alone, keeping the settings in use. The app's own saves are
+     * skipped. Call on the UI thread.
+     */
+    fun reloadSettingsFromDisk() {
+        val text = settingsStore.readText()
+        if (text != null && text == settingsStore.lastWritten && settingsError == null) return
+        val loaded = settingsStore.load()
+        settingsError = settingsStore.loadError
+        if (settingsError == null && loaded != settings) {
+            apply(loaded)
+            status = "Applied settings.json"
+        }
+    }
+
+    /** Opens settings.json in the system's editor for JSON, writing the current settings first if there is no file yet. */
+    fun openSettingsFile() {
+        scope.launch(Dispatchers.IO) {
+            runCatching {
+                if (!settingsFile.exists()) settingsStore.save(settings)
+                openInSystem(settingsFile)
+            }.onFailure { log.warn("Couldn't open {}", settingsFile, it) }
+        }
+    }
+
+    /** Opens the folder of the user's theme files in the file manager. */
+    fun openThemesFolder() {
+        scope.launch(Dispatchers.IO) {
+            runCatching { openInSystem(ThemeRegistry.userThemesFolder()) }.onFailure { log.warn("Couldn't open the themes folder", it) }
+        }
+    }
+
+    /** Copies the theme in use into the themes folder (once) and opens the copy, which then replaces the built-in theme. */
+    fun customizeTheme(dark: Boolean) {
+        val name = ThemeRegistry.resolve(if (dark) settings.theme.dark else settings.theme.light, dark).name
+        scope.launch(Dispatchers.IO) {
+            runCatching { ThemeRegistry.copyToUserFolder(name)?.let(::openInSystem) }.onFailure { log.warn("Couldn't copy theme {}", name, it) }
+        }
+    }
+
+    /** Applies edits of settings.json and of theme files while the app runs; [Main] starts it, tests don't. */
+    fun watchConfigFiles() {
+        ThemeRegistry.reloadUserThemes()
+        ConfigFileWatcher(settingsFile, DatagrokPaths.themes, onSettingsChanged = ::reloadSettingsFromDisk, onThemesChanged = { ThemeRegistry.reloadUserThemes() }).start(scope)
     }
 
     /** Settings read outside composition: shortcuts are matched in key handlers, badges drawn in plain functions. */

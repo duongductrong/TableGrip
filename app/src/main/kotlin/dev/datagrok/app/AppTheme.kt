@@ -11,6 +11,9 @@ enum class AppTheme(val label: String) {
     fun isDark(): Boolean = (if (this == System) fromSystemTheme(currentSystemTheme) else this) == Dark
 
     companion object {
+        /** The mode by its settings name; unknown names follow the OS. */
+        fun of(name: String): AppTheme = entries.firstOrNull { it.name.equals(name, ignoreCase = true) } ?: System
+
         fun fromSystemTheme(systemTheme: SystemTheme): AppTheme = if (systemTheme == SystemTheme.LIGHT) Light else Dark
     }
 }

@@ -21,6 +21,9 @@ import dev.datagrok.app.console.SyntaxToken
 import dev.datagrok.app.console.syntaxColor
 import dev.datagrok.app.grid.CellFormat
 import dev.datagrok.app.ui.DefaultAccent
+import dev.datagrok.app.ui.theme.ThemeRegistry
+import dev.datagrok.app.ui.theme.colorTheme
+import dev.datagrok.app.ui.theme.isDarkMode
 import dev.datagrok.app.ui.KeymapPreset
 import dev.datagrok.app.ui.Shortcuts
 import dev.datagrok.app.ui.defaultEnvironmentColor
@@ -149,22 +152,26 @@ object SettingsPages {
                             "Theme",
                             listOf(
                                 ChoiceField(
-                                    "Theme",
+                                    "Mode",
                                     AppTheme.entries,
                                     AppTheme::label,
-                                    get = { s -> AppTheme.entries.firstOrNull { it.name == s.theme } ?: AppTheme.System },
-                                    set = { s, theme -> s.copy(theme = theme.name) },
+                                    get = { s -> AppTheme.of(s.theme.mode) },
+                                    set = { s, mode -> s.copy(theme = s.theme.copy(mode = mode.name)) },
                                     hint = "\"Sync with OS\" follows the system's light or dark mode.",
                                 ),
+                                themeField(dark = true),
+                                themeField(dark = false),
                                 ColorField(
                                     "Accent colour",
                                     Settings::accentColor,
                                     { s, v -> s.copy(accentColor = v) },
-                                    fallback = { DefaultAccent },
+                                    fallback = { s -> s.copy(accentColor = "").colorTheme(s.isDarkMode()).islands.accent },
                                     swatches = AccentSwatches,
-                                    hint = "Selected tool buttons, the statement marker in consoles and other highlights.",
+                                    hint = "Over every theme: selected tool buttons, primary buttons, the statement marker in consoles and other highlights.",
                                 ),
                             ),
+                            panel = { app -> ThemeFilesPanel(app) },
+                            keywords = listOf("dark", "light", "colour theme", "color theme", "settings.json", "json", "VS Code", "Dracula", "One Dark", "Catppuccin", "Contrast"),
                         ),
                         SettingsSection(
                             "Layout",
@@ -204,7 +211,7 @@ object SettingsPages {
                                     SyntaxScheme::label,
                                     get = { s -> SyntaxScheme.of(s.syntaxScheme) },
                                     set = { s, scheme -> s.copy(syntaxScheme = scheme.name) },
-                                    hint = "Each scheme has a dark and a light variant, picked by the theme. The preview shows the current one.",
+                                    hint = "\"Theme's own\" uses the colour theme's tokens. Other schemes have a dark and a light variant, picked by the mode. The preview shows the current one.",
                                 ),
                             ),
                             panel = { SyntaxPreview() },
@@ -580,6 +587,26 @@ object SettingsPages {
     fun byId(id: String): SettingsPage? = all.firstOrNull { it.id == id }
 }
 
+/** Picks the theme used in [dark] or light mode from the built-in and the user's themes; an unknown name shows as Graphite. */
+private fun themeField(dark: Boolean): ChoiceField<String> =
+    ChoiceField(
+        if (dark) "Dark theme" else "Light theme",
+        liveList { ThemeRegistry.names(dark) },
+        { it },
+        get = { s -> ThemeRegistry.resolve(if (dark) s.theme.dark else s.theme.light, dark).name },
+        set = { s, name -> s.copy(theme = if (dark) s.theme.copy(dark = name) else s.theme.copy(light = name)) },
+        hint = if (dark) "Used in dark mode. Your own themes go in ~/.datagrok/themes." else "Used in light mode.",
+    )
+
+/** A list read afresh on every access, e.g. themes that can change while the dialog is open. */
+private fun <T> liveList(read: () -> List<T>): List<T> =
+    object : AbstractList<T>() {
+        override val size: Int
+            get() = read().size
+
+        override fun get(index: Int): T = read()[index]
+    }
+
 private val AccentSwatches =
     listOf(
         DefaultAccent,
@@ -601,7 +628,7 @@ private fun syntaxColorField(token: SyntaxToken, dark: Boolean): ColorField =
             s.copy(syntaxColors = if (v.isEmpty()) s.syntaxColors - key else s.syntaxColors + (key to v))
         },
         // The scheme's colour, not a custom one already set.
-        fallback = { s -> s.copy(syntaxColors = emptyMap()).syntaxColor(token, dark) },
+        fallback = { s -> s.copy(syntaxColors = emptyMap()).syntaxColor(token, s.colorTheme(dark)) },
     )
 
 private fun startupToolLabel(value: String): String =

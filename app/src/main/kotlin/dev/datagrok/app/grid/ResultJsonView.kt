@@ -1,5 +1,7 @@
 package dev.datagrok.app.grid
 
+import dev.datagrok.app.console.SyntaxToken
+import dev.datagrok.app.ui.theme.LocalColorTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -212,24 +214,15 @@ internal class JsonPalette(val key: SpanStyle, val string: SpanStyle, val number
         }
 }
 
-private val DarkJsonPalette =
-    JsonPalette(
-        key = SpanStyle(color = Color(0xFFC77DBB)),
-        string = SpanStyle(color = Color(0xFF6AAB73)),
-        number = SpanStyle(color = Color(0xFF2AACB8)),
-        literal = SpanStyle(color = Color(0xFFCF8E6D)),
-    )
-
-private val LightJsonPalette =
-    JsonPalette(
-        key = SpanStyle(color = Color(0xFF871094)),
-        string = SpanStyle(color = Color(0xFF067D17)),
-        number = SpanStyle(color = Color(0xFF1750EB)),
-        literal = SpanStyle(color = Color(0xFF0033B3)),
-    )
-
+/** Keys, strings, numbers and literals in the theme's quoted-identifier, string, number and keyword colours, as the SQL editor shows them. */
 @Composable
-internal fun jsonPalette(): JsonPalette = if (JewelTheme.isDark) DarkJsonPalette else LightJsonPalette
+internal fun jsonPalette(): JsonPalette {
+    val syntax = LocalColorTheme.current.syntax
+    return remember(syntax) {
+        fun color(token: SyntaxToken) = SpanStyle(color = syntax.getValue(token).color)
+        JsonPalette(key = color(SyntaxToken.QuotedIdentifier), string = color(SyntaxToken.String), number = color(SyntaxToken.Number), literal = color(SyntaxToken.Keyword))
+    }
+}
 
 /** One line of pretty JSON with its tokens coloured; punctuation keeps the default text colour. */
 internal fun highlightJson(line: String, palette: JsonPalette): AnnotatedString = buildAnnotatedString {

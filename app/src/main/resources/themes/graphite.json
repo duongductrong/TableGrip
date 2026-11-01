@@ -1,0 +1,126 @@
+{
+  "$schema": "https://datagrok.dev/schema/theme-v1.json",
+  "name": "Graphite",
+  "author": "Datagrok",
+  "license": "Apache-2.0",
+  "themes": [
+    {
+      "name": "Graphite Dark",
+      "appearance": "dark",
+      "colors": {
+        "frame.background": "#27292E",
+        "island.background": "#1E1F22",
+        "island.border": "#FFFFFF14",
+        "divider": "#393B40",
+        "accent": "#3574F0",
+        "accent.foreground": "#FFFFFF",
+        "editor.currentLine": "#FFFFFF0F",
+        "editor.findMatch": "#3D61854D",
+        "editor.findMatch.current": "#6F8FBF99",
+        "editor.bracket": "#43A04733",
+        "editor.bracket.border": "#43A04799",
+        "grid.modified": "#3574F040",
+        "grid.inserted": "#49A35B33",
+        "grid.deleted": "#DB5C5C33",
+        "chart.background": "#1E1F22",
+        "chart.text": "#DFE1E5",
+        "chart.text.muted": "#9DA0A8",
+        "chart.grid": "#2E3034",
+        "diagram.background": "#1E1F22",
+        "diagram.grid": "#2B2D30",
+        "diagram.box": "#2B2D30",
+        "diagram.header": "#393B40",
+        "diagram.header.text": "#DFE1E5",
+        "diagram.border": "#4E5157",
+        "diagram.text": "#DFE1E5",
+        "diagram.text.muted": "#8C8F94",
+        "diagram.line": "#6F737A",
+        "diagram.primaryKey": "#E0B53E",
+        "diagram.foreignKey": "#5C9CF5",
+        "diagram.match": "#E0B53E"
+      },
+      "syntax": {
+        "keyword": "#CF8E6D",
+        "string": "#6AAB73",
+        "number": "#2AACB8",
+        "comment": {
+          "color": "#7A7E85",
+          "fontStyle": "italic"
+        },
+        "quotedIdentifier": "#C77DBB",
+        "parameter": "#56A8F5"
+      },
+      "chart": [
+        "#548AF7",
+        "#E5A33E",
+        "#5FB865",
+        "#E06C75",
+        "#B189F5",
+        "#3FB6C6",
+        "#D8829A",
+        "#A8B04F",
+        "#8E9BB0",
+        "#C97E4B"
+      ]
+    },
+    {
+      "name": "Graphite Light",
+      "appearance": "light",
+      "colors": {
+        "frame.background": "#E9EBF0",
+        "island.background": "#FFFFFF",
+        "island.border": "#00000014",
+        "divider": "#E4E5EA",
+        "accent": "#3574F0",
+        "accent.foreground": "#FFFFFF",
+        "editor.currentLine": "#0000000A",
+        "editor.findMatch": "#F2E36B66",
+        "editor.findMatch.current": "#F2C94CCC",
+        "editor.bracket": "#93D9A333",
+        "editor.bracket.border": "#43A04799",
+        "grid.modified": "#3574F033",
+        "grid.inserted": "#55A76A33",
+        "grid.deleted": "#E5576533",
+        "chart.background": "#FFFFFF",
+        "chart.text": "#1E1F22",
+        "chart.text.muted": "#6C707E",
+        "chart.grid": "#EBECF0",
+        "diagram.background": "#F7F8FA",
+        "diagram.grid": "#EBECF0",
+        "diagram.box": "#FFFFFF",
+        "diagram.header": "#EDF3FF",
+        "diagram.header.text": "#1E1F22",
+        "diagram.border": "#C9CCD6",
+        "diagram.text": "#1E1F22",
+        "diagram.text.muted": "#6C707E",
+        "diagram.line": "#8C909C",
+        "diagram.primaryKey": "#C28A0C",
+        "diagram.foreignKey": "#3574F0",
+        "diagram.match": "#F2C55C"
+      },
+      "syntax": {
+        "keyword": "#0033B3",
+        "string": "#067D17",
+        "number": "#1750EB",
+        "comment": {
+          "color": "#8C8C8C",
+          "fontStyle": "italic"
+        },
+        "quotedIdentifier": "#871094",
+        "parameter": "#00627A"
+      },
+      "chart": [
+        "#3574F0",
+        "#D98B1A",
+        "#3E9A47",
+        "#D24B57",
+        "#8A5CD6",
+        "#1F9AA9",
+        "#C25D7C",
+        "#878F2C",
+        "#6C7A92",
+        "#AA5F2D"
+      ]
+    }
+  ]
+}

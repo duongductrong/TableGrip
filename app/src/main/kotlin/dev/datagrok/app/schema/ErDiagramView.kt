@@ -1,5 +1,7 @@
 package dev.datagrok.app.schema
 
+import dev.datagrok.app.ui.theme.ColorTheme
+import dev.datagrok.app.ui.theme.LocalColorTheme
 import androidx.compose.foundation.ContextMenuArea
 import androidx.compose.foundation.ContextMenuItem
 import androidx.compose.foundation.Canvas
@@ -203,7 +205,7 @@ private fun StatusLine(tab: ErDiagramTab) {
 /** What the key markers in the boxes mean. */
 @Composable
 private fun Legend() {
-    val colors = ErColors.of(JewelTheme.isDark, LocalIslands.current.accent)
+    val colors = ErColors.of(LocalColorTheme.current, LocalIslands.current.accent)
     val info = JewelTheme.globalColors.text.info
     Row(horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) {
         Canvas(Modifier.size(8.dp)) { drawCircle(colors.primaryKey, size.minDimension / 2) }
@@ -236,6 +238,16 @@ internal data class ErColors(
     val match: Color,
 ) {
     companion object {
+        /** The diagram in [theme]'s colours, with [accent] for selection. */
+        fun of(theme: ColorTheme, accent: Color): ErColors {
+            val d = theme.diagram
+            return ErColors(
+                background = d.background, grid = d.grid, box = d.box, header = d.header, headerText = d.headerText, border = d.border,
+                text = d.text, muted = d.muted, line = d.line, accent = accent, primaryKey = d.primaryKey, foreignKey = d.foreignKey, match = d.match,
+            )
+        }
+
+        /** Graphite's diagram colours, for the PNG export, which is drawn outside composition. */
         fun of(dark: Boolean, accent: Color): ErColors =
             if (dark) {
                 ErColors(
@@ -256,7 +268,7 @@ internal data class ErColors(
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun DiagramCanvas(tab: ErDiagramTab) {
-    val colors = ErColors.of(JewelTheme.isDark, LocalIslands.current.accent)
+    val colors = ErColors.of(LocalColorTheme.current, LocalIslands.current.accent)
     // Text is measured at density 1, in the same units as the boxes; the whole canvas is then scaled by zoom × density,
     // so text and boxes stay in proportion on any screen.
     val fonts = LocalFontFamilyResolver.current

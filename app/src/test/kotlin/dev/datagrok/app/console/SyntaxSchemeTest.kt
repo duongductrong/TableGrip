@@ -78,7 +78,7 @@ class SyntaxSchemeTest {
             app.settingsOpen = true
             app.settingsPage = "color-scheme"
             waitForIdle()
-            onNodeWithText("Datagrok").performClick()
+            onNodeWithText("Theme's own").performClick()
             waitForIdle()
             onNodeWithText("Monokai").performClick()
             waitForIdle()

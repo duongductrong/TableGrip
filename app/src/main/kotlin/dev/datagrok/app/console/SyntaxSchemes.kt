@@ -18,6 +18,8 @@ import dev.datagrok.app.ui.LocalSettings
 import dev.datagrok.core.sql.SqlSyntax
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import dev.datagrok.app.ui.parseHexColor
+import dev.datagrok.app.ui.theme.ColorTheme
+import dev.datagrok.app.ui.theme.colorTheme
 import dev.datagrok.core.settings.Settings
 
 /** The SQL tokens the editor colours, with the key Settings stores a custom colour under. */
@@ -38,9 +40,9 @@ class SchemeVariant(val tokens: Map<SyntaxToken, Long>, val background: Long? = 
 
 /** A syntax colour scheme, with a variant for dark and light themes. */
 enum class SyntaxScheme(val label: String, private val dark: SchemeVariant, private val light: SchemeVariant) {
-    // Datagrok's own sits on the islands' colours, like the rest of the window.
-    Datagrok(
-        "Datagrok",
+    // The colour theme's own tokens (Graphite's are the ones below), on the islands' colours like the rest of the window.
+    Theme(
+        "Theme's own",
         dark = SchemeVariant(tokens(0xFFCF8E6D, 0xFF6AAB73, 0xFF2AACB8, 0xFF7A7E85, 0xFFC77DBB, 0xFF56A8F5)),
         light = SchemeVariant(tokens(0xFF0033B3, 0xFF067D17, 0xFF1750EB, 0xFF8C8C8C, 0xFF871094, 0xFF00627A)),
     ),
@@ -76,7 +78,8 @@ enum class SyntaxScheme(val label: String, private val dark: SchemeVariant, priv
     fun foreground(dark: Boolean): Color? = variant(dark).foreground?.let(::Color)
 
     companion object {
-        fun of(name: String): SyntaxScheme = entries.firstOrNull { it.name == name } ?: Datagrok
+        /** `Datagrok`, the name before themes carried their own tokens, and unknown names mean [Theme]. */
+        fun of(name: String): SyntaxScheme = entries.firstOrNull { it.name == name } ?: Theme
     }
 }
 
@@ -90,9 +93,14 @@ private fun tokens(keyword: Long, string: Long, number: Long, comment: Long, quo
         SyntaxToken.Parameter to parameter,
     )
 
-/** [token]'s colour as the user set it, or their scheme's. */
-fun Settings.syntaxColor(token: SyntaxToken, dark: Boolean): Color =
-    syntaxColors[token.settingKey(dark)]?.let(::parseHexColor) ?: SyntaxScheme.of(syntaxScheme).color(token, dark)
+/** [token]'s colour as the user set it, else their scheme's, else [theme]'s own. */
+fun Settings.syntaxColor(token: SyntaxToken, theme: ColorTheme): Color =
+    syntaxColors[token.settingKey(theme.isDark)]?.let(::parseHexColor)
+        ?: SyntaxScheme.of(syntaxScheme).takeIf { it != SyntaxScheme.Theme }?.color(token, theme.isDark)
+        ?: theme.syntax.getValue(token).color
+
+/** [token]'s colour in the theme these settings use for [dark] mode. */
+fun Settings.syntaxColor(token: SyntaxToken, dark: Boolean): Color = syntaxColor(token, colorTheme(dark))
 
 /** SQL showing every coloured token, for the Color Scheme page's preview. */
 private const val PreviewSql =
