@@ -355,12 +355,14 @@ private fun KeyRowView(row: KeyRow.Key, selected: Boolean, showBadge: Boolean, o
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (showBadge) TypeBadge(row.info.type)
-        Tooltip({ Text(row.info.name) }) { Text(row.label, maxLines = 1, overflow = TextOverflow.Ellipsis) }
-        Spacer(Modifier.weight(1f))
+        // The label takes whatever is left and ellipsizes; the TTL keeps its natural width.
+        Box(Modifier.weight(1f)) {
+            Tooltip({ Text(row.info.name) }) { Text(row.label, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        }
         row.info.ttlMillis?.let {
-            Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(AllIconsKeys.Vcs.History, "Expires", Modifier.size(11.dp))
-                Text(formatTtl(it), color = JewelTheme.globalColors.text.info, fontSize = 11.sp)
+                Text(formatTtl(it), color = JewelTheme.globalColors.text.info, fontSize = 11.sp, maxLines = 1, softWrap = false)
             }
         }
     }
