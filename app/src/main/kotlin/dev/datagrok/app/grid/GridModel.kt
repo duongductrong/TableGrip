@@ -34,6 +34,10 @@ interface GridModel {
      * its cells' text (a document's own fields and types); null builds the JSON from the cells. Read on the UI thread.
      */
     fun json(columns: List<Int>): JsonArray? = null
+
+    /** Edits whole rows as JSON; null when the grid is read-only. */
+    val records: RecordEditor?
+        get() = null
 }
 
 interface GridEditor {

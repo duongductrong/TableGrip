@@ -6,7 +6,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
@@ -20,6 +23,7 @@ import dev.datagrok.core.connection.ConnectionStore
 import dev.datagrok.core.connection.DatabaseType
 import dev.datagrok.core.connection.InMemorySecretStore
 import dev.datagrok.core.driver.KeyEdit
+import dev.datagrok.core.driver.KeyValue
 import dev.datagrok.core.driver.KeyValueStore
 import dev.datagrok.core.drivers.DriverLibrary
 import dev.datagrok.core.history.QueryHistory
@@ -65,6 +69,7 @@ class KeyBrowserUiTest {
         val tab = KeyBrowserTab(app, config, Db)
         setContent { DatagrokTheme(isDark = true) { Box(Modifier.size(1000.dp, 560.dp)) { KeyBrowserView(tab) } } }
         waitUntil(timeoutMillis = 10_000) { tab.keys.size == 5 }
+        onNodeWithText("Database 5").assertExists()
         tab.select("user:1")
         waitUntil(timeoutMillis = 10_000) { tab.value != null }
         onNodeWithText("ada@example.com").assertExists()
@@ -72,8 +77,45 @@ class KeyBrowserUiTest {
 
         tab.select("session:abc")
         waitUntil(timeoutMillis = 10_000) { tab.value?.key == "session:abc" }
-        onNodeWithText("TTL 59m", substring = true).assertExists()
+        onNodeWithText("Expires in 59m", substring = true).assertExists()
         System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "key-browser-text.png")) }
+
+        onNodeWithText("JSON").performClick()
+        onNodeWithText("Expand All").assertExists()
+        System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "key-browser-json.png")) }
+        onNodeWithText("Expires in", substring = true).performClick()
+        onNodeWithText("Set expiry").assertExists()
+        System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "key-browser-ttl.png")) }
+        onNodeWithText("1 day").performClick()
+        waitUntil(timeoutMillis = 10_000) { (tab.value?.ttlMillis ?: 0) > 3_600_000 }
+
+        tab.select("leaders")
+        waitUntil(timeoutMillis = 10_000) { tab.value?.key == "leaders" }
+        onNodeWithText("2 members").assertExists()
+        System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "key-browser-zset.png")) }
+
+        onNodeWithText("New key").performClick()
+        onNodeWithText("Create key").assertExists()
+        onNodeWithText("hash").performClick()
+        System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "key-browser-new.png")) }
+        onNodeWithText("Cancel").performClick()
+
+        // A hash value edits in place: click it, change it, save.
+        tab.select("user:1")
+        waitUntil(timeoutMillis = 10_000) { tab.value?.key == "user:1" }
+        onNodeWithText("Ada").performClick()
+        onNode(hasSetTextAction() and hasText("Ada")).performTextReplacement("Ada Lovelace")
+        onNodeWithText("Save").performClick()
+        waitUntil(timeoutMillis = 10_000) { (tab.value as? KeyValue.Hash)?.fields?.contains("name" to "Ada Lovelace") == true }
+
+        // Deleting asks first.
+        tab.select("queue:jobs")
+        waitUntil(timeoutMillis = 10_000) { tab.value?.key == "queue:jobs" }
+        onNodeWithContentDescription("Delete key").performClick()
+        onNodeWithText("Delete queue:jobs?").assertExists()
+        System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "key-browser-delete.png")) }
+        onNodeWithText("Delete").performClick()
+        waitUntil(timeoutMillis = 10_000) { tab.keys.none { it.name == "queue:jobs" } }
 
         tab.pattern.edit { replace(0, length, "user:*") }
         tab.reload()
@@ -105,7 +147,34 @@ class KeyBrowserUiTest {
         app.dispose()
     }
 
+    @Test
+    fun `long key lists and collections scroll`() = runComposeUiTest {
+        if (server == null) return@runComposeUiTest
+        val (app, config) = app()
+        runBlocking {
+            KeyValueStore.connect(config, null).use { redis ->
+                redis.command(LongDb, listOf("FLUSHDB"))
+                (1..80).forEach { redis.edit(LongDb, "item:%03d".format(it), KeyEdit.SetText("v$it")) }
+                (1..120).forEach { redis.edit(LongDb, "big", KeyEdit.SetField("field%03d".format(it), "value $it")) }
+            }
+        }
+        val tab = KeyBrowserTab(app, config, LongDb)
+        tab.treeView = false
+        setContent { DatagrokTheme(isDark = true) { Box(Modifier.size(1000.dp, 420.dp)) { KeyBrowserView(tab) } } }
+        waitUntil(timeoutMillis = 10_000) { !tab.scanning && tab.keys.size == 81 }
+        tab.select("big")
+        waitUntil(timeoutMillis = 10_000) { tab.value?.key == "big" }
+        onNodeWithText("120 fields").assertExists()
+        System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "key-browser-scroll.png")) }
+        onNodeWithText("New key").performClick()
+        onNodeWithText("hash").performClick()
+        System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "key-browser-new-scroll.png")) }
+        runBlocking { KeyValueStore.connect(config, null).use { it.command(LongDb, listOf("FLUSHDB")) } }
+        app.dispose()
+    }
+
     private companion object {
+        const val LongDb = 6
         const val Db = 5
     }
 
@@ -132,7 +201,7 @@ class KeyBrowserUiTest {
         waitUntil(timeoutMillis = 10_000) { !tab.scanning && tab.keys.size == 3 }
         tab.select("/dg/feature-flags")
         waitUntil(timeoutMillis = 10_000) { tab.value?.key == "/dg/feature-flags" }
-        onNodeWithText("TTL 9m", substring = true).assertExists()
+        onNodeWithText("Expires in 9m", substring = true).assertExists()
         System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "etcd-keys.png")) }
 
         val console = CommandConsoleTab(app, config, "cluster")

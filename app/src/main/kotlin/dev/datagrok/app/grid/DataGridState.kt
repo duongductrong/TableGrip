@@ -87,6 +87,22 @@ class DataGridState {
         requestFocus()
     }
 
+    /** The record open in the JSON record editor, from the grid's menu or the JSON view; null when it's closed. */
+    var recordEdit by mutableStateOf<RecordEditRequest?>(null)
+
+    /** Opens [row] of [model] in the JSON record editor, if it can be edited that way. */
+    fun editRecord(model: GridModel, row: Int) {
+        val records = model.records ?: return
+        if (records.canEditRecord(row)) recordEdit = RecordEditRequest(model, row, records.recordJson(row))
+    }
+
+    /** Opens the JSON record editor on a new record of [model]. */
+    fun newRecord(model: GridModel) {
+        val records = model.records?.takeIf { it.canAddRecord } ?: return
+        val template = records.newRecord()
+        recordEdit = RecordEditRequest(model, null, template.json, template.hint)
+    }
+
     /** [reveal]s [row] at its first column that takes an edit, so typing and paste land where a value can go. */
     fun revealEditable(model: GridModel, row: Int) {
         val column = visibleColumns.indices.firstOrNull { model.editor?.canEdit(row, visibleColumns[it]) == true } ?: 0

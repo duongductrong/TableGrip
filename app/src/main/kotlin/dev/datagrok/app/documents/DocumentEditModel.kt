@@ -3,9 +3,16 @@ package dev.datagrok.app.documents
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
+import dev.datagrok.app.grid.FieldChange
+import dev.datagrok.app.grid.FieldDiff
 import dev.datagrok.app.grid.GridEditor
 import dev.datagrok.app.grid.GridModel
+import dev.datagrok.app.grid.RecordEditor
+import dev.datagrok.app.grid.RecordPlan
+import dev.datagrok.app.grid.RecordTemplate
 import dev.datagrok.app.grid.RowStatus
+import dev.datagrok.app.grid.change
+import dev.datagrok.app.grid.diffRecord
 import dev.datagrok.core.driver.ResultColumn
 import dev.datagrok.core.edit.ColumnEdit
 import dev.datagrok.core.edit.EditCheck
@@ -85,7 +92,7 @@ internal class DocumentEditModel(
     /** Fields no document of the page has, added by the user (or carried over with pending edits). */
     extraFields: List<String> = emptyList(),
     private val zone: ZoneId = ZoneId.systemDefault(),
-) : GridModel, GridEditor {
+) : GridModel, GridEditor, RecordEditor {
     private val base = DocumentBrowserTab.rows(documents)
     private val added = mutableStateListOf<String>().apply { addAll(extraFields.filter { it !in base.columns.map(ResultColumn::name) }) }
 
@@ -102,11 +109,18 @@ internal class DocumentEditModel(
 
         /** The field removed from the document (`$unset`). */
         data object Removed : Edit
+
+        /**
+         * The field set to an Extended JSON [literal] as it is, from the JSON record editor: it may change the field's
+         * type or hold what a cell can't (nested documents with their types, binary…).
+         */
+        data class Literal(val literal: String) : Edit
     }
 
     private val edits = mutableStateMapOf<Pair<Int, Int>, Edit>()
     private val deleted = mutableStateMapOf<Int, Unit>()
-    private val inserted = mutableStateListOf<SnapshotStateMap<Int, String?>>()
+    /** New documents' fields, by column: [Edit.Value] typed into a cell or [Edit.Literal] from the record editor. */
+    private val inserted = mutableStateListOf<SnapshotStateMap<Int, Edit>>()
 
     private val baseRows: Int
         get() = documents.size
@@ -115,6 +129,9 @@ internal class DocumentEditModel(
         get() = baseRows + inserted.size
 
     override val editor: GridEditor?
+        get() = if (readOnly) null else this
+
+    override val records: RecordEditor?
         get() = if (readOnly) null else this
 
     override val setDefaultLabel: String
@@ -137,13 +154,20 @@ internal class DocumentEditModel(
     private fun hasId(row: Int) = "_id" in documents[row]
 
     override fun value(row: Int, column: Int): String? {
-        if (row >= baseRows) return inserted[row - baseRows][column]
+        if (row >= baseRows) return inserted[row - baseRows][column]?.let(::shown)
         return when (val edit = edits[row to column]) {
-            is Edit.Value -> edit.text
-            Edit.Removed -> null
             null -> if (column < base.columns.size) base.rows[row][column] else ""
+            else -> shown(edit)
         }
     }
+
+    /** What a cell shows for a pending edit. */
+    private fun shown(edit: Edit): String? =
+        when (edit) {
+            is Edit.Value -> edit.text
+            is Edit.Literal -> DocumentBrowserTab.cell(parseLiteral(edit.literal))
+            Edit.Removed -> null
+        }
 
     override fun rowStatus(row: Int): RowStatus =
         when {
@@ -164,29 +188,43 @@ internal class DocumentEditModel(
     /** The documents themselves, as relaxed Extended JSON with pending edits applied, rather than the cells' text. */
     override fun json(columns: List<Int>): JsonArray {
         val names = columns.map(::field)
-        fun element(row: Int, column: Int, text: String?): JsonElement {
-            if (text == null) return JsonNull
-            val literal = (convert(kind(row, column), text, zone) as? Converted.Ok)?.literal ?: return JsonPrimitive(text)
-            return runCatching { Lenient.parseToJsonElement(literal) }.getOrElse { JsonPrimitive(text) }
-        }
         val rows =
             (0 until rowCount).filter { rowStatus(it) != RowStatus.Deleted }.map { row ->
-                val fields = LinkedHashMap<String, JsonElement>()
-                if (row < baseRows) {
-                    for ((name, value) in documents[row]) if (name in names) fields[name] = value
-                    edits.filterKeys { it.first == row }.forEach { (key, edit) ->
-                        val name = field(key.second)
-                        if (name !in names) return@forEach
-                        if (edit is Edit.Value) fields[name] = element(row, key.second, edit.text) else fields.remove(name)
-                    }
-                } else {
-                    inserted[row - baseRows].entries.sortedBy { it.key }.forEach { (column, text) -> if (field(column) in names) fields[field(column)] = element(row, column, text) }
-                }
+                val fields = documentFields(row)
                 // In the grid's column order.
-                JsonObject(names.filter { it in fields }.associateWith { fields.getValue(it) } + fields.filterKeys { it !in names })
+                JsonObject(names.filter { it in fields }.associateWith { fields.getValue(it) })
             }
         return JsonArray(rows)
     }
+
+    /** Document [row]'s fields with its pending edits applied, in the document's own order (new fields last). */
+    private fun documentFields(row: Int): LinkedHashMap<String, JsonElement> {
+        val fields = LinkedHashMap<String, JsonElement>()
+        if (row < baseRows) {
+            fields.putAll(documents[row])
+            edits.filterKeys { it.first == row }.entries.sortedBy { it.key.second }.forEach { (key, edit) ->
+                val element = element(row, key.second, edit)
+                if (element == null) fields.remove(field(key.second)) else fields[field(key.second)] = element
+            }
+        } else {
+            inserted[row - baseRows].entries.sortedBy { it.key }.forEach { (column, edit) -> element(row, column, edit)?.let { fields[field(column)] = it } }
+        }
+        return fields
+    }
+
+    /** A pending edit as the JSON value it writes; null for a removed field. */
+    private fun element(row: Int, column: Int, edit: Edit): JsonElement? =
+        when (edit) {
+            Edit.Removed -> null
+            is Edit.Literal -> parseLiteral(edit.literal)
+            is Edit.Value -> {
+                val text = edit.text ?: return JsonNull
+                val literal = (convert(kind(row, column), text, zone) as? Converted.Ok)?.literal ?: return JsonPrimitive(text)
+                runCatching { Lenient.parseToJsonElement(literal) }.getOrElse { JsonPrimitive(text) }
+            }
+        }
+
+    private fun parseLiteral(literal: String): JsonElement = runCatching { Lenient.parseToJsonElement(literal) }.getOrElse { JsonPrimitive(literal) }
 
     // region Types
 
@@ -247,7 +285,7 @@ internal class DocumentEditModel(
         if (row >= baseRows) return column in inserted[row - baseRows]
         return when (edits[row to column]) {
             Edit.Removed -> false
-            is Edit.Value -> true
+            is Edit.Value, is Edit.Literal -> true
             null -> original(row, column) != null
         }
     }
@@ -265,7 +303,7 @@ internal class DocumentEditModel(
     override fun setValue(row: Int, column: Int, value: String?) {
         if (!canEdit(row, column)) return
         if (row >= baseRows) {
-            inserted[row - baseRows][column] = value
+            inserted[row - baseRows][column] = Edit.Value(value)
             return
         }
         val original = original(row, column)
@@ -323,7 +361,7 @@ internal class DocumentEditModel(
     override fun problem(row: Int, column: Int): String? {
         val text =
             when {
-                row >= baseRows -> if (column in inserted[row - baseRows]) inserted[row - baseRows][column] else return null
+                row >= baseRows -> (inserted[row - baseRows][column] as? Edit.Value ?: return null).text
                 row in deleted -> return null
                 else -> (edits[row to column] as? Edit.Value ?: return null).text
             } ?: return null
@@ -365,6 +403,7 @@ internal class DocumentEditModel(
                     when (edit) {
                         Edit.Removed -> unset += name
                         is Edit.Value -> set[name] = literal(row, key.second, edit.text)
+                        is Edit.Literal -> set[name] = edit.literal
                     }
                 }
                 val expected = (set.keys + unset).associateWith { name -> documents[row][name]?.toString() }
@@ -373,7 +412,15 @@ internal class DocumentEditModel(
         val inserts =
             inserted.mapIndexed { index, cells ->
                 val row = baseRows + index
-                val body = cells.entries.sortedBy { it.key }.joinToString(", ") { (column, text) -> JsonPrimitive(field(column)).toString() + ": " + literal(row, column, text) }
+                val body =
+                    cells.entries.sortedBy { it.key }.joinToString(", ") { (column, edit) ->
+                        JsonPrimitive(field(column)).toString() + ": " +
+                            when (edit) {
+                                is Edit.Literal -> edit.literal
+                                is Edit.Value -> literal(row, column, edit.text)
+                                Edit.Removed -> error("A new document has no fields to remove")
+                            }
+                    }
                 Change.Insert(row, "{$body}")
             }
         return deletes + updates + inserts
@@ -432,15 +479,136 @@ internal class DocumentEditModel(
                 when (edit) {
                     Edit.Removed -> if (original(row, column) != null) edits[row to column] = edit
                     is Edit.Value -> setValue(row, column, edit.text)
+                    is Edit.Literal -> if (field(column) != "_id") edits[row to column] = edit
                 }
             }
         }
-        pending.inserts.forEach { cells -> inserted += mutableStateMapOf<Int, String?>().apply { cells.forEach { (name, text) -> fields.indexOf(name).takeIf { it >= 0 }?.let { put(it, text) } } } }
+        pending.inserts.forEach { cells -> inserted += mutableStateMapOf<Int, Edit>().apply { cells.forEach { (name, edit) -> fields.indexOf(name).takeIf { it >= 0 }?.let { put(it, edit) } } } }
         pending.deletes.forEach { id ->
             val row = rowsById[id]
             if (row == null) missing++ else deleted[row] = Unit
         }
         return missing
+    }
+
+    // endregion
+
+    // region Records as JSON
+
+    override val recordNoun: String
+        get() = "document"
+
+    override fun whyNotEditable(row: Int): String? =
+        when {
+            readOnly -> "The connection is read-only"
+            row !in 0 until rowCount -> "This document is no longer on the page"
+            row in deleted -> "This document is marked for deletion; revert it first"
+            row < baseRows && !hasId(row) -> "This document has no _id, so it can't be found again to save changes"
+            else -> null
+        }
+
+    override fun describeRecord(row: Int): String =
+        if (row >= baseRows) "New document" else documents[row]["_id"]?.let { "_id: ${DocumentBrowserTab.cell(it)}" } ?: "Document ${row + 1} on this page"
+
+    /** The whole document, every field, with pending edits applied: not just the columns on show. */
+    override fun recordJson(row: Int): JsonObject = JsonObject(documentFields(row))
+
+    override fun newRecord(): RecordTemplate {
+        val known = fields.filter { it != "_id" }
+        val hint =
+            buildString {
+                append("Leave out _id to have one generated.")
+                if (known.isNotEmpty()) append(" Fields on this page: ${known.take(12).joinToString(", ")}${if (known.size > 12) ", …" else ""}.")
+            }
+        return RecordTemplate(JsonObject(emptyMap()), hint)
+    }
+
+    override fun plan(row: Int?, base: JsonObject, edited: JsonObject): RecordPlan = planned(row, base, edited).first
+
+    override fun apply(row: Int?, base: JsonObject, edited: JsonObject): Int? {
+        val (plan, steps) = planned(row, base, edited)
+        if (!plan.canApply) return null
+        val target = row ?: addRow()
+        for (step in steps) {
+            val column = fields.indexOf(step.name).takeIf { it >= 0 } ?: run {
+                addField(step.name)
+                fields.indexOf(step.name)
+            }
+            if (target >= baseRows) {
+                val cells = inserted[target - baseRows]
+                if (step.literal == null) cells.remove(column) else cells[column] = Edit.Literal(step.literal)
+                continue
+            }
+            val original = original(target, column)
+            when {
+                step.literal == null -> if (original == null) edits.remove(target to column) else edits[target to column] = Edit.Removed
+                // Typed back to what was read: nothing to write.
+                original != null && parseLiteral(step.literal) == original -> edits.remove(target to column)
+                else -> edits[target to column] = Edit.Literal(step.literal)
+            }
+        }
+        return target
+    }
+
+    /** A field a record's plan sets to an Extended JSON [literal], or removes when it's null. */
+    private data class Step(val name: String, val literal: String?)
+
+    private fun planned(row: Int?, base: JsonObject, edited: JsonObject): Pair<RecordPlan, List<Step>> {
+        if (row != null) whyNotEditable(row)?.let { return RecordPlan(emptyList(), listOf(it)) to emptyList() }
+        val isNew = row == null || row >= baseRows
+        val problems = mutableListOf<String>()
+        val notes = mutableListOf<String>()
+        val kept = mutableListOf<String>()
+        val retyped = mutableListOf<String>()
+        val changes = mutableListOf<FieldChange>()
+        val steps = mutableListOf<Step>()
+        // Exact: in BSON 5 and 5.0 are an int and a double.
+        for (diff in diffRecord(if (row == null) JsonObject(emptyMap()) else base, edited) { a, b -> a == b }) {
+            val name = diff.name
+            if (name == "_id" && !isNew) {
+                problems += if (diff is FieldDiff.Removed) "Keep _id: it's how the document is found" else "_id can't be changed: it's how the document is found. Copy the document to a new one instead."
+                continue
+            }
+            if (!editableName(name)) {
+                problems += "“$name”: field names with dots or a leading \$ can't be edited here"
+                continue
+            }
+            when (diff) {
+                is FieldDiff.Removed -> steps += Step(name, null)
+                is FieldDiff.Set -> {
+                    val was = if (row != null && row < baseRows) documents[row][name]?.let(BsonKind::of) else null
+                    val literal = keepType(was, diff.value)
+                    steps += Step(name, literal)
+                    val now = BsonKind.of(parseLiteral(literal))
+                    when {
+                        was == null || was == BsonKind.Null || now == BsonKind.Null || now == was -> if (literal != diff.value.toString()) kept += "$name (${was?.label})"
+                        else -> retyped += "$name: ${was.label} → ${now.label}"
+                    }
+                }
+            }
+            changes += diff.change()
+        }
+        if (kept.isNotEmpty()) notes += "Numbers keep their field's type: ${kept.joinToString(", ")}"
+        if (retyped.isNotEmpty()) notes += "Changes type: ${retyped.joinToString(", ")}"
+        if (row != null && !isNew) {
+            val current = recordJson(row)
+            val both = changes.map { it.name }.filter { current[it] != base[it] }
+            if (both.isNotEmpty()) notes += "Also edited in the grid since this was opened: ${both.joinToString(", ")}. The JSON's values replace those edits."
+        }
+        if (!isNew && changes.isNotEmpty()) notes += "Only the fields you changed are written, and only while they still hold the values they had when loaded."
+        return RecordPlan(changes, problems, notes, isNew = row == null) to steps
+    }
+
+    /**
+     * [value] as the literal to write. A plain number put in a field that holds a `long`, `double` or `decimal` keeps
+     * that type, as it would typed into the cell: relaxed JSON can't tell `5` the long from `5` the int.
+     */
+    private fun keepType(was: BsonKind?, value: JsonElement): String {
+        val number = value as? JsonPrimitive
+        if (number != null && !number.isString && number.content != "true" && number.content != "false" && was in KeepTypes) {
+            (convert(was, number.content, zone) as? Converted.Ok)?.let { return it.literal }
+        }
+        return value.toString()
     }
 
     // endregion
@@ -453,7 +621,7 @@ internal class DocumentEditModel(
 /** Unsaved edits carried across a reload, by `_id` and field name rather than grid position. */
 internal data class Pending(
     val edits: Map<String, Map<String, DocumentEditModel.Edit>> = emptyMap(),
-    val inserts: List<Map<String, String?>> = emptyList(),
+    val inserts: List<Map<String, DocumentEditModel.Edit>> = emptyList(),
     val deletes: Set<String> = emptySet(),
 ) {
     val fields: List<String>
@@ -476,6 +644,7 @@ private val ObjectIdText = Regex("""^(?:ObjectId\(\s*['"]?)?([0-9a-fA-F]{24})(?:
 private val HasZone = Regex("""(?:[Zz]|[+-]\d\d:?\d\d)$""")
 private val IsoDateText = Regex("""^(?:ISODate|new Date)\(\s*['"](.*)['"]\s*\)$""")
 private val Lenient = Json { isLenient = true }
+private val KeepTypes = setOf(BsonKind.Int64, BsonKind.Double, BsonKind.Decimal)
 
 private fun wrapped(key: String, value: String) = JsonObject(mapOf(key to JsonPrimitive(value))).toString()
 

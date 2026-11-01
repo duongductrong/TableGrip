@@ -749,6 +749,7 @@ private fun cellMenu(controller: GridController): List<ContextMenuItem> {
     val state = controller.state
     val selection = state.selection ?: return emptyList()
     val editor = controller.model.editor
+    val records = controller.model.records
     val focus = selection.focus
     val single = selection.anchor == selection.focus && !selection.wholeRows
     val filter = controller.actions.onFilterByValue
@@ -781,7 +782,11 @@ private fun cellMenu(controller: GridController): List<ContextMenuItem> {
         ContextMenuItem(editor?.setDefaultLabel ?: "Set DEFAULT") { controller.setDefault() }.takeIf { controller.canSetDefault() },
         ContextMenuItem("Generate UUID") { controller.generateUuids(timeOrdered = false) }.takeIf { controller.hasUuidSelection() },
         ContextMenuItem("Generate UUID v7 (time-ordered)") { controller.generateUuids(timeOrdered = true) }.takeIf { controller.hasUuidSelection() },
+        records?.takeIf { selection.rows.first == selection.rows.last && it.canEditRecord(focus.row) }?.let {
+            ContextMenuItem("Edit ${it.recordNoun.replaceFirstChar(Char::uppercase)} as JSON…") { state.editRecord(controller.model, focus.row) }
+        },
         ContextMenuItem("Add Row (${Shortcuts.AddRow})") { controller.addRow() }.takeIf { editor != null },
+        records?.takeIf { it.canAddRecord }?.let { ContextMenuItem("Add ${it.recordNoun.replaceFirstChar(Char::uppercase)} from JSON…") { state.newRecord(controller.model) } },
         ContextMenuItem("Delete Row(s) (${Shortcuts.DeleteRows})") { controller.deleteSelectedRows() }.takeIf { editor != null },
         ContextMenuItem("Revert Row(s) (${Shortcuts.RevertRows})") { controller.revertSelectedRows() }.takeIf { editor != null },
     )

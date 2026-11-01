@@ -131,7 +131,7 @@ fun rowsJson(model: GridModel, columns: List<Int>): JsonArray = rowsJson(rowsSna
 fun displayLines(text: String, maxChars: Int = 1000): List<String> =
     text.lineSequence().map { if (it.length > maxChars) it.take(maxChars) + "… (+${it.length - maxChars} chars)" else it }.toList()
 
-private fun cellJson(value: String?, column: ResultColumn): JsonElement =
+internal fun cellJson(value: String?, column: ResultColumn): JsonElement =
     when {
         value == null -> JsonNull
         column.isNumeric -> value.toBigDecimalOrNull()?.let(::JsonPrimitive) ?: JsonPrimitive(value)

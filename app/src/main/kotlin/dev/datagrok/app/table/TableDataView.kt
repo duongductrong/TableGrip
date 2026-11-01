@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import dev.datagrok.app.ui.AppDialog
 import dev.datagrok.app.grid.DataGrid
 import dev.datagrok.app.grid.GridActions
+import dev.datagrok.app.grid.RecordEditorHost
 import dev.datagrok.app.grid.ResultJsonView
 import dev.datagrok.app.grid.ValuePanel
 import dev.datagrok.app.ui.LocalIslands
@@ -100,6 +101,7 @@ internal fun TableDataView(tab: TableDataTab) {
     }
     tab.pendingDiscard?.let { DiscardDialog(tab) }
     tab.preview?.let { PreviewDialog(tab, it) }
+    tab.model?.let { RecordEditorHost(it, tab.grid, tab.dialect.qualifiedName(tab.table)) }
 }
 
 @Composable

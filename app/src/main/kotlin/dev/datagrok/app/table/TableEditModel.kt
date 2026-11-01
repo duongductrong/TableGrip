@@ -3,17 +3,32 @@ package dev.datagrok.app.table
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
+import dev.datagrok.app.grid.FieldChange
+import dev.datagrok.app.grid.FieldDiff
 import dev.datagrok.app.grid.GridEditor
 import dev.datagrok.app.grid.GridModel
+import dev.datagrok.app.grid.RecordEditor
+import dev.datagrok.app.grid.RecordPlan
+import dev.datagrok.app.grid.RecordTemplate
 import dev.datagrok.app.grid.RowStatus
+import dev.datagrok.app.grid.cellJson
+import dev.datagrok.app.grid.change
+import dev.datagrok.app.grid.diffRecord
 import dev.datagrok.core.dialect.SqlDialect
 import dev.datagrok.core.driver.QueryResult
 import dev.datagrok.core.driver.ResultColumn
 import dev.datagrok.core.edit.BoundValue
 import dev.datagrok.core.edit.ColumnEdit
 import dev.datagrok.core.edit.EditCheck
+import dev.datagrok.core.edit.EditKind
 import dev.datagrok.core.edit.RowChange
 import dev.datagrok.core.metadata.TableDetails
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
 
 /**
  * One page of table rows plus pending, unsaved edits: changed cells, rows marked for deletion and new rows (appended
@@ -27,7 +42,7 @@ class TableEditModel(
     private val readOnly: Boolean = false,
     details: TableDetails? = null,
     dialect: SqlDialect? = null,
-) : GridModel, GridEditor {
+) : GridModel, GridEditor, RecordEditor {
     override val columns: List<ResultColumn> = result.columns
 
     private val columnEdits: List<ColumnEdit> =
@@ -53,6 +68,9 @@ class TableEditModel(
         get() = baseRows + inserted.size
 
     override val editor: GridEditor?
+        get() = if (readOnly) null else this
+
+    override val records: RecordEditor?
         get() = if (readOnly) null else this
 
     val changeCount: Int
@@ -181,6 +199,167 @@ class TableEditModel(
         deleted.clear()
         inserted.clear()
     }
+
+    // region Records as JSON
+
+    override val recordNoun: String
+        get() = "row"
+
+    override fun whyNotEditable(row: Int): String? =
+        when {
+            readOnly -> "The connection is read-only"
+            row !in 0 until rowCount -> "This row is no longer on the page"
+            row in deleted -> "This row is marked for deletion; revert it first"
+            row < baseRows && !hasKey -> "The table has no primary key, so existing rows can't be changed"
+            else -> null
+        }
+
+    override fun describeRecord(row: Int): String {
+        if (row >= baseRows) return "New row"
+        val key = keyColumns ?: return "Row ${row + 1} on this page"
+        return key.joinToString(", ") { "${columns[it].name} = ${result.rows[row][it] ?: "NULL"}" }
+    }
+
+    /** Each column as the JSON view shows it; a new row leaves out the columns that will take their default. */
+    override fun recordJson(row: Int): JsonObject =
+        JsonObject(
+            columns.indices
+                .filter { row < baseRows || it in inserted[row - baseRows] }
+                .associate { columns[it].name to cellJson(value(row, it), columns[it]) },
+        )
+
+    override fun newRecord(): RecordTemplate {
+        // Nullable columns are listed as null, so the shape of the row is there to fill in; generated and defaulted ones aren't.
+        val (defaulted, asked) = columns.indices.filter { !columns[it].isBinary }.partition { columnEdits[it].let { edit -> edit.generated || edit.defaultValue != null } }
+        val hint =
+            defaulted.takeIf { it.isNotEmpty() }?.let { list ->
+                "Left out, so they take their defaults: " + list.joinToString(", ") { columns[it].name } + ". Add one to set it."
+            }
+        return RecordTemplate(JsonObject(asked.associate { columns[it].name to JsonNull }), hint)
+    }
+
+    override fun plan(row: Int?, base: JsonObject, edited: JsonObject): RecordPlan = planned(row, base, edited).first
+
+    override fun apply(row: Int?, base: JsonObject, edited: JsonObject): Int? {
+        val (plan, steps) = planned(row, base, edited)
+        if (!plan.canApply) return null
+        val target = row ?: addRow()
+        steps.forEach { step ->
+            when (step) {
+                is Step.Value -> setValue(target, step.column, step.text)
+                is Step.Default -> revertCell(target, step.column)
+            }
+        }
+        return target
+    }
+
+    /** One cell write a record's plan comes down to. */
+    private sealed interface Step {
+        val column: Int
+
+        /** The cell set to [text]; null for NULL. */
+        data class Value(override val column: Int, val text: String?) : Step
+
+        /** A new row's cell left to its default. */
+        data class Default(override val column: Int) : Step
+    }
+
+    private fun planned(row: Int?, base: JsonObject, edited: JsonObject): Pair<RecordPlan, List<Step>> {
+        if (row != null) whyNotEditable(row)?.let { return RecordPlan(emptyList(), listOf(it)) to emptyList() }
+        val problems = mutableListOf<String>()
+        val notes = mutableListOf<String>()
+        val changes = mutableListOf<FieldChange>()
+        val steps = mutableListOf<Step>()
+        val kept = mutableListOf<String>()
+        val isNew = row == null || row >= baseRows
+        for (diff in diffRecord(if (row == null) JsonObject(emptyMap()) else base, edited)) {
+            val name = diff.name
+            val column = columns.indexOfFirst { it.name == name }
+            if (column < 0) {
+                problems += "There's no column “$name” in this table"
+                continue
+            }
+            val edit = columnEdits[column]
+            when (diff) {
+                is FieldDiff.Removed ->
+                    if (isNew) {
+                        steps += Step.Default(column)
+                        changes += diff.change()
+                    } else kept += name
+                is FieldDiff.Set -> {
+                    if (columns[column].isBinary) {
+                        problems += "“$name” holds binary data, which can't be edited as JSON"
+                        continue
+                    }
+                    val text =
+                        when (val converted = cellText(column, diff.value)) {
+                            is CellText.Invalid -> {
+                                problems += converted.message
+                                continue
+                            }
+                            is CellText.Ok -> converted.text
+                        }
+                    if (text == null) {
+                        if (edit.nullable) {
+                            steps += Step.Value(column, null)
+                            changes += diff.change()
+                        } else problems += "“$name” can't be NULL" + if (isNew && edit.hasDefault) "; leave it out to use its default" else ""
+                        continue
+                    }
+                    when (val check = edit.check(text)) {
+                        is EditCheck.Invalid -> problems += "“$name”: ${check.message}"
+                        EditCheck.Empty -> problems += "“$name” is empty, which isn't ${article(edit.typeName)}; use null for NULL"
+                        is EditCheck.Ok -> {
+                            if (check.warning) check.note?.let { notes += "“$name”: $it" }
+                            steps += Step.Value(column, check.value)
+                            changes += diff.change()
+                        }
+                    }
+                }
+            }
+        }
+        if (!isNew) {
+            val keyNames = keyColumns.orEmpty().map { columns[it].name }.toSet()
+            changes.map { it.name }.filter { it in keyNames }.takeIf { it.isNotEmpty() }?.let { keys ->
+                notes += "Changes the primary key (${keys.joinToString(", ")}); rows that reference it aren't updated"
+            }
+            val current = recordJson(row!!)
+            val both = changes.map { it.name }.filter { current[it] != base[it] }
+            if (both.isNotEmpty()) notes += "Also edited in the grid since this was opened: ${both.joinToString(", ")}. The JSON's values replace those edits."
+        }
+        if (kept.isNotEmpty()) notes += "Left out, so they keep their values: ${kept.joinToString(", ")}"
+        return RecordPlan(changes, problems, notes, isNew = row == null) to steps
+    }
+
+    private sealed interface CellText {
+        data class Ok(val text: String?) : CellText
+
+        data class Invalid(val message: String) : CellText
+    }
+
+    /** A JSON value as the text a cell of [column] holds: the inverse of [cellJson]. */
+    private fun cellText(column: Int, value: JsonElement): CellText {
+        val edit = columnEdits[column]
+        val name = columns[column].name
+        val isJson = edit.kind == EditKind.Json || "json" in columns[column].typeName.lowercase()
+        return when (value) {
+            is JsonNull -> CellText.Ok(null)
+            is JsonPrimitive ->
+                when {
+                    isJson && !value.isString -> CellText.Ok(value.toString())
+                    value.isString -> CellText.Ok(value.content)
+                    value.booleanOrNull != null && edit.kind == EditKind.Boolean -> CellText.Ok(edit.booleanText(value.booleanOrNull!!))
+                    else -> CellText.Ok(value.content)
+                }
+            is JsonObject, is JsonArray ->
+                if (isJson) CellText.Ok(value.toString())
+                else CellText.Invalid("“$name” takes ${article(edit.typeName)}, not ${if (value is JsonObject) "an object" else "an array"}")
+        }
+    }
+
+    private fun article(type: String): String = type.lowercase().let { (if (it.isNotEmpty() && it[0] in "aeiou") "an " else "a ") + it }
+
+    // endregion
 
     fun toChanges(): List<RowChange> {
         fun bound(column: Int, value: String?) = columns[column].let { BoundValue(value, it.jdbcType, it.isNumeric) }

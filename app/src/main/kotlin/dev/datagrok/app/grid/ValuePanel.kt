@@ -212,9 +212,12 @@ private fun TimestampInfo(value: TimestampValue) {
     }
 }
 
-/** A collapsible JSON tree; objects and arrays open on click. */
+/**
+ * A collapsible JSON tree; objects and arrays open on click. With [recordAction], each top-level element of an array
+ * gets it (e.g. an edit button) in front, given its index.
+ */
 @Composable
-internal fun JsonTree(root: JsonElement) {
+internal fun JsonTree(root: JsonElement, recordAction: (@Composable (Int) -> Unit)? = null) {
     var expanded by remember(root) { mutableStateOf(jsonContainerPaths(root).filter { path -> path.count { it == '.' || it == '[' } < 2 }.toSet()) }
     val lines = remember(root, expanded) { jsonLines(root, expanded) }
     val info = JewelTheme.globalColors.text.info
@@ -244,6 +247,9 @@ internal fun JsonTree(root: JsonElement) {
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    if (recordAction != null && line.depth == 1 && root is JsonArray) {
+                        Box(Modifier.size(18.dp)) { line.label?.toIntOrNull()?.let { recordAction(it) } }
+                    }
                     Box(Modifier.size(14.dp)) {
                         if (line.isContainer && line.path != "$") {
                             Icon(if (open) AllIconsKeys.General.ChevronDown else AllIconsKeys.General.ChevronRight, null, tint = info)

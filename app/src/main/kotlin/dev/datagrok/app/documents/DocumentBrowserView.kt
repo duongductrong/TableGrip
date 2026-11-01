@@ -54,6 +54,7 @@ import dev.datagrok.app.completion.handleCompletionKey
 import dev.datagrok.app.connections.ConnectionLoadingPlaceholder
 import dev.datagrok.app.grid.DataGrid
 import dev.datagrok.app.grid.GridActions
+import dev.datagrok.app.grid.RecordEditorHost
 import dev.datagrok.app.table.PageSizes
 import dev.datagrok.app.table.Separator
 import dev.datagrok.app.table.ToolButton
@@ -93,6 +94,7 @@ internal fun DocumentBrowserView(tab: DocumentBrowserTab) {
     }
     tab.pendingDiscard?.let { DiscardDialog(tab) }
     tab.preview?.let { PreviewDialog(tab, it) }
+    RecordEditorHost(tab.model, tab.grid, "${tab.database}.${tab.collection}")
 }
 
 @Composable

@@ -2,6 +2,7 @@ package dev.datagrok.app.keyvalue
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import dev.datagrok.app.AppState
@@ -50,6 +51,29 @@ class KeyBrowserTab(private val app: AppState, val config: ConnectionConfig, val
 
     var loadingValue by mutableStateOf(false)
         private set
+
+    /** When [value] was read, so its TTL can count down without asking the server again. */
+    var valueReadAt by mutableLongStateOf(0L)
+        private set
+
+    /** Splits key names into the list's folders: `user:1` sits in `user`, etcd's `/services/api` in `services`. */
+    val delimiter = if (plainValues) "/" else ":"
+
+    /** Folders in the key list, rather than one flat list. */
+    var treeView by mutableStateOf(true)
+
+    /** Group paths the user folded away; every group starts expanded. */
+    var collapsed by mutableStateOf<Set<String>>(emptySet())
+
+    /** Shows only keys of this type; null for all. Applies to the keys scanned so far. */
+    var typeFilter by mutableStateOf<KeyType?>(null)
+
+    val visibleKeys: List<KeyInfo>
+        get() = typeFilter?.let { type -> keys.filter { it.type == type } } ?: keys
+
+    fun toggleGroup(path: String) {
+        collapsed = if (path in collapsed) collapsed - path else collapsed + path
+    }
 
     /** The last failure or confirmation, shown under the toolbar. */
     var message by mutableStateOf<Message?>(null)
@@ -107,6 +131,8 @@ class KeyBrowserTab(private val app: AppState, val config: ConnectionConfig, val
     }
 
     fun select(key: String?) {
+        // A confirmation is about the key it was for; errors stay until dismissed.
+        if (key != selectedKey && message?.isError == false) message = null
         selectedKey = key
         refreshValue()
     }
@@ -122,6 +148,7 @@ class KeyBrowserTab(private val app: AppState, val config: ConnectionConfig, val
             loadingValue = true
             try {
                 value = connection().read(keyspace, key)
+                valueReadAt = System.currentTimeMillis()
                 if (value == null) {
                     // Deleted or expired since it was listed.
                     keys = keys.filterNot { it.name == key }
@@ -139,27 +166,42 @@ class KeyBrowserTab(private val app: AppState, val config: ConnectionConfig, val
     }
 
     /** Applies [edit] to the selected key (or [key]) and shows the result. */
-    fun edit(edit: KeyEdit, key: String? = selectedKey) {
+    fun edit(edit: KeyEdit, key: String? = selectedKey) = editAll(listOf(edit), key)
+
+    /** Applies [edits] in order, e.g. removing a set member and adding its replacement. */
+    fun editAll(edits: List<KeyEdit>, key: String? = selectedKey, confirmation: String? = null) {
         val target = key ?: return
+        if (edits.isEmpty()) return
         act { redis ->
-            redis.edit(keyspace, target, edit)
-            if (keys.none { it.name == target }) keys = (keys + KeyInfo(target, typeOf(edit), null)).sortedBy { it.name }
+            edits.forEach { redis.edit(keyspace, target, it) }
+            if (keys.none { it.name == target }) keys = (keys + KeyInfo(target, typeOf(edits.last()), null)).sortedBy { it.name }
             selectedKey = target
-            value = redis.read(keyspace, target)
+            readSelected(redis, target)
+            confirmation?.let { message = Message(it, isError = false) }
         }
     }
 
-    /** Creates [key] with a first element, as Redis has no empty hashes, lists, sets or streams. */
-    fun create(key: String, edit: KeyEdit) {
+    /**
+     * Creates [key] with a first element, as Redis has no empty hashes, lists, sets or streams, expiring after
+     * [ttlSeconds] if given.
+     */
+    fun create(key: String, edit: KeyEdit, ttlSeconds: Long? = null, onCreated: () -> Unit = {}) {
         if (key.isBlank()) return
         act { redis ->
             if (redis.read(keyspace, key) != null) throw IllegalStateException("$key already exists.")
             redis.edit(keyspace, key, edit)
-            keys = (keys + KeyInfo(key, typeOf(edit), null)).sortedBy { it.name }
+            if (ttlSeconds != null) redis.expire(keyspace, key, ttlSeconds * 1_000)
+            readSelected(redis, key)
+            keys = (keys + KeyInfo(key, typeOf(edit), value?.ttlMillis)).sortedBy { it.name }
             selectedKey = key
-            value = redis.read(keyspace, key)
             message = Message("Created $key.", isError = false)
+            onCreated()
         }
+    }
+
+    private suspend fun readSelected(redis: KeyValueConnection, key: String) {
+        value = redis.read(keyspace, key)
+        valueReadAt = System.currentTimeMillis()
     }
 
     fun delete() {
@@ -180,7 +222,8 @@ class KeyBrowserTab(private val app: AppState, val config: ConnectionConfig, val
             redis.rename(keyspace, from, to)
             keys = keys.map { if (it.name == from) it.copy(name = to) else it }.sortedBy { it.name }
             selectedKey = to
-            value = redis.read(keyspace, to)
+            readSelected(redis, to)
+            message = Message("Renamed $from to $to.", isError = false)
         }
     }
 
@@ -189,8 +232,9 @@ class KeyBrowserTab(private val app: AppState, val config: ConnectionConfig, val
         val key = selectedKey ?: return
         act { redis ->
             redis.expire(keyspace, key, seconds?.times(1_000))
-            value = redis.read(keyspace, key)
+            readSelected(redis, key)
             keys = keys.map { if (it.name == key) it.copy(ttlMillis = value?.ttlMillis) else it }
+            message = Message(if (seconds == null) "$key no longer expires." else "$key expires in ${formatTtl(seconds * 1_000)}.", isError = false)
         }
     }
 
