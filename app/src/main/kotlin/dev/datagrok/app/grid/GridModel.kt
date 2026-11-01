@@ -65,6 +65,9 @@ interface GridEditor {
     /** Leaves a new row's column out, or sets an existing row's column back to its default. */
     fun setDefault(row: Int, column: Int) {}
 
+    /** Drops the pending edit of one cell, so it's back as read (in a new row: left out). */
+    fun revertCell(row: Int, column: Int)
+
     /** Appends a new row and returns its index. */
     fun addRow(): Int
 

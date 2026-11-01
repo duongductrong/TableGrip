@@ -147,6 +147,15 @@ class TableEditModel(
         defaults[row to column] = Unit
     }
 
+    override fun revertCell(row: Int, column: Int) {
+        if (row >= baseRows) {
+            inserted[row - baseRows].remove(column)
+            return
+        }
+        updates.remove(row to column)
+        defaults.remove(row to column)
+    }
+
     override fun addRow(): Int {
         inserted += mutableStateMapOf()
         return rowCount - 1

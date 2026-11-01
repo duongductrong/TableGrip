@@ -50,7 +50,6 @@ import dev.datagrok.app.completion.handleCompletionKey
 import dev.datagrok.app.connections.ConnectionLoadingPlaceholder
 import dev.datagrok.app.grid.DataGrid
 import dev.datagrok.app.grid.GridActions
-import dev.datagrok.app.grid.GridCell
 import dev.datagrok.app.table.PageSizes
 import dev.datagrok.app.table.Separator
 import dev.datagrok.app.table.ToolButton
@@ -257,7 +256,7 @@ private fun Toolbar(tab: DocumentBrowserTab) {
         Separator()
 
         val editable = model.editor != null && !tab.showJson
-        ToolButton(AllIconsKeys.General.Add, "Add document (${Shortcuts.AddRow})", enabled = editable) { tab.grid.reveal(GridCell(model.addRow(), 0)) }
+        ToolButton(AllIconsKeys.General.Add, "Add document (${Shortcuts.AddRow})", enabled = editable) { tab.grid.revealEditable(model, model.addRow()) }
         ToolButton(AllIconsKeys.General.Remove, "Delete selected documents (${Shortcuts.DeleteRows})", enabled = editable && tab.grid.selection != null) {
             tab.grid.selection?.rows?.let { model.deleteRows(it.toList()) }
             tab.grid.clamp(model.rowCount)

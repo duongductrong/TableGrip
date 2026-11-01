@@ -1,6 +1,8 @@
 package dev.datagrok.app.grid
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -10,6 +12,7 @@ import androidx.compose.ui.test.click
 import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performTextInput
@@ -27,12 +30,16 @@ import dev.datagrok.core.metadata.ColumnInfo
 import dev.datagrok.core.metadata.Namespace
 import dev.datagrok.core.metadata.TableDetails
 import dev.datagrok.core.metadata.TableRef
+import java.awt.Toolkit
+import java.awt.datatransfer.StringSelection
 import java.sql.Types
 import dev.datagrok.core.agent.Mention
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.jetbrains.jewel.intui.standalone.theme.IntUiTheme
+import org.jetbrains.jewel.ui.component.OutlinedButton
+import org.jetbrains.jewel.ui.component.Text
 
 @OptIn(ExperimentalTestApi::class)
 class DataGridTest {
@@ -314,5 +321,100 @@ class DataGridTest {
         model.setDefault(0, 4)
         val update = model.toChanges().filterIsInstance<RowChange.Update>().single()
         assertTrue(update.values.getValue("at").isDefault)
+    }
+
+    @Test
+    fun `cmd-V stores a value that fits, into the row Add made`() = runComposeUiTest {
+        val state = DataGridState()
+        val model = typed()
+        setContent {
+            IntUiTheme(isDark = false) {
+                Column(Modifier.size(900.dp, 400.dp)) {
+                    OutlinedButton(onClick = { state.revealEditable(model, model.addRow()) }) { Text("Add") }
+                    DataGrid(model, state, Modifier.height(360.dp))
+                }
+            }
+        }
+        Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection("7"), null)
+        onNodeWithText("Add").performClick()
+        waitForIdle()
+        onRoot().performKeyInput { withKeyDown(if (isMac) Key.MetaLeft else Key.CtrlLeft) { pressKey(Key.V) } }
+        waitForIdle()
+        assertEquals("7", model.value(2, 0))
+        assertEquals(null, state.editing)
+    }
+
+    @Test
+    fun `a pasted value that doesn't fit opens the editor, and Enter refuses it`() = runComposeUiTest {
+        val state = DataGridState()
+        val model = typed()
+        setContent { IntUiTheme(isDark = false) { Box(Modifier.size(900.dp, 400.dp)) { DataGrid(model, state) } } }
+        Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection("seven"), null)
+        val row = model.addRow()
+        state.revealEditable(model, row)
+        waitForIdle()
+        onRoot().performKeyInput { withKeyDown(if (isMac) Key.MetaLeft else Key.CtrlLeft) { pressKey(Key.V) } }
+        waitForIdle()
+        assertEquals(GridCell(row, 0), state.editing)
+        assertEquals("seven", state.editText.text.toString())
+        onNodeWithText("seven").performKeyInput { pressKey(Key.Enter) }
+        waitForIdle()
+        assertEquals(GridCell(row, 0), state.editing)
+        assertEquals(null, model.value(row, 0))
+    }
+
+    @Test
+    fun `Add opens on the first column that takes an edit`() = runComposeUiTest {
+        val state = DataGridState()
+        val columns = listOf(ResultColumn("data", "bytea", Types.BINARY), ResultColumn("id", "int4", Types.INTEGER))
+        val model = TableEditModel(QueryResult.Rows(columns, listOf(listOf(null, "1")), false, 1), listOf("id"))
+        setContent { IntUiTheme(isDark = false) { Box(Modifier.size(900.dp, 400.dp)) { DataGrid(model, state) } } }
+        val row = model.addRow()
+        state.revealEditable(model, row)
+        waitForIdle()
+        assertEquals(GridCell(row, 1), state.focus)
+    }
+
+    @Test
+    fun `a pasted block fills rows and columns, adds rows, flags what doesn't fit, and undoes`() = runComposeUiTest {
+        val state = DataGridState()
+        val model = typed()
+        setContent { IntUiTheme(isDark = false) { Box(Modifier.size(900.dp, 400.dp)) { DataGrid(model, state) } } }
+        val primary = if (isMac) Key.MetaLeft else Key.CtrlLeft
+        // qty and due for three rows, from a spreadsheet: the last row is new, and its blank due keeps the default.
+        Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection("8\t2026-10-05\r\n9\tnope\r\n10\t\r\n"), null)
+        onNodeWithText("5").performMouseInput { click(center) }
+        waitForIdle()
+        onRoot().performKeyInput { withKeyDown(primary) { pressKey(Key.V) } }
+        waitForIdle()
+        assertEquals(3, model.rowCount)
+        assertEquals(listOf("8", "2026-10-05", "9", "nope", "10"), listOf(model.value(0, 2), model.value(0, 3), model.value(1, 2), model.value(1, 3), model.value(2, 2)))
+        assertTrue(model.problem(1, 3) != null, "a value the column can't take is kept and flagged")
+        assertTrue(!model.isModified(2, 3))
+        assertEquals(GridSelection(GridCell(0, 2), GridCell(2, 3)), state.selection)
+        assertTrue(state.notice!!.text.startsWith("Pasted 5 cells · 1 new row · 1 to fix"), state.notice!!.text)
+
+        onRoot().performKeyInput { withKeyDown(primary) { pressKey(Key.Z) } }
+        waitForIdle()
+        assertEquals(2, model.rowCount)
+        assertEquals(listOf("5", "2026-10-01", "7", null), listOf(model.value(0, 2), model.value(0, 3), model.value(1, 2), model.value(1, 3)))
+        assertTrue(!model.hasChanges)
+    }
+
+    @Test
+    fun `copying and pasting between cells keeps NULL apart from empty text`() = runComposeUiTest {
+        val state = DataGridState()
+        val model = TableEditModel(result(3, 2), primaryKey = listOf("id"))
+        setContent { IntUiTheme(isDark = false) { Box(Modifier.size(900.dp, 400.dp)) { DataGrid(model, state) } } }
+        val primary = if (isMac) Key.MetaLeft else Key.CtrlLeft
+        model.setValue(0, 1, null)
+        onNodeWithText("r0c2").performMouseInput { click(center) }
+        onRoot().performKeyInput { withKeyDown(Key.ShiftLeft) { pressKey(Key.DirectionLeft) } }
+        onRoot().performKeyInput { withKeyDown(primary) { pressKey(Key.C) } }
+        onNodeWithText("r1c1").performMouseInput { click(center) }
+        onRoot().performKeyInput { withKeyDown(primary) { pressKey(Key.V) } }
+        waitForIdle()
+        assertEquals(null, model.value(1, 1))
+        assertEquals("r0c2", model.value(1, 2))
     }
 }

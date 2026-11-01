@@ -18,6 +18,8 @@ import androidx.compose.ui.input.key.utf16CodePoint
 import androidx.compose.ui.unit.Dp
 import dev.datagrok.app.ui.Shortcuts
 import dev.datagrok.app.ui.copyToClipboard
+import androidx.compose.runtime.snapshots.Snapshot
+import dev.datagrok.core.export.ClipboardTable
 import dev.datagrok.core.dialect.SortColumn
 import dev.datagrok.core.dialect.SortDirection
 import dev.datagrok.core.dialect.SqlDialect
@@ -285,7 +287,9 @@ internal class GridController(val state: DataGridState, private val scope: Corou
         val primary = if (isMac) event.isMetaPressed else event.isCtrlPressed
         val shift = event.isShiftPressed
         val rowCount = model.rowCount
-        if (rowCount == 0 && !Shortcuts.AddRow.matches(event)) return false
+        val isPaste = primary && !shift && event.key == Key.V
+        // An empty grid still takes rows: added, or pasted in.
+        if (rowCount == 0 && !Shortcuts.AddRow.matches(event) && !isPaste) return false
         val focus = state.focus
 
         return when {
@@ -301,11 +305,15 @@ internal class GridController(val state: DataGridState, private val scope: Corou
             Shortcuts.ExcludeValue.matches(event) -> filterByFocusedValue(exclude = true)
             // ⇧ is left to the table's Clear Filter.
             Shortcuts.DeleteRows.matches(event) || (primary && !shift && event.key == Key.Delete) -> deleteSelectedRows().let { editor != null }
-            Shortcuts.RevertRows.matches(event) -> revertSelectedRows().let { editor != null }
+            Shortcuts.RevertRows.matches(event) -> {
+                if (!undoPaste()) revertSelectedRows()
+                editor != null
+            }
             primary && event.key == Key.DirectionUp -> moveTo(GridCell(0, focus?.column ?: 0), shift)
             primary && event.key == Key.DirectionDown -> moveTo(GridCell(rowCount - 1, focus?.column ?: 0), shift)
             primary && event.key == Key.MoveHome -> moveTo(GridCell(0, 0), shift)
             primary && event.key == Key.MoveEnd -> moveTo(GridCell(rowCount - 1, columnCount - 1), shift)
+            isPaste -> paste()
             primary || event.isCtrlPressed -> false
             event.key == Key.DirectionUp -> moveBy(-1, 0, shift)
             event.key == Key.DirectionDown -> moveBy(1, 0, shift)
@@ -397,10 +405,121 @@ internal class GridController(val state: DataGridState, private val scope: Corou
         scrollIntoView(cell)
         val current = model.value(cell.row, state.modelColumn(cell.column)).orEmpty()
         val kind = cellEdit(cell)?.kind
-        val popup = if (replaceWith == null && (kind == EditKind.Json || '\n' in current)) EditPopup.Expanded else EditPopup.None
-        state.startEditing(cell, replaceWith ?: current, initial = current, popup = popup)
+        val text = replaceWith ?: current
+        val popup = if ('\n' in text || (replaceWith == null && kind == EditKind.Json)) EditPopup.Expanded else EditPopup.None
+        state.startEditing(cell, text, initial = current, popup = popup)
         return true
     }
+
+    // region Paste
+
+    /**
+     * Pastes the clipboard, laid out by [planPaste]. One value into one cell is stored when it fits the column as it is;
+     * otherwise the editor opens on it, showing what's wrong. A block is written whole: values that don't fit are kept
+     * as typed and flagged, like an edit clicked away from, cells that can't be edited are skipped and rows past the
+     * end are added. The pasted range is selected, and [Shortcuts.RevertRows] undoes it while it still is.
+     */
+    fun paste(): Boolean {
+        val editor = editor ?: return false
+        val block = GridClipboard.read() ?: return false
+        val selection = state.selection ?: GridSelection(GridCell(0, 0), GridCell(0, 0)).takeIf { model.rowCount == 0 } ?: return false
+        val single = block.rows.singleOrNull()?.singleOrNull()
+        if (block.header == null && !single.isNullOrEmpty() && selection.anchor == selection.focus && !selection.wholeRows) {
+            return pasteValue(selection.focus, single)
+        }
+        val plan = planPaste(block, selection, state.visibleColumns.map { model.columns[it].name }, model.rowCount, canAddRows = true) ?: return false
+        val firstNewRow = model.rowCount
+        val cells = mutableListOf<PastedCell>()
+        var invalid = 0
+        var skipped = 0
+        Snapshot.withMutableSnapshot {
+            repeat(plan.newRows) { editor.addRow() }
+            for ((cell, text) in plan.writes) {
+                val row = cell.row
+                val column = state.modelColumn(cell.column)
+                if (!editor.canEdit(row, column)) {
+                    skipped++
+                    continue
+                }
+                val inserted = model.rowStatus(row) == RowStatus.Inserted
+                val check = text?.let { editor.check(row, column, it) }
+                // A blank in a new row leaves the column out, so it still gets its default.
+                if (check == EditCheck.Empty && inserted && !model.isModified(row, column)) continue
+                val pasted = PastedCell(row, column, model.value(row, column), model.isModified(row, column), model.placeholder(row, column))
+                when (check) {
+                    null -> {
+                        if (!editor.canSetNull(row, column)) invalid++
+                        editor.setValue(row, column, null)
+                    }
+                    is EditCheck.Ok -> editor.setValue(row, column, check.value)
+                    EditCheck.Empty -> if (inserted && editor.canSetDefault(row, column)) editor.setDefault(row, column) else editor.setValue(row, column, null)
+                    is EditCheck.Invalid -> {
+                        invalid++
+                        editor.setValue(row, column, text)
+                    }
+                }
+                pasted.after = model.value(row, column)
+                cells += pasted
+            }
+        }
+        state.pasteUndo = PasteUndo(model, plan.range, cells, firstNewRow, plan.newRows)
+        state.selection = plan.range
+        scrollIntoView(plan.range.anchor)
+        state.notice =
+            GridNotice(
+                listOfNotNull(
+                    if (cells.isEmpty()) "Nothing pasted" else "Pasted ${count(cells.size, "cell")}",
+                    count(plan.newRows, "new row").takeIf { plan.newRows > 0 },
+                    "$invalid to fix".takeIf { invalid > 0 },
+                    "${count(skipped, "read-only cell")} skipped".takeIf { skipped > 0 },
+                    "${count(plan.cutColumns, "column")} cut off".takeIf { plan.cutColumns > 0 },
+                    "${Shortcuts.RevertRows} undoes".takeIf { cells.isNotEmpty() || plan.newRows > 0 },
+                ).joinToString(" · ")
+            )
+        return true
+    }
+
+    /** Stores [text] in [cell] when it fits the column as it is; otherwise opens the editor on it, showing what's wrong. */
+    private fun pasteValue(cell: GridCell, text: String): Boolean {
+        val editor = editor ?: return false
+        if (!canEdit(cell)) return false
+        val row = cell.row
+        val column = state.modelColumn(cell.column)
+        val check = editor.check(row, column, text)
+        if (check !is EditCheck.Ok || check.warning) return startEditing(cell, replaceWith = text)
+        val pasted = PastedCell(row, column, model.value(row, column), model.isModified(row, column), model.placeholder(row, column))
+        editor.setValue(row, column, check.value)
+        pasted.after = model.value(row, column)
+        state.pasteUndo = PasteUndo(model, GridSelection(cell, cell), listOf(pasted), model.rowCount, 0)
+        return true
+    }
+
+    /** Undoes the last paste while its range is still selected and its cells still hold what it wrote. */
+    private fun undoPaste(): Boolean {
+        val undo = state.pasteUndo ?: return false
+        val editor = editor ?: return false
+        if (undo.model !== model || state.selection != undo.range || model.rowCount < undo.firstNewRow + undo.newRows) return false
+        if (undo.cells.any { model.value(it.row, it.column) != it.after }) return false
+        state.pasteUndo = null
+        Snapshot.withMutableSnapshot {
+            for (cell in undo.cells.asReversed()) {
+                when {
+                    cell.row >= undo.firstNewRow -> Unit
+                    !cell.modified -> editor.revertCell(cell.row, cell.column)
+                    cell.before == null && cell.placeholder != null -> editor.setDefault(cell.row, cell.column)
+                    else -> editor.setValue(cell.row, cell.column, cell.before)
+                }
+            }
+            if (undo.newRows > 0) editor.deleteRows((undo.firstNewRow until undo.firstNewRow + undo.newRows).toList())
+        }
+        state.clamp(model.rowCount)
+        state.notice = GridNotice("Paste undone")
+        return true
+    }
+
+    private fun count(n: Int, noun: String) = "$n $noun${if (n == 1) "" else "s"}"
+
+    // endregion
 
     /** Checks the open editor's text against its column: what would be stored, or why it can't be. */
     fun editCheck(): EditCheck? {
@@ -569,10 +688,18 @@ internal class GridController(val state: DataGridState, private val scope: Corou
         return true
     }
 
+    /**
+     * Copies the selected cells. TSV also goes on the clipboard as an HTML table for spreadsheets, and is remembered
+     * with its NULLs, which the text can't tell from empty, for pasting back into a grid.
+     */
     fun copy(format: CopyFormat, includeHeader: Boolean = false) {
         val (columns, rows) = selectedBlock()
         if (rows.isEmpty()) return
-        copyToClipboard(ResultFormats.format(format, columns, rows, includeHeader, actions.dialect, actions.tableName))
+        val text = ResultFormats.format(format, columns, rows, includeHeader, actions.dialect, actions.tableName)
+        if (format != CopyFormat.Tsv) return copyToClipboard(text)
+        val header = columns.map { it.name }.takeIf { includeHeader }
+        GridClipboard.last = CopiedBlock(text, header, rows)
+        copyToClipboard(text, ClipboardTable.html(header, rows))
     }
 
     // endregion

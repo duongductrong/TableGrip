@@ -31,6 +31,7 @@ import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.delay
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -258,6 +259,23 @@ fun DataGrid(
                 )
                 if (model.rowCount == 0) {
                     Text("No rows", Modifier.align(Alignment.Center), color = JewelTheme.globalColors.text.info)
+                }
+                state.notice?.let { notice ->
+                    LaunchedEffect(notice) {
+                        delay(4_000)
+                        if (state.notice === notice) state.notice = null
+                    }
+                    val shape = RoundedCornerShape(4.dp)
+                    Text(
+                        notice.text,
+                        Modifier.align(Alignment.BottomCenter)
+                            .padding(bottom = ScrollbarAllowance + 6.dp)
+                            .clip(shape)
+                            .background(JewelTheme.globalColors.panelBackground)
+                            .border(1.dp, JewelTheme.globalColors.borders.normal, shape)
+                            .padding(horizontal = 8.dp, vertical = 3.dp),
+                        fontSize = 12.sp,
+                    )
                 }
             }
         }
@@ -735,6 +753,7 @@ private fun cellMenu(controller: GridController): List<ContextMenuItem> {
         ContextMenuItem("Edit Cell") { controller.startEditing(focus) }.takeIf { single && controller.canEdit(focus) },
         ContextMenuItem("Copy (${Shortcuts.Copy})") { controller.copy(CopyFormat.Tsv) },
         ContextMenuItem("Copy with Header (${Shortcuts.CopyWithHeader})") { controller.copy(CopyFormat.Tsv, includeHeader = true) },
+        ContextMenuItem("Paste (${if (isMac) "⌘V" else "Ctrl+V"})") { controller.paste() }.takeIf { editor != null },
         ContextMenuItem("Copy as CSV") { controller.copy(CopyFormat.Csv, includeHeader = true) },
         ContextMenuItem("Copy as JSON") { controller.copy(CopyFormat.Json) },
         ContextMenuItem("Copy as Markdown") { controller.copy(CopyFormat.Markdown) },

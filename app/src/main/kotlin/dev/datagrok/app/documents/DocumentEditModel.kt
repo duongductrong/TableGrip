@@ -278,6 +278,10 @@ internal class DocumentEditModel(
         if (unchanged) edits.remove(row to column) else edits[row to column] = Edit.Value(value)
     }
 
+    override fun revertCell(row: Int, column: Int) {
+        if (row >= baseRows) inserted[row - baseRows].remove(column) else edits.remove(row to column)
+    }
+
     override fun addRow(): Int {
         inserted += mutableStateMapOf()
         return rowCount - 1

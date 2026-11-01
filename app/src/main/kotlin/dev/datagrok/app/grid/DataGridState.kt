@@ -15,6 +15,9 @@ import dev.datagrok.core.driver.ResultColumn
 /** What floats over the cell being edited, besides its inline text field. */
 enum class EditPopup { None, Expanded, Picker }
 
+/** A note shown over the grid; each one is new, so the same text twice still shows twice. */
+class GridNotice(val text: String)
+
 /** A cell in display coordinates: [column] indexes [DataGridState.visibleColumns]. */
 data class GridCell(val row: Int, val column: Int)
 
@@ -61,6 +64,11 @@ class DataGridState {
     /** Bumped when a commit is refused because the text doesn't fit the column, so the editor can say so. */
     var editRejections by mutableIntStateOf(0)
 
+    /** A short note over the grid, e.g. what a paste did; it fades after a few seconds. */
+    var notice by mutableStateOf<GridNotice?>(null)
+
+    internal var pasteUndo: PasteUndo? = null
+
     /** Bumped by [requestFocus] so the grid takes keyboard focus, e.g. on Esc from the filter bar. */
     var focusRequests by mutableIntStateOf(0)
         private set
@@ -72,9 +80,17 @@ class DataGridState {
     /** A cell to scroll into view on the next frame; set via [reveal] by code outside the grid. */
     var pendingReveal by mutableStateOf<GridCell?>(null)
 
+    /** Selects [cell], scrolls it into view and takes keyboard focus, e.g. for a row an Add button just appended. */
     fun reveal(cell: GridCell) {
         select(cell)
         pendingReveal = cell
+        requestFocus()
+    }
+
+    /** [reveal]s [row] at its first column that takes an edit, so typing and paste land where a value can go. */
+    fun revealEditable(model: GridModel, row: Int) {
+        val column = visibleColumns.indices.firstOrNull { model.editor?.canEdit(row, visibleColumns[it]) == true } ?: 0
+        reveal(GridCell(row, column))
     }
 
     val visibleColumns: List<Int>

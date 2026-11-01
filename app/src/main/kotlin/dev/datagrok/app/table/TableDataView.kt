@@ -52,7 +52,6 @@ import androidx.compose.ui.unit.dp
 import dev.datagrok.app.ui.AppDialog
 import dev.datagrok.app.grid.DataGrid
 import dev.datagrok.app.grid.GridActions
-import dev.datagrok.app.grid.GridCell
 import dev.datagrok.app.grid.ResultJsonView
 import dev.datagrok.app.grid.ValuePanel
 import dev.datagrok.app.ui.LocalIslands
@@ -240,7 +239,7 @@ private fun Toolbar(tab: TableDataTab) {
 
         val editable = model?.editor != null
         ToolButton(AllIconsKeys.General.Add, "Add row (${Shortcuts.AddRow})", enabled = editable) {
-            model?.let { tab.grid.reveal(GridCell(it.addRow(), 0)) }
+            model?.let { tab.grid.revealEditable(it, it.addRow()) }
         }
         ToolButton(AllIconsKeys.General.Remove, "Delete selected rows (${Shortcuts.DeleteRows})", enabled = editable && tab.grid.selection != null) {
             tab.grid.selection?.rows?.let { model?.deleteRows(it.toList()) }
