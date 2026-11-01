@@ -9,6 +9,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -101,6 +104,15 @@ internal fun TableDataView(tab: TableDataTab) {
 
 @Composable
 private fun DataView(tab: TableDataTab) {
+    var origin by remember { mutableStateOf(Offset.Zero) }
+    Box(Modifier.fillMaxSize().onGloballyPositioned { origin = it.positionInRoot() }) {
+        DataContent(tab)
+        ColumnDragGhost(tab.columnDrag, tab.builder.root, origin)
+    }
+}
+
+@Composable
+private fun DataContent(tab: TableDataTab) {
     // Filter keys the grid and the bar left alone; the window handles them too, for focus outside the table.
     Column(Modifier.fillMaxSize().onKeyEvent { it.type == KeyEventType.KeyDown && handleFilterShortcut(tab, it) }) {
         Toolbar(tab)
@@ -133,6 +145,7 @@ private fun DataView(tab: TableDataTab) {
                                 onFollowLink = tab::followLink,
                                 relatedRows = tab::referencingRows,
                                 onMention = tab::mentionCells.takeIf { tab.canMention },
+                                onColumnDragOut = tab.columnDrag.takeIf { tab.filterMode == FilterMode.Builder },
                             ),
                     )
                 }

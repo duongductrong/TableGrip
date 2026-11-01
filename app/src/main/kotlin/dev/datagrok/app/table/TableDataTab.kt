@@ -90,6 +90,10 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
     /** Problems are shown once the user tries to apply; until then only values already typed are checked. */
     var showFilterIssues by mutableStateOf(false)
         private set
+    /** The builder's column list, to drag columns from; null shows it whenever there are conditions. */
+    var showFilterColumns by mutableStateOf<Boolean?>(null)
+    /** A column dragged from the builder's list or the grid's header onto the builder. */
+    internal val columnDrag = ColumnDragState(::dropColumn)
 
     val hasAppliedFilter: Boolean
         get() = appliedSql != null || appliedTree?.children?.isNotEmpty() == true
@@ -489,6 +493,17 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
         }
         val first = builder.rows().firstOrNull() ?: builder.addCondition(builder.root, defaultFilterColumn())
         focusFilterNode = first.id
+    }
+
+    private fun dropColumn(name: String, drop: ColumnDrop) {
+        val column = filterColumns.firstOrNull { it.name == name } ?: return
+        when (drop) {
+            is ColumnDrop.Into -> focusFilterNode = builder.addCondition(drop.group, column).id
+            is ColumnDrop.Onto -> {
+                builder.setColumn(drop.condition, column, dialect.supportsRegex)
+                focusFilterNode = drop.condition.id
+            }
+        }
     }
 
     /** Distinct values of [column] starting with [prefix], for the builder's value suggestions; empty on any failure. */

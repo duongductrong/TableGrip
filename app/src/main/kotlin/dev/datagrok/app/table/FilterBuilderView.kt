@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -97,6 +98,27 @@ import org.jetbrains.jewel.ui.component.Tooltip
 import org.jetbrains.jewel.ui.component.separator
 import org.jetbrains.jewel.ui.icons.AllIconsKeys
 import org.jetbrains.jewel.ui.theme.treeStyle
+import org.jetbrains.jewel.ui.theme.textFieldStyle
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import org.jetbrains.jewel.ui.Orientation
+import org.jetbrains.jewel.ui.component.Divider
 
 /** Nested groups beyond this depth stop offering "+ Group"; deeper logic reads better as SQL. */
 private const val MaxDepth = 3
@@ -135,42 +157,189 @@ internal fun BuilderFilterBar(tab: TableDataTab) {
     val context = BuilderContext(tab, tab.filterColumns, draft, ui)
     val root = tab.builder.root
     val info = JewelTheme.globalColors.text.info
+    val drag = tab.columnDrag
+    DisposableEffect(drag, root) { onDispose { drag.unregister(root) } }
 
-    Column(
-        Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp).onPreviewKeyEvent { handleFilterShortcut(tab, it) },
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Row(Modifier.fillMaxWidth().height(30.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(AllIconsKeys.General.Filter, null)
-            FilterModeSwitch(tab)
-            when {
-                root.children.isEmpty() -> {
-                    Tooltip({ Text("Add condition (${Shortcuts.FocusFilter})") }) { Link("Add condition", onClick = { context.addCondition(root) }) }
-                    Text("or ${Shortcuts.FilterByValue} on a cell to filter by its value", color = info, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    // Three sections, divided: what the filter does and its actions; the columns beside the conditions; adding and the SQL it makes.
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        // Unless asked for, the column list only shows where it leaves the conditions room for their values.
+        val showColumns = tab.showFilterColumns ?: (root.children.isNotEmpty() && maxWidth >= 900.dp)
+        Column(
+            Modifier.fillMaxWidth()
+                .onGloballyPositioned { drag.register(root, ColumnDrop.Into(root), it.boundsInRoot()) }
+                .background(if (drag.hovered == ColumnDrop.Into(root)) dropTint else Color.Transparent)
+                .onPreviewKeyEvent { handleFilterShortcut(tab, it) },
+        ) {
+            Row(
+                Modifier.fillMaxWidth().height(38.dp).padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(AllIconsKeys.General.Filter, null)
+                FilterModeSwitch(tab)
+                Tooltip({ Text(if (showColumns) "Hide columns" else "Show columns to drag into the filter") }) {
+                    ViewChip("Columns", showColumns) { tab.showFilterColumns = !showColumns }
                 }
-                root.children.size > 1 -> {
-                    Text("Rows matching", color = info)
-                    CombinatorSwitch(root)
-                    Text("of these conditions", color = info)
+                Separator()
+                when {
+                    root.children.isEmpty() -> {
+                        Tooltip({ Text("Add condition (${Shortcuts.FocusFilter})") }) { Link("Add condition", onClick = { context.addCondition(root) }) }
+                        Text("drag a column here, or ${Shortcuts.FilterByValue} on a cell to filter by its value", color = info, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                    root.children.size > 1 -> {
+                        Text("Rows matching", color = info)
+                        CombinatorSwitch(root)
+                        Text("of these conditions", color = info)
+                    }
+                    else -> Text("Rows matching", color = info)
                 }
-                else -> Text("Rows matching", color = info)
+                Box(Modifier.weight(1f))
+                FilterActions(tab, draft)
             }
-            Box(Modifier.weight(1f))
-            FilterActions(tab, draft)
-        }
-        if (root.children.isNotEmpty()) {
-            Column(Modifier.fillMaxWidth().heightIn(max = 260.dp).verticalScroll(rememberScrollState())) { GroupBody(context, root, depth = 0) }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                AddLinks(context, root, depth = 0)
-                Spacer(Modifier.width(8.dp))
-                SqlPreview(tab, draft, Modifier.weight(1f))
+            if (root.children.isNotEmpty() || showColumns) {
+                Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
+                BuilderBody(context, showColumns)
+                Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
+                Row(
+                    Modifier.fillMaxWidth().height(32.dp).padding(horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    AddLinks(context, root, depth = 0)
+                    Spacer(Modifier.width(8.dp))
+                    SqlPreview(tab, draft, Modifier.weight(1f))
+                }
             }
         }
     }
 }
 
-private fun BuilderContext.addCondition(parent: GroupState, after: FilterNodeState? = null) {
-    val condition = builder.addCondition(parent, defaultColumn(), after)
+/** The theme's accent, faint, behind where a dragged column would land. */
+private val dropTint: Color
+    @Composable get() = LocalIslands.current.accent.copy(alpha = if (JewelTheme.isDark) 0.14f else 0.08f)
+
+/** Column list and conditions side by side. The list is never shorter than a few columns; the conditions grow until they scroll. */
+@Composable
+private fun BuilderBody(context: BuilderContext, showColumns: Boolean) {
+    val root = context.builder.root
+    var conditionsHeight by remember { mutableIntStateOf(0) }
+    val height = with(LocalDensity.current) { conditionsHeight.toDp() }.coerceIn(if (showColumns) 160.dp else 0.dp, 260.dp)
+    Row(Modifier.fillMaxWidth().height(height)) {
+        if (showColumns) {
+            ColumnPanel(context, Modifier.width(190.dp).fillMaxHeight())
+            Divider(Orientation.Vertical, Modifier.fillMaxHeight())
+        }
+        Box(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState())) {
+            Column(Modifier.fillMaxWidth().onSizeChanged { conditionsHeight = it.height }.padding(horizontal = 8.dp, vertical = 6.dp)) {
+                if (root.children.isEmpty()) DropPlaceholder() else GroupBody(context, root, depth = 0)
+            }
+        }
+    }
+}
+
+/** Where an empty builder takes its first column. */
+@Composable
+private fun DropPlaceholder() {
+    val outline = JewelTheme.globalColors.text.info.copy(alpha = 0.45f)
+    Row(
+        Modifier.fillMaxWidth()
+            .height(34.dp)
+            .drawBehind {
+                drawRoundRect(
+                    color = outline,
+                    cornerRadius = CornerRadius(6.dp.toPx()),
+                    style = Stroke(width = 1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 3.dp.toPx()))),
+                )
+            }
+            .padding(horizontal = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(AllIconsKeys.General.Add, null)
+        Text("Drop a column here to filter by it, or double-click one", color = JewelTheme.globalColors.text.info)
+    }
+}
+
+/** Marks the column list as a place a dragged column is put back, not dropped. */
+private object ColumnPanelKey
+
+/** The table's columns, searchable, to drag onto a group or a condition (or double-click to add a condition). */
+@Composable
+private fun ColumnPanel(context: BuilderContext, modifier: Modifier) {
+    val drag = context.tab.columnDrag
+    val search = remember { TextFieldState() }
+    val query = search.text.toString().trim()
+    val shown =
+        remember(context.columns, query) {
+            if (query.isEmpty()) context.columns
+            else context.columns.filter { it.name.contains(query, ignoreCase = true) || it.typeName.contains(query, ignoreCase = true) }
+        }
+    DisposableEffect(drag) { onDispose { drag.unregister(ColumnPanelKey) } }
+    Column(
+        modifier.onGloballyPositioned { drag.register(ColumnPanelKey, null, it.boundsInRoot()) }.padding(6.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        TextField(
+            search,
+            Modifier.fillMaxWidth(),
+            placeholder = { Text("Search ${context.columns.size} columns") },
+            leadingIcon = { Icon(AllIconsKeys.Actions.Search, null) },
+        )
+        if (shown.isEmpty()) Text("No matching column", Modifier.padding(4.dp), color = JewelTheme.globalColors.text.info)
+        LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
+            items(shown, key = { it.name }) { ColumnRow(context, it, query) }
+        }
+    }
+}
+
+@Composable
+private fun ColumnRow(context: BuilderContext, column: FilterColumn, query: String) {
+    val drag = context.tab.columnDrag
+    val origin = remember { arrayOf(Offset.Zero) }
+    val current by rememberUpdatedState(column)
+    Tooltip({ Text("Drag onto a group to add a condition, or onto a condition to use this column; double-click to add one") }) {
+        Row(
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(4.dp))
+                .background(if (drag.dragged == column.name) dropTint else Color.Transparent)
+                .onGloballyPositioned { origin[0] = it.positionInRoot() }
+                .pointerInput(column.name) { detectTapGestures(onDoubleTap = { context.addCondition(context.builder.root, column = current) }) }
+                .pointerInput(column.name) {
+                    detectDragGestures(
+                        onDragStart = { drag.start(current.name, origin[0] + it) },
+                        // Absolute rather than summed deltas, which drift from the real pointer.
+                        onDrag = { change, _ ->
+                            change.consume()
+                            drag.move(current.name, origin[0] + change.position)
+                        },
+                        onDragEnd = drag::drop,
+                        onDragCancel = drag::cancel,
+                    )
+                }
+                .padding(horizontal = 4.dp, vertical = 3.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(AllIconsKeys.Nodes.DataColumn, null)
+            Text(highlight(column.name, query), Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Tag(column.typeName.lowercase().take(12).ifEmpty { column.kind.label }, column.kind.color())
+        }
+    }
+}
+
+/** Registers [drop] as where a dragged column lands inside this element, and outlines it in the accent while it's the one. */
+@Composable
+private fun Modifier.columnDropTarget(drag: ColumnDragState, key: Any, drop: ColumnDrop): Modifier {
+    DisposableEffect(drag, key) { onDispose { drag.unregister(key) } }
+    val active = drag.hovered == drop
+    val shape = RoundedCornerShape(6.dp)
+    val accent = LocalIslands.current.accent
+    return onGloballyPositioned { drag.register(key, drop, it.boundsInRoot()) }
+        .then(if (active) Modifier.clip(shape).background(dropTint).border(1.dp, accent, shape) else Modifier)
+}
+
+private fun BuilderContext.addCondition(parent: GroupState, after: FilterNodeState? = null, column: FilterColumn? = defaultColumn()) {
+    val condition = builder.addCondition(parent, column, after)
     tab.focusFilterNode = condition.id
 }
 
@@ -296,13 +465,9 @@ private fun GroupBody(context: BuilderContext, group: GroupState, depth: Int) {
             key(child.id) {
                 Row(verticalAlignment = Alignment.Top) {
                     // The joining word in front of every condition but the first makes the logic readable at a glance.
-                    Text(
-                        if (index == 0) "" else group.combinator.keyword,
-                        Modifier.width(34.dp).padding(top = 7.dp),
-                        color = JewelTheme.globalColors.text.info,
-                        fontSize = 11.sp,
-                        style = JewelTheme.editorTextStyle,
-                    )
+                    Box(Modifier.width(40.dp).padding(top = 6.dp)) {
+                        if (index > 0) Joiner(group.combinator.keyword)
+                    }
                     val keys = if (child is GroupState) Modifier else Modifier.onPreviewKeyEvent { context.onRowKey(group, depth, child, it) }
                     Box(Modifier.weight(1f).then(keys)) {
                         when (child) {
@@ -317,15 +482,33 @@ private fun GroupBody(context: BuilderContext, group: GroupState, depth: Int) {
     }
 }
 
+/** AND or OR, as a pill so it reads apart from the conditions it joins. */
+@Composable
+private fun Joiner(keyword: String) {
+    Text(
+        keyword,
+        Modifier.clip(RoundedCornerShape(4.dp)).background(LocalIslands.current.divider).padding(horizontal = 5.dp, vertical = 1.dp),
+        color = JewelTheme.globalColors.text.info,
+        fontSize = 10.sp,
+        fontWeight = FontWeight.SemiBold,
+        style = JewelTheme.editorTextStyle,
+    )
+}
+
 @Composable
 private fun NestedGroup(context: BuilderContext, group: GroupState, depth: Int) {
     val shape = RoundedCornerShape(6.dp)
     val islands = LocalIslands.current
+    val drag = context.tab.columnDrag
+    val drop = ColumnDrop.Into(group)
+    val active = drag.hovered == drop
+    DisposableEffect(drag, group) { onDispose { drag.unregister(group) } }
     Column(
         Modifier.fillMaxWidth()
+            .onGloballyPositioned { drag.register(group, drop, it.boundsInRoot()) }
             .clip(shape)
-            .background(islands.accent.copy(alpha = if (JewelTheme.isDark) 0.06f else 0.04f))
-            .border(1.dp, islands.divider, shape)
+            .background(if (active) dropTint else islands.accent.copy(alpha = if (JewelTheme.isDark) 0.06f else 0.04f))
+            .border(1.dp, if (active) islands.accent else islands.divider, shape)
             .padding(6.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -388,7 +571,10 @@ private fun ConditionRow(context: BuilderContext, condition: ConditionState) {
         }
     }
 
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    Column(
+        Modifier.fillMaxWidth().columnDropTarget(tab.columnDrag, condition, ColumnDrop.Onto(condition)),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
             Checkbox(condition.enabled, { condition.enabled = it })
             Row(
@@ -521,13 +707,32 @@ private fun ValueKind.color(): Color =
         else -> Color(0xFF8C8C8C)
     }
 
-/** A combo-box-like button for pickers that open their own popup. */
+/**
+ * A combo-box-like button for pickers that open their own popup. Drawn as an input, in the text field's colours, corners
+ * and height, so a condition reads as three boxes: column, operator, value.
+ */
 @Composable
 internal fun PickerButton(error: Boolean, modifier: Modifier, onClick: () -> Unit, content: @Composable RowScope.() -> Unit) {
-    val shape = RoundedCornerShape(5.dp)
-    val border = if (error) JewelTheme.globalColors.outlines.error else JewelTheme.globalColors.borders.normal
+    val style = JewelTheme.textFieldStyle
+    val interactions = remember { MutableInteractionSource() }
+    val focused by interactions.collectIsFocusedAsState()
+    val hovered by interactions.collectIsHoveredAsState()
+    val shape = RoundedCornerShape(style.metrics.cornerSize)
+    val border =
+        when {
+            error -> JewelTheme.globalColors.outlines.error
+            focused -> JewelTheme.globalColors.outlines.focused
+            hovered -> style.colors.borderHovered
+            else -> style.colors.border
+        }
     Row(
-        modifier.height(28.dp).clip(shape).border(1.dp, border, shape).clickable(onClick = onClick).padding(start = 8.dp, end = 4.dp),
+        modifier.height(style.metrics.minSize.height)
+            .clip(shape)
+            .background(if (focused) style.colors.backgroundFocused else style.colors.background, shape)
+            .border(if (error || focused) 2.dp else style.metrics.borderWidth, border, shape)
+            .hoverable(interactions)
+            .clickable(interactionSource = interactions, indication = null, onClick = onClick)
+            .padding(start = 8.dp, end = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

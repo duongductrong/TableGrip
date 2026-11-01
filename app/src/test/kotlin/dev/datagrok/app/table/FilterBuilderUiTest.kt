@@ -9,6 +9,8 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.onAllNodesWithText
@@ -104,7 +106,8 @@ class FilterBuilderUiTest {
                 assertEquals("id", first.column)
 
                 // The column picker searches as you type and picks with Enter.
-                onAllNodesWithText("id").onFirst().performClick()
+                // The column list beside the conditions names it too, but only the picker is clickable.
+                onAllNodes(hasText("id", substring = false) and hasClickAction()).onFirst().performClick()
                 waitForIdle()
                 onNode(isFocused() and hasSetTextAction()).performTextInput("tot")
                 waitForIdle()
