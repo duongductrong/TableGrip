@@ -324,7 +324,7 @@ private fun SqlFilterBar(tab: TableDataTab) {
     }
 
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp).onPreviewKeyEvent { handleFilterShortcut(tab, it) },
+        Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp).onPreviewKeyEvent { handleFilterShortcut(tab, it) },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(AllIconsKeys.General.Filter, null)
@@ -370,8 +370,8 @@ private fun SqlFilterBar(tab: TableDataTab) {
                 controller.accept(tab.filter, it)
             }
         }
-        Spacer(Modifier.width(6.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) { FilterActions(tab) }
+        Spacer(Modifier.width(12.dp))
+        FilterActions(tab)
     }
 }
 

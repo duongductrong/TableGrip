@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -121,6 +122,8 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import org.jetbrains.jewel.ui.Orientation
 import org.jetbrains.jewel.ui.component.Divider
+import org.jetbrains.jewel.ui.component.VerticalScrollbar
+import androidx.compose.foundation.layout.fillMaxSize
 
 /** Nested groups beyond this depth stop offering "+ Group"; deeper logic reads better as SQL. */
 private const val MaxDepth = 3
@@ -162,18 +165,20 @@ internal fun BuilderFilterBar(tab: TableDataTab) {
     val drag = tab.columnDrag
     DisposableEffect(drag, root) { onDispose { drag.unregister(root) } }
 
-    // Three sections, divided: what the filter does and its actions; the columns beside the conditions; adding and the SQL it makes.
+    // A toolbar (mode, columns, apply), then the columns beside a Filter card, as in the document builder.
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         // Unless asked for, the column list only shows where it leaves the conditions room for their values.
         val showColumns = tab.showFilterColumns ?: (root.children.isNotEmpty() && maxWidth >= 900.dp)
+        val expanded = root.children.isNotEmpty() || showColumns
         Column(
             Modifier.fillMaxWidth()
                 .onGloballyPositioned { drag.register(root, ColumnDrop.Into(root), it.boundsInRoot()) }
-                .background(if (drag.hovered == ColumnDrop.Into(root)) dropTint else Color.Transparent)
+                // Collapsed, the whole bar is where a column lands; expanded, the Filter card shows it.
+                .background(if (!expanded && drag.hovered == ColumnDrop.Into(root)) dropTint else Color.Transparent)
                 .onPreviewKeyEvent { handleFilterShortcut(tab, it) },
         ) {
             Row(
-                Modifier.fillMaxWidth().height(38.dp).padding(horizontal = 8.dp),
+                Modifier.fillMaxWidth().height(40.dp).padding(horizontal = BarInset),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -183,34 +188,27 @@ internal fun BuilderFilterBar(tab: TableDataTab) {
                     ViewChip("Columns", showColumns) { tab.showFilterColumns = !showColumns }
                 }
                 Separator()
-                when {
-                    root.children.isEmpty() -> {
+                // What the filter is (or how to start one) takes the middle and gives way first; the actions keep their place on the right.
+                Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    if (root.children.isEmpty()) {
                         Tooltip({ Text("Add condition (${Shortcuts.FocusFilter})") }) { Link("Add condition", onClick = { context.addCondition(root) }) }
-                        Text("drag a column here, or ${Shortcuts.FilterByValue} on a cell to filter by its value", color = info, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(
+                            "drag a column here, or ${Shortcuts.FilterByValue} on a cell to filter by its value",
+                            Modifier.weight(1f, fill = false),
+                            color = info,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    } else {
+                        SqlPreview(tab, draft, Modifier.weight(1f))
                     }
-                    root.children.size > 1 -> {
-                        Text("Rows matching", color = info)
-                        CombinatorSwitch(root)
-                        Text("of these conditions", color = info)
-                    }
-                    else -> Text("Rows matching", color = info)
                 }
-                Box(Modifier.weight(1f))
+                Spacer(Modifier.width(12.dp))
                 FilterActions(tab, draft)
             }
-            if (root.children.isNotEmpty() || showColumns) {
+            if (expanded) {
                 Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
                 BuilderBody(context, showColumns)
-                Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
-                Row(
-                    Modifier.fillMaxWidth().height(32.dp).padding(horizontal = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    AddLinks(context, root, depth = 0)
-                    Spacer(Modifier.width(8.dp))
-                    SqlPreview(tab, draft, Modifier.weight(1f))
-                }
             }
         }
     }
@@ -220,23 +218,105 @@ internal fun BuilderFilterBar(tab: TableDataTab) {
 private val dropTint: Color
     @Composable get() = LocalIslands.current.accent.copy(alpha = if (JewelTheme.isDark) 0.14f else 0.08f)
 
-/** Column list and conditions side by side. The list is never shorter than a few columns; the conditions grow until they scroll. */
+/**
+ * Column list and the Filter card side by side. The list is never shorter than a few columns; the card grows with its
+ * conditions until it scrolls. Both show their scrollbars, so the thumb can be dragged.
+ */
 @Composable
 private fun BuilderBody(context: BuilderContext, showColumns: Boolean) {
-    val root = context.builder.root
     var conditionsHeight by remember { mutableIntStateOf(0) }
-    val height = with(LocalDensity.current) { conditionsHeight.toDp() }.coerceIn(if (showColumns) 160.dp else 0.dp, 260.dp)
+    val height = with(LocalDensity.current) { conditionsHeight.toDp() }.coerceIn(if (showColumns) 220.dp else 0.dp, 300.dp)
     Row(Modifier.fillMaxWidth().height(height)) {
         if (showColumns) {
-            ColumnPanel(context, Modifier.width(190.dp).fillMaxHeight())
+            ColumnPanel(context, Modifier.width(220.dp).fillMaxHeight())
             Divider(Orientation.Vertical, Modifier.fillMaxHeight())
         }
-        Box(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState())) {
-            Column(Modifier.fillMaxWidth().onSizeChanged { conditionsHeight = it.height }.padding(horizontal = 8.dp, vertical = 6.dp)) {
-                if (root.children.isEmpty()) DropPlaceholder() else GroupBody(context, root, depth = 0)
+        val scroll = rememberScrollState()
+        Box(Modifier.weight(1f).fillMaxHeight()) {
+            Box(Modifier.fillMaxSize().verticalScroll(scroll)) {
+                Column(Modifier.fillMaxWidth().onSizeChanged { conditionsHeight = it.height }.padding(BarInset)) {
+                    FilterCard(context)
+                }
+            }
+            // In the inset beside the card, so it never covers the card's edge.
+            VerticalScrollbar(scroll, Modifier.align(Alignment.TopEnd).fillMaxHeight().padding(vertical = 2.dp, horizontal = 2.dp))
+        }
+    }
+}
+
+/** Room kept beside scrolling content so the scrollbar never covers it. */
+private val ScrollbarGutter = 10.dp
+
+/**
+ * The bar's edge inset, shared by the toolbar and the body, so the filter icon lines up with the column list and Apply
+ * with the Filter card's right edge. Wide enough to hold the conditions' scrollbar.
+ */
+private val BarInset = 12.dp
+
+/**
+ * The conditions, in a card like the document builder's: a title with how many are active, how they combine and what
+ * can be added; then the rows, or a drop target saying what to do when there are none.
+ */
+@Composable
+private fun FilterCard(context: BuilderContext) {
+    val builder = context.builder
+    val root = builder.root
+    val drag = context.tab.columnDrag
+    val islands = LocalIslands.current
+    val active = drag.hovered == ColumnDrop.Into(root)
+    val shape = RoundedCornerShape(6.dp)
+    val count = builder.rows().count { it.enabled }
+    Column(
+        Modifier.fillMaxWidth()
+            .clip(shape)
+            .background(if (active) dropTint else Color.Transparent)
+            .border(1.dp, if (active) islands.accent else islands.divider, shape),
+    ) {
+        Row(
+            Modifier.fillMaxWidth().height(34.dp).padding(horizontal = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(AllIconsKeys.General.Filter, null)
+            Text("Filter", fontWeight = FontWeight.SemiBold)
+            if (count > 0) CountBadge(count)
+            if (root.children.size > 1) {
+                Spacer(Modifier.width(4.dp))
+                Text("Match", color = JewelTheme.globalColors.text.info)
+                CombinatorSwitch(root)
+                Text("of these conditions", color = JewelTheme.globalColors.text.info)
+            }
+            Box(Modifier.weight(1f))
+            AddLinks(context, root, depth = 0)
+            if (root.children.isNotEmpty()) {
+                Tooltip({ Text("Remove every condition") }) { Link("Remove all", onClick = builder::clear) }
+            }
+        }
+        Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
+        Column(Modifier.fillMaxWidth().padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            if (root.children.isEmpty()) {
+                DropPlaceholder()
+                Hint("Without conditions, every row is shown.")
+            } else {
+                GroupBody(context, root, depth = 0)
             }
         }
     }
+}
+
+@Composable
+private fun CountBadge(count: Int) {
+    Text(
+        count.toString(),
+        Modifier.clip(RoundedCornerShape(8.dp)).background(JewelTheme.globalColors.borders.normal.copy(alpha = 0.6f)).padding(horizontal = 6.dp),
+        fontSize = 11.sp,
+        fontWeight = FontWeight.SemiBold,
+    )
+}
+
+@Composable
+private fun Hint(text: String) {
+    Text(text, color = JewelTheme.globalColors.text.info, fontSize = 11.sp)
 }
 
 /** Where an empty builder takes its first column. */
@@ -278,18 +358,27 @@ private fun ColumnPanel(context: BuilderContext, modifier: Modifier) {
         }
     DisposableEffect(drag) { onDispose { drag.unregister(ColumnPanelKey) } }
     Column(
-        modifier.onGloballyPositioned { drag.register(ColumnPanelKey, null, it.boundsInRoot()) }.padding(6.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier.onGloballyPositioned { drag.register(ColumnPanelKey, null, it.boundsInRoot()) }.padding(start = BarInset, end = 6.dp, top = BarInset, bottom = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text("Columns", fontWeight = FontWeight.SemiBold)
+            if (context.columns.isNotEmpty()) CountBadge(context.columns.size)
+        }
         TextField(
             search,
             Modifier.fillMaxWidth(),
             placeholder = { Text("Search ${context.columns.size} columns") },
             leadingIcon = { Icon(AllIconsKeys.Actions.Search, null) },
         )
+        Hint("Drag onto the filter, or double-click")
         if (shown.isEmpty()) Text("No matching column", Modifier.padding(4.dp), color = JewelTheme.globalColors.text.info)
-        LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
-            items(shown, key = { it.name }) { ColumnRow(context, it, query) }
+        val list = rememberLazyListState()
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+            LazyColumn(Modifier.fillMaxSize().padding(end = ScrollbarGutter), state = list) {
+                items(shown, key = { it.name }) { ColumnRow(context, it, query) }
+            }
+            VerticalScrollbar(list, Modifier.align(Alignment.TopEnd).fillMaxHeight())
         }
     }
 }
@@ -432,20 +521,34 @@ internal fun FilterModeSwitch(tab: TableDataTab) {
     }
 }
 
-/** Clear and Apply, shared by both filter modes. */
+/**
+ * The filter's state, then Clear and Apply, shared by both filter modes. One self-contained group, so it sits the same
+ * way in either bar: the status reads as a note (a dot and muted text), Clear as a quiet link, and Apply stands apart.
+ */
 @Composable
 internal fun FilterActions(tab: TableDataTab, draft: CompiledFilter? = null) {
     val invalid = draft?.isValid == false && tab.showFilterIssues
-    if (invalid) {
-        val count = draft.issues.size
-        Text(if (count == 1) "1 condition needs attention" else "$count conditions need attention", color = JewelTheme.globalColors.text.error)
-    } else if (tab.isFilterDirty) {
-        Text("Not applied", color = JewelTheme.globalColors.text.info)
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        if (invalid) {
+            val count = draft.issues.size
+            FilterStatus(if (count == 1) "1 condition needs attention" else "$count conditions need attention", JewelTheme.globalColors.text.error)
+        } else if (tab.isFilterDirty) {
+            FilterStatus("Not applied", LocalIslands.current.accent, JewelTheme.globalColors.text.info)
+        }
+        val canClear = tab.hasAppliedFilter || !tab.builder.isEmpty || tab.filter.text.isNotBlank()
+        if (canClear) Tooltip({ Text("Clear filter (${Shortcuts.ClearFilter})") }) { Link("Clear", onClick = tab::clearFilter) }
+        Tooltip({ Text("Apply filter (⏎ in any field, ${Shortcuts.ApplyFilter})") }) {
+            DefaultButton(onClick = tab::applyFilter, enabled = tab.isFilterDirty || invalid) { Text("Apply") }
+        }
     }
-    val canClear = tab.hasAppliedFilter || !tab.builder.isEmpty || tab.filter.text.isNotBlank()
-    if (canClear) Tooltip({ Text("Clear filter (${Shortcuts.ClearFilter})") }) { Link("Clear", onClick = tab::clearFilter) }
-    Tooltip({ Text("Apply filter (⏎ in any field, ${Shortcuts.ApplyFilter})") }) {
-        DefaultButton(onClick = tab::applyFilter, enabled = tab.isFilterDirty || invalid) { Text("Apply") }
+}
+
+/** A dot in [dot]'s colour and a short note, e.g. that the filter has changes not yet applied. */
+@Composable
+private fun FilterStatus(text: String, dot: Color, color: Color = dot) {
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.size(6.dp).clip(RoundedCornerShape(3.dp)).background(dot))
+        Text(text, color = color, maxLines = 1)
     }
 }
 
@@ -681,7 +784,7 @@ private fun CaseToggle(condition: ConditionState) {
 private fun SqlPreview(tab: TableDataTab, draft: CompiledFilter, modifier: Modifier) {
     val preview = draft.filter?.preview
     val info = JewelTheme.globalColors.text.info
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.End), verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
         if (preview != null) {
             // The clause shrinks (ellipsized) first, so the actions after it stay visible.
             Tooltip({ Text("WHERE $preview", style = JewelTheme.editorTextStyle) }, Modifier.weight(1f, fill = false)) {
