@@ -66,9 +66,9 @@ private const val MaxLineChars = 1000
 fun ResultJsonView(model: GridModel, state: DataGridState, modifier: Modifier = Modifier) {
     // Rows are captured on the UI thread (cheap), then parsed and encoded in the background; edits and column changes rebuild.
     val content by produceState<JsonContent?>(null, model, state) {
-        snapshotFlow { rowsSnapshot(model, state.visibleColumns) }.collectLatest { snapshot ->
+        snapshotFlow { model.json(state.visibleColumns) ?: rowsSnapshot(model, state.visibleColumns) }.collectLatest { snapshot ->
             value = withContext(Dispatchers.Default) {
-                val json = rowsJson(snapshot)
+                val json = snapshot as? JsonArray ?: rowsJson(snapshot as RowsSnapshot)
                 val text = PrettyJson.encodeToString(JsonElement.serializer(), json)
                 JsonContent(json, text, displayLines(text, MaxLineChars), text.lineSequence().any { it.length > MaxLineChars })
             }

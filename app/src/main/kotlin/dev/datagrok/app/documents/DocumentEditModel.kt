@@ -161,6 +161,33 @@ internal class DocumentEditModel(
             else -> null
         }
 
+    /** The documents themselves, as relaxed Extended JSON with pending edits applied, rather than the cells' text. */
+    override fun json(columns: List<Int>): JsonArray {
+        val names = columns.map(::field)
+        fun element(row: Int, column: Int, text: String?): JsonElement {
+            if (text == null) return JsonNull
+            val literal = (convert(kind(row, column), text, zone) as? Converted.Ok)?.literal ?: return JsonPrimitive(text)
+            return runCatching { Lenient.parseToJsonElement(literal) }.getOrElse { JsonPrimitive(text) }
+        }
+        val rows =
+            (0 until rowCount).filter { rowStatus(it) != RowStatus.Deleted }.map { row ->
+                val fields = LinkedHashMap<String, JsonElement>()
+                if (row < baseRows) {
+                    for ((name, value) in documents[row]) if (name in names) fields[name] = value
+                    edits.filterKeys { it.first == row }.forEach { (key, edit) ->
+                        val name = field(key.second)
+                        if (name !in names) return@forEach
+                        if (edit is Edit.Value) fields[name] = element(row, key.second, edit.text) else fields.remove(name)
+                    }
+                } else {
+                    inserted[row - baseRows].entries.sortedBy { it.key }.forEach { (column, text) -> if (field(column) in names) fields[field(column)] = element(row, column, text) }
+                }
+                // In the grid's column order.
+                JsonObject(names.filter { it in fields }.associateWith { fields.getValue(it) } + fields.filterKeys { it !in names })
+            }
+        return JsonArray(rows)
+    }
+
     // region Types
 
     /** The type a column mostly holds, for cells with nothing to go by (missing, null, new). */

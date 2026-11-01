@@ -33,9 +33,9 @@ import kotlinx.serialization.json.jsonObject
 import dev.datagrok.app.connections.ConnectionStatus
 
 /**
- * One collection's documents, a page at a time: an editable grid with a column per top-level field, and the selected
- * document as JSON to edit as a whole. Filter and sort are shell-style Extended JSON, as in `find()`; they apply on
- * Enter, and paging keeps to what was applied, not to what's half typed in the fields.
+ * One collection's documents, a page at a time: an editable grid with a column per top-level field, or the documents as
+ * JSON. Filter and sort are shell-style Extended JSON, as in `find()`; they apply on Enter, and paging keeps to what was
+ * applied, not to what's half typed in the fields.
  */
 class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig, val database: String, val collection: String) : WorkspaceTab {
     override val connectionId = config.id
@@ -88,15 +88,16 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
     val completionFields: List<DocumentField>
         get() = schema.version.let { schema.fields() }
 
-    /** The document shown in the editor: an index into [documents], or null for a new one or none. */
-    var shown by mutableStateOf<Int?>(null)
-        private set
+    /** Shows the page's documents as JSON instead of the grid. */
+    var showJson by mutableStateOf(false)
+    var showValuePanel by mutableStateOf(false)
 
-    var creating by mutableStateOf(false)
-        private set
+    /** The filter or sort fields differ from what the documents show. */
+    val isFilterDirty: Boolean
+        get() = normalize(filter.text.toString()) != appliedFilter || normalize(sort.text.toString()) != appliedSort
 
-    /** The shown document as pretty JSON, editable. */
-    val editor = TextFieldState()
+    val hasAppliedFilter: Boolean
+        get() = appliedFilter.replace(" ", "") != "{}" || appliedSort.replace(" ", "") != "{}"
 
     var message by mutableStateOf<Message?>(null)
 
@@ -142,6 +143,16 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
         load(0)
     }
 
+    /** Empties the filter and sort and shows every document. */
+    fun clearFilter() = guard {
+        filter.setTextAndPlaceCursorAtEnd("{}")
+        sort.setTextAndPlaceCursorAtEnd("{}")
+        appliedFilter = "{}"
+        appliedSort = "{}"
+        total = null
+        load(0)
+    }
+
     /** Loads the current page again, with what's applied. */
     fun refresh() = guard { load(skip) }
 
@@ -177,15 +188,14 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
                 carry = null
                 val next = DocumentEditModel(parsed, readOnly = readOnly, extraFields = restore?.fields.orEmpty())
                 val lost = restore?.let(next::restore) ?: 0
-                skip = target
-                documents = parsed
-                hasMore = page.hasMore
+                // The model first: whatever watches documents finds the matching grid.
                 model = next
+                skip = target
+                hasMore = page.hasMore
+                documents = parsed
                 schema.add(parsed)
                 grid.selection = null
                 grid.verticalScroll.requestScrollToItem(0)
-                shown = null
-                if (!creating) editor.setTextAndPlaceCursorAtEnd("")
                 if (lost > 0) message = Message("$lost unsaved ${if (lost == 1) "document isn't" else "documents aren't"} on this page any more; their edits were dropped.", isError = true)
                 if (!sampled) {
                     sampled = true
@@ -201,55 +211,6 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
     }
 
     fun count() = launch { total = connection().count(database, collection, appliedFilter) }
-
-    /** Shows document [index] of the page in the editor; new, unsaved rows have nothing to show. */
-    fun show(index: Int?) {
-        if (index == shown && !creating) return
-        creating = false
-        shown = index?.takeIf { it in documents.indices }
-        editor.setTextAndPlaceCursorAtEnd(shown?.let { Pretty.encodeToString(JsonObject.serializer(), documents[it]) }.orEmpty())
-    }
-
-    fun startNew() {
-        creating = true
-        shown = null
-        editor.setTextAndPlaceCursorAtEnd("{\n  \n}")
-    }
-
-    /**
-     * Inserts the editor's document, or saves it over the shown one. Only the fields that differ from the document as
-     * loaded are written, and only while they still hold those values, so a newer change made elsewhere isn't lost.
-     */
-    fun save() {
-        val index = shown
-        if (!creating && index != null && model.hasEdits(index)) {
-            message = Message("This document has unsaved edits in the grid; submit or revert them first.", isError = true)
-            return
-        }
-        launch {
-            val text = editor.text.toString()
-            if (creating) {
-                val id = connection().insert(database, collection, text)
-                creating = false
-                message = Message("Inserted $id.", isError = false)
-            } else {
-                index ?: return@launch
-                connection().replace(database, collection, idOf(documents[index]), text, original = documents[index].toString())
-                message = Message("Saved.", isError = false)
-            }
-            total = null
-            load(skip).join()
-            show(index)
-        }
-    }
-
-    /** Marks the selected documents (or the shown one) for deletion; Submit deletes them. */
-    fun deleteSelected() {
-        val rows = grid.selection?.rows?.toList() ?: shown?.let { listOf(it) } ?: return
-        model.deleteRows(rows)
-        grid.clamp(model.rowCount)
-        message = Message("Marked for deletion; submit to delete.", isError = false)
-    }
 
     // region Grid edits
 

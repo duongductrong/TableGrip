@@ -17,6 +17,8 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,6 +31,8 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isCtrlPressed
 import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.isShiftPressed
+import androidx.compose.ui.input.key.isAltPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
@@ -50,6 +54,15 @@ import dev.datagrok.app.grid.GridCell
 import dev.datagrok.app.table.PageSizes
 import dev.datagrok.app.table.Separator
 import dev.datagrok.app.table.ToolButton
+import dev.datagrok.app.table.ErrorBanner
+import dev.datagrok.app.table.ViewChip
+import dev.datagrok.app.table.ViewChipGroup
+import dev.datagrok.app.grid.ResultJsonView
+import dev.datagrok.app.grid.ValuePanel
+import org.jetbrains.jewel.ui.component.HorizontalSplitLayout
+import org.jetbrains.jewel.ui.component.Icon
+import org.jetbrains.jewel.ui.component.Tooltip
+import org.jetbrains.jewel.ui.component.rememberSplitLayoutState
 import dev.datagrok.app.ui.AppDialog
 import dev.datagrok.app.ui.Shortcuts
 import dev.datagrok.core.completion.DocumentCompleter
@@ -67,64 +80,75 @@ import org.jetbrains.jewel.ui.component.TextArea
 import org.jetbrains.jewel.ui.component.TextField
 import org.jetbrains.jewel.ui.icons.AllIconsKeys
 
+/** Laid out like a table's data view: toolbar, filter bar, the grid or JSON, and a status line. */
 @Composable
 internal fun DocumentBrowserView(tab: DocumentBrowserTab) {
-    // The grid's focused row is the document the editor shows.
-    val focusedRow = tab.grid.selection?.focus?.row
-    LaunchedEffect(focusedRow) { if (focusedRow != null) tab.show(focusedRow) }
     Column(Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground)) {
-        QueryBar(tab)
-        Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
         Toolbar(tab)
-        tab.message?.let {
-            Text(
-                it.text,
-                Modifier.padding(horizontal = 10.dp, vertical = 2.dp),
-                color = if (it.isError) JewelTheme.globalColors.text.error else JewelTheme.globalColors.text.info,
-                maxLines = 3,
-            )
-        }
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
-        Row(Modifier.weight(1f).fillMaxWidth()) {
-            Column(Modifier.weight(1f).fillMaxHeight()) {
-                if (tab.loading && tab.documents.isEmpty()) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        ConnectionLoadingPlaceholder(tab.config, tab.connectionStatus, "Loading ${tab.collection}…")
-                    }
-                } else if (tab.model.rowCount == 0) {
-                    Text("No documents match.", Modifier.padding(10.dp), color = JewelTheme.globalColors.text.info)
-                } else {
-                    DataGrid(
-                        tab.model,
-                        tab.grid,
-                        Modifier.fillMaxSize(),
-                        sort = tab.sortColumns,
-                        firstRowNumber = tab.skip + 1,
-                        actions = GridActions(onSort = tab::setSort, onFilterByValue = tab::filterByValue, onSubmit = tab::submit),
-                    )
+        FilterBar(tab)
+        Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
+        tab.message?.let { message ->
+            if (message.isError) ErrorBanner(message.text, onDismiss = { tab.message = null })
+            else Text(message.text, Modifier.padding(horizontal = 10.dp, vertical = 3.dp), color = JewelTheme.globalColors.text.info, maxLines = 2)
+        }
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+            val model = tab.model
+            when {
+                tab.loading && tab.documents.isEmpty() ->
+                    ConnectionLoadingPlaceholder(tab.config, tab.connectionStatus, "Loading ${tab.collection}…", Modifier.align(Alignment.Center))
+                tab.showJson -> ResultJsonView(model, tab.grid)
+                model.rowCount == 0 -> Text("No documents match.", Modifier.padding(10.dp), color = JewelTheme.globalColors.text.info)
+                else -> {
+                    val grid =
+                        @Composable {
+                            DataGrid(
+                                model,
+                                tab.grid,
+                                sort = tab.sortColumns,
+                                firstRowNumber = tab.skip + 1,
+                                actions = GridActions(onSort = tab::setSort, onFilterByValue = tab::filterByValue, onSubmit = tab::submit),
+                            )
+                        }
+                    if (tab.showValuePanel) {
+                        HorizontalSplitLayout(
+                            first = { grid() },
+                            second = { ValuePanel(model, tab.grid) },
+                            modifier = Modifier.fillMaxSize(),
+                            firstPaneMinWidth = 300.dp,
+                            secondPaneMinWidth = 220.dp,
+                            state = rememberSplitLayoutState(0.72f),
+                        )
+                    } else grid()
                 }
             }
-            Divider(Orientation.Vertical, Modifier.fillMaxHeight())
-            Inspector(tab, Modifier.width(400.dp).fillMaxHeight().padding(8.dp))
         }
+        StatusLine(tab)
     }
     tab.pendingDiscard?.let { DiscardDialog(tab) }
     tab.preview?.let { PreviewDialog(tab, it) }
 }
 
-/** Filter and sort, each completing fields, operators and values from the documents seen so far. */
+/**
+ * Filter and sort as shell-style JSON, each completing fields, operators and values from the documents seen so far;
+ * Enter or [Shortcuts.ApplyFilter] applies both.
+ */
 @Composable
-private fun QueryBar(tab: DocumentBrowserTab) {
-    Row(
-        Modifier.fillMaxWidth().height(36.dp).padding(horizontal = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text("Filter")
-        QueryField(tab, tab.filter, DocumentQuery.Filter, "{status: 'A', total: {\$gt: 10}}   ${Shortcuts.Completion} for suggestions", Modifier.weight(1f))
-        Text("Sort")
+private fun FilterBar(tab: DocumentBrowserTab) {
+    Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(AllIconsKeys.General.Filter, null)
+        Text("Filter", Modifier.padding(horizontal = 8.dp), color = JewelTheme.globalColors.text.info, style = JewelTheme.editorTextStyle)
+        QueryField(tab, tab.filter, DocumentQuery.Filter, "{status: 'A', total: {\$gt: 10}}   ${Shortcuts.Completion} for suggestions, ⏎ to apply", Modifier.weight(1f))
+        Text("Sort", Modifier.padding(horizontal = 8.dp), color = JewelTheme.globalColors.text.info, style = JewelTheme.editorTextStyle)
         QueryField(tab, tab.sort, DocumentQuery.Sort, "{total: -1}", Modifier.width(220.dp))
-        ToolButton(AllIconsKeys.Actions.Execute, "Find (Enter in a field)") { tab.reload() }
+        Spacer(Modifier.width(6.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (tab.isFilterDirty) Text("Not applied", color = JewelTheme.globalColors.text.info)
+            if (tab.hasAppliedFilter || tab.isFilterDirty) Link("Clear", onClick = tab::clearFilter)
+            Tooltip({ Text("Apply filter and sort (⏎ in a field, ${Shortcuts.ApplyFilter})") }) {
+                DefaultButton(onClick = tab::reload, enabled = tab.isFilterDirty) { Text("Apply") }
+            }
+        }
     }
 }
 
@@ -166,7 +190,22 @@ private fun QueryField(tab: DocumentBrowserTab, state: TextFieldState, query: Do
             state,
             Modifier.fillMaxWidth().onPreviewKeyEvent { event ->
                 if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                // ⌘Enter always applies; plain Enter picks the highlighted suggestion first, if any.
+                if (Shortcuts.ApplyFilter.matches(event)) {
+                    controller.close()
+                    tab.reload()
+                    return@onPreviewKeyEvent true
+                }
                 if (handleCompletionKey(controller, event.key) { accept() }) return@onPreviewKeyEvent true
+                if ((event.key == Key.Enter || event.key == Key.NumPadEnter) && !event.isShiftPressed && !event.isAltPressed) {
+                    controller.close()
+                    tab.reload()
+                    return@onPreviewKeyEvent true
+                }
+                if (event.key == Key.Escape) {
+                    tab.grid.requestFocus()
+                    return@onPreviewKeyEvent true
+                }
                 if (event.isCtrlPressed && event.key == Key.Spacebar) {
                     controller.update(state, source, explicit = true)
                     return@onPreviewKeyEvent true
@@ -185,10 +224,6 @@ private fun QueryField(tab: DocumentBrowserTab, state: TextFieldState, query: Do
             },
             textStyle = JewelTheme.editorTextStyle,
             placeholder = { Text(placeholder) },
-            onKeyboardAction = KeyboardActionHandler {
-                controller.close()
-                tab.reload()
-            },
         )
         // The field scrolls long text; keep the popup within it.
         val x = with(density) { 10.dp.toPx() } + charWidth * (controller.result?.replaceStart ?: 0)
@@ -196,6 +231,7 @@ private fun QueryField(tab: DocumentBrowserTab, state: TextFieldState, query: Do
     }
 }
 
+/** In the order of a table's toolbar: paging, editing, then the views. */
 @Composable
 private fun Toolbar(tab: DocumentBrowserTab) {
     val model = tab.model
@@ -207,8 +243,7 @@ private fun Toolbar(tab: DocumentBrowserTab) {
         val idle = !tab.loading
         ToolButton(AllIconsKeys.Actions.Play_first, "First page", enabled = idle && tab.skip > 0) { tab.firstPage() }
         ToolButton(AllIconsKeys.Actions.Play_back, "Previous page", enabled = idle && tab.skip > 0) { tab.previousPage() }
-        val first = if (tab.documents.isEmpty()) 0 else tab.skip + 1
-        Text("$first–${tab.skip + tab.documents.size}", Modifier.padding(horizontal = 4.dp))
+        Text(if (tab.documents.isEmpty()) "0 docs" else "${tab.skip + 1}–${tab.skip + tab.documents.size}", Modifier.padding(horizontal = 4.dp))
         Text("of", color = JewelTheme.globalColors.text.info)
         if (tab.total == null) Link("?", onClick = { tab.count() }) else Text(tab.total.toString())
         ToolButton(AllIconsKeys.Actions.Play_forward, "Next page", enabled = idle && tab.hasMore) { tab.nextPage() }
@@ -218,39 +253,69 @@ private fun Toolbar(tab: DocumentBrowserTab) {
             onSelectedItemChange = { tab.setPageSize(PageSizes[it]) },
             modifier = Modifier.width(110.dp).padding(horizontal = 4.dp),
         )
-        ToolButton(AllIconsKeys.Actions.Refresh, "Reload page") { tab.refresh() }
-        if (!tab.readOnly) {
-            Separator()
-            val editable = model.editor != null
-            ToolButton(AllIconsKeys.General.Add, "Add document (${Shortcuts.AddRow})", enabled = editable) { tab.grid.reveal(GridCell(model.addRow(), 0)) }
-            ToolButton(AllIconsKeys.General.Remove, "Delete selected documents (${Shortcuts.DeleteRows})", enabled = editable && tab.grid.selection != null) {
-                tab.grid.selection?.rows?.let { model.deleteRows(it.toList()) }
-                tab.grid.clamp(model.rowCount)
-            }
-            AddField(tab)
-            ToolButton(AllIconsKeys.Actions.Rollback, "Revert all changes", enabled = tab.hasChanges) { tab.revert() }
-            ToolButton(AllIconsKeys.Actions.Preview, "Preview pending writes", enabled = tab.hasChanges) { tab.openPreview() }
-            ToolButton(AllIconsKeys.Actions.Commit, "Submit changes (${Shortcuts.Submit})", enabled = tab.hasChanges && !tab.submitting) { tab.submit() }
-            if (tab.hasChanges) Text("${model.changeCount} pending", Modifier.padding(start = 4.dp), color = JewelTheme.globalColors.text.info)
+        ToolButton(AllIconsKeys.Actions.Refresh, "Reload (${Shortcuts.Reload})") { tab.refresh() }
+        Separator()
+
+        val editable = model.editor != null && !tab.showJson
+        ToolButton(AllIconsKeys.General.Add, "Add document (${Shortcuts.AddRow})", enabled = editable) { tab.grid.reveal(GridCell(model.addRow(), 0)) }
+        ToolButton(AllIconsKeys.General.Remove, "Delete selected documents (${Shortcuts.DeleteRows})", enabled = editable && tab.grid.selection != null) {
+            tab.grid.selection?.rows?.let { model.deleteRows(it.toList()) }
+            tab.grid.clamp(model.rowCount)
         }
+        AddField(tab, enabled = editable)
+        ToolButton(AllIconsKeys.Actions.Rollback, "Revert all changes", enabled = tab.hasChanges) { tab.revert() }
+        ToolButton(AllIconsKeys.Actions.Preview, "Preview pending writes", enabled = tab.hasChanges) { tab.openPreview() }
+        ToolButton(AllIconsKeys.Actions.Commit, "Submit changes (${Shortcuts.Submit})", enabled = tab.hasChanges && !tab.submitting) { tab.submit() }
+        if (tab.hasChanges) Text("${model.changeCount} pending", Modifier.padding(start = 4.dp), color = JewelTheme.globalColors.text.info)
+
         Box(Modifier.weight(1f))
         if (tab.loading || tab.submitting) Text(if (tab.submitting) "Saving…" else "Loading…", Modifier.padding(end = 8.dp), color = JewelTheme.globalColors.text.info)
-        Text(if (tab.readOnly) "Read-only connection" else "${tab.database}.${tab.collection}", Modifier.padding(end = 8.dp), color = JewelTheme.globalColors.text.info)
+        ViewChipGroup {
+            ViewChip("Grid", !tab.showJson) { tab.showJson = false }
+            ViewChip("JSON", tab.showJson) { tab.showJson = true }
+        }
+        Separator()
+        ToolButton(
+            AllIconsKeys.Actions.PreviewDetails,
+            if (tab.showValuePanel) "Hide value panel" else "Show value panel",
+            enabled = !tab.showJson,
+        ) {
+            tab.showValuePanel = !tab.showValuePanel
+        }
+    }
+}
+
+@Composable
+private fun StatusLine(tab: DocumentBrowserTab) {
+    Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
+    Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 3.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        val info = JewelTheme.globalColors.text.info
+        val selection = tab.grid.selection
+        if (selection != null && !tab.showJson) {
+            val columns = selection.columns(tab.grid.visibleColumns.size)
+            Text("${selection.rows.count()} × ${columns.count()} selected", color = info)
+        }
+        if (tab.readOnly) Text("Read-only connection", color = info)
+        Box(Modifier.weight(1f))
+        Text("${tab.database}.${tab.collection}", color = info)
     }
 }
 
 /** A column for a field no document on the page has yet, so values can be typed into it. */
 @Composable
-private fun AddField(tab: DocumentBrowserTab) {
+private fun AddField(tab: DocumentBrowserTab, enabled: Boolean) {
     var open by remember { mutableStateOf(false) }
     val name = remember { TextFieldState() }
     if (!open) {
-        ToolButton(AllIconsKeys.General.InlineAdd, "Add field", enabled = tab.model.editor != null) { open = true }
+        ToolButton(AllIconsKeys.General.InlineAdd, "Add field", enabled = enabled) { open = true }
         return
     }
+    // The box opens focused, so typing and ⌘V go into it rather than to the grid that had focus when its button was pressed.
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
     TextField(
         name,
-        Modifier.width(160.dp).onPreviewKeyEvent { event ->
+        Modifier.width(160.dp).focusRequester(focus).onPreviewKeyEvent { event ->
             if (event.type == KeyEventType.KeyDown && event.key == Key.Escape) {
                 open = false
                 true
@@ -265,38 +330,6 @@ private fun AddField(tab: DocumentBrowserTab) {
             } else tab.message = DocumentBrowserTab.Message(problem, isError = true)
         },
     )
-}
-
-/** The shown document as JSON: edited in place and saved as a whole; only the fields that changed are written. */
-@Composable
-private fun Inspector(tab: DocumentBrowserTab, modifier: Modifier) {
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(
-                when {
-                    tab.creating -> "New document"
-                    tab.shown != null -> "Document ${tab.skip + tab.shown!! + 1}"
-                    else -> "Select a document"
-                },
-                color = JewelTheme.globalColors.text.info,
-            )
-            Spacer(Modifier.weight(1f))
-            if (!tab.readOnly) Link("New", onClick = tab::startNew)
-        }
-        TextArea(
-            tab.editor,
-            Modifier.weight(1f).fillMaxWidth(),
-            textStyle = JewelTheme.editorTextStyle,
-            readOnly = tab.readOnly || (tab.shown == null && !tab.creating),
-        )
-        if (!tab.readOnly && (tab.shown != null || tab.creating)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                DefaultButton(onClick = { tab.save() }) { Text(if (tab.creating) "Insert" else "Save") }
-                if (tab.creating) OutlinedButton(onClick = { tab.show(null) }) { Text("Cancel") }
-                else OutlinedButton(onClick = tab::deleteSelected) { Text("Delete") }
-            }
-        }
-    }
 }
 
 @Composable

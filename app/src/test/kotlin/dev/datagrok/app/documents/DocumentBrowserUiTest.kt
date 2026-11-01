@@ -23,7 +23,6 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import dev.datagrok.app.AppState
-import dev.datagrok.app.grid.GridCell
 import dev.datagrok.app.keyvalue.CommandConsoleTab
 import dev.datagrok.app.keyvalue.CommandConsoleView
 import dev.datagrok.app.ui.DatagrokTheme
@@ -90,29 +89,37 @@ class DocumentBrowserUiTest {
     }
 
     @Test
-    fun `documents show in the grid and edit as JSON`() = runComposeUiTest {
+    fun `documents show as a grid or JSON, and the filter applies on Enter or cmd-Enter`() = runComposeUiTest {
         if (server == null) return@runComposeUiTest
         val (app, config) = app()
         val tab = DocumentBrowserTab(app, config, db, "orders")
         setContent { DatagrokTheme(isDark = true) { Box(Modifier.size(1100.dp, 520.dp)) { DocumentBrowserView(tab) } } }
         waitUntil(timeoutMillis = 10_000) { tab.documents.size == 3 }
         assertEquals(listOf("_id", "customer", "status", "total", "items", "placed", "address", "vip"), tab.model.columns.map { it.name })
-
-        tab.grid.select(GridCell(2, 1))
-        waitUntil(timeoutMillis = 5_000) { tab.shown == 2 }
-        assertTrue("\"grace\"" in tab.editor.text)
         System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "documents.png")) }
 
-        tab.editor.setTextAndPlaceCursorAtEnd(tab.editor.text.toString().replace("\"grace\"", "\"grace hopper\""))
-        tab.save()
+        // The JSON view shows the documents themselves, with pending edits, in the grid's column order.
+        tab.model.setValue(2, tab.model.fields.indexOf("customer"), "grace hopper")
+        onNodeWithText("JSON").performClick()
+        waitUntil(timeoutMillis = 5_000) { onAllNodesWithText("\"ada\"", substring = true).fetchSemanticsNodes().isNotEmpty() }
+        assertEquals("\"grace hopper\"", tab.model.json(tab.grid.visibleColumns)[2].jsonObject["customer"].toString())
+        assertTrue(onAllNodesWithText("\"${'$'}date\"", substring = true).fetchSemanticsNodes().isNotEmpty(), "dates stay Extended JSON")
+        System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "documents-json.png")) }
+        onNodeWithText("Grid").performClick()
+        tab.submit()
         waitUntil(timeoutMillis = 10_000) { tab.documents.getOrNull(2)?.get("customer")?.toString() == "\"grace hopper\"" }
 
-        tab.filter.setTextAndPlaceCursorAtEnd("{status: 'A', total: {\$gt: 40}}")
-        tab.reload()
-        waitUntil(timeoutMillis = 10_000) { tab.documents.size == 1 }
+        val field = onAllNodes(hasSetTextAction())[0]
+        field.performClick()
+        field.performTextReplacement("{status: 'A', total: {\$gt: 40}}")
+        field.performKeyInput { pressKey(Key.Enter) }
+        waitUntil(timeoutMillis = 10_000) { tab.documents.size == 1 && !tab.loading }
         tab.count()
         waitUntil(timeoutMillis = 10_000) { tab.total == 1L }
         onNodeWithText("grace hopper").assertExists()
+        field.performTextReplacement("status: 'B'")
+        field.performKeyInput { withKeyDown(if (System.getProperty("os.name").startsWith("Mac")) Key.MetaLeft else Key.CtrlLeft) { pressKey(Key.Enter) } }
+        waitUntil(timeoutMillis = 10_000) { tab.appliedFilter == "{status: 'B'}" && tab.documents.size == 1 && !tab.loading }
         runBlocking { DocumentStore.connect(config, null).use { it.command(db, "db.dropDatabase()") } }
         app.dispose()
     }

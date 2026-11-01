@@ -4,6 +4,7 @@ import dev.datagrok.core.driver.QueryResult
 import dev.datagrok.core.driver.ResultColumn
 import dev.datagrok.core.edit.ColumnEdit
 import dev.datagrok.core.edit.EditCheck
+import kotlinx.serialization.json.JsonArray
 
 enum class RowStatus { Normal, Inserted, Deleted }
 
@@ -27,6 +28,12 @@ interface GridModel {
     /** Null for read-only grids. */
     val editor: GridEditor?
         get() = null
+
+    /**
+     * The rows as the JSON view shows them, limited to [columns] in that order, when the model holds richer values than
+     * its cells' text (a document's own fields and types); null builds the JSON from the cells. Read on the UI thread.
+     */
+    fun json(columns: List<Int>): JsonArray? = null
 }
 
 interface GridEditor {
