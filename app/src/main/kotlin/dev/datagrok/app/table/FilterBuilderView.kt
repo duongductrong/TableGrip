@@ -98,6 +98,8 @@ import org.jetbrains.jewel.ui.component.Tooltip
 import org.jetbrains.jewel.ui.component.separator
 import org.jetbrains.jewel.ui.icons.AllIconsKeys
 import org.jetbrains.jewel.ui.theme.treeStyle
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.input.pointer.PointerIcon
 import org.jetbrains.jewel.ui.theme.textFieldStyle
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -466,7 +468,7 @@ private fun GroupBody(context: BuilderContext, group: GroupState, depth: Int) {
                 Row(verticalAlignment = Alignment.Top) {
                     // The joining word in front of every condition but the first makes the logic readable at a glance.
                     Box(Modifier.width(40.dp).padding(top = 6.dp)) {
-                        if (index > 0) Joiner(group.combinator.keyword)
+                        if (index > 0) Joiner(group)
                     }
                     val keys = if (child is GroupState) Modifier else Modifier.onPreviewKeyEvent { context.onRowKey(group, depth, child, it) }
                     Box(Modifier.weight(1f).then(keys)) {
@@ -482,17 +484,31 @@ private fun GroupBody(context: BuilderContext, group: GroupState, depth: Int) {
     }
 }
 
-/** AND or OR, as a pill so it reads apart from the conditions it joins. */
+/**
+ * AND or OR, as a pill so it reads apart from the conditions it joins. A group joins all its conditions one way, so a
+ * click flips every joiner in it; mixing AND with OR takes a nested group, which keeps the precedence visible.
+ */
 @Composable
-private fun Joiner(keyword: String) {
-    Text(
-        keyword,
-        Modifier.clip(RoundedCornerShape(4.dp)).background(LocalIslands.current.divider).padding(horizontal = 5.dp, vertical = 1.dp),
-        color = JewelTheme.globalColors.text.info,
-        fontSize = 10.sp,
-        fontWeight = FontWeight.SemiBold,
-        style = JewelTheme.editorTextStyle,
-    )
+private fun Joiner(group: GroupState) {
+    val other = if (group.combinator == Combinator.All) Combinator.Any else Combinator.All
+    val interactions = remember { MutableInteractionSource() }
+    val hovered by interactions.collectIsHoveredAsState()
+    val islands = LocalIslands.current
+    Tooltip({ Text("Switch this group to ${other.keyword} (${Shortcuts.ToggleCombinator} in a condition). To mix AND with OR, use + Group.") }) {
+        Text(
+            group.combinator.keyword,
+            Modifier.clip(RoundedCornerShape(4.dp))
+                .background(if (hovered) islands.accent.copy(alpha = if (JewelTheme.isDark) 0.22f else 0.12f) else islands.divider)
+                .hoverable(interactions)
+                .pointerHoverIcon(PointerIcon.Hand)
+                .clickable(interactionSource = interactions, indication = null) { group.combinator = other }
+                .padding(horizontal = 5.dp, vertical = 1.dp),
+            color = if (hovered) JewelTheme.globalColors.text.normal else JewelTheme.globalColors.text.info,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.SemiBold,
+            style = JewelTheme.editorTextStyle,
+        )
+    }
 }
 
 @Composable

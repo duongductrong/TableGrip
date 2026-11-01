@@ -73,6 +73,7 @@ import dev.datagrok.app.grid.ColumnDragOut
 import dev.datagrok.app.table.ToolButton
 import dev.datagrok.app.table.ViewChip
 import dev.datagrok.app.table.ViewChipGroup
+import dev.datagrok.app.ui.LocalIslands
 import dev.datagrok.app.ui.Shortcuts
 import kotlin.math.roundToInt
 import kotlinx.coroutines.FlowPreview
@@ -278,8 +279,8 @@ private val accent: Color
 
 /**
  * A card fields can be dropped on, in the theme's panel colours: a title row, a divider, then its rows or chips; the
- * query they make shows in the filter bar's fields above. While a field is dragged every card shows a dashed outline; the one under
- * the pointer takes the accent.
+ * query they make shows in the filter bar's fields above. Each card keeps a solid outline in the divider colour; while a field
+ * is dragged, the one under the pointer takes the accent.
  */
 @Composable
 private fun ScopeCard(
@@ -292,13 +293,8 @@ private fun ScopeCard(
 ) {
     val drag = tab.fieldDrag
     DisposableEffect(scope) { onDispose { drag.unregister(scope.zone) } }
-    val dragging = drag.dragged != null
     val active = drag.hovered == scope.zone
-    val outline = when {
-        active -> accent
-        dragging -> dashed
-        else -> JewelTheme.globalColors.borders.normal
-    }
+    val outline = if (active) accent else LocalIslands.current.divider
     val shape = RoundedCornerShape(6.dp)
     Column(
         modifier
@@ -312,7 +308,7 @@ private fun ScopeCard(
                     topLeft = Offset(stroke / 2, stroke / 2),
                     size = Size(size.width - stroke, size.height - stroke),
                     cornerRadius = CornerRadius(6.dp.toPx()),
-                    style = Stroke(width = stroke, pathEffect = if (dragging && !active) PathEffect.dashPathEffect(floatArrayOf(5.dp.toPx(), 4.dp.toPx())) else null),
+                    style = Stroke(width = stroke),
                 )
             },
     ) {
