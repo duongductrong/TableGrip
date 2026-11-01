@@ -64,6 +64,8 @@ import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.isShiftPressed
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -203,6 +205,7 @@ fun DataGrid(
         ContextMenuArea(items = { contextMenu(controller) }) {
             Box(
                 Modifier.fillMaxSize()
+                    .onGloballyPositioned { controller.windowOrigin = it.positionInRoot() }
                     .pointerHoverIcon(if (resizeHover) ResizeCursor else PointerIcon.Default)
                     .pointerInput(controller) {
                         awaitPointerEventScope {

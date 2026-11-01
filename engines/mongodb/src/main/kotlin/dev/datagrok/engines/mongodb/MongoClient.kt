@@ -104,13 +104,14 @@ class MongoClient : DocumentClient {
                 }.toList().sortedBy { it.name }
             }
 
-        override suspend fun find(database: String, collection: String, filter: String, sort: String, skip: Long, limit: Int): DocumentPage =
+        override suspend fun find(database: String, collection: String, filter: String, sort: String, skip: Long, limit: Int, projection: String): DocumentPage =
             io {
                 // Ties in the sort would let skip() hand out a document on two pages and none on another: break them by _id.
                 val order = Shell.document(sort).apply { if (isNotEmpty() && "_id" !in this && "\$natural" !in this) append("_id", BsonInt32(1)) }
                 val documents =
                     db(database).getCollection(collection, BsonDocument::class.java)
                         .find(Shell.document(filter))
+                        .projection(Shell.document(projection))
                         .sort(order)
                         .skip(skip.toInt())
                         .limit(limit + 1)

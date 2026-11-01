@@ -16,6 +16,7 @@ import dev.datagrok.core.connection.ConnectionConfig
 import dev.datagrok.core.dialect.SortColumn
 import dev.datagrok.core.dialect.SortDirection
 import dev.datagrok.core.driver.DocumentConnection
+import dev.datagrok.core.driver.DocumentPage
 import dev.datagrok.core.driver.QueryResult
 import dev.datagrok.core.driver.ResultColumn
 import java.sql.Types
@@ -34,8 +35,9 @@ import dev.datagrok.app.connections.ConnectionStatus
 
 /**
  * One collection's documents, a page at a time: an editable grid with a column per top-level field, or the documents as
- * JSON. Filter and sort are shell-style Extended JSON, as in `find()`; they apply on Enter, and paging keeps to what was
- * applied, not to what's half typed in the fields.
+ * JSON. Filter, sort and projection are shell-style Extended JSON, as in `find()`, with skip and limit beside them; they
+ * apply on Enter, and paging keeps to what was applied, not to what's half typed in the fields. Pages move within the
+ * documents that skip and limit leave.
  */
 class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig, val database: String, val collection: String) : WorkspaceTab {
     override val connectionId = config.id
@@ -46,14 +48,29 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
 
     val filter = TextFieldState("{}")
     val sort = TextFieldState("{}")
+    val projection = TextFieldState("{}")
+    /** Blank for none, like `0`. */
+    val skipField = TextFieldState("")
+    val limitField = TextFieldState("")
 
-    /** The filter and sort the rows reflect, normalized: braces added when left out. */
+    /** Shows the projection, skip and limit fields; open whenever any of them is applied. */
+    var showOptions by mutableStateOf(false)
+
+    /** The filter, sort and projection the rows reflect, normalized: braces added when left out. */
     var appliedFilter by mutableStateOf("{}")
         private set
     var appliedSort by mutableStateOf("{}")
         private set
+    var appliedProjection by mutableStateOf("{}")
+        private set
+    /** Matching documents passed over before the first page. */
+    var appliedSkip by mutableLongStateOf(0)
+        private set
+    /** At most this many documents over all pages; null for no limit. */
+    var appliedLimit by mutableStateOf<Long?>(null)
+        private set
 
-    /** Documents before the page shown; changes only once a page has loaded. */
+    /** Documents before the page shown, after [appliedSkip]; changes only once a page has loaded. */
     var skip by mutableLongStateOf(0)
         private set
 
@@ -68,7 +85,7 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
     val connectionStatus: ConnectionStatus
         get() = app.databases.status(config.id)
 
-    /** Documents matching the filter, counted on request: counting can be slow on large collections. */
+    /** Documents matching the filter, within skip and limit, counted on request: counting can be slow on large collections. */
     var total by mutableStateOf<Long?>(null)
         private set
 
@@ -88,16 +105,32 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
     val completionFields: List<DocumentField>
         get() = schema.version.let { schema.fields() }
 
+    /** The query as rows and chips, kept in step with the filter, sort and projection fields. */
+    internal val builder = QueryBuilder()
+    var showBuilder by mutableStateOf(false)
+        private set
+    /** Fields dragged from the builder's list or the grid's headers onto the builder. */
+    internal val fieldDrag = FieldDragState(onStart = { openBuilder() }, onDrop = ::dropField)
+    /** The text the builder last wrote or read, so a change from the builder isn't read back into it. */
+    private var builderText: Triple<String, String, String>? = null
+
     /** Shows the page's documents as JSON instead of the grid. */
     var showJson by mutableStateOf(false)
     var showValuePanel by mutableStateOf(false)
 
-    /** The filter or sort fields differ from what the documents show. */
+    /** The query fields differ from what the documents show. */
     val isFilterDirty: Boolean
-        get() = normalize(filter.text.toString()) != appliedFilter || normalize(sort.text.toString()) != appliedSort
+        get() =
+            normalize(filter.text.toString()) != appliedFilter || normalize(sort.text.toString()) != appliedSort ||
+                normalize(projection.text.toString()) != appliedProjection ||
+                parseCount(skipField.text.toString()) != appliedSkip || parseCount(limitField.text.toString())?.takeIf { it > 0 } != appliedLimit
 
     val hasAppliedFilter: Boolean
-        get() = appliedFilter.replace(" ", "") != "{}" || appliedSort.replace(" ", "") != "{}"
+        get() = appliedFilter.replace(" ", "") != "{}" || appliedSort.replace(" ", "") != "{}" || hasAppliedOptions
+
+    /** A projection, skip or limit is applied. */
+    val hasAppliedOptions: Boolean
+        get() = appliedProjection.replace(" ", "") != "{}" || appliedSkip > 0 || appliedLimit != null
 
     var message by mutableStateOf<Message?>(null)
 
@@ -135,20 +168,36 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
 
     private suspend fun connection(): DocumentConnection = app.databases.documents(config)
 
-    /** Applies the filter and sort fields and loads the first page. */
+    /** Applies the query fields and loads the first page; a skip or limit that isn't a count stops it. */
     fun reload() = guard {
+        val skipValue = parseCount(skipField.text.toString())
+        val limitValue = parseCount(limitField.text.toString())
+        if (skipValue == null || limitValue == null) {
+            message = Message("Skip and limit take a whole number of documents, or nothing.", isError = true)
+            return@guard
+        }
         appliedFilter = normalize(filter.text.toString())
         appliedSort = normalize(sort.text.toString())
+        appliedProjection = normalize(projection.text.toString())
+        appliedSkip = skipValue
+        // As in find(), a limit of 0 is no limit.
+        appliedLimit = limitValue.takeIf { it > 0 }
         total = null
         load(0)
     }
 
-    /** Empties the filter and sort and shows every document. */
+    /** Empties the query fields and shows every document. */
     fun clearFilter() = guard {
         filter.setTextAndPlaceCursorAtEnd("{}")
         sort.setTextAndPlaceCursorAtEnd("{}")
+        projection.setTextAndPlaceCursorAtEnd("{}")
+        skipField.setTextAndPlaceCursorAtEnd("")
+        limitField.setTextAndPlaceCursorAtEnd("")
         appliedFilter = "{}"
         appliedSort = "{}"
+        appliedProjection = "{}"
+        appliedSkip = 0
+        appliedLimit = null
         total = null
         load(0)
     }
@@ -182,16 +231,22 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
         val job = launch {
             loading = true
             try {
-                val page = connection().find(database, collection, appliedFilter, appliedSort, target, pageSize)
+                // The last page stops at the limit.
+                val size = appliedLimit?.let { (it - target).coerceIn(0, pageSize.toLong()).toInt() } ?: pageSize
+                val page =
+                    if (size == 0) DocumentPage(emptyList(), hasMore = false)
+                    else connection().find(database, collection, appliedFilter, appliedSort, appliedSkip + target, size, appliedProjection)
                 val parsed = page.documents.map { Json.parseToJsonElement(it).jsonObject }
                 val restore = carry
                 carry = null
-                val next = DocumentEditModel(parsed, readOnly = readOnly, extraFields = restore?.fields.orEmpty())
+                // Documents projected without their _id can't be written back.
+                val noIds = parsed.any { "_id" !in it }
+                val next = DocumentEditModel(parsed, readOnly = readOnly || noIds, extraFields = restore?.fields.orEmpty())
                 val lost = restore?.let(next::restore) ?: 0
                 // The model first: whatever watches documents finds the matching grid.
                 model = next
                 skip = target
-                hasMore = page.hasMore
+                hasMore = page.hasMore && appliedLimit.let { it == null || target + size < it }
                 documents = parsed
                 schema.add(parsed)
                 grid.selection = null
@@ -210,7 +265,10 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
         return job
     }
 
-    fun count() = launch { total = connection().count(database, collection, appliedFilter) }
+    fun count() = launch {
+        val matching = (connection().count(database, collection, appliedFilter) - appliedSkip).coerceAtLeast(0)
+        total = appliedLimit?.let { minOf(it, matching) } ?: matching
+    }
 
     // region Grid edits
 
@@ -347,6 +405,51 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
 
     // endregion
 
+    // region Query builder
+
+    /** The BSON type [field] holds, when the documents seen agree on one. */
+    internal fun fieldKind(field: String): BsonKind? = completionFields.firstOrNull { it.path == field }?.types?.let(::kindOf)
+
+    private fun queryText() = Triple(filter.text.toString(), sort.text.toString(), projection.text.toString())
+
+    fun toggleBuilder() = if (showBuilder) showBuilder = false else openBuilder()
+
+    fun openBuilder() {
+        if (showBuilder) return
+        readIntoBuilder()
+        showBuilder = true
+    }
+
+    /** Reads the fields into the builder, unless the builder wrote them. */
+    internal fun readIntoBuilder(force: Boolean = true) {
+        val text = queryText()
+        if (!force && text == builderText) return
+        builder.load(text.first, text.second, text.third, ::fieldKind)
+        builderText = text
+    }
+
+    /** Writes what the builder holds into the fields; the user applies it as any typed query. */
+    internal fun writeFromBuilder(rendered: QueryBuilder.Rendered) {
+        val (filterText, sortText, projectionText) = rendered.query
+        if (filter.text.toString() != filterText) filter.setTextAndPlaceCursorAtEnd(filterText)
+        if (sort.text.toString() != sortText) sort.setTextAndPlaceCursorAtEnd(sortText)
+        if (projection.text.toString() != projectionText) projection.setTextAndPlaceCursorAtEnd(projectionText)
+        if (projectionText != "{}") showOptions = true
+        builderText = queryText()
+        builder.unreadable = false
+    }
+
+    /** A field dropped on the builder: a condition to fill in, a sort, or a field to show. */
+    internal fun dropField(field: String, zone: FieldZone) {
+        when (zone) {
+            FieldZone.Filter -> builder.focus = builder.addCondition(field, if (fieldKind(field) == BsonKind.Array) FilterOperator.In else FilterOperator.Eq)
+            FieldZone.Sort -> builder.addSort(field)
+            FieldZone.Projection -> builder.addProjection(field)
+        }
+    }
+
+    // endregion
+
     private fun launch(block: suspend () -> Unit): Job =
         app.scope.launch {
             try {
@@ -379,6 +482,9 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
                 else -> "{$trimmed}"
             }
         }
+
+        /** A skip or limit as typed: blank is 0; null when it isn't a whole, non-negative number. */
+        internal fun parseCount(text: String): Long? = text.trim().ifEmpty { "0" }.toLongOrNull()?.takeIf { it >= 0 }
 
         private val SortEntry = Regex("""(['"]?)([^'",:{}\s]+)\1\s*:\s*(-?1)\b""")
 

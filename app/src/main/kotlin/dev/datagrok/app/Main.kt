@@ -150,6 +150,7 @@ private fun handleWindowShortcut(app: AppState, event: KeyEvent): Boolean {
         selected is TableDataTab -> handleFilterShortcut(selected, event)
         selected is DocumentBrowserTab && Shortcuts.Reload.matches(event) -> done { selected.refresh() }
         selected is DocumentBrowserTab && Shortcuts.Save.matches(event) -> done { selected.submit() }
+        selected is DocumentBrowserTab && Shortcuts.ToggleFilterMode.matches(event) -> done { selected.toggleBuilder() }
         else -> false
     }
 }

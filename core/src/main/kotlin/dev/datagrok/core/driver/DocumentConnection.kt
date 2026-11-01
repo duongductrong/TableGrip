@@ -20,7 +20,8 @@ interface DocumentConnection : DatabaseConnection {
 
     suspend fun collections(database: String): List<CollectionInfo>
 
-    suspend fun find(database: String, collection: String, filter: String, sort: String, skip: Long, limit: Int): DocumentPage
+    /** [projection] picks the fields returned, as in `find()`'s second argument: `{name: 1}` or `{items: 0}`. */
+    suspend fun find(database: String, collection: String, filter: String, sort: String, skip: Long, limit: Int, projection: String = "{}"): DocumentPage
 
     suspend fun count(database: String, collection: String, filter: String): Long
 

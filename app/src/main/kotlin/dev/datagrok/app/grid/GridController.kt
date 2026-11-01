@@ -54,7 +54,18 @@ data class GridActions(
     val relatedRows: ((row: Int) -> List<Pair<String, () -> Unit>>)? = null,
     /** Mentions the selected cells in the agent chat (⌘L). */
     val onMention: ((GridMention) -> Unit)? = null,
+    /** Takes a column header dragged out of the grid, e.g. into a query builder. */
+    val onColumnDragOut: ColumnDragOut? = null,
 )
+
+/** Where a column header dragged past the grid's edge goes. Positions are in the window's coordinates. */
+interface ColumnDragOut {
+    fun move(column: String, at: Offset)
+
+    fun drop(column: String)
+
+    fun cancel()
+}
 
 /** Cells selected for the agent chat: their [columns], model [rows], and the values of the first [Mention.CellRows] rows. */
 data class GridMention(val columns: List<ResultColumn>, val rows: IntRange, val values: List<List<String?>>)
@@ -72,6 +83,8 @@ internal class GridController(val state: DataGridState, private val scope: Corou
     var sort: List<SortColumn> = emptyList()
     var naturalWidths: List<Dp> = emptyList()
     var density: Float = 1f
+    /** The grid's position in the window, for columns dragged out of it. */
+    var windowOrigin: Offset = Offset.Zero
 
     /** Last right-clicked header column, so the context menu knows what to offer. */
     var menuHeaderColumn: Int? = null
@@ -85,7 +98,8 @@ internal class GridController(val state: DataGridState, private val scope: Corou
     private sealed interface Drag {
         data class Resize(val column: Int, val startX: Float, val startWidth: Float) : Drag
 
-        data class HeaderPress(val column: Int, val startX: Float, var reordering: Boolean = false) : Drag
+        /** [outside]: dragged past the grid's top or bottom, handed to [GridActions.onColumnDragOut]. */
+        data class HeaderPress(val column: Int, val startX: Float, var reordering: Boolean = false, var outside: Boolean = false) : Drag
 
         data object Cells : Drag
 
@@ -195,6 +209,19 @@ internal class GridController(val state: DataGridState, private val scope: Corou
                 state.userWidths[state.modelColumn(current.column)] = Dp(width / density)
             }
             is Drag.HeaderPress -> {
+                val out = actions.onColumnDragOut
+                if (out != null && (position.y < 0 || position.y > geometry.viewportHeight)) {
+                    current.outside = true
+                    dropIndicator = null
+                    out.move(columnName(current.column), windowOrigin + position)
+                    return false
+                }
+                if (current.outside) {
+                    // Back over the grid: reordering again.
+                    current.outside = false
+                    current.reordering = true
+                    out?.cancel()
+                }
                 if (!current.reordering && kotlin.math.abs(position.x - current.startX) > 6 * density) current.reordering = true
                 if (current.reordering) dropIndicator = geometry.dropIndex(position.x + state.horizontalScroll.value)
             }
@@ -220,7 +247,9 @@ internal class GridController(val state: DataGridState, private val scope: Corou
         drag = null
         dropIndicator = null
         if (current !is Drag.HeaderPress) return
-        if (current.reordering) {
+        if (current.outside) {
+            actions.onColumnDragOut?.drop(columnName(current.column))
+        } else if (current.reordering) {
             val insertBefore = geometry.dropIndex(lastPointerContentX)
             // Removing the column first shifts everything after it left by one.
             state.move(current.column, if (insertBefore > current.column) insertBefore - 1 else insertBefore)

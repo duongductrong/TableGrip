@@ -81,6 +81,7 @@ class MongoClientTest {
         assertEquals(false, mongo.find(db, "orders", "{status: 'A'}", "{total: -1}", skip = 2, limit = 2).hasMore)
         assertTrue("\"\$date\": \"2026-10-01T10:00:00Z\"" in mongo.find(db, "orders", "{_id: 1}", "", 0, 1).documents.single())
         assertEquals(3L, mongo.count(db, "orders", "{status: 'A'}"))
+        assertEquals("{\"customer\": \"grace\"}", mongo.find(db, "orders", "{_id: 3}", "", 0, 1, projection = "{customer: 1, _id: 0}").documents.single())
 
         // Insert gets an ObjectId; replace keeps the _id; it can't be changed.
         val id = mongo.insert(db, "orders", "{customer: 'new', total: 1}")

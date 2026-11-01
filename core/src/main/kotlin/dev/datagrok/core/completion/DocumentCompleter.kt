@@ -8,14 +8,14 @@ package dev.datagrok.core.completion
 data class DocumentField(val path: String, val types: List<String>, val values: List<String> = emptyList())
 
 /** Which `find()` argument is being completed. */
-enum class DocumentQuery { Filter, Sort }
+enum class DocumentQuery { Filter, Sort, Projection }
 
 /**
  * Completion for a document browser's filter and sort, written in the shell's relaxed Extended JSON
  * (`{status: 'A', total: {$gt: 10}}`). It reads the text up to the caret as nested objects and arrays to tell what the
  * caret is in: the keys of the filter (fields, `$and`…), of a field's condition (`$gt`, `$in`…), of `$elemMatch` (the
  * array's element fields), `$expr` or `$text`; or a value: a field's values, `true`/`false` for `$exists`, BSON type
- * names for `$type`, `1`/`-1` for a sort. The outer braces may be left out.
+ * names for `$type`, `1`/`-1` for a sort, `1`/`0` for a projection. The outer braces may be left out.
  */
 object DocumentCompleter {
     fun complete(text: String, caret: Int, query: DocumentQuery, fields: List<DocumentField>): CompletionResult {
@@ -49,7 +49,7 @@ object DocumentCompleter {
                     under(role.base, fields).map { (name, f) -> field(name, f) } +
                         operators(QueryOperators) + if (role.elements) operators(FieldOperators) else emptyList()
                 is Role.Operators -> operators(FieldOperators) + under(role.field, fields).map { (name, f) -> field(name, f) }
-                Role.Sort -> under("", fields).map { (name, f) -> field(name, f) }
+                Role.Sort, Role.Projection -> under("", fields).map { (name, f) -> field(name, f) }
                 Role.Text -> operators(TextOperators)
                 Role.Expression -> operators(ExpressionOperators)
                 else -> emptyList()
@@ -78,6 +78,7 @@ object DocumentCompleter {
                     else -> if (key.startsWith("$")) fieldValues(role.field, typed, fields) else fieldValues(join(role.field, key), typed, fields)
                 }
             Role.Sort -> rank(SortDirections, typed)
+            Role.Projection -> rank(Inclusions, typed)
             Role.Text -> if (key == "\$caseSensitive" || key == "\$diacriticSensitive") rank(Booleans, typed) else emptyList()
             else -> emptyList()
         }
@@ -205,6 +206,7 @@ object DocumentCompleter {
 
     private val Booleans = listOf("true", "false").map { CompletionItem(it, it, CompletionKind.Value) }
     private val SortDirections = listOf(CompletionItem("1", "1", CompletionKind.Value, "ascending"), CompletionItem("-1", "-1", CompletionKind.Value, "descending"))
+    private val Inclusions = listOf(CompletionItem("1", "1", CompletionKind.Value, "include"), CompletionItem("0", "0", CompletionKind.Value, "exclude"))
     private val RegexOptions =
         listOf("'i'" to "case-insensitive", "'m'" to "multi-line anchors", "'x'" to "ignore whitespace", "'s'" to "dot matches newlines")
             .map { (value, detail) -> CompletionItem(value, value, CompletionKind.Value, detail) }
@@ -246,6 +248,9 @@ object DocumentCompleter {
 
         data object Sort : Role
 
+        /** A projection's keys are fields; their values include or exclude them. */
+        data object Projection : Role
+
         data object Text : Role
 
         data object Expression : Role
@@ -263,7 +268,12 @@ object DocumentCompleter {
         private var parens = 0
 
         fun run(): Scan? {
-            val rootRole = if (query == DocumentQuery.Sort) Role.Sort else Role.Query("")
+            val rootRole =
+                when (query) {
+                    DocumentQuery.Sort -> Role.Sort
+                    DocumentQuery.Projection -> Role.Projection
+                    DocumentQuery.Filter -> Role.Query("")
+                }
             // Without outer braces, the text is the root document's content.
             if (!text.substring(0, caret).trimStart().startsWith("{")) stack.addLast(Frame(true, rootRole))
             var i = 0

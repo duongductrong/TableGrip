@@ -463,7 +463,7 @@ private fun IssueText(text: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun RemoveButton(tooltip: String, onClick: () -> Unit) {
+internal fun RemoveButton(tooltip: String, onClick: () -> Unit) {
     Tooltip({ Text(tooltip) }) { IconButton(onClick = onClick) { Icon(AllIconsKeys.General.CloseSmall, tooltip) } }
 }
 
@@ -502,7 +502,7 @@ private fun SqlPreview(tab: TableDataTab, draft: CompiledFilter, modifier: Modif
 
 /** A short coloured label, e.g. a column's database type. */
 @Composable
-private fun Tag(text: String, color: Color) {
+internal fun Tag(text: String, color: Color) {
     Text(
         text,
         Modifier.clip(RoundedCornerShape(4.dp)).background(color.copy(alpha = 0.16f)).padding(horizontal = 4.dp, vertical = 1.dp),
@@ -523,7 +523,7 @@ private fun ValueKind.color(): Color =
 
 /** A combo-box-like button for pickers that open their own popup. */
 @Composable
-private fun PickerButton(error: Boolean, modifier: Modifier, onClick: () -> Unit, content: @Composable RowScope.() -> Unit) {
+internal fun PickerButton(error: Boolean, modifier: Modifier, onClick: () -> Unit, content: @Composable RowScope.() -> Unit) {
     val shape = RoundedCornerShape(5.dp)
     val border = if (error) JewelTheme.globalColors.outlines.error else JewelTheme.globalColors.borders.normal
     Row(

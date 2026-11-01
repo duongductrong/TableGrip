@@ -14,6 +14,7 @@ import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.pressKey
@@ -238,6 +239,67 @@ class DocumentBrowserUiTest {
         assertEquals("{'address.city': ", tab.filter.text.toString())
         // Right after the key, the field's values are offered.
         waitUntil(timeoutMillis = 5_000) { onAllNodesWithText("'Helsinki'").fetchSemanticsNodes().isNotEmpty() }
+        runBlocking { DocumentStore.connect(config, null).use { it.command(db, "db.dropDatabase()") } }
+        app.dispose()
+    }
+
+    @Test
+    fun `fields dragged into the builder become conditions, sorts and projections`() = runComposeUiTest {
+        if (server == null) return@runComposeUiTest
+        val (app, config) = app()
+        val tab = DocumentBrowserTab(app, config, db, "orders")
+        setContent { DatagrokTheme(isDark = true) { Box(Modifier.size(1300.dp, 760.dp)) { DocumentBrowserView(tab) } } }
+        waitUntil(timeoutMillis = 10_000) { tab.documents.size == 3 }
+        onNodeWithText("Builder").performClick()
+        waitForIdle()
+        System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "documents-builder-empty.png")) }
+        // While a field is dragged, every card shows it takes drops, and the one under the pointer lights up.
+        val sortCard = onNodeWithText("Drop fields to sort by").fetchSemanticsNode().boundsInRoot.center
+        tab.fieldDrag.start("total", sortCard)
+        waitForIdle()
+        System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "documents-builder-dragging.png")) }
+        tab.fieldDrag.cancel()
+        waitForIdle()
+
+        /** Drags the topmost node showing [text] (the builder's field list sits above the grid) onto [target]'s middle. */
+        fun drag(text: String, target: String, pick: (List<androidx.compose.ui.semantics.SemanticsNode>) -> androidx.compose.ui.semantics.SemanticsNode = { nodes -> nodes.minBy { it.boundsInRoot.top } }) {
+            val nodes = onAllNodesWithText(text).fetchSemanticsNodes()
+            val source = pick(nodes)
+            val to = onNodeWithText(target).fetchSemanticsNode().boundsInRoot.center
+            val index = nodes.indexOf(source)
+            onAllNodesWithText(text)[index].performMouseInput {
+                moveTo(center)
+                press()
+                val steps = 12
+                val from = source.boundsInRoot.center
+                for (step in 1..steps) moveTo(center + (to - from) * (step / steps.toFloat()))
+                release()
+            }
+            waitForIdle()
+        }
+
+        drag("status", "Drop a field to filter by it")
+        assertEquals(listOf("status"), tab.builder.conditions.map { it.field })
+        tab.builder.conditions.single().value.setTextAndPlaceCursorAtEnd("A")
+        waitUntil(timeoutMillis = 5_000) { tab.filter.text.toString() == "{status: 'A'}" }
+
+        // A column header dragged up out of the grid lands in the builder too.
+        drag("total", "Drop fields to sort by") { nodes -> nodes.maxBy { it.boundsInRoot.top } }
+        assertEquals(listOf("total"), tab.builder.sort.map { it.field })
+        waitUntil(timeoutMillis = 5_000) { tab.sort.text.toString() == "{total: 1}" }
+        assertEquals(listOf("_id", "customer", "status", "total", "items", "placed", "address", "vip"), tab.model.columns.map { it.name }, "the columns didn't move")
+
+        drag("customer", "Drop fields to show only those")
+        waitUntil(timeoutMillis = 5_000) { tab.projection.text.toString() == "{customer: 1}" }
+        tab.reload()
+        waitUntil(timeoutMillis = 10_000) { !tab.loading && tab.appliedFilter == "{status: 'A'}" && tab.documents.size == 2 }
+        assertEquals(listOf("ada", "grace"), tab.documents.map { it["customer"]!!.toString().trim('"') })
+        assertTrue(tab.documents.all { it.keys == setOf("_id", "customer") })
+        System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "documents-builder.png")) }
+
+        // Typing in the filter bar shows in the builder.
+        tab.filter.setTextAndPlaceCursorAtEnd("{total: {\$gte: 20, \$lt: 60}}")
+        waitUntil(timeoutMillis = 5_000) { tab.builder.conditions.map { it.operator } == listOf(FilterOperator.Gte, FilterOperator.Lt) }
         runBlocking { DocumentStore.connect(config, null).use { it.command(db, "db.dropDatabase()") } }
         app.dispose()
     }

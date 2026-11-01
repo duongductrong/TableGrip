@@ -89,6 +89,13 @@ class DocumentCompleterTest {
     }
 
     @Test
+    fun `projection offers fields then include or exclude`() {
+        assertEquals("{total: |}", accept("{tot|}", query = DocumentQuery.Projection))
+        assertEquals(listOf("1", "0"), labels("{total: |}", DocumentQuery.Projection))
+        assertTrue(labels("{|}", DocumentQuery.Projection).none { it.startsWith("$") })
+    }
+
+    @Test
     fun `nothing is offered where nothing fits`() {
         assertEquals(emptyList(), labels("{status: 'A' |}"))
         assertEquals(emptyList(), labels("{_id: ObjectId('65|')}"))

@@ -27,6 +27,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isCtrlPressed
@@ -82,11 +86,26 @@ import org.jetbrains.jewel.ui.icons.AllIconsKeys
 /** Laid out like a table's data view: toolbar, filter bar, the grid or JSON, and a status line. */
 @Composable
 internal fun DocumentBrowserView(tab: DocumentBrowserTab) {
+    var origin by remember { mutableStateOf(Offset.Zero) }
+    Box(Modifier.fillMaxSize().onGloballyPositioned { origin = it.positionInRoot() }) {
+        Content(tab)
+        FieldDragGhost(tab.fieldDrag, origin)
+    }
+    tab.pendingDiscard?.let { DiscardDialog(tab) }
+    tab.preview?.let { PreviewDialog(tab, it) }
+}
+
+@Composable
+private fun Content(tab: DocumentBrowserTab) {
     Column(Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground)) {
         Toolbar(tab)
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
         FilterBar(tab)
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
+        if (tab.showBuilder) {
+            QueryBuilderPanel(tab)
+            Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
+        }
         tab.message?.let { message ->
             if (message.isError) ErrorBanner(message.text, onDismiss = { tab.message = null })
             else Text(message.text, Modifier.padding(horizontal = 10.dp, vertical = 3.dp), color = JewelTheme.globalColors.text.info, maxLines = 2)
@@ -106,7 +125,7 @@ internal fun DocumentBrowserView(tab: DocumentBrowserTab) {
                                 tab.grid,
                                 sort = tab.sortColumns,
                                 firstRowNumber = tab.skip + 1,
-                                actions = GridActions(onSort = tab::setSort, onFilterByValue = tab::filterByValue, onSubmit = tab::submit),
+                                actions = GridActions(onSort = tab::setSort, onFilterByValue = tab::filterByValue, onSubmit = tab::submit, onColumnDragOut = tab.fieldDrag),
                             )
                         }
                     if (tab.showValuePanel) {
@@ -124,31 +143,79 @@ internal fun DocumentBrowserView(tab: DocumentBrowserTab) {
         }
         StatusLine(tab)
     }
-    tab.pendingDiscard?.let { DiscardDialog(tab) }
-    tab.preview?.let { PreviewDialog(tab, it) }
 }
 
 /**
  * Filter and sort as shell-style JSON, each completing fields, operators and values from the documents seen so far;
- * Enter or [Shortcuts.ApplyFilter] applies both.
+ * the options row below adds projection, skip and limit. Enter or [Shortcuts.ApplyFilter] applies them all.
  */
 @Composable
 private fun FilterBar(tab: DocumentBrowserTab) {
-    Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-        Icon(AllIconsKeys.General.Filter, null)
-        Text("Filter", Modifier.padding(horizontal = 8.dp), color = JewelTheme.globalColors.text.info, style = JewelTheme.editorTextStyle)
-        QueryField(tab, tab.filter, DocumentQuery.Filter, "{status: 'A', total: {\$gt: 10}}   ${Shortcuts.Completion} for suggestions, ⏎ to apply", Modifier.weight(1f))
-        Text("Sort", Modifier.padding(horizontal = 8.dp), color = JewelTheme.globalColors.text.info, style = JewelTheme.editorTextStyle)
-        QueryField(tab, tab.sort, DocumentQuery.Sort, "{total: -1}", Modifier.width(220.dp))
-        Spacer(Modifier.width(6.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (tab.isFilterDirty) Text("Not applied", color = JewelTheme.globalColors.text.info)
-            if (tab.hasAppliedFilter || tab.isFilterDirty) Link("Clear", onClick = tab::clearFilter)
-            Tooltip({ Text("Apply filter and sort (⏎ in a field, ${Shortcuts.ApplyFilter})") }) {
-                DefaultButton(onClick = tab::reload, enabled = tab.isFilterDirty) { Text("Apply") }
+    val label = Modifier.padding(horizontal = 8.dp)
+    val info = JewelTheme.globalColors.text.info
+    val expanded = tab.showOptions || tab.hasAppliedOptions
+    Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Icon(AllIconsKeys.General.Filter, null)
+            Text("Filter", label, color = info, style = JewelTheme.editorTextStyle)
+            QueryField(tab, tab.filter, DocumentQuery.Filter, "{status: 'A', total: {\$gt: 10}}   ${Shortcuts.Completion} for suggestions, ⏎ to apply", Modifier.weight(1f))
+            Text("Sort", label, color = info, style = JewelTheme.editorTextStyle)
+            QueryField(tab, tab.sort, DocumentQuery.Sort, "{total: -1}", Modifier.width(220.dp))
+            Spacer(Modifier.width(6.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (tab.isFilterDirty) Text("Not applied", color = info)
+                if (tab.hasAppliedFilter || tab.isFilterDirty) Link("Clear", onClick = tab::clearFilter)
+                Tooltip({ Text((if (tab.showBuilder) "Hide the query builder" else "Build the query by dragging fields; drag a column header up to add it") + " (${Shortcuts.ToggleFilterMode})") }) {
+                    ViewChipGroup { ViewChip("Builder", tab.showBuilder) { tab.toggleBuilder() } }
+                }
+                ToolButton(
+                    if (expanded) AllIconsKeys.General.ChevronUp else AllIconsKeys.General.ChevronDown,
+                    if (expanded) "Hide projection, skip and limit" else "Projection, skip and limit",
+                    enabled = !tab.hasAppliedOptions,
+                ) {
+                    tab.showOptions = !tab.showOptions
+                }
+                Tooltip({ Text("Apply the query (⏎ in a field, ${Shortcuts.ApplyFilter})") }) {
+                    DefaultButton(onClick = tab::reload, enabled = tab.isFilterDirty) { Text("Apply") }
+                }
+            }
+        }
+        if (expanded) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Icon(AllIconsKeys.General.Filter, null, Modifier.alpha(0f))
+                Text("Project", label, color = info, style = JewelTheme.editorTextStyle)
+                QueryField(tab, tab.projection, DocumentQuery.Projection, "{customer: 1, total: 1}  or  {items: 0}", Modifier.weight(1f))
+                Text("Skip", label, color = info, style = JewelTheme.editorTextStyle)
+                CountField(tab, tab.skipField, "0")
+                Text("Limit", label, color = info, style = JewelTheme.editorTextStyle)
+                CountField(tab, tab.limitField, "none")
             }
         }
     }
+}
+
+/** A number of documents for skip or limit; Enter applies the query. */
+@Composable
+private fun CountField(tab: DocumentBrowserTab, state: TextFieldState, placeholder: String) {
+    TextField(
+        state,
+        Modifier.width(90.dp).onPreviewKeyEvent { event ->
+            if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+            when {
+                Shortcuts.ApplyFilter.matches(event) || event.key == Key.Enter || event.key == Key.NumPadEnter -> {
+                    tab.reload()
+                    true
+                }
+                event.key == Key.Escape -> {
+                    tab.grid.requestFocus()
+                    true
+                }
+                else -> false
+            }
+        },
+        textStyle = JewelTheme.editorTextStyle,
+        placeholder = { Text(placeholder) },
+    )
 }
 
 @Composable

@@ -244,7 +244,7 @@ object Shortcuts {
     val FocusFilter by action("Table Filter", "Focus filter", Shortcut(Key.F, "F", primary = true))
     val FilterByValue by action("Table Filter", "Filter by the selected cell's value", Shortcut(Key.F, "F", primary = true, alt = true))
     val ExcludeValue by action("Table Filter", "Exclude the selected cell's value", Shortcut(Key.F, "F", primary = true, alt = true, shift = true))
-    val ToggleFilterMode by action("Table Filter", "Switch between builder and SQL", Shortcut(Key.F, "F", primary = true, shift = true))
+    val ToggleFilterMode by action("Table Filter", "Switch between builder and SQL; show or hide a collection's query builder", Shortcut(Key.F, "F", primary = true, shift = true))
     val ClearFilter by action("Table Filter", "Clear filter", Shortcut(Key.Backspace, BackspaceLabel, primary = true, shift = true))
 
     // Filter builder: in a condition row. Row editing mirrors line editing in the SQL editor.
@@ -335,7 +335,7 @@ object Shortcuts {
                     entry("Focus filter (adds a condition on the current column)", FocusFilter),
                     entry("Filter by the selected cell's value", FilterByValue),
                     entry("Exclude the selected cell's value", ExcludeValue),
-                    entry("Switch between builder and SQL", ToggleFilterMode),
+                    entry("Switch between builder and SQL; show or hide a collection's query builder", ToggleFilterMode),
                     entry("Clear filter", ClearFilter),
                     Entry("Apply filter", "$EnterLabel  /  ${ApplyFilter.label}"),
                     Entry("Back to the grid", "Esc"),
