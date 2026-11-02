@@ -1,5 +1,5 @@
 {
-  "$schema": "https://datagrok.dev/schema/theme-v1.json",
+  "$schema": "https://tablegrip.dev/schema/theme-v1.json",
   "name": "Catppuccin",
   "author": "Catppuccin (catppuccin.com): Frappé and Latte",
   "license": "MIT",

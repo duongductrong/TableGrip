@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Builds and launches Datagrok.
+# Builds and launches TableGrip.
 #
-#   scripts/run.sh                 # run with your normal profile (~/.datagrok)
+#   scripts/run.sh                 # run with your normal profile (~/.tablegrip)
 #   scripts/run.sh --fresh         # run against a throwaway profile/settings/history directory
 #   scripts/run.sh --home DIR      # run against the profile in DIR
 #   scripts/run.sh -- --info       # anything after -- goes to Gradle
@@ -15,13 +15,13 @@ gradle_args=()
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --fresh)
-            home="$(mktemp -d "${TMPDIR:-/tmp}/datagrok.XXXXXX")"
+            home="$(mktemp -d "${TMPDIR:-/tmp}/tablegrip.XXXXXX")"
             echo "Using a throwaway profile in $home"
-            gradle_args+=("-Pdatagrok.home=$home")
+            gradle_args+=("-Ptablegrip.home=$home")
             ;;
         --home)
             [[ $# -ge 2 ]] || { echo "--home needs a directory" >&2; exit 2; }
-            gradle_args+=("-Pdatagrok.home=$2")
+            gradle_args+=("-Ptablegrip.home=$2")
             shift
             ;;
         --)

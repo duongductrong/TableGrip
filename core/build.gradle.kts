@@ -18,7 +18,7 @@ dependencies {
     implementation(libs.sshj)
     api(libs.slf4j.api)
 
-    // No JDBC driver ships with Datagrok: users download them on demand (see DriverLibrary). Tests aren't distributed,
+    // No JDBC driver ships with TableGrip: users download them on demand (see DriverLibrary). Tests aren't distributed,
     // so they keep the drivers on their classpath.
     testImplementation(kotlin("test"))
     testImplementation(libs.junit.jupiter)
@@ -46,7 +46,7 @@ tasks.test {
 
 // region Driver catalog
 //
-// The drivers Datagrok offers to download, and the license every jar they pull in is under. A person reads each license
+// The drivers TableGrip offers to download, and the license every jar they pull in is under. A person reads each license
 // before adding it here: POMs often omit or misstate theirs, and a version bump can change it. `lockDrivers` writes the
 // lockfile the app downloads from; `verifyDriverLock` (part of `check`) fails when the lockfile is stale or a jar's
 // license isn't allowed. Drivers under GPL or a vendor's own license never go here: users bring those jars themselves.
@@ -98,13 +98,13 @@ val driverCatalog =
             "clickhouse", "ClickHouse JDBC", libs.jdbc.clickhouse, "com.clickhouse.jdbc.Driver",
             "https://github.com/ClickHouse/clickhouse-java/blob/main/LICENSE", "https://github.com/ClickHouse/clickhouse-java",
         ),
-        // Not JDBC: Datagrok's Redis adapter (engines/redis) runs on this client; the class is the adapter's.
+        // Not JDBC: TableGrip's Redis adapter (engines/redis) runs on this client; the class is the adapter's.
         CatalogDriver(
-            "lettuce", "Lettuce (Redis client)", libs.lettuce, "dev.datagrok.engines.redis.RedisClient",
+            "lettuce", "Lettuce (Redis client)", libs.lettuce, "dev.tablegrip.engines.redis.RedisClient",
             "https://github.com/redis/lettuce/blob/main/LICENSE", "https://github.com/redis/lettuce",
         ),
         CatalogDriver(
-            "mongodb", "MongoDB Java Driver", libs.mongodb.driver.sync, "dev.datagrok.engines.mongodb.MongoClient",
+            "mongodb", "MongoDB Java Driver", libs.mongodb.driver.sync, "dev.tablegrip.engines.mongodb.MongoClient",
             "https://github.com/mongodb/mongo-java-driver/blob/main/LICENSE.txt", "https://github.com/mongodb/mongo-java-driver",
         ),
         CatalogDriver(
@@ -228,10 +228,10 @@ val driverLockContent: Provider<String> =
         .reduce { acc, next -> acc.zip(next) { a, b -> "$a,\n$b" } }
         .map { "{\n  \"drivers\": [\n$it\n  ]\n}\n" }
 
-val driverLockFile = layout.projectDirectory.file("src/main/resources/dev/datagrok/core/drivers/drivers.lock.json")
+val driverLockFile = layout.projectDirectory.file("src/main/resources/dev/tablegrip/core/drivers/drivers.lock.json")
 
 tasks.register("lockDrivers") {
-    group = "datagrok"
+    group = "tablegrip"
     description = "Resolves the driver catalog and writes drivers.lock.json (coordinates, sha256 and license of every jar)."
     val content = driverLockContent
     val output = driverLockFile.asFile

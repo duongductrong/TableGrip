@@ -1,7 +1,7 @@
 # Customization — proposal
 
 > **Status (2026-10-31): all 4 phases implemented.** Decisions made: `Settings` keeps a flat structure (no migration
-> needed); the keymap has Datagrok / DataGrip / VS Code presets. Items **not done**, because they touch the core of the
+> needed); the keymap has TableGrip / DataGrip / VS Code presets. Items **not done**, because they touch the core of the
 > editor or grid: word wrap (the editor relies on not soft-wrapping), leading comma when formatting, UI density (island
 > spacing), and turning off the prompt when closing an unsaved tab (to avoid data loss). Drag-and-drop for tool stripe
 > buttons is also not done; instead there are up/down buttons in Settings and a "Hide" right-click menu item.
@@ -17,13 +17,13 @@ Goal: let users tailor the app to their personal habits. **All defaults stay exa
 | Area | Hard-coded value | File |
 | --- | --- | --- |
 | Shortcuts | ~60 keys in `object Shortcuts` | `ui/Shortcuts.kt` |
-| Accent, frame, island colors | `DarkIslands` / `LightIslands` | `ui/DatagrokTheme.kt` |
+| Accent, frame, island colors | `DarkIslands` / `LightIslands` | `ui/TableGripTheme.kt` |
 | SQL syntax colors | 2 fixed palettes | `console/SqlEditor.kt:603` |
-| Environment colors (DEV/STG/PROD) | 4 fixed colors | `ui/DatagrokTheme.kt:150` |
+| Environment colors (DEV/STG/PROD) | 4 fixed colors | `ui/TableGripTheme.kt:150` |
 | Indent | 4 spaces (editor + formatter) | `SqlEditor.kt:342`, `SqlFormatter.kt:8` |
 | Keyword case when formatting | always UPPERCASE | `SqlFormatter.kt:46` |
 | Auto-pair brackets/quotes | always on | `SqlEditor.kt:128` |
-| Editor / UI font | Jewel default font | `DatagrokTheme.kt` |
+| Editor / UI font | Jewel default font | `TableGripTheme.kt` |
 | Grid row height | 26dp | `grid/GridGeometry.kt:7` |
 | NULL display | `<null>` | `grid/DataGrid.kt:464` |
 | Date/time format | `yyyy-MM-dd HH:mm:ss.SSS` | `grid/ValueFormats.kt:211` |
@@ -94,7 +94,7 @@ Goal: let users tailor the app to their personal habits. **All defaults stay exa
 **Settings › Color Scheme** (new page)
 
 - Separate SQL syntax palettes for Light and Dark: keyword, string, number, comment, quoted identifier, parameter.
-- A few built-in schemes for quick selection: **Datagrok (default)**, Darcula, GitHub, Solarized, Monokai.
+- A few built-in schemes for quick selection: **TableGrip (default)**, Darcula, GitHub, Solarized, Monokai.
 - Environment colors: LOCAL / DEV / STG / PROD (some teams use a different color for PROD).
 
 ### Phase 3 — Shortcuts
@@ -104,7 +104,7 @@ Goal: let users tailor the app to their personal habits. **All defaults stay exa
 - A table of all actions (taken from `Shortcuts.groups`, which already has descriptions), searchable by name or by key.
 - Click a row → press a new key combination to assign it; report a **conflict** when the key is already used in the same
   context.
-- Presets: **Datagrok (default)**, JetBrains/DataGrip, VS Code, TablePlus.
+- Presets: **TableGrip (default)**, JetBrains/DataGrip, VS Code, TablePlus.
 - Store only the user's overrides (`keymapOverrides: Map<actionId, String>`), so later changes to the defaults still
   reach users who haven't customized anything.
 - Technical: change `Shortcuts` from an `object` of `val`s to a registry looked up by id, read through a
@@ -138,7 +138,7 @@ Same phase: **show/hide and reorder buttons on the tool stripe** (right-click �
   `layout`) **with migration** from the old flat fields (`editorFontSize`, `pageSize`…) so old files are still read
   correctly. Or keep it flat for simplicity — to be decided.
 - `settings/SettingsForm.kt`: add `BooleanField`, `ColorField`, `FontField`, "Restore defaults", and the modified dot.
-- `ui/DatagrokTheme.kt`: `IslandsPalette`, syntax colors, and fonts come from settings instead of constants.
+- `ui/TableGripTheme.kt`: `IslandsPalette`, syntax colors, and fonts come from settings instead of constants.
 - Tests: each setting has a "default = old value" test and a JSON round-trip test; tests for parsing/formatting key
   strings.
 

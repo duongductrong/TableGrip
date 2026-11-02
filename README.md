@@ -1,4 +1,4 @@
-# Datagrok
+# TableGrip
 
 A desktop database client (in the spirit of TablePlus / DataGrip) built with Kotlin,
 Compose for Desktop and [Jewel](https://jewel-ui.dev) — the IntelliJ look & feel for Compose.
@@ -14,7 +14,7 @@ Compose for Desktop and [Jewel](https://jewel-ui.dev) — the IntelliJ look & fe
 ```bash
 scripts/run.sh                      # launch the app (--fresh: throwaway profile; scripts\run.cmd on Windows)
 ./gradlew :app:run                  # launch the app
-./gradlew :app:run -Pdatagrok.home=/tmp/dg   # launch with a throwaway profile/settings/history directory
+./gradlew :app:run -Ptablegrip.home=/tmp/dg   # launch with a throwaway profile/settings/history directory
 ./gradlew :core:test                # run core tests
 ./gradlew :core:test -Pit.postgres=localhost:55432 -Pit.mysql=localhost:53306   # also test against real servers (seed: core/src/test/resources/structure-it)
 ./gradlew :core:test -Pit.network=true          # also download the real catalog drivers from Maven Central
@@ -74,7 +74,7 @@ saved queries, connections, actions and recent queries of the current connection
 (`uo` → `user_orders`). ⏎ opens; ⇧⏎ opens a table's structure.
 
 **Sessions**: open consoles (with unsaved text and the caret) and tables (with their filter and view) come back on the
-next start, from `~/.datagrok/session.json`, saved every few seconds while something changes. Quitting only asks about
+next start, from `~/.tablegrip/session.json`, saved every few seconds while something changes. Quitting only asks about
 work a restart can't bring back: open transactions and unsubmitted edits. Tables load once their tab is shown.
 
 **Explorer**: the search field narrows the tree to connections, and to tables and columns already loaded, whose name
@@ -84,7 +84,7 @@ Options in the connection dialog.
 ## Saved queries
 
 ⌘S in a new console names the query and saves it under Saved Queries (⌘4), like TablePlus; later ⌘S saves in place and
-⇧⌘S saves to a file anywhere. Queries are plain `.sql` files in `~/.datagrok/queries/`, folders included, so they can be
+⇧⌘S saves to a file anywhere. Queries are plain `.sql` files in `~/.tablegrip/queries/`, folders included, so they can be
 edited elsewhere or kept in git. "Always run on <connection>" writes a `-- connection: <name>` first line, which opens
 the query on that connection; without it a query opens on the current one.
 
@@ -192,10 +192,10 @@ and what blocks what: sessions waiting on a lock sit indented under the session 
 All, search by user, database or query, and refresh every 2, 5 or 10 s or pause; it only refreshes while the tab is in
 front, over a connection of its own so it still works when the pool is stuck. Select a session for its full query, then
 open it in a console, **Cancel Query** or **Terminate** it. Terminating always asks first, and so does cancelling on
-Production or confirm-writes connections; read-only connections can't signal sessions at all. Datagrok's own sessions
-(named `Datagrok` in `pg_stat_activity`) are hidden unless you turn off Hide Datagrok. Supported on PostgreSQL (and
+Production or confirm-writes connections; read-only connections can't signal sessions at all. TableGrip's own sessions
+(named `TableGrip` in `pg_stat_activity`) are hidden unless you turn off Hide TableGrip. Supported on PostgreSQL (and
 PostgreSQL-compatible services), MySQL and MariaDB; on MySQL, lock waits come from `performance_schema.data_lock_waits`
-(or `INNODB_LOCK_WAITS` on MariaDB) and Datagrok's sessions are named by the `program_name` connection attribute. File
+(or `INNODB_LOCK_WAITS` on MariaDB) and TableGrip's sessions are named by the `program_name` connection attribute. File
 and embedded databases don't offer it. While an Activity tab is open but not in front it refreshes every 15 s, and the
 status bar warns when sessions have waited on a lock for more than 5 s; click the warning to see them.
 
@@ -206,45 +206,45 @@ directory format), `pg_restore` (pick which tables and objects to restore from a
 `psql`; MySQL and MariaDB use `mysqldump` / `mariadb-dump` (`--single-transaction`, with routines, triggers and events)
 and `mysql`. SQLite backs itself up with `VACUUM INTO`, DuckDB with `EXPORT DATABASE`. The dialog shows the equivalent
 command to copy. Passwords go through `PGPASSWORD` or an owner-only `--defaults-extra-file` that is deleted afterwards,
-never the command line; SSH tunnels work as for connections. Every run is logged to `~/.datagrok/logs/backup/`.
+never the command line; SSH tunnels work as for connections. Every run is logged to `~/.tablegrip/logs/backup/`.
 
 Restores go into a **new database** by default. Read-only connections can't be restored into, and Production asks for
 the target database's name to be typed again. A cancelled or failed backup deletes its partial file.
 
-**Tools are never bundled.** Datagrok looks on PATH and in the usual places (Homebrew, Postgres.app, the EDB and MySQL
+**Tools are never bundled.** TableGrip looks on PATH and in the usual places (Homebrew, Postgres.app, the EDB and MySQL
 installers, `/usr/lib/postgresql`), picks the newest `pg_dump` that can read the server's version, and **Settings →
 Tools** shows every copy found and lets you choose one by hand. When none fits it offers to download the official
 PostgreSQL client tools (EDB's builds for macOS and Windows, pinned by SHA-256), saying where from, how big and under
 which license, and only after you confirm; only `pg_dump`, `pg_restore`, `psql` and their libraries (~28 MB) are kept in
-`~/.datagrok/tools/`, removable from the same page. MySQL's clients are GPL and never downloaded: install them yourself.
+`~/.tablegrip/tools/`, removable from the same page. MySQL's clients are GPL and never downloaded: install them yourself.
 
 **Scheduled backups** (Settings → Backups) are off until you turn them on. Each schedule backs up one connection every
-hour, day or week while Datagrok is open, keeps its newest N backups (deleting only its own older ones), runs a missed
+hour, day or week while TableGrip is open, keeps its newest N backups (deleting only its own older ones), runs a missed
 backup soon after the app opens, and says what would stop it (no tools, no saved password, a folder it can't write).
 
 ## Connections
 
-Everything lives in `~/.datagrok/` (override with `-Ddatagrok.home`): `connections.json` (no secrets),
+Everything lives in `~/.tablegrip/` (override with `-Dtablegrip.home`): `connections.json` (no secrets),
 `settings.json`, `themes/`, `history.jsonl`, `session.json`, `queries/` and `logs/`. `settings.json` can be edited by
 hand (comments allowed; edits apply while the app runs), and `themes/` holds your own colour themes; see
 [docs/plans/themes.md](docs/plans/themes.md). Passwords go to the OS credential store
-via [java-keyring](https://github.com/javakeyring/java-keyring) under the service name `Datagrok`:
+via [java-keyring](https://github.com/javakeyring/java-keyring) under the service name `TableGrip`:
 macOS Keychain, Windows Credential Manager, or the Secret Service (GNOME Keyring / KWallet) on Linux.
 
 ## Drivers
 
-No JDBC driver ships with Datagrok. The connection dialog says what the chosen driver needs and offers it:
+No JDBC driver ships with TableGrip. The connection dialog says what the chosen driver needs and offers it:
 
 - **Catalog drivers** (PostgreSQL, MariaDB Connector/J, SQLite, SQL Server, ClickHouse, DuckDB, H2, HSQLDB, Derby)
   download from Maven Central, or a mirror set in
-  Settings → Drivers, into `~/.datagrok/drivers/`. Every jar must match the SHA-256 pinned in
-  `core/src/main/resources/dev/datagrok/core/drivers/drivers.lock.json`, which `:core:lockDrivers` writes from the catalog
+  Settings → Drivers, into `~/.tablegrip/drivers/`. Every jar must match the SHA-256 pinned in
+  `core/src/main/resources/dev/tablegrip/core/drivers/drivers.lock.json`, which `:core:lockDrivers` writes from the catalog
   in `core/build.gradle.kts`. The catalog only takes jars whose license a person reviewed and the allowlist accepts
   (permissive, or LGPL as a separate user download); `check` fails when the lockfile is stale.
-- **Non-JDBC clients** (Lettuce for Redis, the MongoDB Java driver) download the same way; Datagrok's own adapter for each
+- **Non-JDBC clients** (Lettuce for Redis, the MongoDB Java driver) download the same way; TableGrip's own adapter for each
   (`engines/redis`, `engines/mongodb`) ships
   inside the app as `engines/<name>.jar`, off the classpath, and loads together with the client's jars.
-- **Your own jars** for drivers Datagrok can't distribute (MySQL Connector/J is GPL): choose them in the dialog.
+- **Your own jars** for drivers TableGrip can't distribute (MySQL Connector/J is GPL): choose them in the dialog.
 - **Offline**: "Import from folder…" installs catalog drivers from jars already on disk, checked against the same hashes.
 
 MySQL connections use MariaDB Connector/J by default. Each driver loads in its own class loader; `:app:verifyNoBundledDrivers`
@@ -275,7 +275,7 @@ menu in the title bar, or go-to-anything) finds connections other tools already 
 
 **Add File…** takes any of these files (or an exported copy) and works out which it is. Names, folders (as groups),
 environments (TablePlus tags, DBeaver connection types), read-only flags and SSH tunnels carry over. Connections that
-are already in Datagrok, or found in two tools, start unticked; PostgreSQL connections imported without a password get
+are already in TableGrip, or found in two tools, start unticked; PostgreSQL connections imported without a password get
 one from `~/.pgpass` when it has a matching entry. Nothing is changed in the other tools. With no connections yet, the
 explorer says how many it found and offers to import them.
 
@@ -305,7 +305,7 @@ libpq parameters are translated to pgjdbc properties (`application_name` → `Ap
 string go to the keychain, never into the profile.
 
 **Drivers:** PostgreSQL JDBC, MySQL Connector/J, MariaDB Connector/J and SQLite JDBC are bundled. MySQL and MariaDB
-servers can use either Connector/J or MariaDB Connector/J; Datagrok writes the URL in the chosen driver's scheme (adding
+servers can use either Connector/J or MariaDB Connector/J; TableGrip writes the URL in the chosen driver's scheme (adding
 `permitMysqlScheme` when MariaDB Connector/J gets a `jdbc:mysql:` URL), translates `sslMode` values between the two
 vocabularies, and sets a 10 s connect timeout where the driver would otherwise wait forever. Extra driver properties go
 in **Options → Driver properties**.

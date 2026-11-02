@@ -35,7 +35,7 @@ histogram, box plot, facets, multi-chart dashboards.
 
 ## 3. Design
 
-### 3.1 Core (`dev.datagrok.core.chart`), pure Kotlin, with unit tests
+### 3.1 Core (`dev.tablegrip.core.chart`), pure Kotlin, with unit tests
 
 ```kotlin
 enum class ColumnKind { Numeric, Temporal, Category, Other }

@@ -42,17 +42,17 @@ Linux, where it is reduced to "tell the user".
 
 ### Version
 
-- One source in `gradle.properties`: `datagrok.version` (`1.4.0`, or `1.4.0-beta.2` for a pre-release) and
-  `datagrok.build`, an integer that only goes up. Local builds use `1`; the release workflow passes the commit count
+- One source in `gradle.properties`: `tablegrip.version` (`1.4.0`, or `1.4.0-beta.2` for a pre-release) and
+  `tablegrip.build`, an integer that only goes up. Local builds use `1`; the release workflow passes the commit count
   of `master` (`git rev-list --count HEAD`), so the same commit always gets the same build. The build fails on a
   malformed version or a build outside 1–65535.
-- The app reads both from the generated `datagrok-version.properties` (`dev.datagrok.app.update.AppVersion`).
+- The app reads both from the generated `tablegrip-version.properties` (`dev.tablegrip.app.update.AppVersion`).
 - macOS: `CFBundleShortVersionString` = `1.4.0` (installers can't carry a suffix), `CFBundleVersion` = build. Sparkle
   compares `CFBundleVersion`.
 - Windows: MSI ProductVersion = `MAJOR.MINOR.BUILD` (`1.4.412`). MSI ignores a fourth part and won't replace an
   installed copy of the same version, so `1.4.0-beta.2` and `1.4.0` would otherwise collide; the build number keeps
   them apart and always increasing.
-- The tag must equal `datagrok.version` (`v1.4.0`) and be on `master`, or the release workflow stops.
+- The tag must equal `tablegrip.version` (`v1.4.0`) and be on `master`, or the release workflow stops.
 
 ### Feeds and hosting
 
@@ -61,8 +61,8 @@ release workflow and `update-appcast.sh` can be reused.
 
 | What | Where | URL the app uses |
 |---|---|---|
-| Archives (zip/DMG, MSI) | GitHub Release of the tag | `https://github.com/duongductrong/datagrok/releases/download/v1.4.0/Datagrok-1.4.0-macos-arm64.zip` (redirects to GitHub's CDN; Sparkle and WinSparkle follow it) |
-| Appcasts | `appcast/` folder on `master`, committed by the release workflow | `https://raw.githubusercontent.com/duongductrong/datagrok/master/appcast/macos-arm64.xml` |
+| Archives (zip/DMG, MSI) | GitHub Release of the tag | `https://github.com/duongductrong/tablegrip/releases/download/v1.4.0/TableGrip-1.4.0-macos-arm64.zip` (redirects to GitHub's CDN; Sparkle and WinSparkle follow it) |
+| Appcasts | `appcast/` folder on `master`, committed by the release workflow | `https://raw.githubusercontent.com/duongductrong/tablegrip/master/appcast/macos-arm64.xml` |
 | Release notes | GitHub Release body (from `CHANGELOG.md`), and an HTML copy as a release asset | `sparkle:releaseNotesLink` to the asset |
 
 What plain GitHub costs, and how each is handled:
@@ -131,9 +131,9 @@ that's fine. What has to be protected is who can *produce* a signed release:
 
 ### Native bridge
 
-- **macOS** (built, Phase 1): `app/src/macos/updater/DatagrokUpdater.m`, ~100 lines of Objective-C around
+- **macOS** (built, Phase 1): `app/src/macos/updater/TableGripUpdater.m`, ~100 lines of Objective-C around
   `SPUStandardUpdaterController`, compiled by `:app:buildUpdaterBridge` into a universal
-  `Contents/Frameworks/libDatagrokUpdater.dylib`. Its C functions (`dg_updater_start`, `_configure`, `_check`,
+  `Contents/Frameworks/libTableGripUpdater.dylib`. Its C functions (`dg_updater_start`, `_configure`, `_check`,
   `_last_check`, `_terminate`) are called from Kotlin with JNA. Sparkle runs on the main thread (AppKit's); only
   `dg_updater_start` waits for it, and it's called off the AWT event thread to avoid a deadlock with AppKit.
 - `:app:downloadSparkle` fetches Sparkle's release archive (pinned version and SHA-256), which also provides
@@ -141,15 +141,15 @@ that's fine. What has to be protected is who can *produce* a signed release:
   `ditto` (keeps its symlinks), drops its XPC services (only sandboxed apps need them), and signs inside out:
   Autoupdate, Updater.app, the framework, the bridge, then the app with `src/macos/entitlements.plist`. Without
   signing properties it ad-hoc signs, so local builds still run.
-- Info.plist: `SUPublicEDKey` from `datagrok.sparklePublicKey`, `SURequireSignedFeed`, `SUVerifyUpdateBeforeExtraction`,
+- Info.plist: `SUPublicEDKey` from `tablegrip.sparklePublicKey`, `SURequireSignedFeed`, `SUVerifyUpdateBeforeExtraction`,
   `SUEnableAutomaticChecks`, and `SUEnableSystemProfiling` = NO. The feed URL isn't in Info.plist: the bridge's delegate
   gives it, so a later version can move it.
-- Kotlin: `dev.datagrok.app.update.Updater`. `Updater.create()` gives the Sparkle one only in an installed Mac app
+- Kotlin: `dev.tablegrip.app.update.Updater`. `Updater.create()` gives the Sparkle one only in an installed Mac app
   that has the bridge; `:app:run`, tests, Windows and Linux get one that does nothing and says why.
 - **Windows** (built, Phase 2): no bridge. `:app:downloadWinSparkle` takes the x64 `WinSparkle.dll` from WinSparkle
   0.9.4's release archive (pinned SHA-256) into the app's resources (`appResourcesRootDir`, `windows-x64/`), where the
   release workflow's Artifact Signing step signs it with the launcher. `WinSparkleUpdater` calls its C API with JNA.
-  The update key comes from `datagrok-version.properties` (no Info.plist on Windows); a missing or invalid key keeps
+  The update key comes from `tablegrip-version.properties` (no Info.plist on Windows); a missing or invalid key keeps
   the updater off.
 - WinSparkle differs from Sparkle in three ways the app accepts: it always shows its dialog when it finds an update
   (no silent install, so "install automatically" only means checking automatically), it has no channels (Beta is
@@ -166,7 +166,7 @@ edits, unsaved data files) like ⌘Q does:
 - Sparkle's own "Install and Relaunch" sends `[NSApp terminate:]` too: it reaches the quit handler, goes through
   `requestExit` like ⌘Q, and if the user cancels there, the update waits for the next quit.
 - Windows: WinSparkle asks `can_shutdown` before running the installer; it answers `!AppState.quitWouldAsk` on the UI
-  thread (open transactions, unsubmitted edits, unsaved data files), and WinSparkle tells the user to close Datagrok
+  thread (open transactions, unsubmitted edits, unsaved data files), and WinSparkle tells the user to close TableGrip
   first when it's false. Then `shutdown_request` quits through `requestExit`. The MSI runs with `/passive`.
 - Never install while a long export, import, backup or restore is running: treat those like unsaved work. (Not done
   yet: today only open transactions, unsubmitted edits and unsaved data files hold a quit.)
@@ -183,7 +183,7 @@ edits, unsaved data files) like ⌘Q does:
   - Current version, last check time, "Check Now".
 - No first-run "may we check?" prompt (`SUEnableAutomaticChecks` = YES); the setting is the opt-out.
 - Privacy: no system profiling (`SUEnableSystemProfiling` = NO). The only thing sent is the request for the feed
-  (with a `Datagrok/<version>` user agent). Say so in Settings › Updates, next to the agent data-sharing setting.
+  (with a `TableGrip/<version>` user agent). Say so in Settings › Updates, next to the agent data-sharing setting.
 - Release notes come from `CHANGELOG.md`, so they can't drift from the code.
 
 ## Release pipeline (GitHub Actions)
@@ -207,7 +207,7 @@ Variable, in the same environment: `WINDOWS_SIGNING` = `azure` turns on Authenti
 secrets. Unset (or anything else), the Windows installer is released unsigned, with a warning in the run and a line in
 the release notes. Artifact Signing only verifies some countries' individuals and organizations, so this keeps
 releases possible without it: SmartScreen warns when the MSI is downloaded, and updates through WinSparkle are still
-only installed with Datagrok's Ed25519 signature. Other ways to sign later: SignPath Foundation (free for open source)
+only installed with TableGrip's Ed25519 signature. Other ways to sign later: SignPath Foundation (free for open source)
 or a cloud-HSM certificate, each needing its own signing step.
 
 The full pipeline, once Phase 1 adds Sparkle. Phase 0 does steps 1, 3, 4 and 6 (Compose's own signing and
@@ -241,12 +241,12 @@ A version with a `-` suffix becomes a pre-release.
   updates a local 99.0.0 build to 99.0.1 end to end; checked on 2026-11-02 on Apple silicon, ad-hoc signed: the
   automatic check downloaded the update and it installed on quit, and a feed changed after signing was refused (no
   download). Left for the maintainer: generate the real key pair (`generate_keys`), put the public key in
-  `datagrok.sparklePublicKey` and the private key (`generate_keys -x`) in `SPARKLE_PRIVATE_KEY`.
+  `tablegrip.sparklePublicKey` and the private key (`generate_keys -x`) in `SPARKLE_PRIVATE_KEY`.
 - **Phase 2, Windows** (done in code, not run on Windows): WinSparkle bundling and `WinSparkleUpdater`, the two
   Windows feeds in `scripts/appcast.py`, a `windows-update-signature` job that signs the MSI with `sign_update` on a Mac
   runner. Checked here: every function the JNA interface declares is exported by the DLL, and the feeds render and
   parse. Still to check on Windows: the updater starts in the installed app, an update from N-1 installs per user
-  without UAC and replaces the old MSI (Apps & features shows one Datagrok), settings and `~/.datagrok` survive, and
+  without UAC and replaces the old MSI (Apps & features shows one TableGrip), settings and `~/.tablegrip` survive, and
   `can_shutdown` holds the install while a transaction is open.
 - **Phase 3**: Linux `.deb` gets notify-only (read the same feed, verify its signature with the JDK's `Ed25519`
   `Signature`, show a banner linking to the download); delta updates on macOS; a Jewel-styled update dialog via

@@ -1,0 +1,46 @@
+package dev.tablegrip.core
+
+import java.nio.file.Path
+
+/** Where TableGrip keeps its files. Override with `-Dtablegrip.home=...` for development or tests. */
+object TableGripPaths {
+    val home: Path
+        get() = System.getProperty("tablegrip.home")?.let(Path::of) ?: Path.of(System.getProperty("user.home"), ".tablegrip")
+
+    val connections: Path
+        get() = home.resolve("connections.json")
+
+    val settings: Path
+        get() = home.resolve("settings.json")
+
+    /** The user's own theme files, read next to the built-in ones (see `dev.tablegrip.core.theme.ThemeFamily`). */
+    val themes: Path
+        get() = home.resolve("themes")
+
+    val history: Path
+        get() = home.resolve("history.jsonl")
+
+    /** Saved queries: plain `.sql` files, in folders, so they can be edited elsewhere or kept in git. */
+    val queries: Path
+        get() = home.resolve("queries")
+
+    /** Tabs and layout to reopen on the next start. */
+    val session: Path
+        get() = home.resolve("session.json")
+
+    /** Downloaded JDBC drivers and the user's own driver jars. */
+    val drivers: Path
+        get() = home.resolve("drivers")
+
+    /** SQLite working copies of open data files (CSV, Excel…); each lives only while its connection is open. */
+    val workingCopies: Path
+        get() = home.resolve("cache").resolve("datafiles")
+
+    /** Agent chats kept for the chat history, one file each. */
+    val chats: Path
+        get() = home.resolve("chats")
+
+    /** Where CLI agents run: a directory of their own, so an agent with file tools works there, not in the user's home. */
+    val agentWorkspace: Path
+        get() = home.resolve("agent")
+}

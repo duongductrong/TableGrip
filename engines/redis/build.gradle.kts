@@ -6,7 +6,7 @@ val jdkLevel = providers.gradleProperty("jdk.level").get().toInt()
 
 kotlin { jvmToolchain(jdkLevel) }
 
-// Datagrok's Redis adapter. Its jar ships inside the app but stays off the app's classpath: DriverLibrary loads it in
+// TableGrip's Redis adapter. Its jar ships inside the app but stays off the app's classpath: DriverLibrary loads it in
 // one class loader with the Lettuce jars the user downloaded. So both core (from the app) and Lettuce (from the
 // download) are only compile-time dependencies here.
 dependencies {

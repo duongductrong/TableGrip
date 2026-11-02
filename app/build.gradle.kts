@@ -15,25 +15,25 @@ val jdkLevel = providers.gradleProperty("jdk.level").get().toInt()
 
 // region Version
 //
-// One source for every version string: `datagrok.version` (what users see, e.g. 1.4.0 or 1.4.0-beta.2) and
-// `datagrok.build` (an integer that only ever goes up; CI passes the commit count of master). Updaters compare the
+// One source for every version string: `tablegrip.version` (what users see, e.g. 1.4.0 or 1.4.0-beta.2) and
+// `tablegrip.build` (an integer that only ever goes up; CI passes the commit count of master). Updaters compare the
 // build, so two releases must never share one.
 
-val appVersion = providers.gradleProperty("datagrok.version").get()
-val appBuild = providers.gradleProperty("datagrok.build").get()
+val appVersion = providers.gradleProperty("tablegrip.version").get()
+val appBuild = providers.gradleProperty("tablegrip.build").get()
 val versionMatch =
     Regex("""([1-9]\d*)\.(\d+)\.(\d+)(-[0-9A-Za-z.]+)?""").matchEntire(appVersion)
-        ?: throw GradleException("datagrok.version must look like 1.4.0 or 1.4.0-beta.2, not '$appVersion'.")
-if (appBuild.toIntOrNull()?.takeIf { it in 1..65535 } == null) throw GradleException("datagrok.build must be an integer from 1 to 65535, not '$appBuild'.")
+        ?: throw GradleException("tablegrip.version must look like 1.4.0 or 1.4.0-beta.2, not '$appVersion'.")
+if (appBuild.toIntOrNull()?.takeIf { it in 1..65535 } == null) throw GradleException("tablegrip.build must be an integer from 1 to 65535, not '$appBuild'.")
 val (versionMajor, versionMinor, versionPatch) = versionMatch.destructured
 
-/** Writes the version the app reads at runtime (see `dev.datagrok.app.update.AppVersion`). */
+/** Writes the version the app reads at runtime (see `dev.tablegrip.app.update.AppVersion`). */
 val versionResource by tasks.registering {
     val version = appVersion
     val build = appBuild
     // Windows reads the update key from here; macOS from Info.plist.
-    val updateKey = providers.gradleProperty("datagrok.sparklePublicKey").orNull.orEmpty()
-    val output = layout.buildDirectory.file("generated/version/datagrok-version.properties")
+    val updateKey = providers.gradleProperty("tablegrip.sparklePublicKey").orNull.orEmpty()
+    val output = layout.buildDirectory.file("generated/version/tablegrip-version.properties")
     inputs.property("version", version)
     inputs.property("build", build)
     inputs.property("updateKey", updateKey)
@@ -52,10 +52,10 @@ val isMacHost = System.getProperty("os.name").startsWith("Mac")
 val sparkleVersion = "2.10.1"
 val sparkleSha256 = "1a856d2a9edb8e628de88121d7be04cf0e2167f8641650b78fca00b14244cf27"
 /** Base64 Ed25519 public key that every update must be signed with (Sparkle's generate_keys prints it). */
-val sparklePublicKey = providers.gradleProperty("datagrok.sparklePublicKey").orNull.orEmpty()
+val sparklePublicKey = providers.gradleProperty("tablegrip.sparklePublicKey").orNull.orEmpty()
 val macEntitlements = layout.projectDirectory.file("src/macos/entitlements.plist")
 val sparkleDir = layout.buildDirectory.dir("sparkle/$sparkleVersion")
-val updaterBridge = layout.buildDirectory.file("updater/libDatagrokUpdater.dylib")
+val updaterBridge = layout.buildDirectory.file("updater/libTableGripUpdater.dylib")
 
 /** Runs a command from a task action; an object, so actions can call it without capturing the build script. */
 object Shell {
@@ -94,7 +94,7 @@ val downloadSparkle by tasks.registering {
 
 /** The bridge between the app and Sparkle, for both Mac architectures. */
 val buildUpdaterBridge by tasks.registering {
-    val source = layout.projectDirectory.file("src/macos/updater/DatagrokUpdater.m")
+    val source = layout.projectDirectory.file("src/macos/updater/TableGripUpdater.m")
     val sparkle = sparkleDir
     val output = updaterBridge
     dependsOn(downloadSparkle)
@@ -109,7 +109,7 @@ val buildUpdaterBridge by tasks.registering {
             "xcrun", "clang", "-dynamiclib", "-fobjc-arc", "-fmodules", "-O2",
             "-arch", "arm64", "-arch", "x86_64", "-mmacosx-version-min=12.0",
             "-F", sparkle.get().asFile.absolutePath, "-framework", "Sparkle", "-framework", "AppKit",
-            "-install_name", "@rpath/libDatagrokUpdater.dylib", "-Wl,-rpath,@loader_path",
+            "-install_name", "@rpath/libTableGripUpdater.dylib", "-Wl,-rpath,@loader_path",
             "-o", dylib.absolutePath, source.asFile.absolutePath,
         )
     }
@@ -159,7 +159,7 @@ kotlin {
     }
 }
 
-/** Datagrok's adapters for non-JDBC clients: shipped as jars inside the app, loaded only with their client's download. */
+/** TableGrip's adapters for non-JDBC clients: shipped as jars inside the app, loaded only with their client's download. */
 val engineAdapters by configurations.creating {
     isCanBeConsumed = false
     isTransitive = false
@@ -194,7 +194,7 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "dev.datagrok.app.MainKt"
+        mainClass = "dev.tablegrip.app.MainKt"
         // Installers bundle this runtime: the JBR, like `run` uses, never whatever JAVA_HOME happens to be.
         javaHome =
             javaToolchains.launcherFor {
@@ -209,12 +209,12 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             appResourcesRootDir = appResources
-            packageName = "Datagrok"
+            packageName = "TableGrip"
             // Installers only take MAJOR.MINOR.PATCH; a pre-release's suffix is shown by the app itself.
             packageVersion = "$versionMajor.$versionMinor.$versionPatch"
             description = "A modern database client"
-            vendor = "Datagrok"
-            copyright = "Copyright 2026 The Datagrok Authors. Licensed under the Apache License, Version 2.0."
+            vendor = "TableGrip"
+            copyright = "Copyright 2026 The TableGrip Authors. Licensed under the Apache License, Version 2.0."
             licenseFile = rootProject.layout.projectDirectory.file("LICENSE")
             // java.net.http downloads drivers; the rest are what downloaded drivers commonly need (GSSAPI/Kerberos and
             // SASL logins, XML parsing), since they can't add modules to the bundled runtime themselves.
@@ -223,7 +223,7 @@ compose.desktop {
                 "java.security.jgss", "java.security.sasl", "java.xml",
             )
 
-            // Lets the file manager open data files with Datagrok (Open With, or double-click once it's the default),
+            // Lets the file manager open data files with TableGrip (Open With, or double-click once it's the default),
             // each in a window of its own. Plain .json and .txt are left out: too many of them aren't tables.
             fileAssociation("text/csv", "csv", "CSV Document")
             fileAssociation("text/tab-separated-values", "tsv", "TSV Document")
@@ -235,8 +235,8 @@ compose.desktop {
             // Signing and notarization are switched on from outside (CI), never stored here: -Pcompose.desktop.mac.sign=true
             // with compose.desktop.mac.signing.identity, and compose.desktop.mac.notarization.appleID / password / teamID.
             macOS {
-                dockName = "Datagrok"
-                bundleID = "dev.datagrok.app"
+                dockName = "TableGrip"
+                bundleID = "dev.tablegrip.app"
                 // CFBundleVersion, which Sparkle compares.
                 packageBuildVersion = appBuild
                 dmgPackageBuildVersion = appBuild
@@ -260,7 +260,7 @@ compose.desktop {
                 upgradeUuid = "0E0D7626-709F-4F7A-9AAC-C702F6194B34"
                 // Installs into the user's profile, so updates don't ask for admin rights.
                 perUserInstall = true
-                menuGroup = "Datagrok"
+                menuGroup = "TableGrip"
                 // MSI ignores anything after the third part and won't replace a build with the same version, so the
                 // build takes the third place: 1.4.0 build 412 and 1.4.1 build 415 install as 1.4.412 and 1.4.415.
                 msiPackageVersion = "$versionMajor.$versionMinor.$appBuild"
@@ -283,7 +283,7 @@ val verifyNoBundledDrivers by tasks.registering {
                 ZipFile(jar).use { zip -> zip.getEntry("META-INF/services/java.sql.Driver") != null }
             }
         if (offenders.isNotEmpty()) {
-            throw GradleException("These jars would ship a JDBC driver with Datagrok: ${offenders.joinToString { it.name }}. Drivers must be downloaded on demand.")
+            throw GradleException("These jars would ship a JDBC driver with TableGrip: ${offenders.joinToString { it.name }}. Drivers must be downloaded on demand.")
         }
     }
 }
@@ -354,11 +354,11 @@ val thirdPartyNotices by tasks.registering {
         val byLicense = components.get().groupBy { coordinates ->
             val group = coordinates.substringBefore(':')
             val license = licenseOf(group) ?: throw GradleException("No reviewed license for $coordinates. Read it and add its group to bundledLicenses.")
-            if (license !in allowed) throw GradleException("$coordinates is under $license, which Datagrok may not ship.")
+            if (license !in allowed) throw GradleException("$coordinates is under $license, which TableGrip may not ship.")
             license
         }
         val text = buildString {
-            appendLine("Datagrok includes the following open source libraries, under the licenses named.")
+            appendLine("TableGrip includes the following open source libraries, under the licenses named.")
             appendLine("License texts: https://spdx.org/licenses/<id>.html. JDBC drivers are not included: they are")
             appendLine("downloaded separately at the user's request, under their own licenses.")
             appendLine()
@@ -410,10 +410,10 @@ tasks {
                 framework.deleteRecursively()
                 // ditto keeps the framework's symlinks, which codesign needs.
                 Shell.run("ditto", sparkle.get().asFile.resolve("Sparkle.framework").absolutePath, framework.absolutePath)
-                // The XPC services are for sandboxed apps; Datagrok isn't one.
+                // The XPC services are for sandboxed apps; TableGrip isn't one.
                 framework.resolve("Versions/B/XPCServices").deleteRecursively()
                 framework.resolve("XPCServices").delete()
-                bridge.get().asFile.copyTo(frameworks.resolve("libDatagrokUpdater.dylib"), overwrite = true)
+                bridge.get().asFile.copyTo(frameworks.resolve("libTableGripUpdater.dylib"), overwrite = true)
 
                 val signer = if (sign) requireNotNull(identity) { "compose.desktop.mac.signing.identity is needed to sign" } else "-"
                 fun codesign(target: File, vararg extra: String) {
@@ -427,7 +427,7 @@ tasks {
                 codesign(framework.resolve("Versions/B/Autoupdate"))
                 codesign(framework.resolve("Versions/B/Updater.app"))
                 codesign(framework)
-                codesign(frameworks.resolve("libDatagrokUpdater.dylib"))
+                codesign(frameworks.resolve("libTableGripUpdater.dylib"))
                 codesign(app, "--entitlements", entitlements.absolutePath)
                 Shell.run("codesign", "--verify", "--deep", "--strict", app.absolutePath)
             }
@@ -453,7 +453,7 @@ tasks {
             doFirst { setExecutable(javaLauncher.get().executablePath.asFile.absolutePath) }
         }
         jvmArgs("-Dcompose.interop.blending=true")
-        // `./gradlew :app:run -Pdatagrok.home=/tmp/dg` runs against a throwaway profile/settings directory.
-        providers.gradleProperty("datagrok.home").orNull?.let { systemProperty("datagrok.home", it) }
+        // `./gradlew :app:run -Ptablegrip.home=/tmp/dg` runs against a throwaway profile/settings directory.
+        providers.gradleProperty("tablegrip.home").orNull?.let { systemProperty("tablegrip.home", it) }
     }
 }

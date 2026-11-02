@@ -2,7 +2,7 @@
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
-rootProject.name = "datagrok"
+rootProject.name = "tablegrip"
 
 pluginManagement {
     repositories {

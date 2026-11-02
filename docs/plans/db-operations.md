@@ -34,7 +34,7 @@ DB file has no server sessions" or "… does not support ClickHouse yet, planned
 ### 1.2 Tab layout
 
 ```
-┌ Toolbar: [⟳ 2s ▾] [⏸] | Filter: [Active ▾] [User ▾] [DB ▾] [> 10s] | [Hide idle] [Hide DataGrok sessions]
+┌ Toolbar: [⟳ 2s ▾] [⏸] | Filter: [Active ▾] [User ▾] [DB ▾] [> 10s] | [Hide idle] [Hide TableGrip sessions]
 ├──────────────────────────────────────────────┬──────────────────────────────┐
 │ Session tree (DataGrid, columns pid/user/db/ │ Selected session details:    │
 │ state/time/wait/truncated SQL).              │ Full SQL (highlighted),      │
@@ -46,7 +46,7 @@ DB file has no server sessions" or "… does not support ClickHouse yet, planned
 ```
 
 - Coloring: running longer than the threshold (yellow → red), *idle in transaction* (orange), waiting on a lock (light red).
-- DataGrok's own sessions are labeled `DataGrok` and hidden by default.
+- TableGrip's own sessions are labeled `TableGrip` and hidden by default.
 - Refresh: 1 / 2 / 5 / 10 s or paused. Refresh stops when the tab is not visible.
 
 ### 1.3 Core
@@ -61,7 +61,7 @@ data class SessionActivity(
     val waitEvent: String?,
     val query: String?, val queryStart: Instant?, val transactionStart: Instant?,
     val blockedBy: List<String>,
-    val own: Boolean,          // DataGrok's own session
+    val own: Boolean,          // TableGrip's own session
 )
 
 interface ActivityReader {
@@ -78,7 +78,7 @@ interface ActivityReader {
 | Blocking | `pg_blocking_pids(pid)` | MySQL 8: `performance_schema.data_lock_waits`; MariaDB / 5.7: `information_schema.INNODB_LOCK_WAITS` |
 | Cancel / terminate | `pg_cancel_backend` / `pg_terminate_backend` | `KILL QUERY id` / `KILL id` |
 | Missing privileges | other users' queries are hidden without `pg_read_all_stats`; kill needs `pg_signal_backend` | `PROCESS`; killing other users' sessions needs `CONNECTION_ADMIN` / `SUPER` |
-| Identifying DataGrok | `application_name = 'DataGrok'` | `connection_id()` of DataGrok's connections |
+| Identifying TableGrip | `application_name = 'TableGrip'` | `connection_id()` of TableGrip's connections |
 
 The monitor uses **its own dedicated connection**, not one from the console pool, so it keeps working when the pool is
 stuck. If privileges are missing, show a banner that states which privilege and the consequence (for example: "Only
@@ -97,7 +97,7 @@ sessions of user `app` are visible — `pg_read_all_stats` is required").
 
 | Tool | Source | Notes |
 | --- | --- | --- |
-| `pg_dump`, `pg_restore`, `psql` | Official PostgreSQL binaries (EDB zip for macOS/Windows; Linux: distro package) | Downloaded to `~/.datagrok/tools/postgresql/<version>/`, with a SHA-256 pin like `drivers.lock.json` |
+| `pg_dump`, `pg_restore`, `psql` | Official PostgreSQL binaries (EDB zip for macOS/Windows; Linux: distro package) | Downloaded to `~/.tablegrip/tools/postgresql/<version>/`, with a SHA-256 pin like `drivers.lock.json` |
 | `mysqldump`, `mysql` | **Not downloaded**. Use the version the user has installed | MySQL binaries are GPL; show install instructions (Homebrew, apt, installer) instead of distributing them |
 | `mariadb-dump` | Same as MySQL | |
 
@@ -122,7 +122,7 @@ A new page, next to the Drivers page, reusing the style of `DriversPanel`:
 
 - Tool list: version, source (Downloaded / System / User-selected), path, size.
 - Actions: Update, Remove, Remove old versions, Open folder, Change path, Verify (runs `--version`).
-- Total size of `~/.datagrok/tools/`.
+- Total size of `~/.tablegrip/tools/`.
 
 ## 3. Backup and restore
 
@@ -151,7 +151,7 @@ Open from: right-click a connection/database/schema → **Backup…**.
 - SSH: open a tunnel like a normal connection, and point the tool at `127.0.0.1:<port>`.
 - Progress: read stderr from `--verbose` and show the object being processed. Cancel = kill the process and delete the
   partial file.
-- Log each run to `~/.datagrok/logs/backup/`.
+- Log each run to `~/.tablegrip/logs/backup/`.
 - Check the version before running (`ServerIdentity` against `--version`).
 - Engines with no external tool: SQLite uses `VACUUM INTO`, DuckDB uses `EXPORT DATABASE` (nothing to download).
   Other engines: menu disabled with a reason.

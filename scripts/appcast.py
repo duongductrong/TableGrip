@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Keeps Datagrok's update feeds (appcast/*.xml) in step with its releases.
+"""Keeps TableGrip's update feeds (appcast/*.xml) in step with its releases.
 
 appcast/releases.json is the record: one entry per published release, with each target's archive, size and Ed25519
 signature. The XML feeds are generated from it and never edited by hand, so a bad release is pulled by deleting its
@@ -20,8 +20,8 @@ import os
 import pathlib
 import sys
 
-# DATAGROK_APPCAST_DIR lets scripts/test-update.sh build a throwaway feed.
-ROOT = pathlib.Path(os.environ.get("DATAGROK_APPCAST_DIR") or pathlib.Path(__file__).resolve().parent.parent / "appcast")
+# TABLEGRIP_APPCAST_DIR lets scripts/test-update.sh build a throwaway feed.
+ROOT = pathlib.Path(os.environ.get("TABLEGRIP_APPCAST_DIR") or pathlib.Path(__file__).resolve().parent.parent / "appcast")
 RECORD = ROOT / "releases.json"
 # Releases kept in each feed: enough for "what's new since your version", small enough to fetch daily.
 KEEP = 10
@@ -83,7 +83,7 @@ def item(release, target):
     if release["notes"].strip():
         notes = f'\n      <description sparkle:format="markdown"><![CDATA[{release["notes"].replace("]]>", "]]]]><![CDATA[>")}]]></description>'
     return f"""    <item>
-      <title>Datagrok {html.escape(release["version"])}</title>
+      <title>TableGrip {html.escape(release["version"])}</title>
       <pubDate>{release["date"]}</pubDate>
       <sparkle:version>{release["build"]}</sparkle:version>
       <sparkle:shortVersionString>{html.escape(release["version"])}</sparkle:shortVersionString>
@@ -98,7 +98,7 @@ def feed(items):
         '<?xml version="1.0" encoding="utf-8"?>\n'
         '<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">\n'
         "  <channel>\n"
-        "    <title>Datagrok</title>\n"
+        "    <title>TableGrip</title>\n"
         + "".join(i + "\n" for i in items)
         + "  </channel>\n</rss>\n"
     )

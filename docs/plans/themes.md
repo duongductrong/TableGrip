@@ -1,7 +1,7 @@
 # Colour themes
 
-Datagrok's look comes from a **colour theme**: a JSON file in a format modelled on Zed's theme files. The app ships six
-families, each with a dark and a light variant. Users add their own by dropping files into `~/.datagrok/themes/`.
+TableGrip's look comes from a **colour theme**: a JSON file in a format modelled on Zed's theme files. The app ships six
+families, each with a dark and a light variant. Users add their own by dropping files into `~/.tablegrip/themes/`.
 Settings pick one theme for dark mode and one for light mode.
 
 | Family | Dark | Light |
@@ -19,7 +19,7 @@ and control keys, so Jewel's Int UI colours (and today's look) stay exactly as t
 ## Settings
 
 ```jsonc
-// ~/.datagrok/settings.json (comments and trailing commas are fine)
+// ~/.tablegrip/settings.json (comments and trailing commas are fine)
 {
   "theme": { "mode": "System", "dark": "One Dark", "light": "One Light" },
   // Keys laid over a theme by its name, like Zed's theme_overrides / VS Code's colorCustomizations
@@ -44,7 +44,7 @@ and control keys, so Jewel's Int UI colours (and today's look) stay exactly as t
 
 ```jsonc
 {
-  "$schema": "https://datagrok.dev/schema/theme-v1.json",
+  "$schema": "https://tablegrip.dev/schema/theme-v1.json",
   "name": "Mine",
   "author": "me",
   "themes": [
@@ -84,9 +84,9 @@ The resolver is `resolveTheme` in `app/.../ui/theme/ColorTheme.kt`. Jewel's cont
 ## Importing VS Code and Zed themes (later)
 
 An importer only has to produce a `ThemeFamily`: read the other editor's file, map its keys, and write the result into
-`~/.datagrok/themes/`. Keys it can't map are simply left out and fall back as described above. Proposed mapping:
+`~/.tablegrip/themes/`. Keys it can't map are simply left out and fall back as described above. Proposed mapping:
 
-| Datagrok | VS Code `colors` | Zed `style` |
+| TableGrip | VS Code `colors` | Zed `style` |
 |---|---|---|
 | `frame.background` | `titleBar.activeBackground` / `sideBar.background` | `background` / `title_bar.background` |
 | `island.background` | `editor.background` | `editor.background` / `panel.background` |

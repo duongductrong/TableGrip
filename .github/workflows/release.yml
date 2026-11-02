@@ -33,20 +33,20 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          version=$(sed -n 's/^datagrok\.version=//p' gradle.properties)
+          version=$(sed -n 's/^tablegrip\.version=//p' gradle.properties)
           # The build number is the commit count of master: it only goes up, and the same commit always gets the same one.
           build=$(git rev-list --count HEAD)
           if [[ "$GITHUB_REF_TYPE" == tag ]]; then
             if [[ "${GITHUB_REF_NAME#v}" != "$version" ]]; then
-              echo "::error::Tag $GITHUB_REF_NAME doesn't match datagrok.version=$version in gradle.properties."
+              echo "::error::Tag $GITHUB_REF_NAME doesn't match tablegrip.version=$version in gradle.properties."
               exit 1
             fi
             if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/master; then
               echo "::error::$GITHUB_REF_NAME isn't on master. Releases are only made from master."
               exit 1
             fi
-            if [[ -z "$(sed -n 's/^datagrok\.sparklePublicKey=//p' gradle.properties)" ]]; then
-              echo "::error::datagrok.sparklePublicKey is empty in gradle.properties: the app couldn't verify its updates."
+            if [[ -z "$(sed -n 's/^tablegrip\.sparklePublicKey=//p' gradle.properties)" ]]; then
+              echo "::error::tablegrip.sparklePublicKey is empty in gradle.properties: the app couldn't verify its updates."
               exit 1
             fi
             signed=true
@@ -59,7 +59,7 @@ jobs:
           echo "build=$build" >> "$GITHUB_OUTPUT"
           echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
           echo "signed=$signed" >> "$GITHUB_OUTPUT"
-          echo "Datagrok $version (build $build), signed: $signed" >> "$GITHUB_STEP_SUMMARY"
+          echo "TableGrip $version (build $build), signed: $signed" >> "$GITHUB_STEP_SUMMARY"
 
   macos:
     needs: version
@@ -119,7 +119,7 @@ jobs:
           MAC_NOTARIZATION_TEAM_ID: ${{ secrets.MAC_NOTARIZATION_TEAM_ID }}
         run: |
           set -euo pipefail
-          args=(-Pdatagrok.build="$BUILD" :app:check :app:packageDmg)
+          args=(-Ptablegrip.build="$BUILD" :app:check :app:packageDmg)
           if [[ "$SIGNED" == true ]]; then
             args+=(
               -Pcompose.desktop.mac.sign=true
@@ -133,16 +133,16 @@ jobs:
           fi
           ./gradlew --no-configuration-cache "${args[@]}"
           mkdir -p dist
-          cp app/build/compose/binaries/main/dmg/*.dmg "dist/Datagrok-$VERSION-${{ matrix.target }}.dmg"
+          cp app/build/compose/binaries/main/dmg/*.dmg "dist/TableGrip-$VERSION-${{ matrix.target }}.dmg"
 
       - name: Check the signature, notarization and version
         if: needs.version.outputs.signed == 'true'
         run: |
           set -euo pipefail
-          dmg="dist/Datagrok-$VERSION-${{ matrix.target }}.dmg"
+          dmg="dist/TableGrip-$VERSION-${{ matrix.target }}.dmg"
           xcrun stapler validate "$dmg"
           spctl --assess --type open --context context:primary-signature --verbose "$dmg"
-          app=app/build/compose/binaries/main/app/Datagrok.app
+          app=app/build/compose/binaries/main/app/TableGrip.app
           codesign --verify --deep --strict --verbose=2 "$app"
           [[ $(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$app/Contents/Info.plist") == "$BUILD" ]]
 
@@ -154,14 +154,14 @@ jobs:
           TARGET: ${{ matrix.target }}
         run: |
           set -euo pipefail
-          dmg="Datagrok-$VERSION-$TARGET.dmg"
+          dmg="TableGrip-$VERSION-$TARGET.dmg"
           sign_update=$(find app/build/sparkle -name sign_update -type f -perm -u+x | head -1)
           key="$RUNNER_TEMP/sparkle.key"
           trap 'rm -f "$key"' EXIT
           printf '%s' "$SPARKLE_PRIVATE_KEY" > "$key"
           signature=$("$sign_update" --ed-key-file "$key" -p "dist/$dmg")
           [[ -n "$signature" ]] || { echo "::error::sign_update gave no signature."; exit 1; }
-          minimum=$(/usr/libexec/PlistBuddy -c "Print :LSMinimumSystemVersion" app/build/compose/binaries/main/app/Datagrok.app/Contents/Info.plist)
+          minimum=$(/usr/libexec/PlistBuddy -c "Print :LSMinimumSystemVersion" app/build/compose/binaries/main/app/TableGrip.app/Contents/Info.plist)
           jq -n --arg file "$dmg" --argjson length "$(stat -f %z "dist/$dmg")" --arg sig "$signature" --arg min "$minimum" --argjson build "$BUILD" \
             '{file: $file, length: $length, edSignature: $sig, minimumSystemVersion: $min, build: $build}' > "dist/appcast-$TARGET.json"
           cat "dist/appcast-$TARGET.json"
@@ -188,7 +188,7 @@ jobs:
       BUILD: ${{ needs.version.outputs.build }}
       # Authenticode needs an Artifact Signing account. Without one (variable WINDOWS_SIGNING unset or not "azure" in
       # the release environment), the MSI ships unsigned: SmartScreen warns on download, but WinSparkle still only
-      # installs updates carrying Datagrok's Ed25519 signature.
+      # installs updates carrying TableGrip's Ed25519 signature.
       AUTHENTICODE: ${{ needs.version.outputs.signed == 'true' && vars.WINDOWS_SIGNING == 'azure' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -211,7 +211,7 @@ jobs:
 
       - name: Build the app image
         shell: bash
-        run: ./gradlew --no-configuration-cache -Pdatagrok.build="$BUILD" :app:check :app:createDistributable
+        run: ./gradlew --no-configuration-cache -Ptablegrip.build="$BUILD" :app:check :app:createDistributable
 
       - name: Sign in to Azure
         if: env.AUTHENTICODE == 'true'
@@ -229,7 +229,7 @@ jobs:
           endpoint: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
           signing-account-name: ${{ secrets.AZURE_SIGNING_ACCOUNT }}
           certificate-profile-name: ${{ secrets.AZURE_CERTIFICATE_PROFILE }}
-          files-folder: app/build/compose/binaries/main/app/Datagrok
+          files-folder: app/build/compose/binaries/main/app/TableGrip
           files-folder-filter: exe,dll
           files-folder-recurse: true
           file-digest: SHA256
@@ -241,9 +241,9 @@ jobs:
         run: |
           set -euo pipefail
           # -x keeps Gradle from rebuilding (and so unsigning) the app image.
-          ./gradlew --no-configuration-cache -Pdatagrok.build="$BUILD" :app:packageMsi -x :app:createDistributable
+          ./gradlew --no-configuration-cache -Ptablegrip.build="$BUILD" :app:packageMsi -x :app:createDistributable
           mkdir -p dist
-          cp app/build/compose/binaries/main/msi/*.msi "dist/Datagrok-$VERSION-windows-x64.msi"
+          cp app/build/compose/binaries/main/msi/*.msi "dist/TableGrip-$VERSION-windows-x64.msi"
 
       - name: Sign the MSI
         if: env.AUTHENTICODE == 'true'
@@ -262,7 +262,7 @@ jobs:
         if: env.AUTHENTICODE == 'true'
         shell: pwsh
         run: |
-          $signature = Get-AuthenticodeSignature "dist/Datagrok-$env:VERSION-windows-x64.msi"
+          $signature = Get-AuthenticodeSignature "dist/TableGrip-$env:VERSION-windows-x64.msi"
           if ($signature.Status -ne 'Valid') { throw "MSI signature is $($signature.Status)" }
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -301,7 +301,7 @@ jobs:
         run: |
           set -euo pipefail
           ./gradlew --no-configuration-cache :app:downloadSparkle
-          msi="Datagrok-$VERSION-windows-x64.msi"
+          msi="TableGrip-$VERSION-windows-x64.msi"
           sign_update=$(find app/build/sparkle -name sign_update -type f -perm -u+x | head -1)
           key="$RUNNER_TEMP/sparkle.key"
           trap 'rm -f "$key"' EXIT
@@ -339,9 +339,9 @@ jobs:
       - name: Build
         run: |
           set -euo pipefail
-          ./gradlew --no-configuration-cache -Pdatagrok.build="$BUILD" :app:check :app:packageDeb
+          ./gradlew --no-configuration-cache -Ptablegrip.build="$BUILD" :app:check :app:packageDeb
           mkdir -p dist
-          cp app/build/compose/binaries/main/deb/*.deb "dist/Datagrok-$VERSION-linux-x64.deb"
+          cp app/build/compose/binaries/main/deb/*.deb "dist/TableGrip-$VERSION-linux-x64.deb"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: linux-x64
@@ -387,9 +387,9 @@ jobs:
             if [[ "$WINDOWS_SIGNING" != azure ]]; then
               echo
               echo "The Windows installer isn't Authenticode-signed yet, so Windows SmartScreen warns when it's downloaded."
-              echo "Updates from inside the app are still checked against Datagrok's signing key."
+              echo "Updates from inside the app are still checked against TableGrip's signing key."
             fi
           } > ../notes.md
-          flags=(--draft --title "Datagrok $VERSION" --notes-file ../notes.md --generate-notes --verify-tag)
+          flags=(--draft --title "TableGrip $VERSION" --notes-file ../notes.md --generate-notes --verify-tag)
           [[ "$PRERELEASE" == true ]] && flags+=(--prerelease)
           gh release create "$GITHUB_REF_NAME" "${flags[@]}" *

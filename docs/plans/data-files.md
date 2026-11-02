@@ -20,7 +20,7 @@ DatabaseType (ConnectionKind.DataFile)  ──►  DataFileStore.connect
 - **Formats are plugins.** A `DataFileFormat` reads a file into `SourceTable`s and returns a `DataFileDocument` that
   remembers the file's layout and writes `OutputTable`s back. Formats know nothing about SQL. Adding one (Parquet, ODS,
   a folder of CSVs) is an implementation, an entry in `DataFileFormats.all` and its `DatabaseType`.
-- **SQLite working copy.** The file is loaded into a temporary SQLite database under `~/.datagrok/cache/datafiles`
+- **SQLite working copy.** The file is loaded into a temporary SQLite database under `~/.tablegrip/cache/datafiles`
   (deleted on close; copies left by a crash are removed on the next open). Each table gets an `_row INTEGER PRIMARY KEY`
   so the table viewer can edit rows; it's never written to the file. Opening a data file needs the SQLite driver, like
   SQLite profiles do.
@@ -48,7 +48,7 @@ DatabaseType (ConnectionKind.DataFile)  ──►  DataFileStore.connect
 ## Opening from the file manager
 
 - **File associations.** The installers register `.csv`, `.tsv`, `.xlsx`, `.xlsm`, `.ndjson` and `.jsonl` (`fileAssociation`
-  in `app/build.gradle.kts`), so Finder's Open With, double-click once Datagrok is the default, and a file dropped on the
+  in `app/build.gradle.kts`), so Finder's Open With, double-click once TableGrip is the default, and a file dropped on the
   Dock icon open them. Plain `.json` and `.txt` are left out: most aren't tables.
 - **One app, one window per file.** `FileOpenRequests` takes files from the command line (Windows, Linux) and from
   macOS's open-file events, installed before the UI so the launching file isn't missed. Each file gets a

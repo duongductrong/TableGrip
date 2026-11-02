@@ -45,7 +45,7 @@ From the symbols of `TableProPluginKit.framework`:
   GCP service account key, MFA.
 - Import/export is also plugin-based: CSV, JSON, SQL, XLSX, Markdown, MQL (Mongo), Parquet.
 
-## 2. DataGrok today
+## 2. TableGrip today
 
 | Item | Current state | Problem when expanding |
 | --- | --- | --- |
@@ -57,18 +57,18 @@ From the symbols of `TableProPluginKit.framework`:
 | Metadata model | `Namespace(catalog, schema)`, `TableRef`, `ColumnInfo` | Purely relational |
 | Branching on type | ~20 files in `app` and `core` (`ConnectionDialog`, `ConsoleTab`, `GridController`, `SqlCompleter`, `ConnectionString`...) | Must switch to asking about capabilities |
 
-**DataGrok's big advantage:** it runs on the JVM. Almost every SQL engine has an official JDBC driver on Maven Central,
+**TableGrip's big advantage:** it runs on the JVM. Almost every SQL engine has an official JDBC driver on Maven Central,
 and the NoSQL engines have official Java SDKs. TablePro has to write a Swift driver (or embed a Go helper) for each engine;
-DataGrok only needs a dialect + introspection.
+TableGrip only needs a dialect + introspection.
 
 ## 3. Goals
 
-DataGrok is a **closed-source** product. Every licensing choice below follows from this.
+TableGrip is a **closed-source** product. Every licensing choice below follows from this.
 
 1. Cover all 37 TablePro types, plus popular engines TablePro does not have.
-2. **The app bundles no drivers.** The installer contains only DataGrok code and base libraries with permissive licenses.
+2. **The app bundles no drivers.** The installer contains only TableGrip code and base libraries with permissive licenses.
    Users download a driver the first time they need it.
-3. **No license risk:** DataGrok does not redistribute, mirror, or automatically download drivers under a strong
+3. **No license risk:** TableGrip does not redistribute, mirror, or automatically download drivers under a strong
    copyleft license or a vendor proprietary license.
 4. Surpass TablePro with **Generic JDBC (bring your own driver)**: users point to a `.jar` file they already have.
 
@@ -79,7 +79,7 @@ DataGrok is a **closed-source** product. Every licensing choice below follows fr
 - **No bundling.** Remove all `runtimeOnly(libs.jdbc.*)` from `core/build.gradle.kts`; drivers remain only in
   `testImplementation` (tests are not distributed).
 - **Users download from the original source.** When needed, the app downloads the artifact directly from Maven Central (`repo1.maven.org`), not through
-  a DataGrok server/mirror: re-hosting the file is redistribution. Before downloading, ask the user, showing the license name, the link to
+  a TableGrip server/mirror: re-hosting the file is redistribution. Before downloading, ask the user, showing the license name, the link to
   the license text, and the file size.
 - **The catalog contains only drivers that pass the license check** (table 4.2). Drivers that fail can only be used the BYO way:
   the app has a preset (dialect, URL template, class name) but **never downloads automatically**; the user picks a jar file they got from the vendor
@@ -89,7 +89,7 @@ DataGrok is a **closed-source** product. Every licensing choice below follows fr
 - **Check the whole dependency tree.** Snowflake, BigQuery, Mongo... pull in dozens of jars. The lockfile (4.3) lists the license
   of *each* artifact in the tree; one artifact outside the allowlist removes the whole driver from the catalog.
 - **Client ≠ server.** Server licenses (Redis RSAL/SSPL/AGPL, MongoDB SSPL, Elasticsearch ELv2/SSPL/AGPL) do not
-  apply to client libraries or to DataGrok; only the client library's license matters.
+  apply to client libraries or to TableGrip; only the client library's license matters.
 
 ### 4.2 Classification
 
@@ -102,7 +102,7 @@ Licenses are taken from the POM on Maven Central (latest version, 2026-10-28); "
 | **B: Catalog, with conditions** | LGPL (weak copyleft), used unmodified, loaded dynamically, user downloads | MariaDB Connector/J (LGPL-2.1), Jaybird / Firebird (LGPL) |
 | **C: BYO only, never auto-download** | GPL, or a vendor proprietary license | MySQL Connector/J (GPLv2 + FOSS exception), Oracle `ojdbc` (FUTC), SAP HANA `ngdbc` (SAP Developer License), Teradata (Generic Download License), IBM Db2 `jcc` (IPLA), Exasol (EXAClient License), Vertica (Client License Agreement) |
 | **C?: Treat as C until verified** | POM differs from reality, or a separate license | Dameng `DmJdbcDriver18` (POM says Apache but it is a vendor driver), Athena JDBC (POM has no license), Weaviate Java client ("Weaviate B.V. License") |
-| **D: No third-party driver needed** | DataGrok code calls HTTP/the protocol directly | libSQL / Turso (Hrana HTTP), Cloudflare D1 & R2 SQL (REST), Firebase RTDB (REST), SurrealDB (HTTP `/sql`), Typesense (REST), Weaviate (REST/GraphQL, replaces the client in row C?), Athena (via AWS SDK v2 instead of JDBC) |
+| **D: No third-party driver needed** | TableGrip code calls HTTP/the protocol directly | libSQL / Turso (Hrana HTTP), Cloudflare D1 & R2 SQL (REST), Firebase RTDB (REST), SurrealDB (HTTP `/sql`), Typesense (REST), Weaviate (REST/GraphQL, replaces the client in row C?), Athena (via AWS SDK v2 instead of JDBC) |
 
 ### 4.2.1 Group B (LGPL) with a closed-source app
 
@@ -110,11 +110,11 @@ MariaDB Connector/J (LGPL) is the **only driver** for the whole MySQL family (My
 StarRocks, Doris, SingleStore...) once Connector/J is removed. **Proposal:** keep it in the catalog, downloaded by the user on demand, on
 these conditions:
 
-1. DataGrok **does not bundle or mirror** the LGPL jar; the user downloads it directly from Maven Central.
+1. TableGrip **does not bundle or mirror** the LGPL jar; the user downloads it directly from Maven Central.
 2. **No modifying, shading, or merging** the jar; it is always a separate file, loaded dynamically, and the user can replace it with another build
    (BYO for the same engine).
 3. Before downloading, show **LGPL-2.1**, the link to the license text, and the link to the upstream source code.
-4. The **DataGrok EULA** does not forbid users from replacing this library, or from reverse engineering to the extent needed to debug that replacement
+4. The **TableGrip EULA** does not forbid users from replacing this library, or from reverse engineering to the extent needed to debug that replacement
    (LGPL-2.1 §6).
 
 Legal needs to confirm **once for the whole group B policy** (applies to both MariaDB Connector/J and Jaybird). If it
@@ -135,10 +135,10 @@ but it goes against the decision "bundle no drivers"; it can be revisited if the
   `drivers.lock.json`: coordinate, Maven Central URL, sha256, and license of each jar. The task fails if any license is outside the
   allowlist (A, verified A\*, B). The lockfile is packaged in the app; at runtime the app just downloads exactly that list, with no
   Maven resolver.
-- **Storage:** `DatagrokPaths/drivers/<id>/<version>/`; verify sha256 before loading; users can delete or change versions in Settings.
+- **Storage:** `TableGripPaths/drivers/<id>/<version>/`; verify sha256 before loading; users can delete or change versions in Settings.
 - **A separate classloader per driver.** The current code already calls `java.sql.Driver` directly instead of `DriverManager`. HikariCP in particular
   must receive a `DataSource` wrapping that driver instance instead of `driverClassName` (Hikari loads classes through the context classloader).
-- **Adapters for non-JDBC SDKs** (Redis, Mongo, Kafka...): the adapter is DataGrok code that lives in the app, compiled against the SDK
+- **Adapters for non-JDBC SDKs** (Redis, Mongo, Kafka...): the adapter is TableGrip code that lives in the app, compiled against the SDK
   as `compileOnly`; at runtime the adapter is loaded with the same classloader as the SDK jars just downloaded, found through `ServiceLoader`.
 - **BYO:** pick one or more jars (or a folder), and the app scans them for `java.sql.Driver` classes; it stores the path and does not copy the files.
   Group C presets only prefill the class name, URL template, and the vendor's download page link (opens the browser, the user downloads it themselves).
@@ -148,7 +148,7 @@ but it goes against the decision "bundle no drivers"; it can be revisited if the
 
 ### 4.4 Detecting the driver and suggesting a download when the user enters a connection
 
-Goal: users do not need to know what a "driver" is. They can enter a connection any way they like; DataGrok identifies the engine,
+Goal: users do not need to know what a "driver" is. They can enter a connection any way they like; TableGrip identifies the engine,
 picks a suitable driver, and offers to download it right in the form, before they click Connect.
 
 #### Signal sources (in decreasing order of reliability)
@@ -157,7 +157,7 @@ picks a suitable driver, and offers to download it right in the form, before the
 | --- | --- | --- |
 | **Engine chosen by the user** in the dialog | Always present | The engine's default driver (`Engine.drivers.first()`) |
 | **Pasted connection string / URL** | The "Paste" field and URL field, if filled | Extend `ConnectionString.parse` (currently only PG/MySQL/MariaDB/SQLite) into a scheme → engine table: `postgres(ql)://`, `mysql://`, `mariadb://`, `sqlserver://`, `mongodb(+srv)://`, `redis(s)://`, `clickhouse://`, `libsql://`, `jdbc:<subprotocol>:` (sqlserver, oracle, clickhouse, duckdb, snowflake, bigquery, trino, databricks, db2, sap, teradata...). Unknown subprotocol → Generic JDBC |
-| **File** (picked, dragged and dropped, opened with DataGrok) | File-based engines | Read magic bytes, do not trust the file extension: `SQLite format 3\0` → SQLite; DuckDB header → DuckDB; `.parquet`/`.csv` → DuckDB; H2 `.mv.db`; Firebird `.fdb` |
+| **File** (picked, dragged and dropped, opened with TableGrip) | File-based engines | Read magic bytes, do not trust the file extension: `SQLite format 3\0` → SQLite; DuckDB header → DuckDB; `.parquet`/`.csv` → DuckDB; H2 `.mv.db`; Firebird `.fdb` |
 | **Port** when the engine is unknown | The user only entered host:port | A hint only: 5432 PG, 3306 MySQL, 1433 SQL Server, 1521 Oracle, 6379 Redis, 27017 MongoDB, 8123/9000 ClickHouse, 9042 Cassandra, 9200 Elasticsearch, 2379 etcd, 9092 Kafka, 7687 Neo4j |
 | **Server probe** (handshake, before login) | Click "Detect", or when the engine is only known at the family level | MySQL wire: the server sends a greeting first → the version string distinguishes MySQL / MariaDB / TiDB / OceanBase. Redis wire: `HELLO` → Redis / Valkey. HTTP: `GET /` on port 9200 → Elasticsearch / OpenSearch, port 8123 → ClickHouse |
 | **After connecting** | First Test/Connect | `SELECT version()` and similar → CockroachDB, Redshift, YugabyteDB, TimescaleDB... on PG wire; suggest switching the engine preset (dialect), keeping the same driver |
@@ -318,7 +318,7 @@ moving the MySQL family to the MariaDB driver). Done when:
   - Magic bytes for DuckDB → Phase 1 together with DuckDB.
 - Needs a human review before release: `THIRD-PARTY-NOTICES.txt` currently lists libraries + licenses + SPDX links; the
   release build should include the full license texts, copyright lines, and NOTICE files of Apache-2.0 libraries — a job for legal.
-- A profile with an unknown `type` (from a newer DataGrok version) currently breaks the whole `connections.json` file on read; it should skip just that
+- A profile with an unknown `type` (from a newer TableGrip version) currently breaks the whole `connections.json` file on read; it should skip just that
   profile instead of the whole file — handle this when adding the first engine in Phase 1.
 
 ## 6. Engine roadmap
@@ -355,12 +355,12 @@ Sizes: **S** ≤ 2 days · **M** ~1 week · **L** 2–3 weeks. The "Group" colum
 | PG family: Redshift, CockroachDB, Greenplum, YugabyteDB, TimescaleDB, Neon, Supabase, PGlite | PG JDBC (Redshift has its own driver) | A | S each | Child dialect + SSL preset |
 | MySQL family: TiDB, OceanBase, Databend, StarRocks, Doris, SingleStore, PlanetScale | MariaDB Connector/J | B | S each | Depends on the decision in 4.2 |
 | H2, HSQLDB, Derby, Firebird | H2 / HSQLDB / Derby / Jaybird | A / B | S each | Cheap, adds coverage |
-| Oracle | `ojdbc` | **C (BYO)** | L | DataGrok handles the dialect, PL/SQL splitter, `DBMS_METADATA`, TNS/wallet; users get ojdbc themselves |
+| Oracle | `ojdbc` | **C (BYO)** | L | TableGrip handles the dialect, PL/SQL splitter, `DBMS_METADATA`, TNS/wallet; users get ojdbc themselves |
 
 ### Phase 2: key-value and document (≈5–6 weeks)
 
 **Status (2026-10-29): Phase 2 done — Redis, MongoDB, etcd.**
-- Architecture for non-JDBC clients: a DataGrok adapter (module `engines/redis`, compiled against core + Lettuce as
+- Architecture for non-JDBC clients: a TableGrip adapter (module `engines/redis`, compiled against core + Lettuce as
   `compileOnly`) is packaged in the app at `engines/redis.jar`, not on the classpath; `DriverLibrary.loadClient` loads it
   with the same classloader as the Lettuce jars the user downloaded (15 jars, 7.7 MB, MIT/Apache/MIT-0). MongoDB and etcd will follow the same
   path.
@@ -440,7 +440,7 @@ Sizes: **S** ≤ 2 days · **M** ~1 week · **L** 2–3 weeks. The "Group" colum
 ### Phase 6: enterprise (BYO presets only, no download)
 
 SAP HANA, Teradata, IBM Db2, Exasol, Vertica, Dameng (until verification is done). Each is **S–M**: preset + dialect +
-structure reader; users supply the driver themselves. This is where DataGrok still "supports" an engine without touching the license.
+structure reader; users supply the driver themselves. This is where TableGrip still "supports" an engine without touching the license.
 
 **Skipped:** Beancount (too niche).
 
@@ -474,7 +474,7 @@ Total ≈ 7 months for one person; from M1 onward the work can run in parallel b
   before it enters the lockfile; get legal's opinion once for the policy (especially group B, section 4.2.1) rather than per driver.
 - **No open-source alternatives on the JVM:** TablePro avoids proprietary drivers with libraries that implement the protocol themselves
   (`oracle-nio` for Oracle, `go-hdb` for SAP HANA, both Apache-2.0). The JVM has no equivalent that is mature enough, so
-  Oracle and HANA in DataGrok remain BYO. Running `go-hdb` as a sidecar process like TablePro could be considered if one-click HANA is needed.
+  Oracle and HANA in TableGrip remain BYO. Running `go-hdb` as a sidecar process like TablePro could be considered if one-click HANA is needed.
 - **Vendor changes license in a new version:** the lockfile pins the version and license; upgrading a version re-runs the check.
 - **Slower first-run experience** because drivers must be downloaded, even PostgreSQL/SQLite. Mitigation: the download banner is right in the connection
   dialog, and the download runs in the background while the user fills in the form.

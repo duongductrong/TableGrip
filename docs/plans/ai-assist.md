@@ -42,7 +42,7 @@ Suggested order: **Fix with AI** (build the shared infrastructure, low risk) →
 
 ### 3.1 `AssistTask`: a single AI turn that returns validated JSON
 
-New package `dev.datagrok.core.assist`, depending only on `AgentAdapter`, so it can be tested with a fake adapter:
+New package `dev.tablegrip.core.assist`, depending only on `AgentAdapter`, so it can be tested with a fake adapter:
 
 ```kotlin
 interface AssistTask<O> {
@@ -94,7 +94,7 @@ read sensitive data until the user has actively allowed it.
 - Every AI popover has a **"Data to be sent"** section (expandable to show the verbatim prompt), along with the agent
   name and its location (local CLI or provider URL).
 - Settings has a global "AI assist" switch to turn everything off.
-- Local log in `~/.datagrok/logs/`: task name, agent, time, result (ok/invalid/failed), **no content is recorded**.
+- Local log in `~/.tablegrip/logs/`: task name, agent, time, result (ok/invalid/failed), **no content is recorded**.
 
 ### 3.3 Scoped schema context
 
@@ -190,7 +190,7 @@ The AI returns a **`FilterGroup` as JSON**, not SQL. This way:
 
 Table name; columns with their `ValueKind` and list of valid operators; enum or distinct values of low-cardinality
 columns (≤ 30, obtained with the existing value-suggestion mechanism, only at `SchemaAndSamples`); the current time,
-time zone, locale-based first day of the week; Datagrok's relative date syntax.
+time zone, locale-based first day of the week; TableGrip's relative date syntax.
 
 ### Gaps to fill first
 

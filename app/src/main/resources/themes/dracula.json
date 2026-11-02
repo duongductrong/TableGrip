@@ -1,5 +1,5 @@
 {
-  "$schema": "https://datagrok.dev/schema/theme-v1.json",
+  "$schema": "https://tablegrip.dev/schema/theme-v1.json",
   "name": "Dracula",
   "author": "Dracula Theme (draculatheme.com), with Alucard as its light variant",
   "license": "MIT",
