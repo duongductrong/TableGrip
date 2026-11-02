@@ -10,3 +10,6 @@ local.properties
 
 # Written by Apache Derby in the working directory (tests)
 derby.log
+
+# JVM crash logs
+hs_err_pid*.log

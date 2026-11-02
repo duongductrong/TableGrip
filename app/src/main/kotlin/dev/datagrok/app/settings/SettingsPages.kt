@@ -328,7 +328,7 @@ object SettingsPages {
                                     "Download and install updates automatically",
                                     Settings::installUpdatesAutomatically,
                                     { s, v -> s.copy(installUpdatesAutomatically = v) },
-                                    hint = "Downloads in the background and installs the next time you quit. Off: asks first, with the release notes.",
+                                    hint = "Downloads in the background and installs the next time you quit. Off: asks first, with the release notes. On Windows, Datagrok always asks before installing.",
                                 ),
                                 ChoiceField(
                                     "Channel",

@@ -259,6 +259,54 @@ jobs:
           path: dist/*
           if-no-files-found: error
 
+  # WinSparkle checks the same kind of Ed25519 signature as Sparkle; Sparkle's sign_update makes it, on a Mac.
+  windows-update-signature:
+    needs: [version, windows]
+    if: needs.version.outputs.signed == 'true'
+    runs-on: macos-15
+    environment: release
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      BUILD: ${{ needs.version.outputs.build }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        with:
+          cache-disabled: true
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: windows-x64
+          path: dist
+      - name: Sign the update
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          ./gradlew --no-configuration-cache :app:downloadSparkle
+          msi="Datagrok-$VERSION-windows-x64.msi"
+          sign_update=$(find app/build/sparkle -name sign_update -type f -perm -u+x | head -1)
+          key="$RUNNER_TEMP/sparkle.key"
+          trap 'rm -f "$key"' EXIT
+          printf '%s' "$SPARKLE_PRIVATE_KEY" > "$key"
+          signature=$("$sign_update" --ed-key-file "$key" -p "dist/$msi")
+          [[ -n "$signature" ]] || { echo "::error::sign_update gave no signature."; exit 1; }
+          mkdir -p meta
+          # JBR 25 needs Windows 10 or later.
+          jq -n --arg file "$msi" --argjson length "$(stat -f %z "dist/$msi")" --arg sig "$signature" --argjson build "$BUILD" \
+            '{file: $file, length: $length, edSignature: $sig, minimumSystemVersion: "10.0", build: $build}' > meta/appcast-windows-x64.json
+          cat meta/appcast-windows-x64.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-x64-update
+          path: meta/*
+          if-no-files-found: error
+
   linux:
     needs: version
     runs-on: ubuntu-latest
@@ -289,7 +337,7 @@ jobs:
           if-no-files-found: error
 
   draft-release:
-    needs: [version, macos, windows, linux]
+    needs: [version, macos, windows, windows-update-signature, linux]
     if: needs.version.outputs.signed == 'true'
     runs-on: ubuntu-latest
     environment: release

@@ -11,6 +11,9 @@ class UpdaterTest {
         assertEquals("${Updater.FeedBase}/macos-arm64.xml", Updater.feedUrl("Mac OS X", "aarch64", override = null))
         assertEquals("${Updater.FeedBase}/macos-x64.xml", Updater.feedUrl("Mac OS X", "x86_64", override = null))
         assertEquals("${Updater.FeedBase}/windows-x64.xml", Updater.feedUrl("Windows 11", "amd64", override = null))
+        // WinSparkle has no channels, so Beta is a feed of its own; Sparkle filters one feed by channel instead.
+        assertEquals("${Updater.FeedBase}/windows-x64-beta.xml", Updater.feedUrl("Windows 11", "amd64", beta = true, override = null))
+        assertEquals("${Updater.FeedBase}/macos-arm64.xml", Updater.feedUrl("Mac OS X", "aarch64", beta = true, override = null))
     }
 
     @Test

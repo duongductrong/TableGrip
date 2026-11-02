@@ -16,9 +16,15 @@ data class AppVersion(
     companion object {
         private const val Resource = "/datagrok-version.properties"
 
+        private val properties: Properties by lazy {
+            Properties().also { properties -> AppVersion::class.java.getResourceAsStream(Resource)?.use(properties::load) }
+        }
+
+        /** The base64 Ed25519 key updates must be signed with (`datagrok.sparklePublicKey`); blank in builds without one. */
+        val updatePublicKey: String
+            get() = properties.getProperty("sparklePublicKey").orEmpty()
+
         val current: AppVersion by lazy {
-            val properties = Properties()
-            AppVersion::class.java.getResourceAsStream(Resource)?.use(properties::load)
             AppVersion(
                 version = properties.getProperty("version") ?: "0.0.0-dev",
                 build = properties.getProperty("build")?.toIntOrNull() ?: 0,

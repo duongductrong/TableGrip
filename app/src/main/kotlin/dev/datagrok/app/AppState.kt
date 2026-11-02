@@ -147,8 +147,10 @@ class AppState(
     val tools = ToolsViewModel(this)
     /** Backups on a schedule while the app is open; off unless turned on in Settings → Backups. */
     val scheduledBackups = ScheduledBackups(this)
+    /** Quits the app the way the user would, asking about unsaved work; [Main] sets it. */
+    var quitApp: () -> Unit = {}
     /** Keeps the installed app up to date; [Main] starts it, tests and `:app:run` get one that does nothing. */
-    val updater: Updater = Updater.create()
+    val updater: Updater = Updater.create(canQuit = { !quitWouldAsk }, requestQuit = { quitApp() })
 
     /** Starts update checks as Settings → Updates say. */
     fun startUpdater() {
@@ -312,15 +314,22 @@ class AppState(
      * first when one does: closing the connection would drop them with its working copy.
      */
     fun confirmDataFiles(connectionIds: Collection<String>?, then: () -> Unit) {
-        val unsaved =
-            connections.profiles
-                .filter { connectionIds == null || it.id in connectionIds }
-                .mapNotNull { databases.dataFile(it.id) }
-                .filter { it.sync.state.value.let { state -> state is DataFileState.Held || state is DataFileState.Failed } }
+        val unsaved = unsavedDataFileConnections(connectionIds)
         if (unsaved.isEmpty()) then() else unsavedDataFiles = UnsavedDataFiles(unsaved, then)
     }
 
+    private fun unsavedDataFileConnections(connectionIds: Collection<String>?) =
+        connections.profiles
+            .filter { connectionIds == null || it.id in connectionIds }
+            .mapNotNull { databases.dataFile(it.id) }
+            .filter { it.sync.state.value.let { state -> state is DataFileState.Held || state is DataFileState.Failed } }
+
+    /** Whether [requestExit] would ask the user anything before quitting, i.e. whether quitting now could lose work. */
+    val quitWouldAsk: Boolean
+        get() = files.windows.any { it.hasUnsavedWork } || workspace.tabs.any { it.losesWorkOnQuit } || unsavedDataFileConnections(null).isNotEmpty()
+
     fun dispose() {
+        updater.dispose()
         agent.stop()
         workspace.disposeAll()
         files.disposeAll()

@@ -25,7 +25,9 @@ ROOT = pathlib.Path(os.environ.get("DATAGROK_APPCAST_DIR") or pathlib.Path(__fil
 RECORD = ROOT / "releases.json"
 # Releases kept in each feed: enough for "what's new since your version", small enough to fetch daily.
 KEEP = 10
-TARGETS = ("macos-arm64", "macos-x64")
+TARGETS = ("macos-arm64", "macos-x64", "windows-x64")
+# WinSparkle has no channels: Windows gets a stable-only feed and one with pre-releases too.
+WINDOWS = "windows-x64"
 
 
 def load():
@@ -73,7 +75,10 @@ def add(args):
 
 def item(release, target):
     archive = release["targets"][target]
-    channel = "\n      <sparkle:channel>beta</sparkle:channel>" if release["channel"] == "beta" else ""
+    windows = target == WINDOWS
+    channel = "\n      <sparkle:channel>beta</sparkle:channel>" if release["channel"] == "beta" and not windows else ""
+    # WinSparkle runs the MSI with these: progress only, no questions; per-user, so no UAC prompt either.
+    installer = ' sparkle:os="windows-x64" sparkle:installerArguments="/passive"' if windows else ""
     notes = ""
     if release["notes"].strip():
         notes = f'\n      <description sparkle:format="markdown"><![CDATA[{release["notes"].replace("]]>", "]]]]><![CDATA[>")}]]></description>'
@@ -84,24 +89,36 @@ def item(release, target):
       <sparkle:shortVersionString>{html.escape(release["version"])}</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>{html.escape(archive["minimumSystemVersion"])}</sparkle:minimumSystemVersion>
       <sparkle:fullReleaseNotesLink>{html.escape(release["notesUrl"])}</sparkle:fullReleaseNotesLink>{channel}{notes}
-      <enclosure url="{html.escape(archive["url"])}" length="{archive["length"]}" type="application/octet-stream" sparkle:edSignature="{html.escape(archive["edSignature"])}"/>
+      <enclosure url="{html.escape(archive["url"])}" length="{archive["length"]}" type="application/octet-stream" sparkle:edSignature="{html.escape(archive["edSignature"])}"{installer}/>
     </item>"""
+
+
+def feed(items):
+    return (
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        '<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">\n'
+        "  <channel>\n"
+        "    <title>Datagrok</title>\n"
+        + "".join(i + "\n" for i in items)
+        + "  </channel>\n</rss>\n"
+    )
+
+
+def write(name, releases, target):
+    items = [item(r, target) for r in releases if target in r["targets"]][:KEEP]
+    (ROOT / name).write_text(feed(items))
+    print(f"appcast/{name}: {len(items)} releases")
 
 
 def render(_args=None):
     releases = sorted(load(), key=lambda r: r["build"], reverse=True)
+    ROOT.mkdir(exist_ok=True)
     for target in TARGETS:
-        items = [item(r, target) for r in releases if target in r["targets"]][:KEEP]
-        feed = (
-            '<?xml version="1.0" encoding="utf-8"?>\n'
-            '<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">\n'
-            "  <channel>\n"
-            "    <title>Datagrok</title>\n"
-            + "".join(i + "\n" for i in items)
-            + "  </channel>\n</rss>\n"
-        )
-        (ROOT / f"{target}.xml").write_text(feed)
-        print(f"appcast/{target}.xml: {len(items)} releases")
+        if target == WINDOWS:
+            write(f"{target}.xml", [r for r in releases if r["channel"] == "stable"], target)
+            write(f"{target}-beta.xml", releases, target)
+        else:
+            write(f"{target}.xml", releases, target)
 
 
 def main():

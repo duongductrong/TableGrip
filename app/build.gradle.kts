@@ -31,11 +31,14 @@ val (versionMajor, versionMinor, versionPatch) = versionMatch.destructured
 val versionResource by tasks.registering {
     val version = appVersion
     val build = appBuild
+    // Windows reads the update key from here; macOS from Info.plist.
+    val updateKey = providers.gradleProperty("datagrok.sparklePublicKey").orNull.orEmpty()
     val output = layout.buildDirectory.file("generated/version/datagrok-version.properties")
     inputs.property("version", version)
     inputs.property("build", build)
+    inputs.property("updateKey", updateKey)
     outputs.file(output)
-    doLast { output.get().asFile.apply { parentFile.mkdirs() }.writeText("version=$version\nbuild=$build\n") }
+    doLast { output.get().asFile.apply { parentFile.mkdirs() }.writeText("version=$version\nbuild=$build\nsparklePublicKey=$updateKey\n") }
 }
 
 // endregion
@@ -112,6 +115,40 @@ val buildUpdaterBridge by tasks.registering {
     }
 }
 
+val isWindowsHost = System.getProperty("os.name").startsWith("Windows")
+val winSparkleVersion = "0.9.4"
+val winSparkleSha256 = "6037df37fc263bd1650a1c4949681a9d40ffe991d01f35892a406cb5d103c976"
+/** Compose copies `windows-x64/` from here into the Windows app's resources folder. */
+val appResources = layout.buildDirectory.dir("appResources")
+
+/** WinSparkle's x64 DLL from its release archive, checked against its pinned SHA-256. */
+val downloadWinSparkle by tasks.registering {
+    val version = winSparkleVersion
+    val sha256 = winSparkleSha256
+    val output = appResources.map { it.dir("windows-x64") }
+    inputs.property("version", version)
+    inputs.property("sha256", sha256)
+    outputs.dir(output)
+    val windows = isWindowsHost
+    onlyIf { windows }
+    doLast {
+        val archive = File(temporaryDir, "WinSparkle-$version.zip")
+        fun digest() = MessageDigest.getInstance("SHA-256").digest(archive.readBytes()).joinToString("") { "%02x".format(it) }
+        if (!archive.isFile || digest() != sha256) {
+            URI("https://github.com/vslavik/winsparkle/releases/download/v$version/WinSparkle-$version.zip").toURL().openStream().use { input ->
+                archive.outputStream().use { input.copyTo(it) }
+            }
+            val actual = digest()
+            if (actual != sha256) throw GradleException("WinSparkle $version doesn't match its pinned SHA-256 (got $actual).")
+        }
+        val dir = output.get().asFile.apply { deleteRecursively(); mkdirs() }
+        ZipFile(archive).use { zip ->
+            val entry = zip.getEntry("WinSparkle-$version/x64/Release/WinSparkle.dll") ?: throw GradleException("No x64 WinSparkle.dll in WinSparkle $version.")
+            zip.getInputStream(entry).use { input -> dir.resolve("WinSparkle.dll").outputStream().use { input.copyTo(it) } }
+        }
+    }
+}
+
 // endregion
 
 kotlin {
@@ -171,6 +208,7 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            appResourcesRootDir = appResources
             packageName = "Datagrok"
             // Installers only take MAJOR.MINOR.PATCH; a pre-release's suffix is shown by the app itself.
             packageVersion = "$versionMajor.$versionMinor.$versionPatch"
@@ -302,6 +340,10 @@ val thirdPartyNotices by tasks.registering {
         }
     val licenses = bundledLicenses
     val allowed = shippableLicenses
+    val sparkle = sparkleVersion
+    val winSparkle = winSparkleVersion
+    inputs.property("sparkle", sparkle)
+    inputs.property("winSparkle", winSparkle)
     val output = noticesFile
     inputs.property("components", components)
     inputs.property("licenses", licenses)
@@ -319,6 +361,10 @@ val thirdPartyNotices by tasks.registering {
             appendLine("Datagrok includes the following open source libraries, under the licenses named.")
             appendLine("License texts: https://spdx.org/licenses/<id>.html. JDBC drivers are not included: they are")
             appendLine("downloaded separately at the user's request, under their own licenses.")
+            appendLine()
+            appendLine("Native components, MIT (https://spdx.org/licenses/MIT.html):")
+            appendLine("  Sparkle $sparkle (macOS updater), https://github.com/sparkle-project/Sparkle")
+            appendLine("  WinSparkle $winSparkle (Windows updater), https://github.com/vslavik/winsparkle")
             byLicense.toSortedMap().forEach { (license, items) ->
                 appendLine()
                 appendLine("$license (https://spdx.org/licenses/$license.html)")
@@ -344,6 +390,7 @@ tasks {
         }
     }
     matching { it.name.startsWith("package") }.configureEach { dependsOn(verifyNoBundledDrivers) }
+    matching { it.name == "prepareAppResources" }.configureEach { dependsOn(downloadWinSparkle) }
 
     // Adds Sparkle and the bridge to the .app jpackage made, then signs them and the app again, inside out.
     matching { it.name == "createDistributable" }.configureEach {

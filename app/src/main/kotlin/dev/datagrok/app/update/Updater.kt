@@ -21,7 +21,7 @@ enum class UpdateChannel(val label: String) {
 }
 
 /**
- * Keeps the app up to date: Sparkle on macOS. Elsewhere, and in builds that weren't packaged (`:app:run`), it does
+ * Keeps the app up to date: Sparkle on macOS, WinSparkle on Windows. On Linux, and in builds that weren't packaged (`:app:run`), it does
  * nothing and says why in [unavailableReason].
  */
 interface Updater {
@@ -49,32 +49,61 @@ interface Updater {
     /** True once [quit] started quitting: the system's quit request that follows must go through, not be asked again. */
     val quitting: Boolean
 
+    /** Stops the updater as the app quits. */
+    fun dispose() {}
+
     companion object {
         private val log = LoggerFactory.getLogger(Updater::class.java)
 
-        fun create(): Updater {
+        /**
+         * The updater for this copy of the app. [canQuit] says whether quitting now would lose nothing (Windows asks
+         * before running the installer); [requestQuit] quits the usual way, asking about unsaved work.
+         */
+        fun create(canQuit: () -> Boolean = { true }, requestQuit: () -> Unit = {}): Updater {
             val os = System.getProperty("os.name").orEmpty()
-            if (!os.startsWith("Mac")) return Unavailable("Updates for ${os.ifBlank { "this system" }} are downloaded from the Datagrok releases page.")
-            val launcher = System.getProperty("jpackage.app-path") ?: return Unavailable("This copy runs from source, not an installed app.")
-            val shim = Path.of(launcher).parent.resolveSibling("Frameworks").resolve("libDatagrokUpdater.dylib")
-            if (!shim.isRegularFile()) return Unavailable("This build was made without the updater.")
-            return runCatching { SparkleUpdater(Native.load(shim.toString(), SparkleLibrary::class.java)) }
-                .getOrElse {
-                    log.warn("Couldn't load the updater from $shim", it)
-                    Unavailable("The updater couldn't be loaded.")
+            val launcher = System.getProperty("jpackage.app-path")
+            return when {
+                os.startsWith("Mac") -> {
+                    launcher ?: return Unavailable(FromSource)
+                    val shim = Path.of(launcher).parent.resolveSibling("Frameworks").resolve("libDatagrokUpdater.dylib")
+                    load(shim) { SparkleUpdater(Native.load(shim.toString(), SparkleLibrary::class.java)) }
                 }
+                os.startsWith("Windows") -> {
+                    launcher ?: return Unavailable(FromSource)
+                    val dll = System.getProperty("compose.application.resources.dir")?.let { Path.of(it, "WinSparkle.dll") } ?: return Unavailable(WithoutUpdater)
+                    load(dll) { WinSparkleUpdater(Native.load(dll.toString(), WinSparkleLibrary::class.java), canQuit, requestQuit) }
+                }
+                else -> Unavailable("Updates for ${os.ifBlank { "this system" }} are downloaded from the Datagrok releases page.")
+            }
         }
 
+        private fun load(library: Path, create: () -> Updater): Updater {
+            if (!library.isRegularFile()) return Unavailable(WithoutUpdater)
+            return runCatching(create).getOrElse {
+                log.warn("Couldn't load the updater from $library", it)
+                Unavailable("The updater couldn't be loaded.")
+            }
+        }
+
+        private const val FromSource = "This copy runs from source, not an installed app."
+        private const val WithoutUpdater = "This build was made without the updater."
+
         /**
-         * The appcast for this OS and architecture. `DATAGROK_UPDATE_FEED` points elsewhere for testing; it must still
-         * be HTTPS unless it's on this machine, and Sparkle still checks every signature.
+         * The appcast for this OS and architecture. Windows has one with pre-releases and one without ([beta]), since
+         * WinSparkle has no channels; macOS has one, and Sparkle picks the channel. `DATAGROK_UPDATE_FEED` points
+         * elsewhere for testing; it must still be HTTPS unless it's on this machine, and every signature is still checked.
          */
-        fun feedUrl(os: String = System.getProperty("os.name").orEmpty(), arch: String = System.getProperty("os.arch").orEmpty(), override: String? = System.getenv("DATAGROK_UPDATE_FEED")): String {
+        fun feedUrl(
+            os: String = System.getProperty("os.name").orEmpty(),
+            arch: String = System.getProperty("os.arch").orEmpty(),
+            beta: Boolean = false,
+            override: String? = System.getenv("DATAGROK_UPDATE_FEED"),
+        ): String {
             override?.takeIf { isAllowedFeed(it) }?.let { return it }
             val target =
                 when {
                     os.startsWith("Mac") -> if (arch == "aarch64") "macos-arm64" else "macos-x64"
-                    os.startsWith("Windows") -> "windows-x64"
+                    os.startsWith("Windows") -> if (beta) "windows-x64-beta" else "windows-x64"
                     else -> "linux-x64"
                 }
             return "$FeedBase/$target.xml"
@@ -152,10 +181,10 @@ private class SparkleUpdater(private val native: SparkleLibrary) : Updater {
         native.dg_updater_terminate()
         return true
     }
-
-    private val Boolean.flag: Int
-        get() = if (this) 1 else 0
-
-    private val Settings.beta: Boolean
-        get() = UpdateChannel.of(updateChannel) == UpdateChannel.Beta
 }
+
+internal val Boolean.flag: Int
+    get() = if (this) 1 else 0
+
+internal val Settings.beta: Boolean
+    get() = UpdateChannel.of(updateChannel) == UpdateChannel.Beta

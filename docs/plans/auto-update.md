@@ -146,8 +146,14 @@ that's fine. What has to be protected is who can *produce* a signed release:
   gives it, so a later version can move it.
 - Kotlin: `dev.datagrok.app.update.Updater`. `Updater.create()` gives the Sparkle one only in an installed Mac app
   that has the bridge; `:app:run`, tests, Windows and Linux get one that does nothing and says why.
-- **Windows** (Phase 2): `WinSparkle.dll` behind the same Kotlin interface; its `can_shutdown` and
-  `shutdown_request` callbacks map to `requestExit`.
+- **Windows** (built, Phase 2): no bridge. `:app:downloadWinSparkle` takes the x64 `WinSparkle.dll` from WinSparkle
+  0.9.4's release archive (pinned SHA-256) into the app's resources (`appResourcesRootDir`, `windows-x64/`), where the
+  release workflow's Artifact Signing step signs it with the launcher. `WinSparkleUpdater` calls its C API with JNA.
+  The update key comes from `datagrok-version.properties` (no Info.plist on Windows); a missing or invalid key keeps
+  the updater off.
+- WinSparkle differs from Sparkle in three ways the app accepts: it always shows its dialog when it finds an update
+  (no silent install, so "install automatically" only means checking automatically), it has no channels (Beta is
+  `windows-x64-beta.xml`), and it doesn't check a feed signature (each MSI's Ed25519 signature still is).
 
 ### Quitting for an install
 
@@ -159,7 +165,9 @@ edits, unsaved data files) like ⌘Q does:
   quit through `[NSApp terminate:]`, and the quit handler lets that one request through (`Updater.quitting`).
 - Sparkle's own "Install and Relaunch" sends `[NSApp terminate:]` too: it reaches the quit handler, goes through
   `requestExit` like ⌘Q, and if the user cancels there, the update waits for the next quit.
-- Windows: `can_shutdown` returns false while `requestExit` would ask something; `shutdown_request` calls `requestExit`.
+- Windows: WinSparkle asks `can_shutdown` before running the installer; it answers `!AppState.quitWouldAsk` on the UI
+  thread (open transactions, unsubmitted edits, unsaved data files), and WinSparkle tells the user to close Datagrok
+  first when it's false. Then `shutdown_request` quits through `requestExit`. The MSI runs with `/passive`.
 - Never install while a long export, import, backup or restore is running: treat those like unsaved work. (Not done
   yet: today only open transactions, unsubmitted edits and unsaved data files hold a quit.)
 
@@ -227,7 +235,12 @@ A version with a `-` suffix becomes a pre-release.
   automatic check downloaded the update and it installed on quit, and a feed changed after signing was refused (no
   download). Left for the maintainer: generate the real key pair (`generate_keys`), put the public key in
   `datagrok.sparklePublicKey` and the private key (`generate_keys -x`) in `SPARKLE_PRIVATE_KEY`.
-- **Phase 2, Windows**: WinSparkle bridge, MSI upgrade test (old version replaced, settings and `~/.datagrok` kept).
+- **Phase 2, Windows** (done in code, not run on Windows): WinSparkle bundling and `WinSparkleUpdater`, the two
+  Windows feeds in `scripts/appcast.py`, a `windows-update-signature` job that signs the MSI with `sign_update` on a Mac
+  runner. Checked here: every function the JNA interface declares is exported by the DLL, and the feeds render and
+  parse. Still to check on Windows: the updater starts in the installed app, an update from N-1 installs per user
+  without UAC and replaces the old MSI (Apps & features shows one Datagrok), settings and `~/.datagrok` survive, and
+  `can_shutdown` holds the install while a transaction is open.
 - **Phase 3**: Linux `.deb` gets notify-only (read the same feed, verify its signature with the JDK's `Ed25519`
   `Signature`, show a banner linking to the download); delta updates on macOS; a Jewel-styled update dialog via
   Sparkle's custom user driver, if the native one looks out of place.
