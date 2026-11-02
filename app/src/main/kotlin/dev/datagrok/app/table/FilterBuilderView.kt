@@ -66,7 +66,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import java.awt.Cursor
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
@@ -156,7 +158,7 @@ private class BuilderContext(val tab: TableDataTab, val columns: List<FilterColu
 
 /** The table viewer's structured filter: rows of typed conditions in nestable all/any groups. */
 @Composable
-internal fun BuilderFilterBar(tab: TableDataTab) {
+internal fun BuilderFilterBar(tab: TableDataTab, maxBodyHeight: Dp = 300.dp) {
     val draft by remember(tab) { derivedStateOf { tab.compileDraft() } }
     val ui = remember(tab) { BuilderUi() }
     val context = BuilderContext(tab, tab.filterColumns, draft, ui)
@@ -208,7 +210,7 @@ internal fun BuilderFilterBar(tab: TableDataTab) {
             }
             if (expanded) {
                 Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
-                BuilderBody(context, showColumns)
+                BuilderBody(context, showColumns, maxBodyHeight)
             }
         }
     }
@@ -220,29 +222,58 @@ internal val dropTint: Color
 
 /**
  * Column list and the Filter card side by side. The list is never shorter than a few columns; the card grows with its
- * conditions until it scrolls. Both show their scrollbars, so the thumb can be dragged.
+ * conditions until it scrolls. Both show their scrollbars, so the thumb can be dragged. The bottom edge drags to set the
+ * height, up to [maxHeight]; a double-click there fits it to the conditions again.
  */
 @Composable
-private fun BuilderBody(context: BuilderContext, showColumns: Boolean) {
+private fun BuilderBody(context: BuilderContext, showColumns: Boolean, maxHeight: Dp) {
+    val tab = context.tab
+    val density = LocalDensity.current
     var conditionsHeight by remember { mutableIntStateOf(0) }
-    val height = with(LocalDensity.current) { conditionsHeight.toDp() }.coerceIn(if (showColumns) 220.dp else 0.dp, 300.dp)
-    Row(Modifier.fillMaxWidth().height(height)) {
-        if (showColumns) {
-            ColumnPanel(context, Modifier.width(220.dp).fillMaxHeight())
-            Divider(Orientation.Vertical, Modifier.fillMaxHeight())
-        }
-        val scroll = rememberScrollState()
-        Box(Modifier.weight(1f).fillMaxHeight()) {
-            Box(Modifier.fillMaxSize().verticalScroll(scroll)) {
-                Column(Modifier.fillMaxWidth().onSizeChanged { conditionsHeight = it.height }.padding(BarInset)) {
-                    FilterCard(context)
-                }
+    val fitted = with(density) { conditionsHeight.toDp() }.coerceIn(if (showColumns) 220.dp else 0.dp, 300.dp)
+    val upper = maxHeight.coerceAtLeast(MinBodyHeight)
+    val height = (tab.filterBodyHeight ?: fitted.coerceAtMost(upper)).coerceIn(MinBodyHeight, upper)
+    val current by rememberUpdatedState(height)
+    val bound by rememberUpdatedState(upper)
+    Box(Modifier.fillMaxWidth().height(height)) {
+        Row(Modifier.fillMaxSize()) {
+            if (showColumns) {
+                ColumnPanel(context, Modifier.width(220.dp).fillMaxHeight())
+                Divider(Orientation.Vertical, Modifier.fillMaxHeight())
             }
-            // In the inset beside the card, so it never covers the card's edge.
-            VerticalScrollbar(scroll, Modifier.align(Alignment.TopEnd).fillMaxHeight().padding(vertical = 2.dp, horizontal = 2.dp))
+            val scroll = rememberScrollState()
+            Box(Modifier.weight(1f).fillMaxHeight()) {
+                Box(Modifier.fillMaxSize().verticalScroll(scroll)) {
+                    Column(Modifier.fillMaxWidth().onSizeChanged { conditionsHeight = it.height }.padding(BarInset)) {
+                        FilterCard(context)
+                    }
+                }
+                // In the inset beside the card, so it never covers the card's edge.
+                VerticalScrollbar(scroll, Modifier.align(Alignment.TopEnd).fillMaxHeight().padding(vertical = 2.dp, horizontal = 2.dp))
+            }
         }
+        // Over the body's bottom edge, just above the divider that separates it from the grid.
+        Box(
+            Modifier.align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(6.dp)
+                .pointerHoverIcon(RowResizeCursor)
+                .pointerInput(tab) { detectTapGestures(onDoubleTap = { tab.filterBodyHeight = null }) }
+                .pointerInput(tab) {
+                    detectDragGestures(onDragStart = { tab.filterBodyHeight = current }) { change, amount ->
+                        change.consume()
+                        val start = tab.filterBodyHeight ?: current
+                        tab.filterBodyHeight = (start + with(density) { amount.y.toDp() }).coerceIn(MinBodyHeight, bound)
+                    }
+                }
+        )
     }
 }
+
+/** The least the builder body can be dragged to: the card's title and a row. */
+private val MinBodyHeight = 80.dp
+
+private val RowResizeCursor = PointerIcon(Cursor(Cursor.N_RESIZE_CURSOR))
 
 /** Room kept beside scrolling content so the scrollbar never covers it. */
 private val ScrollbarGutter = 10.dp

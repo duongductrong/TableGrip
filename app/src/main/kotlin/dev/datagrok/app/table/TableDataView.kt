@@ -50,6 +50,7 @@ import dev.datagrok.app.completion.CompletionPopup
 import dev.datagrok.app.completion.handleCompletionKey
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import dev.datagrok.app.ui.AppDialog
@@ -116,7 +117,8 @@ private fun DataView(tab: TableDataTab) {
 @Composable
 private fun DataContent(tab: TableDataTab) {
     // Filter keys the grid and the bar left alone; the window handles them too, for focus outside the table.
-    Column(Modifier.fillMaxSize().onKeyEvent { it.type == KeyEventType.KeyDown && handleFilterShortcut(tab, it) }) {
+    var height by remember { mutableStateOf(0) }
+    Column(Modifier.fillMaxSize().onSizeChanged { height = it.height }.onKeyEvent { it.type == KeyEventType.KeyDown && handleFilterShortcut(tab, it) }) {
         Toolbar(tab)
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
         // The select list's bar shows while it's being edited or differs from SELECT *.
@@ -124,7 +126,8 @@ private fun DataContent(tab: TableDataTab) {
             SelectBar(tab)
             Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
         }
-        FilterBar(tab)
+        // The filter can be dragged taller, but always leaves the grid room for a few rows.
+        FilterBar(tab, maxBodyHeight = with(LocalDensity.current) { height.toDp() } - GridReserve)
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
         tab.error?.let { ErrorBanner(it, onDismiss = { tab.error = null }) }
 
@@ -300,9 +303,12 @@ internal fun Separator() {
 }
 
 @Composable
-private fun FilterBar(tab: TableDataTab) {
-    if (tab.filterMode == FilterMode.Builder) BuilderFilterBar(tab) else SqlFilterBar(tab)
+private fun FilterBar(tab: TableDataTab, maxBodyHeight: Dp) {
+    if (tab.filterMode == FilterMode.Builder) BuilderFilterBar(tab, maxBodyHeight) else SqlFilterBar(tab)
 }
+
+/** Height kept below the filter body for the toolbars, the grid's header and a few rows, and the status line. */
+private val GridReserve = 260.dp
 
 @Composable
 private fun SqlFilterBar(tab: TableDataTab) {

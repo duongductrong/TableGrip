@@ -9,6 +9,7 @@ import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.Dp
 import dev.datagrok.app.AppState
 import dev.datagrok.app.export.ExportRequest
 import dev.datagrok.app.grid.DataGridState
@@ -96,6 +97,8 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
         private set
     /** The builder's column list, to drag columns from; null shows it whenever there are conditions. */
     var showFilterColumns by mutableStateOf<Boolean?>(null)
+    /** The builder body's height, set by dragging its bottom edge; null fits it to the conditions. */
+    var filterBodyHeight by mutableStateOf<Dp?>(null)
     /** A column dragged from the builder's list or the grid's header onto the builder. */
     internal val columnDrag = ColumnDragState(::dropColumn)
 
