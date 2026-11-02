@@ -4,7 +4,9 @@ import dev.datagrok.core.chart.TimeBucket
 import dev.datagrok.core.connection.DatabaseType
 import dev.datagrok.core.connection.EngineFamily
 import dev.datagrok.core.filter.FilterValues
+import dev.datagrok.core.filter.SelectFunction
 import dev.datagrok.core.filter.SqlParam
+import dev.datagrok.core.filter.SqlProjection
 import dev.datagrok.core.metadata.Namespace
 import dev.datagrok.core.metadata.TableRef
 import dev.datagrok.core.sql.SqlSyntax
@@ -108,12 +110,13 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
     open fun qualifiedName(table: TableRef): String =
         listOfNotNull(table.namespace.catalog, table.namespace.schema, table.name).joinToString(".", transform = ::quoteIdentifier)
 
-    open fun selectPage(table: TableRef, filter: String?, orderBy: List<SortColumn>, limit: Int, offset: Long): String =
-        selectAll(table, filter, orderBy) + " LIMIT $limit OFFSET $offset"
+    open fun selectPage(table: TableRef, filter: String?, orderBy: List<SortColumn>, limit: Int, offset: Long, projection: SqlProjection? = null): String =
+        selectAll(table, filter, orderBy, projection) + " LIMIT $limit OFFSET $offset"
 
-    open fun selectAll(table: TableRef, filter: String?, orderBy: List<SortColumn>): String =
+    /** The table's rows, as [projection] picks their columns (all of them when null). */
+    open fun selectAll(table: TableRef, filter: String?, orderBy: List<SortColumn>, projection: SqlProjection? = null): String =
         buildString {
-            append("SELECT * FROM ").append(qualifiedName(table))
+            append("SELECT ").append(projection?.clause ?: "*").append(" FROM ").append(qualifiedName(table))
             filter?.takeIf { it.isNotBlank() }?.let { append(" WHERE ").append(it) }
             if (orderBy.isNotEmpty()) {
                 append(" ORDER BY ")
@@ -139,8 +142,33 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
             "${castToText(col)} LIKE ? ESCAPE '!' LIMIT $scan) s ORDER BY v LIMIT $limit"
     }
 
-    open fun countRows(table: TableRef, filter: String?): String =
-        "SELECT COUNT(*) FROM ${qualifiedName(table)}" + (filter?.takeIf { it.isNotBlank() }?.let { " WHERE $it" } ?: "")
+    /** Rows [selectAll] returns; with DISTINCT, the distinct ones. */
+    open fun countRows(table: TableRef, filter: String?, projection: SqlProjection? = null): String {
+        val where = filter?.takeIf { it.isNotBlank() }?.let { " WHERE $it" } ?: ""
+        if (projection?.distinct == true) return "SELECT COUNT(*) FROM (SELECT ${projection.clause} FROM ${qualifiedName(table)}$where) d"
+        return "SELECT COUNT(*) FROM ${qualifiedName(table)}$where"
+    }
+
+    /**
+     * [function] applied to [expression] in a select list, with its [arguments] already SQL (a [TimeBucket] name for
+     * [SelectFunction.Truncate]); null when the engine has no such function.
+     */
+    open fun selectFunction(function: SelectFunction, expression: String, arguments: List<String> = emptyList()): String? =
+        when (function) {
+            SelectFunction.None -> expression
+            SelectFunction.Upper -> "UPPER($expression)"
+            SelectFunction.Lower -> "LOWER($expression)"
+            SelectFunction.Trim -> "TRIM($expression)"
+            SelectFunction.Length -> "LENGTH($expression)"
+            SelectFunction.Substring -> "SUBSTRING($expression, ${arguments.joinToString()})"
+            SelectFunction.Round -> "ROUND($expression, ${arguments.single()})"
+            SelectFunction.Abs -> "ABS($expression)"
+            SelectFunction.Floor -> "FLOOR($expression)"
+            SelectFunction.Ceil -> "CEILING($expression)"
+            SelectFunction.Truncate -> TimeBucket.of(arguments.single())?.let { timeBucket(expression, it) }
+            SelectFunction.Coalesce -> "COALESCE($expression, ${arguments.single()})"
+            SelectFunction.AsText -> castToText(expression)
+        }
 
     /**
      * [expression], a date or timestamp, rounded down to the start of its [bucket] (weeks start on Monday), for charts
@@ -152,6 +180,11 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
         override fun toString() = "PostgreSQL"
 
         override fun timeBucket(expression: String, bucket: TimeBucket) = "date_trunc('${bucket.name.lowercase()}', $expression)"
+
+        /** `round(double precision, int)` doesn't exist; only numeric rounds to a number of decimals. */
+        override fun selectFunction(function: SelectFunction, expression: String, arguments: List<String>): String? =
+            if (function == SelectFunction.Round) "ROUND(CAST($expression AS NUMERIC), ${arguments.single()})"
+            else super.selectFunction(function, expression, arguments)
 
         override fun defaultNamespace(names: List<String>, database: String): String? = "public".takeIf { it in names } ?: names.firstOrNull()
 
@@ -231,6 +264,10 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
 
         override fun castToText(expression: String) = "CAST($expression AS CHAR)"
 
+        /** LENGTH counts bytes here; CHAR_LENGTH counts characters, as everywhere else. */
+        override fun selectFunction(function: SelectFunction, expression: String, arguments: List<String>): String? =
+            if (function == SelectFunction.Length) "CHAR_LENGTH($expression)" else super.selectFunction(function, expression, arguments)
+
         override fun escapeString(value: String) = value.replace("\\", "\\\\").replace("'", "''")
 
         /** Comparing as binary strings is the collation-independent way to match case exactly. */
@@ -305,6 +342,10 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
 
         override fun regexMatch(expression: String, caseSensitive: Boolean, negated: Boolean): Pair<String, String>? = null
 
+        /** SUBSTRING only arrived in 3.34; substr is in every version. */
+        override fun selectFunction(function: SelectFunction, expression: String, arguments: List<String>): String? =
+            if (function == SelectFunction.Substring) "substr($expression, ${arguments.joinToString()})" else super.selectFunction(function, expression, arguments)
+
         override fun listNamespaces(meta: DatabaseMetaData): List<Namespace> = listOf(Namespace(catalog = null, schema = null))
     }
 
@@ -318,8 +359,8 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
         override fun quoteIdentifier(name: String) = "\"${name.replace("\"", "\"\"")}\""
 
         /** SQL:2008 paging, which every engine in this family speaks (LIMIT is a common but non-standard extension). */
-        override fun selectPage(table: TableRef, filter: String?, orderBy: List<SortColumn>, limit: Int, offset: Long): String =
-            selectAll(table, filter, orderBy) + " OFFSET $offset ROWS FETCH NEXT $limit ROWS ONLY"
+        override fun selectPage(table: TableRef, filter: String?, orderBy: List<SortColumn>, limit: Int, offset: Long, projection: SqlProjection?): String =
+            selectAll(table, filter, orderBy, projection) + " OFFSET $offset ROWS FETCH NEXT $limit ROWS ONLY"
 
         override fun sampleValues(table: TableRef, column: String, limit: Int, scan: Int): String {
             val col = quoteIdentifier(column)
@@ -372,8 +413,11 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
 
         override fun quoteIdentifier(name: String) = "[${name.replace("]", "]]")}]"
 
-        override fun selectPage(table: TableRef, filter: String?, orderBy: List<SortColumn>, limit: Int, offset: Long): String =
-            selectAll(table, filter, orderBy) + (if (orderBy.isEmpty()) " ORDER BY (SELECT NULL)" else "") + " OFFSET $offset ROWS FETCH NEXT $limit ROWS ONLY"
+        /** With DISTINCT, ORDER BY may only name what's selected, so the stand-in order is the first column. */
+        override fun selectPage(table: TableRef, filter: String?, orderBy: List<SortColumn>, limit: Int, offset: Long, projection: SqlProjection?): String {
+            val order = if (orderBy.isNotEmpty()) "" else if (projection?.distinct == true) " ORDER BY 1" else " ORDER BY (SELECT NULL)"
+            return selectAll(table, filter, orderBy, projection) + order + " OFFSET $offset ROWS FETCH NEXT $limit ROWS ONLY"
+        }
 
         override fun sampleValues(table: TableRef, column: String, limit: Int, scan: Int): String {
             val col = quoteIdentifier(column)
@@ -382,6 +426,14 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
         }
 
         override fun castToText(expression: String) = "CAST($expression AS NVARCHAR(4000))"
+
+        /** LEN, and LTRIM/RTRIM for servers before 2017's TRIM. */
+        override fun selectFunction(function: SelectFunction, expression: String, arguments: List<String>): String? =
+            when (function) {
+                SelectFunction.Length -> "LEN($expression)"
+                SelectFunction.Trim -> "LTRIM(RTRIM($expression))"
+                else -> super.selectFunction(function, expression, arguments)
+            }
 
         /** T-SQL has no boolean literals; BIT columns take 1 and 0. */
         override fun literal(param: SqlParam): String = (param.value as? Boolean)?.let { if (it) "1" else "0" } ?: super.literal(param)
@@ -432,6 +484,18 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
         override fun escapeString(value: String) = value.replace("\\", "\\\\").replace("'", "\\'")
 
         override fun castToText(expression: String) = "toString($expression)"
+
+        /** Character-wise (UTF-8) text functions, and the ones under ClickHouse's own names. */
+        override fun selectFunction(function: SelectFunction, expression: String, arguments: List<String>): String? =
+            when (function) {
+                SelectFunction.Upper -> "upperUTF8($expression)"
+                SelectFunction.Lower -> "lowerUTF8($expression)"
+                SelectFunction.Trim -> "trimBoth($expression)"
+                SelectFunction.Length -> "lengthUTF8($expression)"
+                SelectFunction.Substring -> "substringUTF8($expression, ${arguments.joinToString()})"
+                SelectFunction.Ceil -> "ceil($expression)"
+                else -> super.selectFunction(function, expression, arguments)
+            }
 
         override fun textMatch(expression: String, caseSensitive: Boolean, negated: Boolean): Pair<String, String> =
             "$expression ${if (negated) "NOT " else ""}${if (caseSensitive) "LIKE" else "ILIKE"} " to ""

@@ -215,7 +215,7 @@ internal fun BuilderFilterBar(tab: TableDataTab) {
 }
 
 /** The theme's accent, faint, behind where a dragged column would land. */
-private val dropTint: Color
+internal val dropTint: Color
     @Composable get() = LocalIslands.current.accent.copy(alpha = if (JewelTheme.isDark) 0.14f else 0.08f)
 
 /**
@@ -251,7 +251,7 @@ private val ScrollbarGutter = 10.dp
  * The bar's edge inset, shared by the toolbar and the body, so the filter icon lines up with the column list and Apply
  * with the Filter card's right edge. Wide enough to hold the conditions' scrollbar.
  */
-private val BarInset = 12.dp
+internal val BarInset = 12.dp
 
 /**
  * The conditions, in a card like the document builder's: a title with how many are active, how they combine and what
@@ -305,7 +305,7 @@ private fun FilterCard(context: BuilderContext) {
 }
 
 @Composable
-private fun CountBadge(count: Int) {
+internal fun CountBadge(count: Int) {
     Text(
         count.toString(),
         Modifier.clip(RoundedCornerShape(8.dp)).background(JewelTheme.globalColors.borders.normal.copy(alpha = 0.6f)).padding(horizontal = 6.dp),
@@ -315,7 +315,7 @@ private fun CountBadge(count: Int) {
 }
 
 @Composable
-private fun Hint(text: String) {
+internal fun Hint(text: String) {
     Text(text, color = JewelTheme.globalColors.text.info, fontSize = 11.sp)
 }
 
@@ -545,7 +545,7 @@ internal fun FilterActions(tab: TableDataTab, draft: CompiledFilter? = null) {
 
 /** A dot in [dot]'s colour and a short note, e.g. that the filter has changes not yet applied. */
 @Composable
-private fun FilterStatus(text: String, dot: Color, color: Color = dot) {
+internal fun FilterStatus(text: String, dot: Color, color: Color = dot) {
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.size(6.dp).clip(RoundedCornerShape(3.dp)).background(dot))
         Text(text, color = color, maxLines = 1)
@@ -763,7 +763,7 @@ private fun RawRow(context: BuilderContext, raw: RawState) {
 }
 
 @Composable
-private fun IssueText(text: String, modifier: Modifier = Modifier) {
+internal fun IssueText(text: String, modifier: Modifier = Modifier) {
     Text(text, modifier, color = JewelTheme.globalColors.text.error, fontSize = 11.sp)
 }
 
@@ -817,7 +817,7 @@ internal fun Tag(text: String, color: Color) {
     )
 }
 
-private fun ValueKind.color(): Color =
+internal fun ValueKind.color(): Color =
     when (this) {
         ValueKind.Text -> Color(0xFF6AAB73)
         ValueKind.Number -> Color(0xFF56A8F5)
@@ -861,7 +861,7 @@ internal fun PickerButton(error: Boolean, modifier: Modifier, onClick: () -> Uni
 
 /** Searchable column list: tables can have hundreds of columns, so it filters as you type and works from the keyboard. */
 @Composable
-private fun ColumnPicker(
+internal fun ColumnPicker(
     columns: List<FilterColumn>,
     selected: String,
     error: Boolean,

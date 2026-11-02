@@ -16,6 +16,7 @@ import dev.datagrok.core.drivers.DriverLibrary
 import dev.datagrok.core.edit.ChangeStatement
 import dev.datagrok.core.export.ResultWriter
 import dev.datagrok.core.filter.SqlFilter
+import dev.datagrok.core.filter.SqlProjection
 import dev.datagrok.core.dialect.SqlDialect
 import dev.datagrok.core.ddl.DdlPhase
 import dev.datagrok.core.ddl.DdlScript
@@ -98,9 +99,10 @@ class Database private constructor(
         limit: Int,
         offset: Long,
         timeoutSeconds: Int,
+        projection: SqlProjection?,
     ): QueryResult.Rows {
         // One extra row tells whether another page exists; it comes back as `truncated`.
-        val sql = dialect.selectPage(table, filter?.sql, orderBy, limit + 1, offset)
+        val sql = dialect.selectPage(table, filter?.sql, orderBy, limit + 1, offset, projection)
         val start = System.nanoTime()
         return withPooled { connection ->
             // The SQL already has a LIMIT; Statement.maxRows would cost Connector/J two `SET sql_select_limit` round trips.
@@ -120,8 +122,9 @@ class Database private constructor(
         orderBy: List<SortColumn>,
         writer: (List<ResultColumn>) -> ResultWriter,
         onProgress: (Long) -> Unit,
+        projection: SqlProjection?,
     ): Long {
-        val sql = dialect.selectAll(table, filter?.sql, orderBy)
+        val sql = dialect.selectAll(table, filter?.sql, orderBy, projection)
         return withPooled { connection ->
             // PostgreSQL only streams with a cursor inside a transaction; everyone else ignores this.
             val autoCommit = withContext(Dispatchers.IO) { connection.autoCommit.also { connection.autoCommit = false } }
@@ -143,9 +146,9 @@ class Database private constructor(
         }
     }
 
-    override suspend fun countRows(table: TableRef, filter: SqlFilter?, timeoutSeconds: Int): Long =
+    override suspend fun countRows(table: TableRef, filter: SqlFilter?, timeoutSeconds: Int, projection: SqlProjection?): Long =
         withPooled { connection ->
-            connection.query(dialect.countRows(table, filter?.sql), filter, timeoutSeconds) { rs -> rs.next(); rs.getLong(1) }
+            connection.query(dialect.countRows(table, filter?.sql, projection), filter, timeoutSeconds) { rs -> rs.next(); rs.getLong(1) }
         }
 
     /**

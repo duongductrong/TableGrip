@@ -26,7 +26,11 @@ import dev.datagrok.core.filter.FilterColumn
 import dev.datagrok.core.filter.FilterCompiler
 import dev.datagrok.core.filter.RawCondition
 import dev.datagrok.core.filter.FilterGroup
+import dev.datagrok.core.filter.CompiledProjection
+import dev.datagrok.core.filter.Projection
+import dev.datagrok.core.filter.ProjectionCompiler
 import dev.datagrok.core.filter.SqlFilter
+import dev.datagrok.core.filter.SqlProjection
 import dev.datagrok.core.filter.ValueKind
 import dev.datagrok.core.metadata.TableDetails
 import dev.datagrok.core.metadata.TableRef
@@ -97,6 +101,78 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
 
     val hasAppliedFilter: Boolean
         get() = appliedSql != null || appliedTree?.children?.isNotEmpty() == true
+
+    /** Which columns show and through which functions, as edited; applied with its Apply. */
+    val select = SelectBuilderState()
+    /** The select list the rows reflect; null shows every column. */
+    var appliedProjection by mutableStateOf<Projection?>(null)
+        private set
+    /** Whether the select editor is open; the bar stays while a select list is applied. */
+    var showSelect by mutableStateOf(false)
+        private set
+    /** Like [showFilterIssues], for the select editor. */
+    var showSelectIssues by mutableStateOf(false)
+        private set
+
+    fun compileSelectDraft(): CompiledProjection = ProjectionCompiler(dialect, filterColumns).compile(select.toProjection())
+
+    private fun compiledProjection(): CompiledProjection? = appliedProjection?.let { ProjectionCompiler(dialect, filterColumns).compile(it) }
+
+    /** The select editor differs from what the rows show. */
+    val isSelectDirty: Boolean
+        get() {
+            val draft = compileSelectDraft()
+            return !draft.isValid || draft.projection != compiledProjection()?.projection
+        }
+
+    /** Rows can be edited unless the select list computes, renames or merges them. */
+    val selectEditable: Boolean
+        get() = compiledProjection()?.editable ?: true
+
+    /** Opens the select editor, starting from every column the first time; or closes it. */
+    fun toggleSelect() {
+        if (showSelect) {
+            showSelect = false
+            return
+        }
+        if (select.isEmpty) select.reset(filterColumns)
+        showData()
+        showSelect = true
+    }
+
+    /** Applies the select list, unless it has items it can't run; those get flagged instead. */
+    fun applySelect() {
+        val compiled = compileSelectDraft()
+        if (!compiled.isValid) {
+            showSelectIssues = true
+            return
+        }
+        guard {
+            showSelectIssues = false
+            val projection = select.toProjection().takeIf { compiled.projection != null }
+            appliedProjection = projection
+            // Sorting by a column that's no longer selected fails with DISTINCT, and can't be seen or undone otherwise.
+            if (projection != null) {
+                val names = ProjectionCompiler(dialect, filterColumns).let { c -> projection.items.filter { it.enabled }.map(c::outputName) }
+                sort = sort.filter { it.column in names }
+            }
+            reloadFiltered()
+        }
+    }
+
+    /** Back to every column, as `SELECT *`. */
+    fun resetSelect() = guard {
+        select.reset(filterColumns)
+        showSelectIssues = false
+        appliedProjection = null
+        reloadFiltered()
+    }
+
+    /** The applied select list as SQL; fails with its first problem if the table changed under it. */
+    private fun resolveProjection(): SqlProjection? {
+        val compiled = compiledProjection() ?: return null
+        return compiled.projection ?: compiled.issues.values.firstOrNull()?.let { throw IllegalStateException("Columns: $it") }
+    }
 
     /** Columns the builder offers, typed from the table's metadata (or the loaded rows when that's unavailable). */
     val filterColumns: List<FilterColumn>
@@ -185,7 +261,7 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
         val access = app.aiAccess(config)
         if (!access.sharesSchema) return
         val first = firstRowNumber.toInt() + cells.rows.first
-        val origin = runCatching { dialect.selectAll(table, resolveFilter()?.preview, sort) }.getOrNull()
+        val origin = runCatching { dialect.selectAll(table, resolveFilter()?.preview, sort, resolveProjection()) }.getOrNull()
         val model = model.takeIf { access.sharesData }
         val shown = cells.rows.take(cells.values.size)
         val keys = model?.columns?.withIndex()?.filter { (_, column) -> column.name in details?.primaryKey.orEmpty() && column !in cells.columns }.orEmpty()
@@ -366,18 +442,26 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
             try {
                 val database = app.databases.database(config)
                 // Columns and key load alongside the first page instead of before it, a round trip apart on a remote
-                // server; only a builder filter needs the column types before the rows can be queried.
+                // server; only a builder filter or a select list needs the column types before the rows can be queried.
                 val columns = if (details == null) async { runCatching { database.tableColumns(table) }.getOrNull() } else null
-                if (columns != null && appliedTree != null) details = columns.await()
+                if (columns != null && (appliedTree != null || appliedProjection != null)) details = columns.await()
                 val result =
-                    database.fetchPage(table, resolveFilter(), sort, pageSize, page.toLong() * pageSize, app.settings.queryTimeoutSeconds)
+                    database.fetchPage(
+                        table,
+                        resolveFilter(),
+                        sort,
+                        pageSize,
+                        page.toLong() * pageSize,
+                        app.settings.queryTimeoutSeconds,
+                        resolveProjection(),
+                    )
                 columns?.let { details = it.await() }
                 hasNextPage = result.truncated
                 model =
                     TableEditModel(
                         result,
                         details?.primaryKey.orEmpty(),
-                        readOnly = config.readOnly || Capability.EditRows !in config.type.capabilities,
+                        readOnly = config.readOnly || Capability.EditRows !in config.type.capabilities || !selectEditable,
                         details = details,
                         dialect = dialect,
                     )
@@ -459,6 +543,8 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
 
     /** Adds `column = value` (or `IS NULL`) to the filter, like DataGrip's "Filter by this value"; or `≠` to [exclude] it. */
     fun filterByValue(column: String, value: String?, exclude: Boolean = false) {
+        // A computed or renamed column of the select list isn't one WHERE can name.
+        if (filterColumns.isNotEmpty() && filterColumns.none { it.name == column }) return
         if (filterMode == FilterMode.Builder) {
             val target = filterColumns.firstOrNull { it.name == column } ?: return
             builder.addFromValue(target, value, exclude)
@@ -546,7 +632,7 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
     /** Counting can be slow on large tables, so it only runs on request. */
     fun countRows() {
         app.scope.launch {
-            runCatching { app.databases.database(config).countRows(table, resolveFilter(), app.settings.queryTimeoutSeconds) }
+            runCatching { app.databases.database(config).countRows(table, resolveFilter(), app.settings.queryTimeoutSeconds, resolveProjection()) }
                 .onSuccess { totalRows = it }
                 .onFailure { error = it.message }
         }
@@ -555,6 +641,7 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
     fun export() {
         val model = model ?: return
         val filter = runCatching { resolveFilter() }.getOrElse { error = it.message; return }
+        val projection = runCatching { resolveProjection() }.getOrElse { error = it.message; return }
         val order = sort
         app.exportRequest =
             ExportRequest(
@@ -564,7 +651,7 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
                 loadedRows = (0 until model.rowCount).map { row -> model.columns.indices.map { model.value(row, it) } },
                 dialect = dialect,
                 tableName = dialect.qualifiedName(table),
-                streamAll = { writer, progress -> app.databases.database(config).exportTable(table, filter, order, writer, progress) },
+                streamAll = { writer, progress -> app.databases.database(config).exportTable(table, filter, order, writer, progress, projection) },
             )
     }
 

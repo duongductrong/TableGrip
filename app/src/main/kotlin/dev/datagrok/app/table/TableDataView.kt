@@ -119,6 +119,11 @@ private fun DataContent(tab: TableDataTab) {
     Column(Modifier.fillMaxSize().onKeyEvent { it.type == KeyEventType.KeyDown && handleFilterShortcut(tab, it) }) {
         Toolbar(tab)
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
+        // The select list's bar shows while it's being edited or differs from SELECT *.
+        if (tab.showSelect || tab.appliedProjection != null) {
+            SelectBar(tab)
+            Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
+        }
         FilterBar(tab)
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
         tab.error?.let { ErrorBanner(it, onDismiss = { tab.error = null }) }
@@ -272,6 +277,7 @@ private fun Toolbar(tab: TableDataTab) {
             ViewChip("JSON", tab.showJson) { tab.showJson = true }
         }
         Separator()
+        ToolButton(AllIconsKeys.Nodes.DataColumn, if (tab.showSelect) "Hide column editor" else "Choose columns and functions (SELECT)") { tab.toggleSelect() }
         ToolButton(AllIconsKeys.Actions.Download, "Export…", enabled = model != null) { tab.export() }
         ToolButton(
             AllIconsKeys.Actions.PreviewDetails,
@@ -403,6 +409,8 @@ private fun StatusLine(tab: TableDataTab) {
         }
         when {
             tab.config.readOnly -> Text("Read-only connection", color = info)
+            !tab.selectEditable -> Text("Computed columns: rows are read-only", color = info)
+            !model.hasKey && tab.details?.primaryKey?.isNotEmpty() == true -> Text("Primary key not selected: existing rows are read-only", color = info)
             !model.hasKey -> Text("No primary key: existing rows are read-only", color = info)
         }
         Box(Modifier.weight(1f))

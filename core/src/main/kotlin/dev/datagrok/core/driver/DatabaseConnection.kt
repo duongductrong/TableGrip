@@ -8,6 +8,7 @@ import dev.datagrok.core.ddl.DdlScript
 import dev.datagrok.core.edit.ChangeStatement
 import dev.datagrok.core.export.ResultWriter
 import dev.datagrok.core.filter.SqlFilter
+import dev.datagrok.core.filter.SqlProjection
 import dev.datagrok.core.metadata.ColumnInfo
 import dev.datagrok.core.metadata.Namespace
 import dev.datagrok.core.metadata.TableDetails
@@ -49,7 +50,16 @@ interface RelationalConnection : DatabaseConnection {
     /** Values of [column] starting with [prefix], for suggestions; bounded in rows scanned and time. */
     suspend fun sampleValues(table: TableRef, column: String, prefix: String, limit: Int = 30): List<String>
 
-    suspend fun fetchPage(table: TableRef, filter: SqlFilter?, orderBy: List<SortColumn>, limit: Int, offset: Long, timeoutSeconds: Int = 0): QueryResult.Rows
+    /** A page of [table]'s rows, with the columns [projection] picks (all of them when null). */
+    suspend fun fetchPage(
+        table: TableRef,
+        filter: SqlFilter?,
+        orderBy: List<SortColumn>,
+        limit: Int,
+        offset: Long,
+        timeoutSeconds: Int = 0,
+        projection: SqlProjection? = null,
+    ): QueryResult.Rows
 
     /** Streams every row of [table] (with the viewer's filter and sort) into [writer]. Cancel the coroutine to stop. */
     suspend fun exportTable(
@@ -58,9 +68,10 @@ interface RelationalConnection : DatabaseConnection {
         orderBy: List<SortColumn>,
         writer: (List<ResultColumn>) -> ResultWriter,
         onProgress: (Long) -> Unit = {},
+        projection: SqlProjection? = null,
     ): Long
 
-    suspend fun countRows(table: TableRef, filter: SqlFilter?, timeoutSeconds: Int = 0): Long
+    suspend fun countRows(table: TableRef, filter: SqlFilter?, timeoutSeconds: Int = 0, projection: SqlProjection? = null): Long
 
     /** Applies [statements] in one transaction, rolling back unless each hits the rows it expects. */
     suspend fun applyChanges(statements: List<ChangeStatement>): Int
