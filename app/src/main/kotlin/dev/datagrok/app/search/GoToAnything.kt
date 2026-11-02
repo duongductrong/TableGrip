@@ -192,6 +192,7 @@ private fun actions(app: AppState): List<GoToItem> {
         action("Agent", Shortcuts.Agent) { app.agentOpen = !app.agentOpen },
         action("Settings", Shortcuts.Settings, AllIconsKeys.General.Settings) { app.settingsOpen = true },
         action("Keyboard Shortcuts", Shortcuts.ShowShortcuts, AllIconsKeys.General.Keyboard) { app.shortcutsOpen = true },
+        app.updater.takeIf { it.unavailableReason == null }?.let { updater -> action("Check for Updates…", icon = AllIconsKeys.Actions.CheckOut) { updater.checkNow() } },
         (workspace.selected as? TableDataTab)?.let { tab -> action("Reload Table", Shortcuts.Reload, AllIconsKeys.Actions.Refresh) { tab.refresh() } },
         workspace.selected?.let { tab -> action("Close Tab", Shortcuts.CloseTab) { workspace.requestClose(tab) } },
     )

@@ -131,38 +131,42 @@ that's fine. What has to be protected is who can *produce* a signed release:
 
 ### Native bridge
 
-`app/native/updater/` holds a small shim per OS with the same C interface, loaded with JNA (already shipped, Apache-2.0):
-
-```c
-void dg_updater_start(const char *feedUrl, int autoCheck, int autoDownload);
-void dg_updater_check_now(void);           // "Check for Updates…": shows UI, also when up to date
-void dg_updater_check_in_background(void); // silent; UI only if an update exists
-void dg_updater_set_feed(const char *feedUrl);
-void dg_updater_set_can_quit(int (*canQuit)(void), void (*requestQuit)(void));
-```
-
-- **macOS** (`DatagrokUpdater.dylib`, ~80 lines of Swift/Obj-C): wraps `SPUStandardUpdaterController`. All calls are
-  dispatched to the main queue (AWT already runs NSApp there). `Sparkle.framework` goes in `Contents/Frameworks`, the
-  dylib in `Contents/app/`, and both are signed with the app.
-- **Windows** (`WinSparkle.dll` + a few lines of C, or JNA straight on WinSparkle's C API): `win_sparkle_init` and
-  friends; `can_shutdown` and `shutdown_request` callbacks are the two above.
-- Kotlin side: `dev.datagrok.app.update.Updater` (interface) with `SparkleUpdater`, `WinSparkleUpdater`, and
-  `NoopUpdater` for `:app:run` and Linux. Dev runs never load the shim, so a debug build can't update itself.
+- **macOS** (built, Phase 1): `app/src/macos/updater/DatagrokUpdater.m`, ~100 lines of Objective-C around
+  `SPUStandardUpdaterController`, compiled by `:app:buildUpdaterBridge` into a universal
+  `Contents/Frameworks/libDatagrokUpdater.dylib`. Its C functions (`dg_updater_start`, `_configure`, `_check`,
+  `_last_check`, `_terminate`) are called from Kotlin with JNA. Sparkle runs on the main thread (AppKit's); only
+  `dg_updater_start` waits for it, and it's called off the AWT event thread to avoid a deadlock with AppKit.
+- `:app:downloadSparkle` fetches Sparkle's release archive (pinned version and SHA-256), which also provides
+  `sign_update` to the workflows. `createDistributable` then copies `Sparkle.framework` into `Contents/Frameworks` with
+  `ditto` (keeps its symlinks), drops its XPC services (only sandboxed apps need them), and signs inside out:
+  Autoupdate, Updater.app, the framework, the bridge, then the app with `src/macos/entitlements.plist`. Without
+  signing properties it ad-hoc signs, so local builds still run.
+- Info.plist: `SUPublicEDKey` from `datagrok.sparklePublicKey`, `SURequireSignedFeed`, `SUVerifyUpdateBeforeExtraction`,
+  `SUEnableAutomaticChecks`, and `SUEnableSystemProfiling` = NO. The feed URL isn't in Info.plist: the bridge's delegate
+  gives it, so a later version can move it.
+- Kotlin: `dev.datagrok.app.update.Updater`. `Updater.create()` gives the Sparkle one only in an installed Mac app
+  that has the bridge; `:app:run`, tests, Windows and Linux get one that does nothing and says why.
+- **Windows** (Phase 2): `WinSparkle.dll` behind the same Kotlin interface; its `can_shutdown` and
+  `shutdown_request` callbacks map to `requestExit`.
 
 ### Quitting for an install
 
 Installing means quitting, and quitting must go through `AppState.requestExit` (open transactions, unsubmitted
 edits, unsaved data files) like ⌘Q does:
 
-- macOS: Sparkle asks the app to terminate with `[NSApp terminate:]`, which arrives at the quit handler in
-  `Main.kt:61`; that already routes to `requestExit`. If the user cancels there, Sparkle keeps the update for the next
-  quit. **To verify**: that `exitApplication()` ends the JVM process promptly, since Sparkle's installer waits for it.
+- The JVM quitting on its own (`exitApplication`) doesn't tell AppKit the app is terminating, and Sparkle installs a
+  downloaded update when it sees that. So once the user has agreed to quit, `Main.kt`'s `exit()` asks the updater to
+  quit through `[NSApp terminate:]`, and the quit handler lets that one request through (`Updater.quitting`).
+- Sparkle's own "Install and Relaunch" sends `[NSApp terminate:]` too: it reaches the quit handler, goes through
+  `requestExit` like ⌘Q, and if the user cancels there, the update waits for the next quit.
 - Windows: `can_shutdown` returns false while `requestExit` would ask something; `shutdown_request` calls `requestExit`.
-- Never install while a long export, import, backup or restore is running: treat those like unsaved work.
+- Never install while a long export, import, backup or restore is running: treat those like unsaved work. (Not done
+  yet: today only open transactions, unsubmitted edits and unsaved data files hold a quit.)
 
 ### User-facing behaviour
 
-- **Menu**: "Check for Updates…" in the app menu (macOS) and Help (Windows).
+- **Check for Updates…** in Go to Anything (⌘P) and as *Check Now* in Settings › Updates. The app has no menu bar of
+  its own, and Java can't add items to the macOS app menu.
 - **Settings › Updates** (new panel, values in `settings.json` like everything else and pushed to the shim at start):
   - Check for updates automatically (default on; once a day, Sparkle's default interval).
   - Download and install updates automatically (default on): downloads in the background, installs on the next quit,
@@ -216,7 +220,13 @@ A version with a `-` suffix becomes a pre-release.
   JBR toolchain instead of whatever `JAVA_HOME` is; `.github/workflows/release.yml` builds, signs, notarizes and
   attaches everything to a draft release. Left for the maintainer: the accounts and secrets below, and the Ed25519 key
   pair (needed from Phase 1).
-- **Phase 1, macOS**: Sparkle shim, feeds, menu item, Settings › Updates, quit handling, staging-feed test.
+- **Phase 1, macOS** (done in code): Sparkle bridge and bundling, Settings › Updates, *Check for Updates…* in ⌘P,
+  quit handling, `scripts/appcast.py` (feeds from `appcast/releases.json`), `appcast.yml` (on a published release:
+  add it to the feeds, sign them, commit), and the release workflow signing each DMG. `scripts/test-update.sh`
+  updates a local 99.0.0 build to 99.0.1 end to end; checked on 2026-11-02 on Apple silicon, ad-hoc signed: the
+  automatic check downloaded the update and it installed on quit, and a feed changed after signing was refused (no
+  download). Left for the maintainer: generate the real key pair (`generate_keys`), put the public key in
+  `datagrok.sparklePublicKey` and the private key (`generate_keys -x`) in `SPARKLE_PRIVATE_KEY`.
 - **Phase 2, Windows**: WinSparkle bridge, MSI upgrade test (old version replaced, settings and `~/.datagrok` kept).
 - **Phase 3**: Linux `.deb` gets notify-only (read the same feed, verify its signature with the JDK's `Ed25519`
   `Signature`, show a banner linking to the download); delta updates on macOS; a Jewel-styled update dialog via

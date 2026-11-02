@@ -6,6 +6,8 @@ import dev.datagrok.app.ui.parseHexColor
 import dev.datagrok.app.AppState
 import dev.datagrok.app.backup.BackupsPanel
 import dev.datagrok.app.tools.ToolsPanel
+import dev.datagrok.app.update.UpdateChannel
+import dev.datagrok.app.update.UpdatesPanel
 import dev.datagrok.core.tools.ToolFamily
 import dev.datagrok.app.AppTheme
 import dev.datagrok.core.agent.provider.AgentMode
@@ -308,6 +310,37 @@ object SettingsPages {
                             panel = { app -> KeymapPanel(app) },
                             keywords = listOf("shortcut", "keyboard", "hotkey", "binding"),
                             reset = { s, d -> s.copy(keyBindings = d.keyBindings) },
+                        ),
+                    ),
+            ),
+            SettingsPage(
+                id = "updates",
+                group = "Appearance & Behavior",
+                title = "Updates",
+                description = "New versions of Datagrok, from its GitHub releases.",
+                sections =
+                    listOf(
+                        SettingsSection(
+                            null,
+                            listOf(
+                                BooleanField("Check for updates automatically", Settings::checkForUpdates, { s, v -> s.copy(checkForUpdates = v) }, hint = "Once a day."),
+                                BooleanField(
+                                    "Download and install updates automatically",
+                                    Settings::installUpdatesAutomatically,
+                                    { s, v -> s.copy(installUpdatesAutomatically = v) },
+                                    hint = "Downloads in the background and installs the next time you quit. Off: asks first, with the release notes.",
+                                ),
+                                ChoiceField(
+                                    "Channel",
+                                    UpdateChannel.entries,
+                                    UpdateChannel::label,
+                                    get = { s -> UpdateChannel.of(s.updateChannel) },
+                                    set = { s, channel -> s.copy(updateChannel = channel.name) },
+                                    hint = "Beta also offers pre-releases, which get new features first and may have rough edges.",
+                                ),
+                            ),
+                            panel = { app -> UpdatesPanel(app) },
+                            keywords = listOf("version", "upgrade", "release", "Sparkle", "beta"),
                         ),
                     ),
             ),

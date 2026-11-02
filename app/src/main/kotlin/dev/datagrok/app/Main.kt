@@ -52,15 +52,24 @@ private fun runApp() = application {
             it.session.startAutosave()
             it.scheduledBackups.sync()
             it.watchConfigFiles()
+            it.startUpdater()
         }
+    }
+    // Once the user agreed to quit: through the updater when it can install a downloaded update on the way out.
+    fun exit() {
+        if (!appState.updater.quit()) exitApplication()
     }
     val doubleShift = remember { DoubleShiftDetector() }
     // ⌘Q bypasses the window's close request on macOS; route it through the same unsaved-work check.
     DisposableEffect(Unit) {
         val desktop = Desktop.getDesktop().takeIf { Desktop.isDesktopSupported() && it.isSupported(Desktop.Action.APP_QUIT_HANDLER) }
         desktop?.setQuitHandler { _, response ->
-            response.cancelQuit()
-            appState.requestExit(::exitApplication)
+            if (appState.updater.quitting) {
+                response.performQuit()
+            } else {
+                response.cancelQuit()
+                appState.requestExit(::exit)
+            }
         }
         onDispose { desktop?.setQuitHandler(null) }
     }
@@ -76,7 +85,7 @@ private fun runApp() = application {
     }
     // Quits once no window is left; the main window only hides while file windows remain.
     fun closedWindow() {
-        if (appState.files.windows.isEmpty() && !appState.mainWindowVisible) appState.requestExit(::exitApplication)
+        if (appState.files.windows.isEmpty() && !appState.mainWindowVisible) appState.requestExit(::exit)
     }
     DatagrokTheme(isDark = appState.theme.isDark(), settings = appState.settings) {
         appState.files.windows.forEach { file ->
@@ -84,7 +93,7 @@ private fun runApp() = application {
         }
         DecoratedWindow(
             onCloseRequest = {
-                if (appState.files.windows.isEmpty()) appState.requestExit(::exitApplication) else appState.mainWindowVisible = false
+                if (appState.files.windows.isEmpty()) appState.requestExit(::exit) else appState.mainWindowVisible = false
             },
             state = appState.windowState,
             visible = appState.mainWindowVisible,

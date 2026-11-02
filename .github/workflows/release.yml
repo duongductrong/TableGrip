@@ -44,6 +44,10 @@ jobs:
               echo "::error::$GITHUB_REF_NAME isn't on master. Releases are only made from master."
               exit 1
             fi
+            if [[ -z "$(sed -n 's/^datagrok\.sparklePublicKey=//p' gradle.properties)" ]]; then
+              echo "::error::datagrok.sparklePublicKey is empty in gradle.properties: the app couldn't verify its updates."
+              exit 1
+            fi
             signed=true
           else
             signed=false
@@ -140,6 +144,26 @@ jobs:
           app=app/build/compose/binaries/main/app/Datagrok.app
           codesign --verify --deep --strict --verbose=2 "$app"
           [[ $(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$app/Contents/Info.plist") == "$BUILD" ]]
+
+      # Sparkle installs the DMG only if its Ed25519 signature matches the key built into the app.
+      - name: Sign the update
+        if: needs.version.outputs.signed == 'true'
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+          TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          dmg="Datagrok-$VERSION-$TARGET.dmg"
+          sign_update=$(find app/build/sparkle -name sign_update -type f -perm -u+x | head -1)
+          key="$RUNNER_TEMP/sparkle.key"
+          trap 'rm -f "$key"' EXIT
+          printf '%s' "$SPARKLE_PRIVATE_KEY" > "$key"
+          signature=$("$sign_update" --ed-key-file "$key" -p "dist/$dmg")
+          [[ -n "$signature" ]] || { echo "::error::sign_update gave no signature."; exit 1; }
+          minimum=$(/usr/libexec/PlistBuddy -c "Print :LSMinimumSystemVersion" app/build/compose/binaries/main/app/Datagrok.app/Contents/Info.plist)
+          jq -n --arg file "$dmg" --argjson length "$(stat -f %z "dist/$dmg")" --arg sig "$signature" --arg min "$minimum" --argjson build "$BUILD" \
+            '{file: $file, length: $length, edSignature: $sig, minimumSystemVersion: $min, build: $build}' > "dist/appcast-$TARGET.json"
+          cat "dist/appcast-$TARGET.json"
 
       - name: Remove the keychain
         if: always() && env.KEYCHAIN != ''

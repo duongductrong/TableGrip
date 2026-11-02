@@ -23,6 +23,7 @@ import dev.datagrok.app.queries.SavedQueries
 import dev.datagrok.app.schema.ImportWizard
 import dev.datagrok.app.schema.TestDataState
 import dev.datagrok.app.settings.SettingsPages
+import dev.datagrok.app.update.Updater
 import dev.datagrok.app.tools.ToolsViewModel
 import dev.datagrok.app.ui.EnvironmentColorOverrides
 import dev.datagrok.app.ui.KeymapPreset
@@ -146,6 +147,13 @@ class AppState(
     val tools = ToolsViewModel(this)
     /** Backups on a schedule while the app is open; off unless turned on in Settings → Backups. */
     val scheduledBackups = ScheduledBackups(this)
+    /** Keeps the installed app up to date; [Main] starts it, tests and `:app:run` get one that does nothing. */
+    val updater: Updater = Updater.create()
+
+    /** Starts update checks as Settings → Updates say. */
+    fun startUpdater() {
+        scope.launch(Dispatchers.IO) { updater.start(settings) }
+    }
     /** Reopens the last session's tabs; [Main] restores it, tests start empty. */
     val session = SessionKeeper(this)
 
@@ -190,6 +198,9 @@ class AppState(
         drivers.library.repository = next.driverRepository
         agent.settingsChanged(before, next)
         if (before.scheduledBackups != next.scheduledBackups || before.backupSchedules.map { it.enabled } != next.backupSchedules.map { it.enabled }) scheduledBackups.sync()
+        if (before.checkForUpdates != next.checkForUpdates || before.installUpdatesAutomatically != next.installUpdatesAutomatically || before.updateChannel != next.updateChannel) {
+            updater.configure(next)
+        }
         return next
     }
 

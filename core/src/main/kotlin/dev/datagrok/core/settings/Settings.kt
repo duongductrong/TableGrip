@@ -125,6 +125,14 @@ data class Settings(
     val stripeHidden: List<String> = emptyList(),
     /** Tool stripe buttons in the user's order, by id; ids missing here keep their place after these. */
     val stripeOrder: List<String> = emptyList(),
+
+    // Updates
+    /** Looks for a new version once a day. */
+    val checkForUpdates: Boolean = true,
+    /** Downloads a new version in the background and installs it when the app quits, without asking. */
+    val installUpdatesAutomatically: Boolean = true,
+    /** `Stable`, or `Beta` to also get pre-releases. */
+    val updateChannel: String = "Stable",
 )
 
 /**

@@ -1,5 +1,7 @@
 @file:Suppress("UnstableApiUsage")
 
+import java.net.URI
+import java.security.MessageDigest
 import java.util.zip.ZipFile
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
@@ -34,6 +36,80 @@ val versionResource by tasks.registering {
     inputs.property("build", build)
     outputs.file(output)
     doLast { output.get().asFile.apply { parentFile.mkdirs() }.writeText("version=$version\nbuild=$build\n") }
+}
+
+// endregion
+
+// region Updater
+//
+// macOS updates through Sparkle: the framework and the small bridge the app calls (app/src/macos/updater) go into
+// Contents/Frameworks, and the app is signed again around them. Other systems don't get an updater yet.
+
+val isMacHost = System.getProperty("os.name").startsWith("Mac")
+val sparkleVersion = "2.10.1"
+val sparkleSha256 = "1a856d2a9edb8e628de88121d7be04cf0e2167f8641650b78fca00b14244cf27"
+/** Base64 Ed25519 public key that every update must be signed with (Sparkle's generate_keys prints it). */
+val sparklePublicKey = providers.gradleProperty("datagrok.sparklePublicKey").orNull.orEmpty()
+val macEntitlements = layout.projectDirectory.file("src/macos/entitlements.plist")
+val sparkleDir = layout.buildDirectory.dir("sparkle/$sparkleVersion")
+val updaterBridge = layout.buildDirectory.file("updater/libDatagrokUpdater.dylib")
+
+/** Runs a command from a task action; an object, so actions can call it without capturing the build script. */
+object Shell {
+    fun run(vararg command: String) {
+        val process = ProcessBuilder(*command).redirectErrorStream(true).start()
+        val output = process.inputStream.bufferedReader().readText()
+        if (process.waitFor() != 0) throw GradleException("${command.joinToString(" ")} failed:\n$output")
+    }
+}
+
+/** Sparkle's release archive, checked against its pinned SHA-256: the framework, and sign_update for the release workflow. */
+val downloadSparkle by tasks.registering {
+    val version = sparkleVersion
+    val sha256 = sparkleSha256
+    val output = sparkleDir
+    inputs.property("version", version)
+    inputs.property("sha256", sha256)
+    outputs.dir(output)
+    val mac = isMacHost
+    onlyIf { mac }
+    doLast {
+        val dir = output.get().asFile.apply { deleteRecursively(); mkdirs() }
+        val archive = File(temporaryDir, "Sparkle-$version.tar.xz")
+        fun digest() = MessageDigest.getInstance("SHA-256").digest(archive.readBytes()).joinToString("") { "%02x".format(it) }
+        // A copy already downloaded is kept as long as it's still the pinned one.
+        if (!archive.isFile || digest() != sha256) {
+            URI("https://github.com/sparkle-project/Sparkle/releases/download/$version/Sparkle-$version.tar.xz").toURL().openStream().use { input ->
+                archive.outputStream().use { input.copyTo(it) }
+            }
+            val actual = digest()
+            if (actual != sha256) throw GradleException("Sparkle $version doesn't match its pinned SHA-256 (got $actual).")
+        }
+        Shell.run("tar", "-xJf", archive.absolutePath, "-C", dir.absolutePath)
+    }
+}
+
+/** The bridge between the app and Sparkle, for both Mac architectures. */
+val buildUpdaterBridge by tasks.registering {
+    val source = layout.projectDirectory.file("src/macos/updater/DatagrokUpdater.m")
+    val sparkle = sparkleDir
+    val output = updaterBridge
+    dependsOn(downloadSparkle)
+    inputs.file(source)
+    inputs.dir(sparkleDir)
+    outputs.file(output)
+    val mac = isMacHost
+    onlyIf { mac }
+    doLast {
+        val dylib = output.get().asFile.apply { parentFile.mkdirs() }
+        Shell.run(
+            "xcrun", "clang", "-dynamiclib", "-fobjc-arc", "-fmodules", "-O2",
+            "-arch", "arm64", "-arch", "x86_64", "-mmacosx-version-min=12.0",
+            "-F", sparkle.get().asFile.absolutePath, "-framework", "Sparkle", "-framework", "AppKit",
+            "-install_name", "@rpath/libDatagrokUpdater.dylib", "-Wl,-rpath,@loader_path",
+            "-o", dylib.absolutePath, source.asFile.absolutePath,
+        )
+    }
 }
 
 // endregion
@@ -126,6 +202,20 @@ compose.desktop {
                 // CFBundleVersion, which Sparkle compares.
                 packageBuildVersion = appBuild
                 dmgPackageBuildVersion = appBuild
+                entitlementsFile = macEntitlements
+                runtimeEntitlementsFile = macEntitlements
+                // Sparkle: every update and the feed itself must carry a signature from this key; checks need no
+                // first-run prompt (Settings → Updates turns them off); nothing about the Mac is sent.
+                infoPlist {
+                    extraKeysRawXml =
+                        """
+                        <key>SUPublicEDKey</key><string>$sparklePublicKey</string>
+                        <key>SURequireSignedFeed</key><true/>
+                        <key>SUVerifyUpdateBeforeExtraction</key><true/>
+                        <key>SUEnableAutomaticChecks</key><true/>
+                        <key>SUEnableSystemProfiling</key><false/>
+                        """.trimIndent()
+                }
             }
             windows {
                 // Fixed for the app's lifetime: it's how a newer MSI finds and replaces the installed one.
@@ -254,6 +344,48 @@ tasks {
         }
     }
     matching { it.name.startsWith("package") }.configureEach { dependsOn(verifyNoBundledDrivers) }
+
+    // Adds Sparkle and the bridge to the .app jpackage made, then signs them and the app again, inside out.
+    matching { it.name == "createDistributable" }.configureEach {
+        if (isMacHost) {
+            dependsOn(downloadSparkle, buildUpdaterBridge)
+            val sparkle = sparkleDir
+            val bridge = updaterBridge
+            val appDir = layout.buildDirectory.dir("compose/binaries/main/app")
+            val entitlements = macEntitlements.asFile
+            val sign = providers.gradleProperty("compose.desktop.mac.sign").orNull == "true"
+            val identity = providers.gradleProperty("compose.desktop.mac.signing.identity").orNull?.let { "Developer ID Application: $it" }
+            val keychain = providers.gradleProperty("compose.desktop.mac.signing.keychain").orNull
+            doLast {
+                val app = appDir.get().asFile.listFiles { file -> file.name.endsWith(".app") }!!.single()
+                val frameworks = app.resolve("Contents/Frameworks").apply { mkdirs() }
+                val framework = frameworks.resolve("Sparkle.framework")
+                framework.deleteRecursively()
+                // ditto keeps the framework's symlinks, which codesign needs.
+                Shell.run("ditto", sparkle.get().asFile.resolve("Sparkle.framework").absolutePath, framework.absolutePath)
+                // The XPC services are for sandboxed apps; Datagrok isn't one.
+                framework.resolve("Versions/B/XPCServices").deleteRecursively()
+                framework.resolve("XPCServices").delete()
+                bridge.get().asFile.copyTo(frameworks.resolve("libDatagrokUpdater.dylib"), overwrite = true)
+
+                val signer = if (sign) requireNotNull(identity) { "compose.desktop.mac.signing.identity is needed to sign" } else "-"
+                fun codesign(target: File, vararg extra: String) {
+                    val command = mutableListOf("codesign", "--force", "--options", "runtime", "--sign", signer)
+                    command += if (sign) "--timestamp" else "--timestamp=none"
+                    if (sign && keychain != null) command += listOf("--keychain", keychain)
+                    command += extra
+                    command += target.absolutePath
+                    Shell.run(*command.toTypedArray())
+                }
+                codesign(framework.resolve("Versions/B/Autoupdate"))
+                codesign(framework.resolve("Versions/B/Updater.app"))
+                codesign(framework)
+                codesign(frameworks.resolve("libDatagrokUpdater.dylib"))
+                codesign(app, "--entitlements", entitlements.absolutePath)
+                Shell.run("codesign", "--verify", "--deep", "--strict", app.absolutePath)
+            }
+        }
+    }
 
     test {
         useJUnitPlatform()
