@@ -11,6 +11,33 @@ plugins {
 
 val jdkLevel = providers.gradleProperty("jdk.level").get().toInt()
 
+// region Version
+//
+// One source for every version string: `datagrok.version` (what users see, e.g. 1.4.0 or 1.4.0-beta.2) and
+// `datagrok.build` (an integer that only ever goes up; CI passes the commit count of master). Updaters compare the
+// build, so two releases must never share one.
+
+val appVersion = providers.gradleProperty("datagrok.version").get()
+val appBuild = providers.gradleProperty("datagrok.build").get()
+val versionMatch =
+    Regex("""([1-9]\d*)\.(\d+)\.(\d+)(-[0-9A-Za-z.]+)?""").matchEntire(appVersion)
+        ?: throw GradleException("datagrok.version must look like 1.4.0 or 1.4.0-beta.2, not '$appVersion'.")
+if (appBuild.toIntOrNull()?.takeIf { it in 1..65535 } == null) throw GradleException("datagrok.build must be an integer from 1 to 65535, not '$appBuild'.")
+val (versionMajor, versionMinor, versionPatch) = versionMatch.destructured
+
+/** Writes the version the app reads at runtime (see `dev.datagrok.app.update.AppVersion`). */
+val versionResource by tasks.registering {
+    val version = appVersion
+    val build = appBuild
+    val output = layout.buildDirectory.file("generated/version/datagrok-version.properties")
+    inputs.property("version", version)
+    inputs.property("build", build)
+    outputs.file(output)
+    doLast { output.get().asFile.apply { parentFile.mkdirs() }.writeText("version=$version\nbuild=$build\n") }
+}
+
+// endregion
+
 kotlin {
     jvmToolchain(jdkLevel)
     compilerOptions {
@@ -55,6 +82,12 @@ dependencies {
 compose.desktop {
     application {
         mainClass = "dev.datagrok.app.MainKt"
+        // Installers bundle this runtime: the JBR, like `run` uses, never whatever JAVA_HOME happens to be.
+        javaHome =
+            javaToolchains.launcherFor {
+                languageVersion = JavaLanguageVersion.of(jdkLevel)
+                vendor = JvmVendorSpec.JETBRAINS
+            }.get().metadata.installationPath.asFile.absolutePath
         // Skiko and the SQLite driver load native libraries.
         jvmArgs("--enable-native-access=ALL-UNNAMED")
         // Trackpad pinch-to-zoom reads macOS magnify gestures (see PinchZoom).
@@ -63,9 +96,12 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Datagrok"
-            packageVersion = "1.0.0"
+            // Installers only take MAJOR.MINOR.PATCH; a pre-release's suffix is shown by the app itself.
+            packageVersion = "$versionMajor.$versionMinor.$versionPatch"
             description = "A modern database client"
             vendor = "Datagrok"
+            copyright = "Copyright 2026 The Datagrok Authors. Licensed under the Apache License, Version 2.0."
+            licenseFile = rootProject.layout.projectDirectory.file("LICENSE")
             // java.net.http downloads drivers; the rest are what downloaded drivers commonly need (GSSAPI/Kerberos and
             // SASL logins, XML parsing), since they can't add modules to the bundled runtime themselves.
             modules(
@@ -82,9 +118,24 @@ compose.desktop {
             fileAssociation("application/x-ndjson", "ndjson", "NDJSON Document")
             fileAssociation("application/jsonl", "jsonl", "JSON Lines Document")
 
+            // Signing and notarization are switched on from outside (CI), never stored here: -Pcompose.desktop.mac.sign=true
+            // with compose.desktop.mac.signing.identity, and compose.desktop.mac.notarization.appleID / password / teamID.
             macOS {
                 dockName = "Datagrok"
                 bundleID = "dev.datagrok.app"
+                // CFBundleVersion, which Sparkle compares.
+                packageBuildVersion = appBuild
+                dmgPackageBuildVersion = appBuild
+            }
+            windows {
+                // Fixed for the app's lifetime: it's how a newer MSI finds and replaces the installed one.
+                upgradeUuid = "0E0D7626-709F-4F7A-9AAC-C702F6194B34"
+                // Installs into the user's profile, so updates don't ask for admin rights.
+                perUserInstall = true
+                menuGroup = "Datagrok"
+                // MSI ignores anything after the third part and won't replace a build with the same version, so the
+                // build takes the third place: 1.4.0 build 412 and 1.4.1 build 415 install as 1.4.412 and 1.4.415.
+                msiPackageVersion = "$versionMajor.$versionMinor.$appBuild"
             }
         }
     }
@@ -194,6 +245,8 @@ tasks {
     check { dependsOn(verifyNoBundledDrivers, thirdPartyNotices) }
     processResources {
         from(thirdPartyNotices)
+        from(versionResource)
+        from(rootProject.layout.projectDirectory.file("LICENSE"), rootProject.layout.projectDirectory.file("NOTICE"))
         // Renamed to the adapter's name, which DriverLibrary looks up as engines/<name>.jar.
         from(engineAdapters) {
             into("engines")

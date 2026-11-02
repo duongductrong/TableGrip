@@ -1,0 +1,28 @@
+package dev.datagrok.app.update
+
+import java.util.Properties
+
+/** The running app's version, from `datagrok.version` and `datagrok.build` in gradle.properties. */
+data class AppVersion(
+    /** What users see: `1.4.0`, or `1.4.0-beta.2` for a pre-release. */
+    val version: String,
+    /** Only ever goes up from one release to the next; updaters compare this, not [version]. */
+    val build: Int,
+) {
+    val isPrerelease: Boolean get() = '-' in version
+
+    override fun toString(): String = "$version ($build)"
+
+    companion object {
+        private const val Resource = "/datagrok-version.properties"
+
+        val current: AppVersion by lazy {
+            val properties = Properties()
+            AppVersion::class.java.getResourceAsStream(Resource)?.use(properties::load)
+            AppVersion(
+                version = properties.getProperty("version") ?: "0.0.0-dev",
+                build = properties.getProperty("build")?.toIntOrNull() ?: 0,
+            )
+        }
+    }
+}

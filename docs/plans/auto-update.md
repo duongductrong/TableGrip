@@ -42,11 +42,17 @@ Linux, where it is reduced to "tell the user".
 
 ### Version
 
-- One source: `datagrok.version` (e.g. `1.4.0`) and `datagrok.build` (an increasing integer from CI) in
-  `gradle.properties`. `packageVersion` reads it; a generated resource `datagrok-version.properties` lets the app show
-  it (About, Settings › Updates) and compare it.
-- macOS: `CFBundleShortVersionString` = version, `CFBundleVersion` = build. Sparkle compares `CFBundleVersion`, so the
-  build number must only ever go up. Windows: MSI ProductVersion = version (MSI only compares the first three parts).
+- One source in `gradle.properties`: `datagrok.version` (`1.4.0`, or `1.4.0-beta.2` for a pre-release) and
+  `datagrok.build`, an integer that only goes up. Local builds use `1`; the release workflow passes the commit count
+  of `master` (`git rev-list --count HEAD`), so the same commit always gets the same build. The build fails on a
+  malformed version or a build outside 1–65535.
+- The app reads both from the generated `datagrok-version.properties` (`dev.datagrok.app.update.AppVersion`).
+- macOS: `CFBundleShortVersionString` = `1.4.0` (installers can't carry a suffix), `CFBundleVersion` = build. Sparkle
+  compares `CFBundleVersion`.
+- Windows: MSI ProductVersion = `MAJOR.MINOR.BUILD` (`1.4.412`). MSI ignores a fourth part and won't replace an
+  installed copy of the same version, so `1.4.0-beta.2` and `1.4.0` would otherwise collide; the build number keeps
+  them apart and always increasing.
+- The tag must equal `datagrok.version` (`v1.4.0`) and be on `master`, or the release workflow stops.
 
 ### Feeds and hosting
 
@@ -170,9 +176,26 @@ edits, unsaved data files) like ⌘Q does:
 
 ## Release pipeline (GitHub Actions)
 
-On a `v*` tag (pre-release if the version has a `-beta` suffix), in the `release` environment:
+`.github/workflows/release.yml`. A `v*` tag makes a signed draft release; "Run workflow" by hand makes an unsigned dry
+run whose installers stay as workflow artifacts.
 
-1. Build per target on its own runner: `macos-14` (arm64), `macos-13` (x64), `windows-latest`.
+Secrets, in the `release` environment (Settings › Environments; add yourself as required reviewer and allow only
+`v*` tags):
+
+| Secret | What |
+|---|---|
+| `MAC_CERTIFICATE_P12` | Developer ID Application certificate and key, exported as .p12, base64 |
+| `MAC_CERTIFICATE_PASSWORD` | its export password |
+| `MAC_SIGNING_IDENTITY` | `Name (TEAMID)`, the part after "Developer ID Application: " |
+| `MAC_NOTARIZATION_APPLE_ID`, `MAC_NOTARIZATION_PASSWORD`, `MAC_NOTARIZATION_TEAM_ID` | Apple ID, an app-specific password for it, team ID |
+| `AZURE_TENANT_ID`, `AZURE_CLIENT_ID` | an Entra app with a federated credential for this repo's `release` environment (OIDC, no client secret) and the *Artifact Signing Certificate Profile Signer* role |
+| `AZURE_SIGNING_ENDPOINT`, `AZURE_SIGNING_ACCOUNT`, `AZURE_CERTIFICATE_PROFILE` | the Artifact Signing (formerly Trusted Signing) account's region endpoint, name, and certificate profile |
+
+The full pipeline, once Phase 1 adds Sparkle. Phase 0 does steps 1, 3, 4 and 6 (Compose's own signing and
+notarization on macOS, Artifact Signing on Windows, plus an unsigned `.deb`); publishing the draft is still by hand.
+A version with a `-` suffix becomes a pre-release.
+
+1. Build per target on its own runner: `macos-15` (arm64), `macos-15-intel` (x64), `windows-latest`, `ubuntu-latest`.
 2. `createDistributable`, then add `Sparkle.framework` and the shim (macOS) or `WinSparkle.dll` (Windows).
 3. Sign: `codesign --options runtime --timestamp` inside-out (dylibs, framework, JBR, launcher, app); Authenticode on
    Windows.
@@ -188,10 +211,11 @@ On a `v*` tag (pre-release if the version has a `-beta` suffix), in the `release
 
 - **Decided**: Sparkle 2 + WinSparkle; appcasts on `master` served from `raw.githubusercontent.com`, archives on
   GitHub Releases; the project is licensed Apache-2.0.
-- **Phase 0, prerequisites** (fixes problems 1–6): `LICENSE` (Apache-2.0) and `NOTICE` at the root, shipped in the app
-  next to `THIRD-PARTY-NOTICES.txt`; version source, `upgradeUuid`, `perUserInstall = true`,
-  Apple and Windows signing in CI with the `release` environment, Ed25519 key pair. Useful even without an updater:
-  signed installers are the other half of M5.
+- **Phase 0, prerequisites** (fixes problems 1–6). Done in code: `LICENSE` (Apache-2.0) and `NOTICE`, shipped in
+  the app and shown by the installers; version source; `upgradeUuid`; `perUserInstall = true`; installers bundle the
+  JBR toolchain instead of whatever `JAVA_HOME` is; `.github/workflows/release.yml` builds, signs, notarizes and
+  attaches everything to a draft release. Left for the maintainer: the accounts and secrets below, and the Ed25519 key
+  pair (needed from Phase 1).
 - **Phase 1, macOS**: Sparkle shim, feeds, menu item, Settings › Updates, quit handling, staging-feed test.
 - **Phase 2, Windows**: WinSparkle bridge, MSI upgrade test (old version replaced, settings and `~/.datagrok` kept).
 - **Phase 3**: Linux `.deb` gets notify-only (read the same feed, verify its signature with the JDK's `Ed25519`

@@ -1,0 +1,8 @@
+Datagrok
+Copyright 2026 The Datagrok Authors
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+It includes open source libraries listed, with their licenses, in THIRD-PARTY-NOTICES.txt, which ships with the
+app. JDBC drivers and database clients are not included: they are downloaded separately at the user's request,
+under their own licenses.

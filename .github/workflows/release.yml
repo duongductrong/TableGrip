@@ -1,0 +1,305 @@
+# Builds, signs and notarizes the installers for a `v*` tag and attaches them to a draft GitHub Release, which the
+# maintainer publishes by hand. Run it by hand ("Run workflow") for an unsigned dry run: installers are kept as workflow
+# artifacts and no release is made. See docs/plans/auto-update.md for the secrets it needs.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      build: ${{ steps.version.outputs.build }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+      signed: ${{ steps.version.outputs.signed }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(sed -n 's/^datagrok\.version=//p' gradle.properties)
+          # The build number is the commit count of master: it only goes up, and the same commit always gets the same one.
+          build=$(git rev-list --count HEAD)
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            if [[ "${GITHUB_REF_NAME#v}" != "$version" ]]; then
+              echo "::error::Tag $GITHUB_REF_NAME doesn't match datagrok.version=$version in gradle.properties."
+              exit 1
+            fi
+            if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/master; then
+              echo "::error::$GITHUB_REF_NAME isn't on master. Releases are only made from master."
+              exit 1
+            fi
+            signed=true
+          else
+            signed=false
+          fi
+          prerelease=false
+          [[ "$version" == *-* ]] && prerelease=true
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "build=$build" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
+          echo "signed=$signed" >> "$GITHUB_OUTPUT"
+          echo "Datagrok $version (build $build), signed: $signed" >> "$GITHUB_STEP_SUMMARY"
+
+  macos:
+    needs: version
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - runner: macos-15
+            target: macos-arm64
+          - runner: macos-15-intel
+            target: macos-x64
+    runs-on: ${{ matrix.runner }}
+    # Signing secrets are only handed out to this environment, which requires the maintainer's approval.
+    environment: ${{ needs.version.outputs.signed == 'true' && 'release' || 'dry-run' }}
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      BUILD: ${{ needs.version.outputs.build }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        with:
+          # A release never reuses a cache another workflow could have written.
+          cache-disabled: ${{ needs.version.outputs.signed == 'true' }}
+
+      - name: Import the Developer ID certificate
+        if: needs.version.outputs.signed == 'true'
+        env:
+          MAC_CERTIFICATE_P12: ${{ secrets.MAC_CERTIFICATE_P12 }}
+          MAC_CERTIFICATE_PASSWORD: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          keychain="$RUNNER_TEMP/signing.keychain-db"
+          keychain_password=$(openssl rand -hex 24)
+          echo "$MAC_CERTIFICATE_P12" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          security create-keychain -p "$keychain_password" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          security import "$RUNNER_TEMP/certificate.p12" -k "$keychain" -P "$MAC_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -k "$keychain_password" "$keychain" > /dev/null
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          rm "$RUNNER_TEMP/certificate.p12"
+          echo "KEYCHAIN=$keychain" >> "$GITHUB_ENV"
+
+      - name: Build, sign and notarize
+        env:
+          SIGNED: ${{ needs.version.outputs.signed }}
+          # "Name (TEAMID)" from "Developer ID Application: Name (TEAMID)".
+          MAC_SIGNING_IDENTITY: ${{ secrets.MAC_SIGNING_IDENTITY }}
+          MAC_NOTARIZATION_APPLE_ID: ${{ secrets.MAC_NOTARIZATION_APPLE_ID }}
+          MAC_NOTARIZATION_PASSWORD: ${{ secrets.MAC_NOTARIZATION_PASSWORD }}
+          MAC_NOTARIZATION_TEAM_ID: ${{ secrets.MAC_NOTARIZATION_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          args=(-Pdatagrok.build="$BUILD" :app:check :app:packageDmg)
+          if [[ "$SIGNED" == true ]]; then
+            args+=(
+              -Pcompose.desktop.mac.sign=true
+              -Pcompose.desktop.mac.signing.identity="$MAC_SIGNING_IDENTITY"
+              -Pcompose.desktop.mac.signing.keychain="$KEYCHAIN"
+              -Pcompose.desktop.mac.notarization.appleID="$MAC_NOTARIZATION_APPLE_ID"
+              -Pcompose.desktop.mac.notarization.password="$MAC_NOTARIZATION_PASSWORD"
+              -Pcompose.desktop.mac.notarization.teamID="$MAC_NOTARIZATION_TEAM_ID"
+              :app:notarizeDmg
+            )
+          fi
+          ./gradlew --no-configuration-cache "${args[@]}"
+          mkdir -p dist
+          cp app/build/compose/binaries/main/dmg/*.dmg "dist/Datagrok-$VERSION-${{ matrix.target }}.dmg"
+
+      - name: Check the signature, notarization and version
+        if: needs.version.outputs.signed == 'true'
+        run: |
+          set -euo pipefail
+          dmg="dist/Datagrok-$VERSION-${{ matrix.target }}.dmg"
+          xcrun stapler validate "$dmg"
+          spctl --assess --type open --context context:primary-signature --verbose "$dmg"
+          app=app/build/compose/binaries/main/app/Datagrok.app
+          codesign --verify --deep --strict --verbose=2 "$app"
+          [[ $(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$app/Contents/Info.plist") == "$BUILD" ]]
+
+      - name: Remove the keychain
+        if: always() && env.KEYCHAIN != ''
+        run: security delete-keychain "$KEYCHAIN"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ matrix.target }}
+          path: dist/*
+          if-no-files-found: error
+
+  windows:
+    needs: version
+    runs-on: windows-latest
+    environment: ${{ needs.version.outputs.signed == 'true' && 'release' || 'dry-run' }}
+    permissions:
+      contents: read
+      id-token: write # Azure sign-in with OpenID Connect: no long-lived Azure secret.
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      BUILD: ${{ needs.version.outputs.build }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        with:
+          cache-disabled: ${{ needs.version.outputs.signed == 'true' }}
+
+      - name: Build the app image
+        shell: bash
+        run: ./gradlew --no-configuration-cache -Pdatagrok.build="$BUILD" :app:check :app:createDistributable
+
+      - name: Sign in to Azure
+        if: needs.version.outputs.signed == 'true'
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          allow-no-subscriptions: true
+
+      # The launcher and DLLs are signed inside the app image, before the MSI is built around them.
+      - name: Sign the app image
+        if: needs.version.outputs.signed == 'true'
+        uses: azure/artifact-signing-action@c7ab2a863ab5f9a846ddb8265964877ef296ee82 # v2.0.0
+        with:
+          endpoint: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ secrets.AZURE_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ secrets.AZURE_CERTIFICATE_PROFILE }}
+          files-folder: app/build/compose/binaries/main/app/Datagrok
+          files-folder-filter: exe,dll
+          files-folder-recurse: true
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      - name: Build the MSI
+        shell: bash
+        run: |
+          set -euo pipefail
+          # -x keeps Gradle from rebuilding (and so unsigning) the app image.
+          ./gradlew --no-configuration-cache -Pdatagrok.build="$BUILD" :app:packageMsi -x :app:createDistributable
+          mkdir -p dist
+          cp app/build/compose/binaries/main/msi/*.msi "dist/Datagrok-$VERSION-windows-x64.msi"
+
+      - name: Sign the MSI
+        if: needs.version.outputs.signed == 'true'
+        uses: azure/artifact-signing-action@c7ab2a863ab5f9a846ddb8265964877ef296ee82 # v2.0.0
+        with:
+          endpoint: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ secrets.AZURE_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ secrets.AZURE_CERTIFICATE_PROFILE }}
+          files-folder: dist
+          files-folder-filter: msi
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      - name: Check the signature
+        if: needs.version.outputs.signed == 'true'
+        shell: pwsh
+        run: |
+          $signature = Get-AuthenticodeSignature "dist/Datagrok-$env:VERSION-windows-x64.msi"
+          if ($signature.Status -ne 'Valid') { throw "MSI signature is $($signature.Status)" }
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-x64
+          path: dist/*
+          if-no-files-found: error
+
+  linux:
+    needs: version
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      BUILD: ${{ needs.version.outputs.build }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        with:
+          cache-disabled: ${{ needs.version.outputs.signed == 'true' }}
+      - name: Build
+        run: |
+          set -euo pipefail
+          ./gradlew --no-configuration-cache -Pdatagrok.build="$BUILD" :app:check :app:packageDeb
+          mkdir -p dist
+          cp app/build/compose/binaries/main/deb/*.deb "dist/Datagrok-$VERSION-linux-x64.deb"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: linux-x64
+          path: dist/*
+          if-no-files-found: error
+
+  draft-release:
+    needs: [version, macos, windows, linux]
+    if: needs.version.outputs.signed == 'true'
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      BUILD: ${{ needs.version.outputs.build }}
+      PRERELEASE: ${{ needs.version.outputs.prerelease }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: dist/*
+      - name: Create the draft release
+        run: |
+          set -euo pipefail
+          cd dist
+          {
+            echo "Build $BUILD."
+            echo
+            echo '```'
+            sha256sum *
+            echo '```'
+            echo
+            echo "Check a download with \`gh attestation verify <file> --repo $GH_REPO\`."
+          } > ../notes.md
+          flags=(--draft --title "Datagrok $VERSION" --notes-file ../notes.md --generate-notes --verify-tag)
+          [[ "$PRERELEASE" == true ]] && flags+=(--prerelease)
+          gh release create "$GITHUB_REF_NAME" "${flags[@]}" *
