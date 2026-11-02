@@ -26,6 +26,7 @@ import dev.datagrok.app.ui.theme.colorTheme
 import dev.datagrok.app.ui.theme.isDarkMode
 import dev.datagrok.app.ui.KeymapPreset
 import dev.datagrok.app.ui.Shortcuts
+import dev.datagrok.app.ui.UiZoom
 import dev.datagrok.app.ui.defaultEnvironmentColor
 import dev.datagrok.core.connection.Environment
 import dev.datagrok.core.sql.KeywordCase
@@ -176,6 +177,14 @@ object SettingsPages {
                         SettingsSection(
                             "Layout",
                             listOf(
+                                ChoiceField(
+                                    "Zoom",
+                                    UiZoom.Levels,
+                                    { if (it == UiZoom.Default) "$it% (default)" else "$it%" },
+                                    get = { s -> UiZoom.snap(s.zoom) },
+                                    set = { s, v -> s.copy(zoom = v) },
+                                    hint = "Scales everything in the window. ${Shortcuts.ZoomIn.label} / ${Shortcuts.ZoomOut.label} zoom in and out, ${Shortcuts.ResetZoom.label} resets.",
+                                ),
                                 ChoiceField(
                                     "Font size",
                                     listOf(0, 11, 12, 13, 14, 15, 16),

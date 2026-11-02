@@ -203,6 +203,11 @@ object Shortcuts {
     val AddToChat by action("General", "Mention the selection in the agent chat", Shortcut(Key.L, "L", primary = true))
     /** VS Code's key; a focused grid takes it first on a foreign-key cell (Go to Referenced Row). */
     val ToggleSidebar by action("General", "Show / hide the sidebar", Shortcut(Key.B, "B", primary = true))
+    /** VS Code's and the browsers' keys; ⌘= is ⌘+ without ⇧, and both zoom in. */
+    val ZoomIn by action("General", "Zoom in", Shortcut(Key.Equals, "=", primary = true))
+    val ZoomInAlt by action("General", "Zoom in (alternative)", Shortcut(Key.Equals, "+", primary = true, shift = true))
+    val ZoomOut by action("General", "Zoom out", Shortcut(Key.Minus, "-", primary = true))
+    val ResetZoom by action("General", "Reset zoom", Shortcut(Key.Zero, "0", primary = true))
 
     // Console
     val RunStatement by action("Console", "Execute statement at caret or selection", Shortcut(Key.Enter, EnterLabel, primary = true))
@@ -281,6 +286,8 @@ object Shortcuts {
                     entry("Agent", Agent),
                     entry("Mention the selection or statement in the agent chat, or open it", AddToChat),
                     entry("Show / hide the sidebar", ToggleSidebar),
+                    entry("Zoom in / out", ZoomIn, ZoomOut),
+                    entry("Reset zoom", ResetZoom),
                     entry("Saved Queries", Queries),
                     entry("Activity: sessions and locks of the current connection", Activity),
                     entry("Settings", Settings),

@@ -38,6 +38,8 @@ import dev.datagrok.app.ui.Island
 import dev.datagrok.app.ui.IslandGap
 import dev.datagrok.app.ui.LocalIslands
 import dev.datagrok.app.ui.Shortcuts
+import dev.datagrok.app.ui.Zoomed
+import dev.datagrok.app.ui.handleZoomShortcut
 import dev.datagrok.core.connection.DatabaseType
 import java.awt.Desktop
 import java.awt.event.WindowAdapter
@@ -62,6 +64,7 @@ internal fun DataFileWindowView(app: AppState, file: DataFileWindow, onClosed: (
         onCloseRequest = { app.files.requestClose(file, onClosed) },
         state = rememberWindowState(size = DpSize(1100.dp, 720.dp)),
         title = file.title,
+        onPreviewKeyEvent = { handleZoomShortcut(app, it) },
         onKeyEvent = { handleShortcut(app, file, it, onClosed) },
     ) {
         FollowThemeAppearance(window)
@@ -90,9 +93,11 @@ internal fun DataFileWindowView(app: AppState, file: DataFileWindow, onClosed: (
             }
         }
         FileTitleBar(app, file)
-        Column(Modifier.fillMaxSize().background(LocalIslands.current.frame)) {
-            Island(Modifier.weight(1f).fillMaxWidth().padding(start = IslandGap, end = IslandGap)) { FileContent(app, file) }
-            FileStatusBar(app, file)
+        Zoomed {
+            Column(Modifier.fillMaxSize().background(LocalIslands.current.frame)) {
+                Island(Modifier.weight(1f).fillMaxWidth().padding(start = IslandGap, end = IslandGap)) { FileContent(app, file) }
+                FileStatusBar(app, file)
+            }
         }
         if (!app.mainWindowVisible && app.files.dialogHost === file) AppDialogs(app)
     }

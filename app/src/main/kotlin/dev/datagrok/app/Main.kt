@@ -27,6 +27,8 @@ import dev.datagrok.core.agent.ChatStore
 import dev.datagrok.app.ui.MainScreen
 import dev.datagrok.app.ui.PinchZoom
 import dev.datagrok.app.ui.TitleBarView
+import dev.datagrok.app.ui.Zoomed
+import dev.datagrok.app.ui.handleZoomShortcut
 import java.awt.Desktop
 import kotlinx.coroutines.delay
 import org.jetbrains.jewel.window.DecoratedWindow
@@ -91,7 +93,7 @@ private fun runApp() = application {
                 // Settings → Keymap is recording a shortcut: every key goes to it.
                 if (Shortcuts.recording) return@DecoratedWindow false
                 if (doubleShift.onKey(it.key, it.type)) appState.goToOpen = true
-                handleTabSwitch(appState, it)
+                handleTabSwitch(appState, it) || handleZoomShortcut(appState, it)
             },
             onKeyEvent = { handleWindowShortcut(appState, it) },
         ) {
@@ -107,7 +109,8 @@ private fun runApp() = application {
                 onDispose { window.contentPane.dropTarget = previous }
             }
             TitleBarView(appState)
-            MainScreen(appState, dialogs = appState.mainWindowVisible)
+            // The title bar keeps its size: its height is also the native one macOS lays the window buttons out by.
+            Zoomed { MainScreen(appState, dialogs = appState.mainWindowVisible) }
         }
     }
 }

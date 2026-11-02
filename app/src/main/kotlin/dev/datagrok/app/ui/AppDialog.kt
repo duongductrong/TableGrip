@@ -68,12 +68,12 @@ internal fun AppDialog(
             if (customTitleBar != null) DialogTitleBar(window, customTitleBar, titleBarHeight, titleBar)
             val body = Modifier.weight(1f).fillMaxWidth()
             if (inset == 0.dp) {
-                Box(body.background(JewelTheme.globalColors.panelBackground)) { content() }
+                Box(body.background(JewelTheme.globalColors.panelBackground)) { Zoomed { content() } }
             } else {
                 // The native title bar (Linux) leaves no frame above the island, so give it the same gap there.
                 val top = if (customTitleBar == null) inset else 0.dp
                 // Concentric with the window's rounded corners, so the gap stays even around the curve.
-                Island(body.padding(start = inset, top = top, end = inset, bottom = inset), RoundedCornerShape((DialogCornerRadius - inset).coerceAtLeast(4.dp))) { content() }
+                Island(body.padding(start = inset, top = top, end = inset, bottom = inset), RoundedCornerShape((DialogCornerRadius - inset).coerceAtLeast(4.dp))) { Zoomed { content() } }
             }
         }
     }

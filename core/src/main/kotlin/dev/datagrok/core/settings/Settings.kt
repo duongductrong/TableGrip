@@ -65,6 +65,8 @@ data class Settings(
     val uiFontSize: Int = 0,
     /** Corner radius of the content islands, in dp. */
     val islandCornerRadius: Int = 10,
+    /** Scale of the whole interface in percent, like a browser's zoom; ⌘+ / ⌘- / ⌘0 change it. */
+    val zoom: Int = 100,
     /** A syntax scheme's name, e.g. `Darcula`; `Theme` (and unknown names) use the theme's own token colours. */
     val syntaxScheme: String = "Theme",
     /** Single token colours over the scheme, keyed `dark.keyword`, `light.string`… as `#RRGGBB`. */
