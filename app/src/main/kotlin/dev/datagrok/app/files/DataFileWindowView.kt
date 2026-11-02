@@ -38,6 +38,7 @@ import dev.datagrok.app.ui.Island
 import dev.datagrok.app.ui.IslandGap
 import dev.datagrok.app.ui.LocalIslands
 import dev.datagrok.app.ui.Shortcuts
+import dev.datagrok.app.ui.ZoomControl
 import dev.datagrok.app.ui.Zoomed
 import dev.datagrok.app.ui.handleZoomShortcut
 import dev.datagrok.core.connection.DatabaseType
@@ -164,6 +165,7 @@ private fun FileStatusBar(app: AppState, file: DataFileWindow) {
             }
         }
         val stats = file.selected?.activeGrid?.let { (model, state) -> SelectionStats.of(model, state) }
+        ZoomControl(app)
         Text(stats?.summary ?: app.status, color = if (stats != null) JewelTheme.globalColors.text.normal else info, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }

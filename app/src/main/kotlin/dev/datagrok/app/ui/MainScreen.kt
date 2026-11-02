@@ -206,6 +206,7 @@ private fun StatusBar(app: AppState) {
             Text(crumb, color = if (index == crumbs.lastIndex) JewelTheme.globalColors.text.normal else info, maxLines = 1)
         }
         Box(Modifier.weight(1f))
+        ZoomControl(app)
         BlockedSessionsChip(app)
         // Like a spreadsheet: several cells selected shows their aggregates instead of the last status message.
         val stats = app.workspace.selected?.takeIf { !app.settingsOpen && app.settings.statusSelectionStats }?.activeGrid?.let { (model, state) -> SelectionStats.of(model, state) }

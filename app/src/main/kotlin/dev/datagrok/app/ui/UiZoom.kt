@@ -1,7 +1,26 @@
 package dev.datagrok.app.ui
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
@@ -12,8 +31,14 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import dev.datagrok.app.AppState
 import dev.datagrok.app.grid.isMac
+import org.jetbrains.jewel.foundation.theme.JewelTheme
+import org.jetbrains.jewel.ui.component.PopupMenu
+import org.jetbrains.jewel.ui.component.Text
+import org.jetbrains.jewel.ui.component.Tooltip
+import org.jetbrains.jewel.ui.component.separator
 
 /** Zoom of the whole interface, in the steps browsers and VS Code use; stored in Settings as a percentage. */
 object UiZoom {
@@ -51,11 +76,66 @@ fun handleZoomShortcut(app: AppState, event: KeyEvent): Boolean {
             Shortcuts.ResetZoom.matches(event) -> UiZoom.Default
             else -> return false
         }
-    if (next != zoom) {
-        app.updateSettings { it.copy(zoom = next) }
-        app.status = "Zoom $next%"
-    }
+    setZoom(app, next)
     return true
+}
+
+/** Applies and saves [percent]; the status bar's [ZoomControl] shows it. */
+fun setZoom(app: AppState, percent: Int) {
+    if (percent != app.settings.zoom) app.updateSettings { it.copy(zoom = percent) }
+}
+
+/**
+ * The zoom in the status bar, there only while it isn't 100%: a magnifier and the percentage, which open a menu of the
+ * levels. Doubles as the notice that the shortcuts changed it.
+ */
+@Composable
+fun ZoomControl(app: AppState) {
+    val zoom = UiZoom.snap(app.settings.zoom)
+    var open by remember { mutableStateOf(false) }
+    if (zoom == UiZoom.Default && !open) return
+    Box {
+        Tooltip({ Text("Zoom: ${Shortcuts.ZoomIn.label} / ${Shortcuts.ZoomOut.label}, ${Shortcuts.ResetZoom.label} resets") }) {
+            Row(
+                Modifier.clip(RoundedCornerShape(4.dp)).clickable { open = true }.padding(horizontal = 4.dp, vertical = 1.dp),
+                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                val info = JewelTheme.globalColors.text.info
+                MagnifierIcon(plus = zoom >= UiZoom.Default, color = info)
+                Text("$zoom%", color = info, maxLines = 1)
+            }
+        }
+        if (open) {
+            PopupMenu(onDismissRequest = { open = false; true }, horizontalAlignment = Alignment.End) {
+                UiZoom.Levels.asReversed().forEach { level ->
+                    selectableItem(selected = level == zoom, onClick = {
+                        open = false
+                        setZoom(app, level)
+                    }) { Text(if (level == UiZoom.Default) "$level% (default)" else "$level%") }
+                }
+                separator()
+                selectableItem(selected = false, enabled = zoom != UiZoom.Default, onClick = {
+                    open = false
+                    setZoom(app, UiZoom.Default)
+                }) { Text("Reset zoom (${Shortcuts.ResetZoom.label})") }
+            }
+        }
+    }
+}
+
+/** A magnifier with + or − in the lens; Int UI's own zoom icons are circled signs, without the handle. */
+@Composable
+private fun MagnifierIcon(plus: Boolean, color: Color) {
+    Canvas(Modifier.size(14.dp)) {
+        val u = size.minDimension / 16f
+        val stroke = 1.2f * u
+        val center = Offset(6.5f * u, 6.5f * u)
+        drawCircle(color, radius = 5f * u, center = center, style = Stroke(stroke))
+        drawLine(color, Offset(10.2f * u, 10.2f * u), Offset(14f * u, 14f * u), strokeWidth = 1.5f * u, cap = StrokeCap.Round)
+        drawLine(color, Offset(4.3f * u, 6.5f * u), Offset(8.7f * u, 6.5f * u), strokeWidth = stroke, cap = StrokeCap.Round)
+        if (plus) drawLine(color, Offset(6.5f * u, 4.3f * u), Offset(6.5f * u, 8.7f * u), strokeWidth = stroke, cap = StrokeCap.Round)
+    }
 }
 
 private fun isPrimaryOnly(event: KeyEvent, key: Key): Boolean =
