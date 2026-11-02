@@ -1,6 +1,7 @@
 # Builds, signs and notarizes the installers for a `v*` tag and attaches them to a draft GitHub Release, which the
 # maintainer publishes by hand. Run it by hand ("Run workflow") for an unsigned dry run: installers are kept as workflow
-# artifacts and no release is made. See docs/plans/auto-update.md for the secrets it needs.
+# artifacts and no release is made. See docs/plans/auto-update.md for the secrets it needs; Windows Authenticode signing
+# only runs when the release environment's variable WINDOWS_SIGNING is "azure".
 name: Release
 
 on:
@@ -185,6 +186,10 @@ jobs:
     env:
       VERSION: ${{ needs.version.outputs.version }}
       BUILD: ${{ needs.version.outputs.build }}
+      # Authenticode needs an Artifact Signing account. Without one (variable WINDOWS_SIGNING unset or not "azure" in
+      # the release environment), the MSI ships unsigned: SmartScreen warns on download, but WinSparkle still only
+      # installs updates carrying Datagrok's Ed25519 signature.
+      AUTHENTICODE: ${{ needs.version.outputs.signed == 'true' && vars.WINDOWS_SIGNING == 'azure' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -197,12 +202,19 @@ jobs:
         with:
           cache-disabled: ${{ needs.version.outputs.signed == 'true' }}
 
+      - name: Say the MSI won't be Authenticode-signed
+        if: needs.version.outputs.signed == 'true' && env.AUTHENTICODE != 'true'
+        shell: bash
+        run: |
+          echo "::warning::WINDOWS_SIGNING isn't \"azure\": the Windows installer is not Authenticode-signed."
+          echo "Windows installer: **not Authenticode-signed** (WINDOWS_SIGNING isn't \"azure\")." >> "$GITHUB_STEP_SUMMARY"
+
       - name: Build the app image
         shell: bash
         run: ./gradlew --no-configuration-cache -Pdatagrok.build="$BUILD" :app:check :app:createDistributable
 
       - name: Sign in to Azure
-        if: needs.version.outputs.signed == 'true'
+        if: env.AUTHENTICODE == 'true'
         uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
         with:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -211,7 +223,7 @@ jobs:
 
       # The launcher and DLLs are signed inside the app image, before the MSI is built around them.
       - name: Sign the app image
-        if: needs.version.outputs.signed == 'true'
+        if: env.AUTHENTICODE == 'true'
         uses: azure/artifact-signing-action@c7ab2a863ab5f9a846ddb8265964877ef296ee82 # v2.0.0
         with:
           endpoint: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
@@ -234,7 +246,7 @@ jobs:
           cp app/build/compose/binaries/main/msi/*.msi "dist/Datagrok-$VERSION-windows-x64.msi"
 
       - name: Sign the MSI
-        if: needs.version.outputs.signed == 'true'
+        if: env.AUTHENTICODE == 'true'
         uses: azure/artifact-signing-action@c7ab2a863ab5f9a846ddb8265964877ef296ee82 # v2.0.0
         with:
           endpoint: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
@@ -247,7 +259,7 @@ jobs:
           timestamp-digest: SHA256
 
       - name: Check the signature
-        if: needs.version.outputs.signed == 'true'
+        if: env.AUTHENTICODE == 'true'
         shell: pwsh
         run: |
           $signature = Get-AuthenticodeSignature "dist/Datagrok-$env:VERSION-windows-x64.msi"
@@ -349,6 +361,7 @@ jobs:
       VERSION: ${{ needs.version.outputs.version }}
       BUILD: ${{ needs.version.outputs.build }}
       PRERELEASE: ${{ needs.version.outputs.prerelease }}
+      WINDOWS_SIGNING: ${{ vars.WINDOWS_SIGNING }}
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
     steps:
@@ -371,6 +384,11 @@ jobs:
             echo '```'
             echo
             echo "Check a download with \`gh attestation verify <file> --repo $GH_REPO\`."
+            if [[ "$WINDOWS_SIGNING" != azure ]]; then
+              echo
+              echo "The Windows installer isn't Authenticode-signed yet, so Windows SmartScreen warns when it's downloaded."
+              echo "Updates from inside the app are still checked against Datagrok's signing key."
+            fi
           } > ../notes.md
           flags=(--draft --title "Datagrok $VERSION" --notes-file ../notes.md --generate-notes --verify-tag)
           [[ "$PRERELEASE" == true ]] && flags+=(--prerelease)

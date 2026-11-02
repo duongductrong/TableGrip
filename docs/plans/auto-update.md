@@ -203,6 +203,13 @@ Secrets, in the `release` environment (Settings › Environments; add yourself a
 | `AZURE_TENANT_ID`, `AZURE_CLIENT_ID` | an Entra app with a federated credential for this repo's `release` environment (OIDC, no client secret) and the *Artifact Signing Certificate Profile Signer* role |
 | `AZURE_SIGNING_ENDPOINT`, `AZURE_SIGNING_ACCOUNT`, `AZURE_CERTIFICATE_PROFILE` | the Artifact Signing (formerly Trusted Signing) account's region endpoint, name, and certificate profile |
 
+Variable, in the same environment: `WINDOWS_SIGNING` = `azure` turns on Authenticode signing with the five `AZURE_*`
+secrets. Unset (or anything else), the Windows installer is released unsigned, with a warning in the run and a line in
+the release notes. Artifact Signing only verifies some countries' individuals and organizations, so this keeps
+releases possible without it: SmartScreen warns when the MSI is downloaded, and updates through WinSparkle are still
+only installed with Datagrok's Ed25519 signature. Other ways to sign later: SignPath Foundation (free for open source)
+or a cloud-HSM certificate, each needing its own signing step.
+
 The full pipeline, once Phase 1 adds Sparkle. Phase 0 does steps 1, 3, 4 and 6 (Compose's own signing and
 notarization on macOS, Artifact Signing on Windows, plus an unsigned `.deb`); publishing the draft is still by hand.
 A version with a `-` suffix becomes a pre-release.
