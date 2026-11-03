@@ -63,7 +63,7 @@ release workflow and `update-appcast.sh` can be reused.
 |---|---|---|
 | Archives (zip/DMG, MSI) | GitHub Release of the tag | `https://github.com/duongductrong/tablegrip/releases/download/v1.4.0/TableGrip-1.4.0-macos-arm64.zip` (redirects to GitHub's CDN; Sparkle and WinSparkle follow it) |
 | Appcasts | `appcast/` folder on `master`, committed by the release workflow | `https://raw.githubusercontent.com/duongductrong/tablegrip/master/appcast/macos-arm64.xml` |
-| Release notes | GitHub Release body (from `CHANGELOG.md`), and an HTML copy as a release asset | `sparkle:releaseNotesLink` to the asset |
+| Release notes | GitHub Release body, written by `scripts/release-notes.py` from the Conventional Commits since the previous release | Inline in the feed (`description`, Markdown), plus `sparkle:fullReleaseNotesLink` to the release |
 
 What plain GitHub costs, and how each is handled:
 
@@ -184,7 +184,8 @@ edits, unsaved data files) like ⌘Q does:
 - No first-run "may we check?" prompt (`SUEnableAutomaticChecks` = YES); the setting is the opt-out.
 - Privacy: no system profiling (`SUEnableSystemProfiling` = NO). The only thing sent is the request for the feed
   (with a `TableGrip/<version>` user agent). Say so in Settings › Updates, next to the agent data-sharing setting.
-- Release notes come from `CHANGELOG.md`, so they can't drift from the code.
+- Release notes come from the commits (`feat:`, `fix:`, `type!:` or a `BREAKING CHANGE:` footer). The draft can be edited
+  before publishing; the dialog shows what is above `<!-- end of release notes -->`, minus Maintenance and Contributors.
 
 ## Release pipeline (GitHub Actions)
 

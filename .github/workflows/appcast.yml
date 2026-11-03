@@ -42,7 +42,9 @@ jobs:
           set -euo pipefail
           mkdir -p metadata
           gh release download "$TAG" --pattern 'appcast-*.json' --dir metadata
-          gh release view "$TAG" --json body --jq .body > metadata/notes.md
+          # Update dialogs show what changed, not the checksums or maintenance commits under it.
+          gh release view "$TAG" --json body --jq .body > metadata/release.md
+          python3 scripts/release-notes.py in-app metadata/release.md > metadata/notes.md
           ls metadata
 
       - name: Add the release to the feeds

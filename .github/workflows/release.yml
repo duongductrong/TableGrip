@@ -365,6 +365,10 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
     steps:
+      # The whole history and its tags: the notes list the commits since the previous release.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           path: dist
@@ -375,21 +379,12 @@ jobs:
       - name: Create the draft release
         run: |
           set -euo pipefail
-          cd dist
-          {
-            echo "Build $BUILD."
-            echo
-            echo '```'
-            sha256sum *
-            echo '```'
-            echo
-            echo "Check a download with \`gh attestation verify <file> --repo $GH_REPO\`."
-            if [[ "$WINDOWS_SIGNING" != azure ]]; then
-              echo
-              echo "The Windows installer isn't Authenticode-signed yet, so Windows SmartScreen warns when it's downloaded."
-              echo "Updates from inside the app are still checked against TableGrip's signing key."
-            fi
-          } > ../notes.md
-          flags=(--draft --title "TableGrip $VERSION" --notes-file ../notes.md --generate-notes --verify-tag)
+          # What changed, from the Conventional Commits since the previous release; then the downloads' checksums.
+          # The maintainer edits the draft before publishing; the appcast workflow shows its top part in the app.
+          notes=(--tag "$GITHUB_REF_NAME" --repo "$GH_REPO" --build "$BUILD" --dist dist)
+          [[ "$WINDOWS_SIGNING" == azure ]] && notes+=(--windows-signed)
+          python3 scripts/release-notes.py github "${notes[@]}" > "$RUNNER_TEMP/notes.md"
+          cat "$RUNNER_TEMP/notes.md" >> "$GITHUB_STEP_SUMMARY"
+          flags=(--draft --title "TableGrip $VERSION" --notes-file "$RUNNER_TEMP/notes.md" --verify-tag)
           [[ "$PRERELEASE" == true ]] && flags+=(--prerelease)
-          gh release create "$GITHUB_REF_NAME" "${flags[@]}" *
+          gh release create "$GITHUB_REF_NAME" "${flags[@]}" dist/*
