@@ -466,8 +466,15 @@ tasks {
                 }
             doFirst { setExecutable(javaLauncher.get().executablePath.asFile.absolutePath) }
         }
-        jvmArgs("-Dcompose.interop.blending=true")
-        // `./gradlew :app:run -Ptablegrip.home=/tmp/dg` runs against a throwaway profile/settings directory.
-        providers.gradleProperty("tablegrip.home").orNull?.let { systemProperty("tablegrip.home", it) }
+        // Added on execution: the Compose run task replaces the JVM arguments it was configured with.
+        // Started from source, macOS would otherwise name the app after the main class ("MainKt").
+        doFirst { jvmArgs("-Dcompose.interop.blending=true", "-Xdock:name=TableGrip Dev") }
+        systemProperty("apple.awt.application.name", "TableGrip Dev")
+        // Development runs keep their own profile/settings directory, so they never touch the installed app's;
+        // `./gradlew :app:run -Ptablegrip.home=/tmp/dg` runs against a throwaway one instead.
+        systemProperty(
+            "tablegrip.home",
+            providers.gradleProperty("tablegrip.home").getOrElse("${System.getProperty("user.home")}/.tablegrip-dev"),
+        )
     }
 }
