@@ -98,4 +98,26 @@ class JsonTreeEditorUiTest {
         assertEquals(original, model.value(0, 1))
         assertFalse(model.isModified(0, 1))
     }
+
+    @Test
+    fun `a click selects a row at once, without waiting out the double-click window`() = runComposeUiTest {
+        val state = DataGridState()
+        val model = model()
+        setContent { IntUiTheme(isDark = false) { Box(Modifier.size(900.dp, 500.dp)) { DataGrid(model, state) } } }
+
+        onNodeWithText(original).performMouseInput { doubleClick(center) }
+        waitForIdle()
+        mainClock.autoAdvance = false
+        onNodeWithText("age:").performMouseInput { click(center) }
+        // One frame: well inside any double-click timeout.
+        mainClock.advanceTimeByFrame()
+        onNodeWithText("$.age").assertExists()
+        // A second click right after is a double-click: on a key, it opens the rename.
+        onNodeWithText("age:").performMouseInput { click(center) }
+        mainClock.advanceTimeByFrame()
+        mainClock.autoAdvance = true
+        waitForIdle()
+        onNode(hasSetTextAction() and hasText("age")).assertExists()
+    }
 }
+

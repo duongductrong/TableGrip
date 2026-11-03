@@ -64,6 +64,26 @@ fun jsonTreeSource(text: String): JsonTreeSource {
     return JsonTreeSource.Ok(root, jsonLayout(text))
 }
 
+/** Remembers the last text opened for the tree, so asking again for the same text doesn't parse it again. */
+class JsonTreeSources {
+    private var text: String? = null
+    private var source: JsonTreeSource? = null
+
+    /** Records that [text] is [source]: the tree's own edits, which it already holds parsed. */
+    fun put(text: String, source: JsonTreeSource) {
+        this.text = text
+        this.source = source
+    }
+
+    fun of(text: String): JsonTreeSource {
+        if (text == this.text) return source!!
+        return jsonTreeSource(text).also {
+            this.text = text
+            source = it
+        }
+    }
+}
+
 /** [root] as text in [layout], every number written with the digits it was read or typed with. */
 @OptIn(ExperimentalSerializationApi::class)
 fun encodeJson(root: JsonElement, layout: JsonLayout): String {
@@ -115,7 +135,9 @@ internal fun firstRepeatedKey(text: String): String? {
                 var next = end + 1
                 while (next < text.length && text[next].isWhitespace()) next++
                 if (keys != null && next < text.length && text[next] == ':') {
-                    val key = Json.decodeFromString<String>(text.substring(i, end + 1))
+                    // Only keys with escapes need decoding to compare; most are the text between the quotes.
+                    val raw = text.substring(i + 1, end)
+                    val key = if ('\\' in raw) Json.decodeFromString<String>(text.substring(i, end + 1)) else raw
                     if (!keys.add(key)) return key
                 }
                 i = end
@@ -258,8 +280,17 @@ fun jsonTreeRows(root: JsonElement, collapsed: Set<JsonPath>): List<JsonTreeRow>
 }
 
 /** Containers [depth] or more levels in, to start a big value folded. */
-fun jsonContainersFrom(root: JsonElement, depth: Int): Set<JsonPath> =
-    jsonTreeRows(root, emptySet()).filter { it.isContainer && it.depth >= depth }.map { it.path }.toSet()
+fun jsonContainersFrom(root: JsonElement, depth: Int): Set<JsonPath> = buildSet {
+    fun visit(element: JsonElement, path: JsonPath) {
+        if (path.size >= depth && (element is JsonObject || element is JsonArray)) add(path)
+        when (element) {
+            is JsonObject -> element.forEach { (key, child) -> visit(child, path + JsonStep.Key(key)) }
+            is JsonArray -> element.forEachIndexed { index, child -> visit(child, path + JsonStep.Index(index)) }
+            else -> Unit
+        }
+    }
+    visit(root, emptyList())
+}
 
 /** `$.address.city`, `$.tags[0]`; keys that aren't plain words are quoted: `$["first name"]`. */
 fun jsonPathText(path: JsonPath): String =

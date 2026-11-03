@@ -39,6 +39,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.drop
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -654,9 +656,16 @@ private fun ExpandedCellEditor(controller: GridController, colors: GridColors, k
     val check by remember { derivedStateOf { controller.editCheck() } }
     val json = kind == EditKind.Json
     val text = controller.state.editText
-    val source = if (json) remember(text.text) { jsonTreeSource(text.text.toString()) } else null
-    var tree by remember { mutableStateOf(source is JsonTreeSource.Ok) }
-    val showTree = tree && source is JsonTreeSource.Ok
+    // Parsed when the tree needs it, not on every keystroke in Text mode; the tree's own edits are always valid JSON.
+    val sources = remember { JsonTreeSources() }
+    var tree by remember { mutableStateOf(json && sources.of(text.text.toString()) is JsonTreeSource.Ok) }
+    val source = if (json && tree) sources.of(text.text.toString()) else null
+    val showTree = source is JsonTreeSource.Ok
+    // Why Tree was refused; it lasts until the text changes.
+    var refusal by remember { mutableStateOf(if (json && !tree) (sources.of(text.text.toString()) as? JsonTreeSource.Unavailable)?.reason else null) }
+    if (json) {
+        LaunchedEffect(Unit) { snapshotFlow { text.text.toString() }.drop(1).collect { refusal = null } }
+    }
     val draft = remember { JsonTreeDraft() }
     val focus = remember { FocusRequester() }
     LaunchedEffect(showTree) { runCatching { focus.requestFocus() } }
@@ -702,7 +711,11 @@ private fun ExpandedCellEditor(controller: GridController, colors: GridColors, k
             if (showTree) {
                 JsonTreeEditor(
                     root = (source as JsonTreeSource.Ok).root,
-                    onChange = { text.setTextAndPlaceCursorAtEnd(encodeJson(it, source.layout)) },
+                    onChange = { root ->
+                        val encoded = encodeJson(root, source.layout)
+                        sources.put(encoded, JsonTreeSource.Ok(root, source.layout))
+                        text.setTextAndPlaceCursorAtEnd(encoded)
+                    },
                     draft = draft,
                     colors = colors,
                     modifier = Modifier.fillMaxWidth().height(ExpandedEditorHeight * 1.8f).focusRequester(focus),
@@ -736,7 +749,10 @@ private fun ExpandedCellEditor(controller: GridController, colors: GridColors, k
             ) {
                 if (json) {
                     ViewChip("Tree", showTree) {
-                        if (source is JsonTreeSource.Ok) tree = true
+                        when (val opened = sources.of(text.text.toString())) {
+                            is JsonTreeSource.Ok -> tree = true
+                            is JsonTreeSource.Unavailable -> refusal = opened.reason
+                        }
                     }
                     ViewChip("Text", !showTree) {
                         draft.flushNow()
@@ -744,9 +760,8 @@ private fun ExpandedCellEditor(controller: GridController, colors: GridColors, k
                     }
                 }
                 val hint = check?.hint()
-                val unavailable = (source as? JsonTreeSource.Unavailable)?.reason?.takeIf { json && tree }
                 Text(
-                    hint?.first ?: unavailable?.let { "$it, so it opens as text" } ?: "${Shortcuts.Submit.label} to apply · Esc to collapse",
+                    hint?.first ?: refusal?.let { "$it, so it opens as text" } ?: "${Shortcuts.Submit.label} to apply · Esc to collapse",
                     Modifier.weight(1f).padding(start = 6.dp),
                     color = hint?.second ?: colors.muted,
                     fontSize = 11.sp,

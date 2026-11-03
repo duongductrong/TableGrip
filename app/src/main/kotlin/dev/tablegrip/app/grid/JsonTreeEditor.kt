@@ -1,6 +1,5 @@
 package dev.tablegrip.app.grid
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
@@ -33,6 +32,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,6 +50,7 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -193,7 +194,6 @@ internal fun JsonTreeEditor(root: JsonElement, onChange: (JsonElement) -> Unit, 
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun TreeRow(
     row: JsonTreeRow,
@@ -225,7 +225,7 @@ private fun TreeRow(
             .heightIn(min = 22.dp)
             .background(if (selected) colors.selection else if (hovered) colors.hover else Color.Transparent)
             .hoverable(interaction)
-            .combinedClickable(interactionSource = interaction, indication = null, onClick = onSelect, onDoubleClick = { if (row.isContainer) onToggle() })
+            .clickThenDoubleClick(onClick = onSelect, onDoubleClick = { if (row.isContainer) onToggle() }, interaction = interaction)
             .padding(start = (8 + (row.depth - 1) * 16).dp, end = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -241,7 +241,7 @@ private fun TreeRow(
             step is JsonStep.Key ->
                 Text(
                     step.name + ":",
-                    Modifier.combinedClickable(onClick = onSelect, onDoubleClick = onEditKey),
+                    Modifier.clickThenDoubleClick(onClick = onSelect, onDoubleClick = onEditKey),
                     style = JewelTheme.editorTextStyle,
                     color = palette.key.color,
                     maxLines = 1,
@@ -269,7 +269,7 @@ private fun TreeRow(
                     )
                 element is JsonObject || element is JsonArray -> {
                     val size = if (element is JsonObject) "{${element.size}}" else "[${(element as JsonArray).size}]"
-                    Text(size, Modifier.combinedClickable(onClick = onSelect, onDoubleClick = onToggle), style = JewelTheme.editorTextStyle, color = colors.muted)
+                    Text(size, Modifier.clickThenDoubleClick(onClick = onSelect, onDoubleClick = onToggle), style = JewelTheme.editorTextStyle, color = colors.muted)
                 }
                 type == JsonValueType.Boolean -> {
                     val value = (element as JsonPrimitive).content == "true"
@@ -303,6 +303,29 @@ private fun TreeRow(
             TreeIconButton(AllIconsKeys.General.Delete, "Remove", onClick = onRemove)
         } else {
             Text(type.label.lowercase(), color = colors.muted, fontSize = 11.sp)
+        }
+    }
+}
+
+/**
+ * [onClick] at once and [onDoubleClick] on a second click inside the double-click window. `combinedClickable` with a
+ * double-click handler holds every single click back until that window passes (about half a second on macOS) to tell
+ * the two apart, which made selecting a row feel slow; here a double-click is a click followed by its second half.
+ */
+@Composable
+private fun Modifier.clickThenDoubleClick(onClick: () -> Unit, onDoubleClick: () -> Unit, interaction: MutableInteractionSource? = null): Modifier {
+    val window = LocalViewConfiguration.current.doubleTapTimeoutMillis
+    val last = remember { LongArray(1) }
+    val click by rememberUpdatedState(onClick)
+    val doubleClick by rememberUpdatedState(onDoubleClick)
+    return combinedClickable(interactionSource = interaction, indication = null) {
+        val now = System.nanoTime() / 1_000_000
+        if (now - last[0] <= window) {
+            last[0] = 0
+            doubleClick()
+        } else {
+            last[0] = now
+            click()
         }
     }
 }
