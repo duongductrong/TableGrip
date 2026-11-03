@@ -56,6 +56,9 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isAltPressed
 import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.PointerEventType
@@ -95,6 +98,7 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import dev.tablegrip.app.ui.copyToClipboard
 import dev.tablegrip.core.edit.EditCheck
+import dev.tablegrip.app.table.ViewChip
 import dev.tablegrip.core.edit.EditKind
 import dev.tablegrip.core.export.CopyFormat
 import dev.tablegrip.core.filter.FilterValues
@@ -644,18 +648,27 @@ private fun EditorIconButton(icon: IconKey, tooltip: String, modifier: Modifier 
 
 /**
  * A roomier multi-line editor floating over the cell: it does not take part in the grid's layout. Enter inserts a line
- * break, [Shortcuts.Submit] applies, Escape collapses back to the inline editor and clicking outside applies.
+ * break, [Shortcuts.Submit] applies, Escape collapses back to the inline editor and clicking outside applies. JSON
+ * objects and arrays open as an editable tree, which writes the text back only when something in it changes.
  */
 @Composable
 private fun ExpandedCellEditor(controller: GridController, colors: GridColors, kind: EditKind?, onCollapse: () -> Unit) {
     val check by remember { derivedStateOf { controller.editCheck() } }
     val json = kind == EditKind.Json
+    val text = controller.state.editText
+    val source = if (json) remember(text.text) { jsonTreeSource(text.text.toString()) } else null
+    var tree by remember { mutableStateOf(source is JsonTreeSource.Ok) }
+    val showTree = tree && source is JsonTreeSource.Ok
+    val draft = remember { JsonTreeDraft() }
     val focus = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+    LaunchedEffect(showTree) { runCatching { focus.requestFocus() } }
     val shape = RoundedCornerShape(6.dp)
     Popup(
         popupPositionProvider = OverCellPositionProvider,
-        onDismissRequest = { controller.commitEdit() },
+        onDismissRequest = {
+            draft.flushNow()
+            controller.commitEdit()
+        },
         properties = PopupProperties(focusable = true),
     ) {
         Column(
@@ -663,42 +676,79 @@ private fun ExpandedCellEditor(controller: GridController, colors: GridColors, k
                 .clip(shape)
                 .background(JewelTheme.globalColors.panelBackground)
                 .border(1.dp, colors.focusBorder, shape)
+                // Applying comes first: it confirms the tree's open field, and stays open when that can't be used.
+                .onPreviewKeyEvent { event ->
+                    if (event.type != KeyEventType.KeyDown || !showTree || !Shortcuts.Submit.matches(event)) return@onPreviewKeyEvent false
+                    if (draft.confirmNow()) controller.commitEdit(strict = true)
+                    true
+                }
+                // The rest after the tree's fields have had their say (Escape there drops the field, not the popup).
+                .onKeyEvent { event ->
+                    if (event.type != KeyEventType.KeyDown || !showTree) return@onKeyEvent false
+                    when {
+                        event.key == Key.Escape -> onCollapse()
+                        event.key == Key.Z && (event.isMetaPressed || event.isCtrlPressed) ->
+                            if (event.isShiftPressed) text.undoState.redo() else text.undoState.undo()
+                        else -> return@onKeyEvent false
+                    }
+                    true
+                }
         ) {
-            BasicTextField(
-                state = controller.state.editText,
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .height(if (json) ExpandedEditorHeight * 1.5f else ExpandedEditorHeight)
-                        .padding(horizontal = 8.dp, vertical = 6.dp)
-                        .focusRequester(focus)
-                        .onPreviewKeyEvent { event ->
-                            if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
-                            when {
-                                Shortcuts.Submit.matches(event) -> controller.commitEdit(strict = true)
-                                event.key == Key.Escape -> onCollapse()
-                                else -> return@onPreviewKeyEvent false
-                            }
-                            true
-                        },
-                textStyle = JewelTheme.editorTextStyle.copy(color = colors.text),
-                cursorBrush = SolidColor(colors.text),
-                lineLimits = TextFieldLineLimits.MultiLine(),
-            )
+            if (showTree) {
+                JsonTreeEditor(
+                    root = (source as JsonTreeSource.Ok).root,
+                    onChange = { text.setTextAndPlaceCursorAtEnd(encodeJson(it, source.layout)) },
+                    draft = draft,
+                    colors = colors,
+                    modifier = Modifier.fillMaxWidth().height(ExpandedEditorHeight * 1.8f).focusRequester(focus),
+                )
+            } else {
+                BasicTextField(
+                    state = text,
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .height(if (json) ExpandedEditorHeight * 1.8f else ExpandedEditorHeight)
+                            .padding(horizontal = 8.dp, vertical = 6.dp)
+                            .focusRequester(focus)
+                            .onPreviewKeyEvent { event ->
+                                if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                                when {
+                                    Shortcuts.Submit.matches(event) -> controller.commitEdit(strict = true)
+                                    event.key == Key.Escape -> onCollapse()
+                                    else -> return@onPreviewKeyEvent false
+                                }
+                                true
+                            },
+                    textStyle = JewelTheme.editorTextStyle.copy(color = colors.text),
+                    cursorBrush = SolidColor(colors.text),
+                    lineLimits = TextFieldLineLimits.MultiLine(),
+                )
+            }
             Row(
                 Modifier.fillMaxWidth().topLine(colors.grid).padding(start = 8.dp, end = 4.dp, top = 3.dp, bottom = 3.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                if (json) {
+                    ViewChip("Tree", showTree) {
+                        if (source is JsonTreeSource.Ok) tree = true
+                    }
+                    ViewChip("Text", !showTree) {
+                        draft.flushNow()
+                        tree = false
+                    }
+                }
                 val hint = check?.hint()
+                val unavailable = (source as? JsonTreeSource.Unavailable)?.reason?.takeIf { json && tree }
                 Text(
-                    hint?.first ?: "${Shortcuts.Submit.label} to apply · Esc to collapse",
-                    Modifier.weight(1f),
+                    hint?.first ?: unavailable?.let { "$it, so it opens as text" } ?: "${Shortcuts.Submit.label} to apply · Esc to collapse",
+                    Modifier.weight(1f).padding(start = 6.dp),
                     color = hint?.second ?: colors.muted,
                     fontSize = 11.sp,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
-                if (json) {
-                    val text = controller.state.editText
+                if (json && !showTree) {
                     EditorIconButton(AllIconsKeys.Actions.ReformatCode, "Format JSON") {
                         reformatJson(text.text.toString(), pretty = true)?.let(text::setTextAndPlaceCursorAtEnd)
                     }
@@ -814,7 +864,7 @@ private fun Modifier.gridLines(color: Color) = drawBehind { drawGridLines(color,
 /** Bottom divider for a whole row, so it also runs past the last column. */
 private fun Modifier.bottomLine(color: Color) = drawBehind { drawGridLines(color, right = false) }
 
-private fun Modifier.topLine(color: Color) = drawBehind {
+internal fun Modifier.topLine(color: Color) = drawBehind {
     val stroke = 1.dp.toPx().coerceAtLeast(1f)
     drawLine(color, Offset(0f, stroke / 2), Offset(size.width, stroke / 2), strokeWidth = stroke)
 }

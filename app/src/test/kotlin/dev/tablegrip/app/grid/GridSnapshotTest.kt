@@ -9,7 +9,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.click
+import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.isRoot
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
@@ -102,6 +107,33 @@ class GridSnapshotTest {
             val suffix = if (dark) "dark" else "light"
             ImageIO.write(onAllNodes(isRoot())[0].captureToImage().toAwtImage(), "png", File(out, "editors-$suffix.png"))
             ImageIO.write(onAllNodes(isRoot())[1].captureToImage().toAwtImage(), "png", File(out, "picker-$suffix.png"))
+        }
+    }
+
+    /** The JSON cell editor's tree: a selected row with its buttons, and a value being typed. */
+    @Test
+    fun jsonTreeSnapshot() {
+        val out = System.getProperty("snapshot.dir") ?: return
+        for (dark in listOf(true, false)) runComposeUiTest {
+            val profile = """{"name":"Bình","age":25,"vip":true,"note":null,"address":{"city":"Hà Nội","zip":"100000"},"tags":["a","b"],"orders":[{"id":1,"total":19.90}]}"""
+            val columns = listOf(ResultColumn("id", "int4", Types.INTEGER), ResultColumn("email", "text", Types.VARCHAR), ResultColumn("profile", "jsonb", Types.OTHER))
+            val rows = (1..8).map { listOf("$it", "user$it@example.com", profile) }
+            val model = TableEditModel(QueryResult.Rows(columns, rows, false, 1), listOf("id"), dialect = SqlDialect.PostgreSQLDialect())
+            val state = DataGridState()
+            setContent {
+                TableGripTheme(isDark = dark) {
+                    Box(Modifier.size(900.dp, 520.dp).background(JewelTheme.globalColors.panelBackground)) { DataGrid(model, state) }
+                }
+            }
+            waitForIdle()
+            onAllNodesWithText(profile)[1].performMouseInput { doubleClick(center) }
+            waitForIdle()
+            onNodeWithText("age:").performMouseInput { click(center) }
+            onNodeWithText("\"Hà Nội\"").performMouseInput { click(center) }
+            waitForIdle()
+            val name = if (dark) "json-tree-dark.png" else "json-tree-light.png"
+            ImageIO.write(onAllNodes(isRoot())[1].captureToImage().toAwtImage(), "png", File(out, name))
+            ImageIO.write(onAllNodes(isRoot())[0].captureToImage().toAwtImage(), "png", File(out, "grid-" + name))
         }
     }
 }

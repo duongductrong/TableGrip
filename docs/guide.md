@@ -120,6 +120,12 @@ columns are virtualized; row numbers stay pinned.
 Right-click cells to copy as CSV / JSON / Markdown / SQL INSERT / IN-list or "Filter by This Value". Selecting several
 cells shows their count, sum, average, min and max in the status bar.
 
+**JSON cells** open as an editable tree: click a value to change it (Enter confirms, Esc drops it), click a boolean to
+switch it, double-click a key to rename it, and use a row's type menu, + and trash buttons to change its type, add or
+remove. ⌘Enter applies; *Text* switches to the raw JSON. The tree writes the value back only when something changes,
+keeps key order and every number's exact digits, and refuses a number that isn't valid JSON, so it can't save broken
+JSON. Values it can't edit losslessly (invalid JSON, a scalar, or an object that repeats a key) open as text.
+
 **Foreign keys**: cells of a foreign-key column get an arrow; clicking it (or ⌘B) opens the referenced table filtered to
 that row. Right-click a row → Show Referencing Rows opens the rows of other tables that point at it, e.g. a user's
 orders.
