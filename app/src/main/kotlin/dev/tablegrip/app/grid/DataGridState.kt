@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.Dp
+import dev.tablegrip.app.ui.Shortcuts
 import dev.tablegrip.core.driver.ResultColumn
 
 /** What floats over the cell being edited, besides its inline text field. */
@@ -67,8 +68,6 @@ class DataGridState {
     /** A short note over the grid, e.g. what a paste did; it fades after a few seconds. */
     var notice by mutableStateOf<GridNotice?>(null)
 
-    internal var pasteUndo: PasteUndo? = null
-
     /** Bumped by [requestFocus] so the grid takes keyboard focus, e.g. on Esc from the filter bar. */
     var focusRequests by mutableIntStateOf(0)
         private set
@@ -101,6 +100,26 @@ class DataGridState {
         val records = model.records?.takeIf { it.canAddRecord } ?: return
         val template = records.newRecord()
         recordEdit = RecordEditRequest(model, null, template.json, template.hint)
+    }
+
+    /** Undoes [model]'s last change to its pending edits and shows where it was; false when there's nothing to undo. */
+    fun undo(model: GridModel): Boolean = travel(model, back = true)
+
+    /** Makes [model]'s last undone change again and shows where it was; false when there's nothing to redo. */
+    fun redo(model: GridModel): Boolean = travel(model, back = false)
+
+    private fun travel(model: GridModel, back: Boolean): Boolean {
+        val history = model.editor?.history ?: return false
+        if (editing != null) stopEditing()
+        val step = (if (back) history.undo() else history.redo()) ?: return false
+        if (model.rowCount == 0) selection = null
+        else step.row?.let { row ->
+            val column = step.column?.let { visibleColumns.indexOf(it).takeIf { index -> index >= 0 } } ?: focus?.column ?: 0
+            reveal(GridCell(row.coerceIn(0, model.rowCount - 1), column))
+        } ?: clamp(model.rowCount)
+        val next = if (back) Shortcuts.Redo else Shortcuts.Undo
+        notice = GridNotice("${if (back) "Undid" else "Redid"} ${step.label} · $next ${if (back) "redoes" else "undoes"}")
+        return true
     }
 
     /** [reveal]s [row] at its first column that takes an edit, so typing and paste land where a value can go. */
@@ -162,6 +181,8 @@ class DataGridState {
             replace(0, length, text)
             selection = androidx.compose.ui.text.TextRange(length)
         }
+        // One text field serves every cell: undo in it must stop at this cell's text, not go back to the last one's.
+        editText.undoState.clearHistory()
     }
 
     fun stopEditing() {

@@ -56,8 +56,6 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isAltPressed
 import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.isCtrlPressed
-import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
@@ -682,13 +680,20 @@ private fun ExpandedCellEditor(controller: GridController, colors: GridColors, k
                     if (draft.confirmNow()) controller.commitEdit(strict = true)
                     true
                 }
-                // The rest after the tree's fields have had their say (Escape there drops the field, not the popup).
+                // The rest after the tree's fields have had their say (Escape there drops the field, not the popup; undo
+                // there undoes typing). Each tree change is one step of the text's own history, which starts at the cell.
                 .onKeyEvent { event ->
                     if (event.type != KeyEventType.KeyDown || !showTree) return@onKeyEvent false
                     when {
                         event.key == Key.Escape -> onCollapse()
-                        event.key == Key.Z && (event.isMetaPressed || event.isCtrlPressed) ->
-                            if (event.isShiftPressed) text.undoState.redo() else text.undoState.undo()
+                        Shortcuts.Undo.matches(event) -> {
+                            draft.flushNow()
+                            text.undoState.undo()
+                        }
+                        Shortcuts.Redo.matches(event) || Shortcuts.RedoAlt.matches(event) -> {
+                            draft.flushNow()
+                            text.undoState.redo()
+                        }
                         else -> return@onKeyEvent false
                     }
                     true
@@ -804,7 +809,10 @@ private fun cellMenu(controller: GridController): List<ContextMenuItem> {
     val focus = selection.focus
     val single = selection.anchor == selection.focus && !selection.wholeRows
     val filter = controller.actions.onFilterByValue
+    val history = editor?.history
     return listOfNotNull(
+        history?.nextUndo?.let { ContextMenuItem("Undo ${it.label.replaceFirstChar(Char::uppercase)} (${Shortcuts.Undo})") { state.undo(controller.model) } },
+        history?.nextRedo?.let { ContextMenuItem("Redo ${it.label.replaceFirstChar(Char::uppercase)} (${Shortcuts.Redo})") { state.redo(controller.model) } },
         ContextMenuItem("Edit Cell") { controller.startEditing(focus) }.takeIf { single && controller.canEdit(focus) },
         ContextMenuItem("Copy (${Shortcuts.Copy})") { controller.copy(CopyFormat.Tsv) },
         ContextMenuItem("Copy with Header (${Shortcuts.CopyWithHeader})") { controller.copy(CopyFormat.Tsv, includeHeader = true) },

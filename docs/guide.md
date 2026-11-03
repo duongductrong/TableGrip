@@ -113,16 +113,21 @@ columns are virtualized; row numbers stay pinned.
 | Select all · copy (TSV) · copy with header | ⌘A · ⌘C · ⇧⌘C |
 | Edit cell | Enter, F2, double-click, or just type |
 | Commit edit · next cell · cancel | Enter · Tab · Esc |
-| Add row · delete rows · revert rows · set NULL | ⌘N · ⌘⌫ · ⌘Z · ⌥⌘N |
+| Add row · delete rows · revert rows · set NULL | ⌘N · ⌘⌫ · ⌥⌘Z · ⌥⌘N |
+| Undo · redo the last change to the data | ⌘Z · ⇧⌘Z or ⌘Y |
 | Submit pending changes | ⌘Enter |
 | Sort · add secondary sort | click header · ⇧-click header |
+
+Undo and redo step through pending changes one action at a time: a typed cell, a paste (with the rows it added), Set
+NULL over a selection, deleted rows, a row edited as JSON, even *Revert all*. Each undo selects the cell it touched and
+says what it undid; nothing reaches the database until you submit. The toolbar and the cell menu offer them too.
 
 Right-click cells to copy as CSV / JSON / Markdown / SQL INSERT / IN-list or "Filter by This Value". Selecting several
 cells shows their count, sum, average, min and max in the status bar.
 
 **JSON cells** open as an editable tree: click a value to change it (Enter confirms, Esc drops it), click a boolean to
 switch it, double-click a key to rename it, and use a row's type menu, + and trash buttons to change its type, add or
-remove. ⌘Enter applies; *Text* switches to the raw JSON. The tree writes the value back only when something changes,
+remove. ⌘Z and ⇧⌘Z undo and redo tree changes; ⌘Enter applies; *Text* switches to the raw JSON. The tree writes the value back only when something changes,
 keeps key order and every number's exact digits, and refuses a number that isn't valid JSON, so it can't save broken
 JSON. Values it can't edit losslessly (invalid JSON, a scalar, or an object that repeats a key) open as text.
 

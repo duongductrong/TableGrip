@@ -164,9 +164,14 @@ private fun handleWindowShortcut(app: AppState, event: KeyEvent): Boolean {
         selected is ConsoleTab -> handleConsoleShortcut(selected, event)
         selected is TableDataTab && Shortcuts.Reload.matches(event) -> done { selected.refresh() }
         selected is TableDataTab && Shortcuts.Save.matches(event) -> done { selected.submit() }
+        // Undo and redo of the pending edits wherever focus is in the tab, unless a text field took them for its own text.
+        selected is TableDataTab && Shortcuts.Undo.matches(event) -> selected.model?.let(selected.grid::undo) ?: false
+        selected is TableDataTab && (Shortcuts.Redo.matches(event) || Shortcuts.RedoAlt.matches(event)) -> selected.model?.let(selected.grid::redo) ?: false
         selected is TableDataTab -> handleFilterShortcut(selected, event)
         selected is DocumentBrowserTab && Shortcuts.Reload.matches(event) -> done { selected.refresh() }
         selected is DocumentBrowserTab && Shortcuts.Save.matches(event) -> done { selected.submit() }
+        selected is DocumentBrowserTab && Shortcuts.Undo.matches(event) -> selected.grid.undo(selected.model)
+        selected is DocumentBrowserTab && (Shortcuts.Redo.matches(event) || Shortcuts.RedoAlt.matches(event)) -> selected.grid.redo(selected.model)
         selected is DocumentBrowserTab && Shortcuts.ToggleFilterMode.matches(event) -> done { selected.toggleBuilder() }
         else -> false
     }

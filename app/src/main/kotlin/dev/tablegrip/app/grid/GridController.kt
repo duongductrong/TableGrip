@@ -317,8 +317,9 @@ internal class GridController(val state: DataGridState, private val scope: Corou
         val shift = event.isShiftPressed
         val rowCount = model.rowCount
         val isPaste = primary && !shift && event.key == Key.V
-        // An empty grid still takes rows: added, or pasted in.
-        if (rowCount == 0 && !Shortcuts.AddRow.matches(event) && !isPaste) return false
+        val isHistory = Shortcuts.Undo.matches(event) || Shortcuts.Redo.matches(event) || Shortcuts.RedoAlt.matches(event)
+        // An empty grid still takes rows: added, pasted in, or brought back by undo.
+        if (rowCount == 0 && !Shortcuts.AddRow.matches(event) && !isPaste && !isHistory) return false
         val focus = state.focus
 
         return when {
@@ -334,10 +335,9 @@ internal class GridController(val state: DataGridState, private val scope: Corou
             Shortcuts.ExcludeValue.matches(event) -> filterByFocusedValue(exclude = true)
             // ⇧ is left to the table's Clear Filter.
             Shortcuts.DeleteRows.matches(event) || (primary && !shift && event.key == Key.Delete) -> deleteSelectedRows().let { editor != null }
-            Shortcuts.RevertRows.matches(event) -> {
-                if (!undoPaste()) revertSelectedRows()
-                editor != null
-            }
+            Shortcuts.RevertRows.matches(event) -> revertSelectedRows().let { editor != null }
+            Shortcuts.Undo.matches(event) -> state.undo(model).let { editor?.history != null }
+            Shortcuts.Redo.matches(event) || Shortcuts.RedoAlt.matches(event) -> state.redo(model).let { editor?.history != null }
             primary && event.key == Key.DirectionUp -> moveTo(GridCell(0, focus?.column ?: 0), shift)
             primary && event.key == Key.DirectionDown -> moveTo(GridCell(rowCount - 1, focus?.column ?: 0), shift)
             primary && event.key == Key.MoveHome -> moveTo(GridCell(0, 0), shift)
@@ -446,7 +446,7 @@ internal class GridController(val state: DataGridState, private val scope: Corou
      * Pastes the clipboard, laid out by [planPaste]. One value into one cell is stored when it fits the column as it is;
      * otherwise the editor opens on it, showing what's wrong. A block is written whole: values that don't fit are kept
      * as typed and flagged, like an edit clicked away from, cells that can't be edited are skipped and rows past the
-     * end are added. The pasted range is selected, and [Shortcuts.RevertRows] undoes it while it still is.
+     * end are added. The pasted range is selected, and the whole paste is one [Shortcuts.Undo] step.
      */
     fun paste(): Boolean {
         val editor = editor ?: return false
@@ -457,52 +457,51 @@ internal class GridController(val state: DataGridState, private val scope: Corou
             return pasteValue(selection.focus, single)
         }
         val plan = planPaste(block, selection, state.visibleColumns.map { model.columns[it].name }, model.rowCount, canAddRows = true) ?: return false
-        val firstNewRow = model.rowCount
-        val cells = mutableListOf<PastedCell>()
+        var pasted = 0
         var invalid = 0
         var skipped = 0
+        val label = "paste" + if (plan.newRows > 0) " with ${count(plan.newRows, "new row")}" else ""
         Snapshot.withMutableSnapshot {
-            repeat(plan.newRows) { editor.addRow() }
-            for ((cell, text) in plan.writes) {
-                val row = cell.row
-                val column = state.modelColumn(cell.column)
-                if (!editor.canEdit(row, column)) {
-                    skipped++
-                    continue
-                }
-                val inserted = model.rowStatus(row) == RowStatus.Inserted
-                val check = text?.let { editor.check(row, column, it) }
-                // A blank in a new row leaves the column out, so it still gets its default.
-                if (check == EditCheck.Empty && inserted && !model.isModified(row, column)) continue
-                val pasted = PastedCell(row, column, model.value(row, column), model.isModified(row, column), model.placeholder(row, column))
-                when (check) {
-                    null -> {
-                        if (!editor.canSetNull(row, column)) invalid++
-                        editor.setValue(row, column, null)
+            editor.undoable(label, plan.range.anchor.row, state.modelColumn(plan.range.anchor.column)) {
+                repeat(plan.newRows) { editor.addRow() }
+                for ((cell, text) in plan.writes) {
+                    val row = cell.row
+                    val column = state.modelColumn(cell.column)
+                    if (!editor.canEdit(row, column)) {
+                        skipped++
+                        continue
                     }
-                    is EditCheck.Ok -> editor.setValue(row, column, check.value)
-                    EditCheck.Empty -> if (inserted && editor.canSetDefault(row, column)) editor.setDefault(row, column) else editor.setValue(row, column, null)
-                    is EditCheck.Invalid -> {
-                        invalid++
-                        editor.setValue(row, column, text)
+                    val inserted = model.rowStatus(row) == RowStatus.Inserted
+                    val check = text?.let { editor.check(row, column, it) }
+                    // A blank in a new row leaves the column out, so it still gets its default.
+                    if (check == EditCheck.Empty && inserted && !model.isModified(row, column)) continue
+                    when (check) {
+                        null -> {
+                            if (!editor.canSetNull(row, column)) invalid++
+                            editor.setValue(row, column, null)
+                        }
+                        is EditCheck.Ok -> editor.setValue(row, column, check.value)
+                        EditCheck.Empty -> if (inserted && editor.canSetDefault(row, column)) editor.setDefault(row, column) else editor.setValue(row, column, null)
+                        is EditCheck.Invalid -> {
+                            invalid++
+                            editor.setValue(row, column, text)
+                        }
                     }
+                    pasted++
                 }
-                pasted.after = model.value(row, column)
-                cells += pasted
             }
         }
-        state.pasteUndo = PasteUndo(model, plan.range, cells, firstNewRow, plan.newRows)
         state.selection = plan.range
         scrollIntoView(plan.range.anchor)
         state.notice =
             GridNotice(
                 listOfNotNull(
-                    if (cells.isEmpty()) "Nothing pasted" else "Pasted ${count(cells.size, "cell")}",
+                    if (pasted == 0) "Nothing pasted" else "Pasted ${count(pasted, "cell")}",
                     count(plan.newRows, "new row").takeIf { plan.newRows > 0 },
                     "$invalid to fix".takeIf { invalid > 0 },
                     "${count(skipped, "read-only cell")} skipped".takeIf { skipped > 0 },
                     "${count(plan.cutColumns, "column")} cut off".takeIf { plan.cutColumns > 0 },
-                    "${Shortcuts.RevertRows} undoes".takeIf { cells.isNotEmpty() || plan.newRows > 0 },
+                    "${Shortcuts.Undo} undoes".takeIf { pasted > 0 || plan.newRows > 0 },
                 ).joinToString(" · ")
             )
         return true
@@ -516,33 +515,7 @@ internal class GridController(val state: DataGridState, private val scope: Corou
         val column = state.modelColumn(cell.column)
         val check = editor.check(row, column, text)
         if (check !is EditCheck.Ok || check.warning) return startEditing(cell, replaceWith = text)
-        val pasted = PastedCell(row, column, model.value(row, column), model.isModified(row, column), model.placeholder(row, column))
-        editor.setValue(row, column, check.value)
-        pasted.after = model.value(row, column)
-        state.pasteUndo = PasteUndo(model, GridSelection(cell, cell), listOf(pasted), model.rowCount, 0)
-        return true
-    }
-
-    /** Undoes the last paste while its range is still selected and its cells still hold what it wrote. */
-    private fun undoPaste(): Boolean {
-        val undo = state.pasteUndo ?: return false
-        val editor = editor ?: return false
-        if (undo.model !== model || state.selection != undo.range || model.rowCount < undo.firstNewRow + undo.newRows) return false
-        if (undo.cells.any { model.value(it.row, it.column) != it.after }) return false
-        state.pasteUndo = null
-        Snapshot.withMutableSnapshot {
-            for (cell in undo.cells.asReversed()) {
-                when {
-                    cell.row >= undo.firstNewRow -> Unit
-                    !cell.modified -> editor.revertCell(cell.row, cell.column)
-                    cell.before == null && cell.placeholder != null -> editor.setDefault(cell.row, cell.column)
-                    else -> editor.setValue(cell.row, cell.column, cell.before)
-                }
-            }
-            if (undo.newRows > 0) editor.deleteRows((undo.firstNewRow until undo.firstNewRow + undo.newRows).toList())
-        }
-        state.clamp(model.rowCount)
-        state.notice = GridNotice("Paste undone")
+        editor.undoable("paste into ${columnName(cell.column)}", row, column) { editor.setValue(row, column, check.value) }
         return true
     }
 
@@ -573,17 +546,20 @@ internal class GridController(val state: DataGridState, private val scope: Corou
         if (editor != null && text != state.editInitial) {
             val row = cell.row
             val column = state.modelColumn(cell.column)
-            when (val check = editCheck()) {
-                is EditCheck.Invalid ->
-                    if (strict) {
-                        state.editRejections++
-                        return
-                    } else editor.setValue(row, column, text)
-                EditCheck.Empty ->
-                    if (model.rowStatus(row) == RowStatus.Inserted && editor.canSetDefault(row, column)) editor.setDefault(row, column)
-                    else editor.setValue(row, column, null)
-                is EditCheck.Ok -> editor.setValue(row, column, check.value)
-                null -> editor.setValue(row, column, text)
+            val check = editCheck()
+            if (check is EditCheck.Invalid && strict) {
+                state.editRejections++
+                return
+            }
+            editor.undoable("edit of ${columnName(cell.column)}", row, column) {
+                when (check) {
+                    is EditCheck.Invalid -> editor.setValue(row, column, text)
+                    EditCheck.Empty ->
+                        if (model.rowStatus(row) == RowStatus.Inserted && editor.canSetDefault(row, column)) editor.setDefault(row, column)
+                        else editor.setValue(row, column, null)
+                    is EditCheck.Ok -> editor.setValue(row, column, check.value)
+                    null -> editor.setValue(row, column, text)
+                }
             }
         }
         state.stopEditing()
@@ -599,7 +575,7 @@ internal class GridController(val state: DataGridState, private val scope: Corou
 
     fun setNull() {
         val editor = editor ?: return
-        forEachSelectedCell { row, column -> if (editor.canSetNull(row, column)) editor.setValue(row, column, null) }
+        selectionStep(editor, "Set NULL") { forEachSelectedCell { row, column -> if (editor.canSetNull(row, column)) editor.setValue(row, column, null) } }
     }
 
     fun canSetDefault(): Boolean {
@@ -611,7 +587,7 @@ internal class GridController(val state: DataGridState, private val scope: Corou
 
     fun setDefault() {
         val editor = editor ?: return
-        forEachSelectedCell { row, column -> editor.setDefault(row, column) }
+        selectionStep(editor, editor.setDefaultLabel) { forEachSelectedCell { row, column -> editor.setDefault(row, column) } }
     }
 
     /** Whether the display [column] shows check boxes: an editable boolean column. */
@@ -633,12 +609,14 @@ internal class GridController(val state: DataGridState, private val scope: Corou
                 false -> if (edit.nullable) null else true
                 null -> true
             }
-        forEachSelectedCell { row, column ->
-            val cellEdit = editor.cellEdit(row, column)
-            if (cellEdit.kind == EditKind.Boolean && editor.canEdit(row, column)) {
-                if (next == null) {
-                    if (editor.canSetNull(row, column)) editor.setValue(row, column, null)
-                } else editor.setValue(row, column, cellEdit.booleanText(next))
+        selectionStep(editor, "switch to ${next?.toString() ?: "NULL"}") {
+            forEachSelectedCell { row, column ->
+                val cellEdit = editor.cellEdit(row, column)
+                if (cellEdit.kind == EditKind.Boolean && editor.canEdit(row, column)) {
+                    if (next == null) {
+                        if (editor.canSetNull(row, column)) editor.setValue(row, column, null)
+                    } else editor.setValue(row, column, cellEdit.booleanText(next))
+                }
             }
         }
         return true
@@ -654,9 +632,11 @@ internal class GridController(val state: DataGridState, private val scope: Corou
     /** Fills the selected UUID cells with new, distinct UUIDs. */
     fun generateUuids(timeOrdered: Boolean) {
         val editor = editor ?: return
-        forEachSelectedCell { row, column ->
-            if (editor.columnEdit(column).kind == EditKind.Uuid && editor.canEdit(row, column)) {
-                editor.setValue(row, column, (if (timeOrdered) Uuids.v7() else Uuids.v4()).toString())
+        selectionStep(editor, "new UUIDs") {
+            forEachSelectedCell { row, column ->
+                if (editor.columnEdit(column).kind == EditKind.Uuid && editor.canEdit(row, column)) {
+                    editor.setValue(row, column, (if (timeOrdered) Uuids.v7() else Uuids.v4()).toString())
+                }
             }
         }
     }
@@ -683,6 +663,12 @@ internal class GridController(val state: DataGridState, private val scope: Corou
         val rows = state.selection?.rows ?: return
         editor?.revertRows(rows.toList())
         state.clamp(model.rowCount)
+    }
+
+    /** Runs [block] over the selection as one undo step, shown at the focused cell when undone. */
+    private fun selectionStep(editor: GridEditor, label: String, block: () -> Unit) {
+        val focus = state.focus ?: return
+        editor.undoable(label, focus.row, state.modelColumn(focus.column), block)
     }
 
     private inline fun forEachSelectedCell(action: (row: Int, modelColumn: Int) -> Unit) {

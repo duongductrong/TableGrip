@@ -35,7 +35,7 @@ class ShortcutsTest {
     /** Keys the focused grid handles, plus the table-wide ones that must get past it. */
     private val gridScope =
         with(Shortcuts) {
-            listOf(Copy, CopyWithHeader, SelectAll, EditCell, SetNull, AddRow, DeleteRows, RevertRows, Submit, FilterByValue, ExcludeValue, FocusFilter, ToggleFilterMode, ClearFilter)
+            listOf(Copy, CopyWithHeader, SelectAll, EditCell, SetNull, AddRow, DeleteRows, Undo, Redo, RedoAlt, RevertRows, Submit, FilterByValue, ExcludeValue, FocusFilter, ToggleFilterMode, ClearFilter)
         }
 
     @Test

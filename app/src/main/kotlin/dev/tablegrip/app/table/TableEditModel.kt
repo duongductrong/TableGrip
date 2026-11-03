@@ -3,6 +3,7 @@ package dev.tablegrip.app.table
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
+import dev.tablegrip.app.grid.EditHistory
 import dev.tablegrip.app.grid.FieldChange
 import dev.tablegrip.app.grid.FieldDiff
 import dev.tablegrip.app.grid.GridEditor
@@ -14,6 +15,7 @@ import dev.tablegrip.app.grid.RowStatus
 import dev.tablegrip.app.grid.cellJson
 import dev.tablegrip.app.grid.change
 import dev.tablegrip.app.grid.diffRecord
+import dev.tablegrip.app.grid.undoable
 import dev.tablegrip.core.dialect.SqlDialect
 import dev.tablegrip.core.driver.QueryResult
 import dev.tablegrip.core.driver.ResultColumn
@@ -63,6 +65,30 @@ class TableEditModel(
 
     private val baseRows: Int
         get() = result.rows.size
+
+    /** The pending edits at one moment, as plain values, for [history]. */
+    private data class Pending(
+        val updates: Map<Pair<Int, Int>, String?>,
+        val defaults: Set<Pair<Int, Int>>,
+        val deleted: Set<Int>,
+        val inserted: List<Map<Int, String?>>,
+    )
+
+    override val history: EditHistory =
+        EditHistory(
+            capture = { Pending(updates.toMap(), defaults.keys.toSet(), deleted.keys.toSet(), inserted.map { it.toMap() }) },
+            restore = { pending ->
+                pending as Pending
+                updates.clear()
+                updates.putAll(pending.updates)
+                defaults.clear()
+                pending.defaults.forEach { defaults[it] = Unit }
+                deleted.clear()
+                pending.deleted.forEach { deleted[it] = Unit }
+                inserted.clear()
+                pending.inserted.forEach { inserted += mutableStateMapOf<Int, String?>().apply { putAll(it) } }
+            },
+        )
 
     override val rowCount: Int
         get() = baseRows + inserted.size
@@ -145,46 +171,47 @@ class TableEditModel(
         else edit.supportsDefault && (edit.defaultValue != null || edit.generated) && (row to column) !in defaults
     }
 
-    override fun setValue(row: Int, column: Int, value: String?) {
-        if (!canEdit(row, column)) return
+    override fun setValue(row: Int, column: Int, value: String?) = undoable("edit of ${columns[column].name}", row, column) {
+        if (!canEdit(row, column)) return@undoable
         if (row >= baseRows) {
             inserted[row - baseRows][column] = value
-            return
+            return@undoable
         }
         defaults.remove(row to column)
         if (columnEdits[column].sameValue(value, result.rows[row][column])) updates.remove(row to column) else updates[row to column] = value
     }
 
-    override fun setDefault(row: Int, column: Int) {
-        if (!canSetDefault(row, column)) return
+    override fun setDefault(row: Int, column: Int) = undoable("DEFAULT for ${columns[column].name}", row, column) {
+        if (!canSetDefault(row, column)) return@undoable
         if (row >= baseRows) {
             inserted[row - baseRows].remove(column)
-            return
+            return@undoable
         }
         updates.remove(row to column)
         defaults[row to column] = Unit
     }
 
-    override fun revertCell(row: Int, column: Int) {
+    override fun revertCell(row: Int, column: Int) = undoable("revert of ${columns[column].name}", row, column) {
         if (row >= baseRows) {
             inserted[row - baseRows].remove(column)
-            return
+            return@undoable
         }
         updates.remove(row to column)
         defaults.remove(row to column)
     }
 
-    override fun addRow(): Int {
-        inserted += mutableStateMapOf()
-        return rowCount - 1
-    }
+    override fun addRow(): Int =
+        undoable("new row", baseRows + inserted.size) {
+            inserted += mutableStateMapOf()
+            rowCount - 1
+        }
 
-    override fun deleteRows(rows: Collection<Int>) {
+    override fun deleteRows(rows: Collection<Int>) = undoable(if (rows.size == 1) "row deletion" else "deletion of ${rows.size} rows", rows.minOrNull()) {
         rows.filter { it >= baseRows }.sortedDescending().forEach { inserted.removeAt(it - baseRows) }
         if (hasKey) rows.filter { it < baseRows }.forEach { deleted[it] = Unit }
     }
 
-    override fun revertRows(rows: Collection<Int>) {
+    override fun revertRows(rows: Collection<Int>) = undoable(if (rows.size == 1) "row revert" else "revert of ${rows.size} rows", rows.minOrNull()) {
         rows.filter { it >= baseRows }.sortedDescending().forEach { inserted.removeAt(it - baseRows) }
         rows.filter { it < baseRows }.forEach { row ->
             deleted.remove(row)
@@ -193,7 +220,8 @@ class TableEditModel(
         }
     }
 
-    fun revertAll() {
+    /** Drops every pending edit; one undo step, so a Revert All clicked by mistake can be taken back. */
+    fun revertAll() = undoable("revert of all changes") {
         updates.clear()
         defaults.clear()
         deleted.clear()
@@ -240,9 +268,9 @@ class TableEditModel(
 
     override fun plan(row: Int?, base: JsonObject, edited: JsonObject): RecordPlan = planned(row, base, edited).first
 
-    override fun apply(row: Int?, base: JsonObject, edited: JsonObject): Int? {
+    override fun apply(row: Int?, base: JsonObject, edited: JsonObject): Int? = undoable(if (row == null) "new row from JSON" else "row edit as JSON", row ?: rowCount) {
         val (plan, steps) = planned(row, base, edited)
-        if (!plan.canApply) return null
+        if (!plan.canApply) return@undoable null
         val target = row ?: addRow()
         steps.forEach { step ->
             when (step) {
@@ -250,7 +278,7 @@ class TableEditModel(
                 is Step.Default -> revertCell(target, step.column)
             }
         }
-        return target
+        target
     }
 
     /** One cell write a record's plan comes down to. */

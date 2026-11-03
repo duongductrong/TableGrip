@@ -93,9 +93,3 @@ internal fun planPaste(block: ClipboardBlock, selection: GridSelection, columnNa
         )
     return PastePlan(kept, newRows = if (canAddRows) (lastRow + 1 - rowCount).coerceAtLeast(0) else 0, cutColumns, cutRows, range)
 }
-
-/** A cell as it was before a paste wrote [after] into it, so the paste can be undone. */
-internal class PastedCell(val row: Int, val column: Int, val before: String?, val modified: Boolean, val placeholder: String?, var after: String? = null)
-
-/** The last paste into a grid: undone while [range] is still selected and its cells still hold what it wrote. */
-internal class PasteUndo(val model: GridModel, val range: GridSelection, val cells: List<PastedCell>, val firstNewRow: Int, val newRows: Int)

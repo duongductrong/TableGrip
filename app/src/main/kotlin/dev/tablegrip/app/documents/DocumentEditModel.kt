@@ -3,6 +3,7 @@ package dev.tablegrip.app.documents
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
+import dev.tablegrip.app.grid.EditHistory
 import dev.tablegrip.app.grid.FieldChange
 import dev.tablegrip.app.grid.FieldDiff
 import dev.tablegrip.app.grid.GridEditor
@@ -13,6 +14,7 @@ import dev.tablegrip.app.grid.RecordTemplate
 import dev.tablegrip.app.grid.RowStatus
 import dev.tablegrip.app.grid.change
 import dev.tablegrip.app.grid.diffRecord
+import dev.tablegrip.app.grid.undoable
 import dev.tablegrip.core.driver.ResultColumn
 import dev.tablegrip.core.edit.ColumnEdit
 import dev.tablegrip.core.edit.EditCheck
@@ -124,6 +126,23 @@ internal class DocumentEditModel(
 
     private val baseRows: Int
         get() = documents.size
+
+    /** The pending edits at one moment, as plain values, for [history]. Fields added as columns stay: they're not edits. */
+    private data class Staged(val edits: Map<Pair<Int, Int>, Edit>, val deleted: Set<Int>, val inserted: List<Map<Int, Edit>>)
+
+    override val history: EditHistory =
+        EditHistory(
+            capture = { Staged(edits.toMap(), deleted.keys.toSet(), inserted.map { it.toMap() }) },
+            restore = { staged ->
+                staged as Staged
+                edits.clear()
+                edits.putAll(staged.edits)
+                deleted.clear()
+                staged.deleted.forEach { deleted[it] = Unit }
+                inserted.clear()
+                staged.inserted.forEach { inserted += mutableStateMapOf<Int, Edit>().apply { putAll(it) } }
+            },
+        )
 
     override val rowCount: Int
         get() = baseRows + inserted.size
@@ -291,20 +310,20 @@ internal class DocumentEditModel(
     }
 
     /** Removes the field from the document; a new document just leaves it out. */
-    override fun setDefault(row: Int, column: Int) {
-        if (!canSetDefault(row, column)) return
+    override fun setDefault(row: Int, column: Int) = undoable("removal of ${field(column)}", row, column) {
+        if (!canSetDefault(row, column)) return@undoable
         if (row >= baseRows) {
             inserted[row - baseRows].remove(column)
-            return
+            return@undoable
         }
         if (original(row, column) == null) edits.remove(row to column) else edits[row to column] = Edit.Removed
     }
 
-    override fun setValue(row: Int, column: Int, value: String?) {
-        if (!canEdit(row, column)) return
+    override fun setValue(row: Int, column: Int, value: String?) = undoable("edit of ${field(column)}", row, column) {
+        if (!canEdit(row, column)) return@undoable
         if (row >= baseRows) {
             inserted[row - baseRows][column] = Edit.Value(value)
-            return
+            return@undoable
         }
         val original = original(row, column)
         val unchanged =
@@ -316,21 +335,23 @@ internal class DocumentEditModel(
         if (unchanged) edits.remove(row to column) else edits[row to column] = Edit.Value(value)
     }
 
-    override fun revertCell(row: Int, column: Int) {
+    override fun revertCell(row: Int, column: Int) = undoable("revert of ${field(column)}", row, column) {
         if (row >= baseRows) inserted[row - baseRows].remove(column) else edits.remove(row to column)
+        Unit
     }
 
-    override fun addRow(): Int {
-        inserted += mutableStateMapOf()
-        return rowCount - 1
-    }
+    override fun addRow(): Int =
+        undoable("new document", rowCount) {
+            inserted += mutableStateMapOf()
+            rowCount - 1
+        }
 
-    override fun deleteRows(rows: Collection<Int>) {
+    override fun deleteRows(rows: Collection<Int>) = undoable(if (rows.size == 1) "document deletion" else "deletion of ${rows.size} documents", rows.minOrNull()) {
         rows.filter { it >= baseRows }.sortedDescending().forEach { inserted.removeAt(it - baseRows) }
         rows.filter { it < baseRows && hasId(it) && !readOnly }.forEach { deleted[it] = Unit }
     }
 
-    override fun revertRows(rows: Collection<Int>) {
+    override fun revertRows(rows: Collection<Int>) = undoable(if (rows.size == 1) "document revert" else "revert of ${rows.size} documents", rows.minOrNull()) {
         rows.filter { it >= baseRows }.sortedDescending().forEach { inserted.removeAt(it - baseRows) }
         rows.filter { it < baseRows }.forEach { row ->
             deleted.remove(row)
@@ -338,7 +359,8 @@ internal class DocumentEditModel(
         }
     }
 
-    fun revertAll() {
+    /** Drops every pending edit; one undo step, so a Revert All clicked by mistake can be taken back. */
+    fun revertAll() = undoable("revert of all changes") {
         edits.clear()
         deleted.clear()
         inserted.clear()
@@ -488,6 +510,8 @@ internal class DocumentEditModel(
             val row = rowsById[id]
             if (row == null) missing++ else deleted[row] = Unit
         }
+        // Carried over from the last page: there's no step before them to go back to.
+        history.clear()
         return missing
     }
 
@@ -525,9 +549,9 @@ internal class DocumentEditModel(
 
     override fun plan(row: Int?, base: JsonObject, edited: JsonObject): RecordPlan = planned(row, base, edited).first
 
-    override fun apply(row: Int?, base: JsonObject, edited: JsonObject): Int? {
+    override fun apply(row: Int?, base: JsonObject, edited: JsonObject): Int? = undoable(if (row == null) "new document from JSON" else "document edit as JSON", row ?: rowCount) {
         val (plan, steps) = planned(row, base, edited)
-        if (!plan.canApply) return null
+        if (!plan.canApply) return@undoable null
         val target = row ?: addRow()
         for (step in steps) {
             val column = fields.indexOf(step.name).takeIf { it >= 0 } ?: run {
@@ -547,7 +571,7 @@ internal class DocumentEditModel(
                 else -> edits[target to column] = Edit.Literal(step.literal)
             }
         }
-        return target
+        target
     }
 
     /** A field a record's plan sets to an Extended JSON [literal], or removes when it's null. */

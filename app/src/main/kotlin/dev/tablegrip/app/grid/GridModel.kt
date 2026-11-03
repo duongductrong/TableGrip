@@ -80,7 +80,15 @@ interface GridEditor {
 
     /** Undoes pending edits, insertions and deletions on [rows]. */
     fun revertRows(rows: Collection<Int>)
+
+    /** Undo and redo of the pending edits, every change recorded as it's made; null when the editor keeps none. */
+    val history: EditHistory?
+        get() = null
 }
+
+/** Runs [block] as one undo step of [GridEditor.history], when there is one. */
+fun <T> GridEditor.undoable(label: String, row: Int? = null, column: Int? = null, block: () -> T): T =
+    history?.change(label, row, column, block) ?: block()
 
 /** [result]'s rows from [offset], at most [limit] of them, so a large result can be shown a page at a time. */
 class ResultGridModel(private val result: QueryResult.Rows, private val offset: Int = 0, limit: Int = Int.MAX_VALUE) : GridModel {

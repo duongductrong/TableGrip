@@ -58,6 +58,7 @@ import dev.tablegrip.app.grid.RecordEditorHost
 import dev.tablegrip.app.table.PageSizes
 import dev.tablegrip.app.table.Separator
 import dev.tablegrip.app.table.ToolButton
+import dev.tablegrip.app.table.UndoRedoButtons
 import dev.tablegrip.app.table.ErrorBanner
 import dev.tablegrip.app.table.ViewChip
 import dev.tablegrip.app.table.ViewChipGroup
@@ -331,6 +332,7 @@ private fun Toolbar(tab: DocumentBrowserTab) {
             tab.grid.clamp(model.rowCount)
         }
         AddField(tab, enabled = editable)
+        UndoRedoButtons(tab.grid, model)
         ToolButton(AllIconsKeys.Actions.Rollback, "Revert all changes", enabled = tab.hasChanges) { tab.revert() }
         ToolButton(AllIconsKeys.Actions.Preview, "Preview pending writes", enabled = tab.hasChanges) { tab.openPreview() }
         ToolButton(AllIconsKeys.Actions.Commit, "Submit changes (${Shortcuts.Submit})", enabled = tab.hasChanges && !tab.submitting) { tab.submit() }

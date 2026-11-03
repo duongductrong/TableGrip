@@ -55,6 +55,8 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import dev.tablegrip.app.ui.AppDialog
 import dev.tablegrip.app.grid.DataGrid
+import dev.tablegrip.app.grid.DataGridState
+import dev.tablegrip.app.grid.GridModel
 import dev.tablegrip.app.grid.GridActions
 import dev.tablegrip.app.grid.RecordEditorHost
 import dev.tablegrip.app.grid.ResultJsonView
@@ -268,6 +270,7 @@ private fun Toolbar(tab: TableDataTab) {
             tab.grid.selection?.rows?.let { model?.deleteRows(it.toList()) }
             model?.let { tab.grid.clamp(it.rowCount) }
         }
+        UndoRedoButtons(tab.grid, model)
         ToolButton(AllIconsKeys.Actions.Rollback, "Revert all changes", enabled = tab.hasChanges) { tab.revert() }
         ToolButton(AllIconsKeys.Actions.Preview, "Preview pending SQL", enabled = tab.hasChanges) { tab.openPreview() }
         ToolButton(AllIconsKeys.Actions.Commit, "Submit changes (${Shortcuts.Submit})", enabled = tab.hasChanges && !tab.submitting) { tab.submit() }
@@ -295,6 +298,20 @@ private fun Toolbar(tab: TableDataTab) {
 @Composable
 internal fun ToolButton(icon: IconKey, tooltip: String, enabled: Boolean = true, onClick: () -> Unit) {
     Tooltip({ Text(tooltip) }) { IconButton(onClick = onClick, enabled = enabled) { Icon(icon, tooltip) } }
+}
+
+/** Undo and redo of [model]'s pending edits, naming what each would undo or redo. */
+@Composable
+internal fun UndoRedoButtons(grid: DataGridState, model: GridModel?) {
+    val history = model?.editor?.history
+    val undo = history?.nextUndo
+    val redo = history?.nextRedo
+    ToolButton(AllIconsKeys.Actions.Undo, undo?.let { "Undo ${it.label} (${Shortcuts.Undo})" } ?: "Undo (${Shortcuts.Undo})", enabled = undo != null) {
+        model?.let(grid::undo)
+    }
+    ToolButton(AllIconsKeys.Actions.Redo, redo?.let { "Redo ${it.label} (${Shortcuts.Redo})" } ?: "Redo (${Shortcuts.Redo})", enabled = redo != null) {
+        model?.let(grid::redo)
+    }
 }
 
 @Composable

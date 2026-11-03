@@ -239,7 +239,12 @@ object Shortcuts {
     val SetNull by action("Data Grid", "Set cell to NULL", Shortcut(Key.N, "N", primary = true, alt = true))
     val AddRow by action("Data Grid", "Add row", Shortcut(Key.N, "N", primary = true))
     val DeleteRows by action("Data Grid", "Delete rows", Shortcut(Key.Backspace, BackspaceLabel, primary = true))
-    val RevertRows by action("Data Grid", "Revert rows", Shortcut(Key.Z, "Z", primary = true))
+    /** Undo and redo step through the pending edits, like a spreadsheet; they're never sent until submitted. */
+    val Undo by action("Data Grid", "Undo the last change to the data", Shortcut(Key.Z, "Z", primary = true))
+    val Redo by action("Data Grid", "Redo", Shortcut(Key.Z, "Z", primary = true, shift = true))
+    val RedoAlt by action("Data Grid", "Redo (alternative)", Shortcut(Key.Y, "Y", primary = true))
+    /** DataGrip's Revert Selected key: drops every pending edit of the selected rows at once. */
+    val RevertRows by action("Data Grid", "Revert rows", Shortcut(Key.Z, "Z", primary = true, alt = true))
     val Submit by action("Data Grid", "Submit changes / apply in the cell editor", Shortcut(Key.Enter, EnterLabel, primary = true))
     val Reload by action("Data Grid", "Reload table", Shortcut(Key.R, "R", primary = true))
     /** DataGrip's Go to Declaration key, which on a foreign-key cell goes to the referenced row. */
@@ -330,7 +335,9 @@ object Shortcuts {
                     entry("Set cell to NULL", SetNull),
                     entry("Add row", AddRow),
                     entry("Delete rows", DeleteRows),
-                    entry("Revert rows", RevertRows),
+                    entry("Undo the last change to the data", Undo),
+                    entry("Redo", Redo, RedoAlt),
+                    entry("Revert rows: drop all their pending changes", RevertRows),
                     entry("Submit changes", Submit, Save),
                     entry("Reload table", Reload),
                     entry("Go to the row a foreign key points at", GoToReferenced),

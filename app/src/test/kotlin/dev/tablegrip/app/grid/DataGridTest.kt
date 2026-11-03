@@ -417,4 +417,90 @@ class DataGridTest {
         assertEquals(null, model.value(1, 1))
         assertEquals("r0c2", model.value(1, 2))
     }
+
+    @Test
+    fun `undo and redo step through edits one action at a time and show where each was`() = runComposeUiTest {
+        val state = DataGridState()
+        val model = TableEditModel(result(3, 3), primaryKey = listOf("id"))
+        setContent { IntUiTheme(isDark = false) { Box(Modifier.size(900.dp, 400.dp)) { DataGrid(model, state) } } }
+        val primary = if (isMac) Key.MetaLeft else Key.CtrlLeft
+        fun type(cell: String, text: String) {
+            onNodeWithText(cell).performMouseInput { doubleClick(center) }
+            waitForIdle()
+            onRoot().performKeyInput { withKeyDown(primary) { pressKey(Key.A) } }
+            onNodeWithText(cell).performTextInput(text)
+            onRoot().performKeyInput { pressKey(Key.Enter) }
+            waitForIdle()
+        }
+        type("r0c1", "first")
+        type("r2c2", "second")
+        onNodeWithText("r1c1").performMouseInput { click(center) }
+        onRoot().performKeyInput { withKeyDown(primary) { pressKey(Key.Backspace) } }
+        waitForIdle()
+        assertEquals(RowStatus.Deleted, model.rowStatus(1))
+
+        // Each ⌘Z takes back one action, newest first, and selects where it happened.
+        onRoot().performKeyInput { withKeyDown(primary) { pressKey(Key.Z) } }
+        waitForIdle()
+        assertEquals(RowStatus.Normal, model.rowStatus(1))
+        assertEquals("second", model.value(2, 2))
+        onRoot().performKeyInput { withKeyDown(primary) { pressKey(Key.Z) } }
+        waitForIdle()
+        assertEquals("r2c2", model.value(2, 2))
+        assertEquals("first", model.value(0, 1))
+        assertEquals(GridCell(2, 2), state.focus)
+        assertTrue(state.notice!!.text.startsWith("Undid edit of c2"), state.notice!!.text)
+
+        // ⇧⌘Z puts it back; a new edit then drops what's left to redo.
+        onRoot().performKeyInput { withKeyDown(primary) { withKeyDown(Key.ShiftLeft) { pressKey(Key.Z) } } }
+        waitForIdle()
+        assertEquals("second", model.value(2, 2))
+        type("r0c2", "third")
+        onRoot().performKeyInput { withKeyDown(primary) { withKeyDown(Key.ShiftLeft) { pressKey(Key.Z) } } }
+        waitForIdle()
+        assertEquals(RowStatus.Normal, model.rowStatus(1), "the deletion was undone before the new edit, so it stays undone")
+    }
+
+    @Test
+    fun `undo in a cell's editor stays within that cell's text`() = runComposeUiTest {
+        val state = DataGridState()
+        val model = TableEditModel(result(2, 2), primaryKey = listOf("id"))
+        setContent { IntUiTheme(isDark = false) { Box(Modifier.size(900.dp, 400.dp)) { DataGrid(model, state) } } }
+        val primary = if (isMac) Key.MetaLeft else Key.CtrlLeft
+        onNodeWithText("r0c1").performMouseInput { doubleClick(center) }
+        waitForIdle()
+        onRoot().performKeyInput { pressKey(Key.Escape) }
+        onNodeWithText("r1c1").performMouseInput { doubleClick(center) }
+        waitForIdle()
+        onRoot().performKeyInput { withKeyDown(primary) { pressKey(Key.Z) } }
+        waitForIdle()
+        assertEquals("r1c1", state.editText.text.toString())
+    }
+
+    @Test
+    fun `a paste, Set NULL over a selection and Revert All are one step each`() {
+        val model = TableEditModel(result(3, 3), primaryKey = listOf("id"))
+        val history = model.history
+        model.undoable("paste") {
+            model.addRow()
+            model.setValue(0, 1, "a")
+            model.setValue(1, 1, "b")
+        }
+        model.setValue(2, 2, null)
+        model.revertAll()
+        assertTrue(!model.hasChanges)
+        assertEquals("revert of all changes", history.undo()!!.label)
+        assertEquals(null, model.value(2, 2))
+        history.undo()
+        assertEquals("r2c2", model.value(2, 2))
+        assertEquals("paste", history.undo()!!.label)
+        assertTrue(!model.hasChanges)
+        assertEquals(3, model.rowCount)
+        assertEquals(null, history.undo())
+        history.redo()
+        assertEquals(listOf("a", "b", 4), listOf(model.value(0, 1), model.value(1, 1), model.rowCount))
+        // Writing what's already there changes nothing, so it leaves no step behind.
+        model.setValue(0, 1, "a")
+        assertEquals("edit of c2", history.redo()!!.label)
+    }
 }
