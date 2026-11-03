@@ -40,8 +40,11 @@ enum class JsonValueType(val label: String) {
     }
 }
 
-/** How the original text was laid out, so an edited value is written back the same way: [indent] null is one line. */
-data class JsonLayout(val indent: String?)
+/**
+ * How the original text was laid out, so an edited value is written back the same way: [indent] null is one line;
+ * [lead] and [trail] are the whitespace around the value, kept as it was.
+ */
+data class JsonLayout(val indent: String?, val lead: String = "", val trail: String = "")
 
 /** A cell's text as the tree editor sees it: a value it can edit losslessly, or why it can't. */
 sealed interface JsonTreeSource {
@@ -60,8 +63,23 @@ fun jsonTreeSource(text: String): JsonTreeSource {
     val root = runCatching { Json.parseToJsonElement(text) }.getOrNull() ?: return JsonTreeSource.Unavailable("The text isn't valid JSON")
     if (root !is JsonObject && root !is JsonArray) return JsonTreeSource.Unavailable("Only objects and arrays open as a tree")
     if (!strictLiterals(root)) return JsonTreeSource.Unavailable("The text isn't valid JSON")
+    if (hasLoneSurrogate(root)) return JsonTreeSource.Unavailable("The text has an incomplete Unicode escape; edit it as text")
     firstRepeatedKey(text)?.let { return JsonTreeSource.Unavailable("The key \"$it\" appears twice in one object; edit it as text") }
     return JsonTreeSource.Ok(root, jsonLayout(text))
+}
+
+/** Text cells longer than this open as text even when they hold JSON, so a huge value can't stall the editor. */
+const val MaxTextTreeLength = 1_000_000
+
+/**
+ * Whether a text cell's [text] opens in the tree: a JSON object or array the tree can write back losslessly. The cell
+ * stays text: the tree only changes what it holds, never how it is checked or saved. [sources] caches the parse.
+ */
+fun textOpensAsTree(text: String, sources: JsonTreeSources? = null): Boolean {
+    if (text.length > MaxTextTreeLength) return false
+    val first = text.firstOrNull { !it.isWhitespace() }
+    if (first != '{' && first != '[') return false
+    return (sources?.of(text) ?: jsonTreeSource(text)) is JsonTreeSource.Ok
 }
 
 /** Remembers the last text opened for the tree, so asking again for the same text doesn't parse it again. */
@@ -94,15 +112,17 @@ fun encodeJson(root: JsonElement, layout: JsonLayout): String {
                 prettyPrint = true
                 prettyPrintIndent = layout.indent
             }
-    return json.encodeToString(JsonElement.serializer(), exactNumbers(root))
+    return layout.lead + json.encodeToString(JsonElement.serializer(), exactNumbers(root)) + layout.trail
 }
 
 /** One line; or pretty, indented like the first indented line (two spaces when none is). */
 fun jsonLayout(text: String): JsonLayout {
     val trimmed = text.trim()
-    if ('\n' !in trimmed) return JsonLayout(null)
+    val lead = text.takeWhile { it.isWhitespace() }
+    val trail = if (trimmed.isEmpty()) "" else text.takeLastWhile { it.isWhitespace() }
+    if ('\n' !in trimmed) return JsonLayout(null, lead, trail)
     val indent = trimmed.lineSequence().drop(1).map { line -> line.takeWhile { it == ' ' || it == '\t' } }.firstOrNull { it.isNotEmpty() }
-    return JsonLayout(indent ?: "  ")
+    return JsonLayout(indent ?: "  ", lead, trail)
 }
 
 private val JsonNumber = Regex("-?(0|[1-9][0-9]*)(\\.[0-9]+)?([eE][+-]?[0-9]+)?")
@@ -117,6 +137,30 @@ private fun strictLiterals(element: JsonElement): Boolean =
         is JsonNull -> true
         is JsonPrimitive -> element.isString || element.content == "true" || element.content == "false" || isJsonNumber(element.content)
     }
+
+/**
+ * Whether a key or string holds half of a surrogate pair (`"\ud800"`): it decodes, but written back raw it is no
+ * valid character, and a database encoding it as UTF-8 would replace it.
+ */
+private fun hasLoneSurrogate(element: JsonElement): Boolean =
+    when (element) {
+        is JsonObject -> element.any { (key, value) -> brokenUnicode(key) || hasLoneSurrogate(value) }
+        is JsonArray -> element.any(::hasLoneSurrogate)
+        is JsonPrimitive -> element.isString && brokenUnicode(element.content)
+    }
+
+private fun brokenUnicode(text: String): Boolean {
+    var i = 0
+    while (i < text.length) {
+        val c = text[i]
+        when {
+            c.isHighSurrogate() -> if (i + 1 < text.length && text[i + 1].isLowSurrogate()) i++ else return true
+            c.isLowSurrogate() -> return true
+        }
+        i++
+    }
+    return false
+}
 
 /** The first key some object in [text] (valid JSON) repeats, compared after unescaping; null when none does. */
 internal fun firstRepeatedKey(text: String): String? {

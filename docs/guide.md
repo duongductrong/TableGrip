@@ -130,6 +130,9 @@ switch it, double-click a key to rename it, and use a row's type menu, + and tra
 remove. ⌘Z and ⇧⌘Z undo and redo tree changes; ⌘Enter applies; *Text* switches to the raw JSON. The tree writes the value back only when something changes,
 keeps key order and every number's exact digits, and refuses a number that isn't valid JSON, so it can't save broken
 JSON. Values it can't edit losslessly (invalid JSON, a scalar, or an object that repeats a key) open as text.
+A text column holding a JSON object or array (common in SQLite, MariaDB, SQL Server) opens in the same tree, but stays
+text: the value is saved exactly as edited and never refused for not being JSON, and an edit changed back restores
+the original text byte for byte.
 
 **Foreign keys**: cells of a foreign-key column get an arrow; clicking it (or ⌘B) opens the referenced table filtered to
 that row. Right-click a row → Show Referencing Rows opens the rows of other tables that point at it, e.g. a user's

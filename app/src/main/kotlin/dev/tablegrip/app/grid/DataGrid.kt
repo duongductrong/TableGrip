@@ -649,15 +649,26 @@ private fun EditorIconButton(icon: IconKey, tooltip: String, modifier: Modifier 
 /**
  * A roomier multi-line editor floating over the cell: it does not take part in the grid's layout. Enter inserts a line
  * break, [Shortcuts.Submit] applies, Escape collapses back to the inline editor and clicking outside applies. JSON
- * objects and arrays open as an editable tree, which writes the text back only when something in it changes.
+ * objects and arrays open as an editable tree, which writes the text back only when something in it changes. So does
+ * a text cell holding one, which stays text: it is checked and saved exactly as a typed value would be.
  */
 @Composable
 private fun ExpandedCellEditor(controller: GridController, colors: GridColors, kind: EditKind?, onCollapse: () -> Unit) {
     val check by remember { derivedStateOf { controller.editCheck() } }
-    val json = kind == EditKind.Json
     val text = controller.state.editText
     // Parsed when the tree needs it, not on every keystroke in Text mode; the tree's own edits are always valid JSON.
     val sources = remember { JsonTreeSources() }
+    // Decided once, on what the popup opened with, so the Tree/Text switch doesn't come and go while typing.
+    val jsonText = kind == EditKind.Text && remember { textOpensAsTree(text.text.toString(), sources) }
+    val json = kind == EditKind.Json || jsonText
+    // The value as stored: a tree edit that brings back what it holds restores its exact text, not a re-encoding.
+    val initial = controller.state.editInitial
+    val initialRoot =
+        remember(initial) {
+            // Usually what the popup opened with, already parsed into [sources].
+            val opened = if (!json) null else if (text.text.toString() == initial) sources.of(initial) else jsonTreeSource(initial)
+            (opened as? JsonTreeSource.Ok)?.root
+        }
     var tree by remember { mutableStateOf(json && sources.of(text.text.toString()) is JsonTreeSource.Ok) }
     val source = if (json && tree) sources.of(text.text.toString()) else null
     val showTree = source is JsonTreeSource.Ok
@@ -712,7 +723,7 @@ private fun ExpandedCellEditor(controller: GridController, colors: GridColors, k
                 JsonTreeEditor(
                     root = (source as JsonTreeSource.Ok).root,
                     onChange = { root ->
-                        val encoded = encodeJson(root, source.layout)
+                        val encoded = if (initialRoot != null && root == initialRoot) initial else encodeJson(root, source.layout)
                         sources.put(encoded, JsonTreeSource.Ok(root, source.layout))
                         text.setTextAndPlaceCursorAtEnd(encoded)
                     },
@@ -761,7 +772,8 @@ private fun ExpandedCellEditor(controller: GridController, colors: GridColors, k
                 }
                 val hint = check?.hint()
                 Text(
-                    hint?.first ?: refusal?.let { "$it, so it opens as text" } ?: "${Shortcuts.Submit.label} to apply · Esc to collapse",
+                    hint?.first ?: refusal?.let { "$it, so it opens as text" }
+                        ?: "${if (jsonText) "Saved as text · " else ""}${Shortcuts.Submit.label} to apply · Esc to collapse",
                     Modifier.weight(1f).padding(start = 6.dp),
                     color = hint?.second ?: colors.muted,
                     fontSize = 11.sp,

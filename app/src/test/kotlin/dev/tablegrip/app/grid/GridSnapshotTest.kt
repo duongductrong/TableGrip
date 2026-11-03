@@ -10,6 +10,13 @@ import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performTextReplacement
+import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.test.withKeyDown
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.onAllNodesWithText
@@ -134,6 +141,38 @@ class GridSnapshotTest {
             val name = if (dark) "json-tree-dark.png" else "json-tree-light.png"
             ImageIO.write(onAllNodes(isRoot())[1].captureToImage().toAwtImage(), "png", File(out, name))
             ImageIO.write(onAllNodes(isRoot())[0].captureToImage().toAwtImage(), "png", File(out, "grid-" + name))
+        }
+    }
+
+    /** JSON kept in a text column (SQLite here): it opens in the same tree, and the edit is saved as text. */
+    @Test
+    fun jsonTextSnapshot() {
+        val out = System.getProperty("snapshot.dir") ?: return
+        for (dark in listOf(true, false)) runComposeUiTest {
+            val settings = """{"theme":"dark","fontSize":14,"beta":false,"shortcuts":{"save":"⌘S","run":"⌘↵"},"recent":["orders","users"]}"""
+            val columns = listOf(ResultColumn("id", "INTEGER", Types.INTEGER), ResultColumn("name", "TEXT", Types.VARCHAR), ResultColumn("settings", "TEXT", Types.VARCHAR))
+            val rows = (1..8).map { listOf("$it", if (it == 2) "plain note" else "user $it", settings) }
+            val model = TableEditModel(QueryResult.Rows(columns, rows, false, 1), listOf("id"), dialect = SqlDialect.SQLiteDialect())
+            val state = DataGridState()
+            setContent {
+                TableGripTheme(isDark = dark) {
+                    Box(Modifier.size(900.dp, 520.dp).background(JewelTheme.globalColors.panelBackground)) { DataGrid(model, state) }
+                }
+            }
+            val suffix = if (dark) "dark" else "light"
+            waitForIdle()
+            onAllNodesWithText(settings)[0].performMouseInput { doubleClick(center) }
+            waitForIdle()
+            ImageIO.write(onAllNodes(isRoot())[1].captureToImage().toAwtImage(), "png", File(out, "json-text-tree-$suffix.png"))
+            onNodeWithText("14").performMouseInput { click(center) }
+            waitForIdle()
+            onNode(hasSetTextAction() and hasText("14")).performTextReplacement("16")
+            onNode(hasSetTextAction() and hasText("16")).performKeyInput { pressKey(Key.Enter) }
+            waitForIdle()
+            ImageIO.write(onAllNodes(isRoot())[1].captureToImage().toAwtImage(), "png", File(out, "json-text-edited-$suffix.png"))
+            onNodeWithText("recent:").performKeyInput { withKeyDown(if (isMac) Key.MetaLeft else Key.CtrlLeft) { pressKey(Key.Enter) } }
+            waitForIdle()
+            ImageIO.write(onAllNodes(isRoot())[0].captureToImage().toAwtImage(), "png", File(out, "json-text-saved-$suffix.png"))
         }
     }
 }

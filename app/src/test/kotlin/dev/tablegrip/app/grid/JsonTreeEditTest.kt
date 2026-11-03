@@ -2,6 +2,7 @@ package dev.tablegrip.app.grid
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -45,6 +46,37 @@ class JsonTreeEditTest {
         assertTrue("\"x\"" in repeated.reason)
         // The same key in different objects, or a key's text inside a string, is fine.
         open("""[{"a":1},{"a":2,"s":"\"a\": {"}]""")
+    }
+
+    @Test
+    fun `whitespace around the value is written back as it was`() {
+        val source = open("  {\n  \"a\": 1\n}\n")
+        assertEquals(JsonLayout("  ", "  ", "\n"), source.layout)
+        assertEquals("  {\n  \"a\": 2\n}\n", encodeJson(source.root.withValue(listOf(key("a")), leafValue(JsonValueType.Number, "2")!!), source.layout))
+        val padded = open("{\"a\":1}   ")
+        assertEquals("{\"a\":2}   ", encodeJson(padded.root.withValue(listOf(key("a")), leafValue(JsonValueType.Number, "2")!!), padded.layout))
+    }
+
+    @Test
+    fun `half a surrogate pair opens as text, a whole one opens as a tree`() {
+        assertIs<JsonTreeSource.Unavailable>(jsonTreeSource("""{"a":"\ud800"}"""))
+        assertIs<JsonTreeSource.Unavailable>(jsonTreeSource("""["x\udc00y"]"""))
+        assertIs<JsonTreeSource.Unavailable>(jsonTreeSource("""{"\ud800":1}"""))
+        val emoji = open("""{"e":"\ud83d\ude00"}""")
+        assertEquals("\ud83d\ude00", (emoji.root.at(listOf(key("e"))) as JsonPrimitive).content)
+    }
+
+    @Test
+    fun `text cells open as a tree only for a JSON object or array it can write back`() {
+        assertTrue(textOpensAsTree("""{"a":1}"""))
+        assertTrue(textOpensAsTree(" \n[1, 2]"))
+        for (text in listOf("", "hello", "42", "\"s\"", "true", "null", "{not json}", "[1,", """{"a":1,"a":2}""", "{\"a\":1} trailing")) {
+            assertFalse(textOpensAsTree(text), text)
+        }
+        assertFalse(textOpensAsTree("[" + "1,".repeat(MaxTextTreeLength / 2) + "1]"))
+        val sources = JsonTreeSources()
+        assertTrue(textOpensAsTree("""{"a":1}""", sources))
+        assertIs<JsonTreeSource.Ok>(sources.of("""{"a":1}"""))
     }
 
     @Test

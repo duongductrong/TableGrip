@@ -425,8 +425,9 @@ internal class GridController(val state: DataGridState, private val scope: Corou
     fun cellEdit(cell: GridCell): ColumnEdit? = editor?.cellEdit(cell.row, state.modelColumn(cell.column))
 
     /**
-     * Starts inline editing; [replaceWith] replaces the value (typing over a cell) instead of editing it. JSON and
-     * multi-line text open straight in the roomier editor, since one line can't show them.
+     * Starts inline editing; [replaceWith] replaces the value (typing over a cell) instead of editing it. JSON, text
+     * holding a JSON object or array, and multi-line text open straight in the roomier editor, since one line can't
+     * show them.
      */
     fun startEditing(cell: GridCell, replaceWith: String? = null): Boolean {
         if (!canEdit(cell)) return false
@@ -435,7 +436,8 @@ internal class GridController(val state: DataGridState, private val scope: Corou
         val current = model.value(cell.row, state.modelColumn(cell.column)).orEmpty()
         val kind = cellEdit(cell)?.kind
         val text = replaceWith ?: current
-        val popup = if ('\n' in text || (replaceWith == null && kind == EditKind.Json)) EditPopup.Expanded else EditPopup.None
+        val json = replaceWith == null && (kind == EditKind.Json || (kind == EditKind.Text && textOpensAsTree(text)))
+        val popup = if ('\n' in text || json) EditPopup.Expanded else EditPopup.None
         state.startEditing(cell, text, initial = current, popup = popup)
         return true
     }
