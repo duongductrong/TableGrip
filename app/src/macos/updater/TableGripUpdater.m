@@ -15,6 +15,22 @@
 
 static _Atomic double lastCheck;
 
+// What the last check found, for Settings → Updates. Written on the main thread, read from the app's; guarded by the
+// delegate. The codes are Kotlin's UpdateStatus.
+enum { DGIdle, DGChecking, DGUpToDate, DGAvailable, DGReady, DGFailed };
+static int state = DGIdle;
+static NSString *detail;  // The version found, or why the check failed.
+static void (^installNow)(void);
+
+static void setState(int newState, NSString *newDetail) {
+    @synchronized([DGUpdaterDelegate class]) {
+        // A downloaded update stays ready to install whatever later checks say.
+        if (state == DGReady && newState != DGReady) return;
+        state = newState;
+        detail = [newDetail copy];
+    }
+}
+
 @implementation DGUpdaterDelegate
 - (nullable NSString *)feedURLStringForUpdater:(SPUUpdater *)updater {
     return self.feed;
@@ -22,6 +38,26 @@ static _Atomic double lastCheck;
 
 - (NSSet<NSString *> *)allowedChannelsForUpdater:(SPUUpdater *)updater {
     return self.beta ? [NSSet setWithObject:@"beta"] : [NSSet set];
+}
+
+- (void)updater:(SPUUpdater *)updater didFindValidUpdate:(SUAppcastItem *)item {
+    setState(DGAvailable, item.displayVersionString);
+}
+
+- (void)updaterDidNotFindUpdate:(SPUUpdater *)updater error:(NSError *)error {
+    setState(DGUpToDate, nil);
+}
+
+- (void)updater:(SPUUpdater *)updater didAbortWithError:(NSError *)error {
+    if (!([error.domain isEqualToString:SUSparkleErrorDomain] && error.code == SUNoUpdateError)) setState(DGFailed, error.localizedDescription);
+}
+
+// The update was downloaded (automatic downloads) and installs when the app quits. Keeping the handler lets the user
+// install it now from Settings instead; Sparkle still installs it on quit either way.
+- (BOOL)updater:(SPUUpdater *)updater willInstallUpdateOnQuit:(SUAppcastItem *)item immediateInstallationBlock:(void (^)(void))immediateInstallHandler {
+    installNow = [immediateInstallHandler copy];
+    setState(DGReady, item.displayVersionString);
+    return YES;
 }
 
 - (void)updater:(SPUUpdater *)updater didFinishUpdateCycleForUpdateCheck:(SPUUpdateCheck)updateCheck error:(nullable NSError *)error {
@@ -86,6 +122,37 @@ void dg_updater_check(void) {
     dispatch_async(dispatch_get_main_queue(), ^{
         [controller checkForUpdates:nil];
     });
+}
+
+/** Checks without any window; the result comes through dg_updater_status. */
+void dg_updater_probe(void) {
+    setState(DGChecking, nil);
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (controller.updater.sessionInProgress) setState(DGIdle, nil);  // A check is already showing its window.
+        else [controller.updater checkForUpdateInformation];
+    });
+}
+
+/** The status code, with the version or error copied into buffer (UTF-8, cut to size). */
+int dg_updater_status(char *buffer, int size) {
+    @synchronized([DGUpdaterDelegate class]) {
+        if (size > 0) {
+            buffer[0] = 0;
+            if (detail != nil && ![detail getCString:buffer maxLength:size encoding:NSUTF8StringEncoding]) buffer[0] = 0;
+        }
+        return state;
+    }
+}
+
+/**
+ * Installs the downloaded update and relaunches. Returns 0 if there's none ready. The app must already have agreed to
+ * quit: Sparkle terminates it, and the quit handler has to let that through.
+ */
+int dg_updater_install_now(void) {
+    void (^handler)(void) = installNow;
+    if (handler == nil) return 0;
+    dispatch_async(dispatch_get_main_queue(), handler);
+    return 1;
 }
 
 /** Seconds since 1970 of the last check, or 0 if there hasn't been one. */

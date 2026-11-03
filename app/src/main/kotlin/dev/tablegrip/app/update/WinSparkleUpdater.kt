@@ -38,11 +38,29 @@ internal interface WinSparkleLibrary : Library {
 
     fun win_sparkle_check_update_with_ui()
 
+    /** Checks with no progress window; WinSparkle's own window still opens if there's an update. */
+    fun win_sparkle_check_update_without_ui()
+
+    /** Checks with a progress window and installs a found update without asking first. */
+    fun win_sparkle_check_update_with_ui_and_install()
+
+    fun win_sparkle_set_did_find_update_callback(callback: Event)
+
+    fun win_sparkle_set_did_not_find_update_callback(callback: Event)
+
+    fun win_sparkle_set_error_callback(callback: Event)
+
+    fun win_sparkle_set_update_cancelled_callback(callback: Event)
+
     fun interface CanShutdown : Callback {
         fun invoke(): Int
     }
 
     fun interface ShutdownRequest : Callback {
+        fun invoke()
+    }
+
+    fun interface Event : Callback {
         fun invoke()
     }
 }
@@ -63,6 +81,14 @@ internal class WinSparkleUpdater(
     // Held here: JNA callbacks only stay alive while something references them.
     private val canShutdown = WinSparkleLibrary.CanShutdown { if (onUiThread(canQuit)) 1 else 0 }
     private val shutdownRequest = WinSparkleLibrary.ShutdownRequest { EventQueue.invokeLater(requestQuit) }
+    private val foundUpdate = WinSparkleLibrary.Event { status = UpdateStatus.Available(null) }
+    private val noUpdate = WinSparkleLibrary.Event { status = UpdateStatus.UpToDate }
+    private val checkFailed = WinSparkleLibrary.Event { status = UpdateStatus.Failed("Couldn't check for updates. See the log for why.") }
+    private val cancelled = WinSparkleLibrary.Event { if (status == UpdateStatus.Checking) status = UpdateStatus.Idle }
+
+    // WinSparkle doesn't say which version it found; the status only says there is one.
+    @Volatile override var status: UpdateStatus = UpdateStatus.Idle
+        private set
 
     override val unavailableReason: String?
         get() = failed
@@ -84,6 +110,10 @@ internal class WinSparkleUpdater(
         native.win_sparkle_set_app_build_version(WString(version.build.toString()))
         native.win_sparkle_set_can_shutdown_callback(canShutdown)
         native.win_sparkle_set_shutdown_request_callback(shutdownRequest)
+        native.win_sparkle_set_did_find_update_callback(foundUpdate)
+        native.win_sparkle_set_did_not_find_update_callback(noUpdate)
+        native.win_sparkle_set_error_callback(checkFailed)
+        native.win_sparkle_set_update_cancelled_callback(cancelled)
         native.win_sparkle_set_automatic_check_for_updates(settings.checkForUpdates.flag)
         native.win_sparkle_set_update_check_interval(DaySeconds)
         native.win_sparkle_init()
@@ -100,7 +130,18 @@ internal class WinSparkleUpdater(
         if (started) native.win_sparkle_check_update_with_ui()
     }
 
-    override fun quit() = false
+    override fun check() {
+        if (!started) return
+        status = UpdateStatus.Checking
+        native.win_sparkle_check_update_without_ui()
+    }
+
+    override fun install() {
+        if (started) native.win_sparkle_check_update_with_ui_and_install()
+    }
+
+    // WinSparkle runs the installer itself and then asks the app to quit (shutdownRequest).
+    override fun quit(relaunch: Boolean) = false
 
     override fun dispose() {
         if (started) native.win_sparkle_cleanup()

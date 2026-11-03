@@ -149,6 +149,8 @@ class AppState(
     val scheduledBackups = ScheduledBackups(this)
     /** Quits the app the way the user would, asking about unsaved work; [Main] sets it. */
     var quitApp: () -> Unit = {}
+    /** Quits like [quitApp], then installs the downloaded update and starts the new version; [Main] sets it. */
+    var restartToUpdate: () -> Unit = {}
     /** Keeps the installed app up to date; [Main] starts it, tests and `:app:run` get one that does nothing. */
     val updater: Updater = Updater.create(canQuit = { !quitWouldAsk }, requestQuit = { quitApp() })
 

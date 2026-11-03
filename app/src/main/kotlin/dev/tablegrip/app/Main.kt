@@ -60,6 +60,7 @@ private fun runApp() = application {
         if (!appState.updater.quit()) exitApplication()
     }
     appState.quitApp = { appState.requestExit(::exit) }
+    appState.restartToUpdate = { appState.requestExit { if (!appState.updater.quit(relaunch = true)) exitApplication() } }
     val doubleShift = remember { DoubleShiftDetector() }
     // ⌘Q bypasses the window's close request on macOS; route it through the same unsaved-work check.
     DisposableEffect(Unit) {

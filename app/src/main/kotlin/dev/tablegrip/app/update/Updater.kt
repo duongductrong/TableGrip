@@ -20,6 +20,38 @@ enum class UpdateChannel(val label: String) {
     }
 }
 
+/** What the last check from Settings → Updates found. */
+sealed interface UpdateStatus {
+    data object Idle : UpdateStatus
+
+    data object Checking : UpdateStatus
+
+    data object UpToDate : UpdateStatus
+
+    /** A newer release; [version] is null where the updater doesn't say which (WinSparkle). */
+    data class Available(val version: String?) : UpdateStatus
+
+    /** Downloaded and verified: it installs when the app quits, or now with [Updater.quit] and `relaunch`. */
+    data class Ready(val version: String?) : UpdateStatus
+
+    data class Failed(val reason: String) : UpdateStatus
+
+    companion object {
+        /** From the codes TableGripUpdater.m's dg_updater_status returns. */
+        internal fun of(code: Int, detail: String): UpdateStatus {
+            val version = detail.ifBlank { null }
+            return when (code) {
+                1 -> Checking
+                2 -> UpToDate
+                3 -> Available(version)
+                4 -> Ready(version)
+                5 -> Failed(detail.ifBlank { "The check failed." })
+                else -> Idle
+            }
+        }
+    }
+}
+
 /**
  * Keeps the app up to date: Sparkle on macOS, WinSparkle on Windows. On Linux, and in builds that weren't packaged (`:app:run`), it does
  * nothing and says why in [unavailableReason].
@@ -40,11 +72,21 @@ interface Updater {
     /** "Check for Updates…": the updater's own window shows the result, also when there's nothing new. */
     fun checkNow()
 
+    /** What the last [check] found. */
+    val status: UpdateStatus
+
+    /** Checks without a window of its own; the result shows in [status]. On Windows, a found update still opens WinSparkle's window. */
+    fun check()
+
+    /** Downloads and installs the update [status] says is available, through the updater's window. */
+    fun install()
+
     /**
-     * Quits the app in a way that lets a downloaded update install, after the user agreed to quit. Returns false if the
-     * caller should quit the usual way.
+     * Quits the app in a way that lets a downloaded update install, after the user agreed to quit; with [relaunch], an
+     * update that's [UpdateStatus.Ready] installs right away and the app starts again. Returns false if the caller
+     * should quit the usual way.
      */
-    fun quit(): Boolean
+    fun quit(relaunch: Boolean = false): Boolean
 
     /** True once [quit] started quitting: the system's quit request that follows must go through, not be asked again. */
     val quitting: Boolean
@@ -125,6 +167,7 @@ interface Updater {
 private class Unavailable(override val unavailableReason: String) : Updater {
     override val lastCheck: Instant? = null
     override val quitting = false
+    override val status: UpdateStatus = UpdateStatus.Idle
 
     override fun start(settings: Settings) {}
 
@@ -132,7 +175,11 @@ private class Unavailable(override val unavailableReason: String) : Updater {
 
     override fun checkNow() {}
 
-    override fun quit() = false
+    override fun check() {}
+
+    override fun install() {}
+
+    override fun quit(relaunch: Boolean) = false
 }
 
 /** The C functions of app/src/macos/updater/TableGripUpdater.m. */
@@ -145,6 +192,12 @@ internal interface SparkleLibrary : Library {
     fun dg_updater_check()
 
     fun dg_updater_last_check(): Double
+
+    fun dg_updater_probe()
+
+    fun dg_updater_status(buffer: ByteArray, size: Int): Int
+
+    fun dg_updater_install_now(): Int
 
     fun dg_updater_terminate()
 }
@@ -175,10 +228,25 @@ private class SparkleUpdater(private val native: SparkleLibrary) : Updater {
         if (started) native.dg_updater_check()
     }
 
-    override fun quit(): Boolean {
+    override val status: UpdateStatus
+        get() {
+            if (!started) return UpdateStatus.Idle
+            val buffer = ByteArray(512)
+            val code = native.dg_updater_status(buffer, buffer.size)
+            return UpdateStatus.of(code, String(buffer, 0, buffer.indexOf(0).takeIf { it >= 0 } ?: buffer.size, Charsets.UTF_8))
+        }
+
+    override fun check() {
+        if (started) native.dg_updater_probe()
+    }
+
+    // Sparkle's own window downloads, verifies and installs it.
+    override fun install() = checkNow()
+
+    override fun quit(relaunch: Boolean): Boolean {
         if (!started) return false
         quitting = true
-        native.dg_updater_terminate()
+        if (!(relaunch && native.dg_updater_install_now() == 1)) native.dg_updater_terminate()
         return true
     }
 }
