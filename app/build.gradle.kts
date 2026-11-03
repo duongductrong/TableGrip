@@ -54,6 +54,8 @@ val sparkleSha256 = "1a856d2a9edb8e628de88121d7be04cf0e2167f8641650b78fca00b1424
 /** Base64 Ed25519 public key that every update must be signed with (Sparkle's generate_keys prints it). */
 val sparklePublicKey = providers.gradleProperty("tablegrip.sparklePublicKey").orNull.orEmpty()
 val macEntitlements = layout.projectDirectory.file("src/macos/entitlements.plist")
+/** The app icon for each system, exported from assets/branding/ by its tools/export_app_icon.py. */
+val appIcons = layout.projectDirectory.dir("src/icons")
 val sparkleDir = layout.buildDirectory.dir("sparkle/$sparkleVersion")
 val updaterBridge = layout.buildDirectory.file("updater/libTableGripUpdater.dylib")
 
@@ -237,6 +239,8 @@ compose.desktop {
             macOS {
                 dockName = "TableGrip"
                 bundleID = "dev.tablegrip.app"
+                // macOS 12–15 show this; macOS 26 the Liquid Glass icon in Assets.car (added after packaging, below).
+                iconFile = appIcons.file("TableGrip.icns")
                 // CFBundleVersion, which Sparkle compares.
                 packageBuildVersion = appBuild
                 dmgPackageBuildVersion = appBuild
@@ -247,6 +251,7 @@ compose.desktop {
                 infoPlist {
                     extraKeysRawXml =
                         """
+                        <key>CFBundleIconName</key><string>TableGrip</string>
                         <key>SUPublicEDKey</key><string>$sparklePublicKey</string>
                         <key>SURequireSignedFeed</key><true/>
                         <key>SUVerifyUpdateBeforeExtraction</key><true/>
@@ -256,6 +261,7 @@ compose.desktop {
                 }
             }
             windows {
+                iconFile = appIcons.file("TableGrip.ico")
                 // Fixed for the app's lifetime: it's how a newer MSI finds and replaces the installed one.
                 upgradeUuid = "0E0D7626-709F-4F7A-9AAC-C702F6194B34"
                 // Installs into the user's profile, so updates don't ask for admin rights.
@@ -264,6 +270,9 @@ compose.desktop {
                 // MSI ignores anything after the third part and won't replace a build with the same version, so the
                 // build takes the third place: 1.4.0 build 412 and 1.4.1 build 415 install as 1.4.412 and 1.4.415.
                 msiPackageVersion = "$versionMajor.$versionMinor.$appBuild"
+            }
+            linux {
+                iconFile = appIcons.file("TableGrip.png")
             }
         }
     }
@@ -392,12 +401,15 @@ tasks {
     matching { it.name.startsWith("package") }.configureEach { dependsOn(verifyNoBundledDrivers) }
     matching { it.name == "prepareAppResources" }.configureEach { dependsOn(downloadWinSparkle) }
 
-    // Adds Sparkle and the bridge to the .app jpackage made, then signs them and the app again, inside out.
+    // Adds Sparkle, the bridge and the Liquid Glass icon to the .app jpackage made, then signs them and the app again,
+    // inside out.
     matching { it.name == "createDistributable" }.configureEach {
         if (isMacHost) {
             dependsOn(downloadSparkle, buildUpdaterBridge)
             val sparkle = sparkleDir
             val bridge = updaterBridge
+            val iconAssets = appIcons.file("Assets.car")
+            inputs.file(iconAssets)
             val appDir = layout.buildDirectory.dir("compose/binaries/main/app")
             val entitlements = macEntitlements.asFile
             val sign = providers.gradleProperty("compose.desktop.mac.sign").orNull == "true"
@@ -414,6 +426,8 @@ tasks {
                 framework.resolve("Versions/B/XPCServices").deleteRecursively()
                 framework.resolve("XPCServices").delete()
                 bridge.get().asFile.copyTo(frameworks.resolve("libTableGripUpdater.dylib"), overwrite = true)
+                // Found through CFBundleIconName; jpackage only knows .icns.
+                iconAssets.asFile.copyTo(app.resolve("Contents/Resources/Assets.car"), overwrite = true)
 
                 val signer = if (sign) requireNotNull(identity) { "compose.desktop.mac.signing.identity is needed to sign" } else "-"
                 fun codesign(target: File, vararg extra: String) {

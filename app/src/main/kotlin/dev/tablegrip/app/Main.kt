@@ -19,6 +19,7 @@ import dev.tablegrip.app.search.DoubleShiftDetector
 import dev.tablegrip.app.documents.DocumentBrowserTab
 import dev.tablegrip.app.table.TableDataTab
 import dev.tablegrip.app.table.handleFilterShortcut
+import dev.tablegrip.app.ui.AppIcon
 import dev.tablegrip.app.ui.TableGripTheme
 import dev.tablegrip.app.ui.FollowThemeAppearance
 import dev.tablegrip.app.ui.Shortcuts
@@ -100,6 +101,7 @@ private fun runApp() = application {
             state = appState.windowState,
             visible = appState.mainWindowVisible,
             title = "TableGrip",
+            icon = AppIcon,
             onPreviewKeyEvent = {
                 // Settings → Keymap is recording a shortcut: every key goes to it.
                 if (Shortcuts.recording) return@DecoratedWindow false

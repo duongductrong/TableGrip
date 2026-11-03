@@ -32,6 +32,7 @@ import dev.tablegrip.app.table.TableDataView
 import dev.tablegrip.app.table.ViewChip
 import dev.tablegrip.app.table.handleFilterShortcut
 import dev.tablegrip.app.ui.AppDialogs
+import dev.tablegrip.app.ui.AppIcon
 import dev.tablegrip.app.ui.FollowThemeAppearance
 import dev.tablegrip.app.ui.HeaderButton
 import dev.tablegrip.app.ui.Island
@@ -65,6 +66,7 @@ internal fun DataFileWindowView(app: AppState, file: DataFileWindow, onClosed: (
         onCloseRequest = { app.files.requestClose(file, onClosed) },
         state = rememberWindowState(size = DpSize(1100.dp, 720.dp)),
         title = file.title,
+        icon = AppIcon,
         onPreviewKeyEvent = { handleZoomShortcut(app, it) },
         onKeyEvent = { handleShortcut(app, file, it, onClosed) },
     ) {

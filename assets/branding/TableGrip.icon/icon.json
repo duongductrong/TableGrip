@@ -1,0 +1,137 @@
+{
+  "fill-specializations": [
+    {
+      "value": {
+        "solid": "srgb:0.03922,0.47843,1.00000,1.00000"
+      }
+    },
+    {
+      "appearance": "dark",
+      "value": {
+        "solid": "srgb:0.04706,0.04706,0.05098,1.00000"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "name": "Cell",
+      "layers": [
+        {
+          "name": "cell",
+          "image-name": "cell.svg",
+          "position": {
+            "scale": 0.86,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          },
+          "glass": true,
+          "fill-specializations": [
+            {
+              "value": {
+                "solid": "srgb:1.00000,1.00000,1.00000,1.00000"
+              }
+            },
+            {
+              "appearance": "dark",
+              "value": {
+                "solid": "srgb:0.03922,0.47843,1.00000,1.00000"
+              }
+            }
+          ]
+        }
+      ],
+      "shadow": {
+        "kind": "layer-color",
+        "opacity": 0.6
+      },
+      "translucency": {
+        "enabled": false,
+        "value": 0
+      },
+      "specular": true
+    },
+    {
+      "name": "Grip",
+      "layers": [
+        {
+          "name": "grip",
+          "image-name": "grip.svg",
+          "position": {
+            "scale": 0.86,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          },
+          "glass": true,
+          "fill-specializations": [
+            {
+              "value": {
+                "solid": "srgb:1.00000,1.00000,1.00000,1.00000"
+              }
+            },
+            {
+              "appearance": "dark",
+              "value": {
+                "solid": "srgb:0.92157,0.92941,0.94902,1.00000"
+              }
+            }
+          ]
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.5
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.2
+      },
+      "specular": true
+    },
+    {
+      "name": "Grid",
+      "layers": [
+        {
+          "name": "grid",
+          "image-name": "grid.svg",
+          "position": {
+            "scale": 1,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          },
+          "glass": false,
+          "fill": {
+            "solid": "srgb:1.00000,1.00000,1.00000,1.00000"
+          },
+          "opacity-specializations": [
+            {
+              "value": 0.11
+            },
+            {
+              "appearance": "dark",
+              "value": 0.07
+            }
+          ]
+        }
+      ],
+      "shadow": {
+        "kind": "none",
+        "opacity": 0
+      },
+      "translucency": {
+        "enabled": false,
+        "value": 0
+      }
+    }
+  ],
+  "supported-platforms": {
+    "squares": [
+      "macOS"
+    ]
+  }
+}
