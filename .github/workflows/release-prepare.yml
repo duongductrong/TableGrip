@@ -28,6 +28,8 @@ on:
         type: string
   push:
     branches: [master]
+    # The website deploys on its own (www.yml); a site-only commit is never a release.
+    paths-ignore: ["www/**"]
 
 permissions:
   contents: read
