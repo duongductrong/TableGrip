@@ -103,6 +103,6 @@ of its release and can be edited in the release PR before it is merged.
 - refactor: Theme handling and update UI labels for consistency (c25b332)
 
 ### Contributors
-duongductrong
+[@duongductrong](https://github.com/duongductrong)
 
 **Full Changelog**: https://github.com/duongductrong/TableGrip/commits/v1.0.0-beta.1
