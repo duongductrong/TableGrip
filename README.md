@@ -14,6 +14,8 @@ the IntelliJ look & feel for Compose.
 ![Platforms](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.3-7F52FF?logo=kotlin&logoColor=white)
 ![Compose](https://img.shields.io/badge/Compose%20Desktop-1.12-4285F4?logo=jetpackcompose&logoColor=white)
+[![GitHub Sponsors](https://img.shields.io/badge/Sponsor-%E2%9D%A4-ff69b4?style=flat&logo=github)](https://github.com/sponsors/duongductrong)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Donate-FF5E5B?style=flat&logo=ko-fi&logoColor=white)](https://ko-fi.com/duongductrong)
 
 [Download](https://github.com/duongductrong/tablegrip/releases) ·
 [User guide](docs/guide.md) ·
@@ -96,6 +98,14 @@ Bug reports, ideas and pull requests are welcome. Read the **[contributing guide
 the project, what `./gradlew check` verifies and how commits are written.
 
 Everyone taking part in this project is expected to follow the **[Code of Conduct](CODE_OF_CONDUCT.md)**.
+
+## Sponsor
+
+TableGrip is free and open source. If it saves you time, you can support its development:
+
+- [GitHub Sponsors](https://github.com/sponsors/duongductrong) — recurring support
+- [Ko-fi](https://ko-fi.com/duongductrong) — one-time tip
+- [PayPal](https://www.paypal.me/duongductrong) — direct support
 
 ## License
 

@@ -17,6 +17,8 @@ internal data class AboutInfo(
     val copyright: String,
     val description: String,
     val link: String,
+    /** The "Sponsor" link under [link]. */
+    val sponsorLink: String = SponsorLink,
     /**
      * The icon as a classpath resource, for a copy run from source: macOS would show a folder, having no app bundle to
      * take it from. Null in an installed copy, whose bundle has the icon for every macOS version (Liquid Glass included).
@@ -27,6 +29,7 @@ internal data class AboutInfo(
         const val Copyright = "© 2026 The TableGrip Authors"
         const val Description = "A modern database client"
         const val Link = "https://github.com/duongductrong/tablegrip"
+        const val SponsorLink = "https://github.com/sponsors/duongductrong"
         const val IconResource = "/icon/TableGrip-macOS.png"
 
         /**
@@ -79,7 +82,7 @@ internal object MacAboutPanel {
             m.put(options, "ApplicationVersion", m.string(info.version))
             m.put(options, "Version", m.string(info.build))
             m.put(options, "Copyright", m.string(info.copyright))
-            m.put(options, "Credits", m.credits(info.description, info.link))
+            m.put(options, "Credits", m.credits(info.description, info.link, info.sponsorLink))
             info.iconResource?.let { MacAboutPanel::class.java.getResourceAsStream(it)?.use { stream -> stream.readBytes() } }
                 ?.let { m.image(it) }
                 ?.let { m.put(options, "ApplicationIcon", it) }
@@ -112,8 +115,8 @@ internal object MacAboutPanel {
             objc.objc_msgSend(dictionary, sel("setObject:forKey:"), value, string(key))
         }
 
-        /** Centered secondary-label text, which follows Light and Dark, with the project link under it. */
-        fun credits(description: String, link: String): Pointer {
+        /** Centered secondary-label text, which follows Light and Dark, with the project and sponsor links under it. */
+        fun credits(description: String, link: String, sponsorLink: String): Pointer {
             val style = autorelease(send(cls("NSMutableParagraphStyle"), "new"))
             objc.objc_msgSend(style, sel("setAlignment:"), CenterAlignment)
             val font = objc.objc_msgSend(cls("NSFont"), sel("systemFontOfSize:"), 11.0) ?: error("No system font")
@@ -124,12 +127,19 @@ internal object MacAboutPanel {
             val linkAttributes = mutableDictionary()
             put(linkAttributes, "NSParagraphStyle", style)
             put(linkAttributes, "NSFont", font)
-            val url = objc.objc_msgSend(cls("NSURL"), sel("URLWithString:"), string(link)) ?: error("Bad URL $link")
-            put(linkAttributes, "NSLink", url)
 
             val credits = attributed("NSMutableAttributedString", "$description\n", textAttributes)
-            objc.objc_msgSend(credits, sel("appendAttributedString:"), attributed("NSAttributedString", link.removePrefix("https://"), linkAttributes))
+            appendLink(credits, link.removePrefix("https://"), link, linkAttributes)
+            objc.objc_msgSend(credits, sel("appendAttributedString:"), attributed("NSAttributedString", "\n", textAttributes))
+            appendLink(credits, "\u2665 Sponsor TableGrip", sponsorLink, linkAttributes)
             return credits
+        }
+
+        private fun appendLink(credits: Pointer, text: String, link: String, baseAttributes: Pointer) {
+            val attributes = objc.objc_msgSend(baseAttributes, sel("mutableCopy"))?.let(::autorelease) ?: error("Couldn't copy attributes")
+            val url = objc.objc_msgSend(cls("NSURL"), sel("URLWithString:"), string(link)) ?: error("Bad URL $link")
+            put(attributes, "NSLink", url)
+            objc.objc_msgSend(credits, sel("appendAttributedString:"), attributed("NSAttributedString", text, attributes))
         }
 
         private fun attributed(className: String, text: String, attributes: Pointer): Pointer {
