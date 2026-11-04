@@ -1,0 +1,142 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design tokens. A quiet, neutral surface with hairline rules and a single accent: TableGrip's own blue (#0A7AFF,
+ * the app icon's background). shadcn/ui components read the standard names (background, primary, border…); the
+ * site adds surface, rule and accent-text for its grid layout.
+ */
+:root {
+  --background: oklch(100% 0 0);
+  --surface: oklch(97.6% 0 0);
+  --surface-strong: oklch(95% 0 0);
+  --raised: oklch(100% 0 0);
+  --rule: oklch(91.5% 0 0);
+  --rule-strong: oklch(78% 0 0);
+  --foreground: oklch(16% 0 0);
+  --muted-foreground: oklch(50% 0 0);
+
+  --brand: oklch(60% 0.215 257);
+  --brand-hover: oklch(56% 0.215 257);
+  --brand-foreground: oklch(99% 0 0);
+  --brand-text: oklch(51% 0.2 257);
+  --brand-subtle: oklch(96.5% 0.02 257);
+
+  --success: oklch(52% 0.13 150);
+  --warning: oklch(58% 0.13 70);
+  --danger: oklch(55% 0.2 27);
+
+  --card: var(--raised);
+  --card-foreground: var(--foreground);
+  --popover: var(--raised);
+  --popover-foreground: var(--foreground);
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-foreground);
+  --secondary: var(--surface-strong);
+  --secondary-foreground: var(--foreground);
+  --muted: var(--surface);
+  --accent: var(--surface-strong);
+  --accent-foreground: var(--foreground);
+  --destructive: var(--danger);
+  --border: var(--rule);
+  --input: var(--rule);
+  --ring: var(--brand-text);
+  --radius: 0.5rem;
+
+  --shot-shadow: 0 1px 2px oklch(0% 0 0 / 0.05), 0 12px 40px -12px oklch(0% 0 0 / 0.18);
+  color-scheme: light;
+}
+
+.dark {
+  --background: oklch(17.5% 0 0);
+  --surface: oklch(20.5% 0 0);
+  --surface-strong: oklch(25% 0 0);
+  --raised: oklch(22.5% 0 0);
+  --rule: oklch(29% 0 0);
+  --rule-strong: oklch(45% 0 0);
+  --foreground: oklch(96.5% 0 0);
+  --muted-foreground: oklch(71% 0 0);
+
+  --brand: oklch(62% 0.2 257);
+  --brand-hover: oklch(66% 0.19 257);
+  --brand-text: oklch(76% 0.13 257);
+  --brand-subtle: oklch(26% 0.05 257);
+
+  --success: oklch(78% 0.15 150);
+  --warning: oklch(80% 0.14 80);
+  --danger: oklch(72% 0.16 25);
+
+  --shot-shadow: 0 1px 2px oklch(0% 0 0 / 0.5), 0 16px 48px -12px oklch(0% 0 0 / 0.6);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+  --color-raised: var(--raised);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-text: var(--brand-text);
+  --color-brand-subtle: var(--brand-subtle);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply bg-background;
+    scroll-padding-top: 5rem;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+    overflow-x: hidden;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-semibold text-balance;
+    letter-spacing: -0.022em;
+  }
+  ::selection {
+    background: var(--brand-subtle);
+  }
+}
