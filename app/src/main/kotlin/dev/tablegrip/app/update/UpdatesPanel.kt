@@ -25,7 +25,7 @@ import org.jetbrains.jewel.ui.component.Link
 import org.jetbrains.jewel.ui.component.OutlinedButton
 import org.jetbrains.jewel.ui.component.Text
 
-private const val ReleasesPage = "https://github.com/duongductrong/tablegrip/releases"
+private const val ReleasesPage = "https://github.com/duongductrong/TableGrip/releases"
 
 /** Settings → Updates: the running version, what the last check found, and checking or installing now. */
 @Composable

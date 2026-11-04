@@ -9,15 +9,15 @@
 In the spirit of TablePlus and DataGrip, built with Kotlin, Compose for Desktop and [Jewel](https://jewel-ui.dev),
 the IntelliJ look & feel for Compose.
 
-[![Release](https://img.shields.io/github/v/release/duongductrong/tablegrip?include_prereleases&sort=semver)](https://github.com/duongductrong/tablegrip/releases)
-[![License](https://img.shields.io/github/license/duongductrong/tablegrip)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/duongductrong/TableGrip?include_prereleases&sort=semver)](https://github.com/duongductrong/TableGrip/releases)
+[![License](https://img.shields.io/github/license/duongductrong/TableGrip)](LICENSE)
 ![Platforms](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.3-7F52FF?logo=kotlin&logoColor=white)
 ![Compose](https://img.shields.io/badge/Compose%20Desktop-1.12-4285F4?logo=jetpackcompose&logoColor=white)
 [![GitHub Sponsors](https://img.shields.io/badge/Sponsor-%E2%9D%A4-ff69b4?style=flat&logo=github)](https://github.com/sponsors/duongductrong)
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-Donate-FF5E5B?style=flat&logo=ko-fi&logoColor=white)](https://ko-fi.com/duongductrong)
 
-[Download](https://github.com/duongductrong/tablegrip/releases) ·
+[Download](https://github.com/duongductrong/TableGrip/releases) ·
 [User guide](docs/guide.md) ·
 [Build from source](#build-from-source) ·
 [Contributing](CONTRIBUTING.md)
@@ -68,7 +68,7 @@ Every feature is described in the **[user guide](docs/guide.md)**.
 
 ## Install
 
-Download the installer for your platform from the [releases page](https://github.com/duongductrong/tablegrip/releases):
+Download the installer for your platform from the [releases page](https://github.com/duongductrong/TableGrip/releases):
 
 | Platform | Package |
 | --- | --- |
@@ -85,7 +85,7 @@ the macOS Keychain, Windows Credential Manager or the Secret Service on Linux.
 ## Build from source
 
 ```bash
-git clone https://github.com/duongductrong/tablegrip.git
+git clone https://github.com/duongductrong/TableGrip.git
 cd tablegrip
 scripts/run.sh
 ```

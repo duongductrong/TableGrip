@@ -28,7 +28,7 @@ internal data class AboutInfo(
     companion object {
         const val Copyright = "© 2026 The TableGrip Authors"
         const val Description = "A modern database client"
-        const val Link = "https://github.com/duongductrong/tablegrip"
+        const val Link = "https://github.com/duongductrong/TableGrip"
         const val SponsorLink = "https://github.com/sponsors/duongductrong"
         const val IconResource = "/icon/TableGrip-macOS.png"
 

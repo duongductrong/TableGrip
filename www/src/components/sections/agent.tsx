@@ -5,6 +5,7 @@ import { ProductShot, ShotThemeSwitch } from '#/components/site/product-shot'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { agentClients, agentPoints, links } from '#/content/site'
+import { SiteLink } from '#/components/site/site-link'
 
 export function Agent() {
   return (
@@ -63,9 +64,9 @@ export function Agent() {
           <span className="text-[13px] text-muted-foreground">or any Anthropic or OpenAI-compatible API</span>
         </div>
         <Button variant="arrow" size="sm" asChild>
-          <a href={links.guide} target="_blank" rel="noreferrer">
+          <SiteLink href={links.agentDocs}>
             Agent in the guide <ArrowRight />
-          </a>
+          </SiteLink>
         </Button>
       </div>
     </Section>

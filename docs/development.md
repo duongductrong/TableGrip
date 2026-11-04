@@ -22,7 +22,7 @@ How to build, run and test TableGrip from source. For how to report issues and s
 ## Running the app
 
 ```bash
-git clone https://github.com/duongductrong/tablegrip.git
+git clone https://github.com/duongductrong/TableGrip.git
 cd tablegrip
 scripts/run.sh                                  # scripts\run.cmd on Windows
 scripts/run.sh --fresh                          # with a throwaway profile
@@ -105,6 +105,6 @@ The version is `tablegrip.version` in `gradle.properties`. Releases go through a
    installers (after you approve the `release` environment), publishes the GitHub Release and updates the feeds.
 
 Locally, `python3 scripts/bump-version.py minor --channel beta` and
-`python3 scripts/release-notes.py changelog --version 1.1.0-beta.1 --repo duongductrong/tablegrip` show what the PR
+`python3 scripts/release-notes.py changelog --version 1.1.0-beta.1 --repo duongductrong/TableGrip` show what the PR
 would contain (revert them afterwards).
 Signing secrets and the update feed are described in [plans/auto-update.md](plans/auto-update.md).

@@ -3,7 +3,8 @@ import { ArrowRight, Check } from 'lucide-react'
 import { Section, SectionHeader } from '#/components/site/frame'
 import { ProductShot, ShotThemeSwitch } from '#/components/site/product-shot'
 import { Button } from '#/components/ui/button'
-import { features, highlights, links } from '#/content/site'
+import { features, highlights } from '#/content/site'
+import { SiteLink } from '#/components/site/site-link'
 
 export function Features() {
   return (
@@ -31,9 +32,9 @@ export function Features() {
               ))}
             </ul>
             <Button variant="arrow" size="sm" className="mt-5 self-start" asChild>
-              <a href={links.guide} target="_blank" rel="noreferrer">
+              <SiteLink href={feature.docs}>
                 Read the guide <ArrowRight />
-              </a>
+              </SiteLink>
             </Button>
           </div>
           <div className="border-t border-rule bg-surface/60 p-3 sm:p-6 md:border-t-0 md:border-l">

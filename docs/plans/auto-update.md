@@ -61,8 +61,8 @@ release workflow and `update-appcast.sh` can be reused.
 
 | What | Where | URL the app uses |
 |---|---|---|
-| Archives (zip/DMG, MSI) | GitHub Release of the tag | `https://github.com/duongductrong/tablegrip/releases/download/v1.4.0/TableGrip-1.4.0-macos-arm64.zip` (redirects to GitHub's CDN; Sparkle and WinSparkle follow it) |
-| Appcasts | `appcast/` folder on `master`, committed by the release workflow | `https://raw.githubusercontent.com/duongductrong/tablegrip/master/appcast/macos-arm64.xml` |
+| Archives (zip/DMG, MSI) | GitHub Release of the tag | `https://github.com/duongductrong/TableGrip/releases/download/v1.4.0/TableGrip-1.4.0-macos-arm64.zip` (redirects to GitHub's CDN; Sparkle and WinSparkle follow it) |
+| Appcasts | `appcast/` folder on `master`, committed by the release workflow | `https://raw.githubusercontent.com/duongductrong/TableGrip/master/appcast/macos-arm64.xml` |
 | Release notes | GitHub Release body, written by `scripts/release-notes.py` from the Conventional Commits since the previous release | Inline in the feed (`description`, Markdown), plus `sparkle:fullReleaseNotesLink` to the release |
 
 What plain GitHub costs, and how each is handled:

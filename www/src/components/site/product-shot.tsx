@@ -17,6 +17,17 @@ const sizes: Record<Scene, { width: number; height: number }> = {
 }
 
 /**
+ * Sizes of every screenshot, including the documentation's own scenes, which only the docs pages use (they are
+ * referenced from Markdown as `shot:<scene>`). A scene missing here still shows, without a reserved size.
+ */
+export const shotSizes: Partial<Record<string, { width: number; height: number }>> = {
+  ...sizes,
+  settings: { width: 2080, height: 1400 },
+  goto: { width: 2080, height: 1280 },
+  connection: { width: 1280, height: 1200 },
+}
+
+/**
  * Screenshots follow the site theme ("auto") unless the visitor pins them to light or dark. Every shot on the page
  * shares one choice, so flipping it once compares the whole app in the other appearance.
  */

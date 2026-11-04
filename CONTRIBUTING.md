@@ -7,7 +7,7 @@ By taking part in this project you agree to follow its [Code of Conduct](CODE_OF
 
 ## Reporting bugs
 
-Search the [existing issues](https://github.com/duongductrong/tablegrip/issues) first. If the bug isn't there, open a
+Search the [existing issues](https://github.com/duongductrong/TableGrip/issues) first. If the bug isn't there, open a
 new issue with:
 
 - the TableGrip version and your OS;
@@ -18,7 +18,7 @@ new issue with:
 ## Security issues
 
 Please don't open a public issue for a vulnerability. Report it privately through
-[GitHub's security advisories](https://github.com/duongductrong/tablegrip/security/advisories/new).
+[GitHub's security advisories](https://github.com/duongductrong/TableGrip/security/advisories/new).
 
 ## Suggesting features
 

@@ -4,6 +4,7 @@ import { Section } from '#/components/site/frame'
 import { ProductShot, ShotThemeSwitch } from '#/components/site/product-shot'
 import { Button } from '#/components/ui/button'
 import { links } from '#/content/site'
+import { SiteLink } from '#/components/site/site-link'
 
 export function Hero() {
   return (
@@ -30,9 +31,9 @@ export function Hero() {
           </Button>
           <p className="text-[13px] text-muted-foreground">macOS · Windows · Linux</p>
           <Button variant="arrow" size="sm" asChild>
-            <a href={links.development}>
+            <SiteLink href={links.development}>
               Build from source <ArrowRight />
-            </a>
+            </SiteLink>
           </Button>
         </div>
         <div className="space-y-2 border-t border-rule px-5 py-7 text-sm leading-relaxed text-muted-foreground sm:px-8 md:border-t-0 md:border-l">

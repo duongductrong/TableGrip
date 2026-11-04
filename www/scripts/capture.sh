@@ -5,7 +5,8 @@
 #   www/scripts/capture.sh dark            # every scene, dark only
 #   www/scripts/capture.sh light editor    # one scene, one theme
 #
-# Scenes: grid, filter, editor, structure, agent. Output: www/public/screenshots/<scene>-<theme>.webp
+# Scenes: grid, filter, editor, structure, agent (landing page) and settings, goto, connection (docs only).
+# Output: www/public/screenshots/<scene>-<theme>.webp
 # macOS only: uses screencapture, cwebp and cliclick (brew install webp cliclick); cliclick clicks into the console
 # and presses ⌘↩, so the terminal needs Accessibility permission.
 set -euo pipefail
@@ -15,7 +16,7 @@ here="$root/www/scripts"
 out="$root/www/public/screenshots"
 home="$root/www/.demo-profile"
 themes=("${1:-dark light}")
-scenes=("${2:-grid filter editor structure agent}")
+scenes=("${2:-grid filter editor structure agent settings goto connection}")
 mkdir -p "$out"
 
 sql='-- Revenue by customer, last 90 days
@@ -52,6 +53,9 @@ window_size() {
     editor) echo "1040 700" ;;
     structure) echo "1040 600" ;;
     agent) echo "1360 900" ;;
+    settings) echo "1040 700" ;;
+    goto) echo "1040 640" ;;
+    connection) echo "1040 700" ;;
   esac
 }
 
@@ -67,9 +71,10 @@ tabs = [
   {"type": "table", "connectionId": "demo-shop", "name": "orders",
    "filter": "status = 'refunded' AND total > 200"},
 ]
-selected = {"grid": 0, "editor": 1, "structure": 2, "agent": 1, "filter": 3}[scene]
+selected = {"grid": 0, "editor": 1, "structure": 2, "agent": 1, "filter": 3,
+            "settings": 0, "goto": 0, "connection": 0}[scene]
 agent = scene == "agent"
-print(json.dumps({"tabs": tabs, "selected": selected, "leftTool": "Explorer" if scene == "grid" else None,
+print(json.dumps({"tabs": tabs, "selected": selected, "leftTool": "Explorer" if scene in ("grid", "goto") else None,
                   "connectionId": "demo-shop", "agentOpen": agent, "agentChat": "demo-chat" if agent else None,
                   "agentSplit": 0.5, "window": {"x": 80, "y": 80, "width": w, "height": h}, "sidebarSplit": 0.22}))
 PY
@@ -92,6 +97,14 @@ for theme in ${themes[@]}; do
       cliclick c:420,330 w:400 kd:cmd kp:return ku:cmd
       sleep 3
     fi
+    # Docs scenes open a screen with the keyboard: click into the grid first so the window has focus.
+    case "$scene" in
+      settings) cliclick c:640,420 w:400 kd:cmd t:, ku:cmd; sleep 2 ;;
+      goto) cliclick c:640,420 w:400 kd:cmd t:p ku:cmd w:700 t:ord; sleep 2 ;;
+      connection)
+        cliclick c:640,420 w:400 kd:cmd t:p ku:cmd w:700 t:"new connection" w:700 kp:return; sleep 3
+        id="$(window_id)" ;; # the dialog is a window of its own, now in front
+    esac
     # -o leaves out the window's shadow: the page draws its own border and shadow around each shot.
     screencapture -x -o -l "$id" "$out/$scene-$theme.png"
     cwebp -quiet -q 86 "$out/$scene-$theme.png" -o "$out/$scene-$theme.webp" && rm "$out/$scene-$theme.png"

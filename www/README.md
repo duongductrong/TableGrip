@@ -19,10 +19,21 @@ src/
   components/site/          # building blocks: Frame/Section (the ruled grid), Segmented, ThemeToggle, ProductShot
   components/sections/      # the page's sections, composed in routes/index.tsx
   content/site.ts           # every piece of copy and every link
+  content/docs/*.md         # the documentation at /docs, one Markdown page each
+  content/docs-nav.ts       # the docs sidebar: groups and page order
+  lib/docs.ts               # renders docs Markdown (headings, callouts, screenshots) and its table of contents
+  components/docs/          # docs layout: sidebar, article, "On this page"
 public/screenshots/         # <scene>-<light|dark>.webp, taken from the real app
 ```
 
 Add more shadcn components with `pnpm dlx shadcn@latest add <name>`; they land in `src/components/ui/`.
+
+## Docs
+
+The documentation lives at `/docs/<slug>`; each page is `src/content/docs/<slug>.md` with `title`, `description` and an
+optional shorter `nav` label in its front matter. A new page also needs its slug in `src/content/docs-nav.ts`. Inside a
+page, `![Caption](shot:<scene>)` shows a product screenshot in the site's theme, `> [!NOTE]` / `[!TIP]` / `[!WARNING]`
+make callouts, and inline HTML such as `<kbd>⌘</kbd>` works. Link between pages with `/docs/<slug>#<heading-id>`.
 
 ## Screenshots
 
@@ -45,7 +56,8 @@ captures the window (without the macOS shadow; the page draws its own) through `
 `agent` scenes click into the console and press ⌘↩ with `cliclick` to run the query, so the terminal needs
 Accessibility permission (`brew install webp cliclick`).
 
-Scenes are `grid` (hero), `filter`, `editor`, `structure` and `agent`. The agent scene reopens a finished chat seeded
+Scenes are `grid` (hero), `filter`, `editor`, `structure` and `agent`, plus `settings`, `goto` and `connection`,
+which only the docs use (they open their screen with keyboard shortcuts; `connection` captures the dialog window). The agent scene reopens a finished chat seeded
 by `demo-profile.sh` (`chats/demo-chat.json`); its numbers match the demo database. The app runs at 110% zoom and
 feature scenes use a smaller window, so text stays readable on the page. To add a scene, extend `window_size()` and
 `session()` in the script, then the `Scene` type and `sizes` map in `src/components/site/product-shot.tsx` (the

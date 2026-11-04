@@ -160,7 +160,7 @@ interface Updater {
             }
         }
 
-        const val FeedBase = "https://raw.githubusercontent.com/duongductrong/tablegrip/master/appcast"
+        const val FeedBase = "https://raw.githubusercontent.com/duongductrong/TableGrip/master/appcast"
     }
 }
 

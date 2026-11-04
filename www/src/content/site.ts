@@ -3,23 +3,37 @@ import type { Scene } from '#/components/site/product-shot'
 /** Everything the landing page says, in one place, taken from the README and the user guide. */
 
 export const links = {
-  github: 'https://github.com/duongductrong/tablegrip',
-  releases: 'https://github.com/duongductrong/tablegrip/releases',
-  guide: 'https://github.com/duongductrong/tablegrip/blob/master/docs/guide.md',
-  development: 'https://github.com/duongductrong/tablegrip/blob/master/docs/development.md',
-  contributing: 'https://github.com/duongductrong/tablegrip/blob/master/CONTRIBUTING.md',
-  license: 'https://github.com/duongductrong/tablegrip/blob/master/LICENSE',
+  github: 'https://github.com/duongductrong/TableGrip',
+  releases: 'https://github.com/duongductrong/TableGrip/releases',
+  docs: '/docs/overview',
+  guide: '/docs/sql-editor',
+  drivers: '/docs/drivers',
+  agentDocs: '/docs/ai-agent',
+  development: '/docs/build-from-source',
+  contributing: '/docs/contributing',
+  license: 'https://github.com/duongductrong/TableGrip/blob/master/LICENSE',
   sponsors: 'https://github.com/sponsors/duongductrong',
   kofi: 'https://ko-fi.com/duongductrong',
   paypal: 'https://www.paypal.me/duongductrong',
 }
 
-export const nav = [
-  { label: 'Features', href: '#features' },
-  { label: 'AI agent', href: '#agent' },
-  { label: 'Databases', href: '#databases' },
-  { label: 'Download', href: '#download' },
-  { label: 'Guide', href: links.guide, external: true },
+export type FeatureMenuIcon = 'editor' | 'grid' | 'schema' | 'agent' | 'databases'
+
+/** What the Features menu in the header lists: one line each, pointing at its section on the home page. */
+export const featureMenu: { label: string; description: string; href: string; icon: FeatureMenuIcon }[] = [
+  { label: 'SQL editor', description: 'Completion from your schema, EXPLAIN and quick fixes.', href: '/#editor', icon: 'editor' },
+  { label: 'Data grid', description: 'Inline edits submitted in one transaction, typed filters.', href: '/#grid', icon: 'grid' },
+  { label: 'Schema tools', description: 'Table designer, schema compare and ER diagrams.', href: '/#schema', icon: 'schema' },
+  { label: 'AI agent', description: 'Bring Claude Code, Codex or Gemini CLI. Schema, not rows.', href: '/#agent', icon: 'agent' },
+  { label: 'Databases', description: 'PostgreSQL, MySQL, SQL Server, Redis, MongoDB and more.', href: '/#databases', icon: 'databases' },
+]
+
+export type NavItem = { label: string; href: string }
+
+export const nav: NavItem[] = [
+  { label: 'Docs', href: links.docs },
+  { label: 'Changelog', href: '/changelog' },
+  { label: 'FAQ', href: '/docs/troubleshooting#faq' },
 ]
 
 /** Monogram tiles in the colours the app gives each engine. */
@@ -53,6 +67,8 @@ export type Feature = {
   points: string[]
   scene: Scene
   alt: string
+  /** The docs page that covers it. */
+  docs: string
 }
 
 export const features: Feature[] = [
@@ -62,6 +78,7 @@ export const features: Feature[] = [
     body: 'Completion for tables, columns, aliases and CTEs, whole JOIN … ON clauses proposed from foreign keys, and real values sampled from the column.',
     points: ['Formatter and EXPLAIN', 'Quick fixes for misspelt names', 'Results as grid, JSON or chart'],
     scene: 'editor',
+    docs: '/docs/sql-editor',
     alt: 'TableGrip SQL console running a revenue query, with the results grid below',
   },
   {
@@ -70,6 +87,7 @@ export const features: Feature[] = [
     body: 'Inline edits stay pending until you submit them in one transaction. Foreign keys are clickable, and a value panel shows JSON as a tree, binary as hex and images as pictures.',
     points: ['Typed filter builder: today-7d, 3 months ago', 'Or a raw WHERE clause with completion', 'Export to CSV, Excel and JSON'],
     scene: 'filter',
+    docs: '/docs/data-grid',
     alt: 'TableGrip data grid showing refunded orders over 200, filtered with a condition in the filter bar',
   },
   {
@@ -78,6 +96,7 @@ export const features: Feature[] = [
     body: 'A table designer, schema compare with generated migrations, ER diagrams as PNG or Mermaid, and CSV, Excel and JSON import with a test data generator.',
     points: ['Columns, indexes, keys, triggers, DDL', 'Compare two schemas, get the migration', 'ER diagrams from foreign keys'],
     scene: 'structure',
+    docs: '/docs/schema-tools',
     alt: 'TableGrip structure view of the orders table listing columns, types and keys',
   },
 ]

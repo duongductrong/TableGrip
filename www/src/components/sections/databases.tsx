@@ -4,6 +4,7 @@ import { DbMonogram } from '#/components/site/db-tile'
 import { Section, SectionHeader } from '#/components/site/frame'
 import { Button } from '#/components/ui/button'
 import { databaseFamilies, featuredDatabases, links } from '#/content/site'
+import { SiteLink } from '#/components/site/site-link'
 
 export function Databases() {
   return (
@@ -13,9 +14,9 @@ export function Databases() {
         description="One app for relational, analytical, key-value and document stores, plus the files you keep data in."
         aside={
           <Button variant="arrow" size="sm" asChild>
-            <a href={`${links.guide}#drivers`} target="_blank" rel="noreferrer">
+            <SiteLink href={links.drivers}>
               About drivers <ArrowRight />
-            </a>
+            </SiteLink>
           </Button>
         }
       />
