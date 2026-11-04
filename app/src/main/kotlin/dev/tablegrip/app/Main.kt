@@ -22,6 +22,7 @@ import dev.tablegrip.app.table.handleFilterShortcut
 import dev.tablegrip.app.ui.AppIcon
 import dev.tablegrip.app.ui.TableGripTheme
 import dev.tablegrip.app.ui.FollowThemeAppearance
+import dev.tablegrip.app.ui.MacAboutPanel
 import dev.tablegrip.app.ui.Shortcuts
 import dev.tablegrip.core.activity.ActivitySupport
 import dev.tablegrip.core.agent.ChatStore
@@ -43,6 +44,7 @@ private const val LaunchFileGrace = 400L
 fun main(args: Array<String>) {
     // Before the UI, so the file the app was launched to open (from Finder or a file association) isn't missed.
     FileOpenRequests.install(args)
+    MacAboutPanel.install()
     runApp()
 }
 

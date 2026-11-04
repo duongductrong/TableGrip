@@ -6,7 +6,10 @@
 - TableGrip.icns  the same icon flattened, for macOS 12–15 (and the Info.plist's CFBundleIconFile)
 - TableGrip.ico   Windows installer, executable and shortcuts
 - TableGrip.png   Linux package (512 px)
-and app/src/main/resources/icon/TableGrip.png, the window icon Windows and Linux show in the taskbar.
+and app/src/main/resources/icon/TableGrip.png, the window icon Windows and Linux show in the taskbar,
+and app/src/main/resources/icon/TableGrip-macOS.png, the same icon on Apple's icon grid (artwork 412 px inside a 512 px
+canvas, with a drop shadow) for a copy run from source: the Dock icon (-Xdock:icon) and the About panel. The renders and
+the other PNGs fill their whole canvas, which in the Dock looks bigger than every other app.
 
 The outputs are committed, so building the app needs neither Xcode 26 nor this script.
 """
@@ -24,6 +27,13 @@ def render(icon, out):
 
 def resized(source, size, out):
     subprocess.run(["magick", source, "-filter", "Lanczos", "-resize", f"{size}x{size}", out], check=True)
+
+def mac_grid(source, out):
+    """Apple's macOS icon grid at 512 px: the 412 px rounded square centred, over a soft shadow like the system's."""
+    subprocess.run(["magick", source, "-filter", "Lanczos", "-resize", "412x412",
+                    "(", "+clone", "-background", "black", "-shadow", "30x5+0+5", ")", "+swap",
+                    "-background", "none", "-layers", "merge", "+repage",
+                    "-gravity", "center", "-extent", "512x512", "-depth", "8", out], check=True)
 
 def main():
     icon = os.path.join(BRANDING, "TableGrip.icon")
@@ -46,6 +56,7 @@ def main():
         window = os.path.join(ROOT, "app", "src", "main", "resources", "icon")
         os.makedirs(window, exist_ok=True)
         resized(flat, 256, os.path.join(window, "TableGrip.png"))
+        mac_grid(flat, os.path.join(window, "TableGrip-macOS.png"))
 
 if __name__ == "__main__":
     main()

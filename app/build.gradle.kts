@@ -2,6 +2,8 @@
 
 import java.net.URI
 import java.security.MessageDigest
+import java.nio.file.Files
+import java.nio.file.LinkOption
 import java.util.zip.ZipFile
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
@@ -58,6 +60,36 @@ val macEntitlements = layout.projectDirectory.file("src/macos/entitlements.plist
 val appIcons = layout.projectDirectory.dir("src/icons")
 val sparkleDir = layout.buildDirectory.dir("sparkle/$sparkleVersion")
 val updaterBridge = layout.buildDirectory.file("updater/libTableGripUpdater.dylib")
+
+/**
+ * The JetBrains Runtime for `:app:run` on a Mac, under the name the Dock shows: macOS 26 ignores -Xdock:name and labels
+ * an app that has no bundle after its executable. A copy of the runtime's home made of links, whose bin/java is a
+ * script running a link named "TableGrip Dev". The script is needed because Gradle resolves links in the executable.
+ */
+object DevRuntime {
+    class Launcher(private val jbr: JavaLauncher, private val home: Directory) : JavaLauncher {
+        override fun getMetadata(): JavaInstallationMetadata = jbr.metadata
+
+        override fun getExecutablePath(): RegularFile = home.file("bin/java")
+    }
+
+    fun make(jbr: JavaLauncher, into: Directory) {
+        val home = jbr.executablePath.asFile.toPath().parent.parent
+        val dir = into.asFile.toPath()
+        // Not File.deleteRecursively: it follows the links into the runtime and empties it. Files.walk doesn't.
+        if (Files.exists(dir, LinkOption.NOFOLLOW_LINKS)) {
+            Files.walk(dir).use { paths -> paths.sorted(Comparator.reverseOrder()).forEach { Files.delete(it) } }
+        }
+        val bin = Files.createDirectories(dir.resolve("bin"))
+        Files.list(home).use { entries -> entries.filter { it.fileName.toString() != "bin" }.forEach { Files.createSymbolicLink(dir.resolve(it.fileName.toString()), it) } }
+        Files.list(home.resolve("bin")).use { entries -> entries.filter { it.fileName.toString() != "java" }.forEach { Files.createSymbolicLink(bin.resolve(it.fileName.toString()), it) } }
+        Files.createSymbolicLink(bin.resolve("TableGrip Dev"), home.resolve("bin/java"))
+        bin.resolve("java").toFile().apply {
+            writeText("#!/bin/sh\nexec \"$(dirname \"$0\")/TableGrip Dev\" \"$@\"\n")
+            setExecutable(true)
+        }
+    }
+}
 
 /** Runs a command from a task action; an object, so actions can call it without capturing the build script. */
 object Shell {
@@ -459,16 +491,26 @@ tasks {
         // The Compose Gradle plugin registers its run tasks in afterEvaluate.
         afterEvaluate {
             // Jewel needs the UI fixes in the JetBrains Runtime.
-            javaLauncher =
+            val jbr =
                 project.javaToolchains.launcherFor {
                     languageVersion = JavaLanguageVersion.of(jdkLevel)
                     vendor = JvmVendorSpec.JETBRAINS
                 }
-            doFirst { setExecutable(javaLauncher.get().executablePath.asFile.absolutePath) }
+            // macOS 26's Dock ignores -Xdock:name and labels an app without a bundle after its executable ("java"), so on
+            // a Mac the JVM starts as "TableGrip Dev" (see DevRuntime).
+            val devRuntime = layout.buildDirectory.dir("dev-runtime")
+            val mac = isMacHost
+            javaLauncher = if (mac) jbr.zip(devRuntime) { launcher, dir -> DevRuntime.Launcher(launcher, dir) } else jbr
+            doFirst {
+                if (mac) DevRuntime.make(jbr.get(), devRuntime.get())
+                setExecutable(javaLauncher.get().executablePath.asFile.absolutePath)
+            }
         }
         // Added on execution: the Compose run task replaces the JVM arguments it was configured with.
         // Started from source, macOS would otherwise name the app after the main class ("MainKt").
-        doFirst { jvmArgs("-Dcompose.interop.blending=true", "-Xdock:name=TableGrip Dev") }
+        // Without an app bundle macOS also shows Java's generic icon, in the Dock and in About TableGrip (see MacAboutPanel).
+        val devIcon = layout.projectDirectory.file("src/main/resources/icon/TableGrip-macOS.png").asFile.absolutePath
+        doFirst { jvmArgs("-Dcompose.interop.blending=true", "-Xdock:name=TableGrip Dev", "-Xdock:icon=$devIcon") }
         systemProperty("apple.awt.application.name", "TableGrip Dev")
         // Development runs keep their own profile/settings directory, so they never touch the installed app's;
         // `./gradlew :app:run -Ptablegrip.home=/tmp/dg` runs against a throwaway one instead.

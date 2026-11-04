@@ -48,3 +48,4 @@ Các file xuất ra được commit sẵn, nên CI build không cần Xcode 26:
 | `app/src/icons/TableGrip.ico` | Windows (MSI, file exe, shortcut): `windows { iconFile }`, gồm các cỡ 16–256 |
 | `app/src/icons/TableGrip.png` | Linux (deb): `linux { iconFile }`, 512 px |
 | `app/src/main/resources/icon/TableGrip.png` | icon của cửa sổ, hiện trên taskbar Windows và Linux (`ui/AppIcon.kt`) |
+| `app/src/main/resources/icon/TableGrip-macOS.png` | bản chạy từ source trên macOS: icon ở Dock (`-Xdock:icon`) và trong About. Đặt theo lưới icon của macOS (hình 412 px giữa canvas 512 px, có bóng đổ); các PNG khác phủ kín canvas nên ở Dock sẽ to hơn icon của app khác |
