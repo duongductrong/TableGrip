@@ -93,7 +93,18 @@ After changing the driver catalog in `core/build.gradle.kts`, regenerate the loc
 
 ## Releases
 
-The version is `tablegrip.version` in `gradle.properties`. Pushing a `v*` tag that matches it runs
-`.github/workflows/release.yml`, which builds, signs and notarizes the installers and attaches them to a draft GitHub
-Release for the maintainer to publish. Release notes are written from the Conventional Commits since the last tag.
+The version is `tablegrip.version` in `gradle.properties`. Releases go through a PR:
+
+1. Run **Release Prepare** (Actions › Release Prepare › Run workflow) with a bump (`patch`, `minor`, `major`) and a
+   channel (`stable`, `beta`), or an exact version for the first release. Pushing a commit to `master` whose subject
+   starts with `release(minor):` (or `release(minor-beta):`) does the same.
+2. It opens `chore: release vX.Y.Z`, which bumps the version and adds the release's entry to
+   [CHANGELOG.md](../CHANGELOG.md), written from the Conventional Commits since the previous release. Edit the notes
+   on the PR's branch if needed.
+3. Merge it. The merge commit is tagged `vX.Y.Z` and `.github/workflows/release.yml` builds, signs and notarizes the
+   installers (after you approve the `release` environment), publishes the GitHub Release and updates the feeds.
+
+Locally, `python3 scripts/bump-version.py minor --channel beta` and
+`python3 scripts/release-notes.py changelog --version 1.1.0-beta.1 --repo duongductrong/tablegrip` show what the PR
+would contain (revert them afterwards).
 Signing secrets and the update feed are described in [plans/auto-update.md](plans/auto-update.md).

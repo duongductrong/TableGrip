@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
 """Writes TableGrip's release notes from the Conventional Commits since the previous release.
 
+  release-notes.py changelog --version 1.4.0 --repo owner/name [--until REV] [--file CHANGELOG.md]
   release-notes.py github --tag v1.4.0 --repo owner/name --build 412 [--dist DIR] [--windows-signed]
   release-notes.py in-app NOTES.md
 
-`github` prints the body of the GitHub release: what changed (Breaking Changes, Features, Bug Fixes, Maintenance),
-the contributors, then the downloads and how to verify them, folded away. `in-app` prints the part an update
-dialog shows: everything above the end marker except Maintenance and Contributors, without links. The maintainer
-may edit the draft before publishing; whatever stays above the marker is what users read.
+`changelog` adds the version's entry to CHANGELOG.md: what changed (Breaking Changes, Features, Bug Fixes,
+Maintenance) and the contributors. The release PR carries it, so the notes are reviewed and edited there. `github`
+prints the body of the GitHub release: that entry, then the downloads and how to verify them, folded away. `in-app`
+prints the part an update dialog shows: everything above the end marker except Maintenance and Contributors, without
+links.
 
 A stable release is compared with the previous stable one, so it lists everything its betas did; a beta with the
 release just before it. Python 3.9+, standard library only.
 """
 
 import argparse
+import datetime
 import hashlib
 import pathlib
 import re
@@ -30,6 +33,12 @@ SECTIONS = (
 # Shown on GitHub only: users updating the app don't need them.
 GITHUB_ONLY = ("Maintenance", "Contributors")
 SUBJECT = re.compile(r"^(?P<type>[a-z]+)(?:\((?P<scope>[^)]*)\))?(?P<bang>!)?:\s*(?P<text>.+)$")
+ENTRY = re.compile(r"^## \[(?P<version>[^\]]+)\]")
+HEADER = """# Changelog
+
+All notable changes to TableGrip are listed here, newest first. Each entry is written from the Conventional Commits
+of its release and can be edited in the release PR before it is merged.
+"""
 # Commits the release pipeline makes itself.
 NOISE = re.compile(r"^chore: (update appcast|bump version|release v)")
 PLATFORMS = (
@@ -44,11 +53,12 @@ def git(*args):
     return subprocess.run(["git", *args], check=True, capture_output=True, text=True).stdout
 
 
-def previous_tag(tag):
-    """The release before [tag]: the previous stable one for a stable release, the previous one of any kind for a beta."""
-    exclude = [] if "-" in tag else ["--exclude", "v*-*"]
+def previous_tag(version, rev):
+    """The release before [version], looking back from [rev]: the previous stable one for a stable release, the
+    previous one of any kind for a beta."""
+    exclude = [] if "-" in version else ["--exclude", "v*-*"]
     try:
-        return git("describe", "--tags", "--abbrev=0", "--match", "v*", *exclude, f"{tag}^").strip()
+        return git("describe", "--tags", "--abbrev=0", "--match", "v*", *exclude, rev).strip()
     except subprocess.CalledProcessError:
         return None  # The first release.
 
@@ -77,11 +87,11 @@ def classify(subject, body):
     return "other", f"{match['type']}: {text}"
 
 
-def github(args):
-    since = previous_tag(args.tag)
+def what_changed(version, until, repo):
+    since = previous_tag(version, until)
     grouped = {key: [] for key, _ in SECTIONS}
     authors = set()
-    for sha, author, subject, body in commits(since, args.until or args.tag):
+    for sha, author, subject, body in commits(since, until):
         entry = classify(subject, body)
         if entry is None:
             continue
@@ -99,8 +109,56 @@ def github(args):
         out += ["### Changes", "- Maintenance release.", ""]
     if authors:
         out += ["### Contributors", ", ".join(sorted(authors, key=str.lower)), ""]
-    base = f"https://github.com/{args.repo}"
-    out.append(f"**Full Changelog**: {base}/compare/{since}...{args.tag}" if since else f"**Full Changelog**: {base}/commits/{args.tag}")
+    base = f"https://github.com/{repo}"
+    tag = f"v{version}"
+    out.append(f"**Full Changelog**: {base}/compare/{since}...{tag}" if since else f"**Full Changelog**: {base}/commits/{tag}")
+    return out
+
+
+def split_entries(text):
+    """(preamble, [(version, entry lines)]) of a Keep a Changelog file."""
+    preamble, entries = [], []
+    for line in text.splitlines():
+        heading = ENTRY.match(line)
+        if heading:
+            entries.append((heading["version"], [line]))
+        elif entries:
+            entries[-1][1].append(line)
+        else:
+            preamble.append(line)
+    return preamble, entries
+
+
+def trimmed(lines):
+    while lines and not lines[-1].strip():
+        lines = lines[:-1]
+    return lines
+
+
+def changelog(args):
+    version = args.version.removeprefix("v")
+    path = pathlib.Path(args.file)
+    preamble, entries = split_entries(path.read_text()) if path.exists() else (HEADER.splitlines(), [])
+    date = datetime.datetime.now(datetime.timezone.utc).date().isoformat()
+    entry = [f"## [{version}] - {date}", "", *what_changed(version, args.until, args.repo)]
+    base = version.split("-")[0]
+    # A stable release lists everything its betas did, so their own entries go. Betas of another base stay.
+    kept = [(v, lines) for v, lines in entries if v != version and not ("-" not in version and v.startswith(f"{base}-"))]
+    out = trimmed(preamble) + [""] + entry
+    for _, lines in kept:
+        out += [""] + trimmed(lines)
+    path.write_text("\n".join(out) + "\n")
+
+
+def github(args):
+    version = args.tag.removeprefix("v")
+    _, entries = split_entries(pathlib.Path(args.changelog).read_text())
+    found = next((lines for v, lines in entries if v == version), None)
+    if found is None:
+        sys.exit(f"error: {args.changelog} has no entry for {version}")
+    out = trimmed(found[1:])
+    while out and not out[0].strip():
+        out = out[1:]
     out += ["", END, "", "<details>", "<summary>Downloads and verification</summary>", ""]
 
     out += ["| Platform | File | SHA-256 |", "|---|---|---|"]
@@ -140,13 +198,19 @@ def in_app(args):
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     commands = parser.add_subparsers(dest="command", required=True)
+    changelog_parser = commands.add_parser("changelog", help="add the version's entry to CHANGELOG.md")
+    changelog_parser.add_argument("--version", required=True)
+    changelog_parser.add_argument("--repo", required=True, help="owner/name")
+    changelog_parser.add_argument("--until", default="HEAD", help="list commits up to this revision")
+    changelog_parser.add_argument("--file", default="CHANGELOG.md")
+    changelog_parser.set_defaults(run=changelog)
     github_parser = commands.add_parser("github", help="the GitHub release body")
     github_parser.add_argument("--tag", required=True)
     github_parser.add_argument("--repo", required=True, help="owner/name")
     github_parser.add_argument("--build", required=True, type=int)
     github_parser.add_argument("--dist", help="folder with the release's archives, for their checksums")
     github_parser.add_argument("--windows-signed", action="store_true")
-    github_parser.add_argument("--until", help="list commits up to this revision instead of the tag (previews)")
+    github_parser.add_argument("--changelog", default="CHANGELOG.md")
     github_parser.set_defaults(run=github)
     in_app_parser = commands.add_parser("in-app", help="the part of a release body update dialogs show")
     in_app_parser.add_argument("notes")

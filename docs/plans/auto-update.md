@@ -184,13 +184,24 @@ edits, unsaved data files) like ⌘Q does:
 - No first-run "may we check?" prompt (`SUEnableAutomaticChecks` = YES); the setting is the opt-out.
 - Privacy: no system profiling (`SUEnableSystemProfiling` = NO). The only thing sent is the request for the feed
   (with a `TableGrip/<version>` user agent). Say so in Settings › Updates, next to the agent data-sharing setting.
-- Release notes come from the commits (`feat:`, `fix:`, `type!:` or a `BREAKING CHANGE:` footer). The draft can be edited
-  before publishing; the dialog shows what is above `<!-- end of release notes -->`, minus Maintenance and Contributors.
+- Release notes come from the commits (`feat:`, `fix:`, `type!:` or a `BREAKING CHANGE:` footer), written into
+  `CHANGELOG.md` by the release PR and edited there before merging; the dialog shows what is above
+  `<!-- end of release notes -->`, minus Maintenance and Contributors.
 
 ## Release pipeline (GitHub Actions)
 
-`.github/workflows/release.yml`. A `v*` tag makes a signed draft release; "Run workflow" by hand makes an unsigned dry
-run whose installers stay as workflow artifacts.
+A release goes through a PR, the way Snapzy's does:
+
+1. `release-prepare.yml` ("Run workflow" with a bump and channel, or a `release(minor):` / `release(minor-beta):`
+   commit on `master`) bumps `tablegrip.version`, adds the version's entry to `CHANGELOG.md` and opens the PR
+   `chore: release vX.Y.Z` from `release/vX.Y.Z`. It needs *Allow GitHub Actions to create and approve pull requests*
+   (Settings › Actions › General).
+2. Review the notes in the PR and merge it. `release-tag.yml` tags the merge commit `vX.Y.Z` and starts `release.yml`
+   on the tag. If `v*` tags are protected by a ruleset, GitHub Actions has to be allowed to bypass it.
+3. `release.yml` builds, signs and notarizes, then publishes the GitHub Release (no draft) and calls `appcast.yml`.
+
+Pushing a `v*` tag by hand still runs step 3. "Run workflow" on `release.yml` from a branch makes an unsigned dry run
+whose installers stay as workflow artifacts.
 
 Secrets, in the `release` environment (Settings › Environments; add yourself as required reviewer and allow only
 `v*` tags):
@@ -212,7 +223,7 @@ only installed with TableGrip's Ed25519 signature. Other ways to sign later: Sig
 or a cloud-HSM certificate, each needing its own signing step.
 
 The full pipeline, once Phase 1 adds Sparkle. Phase 0 does steps 1, 3, 4 and 6 (Compose's own signing and
-notarization on macOS, Artifact Signing on Windows, plus an unsigned `.deb`); publishing the draft is still by hand.
+notarization on macOS, Artifact Signing on Windows, plus an unsigned `.deb`); the release is published once they pass.
 A version with a `-` suffix becomes a pre-release.
 
 1. Build per target on its own runner: `macos-15` (arm64), `macos-15-intel` (x64), `windows-latest`, `ubuntu-latest`.
@@ -221,7 +232,7 @@ A version with a `-` suffix becomes a pre-release.
    Windows.
 4. Package the DMG / MSI, notarize and staple (macOS), sign the MSI.
 5. `sign_update` each archive with the Ed25519 key.
-6. Create the GitHub Release as a **draft** and upload every archive to it.
+6. Upload every archive to the GitHub Release (a draft until all are up).
 7. A smoke job installs the previous release, points it at a staging feed (a local file, as Snapzy's
    `test-update-local.sh` does), and checks it updates to the new one.
 8. Publish the release, then update the appcast per target (signed feed) and commit it to `appcast/` on `master`.

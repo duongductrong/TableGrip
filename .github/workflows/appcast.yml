@@ -1,8 +1,17 @@
-# When the maintainer publishes a release, adds it to the update feeds (appcast/*.xml on master), signs them and
-# commits them. Archives are already on the release by then, so a feed never points at a file that isn't there.
+# Adds a published release to the update feeds (appcast/*.xml on master), signs them and commits them. The release
+# workflow calls it once it has published; a release published by hand (a draft, say) starts it too. Archives are
+# already on the release by then, so a feed never points at a file that isn't there.
 name: Appcast
 
 on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+      prerelease:
+        required: true
+        type: boolean
   release:
     types: [published]
 
@@ -22,8 +31,8 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      TAG: ${{ github.event.release.tag_name }}
-      PRERELEASE: ${{ github.event.release.prerelease }}
+      TAG: ${{ inputs.tag || github.event.release.tag_name }}
+      PRERELEASE: ${{ inputs.prerelease || github.event.release.prerelease }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

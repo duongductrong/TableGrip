@@ -1,0 +1,146 @@
+# Opens the release PR: bumps tablegrip.version and adds the version's entry to CHANGELOG.md on a release/vX.Y.Z
+# branch. Edit the notes in the PR if needed; merging it makes the release (release-tag.yml, then release.yml).
+#
+# Start it with "Run workflow" (bump type, channel, or an exact version such as the first release's), or by pushing a
+# commit to master whose subject starts with release(patch|minor|major): for a stable release, or
+# release(patch|minor|major-beta): for a beta. Needs "Allow GitHub Actions to create and approve pull requests"
+# (Settings › Actions › General).
+name: Release Prepare
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Version bump
+        required: true
+        type: choice
+        default: patch
+        options: [patch, minor, major]
+      channel:
+        description: Release channel
+        required: true
+        type: choice
+        default: stable
+        options: [stable, beta]
+      version:
+        description: Exact version instead of the bump (e.g. 1.0.0); leave empty to bump
+        required: false
+        type: string
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-prepare
+  cancel-in-progress: false
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+      bump: ${{ steps.check.outputs.bump }}
+      channel: ${{ steps.check.outputs.channel }}
+    steps:
+      - id: check
+        env:
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref_name }}
+          SUBJECT: ${{ github.event.head_commit.message }}
+          INPUT_BUMP: ${{ inputs.bump }}
+          INPUT_CHANNEL: ${{ inputs.channel }}
+        run: |
+          set -euo pipefail
+          if [[ "$REF" != master ]]; then
+            echo "::error::Releases are only made from master, not $REF."
+            exit 1
+          fi
+          if [[ "$EVENT" == workflow_dispatch ]]; then
+            { echo "run=true"; echo "bump=$INPUT_BUMP"; echo "channel=$INPUT_CHANNEL"; } >> "$GITHUB_OUTPUT"
+          elif [[ "$(head -n1 <<< "$SUBJECT")" =~ ^release\((patch|minor|major)(-beta)?\): ]]; then
+            channel=stable
+            [[ -n "${BASH_REMATCH[2]}" ]] && channel=beta
+            { echo "run=true"; echo "bump=${BASH_REMATCH[1]}"; echo "channel=$channel"; } >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  prepare:
+    needs: trigger
+    if: needs.trigger.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      # The whole history and its tags: the beta number and the notes come from them.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Bump the version
+        id: version
+        env:
+          BUMP: ${{ needs.trigger.outputs.bump }}
+          CHANNEL: ${{ needs.trigger.outputs.channel }}
+          EXACT: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [[ -n "$EXACT" ]]; then
+            python3 scripts/bump-version.py --version "$EXACT" | tee -a "$GITHUB_OUTPUT"
+          else
+            python3 scripts/bump-version.py "$BUMP" --channel "$CHANNEL" | tee -a "$GITHUB_OUTPUT"
+          fi
+
+      - name: Write the changelog entry
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: python3 scripts/release-notes.py changelog --version "$VERSION" --repo "$GH_REPO"
+
+      - name: Open the release PR
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          PREVIOUS: ${{ steps.version.outputs.previous_version }}
+        run: |
+          set -euo pipefail
+          branch="release/v$VERSION"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$branch"
+          git add gradle.properties CHANGELOG.md
+          git commit -m "chore: bump version to v$VERSION"
+          git push --force origin "$branch"
+
+          body="$RUNNER_TEMP/pr-body.md"
+          {
+            echo "Releases **v$VERSION** (from $PREVIOUS)."
+            echo
+            echo "The notes below are the CHANGELOG.md entry. Edit it on this branch if needed: it becomes the GitHub"
+            echo "release's notes, and the update dialog shows it without Maintenance and Contributors."
+            echo
+            echo "**Merging this PR tags the merge commit v$VERSION, then builds, signs and publishes the release.**"
+            echo
+            echo "---"
+            echo
+            python3 - "$VERSION" <<'PY'
+          import re, sys
+          text = open("CHANGELOG.md").read()
+          match = re.search(rf"^## \[{re.escape(sys.argv[1])}\].*?\n(.*?)(?=^## \[|\Z)", text, re.S | re.M)
+          print(match[1].strip())
+          PY
+          } > "$body"
+
+          title="chore: release v$VERSION"
+          existing=$(gh pr list --head "$branch" --base master --state open --json number --jq '.[0].number // empty')
+          if [[ -n "$existing" ]]; then
+            gh pr edit "$existing" --title "$title" --body-file "$body"
+            echo "Updated #$existing" >> "$GITHUB_STEP_SUMMARY"
+          else
+            gh pr create --base master --head "$branch" --title "$title" --body-file "$body" >> "$GITHUB_STEP_SUMMARY"
+          fi

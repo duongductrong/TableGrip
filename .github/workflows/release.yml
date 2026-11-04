@@ -1,7 +1,9 @@
-# Builds, signs and notarizes the installers for a `v*` tag and attaches them to a draft GitHub Release, which the
-# maintainer publishes by hand. Run it by hand ("Run workflow") for an unsigned dry run: installers are kept as workflow
-# artifacts and no release is made. See docs/plans/auto-update.md for the secrets it needs; Windows Authenticode signing
-# only runs when the release environment's variable WINDOWS_SIGNING is "azure".
+# Builds, signs and notarizes the installers for a `v*` tag, publishes them as a GitHub Release with the version's
+# CHANGELOG.md entry as its notes, then adds the release to the update feeds (appcast.yml). Merging a release PR
+# (release-prepare.yml) makes the tag and starts this on it (release-tag.yml); pushing a `v*` tag by hand works too.
+# Run it by hand on a branch ("Run workflow") for an unsigned dry run: installers are kept as workflow artifacts and
+# no release is made. See docs/plans/auto-update.md for the secrets it needs; Windows Authenticode signing only runs
+# when the release environment's variable WINDOWS_SIGNING is "azure".
 name: Release
 
 on:
@@ -348,7 +350,7 @@ jobs:
           path: dist/*
           if-no-files-found: error
 
-  draft-release:
+  publish:
     needs: [version, macos, windows, windows-update-signature, linux]
     if: needs.version.outputs.signed == 'true'
     runs-on: ubuntu-latest
@@ -365,10 +367,9 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
     steps:
-      # The whole history and its tags: the notes list the commits since the previous release.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
+          persist-credentials: false
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           path: dist
@@ -376,15 +377,40 @@ jobs:
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: dist/*
-      - name: Create the draft release
+      - name: Publish the release
         run: |
           set -euo pipefail
-          # What changed, from the Conventional Commits since the previous release; then the downloads' checksums.
-          # The maintainer edits the draft before publishing; the appcast workflow shows its top part in the app.
+          # The version's CHANGELOG.md entry, reviewed in the release PR; then the downloads' checksums.
+          # The appcast workflow shows its top part in the app.
           notes=(--tag "$GITHUB_REF_NAME" --repo "$GH_REPO" --build "$BUILD" --dist dist)
           [[ "$WINDOWS_SIGNING" == azure ]] && notes+=(--windows-signed)
           python3 scripts/release-notes.py github "${notes[@]}" > "$RUNNER_TEMP/notes.md"
           cat "$RUNNER_TEMP/notes.md" >> "$GITHUB_STEP_SUMMARY"
-          flags=(--draft --title "TableGrip $VERSION" --notes-file "$RUNNER_TEMP/notes.md" --verify-tag)
-          [[ "$PRERELEASE" == true ]] && flags+=(--prerelease)
-          gh release create "$GITHUB_REF_NAME" "${flags[@]}" dist/*
+          prerelease=()
+          [[ "$PRERELEASE" == true ]] && prerelease=(--prerelease)
+
+          # gh uploads into a draft and publishes it once every file is up. A run that failed halfway leaves that
+          # draft; a re-run finishes it. A published release is never re-uploaded: installed copies may be fetching it.
+          if draft=$(gh release view "$GITHUB_REF_NAME" --json isDraft --jq .isDraft 2>/dev/null); then
+            if [[ "$draft" != true ]]; then
+              echo "::error::$GITHUB_REF_NAME is already published."
+              exit 1
+            fi
+            gh release upload "$GITHUB_REF_NAME" dist/* --clobber
+            gh release edit "$GITHUB_REF_NAME" --title "TableGrip $VERSION" --notes-file "$RUNNER_TEMP/notes.md" \
+              "${prerelease[@]}" --draft=false
+          else
+            gh release create "$GITHUB_REF_NAME" --title "TableGrip $VERSION" --notes-file "$RUNNER_TEMP/notes.md" \
+              --verify-tag "${prerelease[@]}" dist/*
+          fi
+
+  # A release published with the workflow token doesn't start appcast.yml by itself, so it is called here.
+  appcast:
+    needs: [version, publish]
+    permissions:
+      contents: write
+    uses: ./.github/workflows/appcast.yml
+    with:
+      tag: ${{ github.ref_name }}
+      prerelease: ${{ needs.version.outputs.prerelease == 'true' }}
+    secrets: inherit
