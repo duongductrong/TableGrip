@@ -53,6 +53,16 @@ def git(*args):
     return subprocess.run(["git", *args], check=True, capture_output=True, text=True).stdout
 
 
+def contributor(sha, author, repo):
+    """A Markdown link to the GitHub account behind [sha], or the git author name when it can't be looked up."""
+    try:
+        login = subprocess.run(["gh", "api", f"repos/{repo}/commits/{sha}", "--jq", ".author.login // empty"],
+                               check=True, capture_output=True, text=True).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        login = ""
+    return f"[@{login}](https://github.com/{login})" if login else author
+
+
 def previous_tag(version, rev):
     """The release before [version], looking back from [rev]: the previous stable one for a stable release, the
     previous one of any kind for a beta."""
@@ -90,13 +100,13 @@ def classify(subject, body):
 def what_changed(version, until, repo):
     since = previous_tag(version, until)
     grouped = {key: [] for key, _ in SECTIONS}
-    authors = set()
+    authors = {}  # git author name -> its contributor link, looked up once per author
     for sha, author, subject, body in commits(since, until):
         entry = classify(subject, body)
         if entry is None:
             continue
-        if "[bot]" not in author:
-            authors.add(author)
+        if "[bot]" not in author and author not in authors:
+            authors[author] = contributor(sha, author, repo)
         section, text = entry
         # GitHub links "#12" and a bare commit hash by itself.
         grouped[section].append(f"- {text} ({sha})")
@@ -108,7 +118,7 @@ def what_changed(version, until, repo):
     if not any(grouped.values()):
         out += ["### Changes", "- Maintenance release.", ""]
     if authors:
-        out += ["### Contributors", ", ".join(sorted(authors, key=str.lower)), ""]
+        out += ["### Contributors", ", ".join(sorted(set(authors.values()), key=str.lower)), ""]
     base = f"https://github.com/{repo}"
     tag = f"v{version}"
     out.append(f"**Full Changelog**: {base}/compare/{since}...{tag}" if since else f"**Full Changelog**: {base}/commits/{tag}")
