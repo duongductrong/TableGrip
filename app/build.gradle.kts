@@ -317,10 +317,13 @@ compose.desktop {
 val verifyNoBundledDrivers by tasks.registering {
     group = "verification"
     description = "Fails if any jar the app ships registers a java.sql.Driver."
-    val jars = configurations.runtimeClasspath.map { classpath -> classpath.incoming.artifacts.resolvedArtifacts.get().map { it.file } }
+    // A file collection, not a resolved list: as an input it carries the build dependencies on the project jars
+    // (core.jar, ...), so they are built before this task reads them.
+    val jars = files(configurations.runtimeClasspath)
+    inputs.files(jars)
     doLast {
         val offenders =
-            jars.get().filter { it.name.endsWith(".jar") }.filter { jar ->
+            jars.files.filter { it.name.endsWith(".jar") }.filter { jar ->
                 ZipFile(jar).use { zip -> zip.getEntry("META-INF/services/java.sql.Driver") != null }
             }
         if (offenders.isNotEmpty()) {
