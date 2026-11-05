@@ -1,6 +1,23 @@
-<?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><!-- sparkle-sign-warning:
+IMPORTANT: This file was signed by Sparkle. Any modifications to this file requires re-signing this file with generate_appcast or sign_update! The signed signature will be embedded at the end of this file.
+--><rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
   <channel>
     <title>TableGrip</title>
+    <item>
+      <title>TableGrip 1.0.0-beta.2</title>
+      <pubDate>Thu, 05 Nov 2026 13:30:23 +0000</pubDate>
+      <sparkle:version>3</sparkle:version>
+      <sparkle:shortVersionString>1.0.0-beta.2</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>10.13</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/duongductrong/TableGrip/releases/tag/v1.0.0-beta.2</sparkle:fullReleaseNotesLink>
+      <sparkle:channel>beta</sparkle:channel>
+      <description sparkle:format="markdown"><![CDATA[### ✨ Features
+- TableGrip, a desktop database client
+]]></description>
+      <enclosure url="https://github.com/duongductrong/TableGrip/releases/download/v1.0.0-beta.2/TableGrip-1.0.0-beta.2-macos-x64.dmg" length="113709484" type="application/octet-stream" sparkle:edSignature="9xd4gIZYKNjvOa4n7c/Vt3k1BGr4uT+XyXSy8DwyyEkvzeFO/tVmPEo99gNQ5bxaINkL4FT0tWrZHkLKWfj+BQ=="></enclosure>
+    </item>
   </channel>
-</rss>
+</rss><!-- sparkle-signatures:
+edSignature: 7YxGNZ3rleHZOW2JIi6gaCszYL2Et9VjGFQnZuk8TgORQzlWYxKfHcT/fitOY/9InXayFyMUpUEsDnd6c0cZAg==
+length: 1376
+-->
