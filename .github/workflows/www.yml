@@ -1,0 +1,84 @@
+# Builds the website (www/) on every pull request that touches it, and deploys it to Cloudflare Workers
+# (https://tablegrip.atcharm.com) when such a change lands on master. CHANGELOG.md counts as a site change: the
+# /changelog page bundles it at build time. The app's own workflows ignore www/ so a site-only change runs only this.
+#
+# Needs the repository secret CLOUDFLARE_API_TOKEN (an account API token with "Workers Scripts: Edit" and, for the
+# custom domain, "Workers Routes: Edit" + "Zone: Read" on atcharm.com) and the variable CLOUDFLARE_ACCOUNT_ID.
+name: Website
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "www/**"
+      - "CHANGELOG.md"
+      - ".github/workflows/www.yml"
+  pull_request:
+    paths:
+      - "www/**"
+      - "CHANGELOG.md"
+      - ".github/workflows/www.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: www-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    working-directory: www
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          version: 11
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: www/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Check the deploy bundle
+        run: pnpm wrangler deploy --dry-run
+
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    environment:
+      name: website
+      url: https://tablegrip.atcharm.com
+    concurrency:
+      group: www-deploy
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          version: 11
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: www/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      # Built here rather than passed from the build job: the build also writes .wrangler/deploy/config.json, which
+      # points wrangler at the generated dist/server/wrangler.json.
+      - run: pnpm build
+      - name: Deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm wrangler deploy

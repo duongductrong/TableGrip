@@ -1,0 +1,88 @@
+# Adds a published release to the update feeds (appcast/*.xml on master), signs them and commits them. The release
+# workflow calls it once it has published; a release published by hand (a draft, say) starts it too. Archives are
+# already on the release by then, so a feed never points at a file that isn't there.
+name: Appcast
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+      prerelease:
+        required: true
+        type: boolean
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: appcast
+  cancel-in-progress: false
+
+jobs:
+  appcast:
+    runs-on: macos-15
+    environment: release
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TAG: ${{ inputs.tag || github.event.release.tag_name }}
+      PRERELEASE: ${{ inputs.prerelease || github.event.release.prerelease }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: master
+          fetch-depth: 0
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        with:
+          cache-disabled: true
+
+      - name: Fetch the release's update metadata
+        run: |
+          set -euo pipefail
+          mkdir -p metadata
+          gh release download "$TAG" --pattern 'appcast-*.json' --dir metadata
+          # Update dialogs show what changed, not the checksums or maintenance commits under it.
+          gh release view "$TAG" --json body --jq .body > metadata/release.md
+          python3 scripts/release-notes.py in-app metadata/release.md > metadata/notes.md
+          ls metadata
+
+      - name: Add the release to the feeds
+        run: |
+          set -euo pipefail
+          version="${TAG#v}"
+          build=$(jq -r .build metadata/appcast-macos-arm64.json)
+          flags=()
+          [[ "$PRERELEASE" == true ]] && flags+=(--prerelease)
+          python3 scripts/appcast.py add --metadata metadata --version "$version" --build "$build" --tag "$TAG" \
+            --repo "$GH_REPO" --notes metadata/notes.md "${flags[@]}"
+
+      - name: Sign the feeds
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          ./gradlew --no-configuration-cache :app:downloadSparkle
+          sign_update=$(find app/build/sparkle -name sign_update -type f -perm -u+x | head -1)
+          key="$RUNNER_TEMP/sparkle.key"
+          trap 'rm -f "$key"' EXIT
+          printf '%s' "$SPARKLE_PRIVATE_KEY" > "$key"
+          for feed in appcast/*.xml; do "$sign_update" --ed-key-file "$key" "$feed"; done
+
+      - name: Commit
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add appcast
+          git commit -m "chore: update appcast for $TAG"
+          git push origin HEAD:master

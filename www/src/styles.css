@@ -1,0 +1,409 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design tokens. A quiet, neutral surface with hairline rules and a single accent: TableGrip's own blue (#0A7AFF,
+ * the app icon's background). shadcn/ui components read the standard names (background, primary, border…); the
+ * site adds surface, rule and accent-text for its grid layout.
+ */
+:root {
+  --background: oklch(100% 0 0);
+  --surface: oklch(97.6% 0 0);
+  --surface-strong: oklch(95% 0 0);
+  --raised: oklch(100% 0 0);
+  --rule: oklch(91.5% 0 0);
+  --rule-strong: oklch(78% 0 0);
+  --foreground: oklch(16% 0 0);
+  --muted-foreground: oklch(50% 0 0);
+
+  --brand: oklch(60% 0.215 257);
+  --brand-hover: oklch(56% 0.215 257);
+  --brand-foreground: oklch(99% 0 0);
+  --brand-text: oklch(51% 0.2 257);
+  --brand-subtle: oklch(96.5% 0.02 257);
+
+  --success: oklch(52% 0.13 150);
+  --warning: oklch(58% 0.13 70);
+  --danger: oklch(55% 0.2 27);
+
+  --card: var(--raised);
+  --card-foreground: var(--foreground);
+  --popover: var(--raised);
+  --popover-foreground: var(--foreground);
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-foreground);
+  --secondary: var(--surface-strong);
+  --secondary-foreground: var(--foreground);
+  --muted: var(--surface);
+  --accent: var(--surface-strong);
+  --accent-foreground: var(--foreground);
+  --destructive: var(--danger);
+  --border: var(--rule);
+  --input: var(--rule);
+  --ring: var(--brand-text);
+  --radius: 0.5rem;
+
+  --shot-shadow: 0 1px 2px oklch(0% 0 0 / 0.05), 0 12px 40px -12px oklch(0% 0 0 / 0.18);
+  color-scheme: light;
+}
+
+.dark {
+  --background: oklch(17.5% 0 0);
+  --surface: oklch(20.5% 0 0);
+  --surface-strong: oklch(25% 0 0);
+  --raised: oklch(22.5% 0 0);
+  --rule: oklch(29% 0 0);
+  --rule-strong: oklch(45% 0 0);
+  --foreground: oklch(96.5% 0 0);
+  --muted-foreground: oklch(71% 0 0);
+
+  --brand: oklch(62% 0.2 257);
+  --brand-hover: oklch(66% 0.19 257);
+  --brand-text: oklch(76% 0.13 257);
+  --brand-subtle: oklch(26% 0.05 257);
+
+  --success: oklch(78% 0.15 150);
+  --warning: oklch(80% 0.14 80);
+  --danger: oklch(72% 0.16 25);
+
+  --shot-shadow: 0 1px 2px oklch(0% 0 0 / 0.5), 0 16px 48px -12px oklch(0% 0 0 / 0.6);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+  --color-raised: var(--raised);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-text: var(--brand-text);
+  --color-brand-subtle: var(--brand-subtle);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply bg-background;
+    scroll-padding-top: 5rem;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+    overflow-x: hidden;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-semibold text-balance;
+    letter-spacing: -0.022em;
+  }
+  ::selection {
+    background: var(--brand-subtle);
+  }
+}
+
+/*
+ * Documentation pages (/docs): the Markdown rendered by lib/docs.ts. Plain elements are styled here so the
+ * content files stay plain Markdown.
+ */
+.doc-content {
+  font-size: 14px;
+  line-height: 1.7;
+  color: color-mix(in oklch, var(--foreground) 88%, var(--background));
+  max-width: 42rem;
+
+  & > :first-child {
+    margin-top: 0;
+  }
+  & p,
+  & ul,
+  & ol {
+    margin: 1rem 0;
+  }
+  & h2 {
+    position: relative;
+    margin: 2.75rem 0 0.875rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--rule);
+    font-size: 1.25rem;
+    line-height: 1.35;
+    color: var(--foreground);
+  }
+  & h3 {
+    position: relative;
+    margin: 2rem 0 0.625rem;
+    font-size: 1rem;
+    line-height: 1.45;
+    color: var(--foreground);
+  }
+  & h4 {
+    margin: 1.75rem 0 0.5rem;
+    font-weight: 600;
+    color: var(--foreground);
+  }
+  & .doc-anchor {
+    position: absolute;
+    left: -1.25em;
+    padding-right: 0.4em;
+    color: var(--muted-foreground);
+    font-weight: 400;
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  & h2:hover .doc-anchor,
+  & h3:hover .doc-anchor,
+  & .doc-anchor:focus-visible {
+    opacity: 1;
+  }
+  & a:not(.doc-anchor) {
+    color: var(--brand-text);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in oklch, var(--brand-text) 35%, transparent);
+    text-underline-offset: 4px;
+    &:hover {
+      text-decoration-color: currentColor;
+    }
+  }
+  & strong {
+    font-weight: 600;
+    color: var(--foreground);
+  }
+  & ul {
+    list-style: disc;
+    padding-left: 1.4rem;
+  }
+  & ol {
+    list-style: decimal;
+    padding-left: 1.4rem;
+  }
+  & li {
+    margin: 0.35rem 0;
+    padding-left: 0.2rem;
+  }
+  & li::marker {
+    color: var(--muted-foreground);
+  }
+  & li > ul,
+  & li > ol {
+    margin: 0.35rem 0;
+  }
+  & hr {
+    margin: 2.5rem 0;
+    border-color: var(--rule);
+  }
+  & :not(pre) > code {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    padding: 0.12em 0.38em;
+    border-radius: 5px;
+    background: var(--surface-strong);
+    color: var(--foreground);
+    overflow-wrap: anywhere;
+  }
+  & kbd {
+    display: inline-block;
+    min-width: 1.6em;
+    padding: 0.05em 0.4em;
+    font-family: var(--font-sans);
+    font-size: 0.82em;
+    line-height: 1.5;
+    text-align: center;
+    border: 1px solid var(--rule-strong);
+    border-bottom-width: 2px;
+    border-radius: 5px;
+    background: var(--raised);
+    color: var(--foreground);
+    white-space: nowrap;
+  }
+  & blockquote {
+    margin: 1.25rem 0;
+    padding-left: 1rem;
+    border-left: 2px solid var(--rule-strong);
+    color: var(--muted-foreground);
+  }
+}
+
+.doc-code {
+  position: relative;
+  margin: 1.25rem 0;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--surface);
+
+  & pre {
+    overflow-x: auto;
+    padding: 1rem 1.1rem;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: var(--foreground);
+  }
+  & .doc-code-lang {
+    position: absolute;
+    top: 0.45rem;
+    right: 4.2rem;
+    font-size: 11px;
+    color: var(--muted-foreground);
+    font-family: var(--font-mono);
+  }
+  & .doc-copy {
+    position: absolute;
+    top: 0.35rem;
+    right: 0.4rem;
+    padding: 0.1rem 0.5rem;
+    font-size: 12px;
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    background: var(--raised);
+    color: var(--muted-foreground);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s;
+    &:hover {
+      color: var(--foreground);
+    }
+  }
+  &:hover .doc-copy,
+  & .doc-copy:focus-visible {
+    opacity: 1;
+  }
+}
+@media (hover: none) {
+  .doc-code .doc-copy {
+    opacity: 1;
+  }
+}
+
+.doc-table {
+  margin: 1.25rem 0;
+  overflow-x: auto;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+
+  & table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  & th {
+    text-align: left;
+    font-weight: 600;
+    color: var(--foreground);
+    background: var(--surface);
+  }
+  & th,
+  & td {
+    padding: 0.55rem 0.85rem;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  & tr:last-child td {
+    border-bottom: 0;
+  }
+  & td:first-child {
+    color: var(--foreground);
+  }
+}
+
+.doc-callout {
+  margin: 1.5rem 0;
+  --callout-tone: var(--brand-text);
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--surface);
+  font-size: 14px;
+  line-height: 1.6;
+
+  & p {
+    margin: 0.3rem 0;
+  }
+  & p:last-child {
+    margin-bottom: 0;
+  }
+  & .doc-callout-title {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0 0 0.2rem;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--foreground);
+  }
+  & .doc-callout-title::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--callout-tone);
+  }
+  &[data-kind='tip'] {
+    --callout-tone: var(--success);
+  }
+  &[data-kind='warning'],
+  &[data-kind='important'] {
+    --callout-tone: var(--warning);
+    border-color: color-mix(in oklch, var(--warning) 35%, var(--rule));
+    background: color-mix(in oklch, var(--warning) 6%, var(--background));
+  }
+}
+
+.doc-shot {
+  margin: 1.75rem auto;
+
+  & .doc-shot-frame {
+    overflow: hidden;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    background: var(--surface);
+    box-shadow: var(--shot-shadow);
+  }
+  & figcaption {
+    margin-top: 0.65rem;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--muted-foreground);
+    text-align: center;
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "$schema": "https://tablegrip.dev/schema/theme-v1.json",
+  "name": "VS Code Modern",
+  "author": "Microsoft (VS Code's Dark Modern and Light Modern)",
+  "license": "MIT",
+  "themes": [
+    {
+      "name": "VS Code Dark Modern",
+      "appearance": "dark",
+      "colors": {
+        "frame.background": "#181818",
+        "island.background": "#1F1F1F",
+        "island.border": "#FFFFFF0F",
+        "divider": "#2B2B2B",
+        "accent": "#0078D4",
+        "accent.foreground": "#FFFFFF",
+        "text": "#CCCCCC",
+        "text.muted": "#9D9D9D",
+        "text.disabled": "#6E7681",
+        "border": "#2B2B2B",
+        "border.focused": "#0078D4",
+        "text.link": "#4DAAFC",
+        "input.background": "#313131",
+        "input.border": "#3C3C3C",
+        "popup.background": "#1F1F1F",
+        "popup.border": "#454545",
+        "list.selection.background": "#04395E",
+        "list.selection.inactive.background": "#37373D",
+        "list.hover.background": "#2A2D2E",
+        "button.secondary.border": "#3C3C3C",
+        "editor.currentLine": "#FFFFFF0A",
+        "editor.findMatch": "#EA5C0055",
+        "editor.findMatch.current": "#9E6A03",
+        "editor.bracket": "#0064001A",
+        "editor.bracket.border": "#888888"
+      },
+      "syntax": {
+        "keyword": "#569CD6",
+        "string": "#CE9178",
+        "number": "#B5CEA8",
+        "comment": {
+          "color": "#6A9955",
+          "fontStyle": "italic"
+        },
+        "quotedIdentifier": "#4EC9B0",
+        "parameter": "#9CDCFE"
+      },
+      "chart": [
+        "#3794FF",
+        "#CCA700",
+        "#89D185",
+        "#F14C4C",
+        "#B180D7",
+        "#4EC9B0",
+        "#D7BA7D",
+        "#CE9178",
+        "#9D9D9D",
+        "#C586C0"
+      ]
+    },
+    {
+      "name": "VS Code Light Modern",
+      "appearance": "light",
+      "colors": {
+        "frame.background": "#F8F8F8",
+        "island.background": "#FFFFFF",
+        "island.border": "#00000017",
+        "divider": "#E5E5E5",
+        "accent": "#005FB8",
+        "accent.foreground": "#FFFFFF",
+        "text": "#3B3B3B",
+        "text.muted": "#6E6E6E",
+        "text.disabled": "#9E9E9E",
+        "border": "#E5E5E5",
+        "border.focused": "#005FB8",
+        "text.link": "#005FB8",
+        "input.background": "#FFFFFF",
+        "input.border": "#CECECE",
+        "popup.background": "#F8F8F8",
+        "popup.border": "#CECECE",
+        "list.selection.background": "#CCE3F8",
+        "list.selection.inactive.background": "#E4E6F1",
+        "list.hover.background": "#F2F2F2",
+        "button.secondary.border": "#CECECE",
+        "editor.currentLine": "#00000008",
+        "editor.findMatch": "#EA5C0055",
+        "editor.findMatch.current": "#A8AC94",
+        "editor.bracket": "#0064001A",
+        "editor.bracket.border": "#B9B9B9"
+      },
+      "syntax": {
+        "keyword": "#0000FF",
+        "string": "#A31515",
+        "number": "#098658",
+        "comment": {
+          "color": "#008000",
+          "fontStyle": "italic"
+        },
+        "quotedIdentifier": "#267F99",
+        "parameter": "#001080"
+      },
+      "chart": [
+        "#1A85FF",
+        "#BF8803",
+        "#388A34",
+        "#E51400",
+        "#652D90",
+        "#16825D",
+        "#895503",
+        "#A31515",
+        "#616161",
+        "#AF00DB"
+      ]
+    }
+  ]
+}

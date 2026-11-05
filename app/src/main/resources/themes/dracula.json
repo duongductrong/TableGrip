@@ -1,0 +1,120 @@
+{
+  "$schema": "https://tablegrip.dev/schema/theme-v1.json",
+  "name": "Dracula",
+  "author": "Dracula Theme (draculatheme.com), with Alucard as its light variant",
+  "license": "MIT",
+  "themes": [
+    {
+      "name": "Dracula",
+      "appearance": "dark",
+      "colors": {
+        "frame.background": "#191A21",
+        "island.background": "#282A36",
+        "island.border": "#F8F8F20F",
+        "divider": "#343746",
+        "accent": "#BD93F9",
+        "accent.foreground": "#191A21",
+        "text": "#F8F8F2",
+        "text.muted": "#A3A8C8",
+        "text.disabled": "#6272A4",
+        "text.error": "#FF5555",
+        "text.warning": "#FFB86C",
+        "border": "#44475A",
+        "border.focused": "#BD93F9",
+        "text.link": "#8BE9FD",
+        "input.background": "#21222C",
+        "input.border": "#44475A",
+        "popup.background": "#21222C",
+        "popup.border": "#44475A",
+        "list.selection.background": "#44475A",
+        "list.selection.inactive.background": "#44475A99",
+        "list.hover.background": "#44475A75",
+        "button.secondary.border": "#44475A",
+        "editor.currentLine": "#44475A75",
+        "editor.findMatch": "#FFB86C40",
+        "editor.findMatch.current": "#FFB86C80",
+        "editor.bracket": "#50FA7B26",
+        "editor.bracket.border": "#50FA7B80"
+      },
+      "syntax": {
+        "keyword": "#FF79C6",
+        "string": "#F1FA8C",
+        "number": "#BD93F9",
+        "comment": {
+          "color": "#6272A4",
+          "fontStyle": "italic"
+        },
+        "quotedIdentifier": "#8BE9FD",
+        "parameter": "#FFB86C"
+      },
+      "chart": [
+        "#BD93F9",
+        "#FFB86C",
+        "#50FA7B",
+        "#FF5555",
+        "#8BE9FD",
+        "#FF79C6",
+        "#F1FA8C",
+        "#9580FF",
+        "#6272A4",
+        "#F8F8F2"
+      ]
+    },
+    {
+      "name": "Alucard",
+      "appearance": "light",
+      "colors": {
+        "frame.background": "#EFEAD2",
+        "island.background": "#FFFBEB",
+        "island.border": "#1F1F1F1A",
+        "divider": "#DED8C0",
+        "accent": "#644AC9",
+        "accent.foreground": "#FFFFFF",
+        "text": "#1F1F1F",
+        "text.muted": "#635D43",
+        "text.disabled": "#A39E83",
+        "text.error": "#CB3A2A",
+        "text.warning": "#A34D14",
+        "border": "#DED8C0",
+        "border.focused": "#644AC9",
+        "text.link": "#036A96",
+        "input.background": "#FFFDF5",
+        "input.border": "#CFCFDE",
+        "popup.background": "#FFFBEB",
+        "popup.border": "#CFCFDE",
+        "list.selection.background": "#CFCFDE",
+        "list.selection.inactive.background": "#CFCFDE99",
+        "list.hover.background": "#CFCFDE66",
+        "button.secondary.border": "#CFCFDE",
+        "editor.currentLine": "#CFCFDE55",
+        "editor.findMatch": "#A34D1426",
+        "editor.findMatch.current": "#A34D1459",
+        "editor.bracket": "#14710A1F",
+        "editor.bracket.border": "#14710A80"
+      },
+      "syntax": {
+        "keyword": "#A3144D",
+        "string": "#846E15",
+        "number": "#644AC9",
+        "comment": {
+          "color": "#6C664B",
+          "fontStyle": "italic"
+        },
+        "quotedIdentifier": "#036A96",
+        "parameter": "#A34D14"
+      },
+      "chart": [
+        "#644AC9",
+        "#A34D14",
+        "#14710A",
+        "#CB3A2A",
+        "#036A96",
+        "#A3144D",
+        "#846E15",
+        "#9C4AB6",
+        "#6C664B",
+        "#1F1F1F"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,129 @@
+package dev.tablegrip.app.completion
+
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.TextRange
+import dev.tablegrip.core.completion.CompletionItem
+import dev.tablegrip.core.completion.CompletionKind
+import dev.tablegrip.core.completion.CompletionResult
+import dev.tablegrip.core.dialect.SqlDialect
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+/** Where suggestions come from: a synchronous completer plus optional async value lookups from the database. */
+class CompletionSource(
+    val complete: (text: String, caret: Int) -> CompletionResult,
+    val dialect: SqlDialect,
+    val cache: SchemaCache?,
+)
+
+/**
+ * The open completion popup for one text field: current result, highlighted row and value suggestions that arrive
+ * asynchronously. Shared by the SQL editor and the table filter.
+ */
+class CompletionController(private val scope: CoroutineScope) {
+    var result by mutableStateOf<CompletionResult?>(null)
+        private set
+    var selected by mutableIntStateOf(0)
+        private set
+    private var values by mutableStateOf<List<CompletionItem>>(emptyList())
+    private var valueJob: Job? = null
+
+    /** Suggestions shown: data values first when a value is expected, then the rest. */
+    val items: List<CompletionItem>
+        get() = values + (result?.items ?: emptyList())
+
+    val isOpen: Boolean
+        get() = result != null && items.isNotEmpty()
+
+    /**
+     * Completing, even with nothing to show right now: keeps following the caret and refreshes when schema metadata or
+     * values arrive, so a list that was empty while tables were loading fills in by itself.
+     */
+    val isActive: Boolean
+        get() = result != null
+
+    /** Whether the highlighted item is exactly what's already typed, so Enter should just break the line. */
+    val selectedIsTyped: Boolean
+        get() {
+            val typed = result?.prefix?.trimStart('"', '`', '\'', '[') ?: return false
+            val item = items.getOrNull(selected) ?: return false
+            return typed.isNotEmpty() && item.kind != CompletionKind.Value && item.insertText.trimEnd().equals(typed, ignoreCase = true)
+        }
+
+    /** Recomputes for the caret; [explicit] (⌃Space) also opens with an empty prefix. */
+    fun update(state: TextFieldState, source: CompletionSource, explicit: Boolean) {
+        val caret = state.selection.start
+        if (!state.selection.collapsed) return close()
+        val next = source.complete(state.text.toString(), caret)
+        source.cache?.request(next.pendingTables)
+        val typed = next.prefix.isNotEmpty() || explicit || next.value != null || isAfterDot(state, next)
+        if (!typed) return close()
+        val previousKey = result?.let { it.replaceStart to it.prefix }
+        result = next
+        if (previousKey != (next.replaceStart to next.prefix)) selected = 0
+        loadValues(next, source)
+    }
+
+    private fun isAfterDot(state: TextFieldState, result: CompletionResult) = state.text.getOrNull(result.replaceStart - 1) == '.'
+
+    private fun loadValues(result: CompletionResult, source: CompletionSource) {
+        valueJob?.cancel()
+        val context = result.value
+        val cache = source.cache
+        if (context == null || cache == null) {
+            values = emptyList()
+            return
+        }
+        valueJob = scope.launch {
+            delay(120) // Let fast typing settle before querying.
+            val numeric = cache.isNumeric(context.namespace, context.table, context.column)
+            values =
+                cache.values(context).map { value ->
+                    val literal = if (numeric && !context.quoted && value.toBigDecimalOrNull() != null) value else source.dialect.literal(value, numeric = false)
+                    CompletionItem(value, literal, CompletionKind.Value, "${context.column} value")
+                }
+        }
+    }
+
+    fun move(delta: Int) {
+        val count = items.size
+        if (count > 0) selected = (selected + delta).mod(count)
+    }
+
+    fun select(index: Int) {
+        selected = index
+    }
+
+    /**
+     * Inserts the highlighted (or given) item over the typed prefix. Returns true when completion should continue right
+     * away, e.g. with the tables of a just-inserted `schema.`.
+     */
+    fun accept(state: TextFieldState, index: Int = selected): Boolean {
+        val result = result ?: return false
+        val item = items.getOrNull(index) ?: return false
+        var end = result.replaceEnd
+        // Completing inside 'pa|' replaces the whole literal, including an auto-inserted closing quote.
+        if (item.kind == CompletionKind.Value && result.value?.quoted == true && state.text.getOrNull(end) == '\'') end++
+        // A keyword's trailing space isn't doubled, nor put before a closing bracket or separator.
+        val next = state.text.getOrNull(end)
+        val text = if (item.insertText.endsWith(' ') && next != null && (next.isWhitespace() || next in ",);")) item.insertText.trimEnd(' ') else item.insertText
+        state.edit {
+            replace(result.replaceStart, end, text)
+            selection = TextRange(result.replaceStart + item.caretOffset.coerceAtMost(text.length))
+        }
+        close()
+        return text.endsWith('.')
+    }
+
+    fun close() {
+        result = null
+        values = emptyList()
+        valueJob?.cancel()
+    }
+}

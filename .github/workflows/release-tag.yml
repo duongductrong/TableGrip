@@ -1,0 +1,62 @@
+# When a release PR (release/vX.Y.Z, opened by release-prepare.yml) is merged, tags the merge commit vX.Y.Z and starts
+# the release workflow on that tag. The tag is made with the workflow token, which doesn't start workflows by pushing,
+# so the release workflow is started with a dispatch instead; it runs on the tag as if the tag had been pushed.
+name: Release Tag
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  tag:
+    # Merged, from a release branch of this repository (a fork can name a branch release/v* too).
+    if: >-
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'release/v') &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      BRANCH: ${{ github.event.pull_request.head.ref }}
+      SHA: ${{ github.event.pull_request.merge_commit_sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          persist-credentials: false
+
+      - name: Tag the merge commit
+        id: tag
+        run: |
+          set -euo pipefail
+          tag="${BRANCH#release/}"
+          version=$(sed -n 's/^tablegrip\.version=//p' gradle.properties)
+          if [[ "$tag" != "v$version" ]]; then
+            echo "::error::$BRANCH was merged, but tablegrip.version=$version on master. Fix the version and tag by hand."
+            exit 1
+          fi
+          if gh api "repos/$GH_REPO/git/ref/tags/$tag" > /dev/null 2>&1; then
+            echo "::error::$tag already exists."
+            exit 1
+          fi
+          gh api "repos/$GH_REPO/git/refs" -f ref="refs/tags/$tag" -f sha="$SHA" > /dev/null
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Tagged $SHA as $tag." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Start the release
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          gh workflow run release.yml --ref "$TAG"
+          echo "Started the Release workflow on $TAG." >> "$GITHUB_STEP_SUMMARY"
+          # The release branch has done its job; deleting it is tidy, not required.
+          gh api -X DELETE "repos/$GH_REPO/git/refs/heads/$BRANCH" > /dev/null 2>&1 || true

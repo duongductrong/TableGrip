@@ -1,0 +1,15 @@
+.gradle/
+.kotlin/
+build/
+build-*/
+out/
+.idea/
+*.iml
+local.properties
+.DS_Store
+
+# Written by Apache Derby in the working directory (tests)
+derby.log
+
+# JVM crash logs
+hs_err_pid*.log

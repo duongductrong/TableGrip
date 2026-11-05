@@ -1,0 +1,89 @@
+package dev.tablegrip.app.workspace
+
+import dev.tablegrip.app.AppState
+import dev.tablegrip.app.console.ConsoleTab
+import dev.tablegrip.core.connection.ConnectionConfig
+import dev.tablegrip.core.connection.ConnectionStore
+import dev.tablegrip.core.connection.DatabaseType
+import dev.tablegrip.core.connection.InMemorySecretStore
+import dev.tablegrip.core.history.QueryHistory
+import dev.tablegrip.core.settings.SettingsStore
+import kotlin.io.path.createTempDirectory
+import kotlin.test.AfterTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+
+class WorkspaceCloseTest {
+    private val app =
+        createTempDirectory("tablegrip-workspace").let { home ->
+            AppState(
+                settingsStore = SettingsStore(home.resolve("settings.json")),
+                connectionStore = ConnectionStore(home.resolve("connections.json"), InMemorySecretStore()),
+                history = QueryHistory(home.resolve("history.jsonl")),
+            )
+        }
+    private val config = ConnectionConfig(id = "db", name = "DB", type = DatabaseType.SQLite)
+    private val workspace = app.workspace
+
+    @AfterTest
+    fun tearDown() = app.dispose()
+
+    private fun console(sql: String = ""): ConsoleTab {
+        workspace.openConsole(config, sql)
+        return workspace.tabs.last() as ConsoleTab
+    }
+
+    @Test
+    fun `the SQL a console opens with is not unsaved work`() {
+        val tab = console("SELECT * FROM users;")
+        assertFalse(tab.hasUnsavedWork)
+        tab.editor.edit { append(" -- edited") }
+        assertTrue(tab.hasUnsavedWork)
+    }
+
+    @Test
+    fun `clean tabs close without asking`() {
+        console()
+        console("SELECT 1;")
+        var done = false
+        workspace.requestCloseAll { done = true }
+        assertTrue(done)
+        assertTrue(workspace.tabs.isEmpty())
+    }
+
+    @Test
+    fun `cancelling the save question keeps every tab open`() {
+        val edited = console()
+        console()
+        edited.editor.edit { append("DELETE FROM users") }
+        var done = false
+        workspace.requestCloseAll { done = true }
+
+        assertEquals(edited, workspace.selected)
+        assertNotNull(edited.pendingScriptClose)
+        edited.pendingScriptClose = null
+        assertFalse(done)
+        assertEquals(2, workspace.tabs.size)
+    }
+
+    @Test
+    fun `discarding resumes closing the rest`() {
+        val first = console()
+        val second = console()
+        first.editor.edit { append("UPDATE a SET b = 1") }
+        second.editor.edit { append("UPDATE c SET d = 2") }
+        var done = false
+        workspace.requestCloseAll { done = true }
+
+        first.closeAfterScript(save = false)
+        assertNull(first.pendingScriptClose)
+        assertEquals(second, workspace.selected)
+        second.closeAfterScript(save = false)
+        assertTrue(done)
+        assertTrue(workspace.tabs.isEmpty())
+    }
+}

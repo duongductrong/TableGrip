@@ -1,0 +1,120 @@
+{
+  "$schema": "https://tablegrip.dev/schema/theme-v1.json",
+  "name": "One",
+  "author": "Atom's One Dark and One Light",
+  "license": "MIT",
+  "themes": [
+    {
+      "name": "One Dark",
+      "appearance": "dark",
+      "colors": {
+        "frame.background": "#21252B",
+        "island.background": "#282C34",
+        "island.border": "#ABB2BF12",
+        "divider": "#3B4048",
+        "accent": "#4D78CC",
+        "accent.foreground": "#FFFFFF",
+        "text": "#ABB2BF",
+        "text.muted": "#7F848E",
+        "text.disabled": "#5C6370",
+        "text.error": "#E06C75",
+        "text.warning": "#E5C07B",
+        "border": "#3B4048",
+        "border.focused": "#4D78CC",
+        "text.link": "#61AFEF",
+        "input.background": "#1D1F23",
+        "input.border": "#3B4048",
+        "popup.background": "#21252B",
+        "popup.border": "#181A1F",
+        "list.selection.background": "#2C313A",
+        "list.selection.inactive.background": "#323842",
+        "list.hover.background": "#2C313A",
+        "button.secondary.border": "#3B4048",
+        "editor.currentLine": "#2C313C",
+        "editor.findMatch": "#528BFF3D",
+        "editor.findMatch.current": "#42557B",
+        "editor.bracket": "#515A6B40",
+        "editor.bracket.border": "#515A6B"
+      },
+      "syntax": {
+        "keyword": "#C678DD",
+        "string": "#98C379",
+        "number": "#D19A66",
+        "comment": {
+          "color": "#5C6370",
+          "fontStyle": "italic"
+        },
+        "quotedIdentifier": "#E06C75",
+        "parameter": "#E5C07B"
+      },
+      "chart": [
+        "#61AFEF",
+        "#E5C07B",
+        "#98C379",
+        "#E06C75",
+        "#C678DD",
+        "#56B6C2",
+        "#D19A66",
+        "#BE5046",
+        "#ABB2BF",
+        "#7F848E"
+      ]
+    },
+    {
+      "name": "One Light",
+      "appearance": "light",
+      "colors": {
+        "frame.background": "#EAEAEB",
+        "island.background": "#FAFAFA",
+        "island.border": "#383A4217",
+        "divider": "#DBDBDC",
+        "accent": "#4078F2",
+        "accent.foreground": "#FFFFFF",
+        "text": "#383A42",
+        "text.muted": "#696C77",
+        "text.disabled": "#A0A1A7",
+        "text.error": "#E45649",
+        "text.warning": "#C18401",
+        "border": "#DBDBDC",
+        "border.focused": "#4078F2",
+        "text.link": "#4078F2",
+        "input.background": "#FFFFFF",
+        "input.border": "#DBDBDC",
+        "popup.background": "#FAFAFA",
+        "popup.border": "#DBDBDC",
+        "list.selection.background": "#DBDBDC",
+        "list.selection.inactive.background": "#E5E5E6",
+        "list.hover.background": "#F0F0F1",
+        "button.secondary.border": "#DBDBDC",
+        "editor.currentLine": "#383A420C",
+        "editor.findMatch": "#526FFF33",
+        "editor.findMatch.current": "#526FFF66",
+        "editor.bracket": "#383A4222",
+        "editor.bracket.border": "#383A4266"
+      },
+      "syntax": {
+        "keyword": "#A626A4",
+        "string": "#50A14F",
+        "number": "#986801",
+        "comment": {
+          "color": "#A0A1A7",
+          "fontStyle": "italic"
+        },
+        "quotedIdentifier": "#E45649",
+        "parameter": "#C18401"
+      },
+      "chart": [
+        "#4078F2",
+        "#C18401",
+        "#50A14F",
+        "#E45649",
+        "#A626A4",
+        "#0184BC",
+        "#986801",
+        "#CA1243",
+        "#696C77",
+        "#383A42"
+      ]
+    }
+  ]
+}
