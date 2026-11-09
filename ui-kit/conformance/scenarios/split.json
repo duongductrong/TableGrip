@@ -1,0 +1,270 @@
+{
+  "component": "split",
+  "description": "The main window's HorizontalSplitLayout. The divider's position is a ratio of the width, lifted to the first pane's minimum and pulled back to leave the second pane its minimum; saved positions are restored clamped to 0.1-0.6 (sidebar) and 0.3-0.9 (agent).",
+  "cases": [
+    {
+      "name": "the divider starts at its ratio",
+      "setup": {},
+      "steps": [],
+      "expect": {
+        "first": 400,
+        "second": 400,
+        "ratio": 50
+      }
+    },
+    {
+      "name": "the sidebar's default ratio in a narrow window is lifted to its minimum",
+      "setup": {
+        "firstMin": 220,
+        "secondMin": 420,
+        "ratio": 0.24,
+        "width": 800
+      },
+      "steps": [],
+      "expect": {
+        "first": 220,
+        "second": 580,
+        "ratio": 28
+      }
+    },
+    {
+      "name": "a ratio below the first pane's minimum is lifted to it",
+      "setup": {
+        "firstMin": 220,
+        "secondMin": 420,
+        "ratio": 0.1
+      },
+      "steps": [],
+      "expect": {
+        "first": 220,
+        "second": 580,
+        "ratio": 28
+      }
+    },
+    {
+      "name": "a ratio above what the second pane's minimum allows is pulled back",
+      "setup": {
+        "firstMin": 220,
+        "secondMin": 420,
+        "ratio": 0.9
+      },
+      "steps": [],
+      "expect": {
+        "first": 380,
+        "second": 420,
+        "ratio": 48
+      }
+    },
+    {
+      "name": "the agent's default ratio in a narrow window is pulled back to the panel's minimum",
+      "setup": {
+        "firstMin": 480,
+        "secondMin": 300,
+        "ratio": 0.68
+      },
+      "steps": [],
+      "expect": {
+        "first": 500,
+        "second": 300,
+        "ratio": 63
+      }
+    },
+    {
+      "name": "the agent panel never gets narrower than its minimum",
+      "setup": {
+        "firstMin": 480,
+        "secondMin": 300,
+        "ratio": 0.95
+      },
+      "steps": [],
+      "expect": {
+        "first": 500,
+        "second": 300,
+        "ratio": 63
+      }
+    },
+    {
+      "name": "the editor never gets narrower than its minimum",
+      "setup": {
+        "firstMin": 480,
+        "secondMin": 300,
+        "ratio": 0.3
+      },
+      "steps": [],
+      "expect": {
+        "first": 480,
+        "second": 320,
+        "ratio": 60
+      }
+    },
+    {
+      "name": "only a first minimum",
+      "setup": {
+        "ratio": 0.1,
+        "firstMin": 300
+      },
+      "steps": [],
+      "expect": {
+        "first": 300,
+        "second": 500,
+        "ratio": 38
+      }
+    },
+    {
+      "name": "only a second minimum",
+      "setup": {
+        "ratio": 0.9,
+        "secondMin": 300
+      },
+      "steps": [],
+      "expect": {
+        "first": 500,
+        "second": 300,
+        "ratio": 63
+      }
+    },
+    {
+      "name": "a narrower window keeps both minimums when they fit",
+      "setup": {
+        "firstMin": 220,
+        "secondMin": 420,
+        "width": 650,
+        "ratio": 0.24
+      },
+      "steps": [],
+      "expect": {
+        "first": 220,
+        "second": 430,
+        "ratio": 34
+      }
+    },
+    {
+      "name": "without minimums the divider can reach the edges",
+      "setup": {
+        "ratio": 0.0
+      },
+      "steps": [],
+      "expect": {
+        "first": 0,
+        "second": 800,
+        "ratio": 0
+      }
+    },
+    {
+      "name": "without minimums the divider can reach the far edge",
+      "setup": {
+        "ratio": 1.0
+      },
+      "steps": [],
+      "expect": {
+        "first": 800,
+        "second": 0,
+        "ratio": 100
+      }
+    },
+    {
+      "name": "a saved sidebar position above the limit is restored at 60%",
+      "setup": {
+        "restore": "sidebar",
+        "saved": 0.9
+      },
+      "steps": [],
+      "expect": {
+        "first": 480,
+        "second": 320,
+        "ratio": 60
+      }
+    },
+    {
+      "name": "a saved sidebar position below the limit is restored at 10%",
+      "setup": {
+        "restore": "sidebar",
+        "saved": 0.02
+      },
+      "steps": [],
+      "expect": {
+        "first": 80,
+        "second": 720,
+        "ratio": 10
+      }
+    },
+    {
+      "name": "a saved sidebar position in range is restored as it was",
+      "setup": {
+        "restore": "sidebar",
+        "saved": 0.3
+      },
+      "steps": [],
+      "expect": {
+        "first": 240,
+        "second": 560,
+        "ratio": 30
+      }
+    },
+    {
+      "name": "the sidebar limit itself is kept",
+      "setup": {
+        "restore": "sidebar",
+        "saved": 0.6
+      },
+      "steps": [],
+      "expect": {
+        "first": 480,
+        "second": 320,
+        "ratio": 60
+      }
+    },
+    {
+      "name": "a saved agent position above the limit is restored at 90%",
+      "setup": {
+        "restore": "agent",
+        "saved": 0.99
+      },
+      "steps": [],
+      "expect": {
+        "first": 720,
+        "second": 80,
+        "ratio": 90
+      }
+    },
+    {
+      "name": "a saved agent position below the limit is restored at 30%",
+      "setup": {
+        "restore": "agent",
+        "saved": 0.1
+      },
+      "steps": [],
+      "expect": {
+        "first": 240,
+        "second": 560,
+        "ratio": 30
+      }
+    },
+    {
+      "name": "a saved agent position in range is restored as it was",
+      "setup": {
+        "restore": "agent",
+        "saved": 0.5
+      },
+      "steps": [],
+      "expect": {
+        "first": 400,
+        "second": 400,
+        "ratio": 50
+      }
+    },
+    {
+      "name": "the agent limit itself is kept",
+      "setup": {
+        "restore": "agent",
+        "saved": 0.3
+      },
+      "steps": [],
+      "expect": {
+        "first": 240,
+        "second": 560,
+        "ratio": 30
+      }
+    }
+  ]
+}

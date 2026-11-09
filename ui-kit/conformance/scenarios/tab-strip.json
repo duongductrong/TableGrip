@@ -1,0 +1,558 @@
+{
+  "component": "tab-strip",
+  "description": "Jewel's TabStrip as the dialogs and result tabs use it. A click selects; arrow keys, Home and End move the selection (wrapping) once the strip has focus, which a click does not give; the strip is one Tab stop; the selected tab is scrolled into view when the strip overflows.",
+  "cases": [
+    {
+      "name": "the first tab starts selected",
+      "setup": {},
+      "steps": [],
+      "expect": {
+        "selected": "Tab 0",
+        "tabs": "Tab 0,Tab 1,Tab 2"
+      }
+    },
+    {
+      "name": "a click selects a tab",
+      "setup": {},
+      "steps": [
+        {
+          "click": "tab:2"
+        }
+      ],
+      "expect": {
+        "selected": "Tab 2",
+        "tabs": "Tab 0,Tab 1,Tab 2"
+      }
+    },
+    {
+      "name": "a click on another tab moves the selection",
+      "setup": {},
+      "steps": [
+        {
+          "click": "tab:2"
+        },
+        {
+          "click": "tab:1"
+        }
+      ],
+      "expect": {
+        "selected": "Tab 1",
+        "tabs": "Tab 0,Tab 1,Tab 2"
+      }
+    },
+    {
+      "name": "a click does not give the strip keyboard focus",
+      "setup": {},
+      "steps": [
+        {
+          "click": "tab:1"
+        }
+      ],
+      "expect": {
+        "focused": false
+      }
+    },
+    {
+      "name": "the close button removes its tab",
+      "setup": {
+        "closable": true
+      },
+      "steps": [
+        {
+          "click": "close:1"
+        }
+      ],
+      "expect": {
+        "selected": "Tab 0",
+        "tabs": "Tab 0,Tab 2"
+      }
+    },
+    {
+      "name": "closing the selected last tab selects the one before",
+      "setup": {
+        "closable": true
+      },
+      "steps": [
+        {
+          "click": "tab:2"
+        },
+        {
+          "click": "close:2"
+        }
+      ],
+      "expect": {
+        "selected": "Tab 1",
+        "tabs": "Tab 0,Tab 1"
+      }
+    },
+    {
+      "name": "closing a tab before the selected one keeps the selection on its tab",
+      "setup": {
+        "closable": true
+      },
+      "steps": [
+        {
+          "click": "tab:2"
+        },
+        {
+          "click": "close:1"
+        }
+      ],
+      "expect": {
+        "selected": "Tab 2",
+        "tabs": "Tab 0,Tab 2"
+      }
+    },
+    {
+      "name": "closing the selected middle tab selects the one before",
+      "setup": {
+        "closable": true
+      },
+      "steps": [
+        {
+          "click": "tab:1"
+        },
+        {
+          "click": "close:1"
+        }
+      ],
+      "expect": {
+        "selected": "Tab 0",
+        "tabs": "Tab 0,Tab 2"
+      }
+    },
+    {
+      "name": "closing the selected first tab selects the next one",
+      "setup": {
+        "closable": true
+      },
+      "steps": [
+        {
+          "click": "close:0"
+        }
+      ],
+      "expect": {
+        "selected": "Tab 1",
+        "tabs": "Tab 1,Tab 2"
+      }
+    },
+    {
+      "name": "closing the only tab leaves an empty strip",
+      "setup": {
+        "closable": true,
+        "tabs": 1
+      },
+      "steps": [
+        {
+          "click": "close:0"
+        }
+      ],
+      "expect": {
+        "selected": "",
+        "tabs": ""
+      }
+    },
+    {
+      "name": "Right selects the next tab",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Right"
+        }
+      ],
+      "expect": {
+        "selected": "Tab 1",
+        "tabs": "Tab 0,Tab 1,Tab 2"
+      }
+    },
+    {
+      "name": "Right from a clicked tab continues from it",
+      "setup": {},
+      "steps": [
+        {
+          "click": "tab:1"
+        },
+        "focus",
+        {
+          "key": "Right"
+        }
+      ],
+      "expect": {
+        "selected": "Tab 2",
+        "tabs": "Tab 0,Tab 1,Tab 2"
+      }
+    },
+    {
+      "name": "Right wraps from the last tab to the first",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "End"
+        },
+        {
+          "key": "Right"
+        }
+      ],
+      "expect": {
+        "selected": "Tab 0",
+        "tabs": "Tab 0,Tab 1,Tab 2"
+      }
+    },
+    {
+      "name": "Left wraps from the first tab to the last",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Left"
+        }
+      ],
+      "expect": {
+        "selected": "Tab 2",
+        "tabs": "Tab 0,Tab 1,Tab 2"
+      }
+    },
+    {
+      "name": "Left selects the previous tab",
+      "setup": {},
+      "steps": [
+        {
+          "click": "tab:2"
+        },
+        "focus",
+        {
+          "key": "Left"
+        }
+      ],
+      "expect": {
+        "selected": "Tab 1",
+        "tabs": "Tab 0,Tab 1,Tab 2"
+      }
+    },
+    {
+      "name": "Home selects the first tab",
+      "setup": {},
+      "steps": [
+        {
+          "click": "tab:2"
+        },
+        "focus",
+        {
+          "key": "Home"
+        }
+      ],
+      "expect": {
+        "selected": "Tab 0",
+        "tabs": "Tab 0,Tab 1,Tab 2"
+      }
+    },
+    {
+      "name": "End selects the last tab",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "End"
+        }
+      ],
+      "expect": {
+        "selected": "Tab 2",
+        "tabs": "Tab 0,Tab 1,Tab 2"
+      }
+    },
+    {
+      "name": "Modifiers do not change what the arrows do",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Right",
+          "mods": [
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "selected": "Tab 1",
+        "tabs": "Tab 0,Tab 1,Tab 2"
+      }
+    },
+    {
+      "name": "Enter, Space, Up, Down and Delete leave the selection alone",
+      "setup": {
+        "closable": true
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "Enter"
+        },
+        {
+          "key": "Space"
+        },
+        {
+          "key": "Up"
+        },
+        {
+          "key": "Down"
+        },
+        {
+          "key": "Delete"
+        }
+      ],
+      "expect": {
+        "selected": "Tab 0",
+        "tabs": "Tab 0,Tab 1,Tab 2"
+      }
+    },
+    {
+      "name": "a lone tab wraps onto itself",
+      "setup": {
+        "tabs": 1
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "Right"
+        }
+      ],
+      "expect": {
+        "selected": "Tab 0",
+        "tabs": "Tab 0"
+      }
+    },
+    {
+      "name": "the strip is a single Tab stop",
+      "setup": {
+        "next": true
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "Tab"
+        }
+      ],
+      "expect": {
+        "nextFocused": true
+      }
+    },
+    {
+      "name": "Tab wraps back to the strip",
+      "setup": {
+        "next": true
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "Tab"
+        },
+        {
+          "key": "Tab"
+        }
+      ],
+      "expect": {
+        "focused": true,
+        "nextFocused": false
+      }
+    },
+    {
+      "name": "Shift+Tab leaves the strip",
+      "setup": {
+        "next": true
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "Tab",
+          "mods": [
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "nextFocused": true
+      }
+    },
+    {
+      "name": "a selected tab beyond the edge is scrolled into view",
+      "setup": {
+        "closable": true,
+        "tabs": 10,
+        "width": 200,
+        "selected": 8
+      },
+      "steps": [],
+      "expect": {
+        "selected": "Tab 8",
+        "selectedVisible": true
+      }
+    },
+    {
+      "name": "the last tab is scrolled into view",
+      "setup": {
+        "closable": true,
+        "tabs": 10,
+        "width": 200,
+        "selected": 9
+      },
+      "steps": [],
+      "expect": {
+        "selected": "Tab 9",
+        "selectedVisible": true
+      }
+    },
+    {
+      "name": "a selected tab in the middle is scrolled into view",
+      "setup": {
+        "closable": true,
+        "tabs": 10,
+        "width": 200,
+        "selected": 5
+      },
+      "steps": [],
+      "expect": {
+        "selected": "Tab 5",
+        "selectedVisible": true
+      }
+    },
+    {
+      "name": "a tab near the start needs no scrolling",
+      "setup": {
+        "closable": true,
+        "tabs": 10,
+        "width": 200,
+        "selected": 2
+      },
+      "steps": [],
+      "expect": {
+        "selected": "Tab 2",
+        "selectedVisible": true
+      }
+    },
+    {
+      "name": "a click on a visible tab selects it",
+      "setup": {
+        "closable": true,
+        "tabs": 10,
+        "width": 200
+      },
+      "steps": [
+        {
+          "click": "tab:2"
+        }
+      ],
+      "expect": {
+        "selected": "Tab 2",
+        "selectedVisible": true
+      }
+    },
+    {
+      "name": "Right through an overflowing strip keeps the selected tab in view",
+      "setup": {
+        "closable": true,
+        "tabs": 10,
+        "width": 200
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "Right"
+        },
+        {
+          "key": "Right"
+        },
+        {
+          "key": "Right"
+        },
+        {
+          "key": "Right"
+        },
+        {
+          "key": "Right"
+        }
+      ],
+      "expect": {
+        "selected": "Tab 5",
+        "selectedVisible": true
+      }
+    },
+    {
+      "name": "End scrolls to the last tab",
+      "setup": {
+        "closable": true,
+        "tabs": 10,
+        "width": 200
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "End"
+        }
+      ],
+      "expect": {
+        "selected": "Tab 9",
+        "selectedVisible": true
+      }
+    },
+    {
+      "name": "Home scrolls back to the first tab",
+      "setup": {
+        "closable": true,
+        "tabs": 10,
+        "width": 200
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "End"
+        },
+        {
+          "key": "Home"
+        }
+      ],
+      "expect": {
+        "selected": "Tab 0",
+        "selectedVisible": true
+      }
+    },
+    {
+      "name": "Left from the first tab wraps and scrolls to the end",
+      "setup": {
+        "closable": true,
+        "tabs": 10,
+        "width": 200
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "Left"
+        }
+      ],
+      "expect": {
+        "selected": "Tab 9",
+        "selectedVisible": true
+      }
+    },
+    {
+      "name": "Right from the last tab wraps and scrolls to the start",
+      "setup": {
+        "closable": true,
+        "tabs": 10,
+        "width": 200,
+        "selected": 9
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "Right"
+        }
+      ],
+      "expect": {
+        "selected": "Tab 0",
+        "selectedVisible": true
+      }
+    }
+  ]
+}

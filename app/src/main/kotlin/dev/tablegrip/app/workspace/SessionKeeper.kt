@@ -72,8 +72,8 @@ class SessionKeeper(private val app: AppState, private val store: SessionStore =
             }
         session.agentChat?.let(app.agent::openChat)
         if (settings.rememberPanelSizes) {
-            session.sidebarSplit?.let { app.sidebarSplit.dividerPosition = it.coerceIn(0.1f, 0.6f) }
-            session.agentSplit?.let { app.agentSplit.dividerPosition = it.coerceIn(0.3f, 0.9f) }
+            session.sidebarSplit?.let { app.sidebarSplit.dividerPosition = restoredSidebarSplit(it) }
+            session.agentSplit?.let { app.agentSplit.dividerPosition = restoredAgentSplit(it) }
         }
         if (settings.rememberWindowBounds) session.window?.let(::restoreWindow)
         session.connectionId?.takeIf { app.connections.byId(it) != null && workspace.selected == null }?.let { app.currentConnectionId = it }
@@ -133,3 +133,9 @@ class SessionKeeper(private val app: AppState, private val store: SessionStore =
         val log = LoggerFactory.getLogger(SessionKeeper::class.java)
     }
 }
+
+/** A saved sidebar divider position, kept where the sidebar stays usable. */
+internal fun restoredSidebarSplit(saved: Float): Float = saved.coerceIn(0.1f, 0.6f)
+
+/** A saved agent-panel divider position, kept where the agent panel stays usable. */
+internal fun restoredAgentSplit(saved: Float): Float = saved.coerceIn(0.3f, 0.9f)
