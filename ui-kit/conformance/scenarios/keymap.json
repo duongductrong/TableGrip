@@ -940,6 +940,169 @@
       "expect": {
         "fired": "CloseTab"
       }
+    },
+    {
+      "name": "primary with = zooms in",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Equals",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "ZoomIn"
+      }
+    },
+    {
+      "name": "primary with Shift and = (the + key) zooms in",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Equals",
+          "mods": [
+            "primary",
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "ZoomInAlt"
+      }
+    },
+    {
+      "name": "primary with - zooms out",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Minus",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "ZoomOut"
+      }
+    },
+    {
+      "name": "primary with 0 resets the zoom",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Digit0",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "ResetZoom"
+      }
+    },
+    {
+      "name": "primary with / comments lines",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Slash",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "Comment"
+      }
+    },
+    {
+      "name": "primary with Shift and / shows the shortcuts",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Slash",
+          "mods": [
+            "primary",
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "ShowShortcuts"
+      }
+    },
+    {
+      "name": "the keypad's Enter counts as Enter",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "NumpadEnter",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "RunStatement,Submit,ApplyFilter"
+      }
+    },
+    {
+      "name": "the physical Control key with Tab goes to the next tab",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Tab",
+          "mods": [
+            "ctrl"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "NextTabAlt"
+      }
+    },
+    {
+      "name": "the physical Control key with Shift and Tab goes to the previous tab",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Tab",
+          "mods": [
+            "ctrl",
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "PreviousTabAlt"
+      }
+    },
+    {
+      "name": "the physical Control key with Space asks for completion",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Space",
+          "mods": [
+            "ctrl"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "Completion"
+      }
     }
   ]
 }

@@ -17,6 +17,7 @@ import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.MouseButton
 import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.rightClick
 import androidx.compose.ui.test.performKeyInput
@@ -25,6 +26,7 @@ import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.requestFocus
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.test.withKeyDown
+import dev.tablegrip.app.conformance.subjects.composeKey
 import dev.tablegrip.app.ui.TableGripTheme
 import org.jetbrains.skiko.OS
 import org.jetbrains.skiko.hostOs
@@ -93,6 +95,21 @@ class ConformanceTest {
     private fun ComposeUiTest.perform(step: Step) {
         when (step) {
             is Step.Click -> node(step.tag).performClick()
+            is Step.MiddleClick ->
+                node(step.tag).performMouseInput {
+                    moveTo(center)
+                    press(MouseButton.Tertiary)
+                    release(MouseButton.Tertiary)
+                }
+            is Step.Drag ->
+                node(step.tag).performMouseInput {
+                    val by = Offset(step.dx.toFloat() * density, step.dy.toFloat() * density)
+                    moveTo(center)
+                    press()
+                    // In small moves, as a hand does: drag detectors wait for the touch slop before they follow.
+                    repeat(DragMoves) { moveBy(by / DragMoves.toFloat()) }
+                    release()
+                }
             is Step.DoubleClick -> node(step.tag).performMouseInput { doubleClick() }
             is Step.RightClick -> node(step.tag).performMouseInput { rightClick() }
             is Step.Hover -> node(step.tag).performMouseInput { moveTo(center) }
@@ -139,31 +156,9 @@ class ConformanceTest {
             else -> error("Unknown modifier '$name'")
         }
 
-    private fun keyOf(name: String): Key =
-        when (name) {
-            "Space" -> Key.Spacebar
-            "Enter" -> Key.Enter
-            "Tab" -> Key.Tab
-            "Escape" -> Key.Escape
-            "Backspace" -> Key.Backspace
-            "Delete" -> Key.Delete
-            "Home" -> Key.MoveHome
-            "End" -> Key.MoveEnd
-            "Left" -> Key.DirectionLeft
-            "Right" -> Key.DirectionRight
-            "Up" -> Key.DirectionUp
-            "Down" -> Key.DirectionDown
-            "PageUp" -> Key.PageUp
-            "PageDown" -> Key.PageDown
-            "F2" -> Key.F2
-            else -> if (name.length == 1 && name[0] in 'A'..'Z') Letters[name[0] - 'A'] else error("Unknown key '$name'")
-        }
+    private fun keyOf(name: String): Key = composeKey(name)
 
     private companion object {
-        val Letters =
-            listOf(
-                Key.A, Key.B, Key.C, Key.D, Key.E, Key.F, Key.G, Key.H, Key.I, Key.J, Key.K, Key.L, Key.M,
-                Key.N, Key.O, Key.P, Key.Q, Key.R, Key.S, Key.T, Key.U, Key.V, Key.W, Key.X, Key.Y, Key.Z,
-            )
+        const val DragMoves = 10
     }
 }

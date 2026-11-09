@@ -1,9 +1,12 @@
 use std::collections::HashSet;
 
 use serde_json::{Map, Value};
-use tg_ui_logic::{Input, Key, KeyEvent, Keymap, Modifiers, Phase, Platform, Preset, dispatch};
+use tg_ui_logic::{
+    Code, Input, Key, KeyEvent, Keymap, Modifiers, Phase, Platform, Preset, dispatch,
+};
 
 use super::{Subject, flag};
+use crate::step::Step;
 
 const WINDOW: usize = 0;
 const INNER: usize = 1;
@@ -59,6 +62,10 @@ impl KeymapSubject {
     /// Runs the key through the window, the inner control and back. `act` is false for a dry run.
     fn press(&mut self, key: Key, mods: Modifiers, act: bool) -> bool {
         let event = KeyEvent::from_input(key, mods, self.keymap.platform());
+        self.press_event(event, act)
+    }
+
+    fn press_event(&mut self, event: KeyEvent, act: bool) -> bool {
         let mut fired = None;
         let mut inner_hit = false;
         let result = dispatch(2, |layer, phase| match (layer, phase) {
@@ -77,7 +84,7 @@ impl KeymapSubject {
                 hit
             }
             (INNER, Phase::Bubble) => {
-                inner_hit = self.inner.contains(&key);
+                inner_hit = matches!(event.code, Code::Key(key) if self.inner.contains(&key));
                 inner_hit
             }
             _ => false,
@@ -112,6 +119,17 @@ impl Subject for KeymapSubject {
             inner_hits: 0,
         };
         probe.press(key, mods, false)
+    }
+
+    /// Keys beyond the shared set, and keys held with the physical Control or Meta key.
+    fn step(&mut self, step: &Step) -> Result<(), String> {
+        match step {
+            Step::Press(event) => {
+                self.press_event(*event, true);
+                Ok(())
+            }
+            other => Err(format!("unsupported step {other:?}")),
+        }
     }
 
     fn observe(&self, key: &str) -> Option<Value> {

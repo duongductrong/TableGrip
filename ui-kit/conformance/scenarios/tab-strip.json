@@ -553,6 +553,34 @@
         "selected": "Tab 0",
         "selectedVisible": true
       }
+    },
+    {
+      "name": "a middle click closes a closable tab",
+      "setup": {
+        "closable": true
+      },
+      "steps": [
+        {
+          "middleClick": "tab:1"
+        }
+      ],
+      "expect": {
+        "tabs": "Tab 0,Tab 2",
+        "selected": "Tab 0"
+      }
+    },
+    {
+      "name": "a middle click closes even a tab without a close button",
+      "setup": {},
+      "steps": [
+        {
+          "middleClick": "tab:1"
+        }
+      ],
+      "expect": {
+        "tabs": "Tab 0,Tab 2",
+        "selected": "Tab 0"
+      }
     }
   ]
 }

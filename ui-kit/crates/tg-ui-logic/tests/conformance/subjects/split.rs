@@ -2,6 +2,7 @@ use serde_json::{Map, Value};
 use tg_ui_logic::{Input, Split, SplitKind};
 
 use super::Subject;
+use crate::step::Step;
 
 pub struct SplitSubject {
     split: Split,
@@ -34,6 +35,18 @@ impl SplitSubject {
 impl Subject for SplitSubject {
     fn input(&mut self, _input: &Input) -> bool {
         false
+    }
+
+    /// A drag on the subject grabs the divider, which sits at its centre with the default ratio.
+    fn step(&mut self, step: &Step) -> Result<(), String> {
+        match step {
+            Step::Drag { tag: None, dx, .. } => {
+                let x = self.split.first_width(self.total) + dx;
+                self.split.drag_to(x, self.total);
+                Ok(())
+            }
+            other => Err(format!("unsupported step {other:?}")),
+        }
     }
 
     fn observe(&self, key: &str) -> Option<Value> {

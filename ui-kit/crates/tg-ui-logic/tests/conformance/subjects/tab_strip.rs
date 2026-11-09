@@ -27,6 +27,11 @@ impl TabStripSubject {
         }
     }
 
+    fn close(&mut self, i: usize) {
+        self.titles.remove(i);
+        self.strip.close(i);
+    }
+
     fn index(tag: &str, prefix: &str) -> Option<usize> {
         tag.strip_prefix(prefix)?.parse().ok()
     }
@@ -47,9 +52,11 @@ impl Subject for TabStripSubject {
                 self.strip.click(Self::index(tag, "tab:").unwrap());
             }
             Step::Click(Some(tag)) if Self::index(tag, "close:").is_some() => {
-                let i = Self::index(tag, "close:").unwrap();
-                self.titles.remove(i);
-                self.strip.close(i);
+                self.close(Self::index(tag, "close:").unwrap());
+            }
+            // Jewel closes a tab on a middle click, as its close button does, even one shown without that button.
+            Step::MiddleClick(Some(tag)) if Self::index(tag, "tab:").is_some() => {
+                self.close(Self::index(tag, "tab:").unwrap());
             }
             other => return Err(format!("unsupported step {other:?}")),
         }

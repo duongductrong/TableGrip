@@ -41,7 +41,17 @@ impl Harness {
         }
     }
 
+    /// Runs one step, then tells the subject when it has just gained focus.
     fn step(&mut self, step: Step) -> Result<(), String> {
+        let had_focus = self.focus.focused() == Some(0);
+        self.route(step)?;
+        if !had_focus && self.focus.focused() == Some(0) {
+            self.subject.on_focus();
+        }
+        Ok(())
+    }
+
+    fn route(&mut self, step: Step) -> Result<(), String> {
         match step {
             Step::Click(None) => self.send(Input::Click),
             Step::Focus => self.focus.focus(0),

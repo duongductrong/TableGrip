@@ -23,7 +23,22 @@ internal fun composeKey(name: String): Key =
         "PageUp" -> Key.PageUp
         "PageDown" -> Key.PageDown
         "F2" -> Key.F2
-        else -> if (name.length == 1 && name[0] in 'A'..'Z') Key(java.awt.event.KeyEvent.VK_A + (name[0] - 'A')) else error("Unknown key '$name'")
+        "Equals" -> Key.Equals
+        "Minus" -> Key.Minus
+        "Slash" -> Key.Slash
+        "Comma" -> Key.Comma
+        "Period" -> Key.Period
+        "LeftBracket" -> Key.LeftBracket
+        "RightBracket" -> Key.RightBracket
+        "NumpadEnter" -> Key.NumPadEnter
+        "NumpadAdd" -> Key.NumPadAdd
+        "NumpadSubtract" -> Key.NumPadSubtract
+        else ->
+            when {
+                name.length == 1 && name[0] in 'A'..'Z' -> Key(java.awt.event.KeyEvent.VK_A + (name[0] - 'A'))
+                name.length == 6 && name.startsWith("Digit") && name[5] in '0'..'9' -> Key(java.awt.event.KeyEvent.VK_0 + (name[5] - '0'))
+                else -> error("Unknown key '$name'")
+            }
     }
 
 internal fun JsonObject.keys(name: String): Set<Key> = ((this[name] as? JsonArray).orEmpty().map { composeKey(it.jsonPrimitive.content) }).toSet()

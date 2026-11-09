@@ -115,6 +115,10 @@ impl Subject for LazyTreeSubject {
         matches!(step, Step::Click(Some(_)) | Step::DoubleClick(Some(_)))
     }
 
+    fn on_focus(&mut self) {
+        self.tree.focus(&self.items);
+    }
+
     fn tab(&mut self, backwards: bool) -> bool {
         self.tree.focus(&self.items);
         if backwards || self.tab_stop >= FORWARD_STOPS {

@@ -94,25 +94,36 @@ Xung đột kiểu một dòng thêm ở cùng vị trí là bình thường; se
 ### Từ vựng kịch bản (đã có sẵn ở cả hai runner)
 
 - **Step:**
-  - Con trỏ: `click`, `doubleClick`, `rightClick`, `hover`, `unhover`. Mỗi loại có thể nhắm một tag, ví dụ
-    `{ "click": "<tag>" }`.
+  - Con trỏ: `click`, `doubleClick`, `rightClick`, `middleClick`, `hover`, `unhover`. Mỗi loại có thể nhắm một tag,
+    ví dụ `{ "click": "<tag>" }`.
+  - Kéo: `{ "drag": "<tag>" | null, "dx": <dp>, "dy": <dp> }`, tức nhấn ở tâm, kéo một đoạn rồi thả. `null` là kéo
+    subject.
   - Bàn phím và chữ: `focus`, `{ "key": "<Tên>", "mods": ["primary", "shift", "alt"] }`, `{ "type": "..." }`.
   - Thời gian: `{ "wait": <ms> }`.
 - **Phím:**
   - `Space`, `Enter`, `Tab`, `Escape`, `Backspace`, `Delete`
   - `Home`, `End`, `Left`, `Right`, `Up`, `Down`, `PageUp`, `PageDown`
   - `F2`, `A`–`Z`
+  - `Digit0`–`Digit9`, `Equals`, `Minus`, `Slash`, `Comma`, `Period`, `LeftBracket`, `RightBracket`
+  - `NumpadEnter`, `NumpadAdd`, `NumpadSubtract`
+
+  Rust chuyển phím ngoài `Key`, hoặc phím đi kèm `ctrl`/`meta`, thành `Step::Press(KeyEvent)` và gửi cho
+  `Subject::step`. Hiện chỉ subject keymap nhận step này.
 - **Expect dùng chung:** `focused`, `nextFocused`, `shown:<tag>` (có node mang tag đó trên màn hình). Mọi key khác do
   subject báo.
 - **Setup dùng chung:** `next: true` thêm một control focus được sau subject (tag `next`).
+- **Modifier `ctrl`, `meta`:** phím Control và Meta vật lý (⌃ và ⌘ trên macOS). Trên Windows/Linux, `ctrl` trùng với
+  `primary`.
 - **Modifier `word`:** di chuyển theo từ, là Option trên macOS và Ctrl ở nơi khác. Hai runner tự quy đổi.
 - **Hook cho subject Rust** (mặc định không làm gì):
   - `claims_key`: subject giữ phím trước khi focus chuyển, ví dụ Tab trong TextArea.
   - `tab(backwards)`: subject có nhiều điểm dừng Tab của riêng nó, ví dụ các dòng radio.
   - `pointer_focuses`: double-click hoặc click vào một phần của subject cũng làm nó nhận focus.
+  - `on_focus`: subject vừa nhận focus (qua `focus`, Tab hoặc con trỏ), ví dụ tree chọn dòng đầu.
 - **Giới hạn đã biết:**
   - Runner Kotlin chưa giả lập được IME composition, nên IME chỉ được kiểm trong Rust (`tg-text`).
   - Item trong popup của Jewel mất test tag do semantics bị gộp.
+  - Chưa có click kèm modifier (Shift/Cmd+click trên tree): mô hình `LazyTree` chưa hỗ trợ.
 
 ## Định nghĩa "xong" cho mỗi session
 

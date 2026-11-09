@@ -1286,6 +1286,16 @@
       "expect": {
         "nextFocused": true
       }
+    },
+    {
+      "name": "gaining focus with nothing selected selects the first row",
+      "setup": {},
+      "steps": [
+        "focus"
+      ],
+      "expect": {
+        "selected": "a"
+      }
     }
   ]
 }

@@ -53,6 +53,9 @@ pub trait Subject {
         false
     }
 
+    /// Focus has just moved onto the subject (by `focus`, Tab or a pointer step), as a control's focus listener hears.
+    fn on_focus(&mut self) {}
+
     /// The value of an `expect` key, or None when the subject can't report it.
     fn observe(&self, key: &str) -> Option<Value>;
 }

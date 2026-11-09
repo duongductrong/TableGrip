@@ -265,6 +265,37 @@
         "second": 560,
         "ratio": 30
       }
+    },
+    {
+      "name": "dragging the divider moves it",
+      "setup": {},
+      "steps": [
+        {
+          "drag": null,
+          "dx": 100
+        }
+      ],
+      "expect": {
+        "first": 500,
+        "second": 300,
+        "ratio": 63
+      }
+    },
+    {
+      "name": "dragging the divider stops at the second pane's minimum",
+      "setup": {
+        "secondMin": 350
+      },
+      "steps": [
+        {
+          "drag": null,
+          "dx": 200
+        }
+      ],
+      "expect": {
+        "first": 450,
+        "second": 350
+      }
     }
   ]
 }
