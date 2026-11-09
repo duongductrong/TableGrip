@@ -23,3 +23,13 @@ regex = "1.13.1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 unicode-segmentation = "1.12"
+# SSH tunnels (tg-core). Pure-Rust crypto: `ring` instead of russh's default aws-lc-rs, so no C/CMake/NASM build step.
+russh = { version = "=0.65.1", default-features = false, features = ["flate2", "ring", "rsa"] }
+thiserror = "=2.0.21"
+# Never called directly: depending on it with `sha1-insecure` makes cargo build russh's own pkcs5 with PBKDF2-HMAC-SHA1,
+# which older `openssl`/`ssh-keygen -m PKCS8` use to encrypt keys (SSHJ reads those). Kept in sync with russh's pkcs5.
+pkcs5 = { version = "=0.8.1", default-features = false, features = ["sha1-insecure"] }
+tokio = { version = "=1.54.1", default-features = false }
+# Test-only (tg-core dev-dependencies).
+rand = "=0.10.3"
+tempfile = "=3.27.0"

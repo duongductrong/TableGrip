@@ -4,3 +4,4 @@
 //!
 //! Ported from `core/src/main/kotlin/dev/tablegrip/core/{connection,settings,history,queries,session,activity,backup,theme}`
 //! (milestone M2 of docs/plans/rust-migration.md). Files the Kotlin app wrote must read back unchanged.
+pub mod ssh;

@@ -7,3 +7,12 @@ publish.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+russh.workspace = true
+thiserror.workspace = true
+pkcs5.workspace = true
+tokio = { workspace = true, features = ["net", "io-util", "sync", "time", "rt"] }
+
+[dev-dependencies]
+rand.workspace = true
+tempfile.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
