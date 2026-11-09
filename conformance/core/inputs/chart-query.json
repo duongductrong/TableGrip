@@ -1,0 +1,516 @@
+{
+  "subject": "chart-query",
+  "cases": [
+    {
+      "name": "wraps the query in a group by",
+      "sql": "SELECT * FROM orders WHERE total > 0;",
+      "spec": {
+        "type": "Line",
+        "x": "created_at",
+        "y": [
+          {
+            "column": "total",
+            "aggregate": "Sum"
+          }
+        ],
+        "series": "region",
+        "bucket": "Month"
+      }
+    },
+    {
+      "name": "without a series",
+      "sql": "SELECT * FROM orders",
+      "spec": {
+        "type": "Line",
+        "x": "created_at",
+        "y": [
+          {
+            "column": "total",
+            "aggregate": "Sum"
+          }
+        ],
+        "bucket": "Month"
+      }
+    },
+    {
+      "name": "two statements",
+      "sql": "SELECT 1; SELECT 2",
+      "spec": {
+        "type": "Line",
+        "x": "created_at",
+        "y": [
+          {
+            "column": "total",
+            "aggregate": "Sum"
+          }
+        ],
+        "series": "region",
+        "bucket": "Month"
+      }
+    },
+    {
+      "name": "a delete",
+      "sql": "DELETE FROM orders",
+      "spec": {
+        "type": "Line",
+        "x": "created_at",
+        "y": [
+          {
+            "column": "total",
+            "aggregate": "Sum"
+          }
+        ],
+        "series": "region",
+        "bucket": "Month"
+      }
+    },
+    {
+      "name": "a spec that doesn't aggregate",
+      "sql": "SELECT * FROM orders",
+      "spec": {
+        "type": "Line",
+        "x": "created_at",
+        "y": [
+          {
+            "column": "total",
+            "aggregate": "None"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a with query",
+      "sql": "WITH a AS (SELECT 1) SELECT * FROM a",
+      "spec": {
+        "type": "Line",
+        "x": "created_at",
+        "y": [
+          {
+            "column": "total",
+            "aggregate": "Sum"
+          }
+        ],
+        "series": "region",
+        "bucket": "Month"
+      }
+    },
+    {
+      "name": "an explain",
+      "sql": "EXPLAIN SELECT * FROM orders",
+      "spec": {
+        "type": "Line",
+        "x": "created_at",
+        "y": [
+          {
+            "column": "total",
+            "aggregate": "Sum"
+          }
+        ],
+        "series": "region",
+        "bucket": "Month"
+      }
+    },
+    {
+      "name": "an empty statement",
+      "sql": "",
+      "spec": {
+        "type": "Line",
+        "x": "created_at",
+        "y": [
+          {
+            "column": "total",
+            "aggregate": "Sum"
+          }
+        ],
+        "series": "region",
+        "bucket": "Month"
+      }
+    },
+    {
+      "name": "only a semicolon",
+      "sql": ";",
+      "spec": {
+        "type": "Line",
+        "x": "created_at",
+        "y": [
+          {
+            "column": "total",
+            "aggregate": "Sum"
+          }
+        ],
+        "series": "region",
+        "bucket": "Month"
+      }
+    },
+    {
+      "name": "lower case select",
+      "sql": "  select * from orders  ;  ",
+      "spec": {
+        "type": "Line",
+        "x": "created_at",
+        "y": [
+          {
+            "column": "total",
+            "aggregate": "Sum"
+          }
+        ],
+        "series": "region",
+        "bucket": "Month"
+      }
+    },
+    {
+      "name": "a comment before the select",
+      "sql": "-- all orders\nSELECT * FROM orders",
+      "spec": {
+        "type": "Line",
+        "x": "created_at",
+        "y": [
+          {
+            "column": "total",
+            "aggregate": "Sum"
+          }
+        ],
+        "series": "region",
+        "bucket": "Month"
+      }
+    },
+    {
+      "name": "a trailing comment",
+      "sql": "SELECT * FROM orders -- all",
+      "spec": {
+        "type": "Line",
+        "x": "created_at",
+        "y": [
+          {
+            "column": "total",
+            "aggregate": "Sum"
+          }
+        ],
+        "series": "region",
+        "bucket": "Month"
+      }
+    },
+    {
+      "name": "a trailing semicolon and a comment",
+      "sql": "SELECT * FROM orders; -- all",
+      "spec": {
+        "type": "Line",
+        "x": "created_at",
+        "y": [
+          {
+            "column": "total",
+            "aggregate": "Sum"
+          }
+        ],
+        "series": "region",
+        "bucket": "Month"
+      }
+    },
+    {
+      "name": "a double semicolon",
+      "sql": "SELECT * FROM orders;;",
+      "spec": {
+        "type": "Line",
+        "x": "created_at",
+        "y": [
+          {
+            "column": "total",
+            "aggregate": "Sum"
+          }
+        ],
+        "series": "region",
+        "bucket": "Month"
+      }
+    },
+    {
+      "name": "a semicolon inside a string",
+      "sql": "SELECT * FROM orders WHERE note = 'a;b'",
+      "spec": {
+        "type": "Line",
+        "x": "created_at",
+        "y": [
+          {
+            "column": "total",
+            "aggregate": "Sum"
+          }
+        ],
+        "series": "region",
+        "bucket": "Month"
+      }
+    },
+    {
+      "name": "a multi line select",
+      "sql": "SELECT a,\n       b\nFROM orders\nWHERE a > 1\nORDER BY a",
+      "spec": {
+        "type": "Line",
+        "x": "created_at",
+        "y": [
+          {
+            "column": "total",
+            "aggregate": "Sum"
+          }
+        ],
+        "series": "region",
+        "bucket": "Month"
+      }
+    },
+    {
+      "name": "bucket Hour",
+      "sql": "SELECT * FROM orders",
+      "spec": {
+        "type": "Area",
+        "x": "ts",
+        "y": [
+          {
+            "column": "amount",
+            "aggregate": "Avg"
+          },
+          {
+            "column": "qty",
+            "aggregate": "Max"
+          }
+        ],
+        "bucket": "Hour"
+      }
+    },
+    {
+      "name": "bucket Day",
+      "sql": "SELECT * FROM orders",
+      "spec": {
+        "type": "Area",
+        "x": "ts",
+        "y": [
+          {
+            "column": "amount",
+            "aggregate": "Avg"
+          },
+          {
+            "column": "qty",
+            "aggregate": "Max"
+          }
+        ],
+        "bucket": "Day"
+      }
+    },
+    {
+      "name": "bucket Week",
+      "sql": "SELECT * FROM orders",
+      "spec": {
+        "type": "Area",
+        "x": "ts",
+        "y": [
+          {
+            "column": "amount",
+            "aggregate": "Avg"
+          },
+          {
+            "column": "qty",
+            "aggregate": "Max"
+          }
+        ],
+        "bucket": "Week"
+      }
+    },
+    {
+      "name": "bucket Month",
+      "sql": "SELECT * FROM orders",
+      "spec": {
+        "type": "Area",
+        "x": "ts",
+        "y": [
+          {
+            "column": "amount",
+            "aggregate": "Avg"
+          },
+          {
+            "column": "qty",
+            "aggregate": "Max"
+          }
+        ],
+        "bucket": "Month"
+      }
+    },
+    {
+      "name": "bucket Quarter",
+      "sql": "SELECT * FROM orders",
+      "spec": {
+        "type": "Area",
+        "x": "ts",
+        "y": [
+          {
+            "column": "amount",
+            "aggregate": "Avg"
+          },
+          {
+            "column": "qty",
+            "aggregate": "Max"
+          }
+        ],
+        "bucket": "Quarter"
+      }
+    },
+    {
+      "name": "bucket Year",
+      "sql": "SELECT * FROM orders",
+      "spec": {
+        "type": "Area",
+        "x": "ts",
+        "y": [
+          {
+            "column": "amount",
+            "aggregate": "Avg"
+          },
+          {
+            "column": "qty",
+            "aggregate": "Max"
+          }
+        ],
+        "bucket": "Year"
+      }
+    },
+    {
+      "name": "aggregates without a bucket",
+      "sql": "SELECT * FROM orders",
+      "spec": {
+        "type": "Bar",
+        "x": "region",
+        "y": [
+          {
+            "column": "total",
+            "aggregate": "Sum"
+          },
+          {
+            "column": "total",
+            "aggregate": "Min"
+          },
+          {
+            "column": "id",
+            "aggregate": "Count"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a measure without an aggregate gets the sum",
+      "sql": "SELECT * FROM orders",
+      "spec": {
+        "type": "Line",
+        "x": "created_at",
+        "y": [
+          {
+            "column": "total",
+            "aggregate": "None"
+          },
+          {
+            "column": "qty",
+            "aggregate": "Avg"
+          }
+        ],
+        "bucket": "Day"
+      }
+    },
+    {
+      "name": "a bar with a series",
+      "sql": "SELECT * FROM orders",
+      "spec": {
+        "type": "Bar",
+        "x": "region",
+        "y": [
+          {
+            "column": "total",
+            "aggregate": "Sum"
+          }
+        ],
+        "series": "kind",
+        "horizontal": true
+      }
+    },
+    {
+      "name": "a pie",
+      "sql": "SELECT * FROM orders",
+      "spec": {
+        "type": "Pie",
+        "x": "region",
+        "y": [
+          {
+            "column": "total",
+            "aggregate": "Count"
+          }
+        ]
+      }
+    },
+    {
+      "name": "names that need quoting",
+      "sql": "SELECT * FROM orders",
+      "spec": {
+        "type": "Bar",
+        "x": "we\"ird",
+        "y": [
+          {
+            "column": "order total",
+            "aggregate": "Sum"
+          }
+        ],
+        "series": "a`b"
+      }
+    },
+    {
+      "name": "names with brackets",
+      "sql": "SELECT * FROM orders",
+      "spec": {
+        "type": "Bar",
+        "x": "a]b",
+        "y": [
+          {
+            "column": "c]d",
+            "aggregate": "Sum"
+          }
+        ]
+      }
+    },
+    {
+      "name": "names with unicode",
+      "sql": "SELECT * FROM orders",
+      "spec": {
+        "type": "Bar",
+        "x": "vùng",
+        "y": [
+          {
+            "column": "tổng",
+            "aggregate": "Sum"
+          }
+        ],
+        "series": "loại"
+      }
+    },
+    {
+      "name": "a scatter that aggregates",
+      "sql": "SELECT * FROM orders",
+      "spec": {
+        "type": "Scatter",
+        "x": "x",
+        "y": [
+          {
+            "column": "y",
+            "aggregate": "Avg"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a bucket on a scatter",
+      "sql": "SELECT * FROM orders",
+      "spec": {
+        "type": "Scatter",
+        "x": "x",
+        "y": [
+          {
+            "column": "y",
+            "aggregate": "Avg"
+          }
+        ],
+        "bucket": "Day"
+      }
+    }
+  ]
+}

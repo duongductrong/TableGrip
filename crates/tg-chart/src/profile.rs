@@ -99,13 +99,47 @@ pub mod values {
     use tg_sql::filter::values::{parse_date, parse_time};
     use tg_sql::kt;
 
-    /// Java's `Double.parseDouble` grammar for decimal numbers: an optional sign, digits with an optional point, an
-    /// optional exponent and an optional `d`/`f` suffix; also `Infinity` and `NaN`. Hexadecimal floats aren't read.
+    /// A hexadecimal float as Java reads it: `0x`, hex digits with an optional point, a mandatory binary exponent.
+    fn hex_float(unsigned: &str) -> Option<f64> {
+        let rest = unsigned
+            .strip_prefix("0x")
+            .or_else(|| unsigned.strip_prefix("0X"))?;
+        let (mantissa, exponent) = rest.split_once(['p', 'P'])?;
+        let (whole, fraction) = mantissa.split_once('.').unwrap_or((mantissa, ""));
+        if whole.len() + fraction.len() == 0 {
+            return None;
+        }
+        let mut value = 0.0_f64;
+        for c in whole.chars().chain(fraction.chars()) {
+            value = value * 16.0 + f64::from(c.to_digit(16)?);
+        }
+        let digits = exponent.strip_prefix(['+', '-']).unwrap_or(exponent);
+        if digits.is_empty() || !digits.bytes().all(|b| b.is_ascii_digit()) {
+            return None;
+        }
+        let power: i32 = exponent
+            .parse::<i32>()
+            .unwrap_or(if exponent.starts_with('-') {
+                i32::MIN / 2
+            } else {
+                i32::MAX / 2
+            });
+        let power = power.saturating_sub(4 * fraction.len() as i32);
+        // Two steps, so a large exponent doesn't overflow before the mantissa brings it back in range.
+        let half = power / 2;
+        Some(value * 2f64.powi(half) * 2f64.powi(power - half))
+    }
+
+    /// Java's `Double.parseDouble` grammar: an optional sign, decimal digits with an optional point, an optional
+    /// exponent and an optional `d`/`f` suffix; hexadecimal floats; also `Infinity` and `NaN`.
     fn java_double(text: &str) -> Option<f64> {
         let body = text.strip_suffix(['d', 'D', 'f', 'F']).unwrap_or(text);
         let unsigned = body.strip_prefix(['+', '-']).unwrap_or(body);
         if unsigned == "Infinity" || unsigned == "NaN" {
             return body.replace("Infinity", "inf").parse().ok();
+        }
+        if let Some(value) = hex_float(unsigned) {
+            return Some(if body.starts_with('-') { -value } else { value });
         }
         let bytes = unsigned.as_bytes();
         let mut i = 0;

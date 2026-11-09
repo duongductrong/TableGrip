@@ -1,0 +1,2972 @@
+{
+  "subject": "chart-spec",
+  "cases": [
+    {
+      "name": "a bar of numbers over categories is fine",
+      "spec": {
+        "type": "Bar",
+        "x": "name",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          }
+        ]
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "a line over dates",
+      "spec": {
+        "type": "Line",
+        "x": "d",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          }
+        ]
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "a line over dates grouped",
+      "spec": {
+        "type": "Line",
+        "x": "d",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "Sum"
+          }
+        ],
+        "bucket": "Month"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "an unknown x",
+      "spec": {
+        "type": "Bar",
+        "x": "missing",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          }
+        ]
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "an unknown measure",
+      "spec": {
+        "type": "Bar",
+        "x": "name",
+        "y": [
+          {
+            "column": "nope",
+            "aggregate": "None"
+          }
+        ]
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "an unknown series",
+      "spec": {
+        "type": "Bar",
+        "x": "name",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          }
+        ],
+        "series": "nope"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "every unknown at once",
+      "spec": {
+        "type": "Bar",
+        "x": "a",
+        "y": [
+          {
+            "column": "b",
+            "aggregate": "None"
+          }
+        ],
+        "series": "c"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "no measures",
+      "spec": {
+        "type": "Bar",
+        "x": "name",
+        "y": []
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "six measures",
+      "spec": {
+        "type": "Bar",
+        "x": "name",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          },
+          {
+            "column": "n2",
+            "aggregate": "None"
+          },
+          {
+            "column": "n",
+            "aggregate": "None"
+          },
+          {
+            "column": "n2",
+            "aggregate": "None"
+          },
+          {
+            "column": "n",
+            "aggregate": "None"
+          },
+          {
+            "column": "n2",
+            "aggregate": "None"
+          }
+        ]
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "five measures",
+      "spec": {
+        "type": "Bar",
+        "x": "name",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          },
+          {
+            "column": "n2",
+            "aggregate": "None"
+          },
+          {
+            "column": "n",
+            "aggregate": "None"
+          },
+          {
+            "column": "n2",
+            "aggregate": "None"
+          },
+          {
+            "column": "n",
+            "aggregate": "None"
+          }
+        ]
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "a measure that isn't numeric",
+      "spec": {
+        "type": "Bar",
+        "x": "name",
+        "y": [
+          {
+            "column": "name",
+            "aggregate": "None"
+          }
+        ]
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "a measure that is a date",
+      "spec": {
+        "type": "Bar",
+        "x": "name",
+        "y": [
+          {
+            "column": "d",
+            "aggregate": "None"
+          }
+        ]
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "a measure that is other",
+      "spec": {
+        "type": "Bar",
+        "x": "name",
+        "y": [
+          {
+            "column": "blob",
+            "aggregate": "None"
+          }
+        ]
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "count needs no numbers",
+      "spec": {
+        "type": "Bar",
+        "x": "name",
+        "y": [
+          {
+            "column": "name",
+            "aggregate": "Count"
+          }
+        ]
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "count of an unreadable column",
+      "spec": {
+        "type": "Bar",
+        "x": "name",
+        "y": [
+          {
+            "column": "blob",
+            "aggregate": "Count"
+          }
+        ]
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "sum of text",
+      "spec": {
+        "type": "Bar",
+        "x": "name",
+        "y": [
+          {
+            "column": "name",
+            "aggregate": "Sum"
+          }
+        ]
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "series can't be x",
+      "spec": {
+        "type": "Bar",
+        "x": "name",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          }
+        ],
+        "series": "name"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "series can't be other",
+      "spec": {
+        "type": "Bar",
+        "x": "name",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          }
+        ],
+        "series": "blob"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "series with several measures",
+      "spec": {
+        "type": "Bar",
+        "x": "name",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          },
+          {
+            "column": "n2",
+            "aggregate": "None"
+          }
+        ],
+        "series": "s"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "series with one measure",
+      "spec": {
+        "type": "Bar",
+        "x": "name",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          }
+        ],
+        "series": "s"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "a numeric series",
+      "spec": {
+        "type": "Bar",
+        "x": "name",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          }
+        ],
+        "series": "n2"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "x can't be other",
+      "spec": {
+        "type": "Bar",
+        "x": "blob",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          }
+        ]
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "bucket on a category",
+      "spec": {
+        "type": "Line",
+        "x": "name",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "Sum"
+          }
+        ],
+        "bucket": "Day"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "bucket on a number",
+      "spec": {
+        "type": "Line",
+        "x": "n",
+        "y": [
+          {
+            "column": "n2",
+            "aggregate": "Sum"
+          }
+        ],
+        "bucket": "Hour"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "bucket needs aggregates",
+      "spec": {
+        "type": "Line",
+        "x": "d",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          }
+        ],
+        "bucket": "Day"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "bucket needs aggregates for every measure",
+      "spec": {
+        "type": "Line",
+        "x": "d",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "Avg"
+          },
+          {
+            "column": "n2",
+            "aggregate": "None"
+          }
+        ],
+        "bucket": "Week"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "bucket with aggregates",
+      "spec": {
+        "type": "Line",
+        "x": "d",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "Avg"
+          },
+          {
+            "column": "n2",
+            "aggregate": "Max"
+          }
+        ],
+        "bucket": "Quarter"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "a scatter of numbers",
+      "spec": {
+        "type": "Scatter",
+        "x": "n",
+        "y": [
+          {
+            "column": "n2",
+            "aggregate": "None"
+          }
+        ]
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "a scatter of dates",
+      "spec": {
+        "type": "Scatter",
+        "x": "d",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          }
+        ]
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "a scatter of categories",
+      "spec": {
+        "type": "Scatter",
+        "x": "name",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          }
+        ]
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "a scatter with a bucket",
+      "spec": {
+        "type": "Scatter",
+        "x": "d",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "Sum"
+          }
+        ],
+        "bucket": "Day"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "a pie of categories",
+      "spec": {
+        "type": "Pie",
+        "x": "name",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          }
+        ]
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "a pie of numbers",
+      "spec": {
+        "type": "Pie",
+        "x": "n",
+        "y": [
+          {
+            "column": "n2",
+            "aggregate": "None"
+          }
+        ]
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "a pie of dates",
+      "spec": {
+        "type": "Pie",
+        "x": "d",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          }
+        ]
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "a pie with two measures",
+      "spec": {
+        "type": "Pie",
+        "x": "name",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          },
+          {
+            "column": "n2",
+            "aggregate": "None"
+          }
+        ]
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "a pie with a series",
+      "spec": {
+        "type": "Pie",
+        "x": "name",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          }
+        ],
+        "series": "s"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "a pie with two measures and a series",
+      "spec": {
+        "type": "Pie",
+        "x": "name",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          },
+          {
+            "column": "n2",
+            "aggregate": "None"
+          }
+        ],
+        "series": "s"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "an area over dates",
+      "spec": {
+        "type": "Area",
+        "x": "d",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          }
+        ]
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "an unknown x skips the x checks",
+      "spec": {
+        "type": "Pie",
+        "x": "missing",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          },
+          {
+            "column": "n2",
+            "aggregate": "None"
+          }
+        ],
+        "series": "s",
+        "bucket": "Day"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "horizontal bars",
+      "spec": {
+        "type": "Bar",
+        "x": "name",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "Sum"
+          }
+        ],
+        "series": "s",
+        "horizontal": true
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "adjusted drops a bucket for a pie of dates",
+      "spec": {
+        "type": "Pie",
+        "x": "d",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "Sum"
+          },
+          {
+            "column": "n2",
+            "aggregate": "Sum"
+          }
+        ],
+        "bucket": "Day"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "adjusted drops series equal to x",
+      "spec": {
+        "type": "Bar",
+        "x": "name",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          },
+          {
+            "column": "n2",
+            "aggregate": "None"
+          }
+        ],
+        "series": "name"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "adjusted keeps one measure for a series",
+      "spec": {
+        "type": "Bar",
+        "x": "name",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          },
+          {
+            "column": "n2",
+            "aggregate": "None"
+          }
+        ],
+        "series": "s"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "adjusted fills in sum for a bucket",
+      "spec": {
+        "type": "Line",
+        "x": "d",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          },
+          {
+            "column": "n2",
+            "aggregate": "Max"
+          }
+        ],
+        "bucket": "Month"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "adjusted drops the bucket of a scatter",
+      "spec": {
+        "type": "Scatter",
+        "x": "d",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          }
+        ],
+        "bucket": "Month"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "adjusted drops the bucket of other kinds",
+      "spec": {
+        "type": "Line",
+        "x": "name",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "Count"
+          }
+        ],
+        "bucket": "Month"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "adjusted for an unknown x",
+      "spec": {
+        "type": "Line",
+        "x": "zz",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          }
+        ],
+        "bucket": "Month"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "columns without duplicates",
+      "spec": {
+        "type": "Line",
+        "x": "d",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          },
+          {
+            "column": "n",
+            "aggregate": "Sum"
+          },
+          {
+            "column": "n2",
+            "aggregate": "None"
+          }
+        ],
+        "series": "s"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "columns when x repeats",
+      "spec": {
+        "type": "Line",
+        "x": "n",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          },
+          {
+            "column": "n",
+            "aggregate": "None"
+          }
+        ],
+        "series": "n"
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "labels",
+      "spec": {
+        "type": "Bar",
+        "x": "name",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          },
+          {
+            "column": "n",
+            "aggregate": "Avg"
+          },
+          {
+            "column": "n2",
+            "aggregate": "Min"
+          },
+          {
+            "column": "n2",
+            "aggregate": "Max"
+          },
+          {
+            "column": "name",
+            "aggregate": "Count"
+          },
+          {
+            "column": "n",
+            "aggregate": "Sum"
+          }
+        ]
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "name": "d",
+          "kind": "Temporal",
+          "distinct": 3,
+          "rows": 3,
+          "min": 0,
+          "max": 10000000000.0
+        },
+        {
+          "name": "blob",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "n2",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "profiles from rows",
+      "spec": {
+        "type": "Bar",
+        "x": "name",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          }
+        ]
+      },
+      "profiles": [
+        {
+          "name": "name",
+          "kind": "Category",
+          "distinct": 1,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "name": "empty profiles",
+      "spec": {
+        "type": "Bar",
+        "x": "name",
+        "y": [
+          {
+            "column": "n",
+            "aggregate": "None"
+          }
+        ]
+      },
+      "profiles": []
+    },
+    {
+      "name": "parse names",
+      "parse": {
+        "type": [
+          "Line",
+          "line",
+          "LINE",
+          "Area",
+          "bar",
+          "Scatter",
+          "PIE",
+          "pie ",
+          "",
+          "histogram",
+          "Radar"
+        ],
+        "aggregate": [
+          "Sum",
+          "sum",
+          "SUM",
+          "Average",
+          "avg",
+          "AVG",
+          "mean",
+          "MEAN",
+          "Mean",
+          "Value",
+          "value",
+          "None",
+          "none",
+          "min",
+          "Max",
+          "count",
+          "COUNT",
+          "median",
+          ""
+        ],
+        "bucket": [
+          "Hour",
+          "day",
+          "WEEK",
+          "Month",
+          "quarter",
+          "Year",
+          "Decade",
+          "",
+          "hours"
+        ]
+      }
+    }
+  ]
+}

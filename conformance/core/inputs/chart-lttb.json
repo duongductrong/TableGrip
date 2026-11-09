@@ -1,0 +1,73 @@
+{
+  "subject": "chart-lttb",
+  "cases": [
+    {
+      "name": "long lines keep the ends and the peak",
+      "count": 10000,
+      "peakAt": 5000,
+      "threshold": 100
+    },
+    {
+      "name": "a wave",
+      "count": 1000,
+      "threshold": 50
+    },
+    {
+      "name": "a longer wave",
+      "count": 5000,
+      "threshold": 2000
+    },
+    {
+      "name": "threshold above the count keeps everything",
+      "count": 10,
+      "threshold": 20
+    },
+    {
+      "name": "threshold equal to the count keeps everything",
+      "count": 10,
+      "threshold": 10
+    },
+    {
+      "name": "threshold below three keeps everything",
+      "count": 100,
+      "threshold": 2
+    },
+    {
+      "name": "threshold of three",
+      "count": 100,
+      "threshold": 3
+    },
+    {
+      "name": "threshold of four",
+      "count": 11,
+      "threshold": 4
+    },
+    {
+      "name": "three points",
+      "count": 3,
+      "threshold": 3
+    },
+    {
+      "name": "one past the threshold",
+      "count": 11,
+      "threshold": 10
+    },
+    {
+      "name": "uneven buckets",
+      "count": 997,
+      "threshold": 61
+    },
+    {
+      "name": "a peak near the start",
+      "count": 500,
+      "peakAt": 3,
+      "threshold": 25
+    },
+    {
+      "name": "a peak near the end",
+      "count": 500,
+      "peakAt": 497,
+      "threshold": 25
+    }
+  ]
+}
