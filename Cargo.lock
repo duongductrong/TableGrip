@@ -5480,6 +5480,11 @@ version = "0.0.0"
 [[package]]
 name = "tg-data"
 version = "0.0.0"
+dependencies = [
+ "chrono",
+ "serde_json",
+ "tg-sql",
+]
 
 [[package]]
 name = "tg-driver"

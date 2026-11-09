@@ -1,0 +1,1965 @@
+{
+    "subject": "data-inference",
+    "cases": [
+        {
+            "name": "integers",
+            "output": {
+                "kind": "Integer",
+                "maxLength": 19,
+                "nullable": false
+            }
+        },
+        {
+            "name": "long minimum",
+            "output": {
+                "kind": "Integer",
+                "maxLength": 20,
+                "nullable": false
+            }
+        },
+        {
+            "name": "one past the long range",
+            "output": {
+                "kind": "BigInteger",
+                "maxLength": 19,
+                "nullable": false
+            }
+        },
+        {
+            "name": "one below the long range",
+            "output": {
+                "kind": "BigInteger",
+                "maxLength": 20,
+                "nullable": false
+            }
+        },
+        {
+            "name": "huge integers",
+            "output": {
+                "kind": "BigInteger",
+                "maxLength": 60,
+                "nullable": false
+            }
+        },
+        {
+            "name": "negative zero",
+            "output": {
+                "kind": "Integer",
+                "maxLength": 2,
+                "nullable": false
+            }
+        },
+        {
+            "name": "zero",
+            "output": {
+                "kind": "Integer",
+                "maxLength": 1,
+                "nullable": false
+            }
+        },
+        {
+            "name": "decimals",
+            "output": {
+                "kind": "Decimal",
+                "maxLength": 8,
+                "nullable": false
+            }
+        },
+        {
+            "name": "leading zeros are text",
+            "output": {
+                "kind": "Text",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "double zero is text",
+            "output": {
+                "kind": "Text",
+                "maxLength": 2,
+                "nullable": false
+            }
+        },
+        {
+            "name": "plus sign is text",
+            "output": {
+                "kind": "Text",
+                "maxLength": 12,
+                "nullable": false
+            }
+        },
+        {
+            "name": "plus sign decimal is text",
+            "output": {
+                "kind": "Text",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "thousands separator is text",
+            "output": {
+                "kind": "Text",
+                "maxLength": 5,
+                "nullable": false
+            }
+        },
+        {
+            "name": "leading zero decimal is text",
+            "output": {
+                "kind": "Text",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "zero point five",
+            "output": {
+                "kind": "Decimal",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "leading zeros before the point",
+            "output": {
+                "kind": "Text",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "trailing point is text",
+            "output": {
+                "kind": "Text",
+                "maxLength": 2,
+                "nullable": false
+            }
+        },
+        {
+            "name": "NaN is text",
+            "output": {
+                "kind": "Text",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "Infinity is text",
+            "output": {
+                "kind": "Text",
+                "maxLength": 8,
+                "nullable": false
+            }
+        },
+        {
+            "name": "bare minus",
+            "output": {
+                "kind": "Text",
+                "maxLength": 1,
+                "nullable": false
+            }
+        },
+        {
+            "name": "bare point",
+            "output": {
+                "kind": "Text",
+                "maxLength": 1,
+                "nullable": false
+            }
+        },
+        {
+            "name": "minus point",
+            "output": {
+                "kind": "Text",
+                "maxLength": 2,
+                "nullable": false
+            }
+        },
+        {
+            "name": "minus point five",
+            "output": {
+                "kind": "Decimal",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "two points",
+            "output": {
+                "kind": "Text",
+                "maxLength": 5,
+                "nullable": false
+            }
+        },
+        {
+            "name": "exponent upper",
+            "output": {
+                "kind": "Decimal",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "exponent plus",
+            "output": {
+                "kind": "Decimal",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "exponent minus",
+            "output": {
+                "kind": "Decimal",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "exponent without digits",
+            "output": {
+                "kind": "Text",
+                "maxLength": 2,
+                "nullable": false
+            }
+        },
+        {
+            "name": "exponent sign without digits",
+            "output": {
+                "kind": "Text",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "exponent only",
+            "output": {
+                "kind": "Text",
+                "maxLength": 2,
+                "nullable": false
+            }
+        },
+        {
+            "name": "zero exponent",
+            "output": {
+                "kind": "Decimal",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "negative zero decimal",
+            "output": {
+                "kind": "Decimal",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "point exponent",
+            "output": {
+                "kind": "Decimal",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "exponent after a point",
+            "output": {
+                "kind": "Text",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "hex is text",
+            "output": {
+                "kind": "Text",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "underscore is text",
+            "output": {
+                "kind": "Text",
+                "maxLength": 5,
+                "nullable": false
+            }
+        },
+        {
+            "name": "leading space is text",
+            "output": {
+                "kind": "Text",
+                "maxLength": 2,
+                "nullable": false
+            }
+        },
+        {
+            "name": "trailing space is text",
+            "output": {
+                "kind": "Text",
+                "maxLength": 2,
+                "nullable": false
+            }
+        },
+        {
+            "name": "fullwidth digits are text",
+            "output": {
+                "kind": "Text",
+                "maxLength": 2,
+                "nullable": false
+            }
+        },
+        {
+            "name": "minus sign unicode",
+            "output": {
+                "kind": "Text",
+                "maxLength": 2,
+                "nullable": false
+            }
+        },
+        {
+            "name": "integers and decimals",
+            "output": {
+                "kind": "Decimal",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "integers and text",
+            "output": {
+                "kind": "Text",
+                "maxLength": 1,
+                "nullable": false
+            }
+        },
+        {
+            "name": "decimal after text",
+            "output": {
+                "kind": "Text",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "big then small",
+            "output": {
+                "kind": "BigInteger",
+                "maxLength": 21,
+                "nullable": false
+            }
+        },
+        {
+            "name": "big integer and decimal",
+            "output": {
+                "kind": "Decimal",
+                "maxLength": 21,
+                "nullable": false
+            }
+        },
+        {
+            "name": "zero and one are integers",
+            "output": {
+                "kind": "Integer",
+                "maxLength": 1,
+                "nullable": false
+            }
+        },
+        {
+            "name": "zero and one only",
+            "output": {
+                "kind": "Integer",
+                "maxLength": 1,
+                "nullable": false
+            }
+        },
+        {
+            "name": "one in a million",
+            "output": {
+                "kind": "Integer",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "true false",
+            "output": {
+                "kind": "Boolean",
+                "maxLength": 5,
+                "nullable": false
+            }
+        },
+        {
+            "name": "upper case words",
+            "output": {
+                "kind": "Boolean",
+                "maxLength": 5,
+                "nullable": false
+            }
+        },
+        {
+            "name": "yes no",
+            "output": {
+                "kind": "Boolean",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "Yes No mixed case",
+            "output": {
+                "kind": "Boolean",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "a maybe breaks it",
+            "output": {
+                "kind": "Text",
+                "maxLength": 5,
+                "nullable": false
+            }
+        },
+        {
+            "name": "y and n are text",
+            "output": {
+                "kind": "Text",
+                "maxLength": 1,
+                "nullable": false
+            }
+        },
+        {
+            "name": "two with a word",
+            "output": {
+                "kind": "Text",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "one with a word",
+            "output": {
+                "kind": "Boolean",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "word with a trailing space",
+            "output": {
+                "kind": "Text",
+                "maxLength": 5,
+                "nullable": false
+            }
+        },
+        {
+            "name": "true and null",
+            "output": {
+                "kind": "Boolean",
+                "maxLength": 4,
+                "nullable": true
+            }
+        },
+        {
+            "name": "t alone",
+            "output": {
+                "kind": "Boolean",
+                "maxLength": 1,
+                "nullable": false
+            }
+        },
+        {
+            "name": "f alone",
+            "output": {
+                "kind": "Boolean",
+                "maxLength": 1,
+                "nullable": false
+            }
+        },
+        {
+            "name": "0 1 words",
+            "output": {
+                "kind": "Boolean",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "nulls and blanks only affect nullability",
+            "output": {
+                "kind": "Integer",
+                "maxLength": 3,
+                "nullable": true
+            }
+        },
+        {
+            "name": "one value",
+            "output": {
+                "kind": "Integer",
+                "maxLength": 1,
+                "nullable": false
+            }
+        },
+        {
+            "name": "only nulls",
+            "output": {
+                "kind": "Text",
+                "maxLength": 0,
+                "nullable": true
+            }
+        },
+        {
+            "name": "only blanks",
+            "output": {
+                "kind": "Text",
+                "maxLength": 1,
+                "nullable": true
+            }
+        },
+        {
+            "name": "blank counts for length",
+            "output": {
+                "kind": "Integer",
+                "maxLength": 1,
+                "nullable": true
+            }
+        },
+        {
+            "name": "no values",
+            "output": {
+                "kind": "Text",
+                "maxLength": 0,
+                "nullable": false
+            }
+        },
+        {
+            "name": "empty string alone",
+            "output": {
+                "kind": "Text",
+                "maxLength": 0,
+                "nullable": true
+            }
+        },
+        {
+            "name": "tabs and newlines are blank",
+            "output": {
+                "kind": "Text",
+                "maxLength": 2,
+                "nullable": true
+            }
+        },
+        {
+            "name": "non breaking space is blank",
+            "output": {
+                "kind": "Integer",
+                "maxLength": 1,
+                "nullable": true
+            }
+        },
+        {
+            "name": "emoji count as one",
+            "output": {
+                "kind": "Text",
+                "maxLength": 2,
+                "nullable": false
+            }
+        },
+        {
+            "name": "combining marks count each",
+            "output": {
+                "kind": "Text",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "accents",
+            "output": {
+                "kind": "Text",
+                "maxLength": 5,
+                "nullable": false
+            }
+        },
+        {
+            "name": "long text",
+            "output": {
+                "kind": "Text",
+                "maxLength": 300,
+                "nullable": false
+            }
+        },
+        {
+            "name": "dates",
+            "output": {
+                "kind": "Date",
+                "maxLength": 10,
+                "nullable": false
+            }
+        },
+        {
+            "name": "a date that does not exist",
+            "output": {
+                "kind": "Text",
+                "maxLength": 10,
+                "nullable": false
+            }
+        },
+        {
+            "name": "slashes are text",
+            "output": {
+                "kind": "Text",
+                "maxLength": 10,
+                "nullable": false
+            }
+        },
+        {
+            "name": "year zero",
+            "output": {
+                "kind": "Date",
+                "maxLength": 10,
+                "nullable": false
+            }
+        },
+        {
+            "name": "year 9999",
+            "output": {
+                "kind": "Date",
+                "maxLength": 10,
+                "nullable": false
+            }
+        },
+        {
+            "name": "month 13",
+            "output": {
+                "kind": "Text",
+                "maxLength": 10,
+                "nullable": false
+            }
+        },
+        {
+            "name": "month 0",
+            "output": {
+                "kind": "Text",
+                "maxLength": 10,
+                "nullable": false
+            }
+        },
+        {
+            "name": "day 32",
+            "output": {
+                "kind": "Text",
+                "maxLength": 10,
+                "nullable": false
+            }
+        },
+        {
+            "name": "day 0",
+            "output": {
+                "kind": "Text",
+                "maxLength": 10,
+                "nullable": false
+            }
+        },
+        {
+            "name": "thirty days in april",
+            "output": {
+                "kind": "Text",
+                "maxLength": 10,
+                "nullable": false
+            }
+        },
+        {
+            "name": "single digit month",
+            "output": {
+                "kind": "Text",
+                "maxLength": 9,
+                "nullable": false
+            }
+        },
+        {
+            "name": "two digit year",
+            "output": {
+                "kind": "Text",
+                "maxLength": 8,
+                "nullable": false
+            }
+        },
+        {
+            "name": "date with trailing space",
+            "output": {
+                "kind": "Text",
+                "maxLength": 11,
+                "nullable": false
+            }
+        },
+        {
+            "name": "date with leading space",
+            "output": {
+                "kind": "Text",
+                "maxLength": 11,
+                "nullable": false
+            }
+        },
+        {
+            "name": "fullwidth date digits",
+            "output": {
+                "kind": "Text",
+                "maxLength": 10,
+                "nullable": false
+            }
+        },
+        {
+            "name": "century leap years",
+            "output": {
+                "kind": "Text",
+                "maxLength": 10,
+                "nullable": false
+            }
+        },
+        {
+            "name": "year 2000 leap",
+            "output": {
+                "kind": "Date",
+                "maxLength": 10,
+                "nullable": false
+            }
+        },
+        {
+            "name": "timestamps",
+            "output": {
+                "kind": "Timestamp",
+                "maxLength": 27,
+                "nullable": false
+            }
+        },
+        {
+            "name": "date and timestamp make a timestamp",
+            "output": {
+                "kind": "Timestamp",
+                "maxLength": 19,
+                "nullable": false
+            }
+        },
+        {
+            "name": "timestamp then date",
+            "output": {
+                "kind": "Timestamp",
+                "maxLength": 19,
+                "nullable": false
+            }
+        },
+        {
+            "name": "hour 25",
+            "output": {
+                "kind": "Text",
+                "maxLength": 16,
+                "nullable": false
+            }
+        },
+        {
+            "name": "hour 24",
+            "output": {
+                "kind": "Text",
+                "maxLength": 16,
+                "nullable": false
+            }
+        },
+        {
+            "name": "minute 60",
+            "output": {
+                "kind": "Text",
+                "maxLength": 16,
+                "nullable": false
+            }
+        },
+        {
+            "name": "second 60",
+            "output": {
+                "kind": "Text",
+                "maxLength": 19,
+                "nullable": false
+            }
+        },
+        {
+            "name": "second 59",
+            "output": {
+                "kind": "Timestamp",
+                "maxLength": 19,
+                "nullable": false
+            }
+        },
+        {
+            "name": "lowercase t",
+            "output": {
+                "kind": "Text",
+                "maxLength": 16,
+                "nullable": false
+            }
+        },
+        {
+            "name": "hour only",
+            "output": {
+                "kind": "Text",
+                "maxLength": 13,
+                "nullable": false
+            }
+        },
+        {
+            "name": "fraction nine digits",
+            "output": {
+                "kind": "Timestamp",
+                "maxLength": 29,
+                "nullable": false
+            }
+        },
+        {
+            "name": "fraction ten digits",
+            "output": {
+                "kind": "Text",
+                "maxLength": 30,
+                "nullable": false
+            }
+        },
+        {
+            "name": "fraction one digit",
+            "output": {
+                "kind": "Timestamp",
+                "maxLength": 21,
+                "nullable": false
+            }
+        },
+        {
+            "name": "fraction without digits",
+            "output": {
+                "kind": "Text",
+                "maxLength": 20,
+                "nullable": false
+            }
+        },
+        {
+            "name": "fraction without seconds",
+            "output": {
+                "kind": "Text",
+                "maxLength": 18,
+                "nullable": false
+            }
+        },
+        {
+            "name": "zulu",
+            "output": {
+                "kind": "Timestamp",
+                "maxLength": 20,
+                "nullable": false
+            }
+        },
+        {
+            "name": "lowercase zulu",
+            "output": {
+                "kind": "Timestamp",
+                "maxLength": 20,
+                "nullable": false
+            }
+        },
+        {
+            "name": "short offset",
+            "output": {
+                "kind": "Timestamp",
+                "maxLength": 22,
+                "nullable": false
+            }
+        },
+        {
+            "name": "compact offset",
+            "output": {
+                "kind": "Timestamp",
+                "maxLength": 24,
+                "nullable": false
+            }
+        },
+        {
+            "name": "colon offset",
+            "output": {
+                "kind": "Timestamp",
+                "maxLength": 25,
+                "nullable": false
+            }
+        },
+        {
+            "name": "offset hour 18",
+            "output": {
+                "kind": "Timestamp",
+                "maxLength": 25,
+                "nullable": false
+            }
+        },
+        {
+            "name": "offset hour 19",
+            "output": {
+                "kind": "Text",
+                "maxLength": 25,
+                "nullable": false
+            }
+        },
+        {
+            "name": "offset minute 59",
+            "output": {
+                "kind": "Timestamp",
+                "maxLength": 25,
+                "nullable": false
+            }
+        },
+        {
+            "name": "offset minute 60",
+            "output": {
+                "kind": "Text",
+                "maxLength": 25,
+                "nullable": false
+            }
+        },
+        {
+            "name": "offset one minute digit",
+            "output": {
+                "kind": "Text",
+                "maxLength": 24,
+                "nullable": false
+            }
+        },
+        {
+            "name": "offset hour 23 negative",
+            "output": {
+                "kind": "Text",
+                "maxLength": 22,
+                "nullable": false
+            }
+        },
+        {
+            "name": "offset without seconds",
+            "output": {
+                "kind": "Timestamp",
+                "maxLength": 22,
+                "nullable": false
+            }
+        },
+        {
+            "name": "offset only after Z",
+            "output": {
+                "kind": "Text",
+                "maxLength": 23,
+                "nullable": false
+            }
+        },
+        {
+            "name": "space before offset",
+            "output": {
+                "kind": "Text",
+                "maxLength": 26,
+                "nullable": false
+            }
+        },
+        {
+            "name": "february 30 with a time",
+            "output": {
+                "kind": "Text",
+                "maxLength": 16,
+                "nullable": false
+            }
+        },
+        {
+            "name": "leap day with a time",
+            "output": {
+                "kind": "Timestamp",
+                "maxLength": 19,
+                "nullable": false
+            }
+        },
+        {
+            "name": "two spaces",
+            "output": {
+                "kind": "Text",
+                "maxLength": 17,
+                "nullable": false
+            }
+        },
+        {
+            "name": "date and text",
+            "output": {
+                "kind": "Text",
+                "maxLength": 10,
+                "nullable": false
+            }
+        },
+        {
+            "name": "timestamp and text",
+            "output": {
+                "kind": "Text",
+                "maxLength": 16,
+                "nullable": false
+            }
+        },
+        {
+            "name": "dates and integers",
+            "output": {
+                "kind": "Text",
+                "maxLength": 10,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json objects and arrays",
+            "output": {
+                "kind": "Json",
+                "maxLength": 7,
+                "nullable": false
+            }
+        },
+        {
+            "name": "not json",
+            "output": {
+                "kind": "Text",
+                "maxLength": 10,
+                "nullable": false
+            }
+        },
+        {
+            "name": "text beats json",
+            "output": {
+                "kind": "Text",
+                "maxLength": 5,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json and text",
+            "output": {
+                "kind": "Text",
+                "maxLength": 7,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json and numbers",
+            "output": {
+                "kind": "Text",
+                "maxLength": 7,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json with nulls",
+            "output": {
+                "kind": "Json",
+                "maxLength": 7,
+                "nullable": true
+            }
+        },
+        {
+            "name": "json padded",
+            "output": {
+                "kind": "Json",
+                "maxLength": 9,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":1}'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 7,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[1,2]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 5,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 2,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{}'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 2,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{ }'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[ ]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 6,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\"}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 5,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":1,}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 8,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[1,]'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[,1]'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{,}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[1 2]'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 5,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[\"a\" \"b\"]'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 9,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[abc]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 5,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":abc}'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 9,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":1}}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 8,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":1}{'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 8,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":1} {\"b\":2}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 15,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[1] [2]'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 7,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[[1] [2]]'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 9,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[[1] ,2]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 8,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[1,2]x]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 7,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[true,false,null]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 17,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[nul]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 5,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[NaN]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 5,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[01]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[1.]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[+1]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[.5]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[0x10]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 6,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json \"['a']\"",
+            "output": {
+                "kind": "Json",
+                "maxLength": 5,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json \"{'a':1}\"",
+            "output": {
+                "kind": "Text",
+                "maxLength": 7,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{a:1}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 5,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":1,\"a\":2}'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 13,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":\"line\\nbreak\"}'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 18,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":\"\\\\x\"}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 10,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":\"\\\\u12\"}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 12,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":\"\\\\u12G4\"}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 14,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":\"\\\\u0041\"}'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 14,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":\"\\\\/\"}'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 10,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":\"\\\\\"q\\\\\"\"}'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 13,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":\"\\\\\\\\\"}'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 10,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":\"\\\\b\\\\f\\\\n\\\\r\\\\t\"}'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 18,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[\"unterminated]'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 15,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":\"b}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 8,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[1,2'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":[1,{\"b\":[]}]}'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 18,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[[[[]]]]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 8,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":{\"b\":{\"c\":1}}}'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 19,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[1,,2]'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 6,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":1,,\"b\":2}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 14,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":1 \"b\":2}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 13,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\" 1}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 7,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\"::1}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 8,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":1;}'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 8,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[\"a\\tb\"]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 7,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[\"a\\x01b\"]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 7,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[1\\x0c]'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":1}\\xa0'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 8,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"é\":\"ü\"}'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 9,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[\"😀\"]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 5,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[-]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[-1]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[1e5]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 5,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[1E+5]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 6,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[\"a\",]'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 6,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":[}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 7,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":]}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 7,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[{]'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{[}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[null]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 6,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[nu ll]'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 7,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":nul}'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 9,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[x,y]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 5,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[a b]'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 5,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":tru e}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 11,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[1:2]'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 5,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":1:2}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 9,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[ \"a\" , \"b\" ]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 13,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{ \"a\" : 1 }'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 11,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[\\\\]'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[a\\\\b]'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 5,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[~]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[é]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":1}\\n'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 8,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '\\n[1]\\n'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 5,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[1]\\u2003'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":[1] \"b\":2}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 15,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":[1],\"b\":[2]}'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 17,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":1,\\n\"b\":2}'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 14,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"\":1}'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 6,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":\"\"}'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 8,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":\"\\\\u00e9\"}'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 14,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":\"\\\\ud83d\\\\ude00\"}'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 20,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":\"\\\\ud83d\"}'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 14,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[{\"a\":1},{\"b\":2}]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 17,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[[],[]]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 7,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[{},{}]'",
+            "output": {
+                "kind": "Json",
+                "maxLength": 7,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{{}}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[[}]'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{}{}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[][]'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[]]'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{}}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":1]'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 7,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '[1}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":1}x'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 8,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{x}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 3,
+                "nullable": false
+            }
+        },
+        {
+            "name": "json '{\"a\":\"b\" \"c\"}'",
+            "output": {
+                "kind": "Text",
+                "maxLength": 13,
+                "nullable": false
+            }
+        },
+        {
+            "name": "generated integers",
+            "output": {
+                "kind": "Integer",
+                "maxLength": 4,
+                "nullable": false
+            }
+        },
+        {
+            "name": "generated decimals then a word",
+            "output": {
+                "kind": "Text",
+                "maxLength": 4,
+                "nullable": false
+            }
+        }
+    ]
+}

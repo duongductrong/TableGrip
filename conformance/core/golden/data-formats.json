@@ -1,0 +1,943 @@
+{
+    "subject": "data-formats",
+    "cases": [
+        {
+            "name": "Tsv the sample rows",
+            "output": "id\tname\n1\tO'Brien\n2\t\n3\t\"a,\"\"b\"\"\nc\""
+        },
+        {
+            "name": "Tsv without a header",
+            "output": "1\tO'Brien\n2\t\n3\t\"a,\"\"b\"\"\nc\""
+        },
+        {
+            "name": "Tsv no rows",
+            "output": "id\tname"
+        },
+        {
+            "name": "Tsv one row",
+            "output": "id\tname\n1\tO'Brien"
+        },
+        {
+            "name": "Tsv a custom table",
+            "output": "id\tname\n1\tO'Brien\n2\t\n3\t\"a,\"\"b\"\"\nc\""
+        },
+        {
+            "name": "Csv the sample rows",
+            "output": "id,name\n1,O'Brien\n2,\n3,\"a,\"\"b\"\"\nc\""
+        },
+        {
+            "name": "Csv without a header",
+            "output": "1,O'Brien\n2,\n3,\"a,\"\"b\"\"\nc\""
+        },
+        {
+            "name": "Csv no rows",
+            "output": "id,name"
+        },
+        {
+            "name": "Csv one row",
+            "output": "id,name\n1,O'Brien"
+        },
+        {
+            "name": "Csv a custom table",
+            "output": "id,name\n1,O'Brien\n2,\n3,\"a,\"\"b\"\"\nc\""
+        },
+        {
+            "name": "Json the sample rows",
+            "output": "[\n  {\n      \"id\": 1,\n      \"name\": \"O'Brien\"\n  },\n  {\n      \"id\": 2,\n      \"name\": null\n  },\n  {\n      \"id\": 3,\n      \"name\": \"a,\\\"b\\\"\\nc\"\n  }\n]"
+        },
+        {
+            "name": "Json without a header",
+            "output": "[\n  {\n      \"id\": 1,\n      \"name\": \"O'Brien\"\n  },\n  {\n      \"id\": 2,\n      \"name\": null\n  },\n  {\n      \"id\": 3,\n      \"name\": \"a,\\\"b\\\"\\nc\"\n  }\n]"
+        },
+        {
+            "name": "Json no rows",
+            "output": "[]"
+        },
+        {
+            "name": "Json one row",
+            "output": "[\n  {\n      \"id\": 1,\n      \"name\": \"O'Brien\"\n  }\n]"
+        },
+        {
+            "name": "Json a custom table",
+            "output": "[\n  {\n      \"id\": 1,\n      \"name\": \"O'Brien\"\n  },\n  {\n      \"id\": 2,\n      \"name\": null\n  },\n  {\n      \"id\": 3,\n      \"name\": \"a,\\\"b\\\"\\nc\"\n  }\n]"
+        },
+        {
+            "name": "Markdown the sample rows",
+            "output": "| id | name |\n| ---: | --- |\n| 1 | O'Brien |\n| 2 | NULL |\n| 3 | a,\"b\" c |"
+        },
+        {
+            "name": "Markdown without a header",
+            "output": "| id | name |\n| ---: | --- |\n| 1 | O'Brien |\n| 2 | NULL |\n| 3 | a,\"b\" c |"
+        },
+        {
+            "name": "Markdown no rows",
+            "output": "| id | name |\n| ---: | --- |"
+        },
+        {
+            "name": "Markdown one row",
+            "output": "| id | name |\n| ---: | --- |\n| 1 | O'Brien |"
+        },
+        {
+            "name": "Markdown a custom table",
+            "output": "| id | name |\n| ---: | --- |\n| 1 | O'Brien |\n| 2 | NULL |\n| 3 | a,\"b\" c |"
+        },
+        {
+            "name": "SqlInsert the sample rows",
+            "output": {
+                "PostgreSQL": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "MySQL": "INSERT INTO table_name (`id`, `name`) VALUES (1, 'O''Brien');\nINSERT INTO table_name (`id`, `name`) VALUES (2, NULL);\nINSERT INTO table_name (`id`, `name`) VALUES (3, 'a,\"b\"\nc');",
+                "MariaDB": "INSERT INTO table_name (`id`, `name`) VALUES (1, 'O''Brien');\nINSERT INTO table_name (`id`, `name`) VALUES (2, NULL);\nINSERT INTO table_name (`id`, `name`) VALUES (3, 'a,\"b\"\nc');",
+                "SQLite": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "SqlServer": "INSERT INTO table_name ([id], [name]) VALUES (1, 'O''Brien');\nINSERT INTO table_name ([id], [name]) VALUES (2, NULL);\nINSERT INTO table_name ([id], [name]) VALUES (3, 'a,\"b\"\nc');",
+                "ClickHouse": "INSERT INTO table_name (`id`, `name`) VALUES (1, 'O\\'Brien');\nINSERT INTO table_name (`id`, `name`) VALUES (2, NULL);\nINSERT INTO table_name (`id`, `name`) VALUES (3, 'a,\"b\"\nc');",
+                "DuckDB": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "CockroachDB": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "TimescaleDB": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "Neon": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "Supabase": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "TiDB": "INSERT INTO table_name (`id`, `name`) VALUES (1, 'O''Brien');\nINSERT INTO table_name (`id`, `name`) VALUES (2, NULL);\nINSERT INTO table_name (`id`, `name`) VALUES (3, 'a,\"b\"\nc');",
+                "PlanetScale": "INSERT INTO table_name (`id`, `name`) VALUES (1, 'O''Brien');\nINSERT INTO table_name (`id`, `name`) VALUES (2, NULL);\nINSERT INTO table_name (`id`, `name`) VALUES (3, 'a,\"b\"\nc');",
+                "AzureSql": "INSERT INTO table_name ([id], [name]) VALUES (1, 'O''Brien');\nINSERT INTO table_name ([id], [name]) VALUES (2, NULL);\nINSERT INTO table_name ([id], [name]) VALUES (3, 'a,\"b\"\nc');",
+                "H2": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "HSQLDB": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "Derby": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "OtherJdbc": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "CsvFile": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "ExcelFile": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "JsonFile": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');"
+            }
+        },
+        {
+            "name": "SqlInsert without a header",
+            "output": {
+                "PostgreSQL": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "MySQL": "INSERT INTO table_name (`id`, `name`) VALUES (1, 'O''Brien');\nINSERT INTO table_name (`id`, `name`) VALUES (2, NULL);\nINSERT INTO table_name (`id`, `name`) VALUES (3, 'a,\"b\"\nc');",
+                "MariaDB": "INSERT INTO table_name (`id`, `name`) VALUES (1, 'O''Brien');\nINSERT INTO table_name (`id`, `name`) VALUES (2, NULL);\nINSERT INTO table_name (`id`, `name`) VALUES (3, 'a,\"b\"\nc');",
+                "SQLite": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "SqlServer": "INSERT INTO table_name ([id], [name]) VALUES (1, 'O''Brien');\nINSERT INTO table_name ([id], [name]) VALUES (2, NULL);\nINSERT INTO table_name ([id], [name]) VALUES (3, 'a,\"b\"\nc');",
+                "ClickHouse": "INSERT INTO table_name (`id`, `name`) VALUES (1, 'O\\'Brien');\nINSERT INTO table_name (`id`, `name`) VALUES (2, NULL);\nINSERT INTO table_name (`id`, `name`) VALUES (3, 'a,\"b\"\nc');",
+                "DuckDB": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "CockroachDB": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "TimescaleDB": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "Neon": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "Supabase": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "TiDB": "INSERT INTO table_name (`id`, `name`) VALUES (1, 'O''Brien');\nINSERT INTO table_name (`id`, `name`) VALUES (2, NULL);\nINSERT INTO table_name (`id`, `name`) VALUES (3, 'a,\"b\"\nc');",
+                "PlanetScale": "INSERT INTO table_name (`id`, `name`) VALUES (1, 'O''Brien');\nINSERT INTO table_name (`id`, `name`) VALUES (2, NULL);\nINSERT INTO table_name (`id`, `name`) VALUES (3, 'a,\"b\"\nc');",
+                "AzureSql": "INSERT INTO table_name ([id], [name]) VALUES (1, 'O''Brien');\nINSERT INTO table_name ([id], [name]) VALUES (2, NULL);\nINSERT INTO table_name ([id], [name]) VALUES (3, 'a,\"b\"\nc');",
+                "H2": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "HSQLDB": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "Derby": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "OtherJdbc": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "CsvFile": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "ExcelFile": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "JsonFile": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');"
+            }
+        },
+        {
+            "name": "SqlInsert no rows",
+            "output": {
+                "PostgreSQL": "",
+                "MySQL": "",
+                "MariaDB": "",
+                "SQLite": "",
+                "SqlServer": "",
+                "ClickHouse": "",
+                "DuckDB": "",
+                "CockroachDB": "",
+                "TimescaleDB": "",
+                "Neon": "",
+                "Supabase": "",
+                "TiDB": "",
+                "PlanetScale": "",
+                "AzureSql": "",
+                "H2": "",
+                "HSQLDB": "",
+                "Derby": "",
+                "OtherJdbc": "",
+                "CsvFile": "",
+                "ExcelFile": "",
+                "JsonFile": ""
+            }
+        },
+        {
+            "name": "SqlInsert one row",
+            "output": {
+                "PostgreSQL": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');",
+                "MySQL": "INSERT INTO table_name (`id`, `name`) VALUES (1, 'O''Brien');",
+                "MariaDB": "INSERT INTO table_name (`id`, `name`) VALUES (1, 'O''Brien');",
+                "SQLite": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');",
+                "SqlServer": "INSERT INTO table_name ([id], [name]) VALUES (1, 'O''Brien');",
+                "ClickHouse": "INSERT INTO table_name (`id`, `name`) VALUES (1, 'O\\'Brien');",
+                "DuckDB": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');",
+                "CockroachDB": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');",
+                "TimescaleDB": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');",
+                "Neon": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');",
+                "Supabase": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');",
+                "TiDB": "INSERT INTO table_name (`id`, `name`) VALUES (1, 'O''Brien');",
+                "PlanetScale": "INSERT INTO table_name (`id`, `name`) VALUES (1, 'O''Brien');",
+                "AzureSql": "INSERT INTO table_name ([id], [name]) VALUES (1, 'O''Brien');",
+                "H2": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');",
+                "HSQLDB": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');",
+                "Derby": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');",
+                "OtherJdbc": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');",
+                "CsvFile": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');",
+                "ExcelFile": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');",
+                "JsonFile": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'O''Brien');"
+            }
+        },
+        {
+            "name": "SqlInsert a custom table",
+            "output": {
+                "PostgreSQL": "INSERT INTO public.items (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO public.items (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO public.items (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "MySQL": "INSERT INTO public.items (`id`, `name`) VALUES (1, 'O''Brien');\nINSERT INTO public.items (`id`, `name`) VALUES (2, NULL);\nINSERT INTO public.items (`id`, `name`) VALUES (3, 'a,\"b\"\nc');",
+                "MariaDB": "INSERT INTO public.items (`id`, `name`) VALUES (1, 'O''Brien');\nINSERT INTO public.items (`id`, `name`) VALUES (2, NULL);\nINSERT INTO public.items (`id`, `name`) VALUES (3, 'a,\"b\"\nc');",
+                "SQLite": "INSERT INTO public.items (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO public.items (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO public.items (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "SqlServer": "INSERT INTO public.items ([id], [name]) VALUES (1, 'O''Brien');\nINSERT INTO public.items ([id], [name]) VALUES (2, NULL);\nINSERT INTO public.items ([id], [name]) VALUES (3, 'a,\"b\"\nc');",
+                "ClickHouse": "INSERT INTO public.items (`id`, `name`) VALUES (1, 'O\\'Brien');\nINSERT INTO public.items (`id`, `name`) VALUES (2, NULL);\nINSERT INTO public.items (`id`, `name`) VALUES (3, 'a,\"b\"\nc');",
+                "DuckDB": "INSERT INTO public.items (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO public.items (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO public.items (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "CockroachDB": "INSERT INTO public.items (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO public.items (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO public.items (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "TimescaleDB": "INSERT INTO public.items (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO public.items (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO public.items (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "Neon": "INSERT INTO public.items (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO public.items (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO public.items (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "Supabase": "INSERT INTO public.items (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO public.items (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO public.items (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "TiDB": "INSERT INTO public.items (`id`, `name`) VALUES (1, 'O''Brien');\nINSERT INTO public.items (`id`, `name`) VALUES (2, NULL);\nINSERT INTO public.items (`id`, `name`) VALUES (3, 'a,\"b\"\nc');",
+                "PlanetScale": "INSERT INTO public.items (`id`, `name`) VALUES (1, 'O''Brien');\nINSERT INTO public.items (`id`, `name`) VALUES (2, NULL);\nINSERT INTO public.items (`id`, `name`) VALUES (3, 'a,\"b\"\nc');",
+                "AzureSql": "INSERT INTO public.items ([id], [name]) VALUES (1, 'O''Brien');\nINSERT INTO public.items ([id], [name]) VALUES (2, NULL);\nINSERT INTO public.items ([id], [name]) VALUES (3, 'a,\"b\"\nc');",
+                "H2": "INSERT INTO public.items (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO public.items (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO public.items (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "HSQLDB": "INSERT INTO public.items (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO public.items (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO public.items (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "Derby": "INSERT INTO public.items (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO public.items (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO public.items (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "OtherJdbc": "INSERT INTO public.items (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO public.items (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO public.items (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "CsvFile": "INSERT INTO public.items (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO public.items (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO public.items (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "ExcelFile": "INSERT INTO public.items (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO public.items (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO public.items (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');",
+                "JsonFile": "INSERT INTO public.items (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO public.items (\"id\", \"name\") VALUES (2, NULL);\nINSERT INTO public.items (\"id\", \"name\") VALUES (3, 'a,\"b\"\nc');"
+            }
+        },
+        {
+            "name": "SqlInList the sample rows",
+            "output": {
+                "PostgreSQL": "(1, 2, 3)",
+                "MySQL": "(1, 2, 3)",
+                "MariaDB": "(1, 2, 3)",
+                "SQLite": "(1, 2, 3)",
+                "SqlServer": "(1, 2, 3)",
+                "ClickHouse": "(1, 2, 3)",
+                "DuckDB": "(1, 2, 3)",
+                "CockroachDB": "(1, 2, 3)",
+                "TimescaleDB": "(1, 2, 3)",
+                "Neon": "(1, 2, 3)",
+                "Supabase": "(1, 2, 3)",
+                "TiDB": "(1, 2, 3)",
+                "PlanetScale": "(1, 2, 3)",
+                "AzureSql": "(1, 2, 3)",
+                "H2": "(1, 2, 3)",
+                "HSQLDB": "(1, 2, 3)",
+                "Derby": "(1, 2, 3)",
+                "OtherJdbc": "(1, 2, 3)",
+                "CsvFile": "(1, 2, 3)",
+                "ExcelFile": "(1, 2, 3)",
+                "JsonFile": "(1, 2, 3)"
+            }
+        },
+        {
+            "name": "SqlInList without a header",
+            "output": {
+                "PostgreSQL": "(1, 2, 3)",
+                "MySQL": "(1, 2, 3)",
+                "MariaDB": "(1, 2, 3)",
+                "SQLite": "(1, 2, 3)",
+                "SqlServer": "(1, 2, 3)",
+                "ClickHouse": "(1, 2, 3)",
+                "DuckDB": "(1, 2, 3)",
+                "CockroachDB": "(1, 2, 3)",
+                "TimescaleDB": "(1, 2, 3)",
+                "Neon": "(1, 2, 3)",
+                "Supabase": "(1, 2, 3)",
+                "TiDB": "(1, 2, 3)",
+                "PlanetScale": "(1, 2, 3)",
+                "AzureSql": "(1, 2, 3)",
+                "H2": "(1, 2, 3)",
+                "HSQLDB": "(1, 2, 3)",
+                "Derby": "(1, 2, 3)",
+                "OtherJdbc": "(1, 2, 3)",
+                "CsvFile": "(1, 2, 3)",
+                "ExcelFile": "(1, 2, 3)",
+                "JsonFile": "(1, 2, 3)"
+            }
+        },
+        {
+            "name": "SqlInList no rows",
+            "output": {
+                "PostgreSQL": "()",
+                "MySQL": "()",
+                "MariaDB": "()",
+                "SQLite": "()",
+                "SqlServer": "()",
+                "ClickHouse": "()",
+                "DuckDB": "()",
+                "CockroachDB": "()",
+                "TimescaleDB": "()",
+                "Neon": "()",
+                "Supabase": "()",
+                "TiDB": "()",
+                "PlanetScale": "()",
+                "AzureSql": "()",
+                "H2": "()",
+                "HSQLDB": "()",
+                "Derby": "()",
+                "OtherJdbc": "()",
+                "CsvFile": "()",
+                "ExcelFile": "()",
+                "JsonFile": "()"
+            }
+        },
+        {
+            "name": "SqlInList one row",
+            "output": {
+                "PostgreSQL": "(1)",
+                "MySQL": "(1)",
+                "MariaDB": "(1)",
+                "SQLite": "(1)",
+                "SqlServer": "(1)",
+                "ClickHouse": "(1)",
+                "DuckDB": "(1)",
+                "CockroachDB": "(1)",
+                "TimescaleDB": "(1)",
+                "Neon": "(1)",
+                "Supabase": "(1)",
+                "TiDB": "(1)",
+                "PlanetScale": "(1)",
+                "AzureSql": "(1)",
+                "H2": "(1)",
+                "HSQLDB": "(1)",
+                "Derby": "(1)",
+                "OtherJdbc": "(1)",
+                "CsvFile": "(1)",
+                "ExcelFile": "(1)",
+                "JsonFile": "(1)"
+            }
+        },
+        {
+            "name": "SqlInList a custom table",
+            "output": {
+                "PostgreSQL": "(1, 2, 3)",
+                "MySQL": "(1, 2, 3)",
+                "MariaDB": "(1, 2, 3)",
+                "SQLite": "(1, 2, 3)",
+                "SqlServer": "(1, 2, 3)",
+                "ClickHouse": "(1, 2, 3)",
+                "DuckDB": "(1, 2, 3)",
+                "CockroachDB": "(1, 2, 3)",
+                "TimescaleDB": "(1, 2, 3)",
+                "Neon": "(1, 2, 3)",
+                "Supabase": "(1, 2, 3)",
+                "TiDB": "(1, 2, 3)",
+                "PlanetScale": "(1, 2, 3)",
+                "AzureSql": "(1, 2, 3)",
+                "H2": "(1, 2, 3)",
+                "HSQLDB": "(1, 2, 3)",
+                "Derby": "(1, 2, 3)",
+                "OtherJdbc": "(1, 2, 3)",
+                "CsvFile": "(1, 2, 3)",
+                "ExcelFile": "(1, 2, 3)",
+                "JsonFile": "(1, 2, 3)"
+            }
+        },
+        {
+            "name": "tsv quotes only when needed",
+            "output": "id\tname\n1\tO'Brien\n2\t\n3\t\"a,\"\"b\"\"\nc\""
+        },
+        {
+            "name": "csv a row with a comma",
+            "output": "3,\"a,\"\"b\"\"\nc\""
+        },
+        {
+            "name": "csv keeps tabs",
+            "output": "id,name\n1,a\tb"
+        },
+        {
+            "name": "tsv keeps commas",
+            "output": "id\tname\n1\ta,b"
+        },
+        {
+            "name": "tsv carriage returns",
+            "output": "id\tname\n1\t\"a\rb\"\n2\t\"a\r\nb\""
+        },
+        {
+            "name": "csv carriage returns",
+            "output": "id,name\n1,\"a\rb\"\n2,\"a\r\nb\""
+        },
+        {
+            "name": "tsv header with separators",
+            "output": "\"a\tb\"\t\"c\"\"d\"\n1\t2"
+        },
+        {
+            "name": "csv header with separators",
+            "output": "\"a,b\",\"c\"\"d\",\"e\nf\"\n1,2,3"
+        },
+        {
+            "name": "csv empty string and null",
+            "output": "id,name\n,\n,"
+        },
+        {
+            "name": "tsv single column",
+            "output": "v\na\n\n"
+        },
+        {
+            "name": "csv single empty row",
+            "output": ""
+        },
+        {
+            "name": "tsv several rows without a header",
+            "output": "1\ta\n2\tb\n3\tc"
+        },
+        {
+            "name": "tsv no columns",
+            "output": "\n\n"
+        },
+        {
+            "name": "csv no columns",
+            "output": "\n"
+        },
+        {
+            "name": "tsv unicode",
+            "output": "id\tname\n1\tñandú 😀 日本語"
+        },
+        {
+            "name": "json keeps numbers numeric and nulls null",
+            "output": "[\n  {\n      \"id\": 1,\n      \"name\": \"O'Brien\"\n  },\n  {\n      \"id\": 2,\n      \"name\": null\n  }\n]"
+        },
+        {
+            "name": "json escapes",
+            "output": "[\n  {\n      \"id\": 1,\n      \"t\": \"q\\\" b\\\\ n\\n t\\t r\\r b\\b f\\f\"\n  },\n  {\n      \"id\": 2,\n      \"t\": \"ctrl \\u0001 \\u001f DEL  / é 😀\"\n  }\n]"
+        },
+        {
+            "name": "json unicode and slash",
+            "output": "[\n  {\n      \"t\": \"日本語/😀\"\n  }\n]"
+        },
+        {
+            "name": "json numeric strings",
+            "output": "[\n  {\n      \"n\": 1\n  },\n  {\n      \"n\": 1.5\n  },\n  {\n      \"n\": 1000.0\n  },\n  {\n      \"n\": 1000.0\n  },\n  {\n      \"n\": 0\n  },\n  {\n      \"n\": 0\n  },\n  {\n      \"n\": 1.0E-7\n  },\n  {\n      \"n\": 1.0E-6\n  },\n  {\n      \"n\": 1.0E-10\n  },\n  {\n      \"n\": 5\n  },\n  {\n      \"n\": 0.5\n  },\n  {\n      \"n\": 5\n  },\n  {\n      \"n\": 7\n  },\n  {\n      \"n\": \"abc\"\n  },\n  {\n      \"n\": \" 5 \"\n  },\n  {\n      \"n\": \"\"\n  },\n  {\n      \"n\": \"NaN\"\n  },\n  {\n      \"n\": \"1_0\"\n  },\n  {\n      \"n\": \"0x10\"\n  },\n  {\n      \"n\": 1.0E22\n  },\n  {\n      \"n\": 0.0\n  },\n  {\n      \"n\": 0.0\n  },\n  {\n      \"n\": 1.2345678901234568E29\n  },\n  {\n      \"n\": -1000.0\n  },\n  {\n      \"n\": 0.0\n  },\n  {\n      \"n\": 1.0\n  },\n  {\n      \"n\": 100\n  },\n  {\n      \"n\": 1000.0\n  },\n  {\n      \"n\": 1.2345678901234568E-11\n  },\n  {\n      \"n\": 1.0E-6\n  }\n]"
+        },
+        {
+            "name": "json integers around the long range",
+            "output": "[\n  {\n      \"n\": 9223372036854775807\n  },\n  {\n      \"n\": 9223372036854775808\n  },\n  {\n      \"n\": 18446744073709551615\n  },\n  {\n      \"n\": 1.8446744073709552E19\n  },\n  {\n      \"n\": -9223372036854775808\n  },\n  {\n      \"n\": -9.223372036854776E18\n  },\n  {\n      \"n\": 1.2345678901234568E21\n  },\n  {\n      \"n\": 0.1\n  },\n  {\n      \"n\": 0.5\n  },\n  {\n      \"n\": 100.0\n  },\n  {\n      \"n\": 123456.789\n  },\n  {\n      \"n\": 1234567.0\n  },\n  {\n      \"n\": 10000000\n  },\n  {\n      \"n\": 1.0E7\n  },\n  {\n      \"n\": 9999999.999\n  },\n  {\n      \"n\": 0.001\n  },\n  {\n      \"n\": 1.0E-4\n  },\n  {\n      \"n\": 1.23456789E7\n  },\n  {\n      \"n\": 1.0E7\n  },\n  {\n      \"n\": 1.23\n  },\n  {\n      \"n\": 9.007199254740994E15\n  },\n  {\n      \"n\": 9007199254740993\n  },\n  {\n      \"n\": -12.5\n  },\n  {\n      \"n\": 3.141592653589793\n  },\n  {\n      \"n\": 1.7976931348623157E308\n  },\n  {\n      \"n\": 4.9E-324\n  },\n  {\n      \"n\": 0.0\n  },\n  {\n      \"n\": -0.0\n  },\n  {\n      \"n\": 4.9E-324\n  },\n  {\n      \"n\": 2.2250738585072014E-308\n  },\n  {\n      \"n\": 0.30000000000000004\n  },\n  {\n      \"n\": 1.0E22\n  },\n  {\n      \"n\": 1.0E23\n  },\n  {\n      \"n\": 1.2345678912345679E8\n  }\n]"
+        },
+        {
+            "name": "json number beyond a double",
+            "output": "error"
+        },
+        {
+            "name": "json number beyond a double negative",
+            "output": "error"
+        },
+        {
+            "name": "json number past the double maximum",
+            "output": "error"
+        },
+        {
+            "name": "json numeric null",
+            "output": "[\n  {\n      \"n\": null\n  }\n]"
+        },
+        {
+            "name": "json other numeric types",
+            "output": "[\n  {\n      \"a\": 1,\n      \"b\": 2.5,\n      \"c\": 3,\n      \"d\": 4.5,\n      \"e\": 5.5,\n      \"f\": 6,\n      \"g\": 7.25\n  }\n]"
+        },
+        {
+            "name": "json non numeric types stay strings",
+            "output": "[\n  {\n      \"a\": \"1\",\n      \"b\": \"true\",\n      \"c\": \"2024-01-01\",\n      \"d\": \"1\",\n      \"e\": \"2024-01-01 10:00:00\"\n  }\n]"
+        },
+        {
+            "name": "json column names escaped",
+            "output": "[\n  {\n      \"na\\\"me\": \"1\",\n      \"new\\nline\": \"2\"\n  }\n]"
+        },
+        {
+            "name": "json duplicate column names",
+            "output": "[\n  {\n      \"a\": \"y\",\n      \"b\": \"x\"\n  }\n]"
+        },
+        {
+            "name": "json no columns",
+            "output": "[\n  {},\n  {}\n]"
+        },
+        {
+            "name": "json several rows",
+            "output": "[\n  {\n      \"id\": 0,\n      \"name\": \"n0\"\n  },\n  {\n      \"id\": 1,\n      \"name\": \"n1\"\n  },\n  {\n      \"id\": 2,\n      \"name\": \"n2\"\n  },\n  {\n      \"id\": 3,\n      \"name\": \"n3\"\n  },\n  {\n      \"id\": 4,\n      \"name\": \"n4\"\n  }\n]"
+        },
+        {
+            "name": "json without a header flag",
+            "output": "[\n  {\n      \"id\": 1,\n      \"name\": \"O'Brien\"\n  }\n]"
+        },
+        {
+            "name": "markdown keeps the NULL text",
+            "output": "| id | name |\n| ---: | --- |\n| 2 | NULL |"
+        },
+        {
+            "name": "markdown escapes pipes and newlines",
+            "output": "| a\\|b | n |\n| --- | ---: |\n| x\\|y | 1 |\n| l1 l2 | 2 |\n| cr\rlf | NULL |\n|  |  |"
+        },
+        {
+            "name": "markdown alignment by type",
+            "output": "| a | b | c | d | e |\n| ---: | --- | ---: | --- | ---: |\n| 1 | x | 2.5 | 2024-01-01 | 1e5 |"
+        },
+        {
+            "name": "markdown no columns",
+            "output": "|  |\n||\n|  |"
+        },
+        {
+            "name": "markdown no rows no header flag",
+            "output": "| id | name |\n| ---: | --- |"
+        },
+        {
+            "name": "markdown unicode",
+            "output": "| id | name |\n| ---: | --- |\n| 1 | 日本語 😀 |"
+        },
+        {
+            "name": "sql insert escapes per dialect",
+            "output": {
+                "PostgreSQL": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO t (\"id\", \"name\") VALUES (2, NULL);",
+                "MySQL": "INSERT INTO t (`id`, `name`) VALUES (1, 'O''Brien');\nINSERT INTO t (`id`, `name`) VALUES (2, NULL);",
+                "MariaDB": "INSERT INTO t (`id`, `name`) VALUES (1, 'O''Brien');\nINSERT INTO t (`id`, `name`) VALUES (2, NULL);",
+                "SQLite": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO t (\"id\", \"name\") VALUES (2, NULL);",
+                "SqlServer": "INSERT INTO t ([id], [name]) VALUES (1, 'O''Brien');\nINSERT INTO t ([id], [name]) VALUES (2, NULL);",
+                "ClickHouse": "INSERT INTO t (`id`, `name`) VALUES (1, 'O\\'Brien');\nINSERT INTO t (`id`, `name`) VALUES (2, NULL);",
+                "DuckDB": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO t (\"id\", \"name\") VALUES (2, NULL);",
+                "CockroachDB": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO t (\"id\", \"name\") VALUES (2, NULL);",
+                "TimescaleDB": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO t (\"id\", \"name\") VALUES (2, NULL);",
+                "Neon": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO t (\"id\", \"name\") VALUES (2, NULL);",
+                "Supabase": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO t (\"id\", \"name\") VALUES (2, NULL);",
+                "TiDB": "INSERT INTO t (`id`, `name`) VALUES (1, 'O''Brien');\nINSERT INTO t (`id`, `name`) VALUES (2, NULL);",
+                "PlanetScale": "INSERT INTO t (`id`, `name`) VALUES (1, 'O''Brien');\nINSERT INTO t (`id`, `name`) VALUES (2, NULL);",
+                "AzureSql": "INSERT INTO t ([id], [name]) VALUES (1, 'O''Brien');\nINSERT INTO t ([id], [name]) VALUES (2, NULL);",
+                "H2": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO t (\"id\", \"name\") VALUES (2, NULL);",
+                "HSQLDB": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO t (\"id\", \"name\") VALUES (2, NULL);",
+                "Derby": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO t (\"id\", \"name\") VALUES (2, NULL);",
+                "OtherJdbc": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO t (\"id\", \"name\") VALUES (2, NULL);",
+                "CsvFile": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO t (\"id\", \"name\") VALUES (2, NULL);",
+                "ExcelFile": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO t (\"id\", \"name\") VALUES (2, NULL);",
+                "JsonFile": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'O''Brien');\nINSERT INTO t (\"id\", \"name\") VALUES (2, NULL);"
+            }
+        },
+        {
+            "name": "sql insert backslash",
+            "output": {
+                "PostgreSQL": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'a\\b');",
+                "MySQL": "INSERT INTO t (`id`, `name`) VALUES (1, 'a\\\\b');",
+                "MariaDB": "INSERT INTO t (`id`, `name`) VALUES (1, 'a\\\\b');",
+                "SQLite": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'a\\b');",
+                "SqlServer": "INSERT INTO t ([id], [name]) VALUES (1, 'a\\b');",
+                "ClickHouse": "INSERT INTO t (`id`, `name`) VALUES (1, 'a\\\\b');",
+                "DuckDB": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'a\\b');",
+                "CockroachDB": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'a\\b');",
+                "TimescaleDB": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'a\\b');",
+                "Neon": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'a\\b');",
+                "Supabase": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'a\\b');",
+                "TiDB": "INSERT INTO t (`id`, `name`) VALUES (1, 'a\\\\b');",
+                "PlanetScale": "INSERT INTO t (`id`, `name`) VALUES (1, 'a\\\\b');",
+                "AzureSql": "INSERT INTO t ([id], [name]) VALUES (1, 'a\\b');",
+                "H2": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'a\\b');",
+                "HSQLDB": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'a\\b');",
+                "Derby": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'a\\b');",
+                "OtherJdbc": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'a\\b');",
+                "CsvFile": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'a\\b');",
+                "ExcelFile": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'a\\b');",
+                "JsonFile": "INSERT INTO t (\"id\", \"name\") VALUES (1, 'a\\b');"
+            }
+        },
+        {
+            "name": "sql insert quotes and newlines",
+            "output": {
+                "PostgreSQL": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'it''s\nnew \"line\" \\ end');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, '''');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, '''''');",
+                "MySQL": "INSERT INTO table_name (`id`, `name`) VALUES (1, 'it''s\nnew \"line\" \\\\ end');\nINSERT INTO table_name (`id`, `name`) VALUES (2, '''');\nINSERT INTO table_name (`id`, `name`) VALUES (3, '''''');",
+                "MariaDB": "INSERT INTO table_name (`id`, `name`) VALUES (1, 'it''s\nnew \"line\" \\\\ end');\nINSERT INTO table_name (`id`, `name`) VALUES (2, '''');\nINSERT INTO table_name (`id`, `name`) VALUES (3, '''''');",
+                "SQLite": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'it''s\nnew \"line\" \\ end');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, '''');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, '''''');",
+                "SqlServer": "INSERT INTO table_name ([id], [name]) VALUES (1, 'it''s\nnew \"line\" \\ end');\nINSERT INTO table_name ([id], [name]) VALUES (2, '''');\nINSERT INTO table_name ([id], [name]) VALUES (3, '''''');",
+                "ClickHouse": "INSERT INTO table_name (`id`, `name`) VALUES (1, 'it\\'s\nnew \"line\" \\\\ end');\nINSERT INTO table_name (`id`, `name`) VALUES (2, '\\'');\nINSERT INTO table_name (`id`, `name`) VALUES (3, '\\'\\'');",
+                "DuckDB": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'it''s\nnew \"line\" \\ end');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, '''');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, '''''');",
+                "CockroachDB": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'it''s\nnew \"line\" \\ end');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, '''');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, '''''');",
+                "TimescaleDB": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'it''s\nnew \"line\" \\ end');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, '''');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, '''''');",
+                "Neon": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'it''s\nnew \"line\" \\ end');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, '''');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, '''''');",
+                "Supabase": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'it''s\nnew \"line\" \\ end');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, '''');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, '''''');",
+                "TiDB": "INSERT INTO table_name (`id`, `name`) VALUES (1, 'it''s\nnew \"line\" \\\\ end');\nINSERT INTO table_name (`id`, `name`) VALUES (2, '''');\nINSERT INTO table_name (`id`, `name`) VALUES (3, '''''');",
+                "PlanetScale": "INSERT INTO table_name (`id`, `name`) VALUES (1, 'it''s\nnew \"line\" \\\\ end');\nINSERT INTO table_name (`id`, `name`) VALUES (2, '''');\nINSERT INTO table_name (`id`, `name`) VALUES (3, '''''');",
+                "AzureSql": "INSERT INTO table_name ([id], [name]) VALUES (1, 'it''s\nnew \"line\" \\ end');\nINSERT INTO table_name ([id], [name]) VALUES (2, '''');\nINSERT INTO table_name ([id], [name]) VALUES (3, '''''');",
+                "H2": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'it''s\nnew \"line\" \\ end');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, '''');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, '''''');",
+                "HSQLDB": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'it''s\nnew \"line\" \\ end');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, '''');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, '''''');",
+                "Derby": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'it''s\nnew \"line\" \\ end');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, '''');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, '''''');",
+                "OtherJdbc": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'it''s\nnew \"line\" \\ end');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, '''');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, '''''');",
+                "CsvFile": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'it''s\nnew \"line\" \\ end');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, '''');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, '''''');",
+                "ExcelFile": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'it''s\nnew \"line\" \\ end');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, '''');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, '''''');",
+                "JsonFile": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'it''s\nnew \"line\" \\ end');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, '''');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, '''''');"
+            }
+        },
+        {
+            "name": "sql insert numbers that are not numbers",
+            "output": {
+                "PostgreSQL": "INSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('abc', 1e5, '1');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (007, .5, '5.');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (' 5 ', +3, 'NaN');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('', -0, '0x10');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (NULL, NULL, NULL);",
+                "MySQL": "INSERT INTO table_name (`n`, `d`, `s`) VALUES ('abc', 1e5, '1');\nINSERT INTO table_name (`n`, `d`, `s`) VALUES (007, .5, '5.');\nINSERT INTO table_name (`n`, `d`, `s`) VALUES (' 5 ', +3, 'NaN');\nINSERT INTO table_name (`n`, `d`, `s`) VALUES ('', -0, '0x10');\nINSERT INTO table_name (`n`, `d`, `s`) VALUES (NULL, NULL, NULL);",
+                "MariaDB": "INSERT INTO table_name (`n`, `d`, `s`) VALUES ('abc', 1e5, '1');\nINSERT INTO table_name (`n`, `d`, `s`) VALUES (007, .5, '5.');\nINSERT INTO table_name (`n`, `d`, `s`) VALUES (' 5 ', +3, 'NaN');\nINSERT INTO table_name (`n`, `d`, `s`) VALUES ('', -0, '0x10');\nINSERT INTO table_name (`n`, `d`, `s`) VALUES (NULL, NULL, NULL);",
+                "SQLite": "INSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('abc', 1e5, '1');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (007, .5, '5.');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (' 5 ', +3, 'NaN');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('', -0, '0x10');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (NULL, NULL, NULL);",
+                "SqlServer": "INSERT INTO table_name ([n], [d], [s]) VALUES ('abc', 1e5, '1');\nINSERT INTO table_name ([n], [d], [s]) VALUES (007, .5, '5.');\nINSERT INTO table_name ([n], [d], [s]) VALUES (' 5 ', +3, 'NaN');\nINSERT INTO table_name ([n], [d], [s]) VALUES ('', -0, '0x10');\nINSERT INTO table_name ([n], [d], [s]) VALUES (NULL, NULL, NULL);",
+                "ClickHouse": "INSERT INTO table_name (`n`, `d`, `s`) VALUES ('abc', 1e5, '1');\nINSERT INTO table_name (`n`, `d`, `s`) VALUES (007, .5, '5.');\nINSERT INTO table_name (`n`, `d`, `s`) VALUES (' 5 ', +3, 'NaN');\nINSERT INTO table_name (`n`, `d`, `s`) VALUES ('', -0, '0x10');\nINSERT INTO table_name (`n`, `d`, `s`) VALUES (NULL, NULL, NULL);",
+                "DuckDB": "INSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('abc', 1e5, '1');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (007, .5, '5.');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (' 5 ', +3, 'NaN');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('', -0, '0x10');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (NULL, NULL, NULL);",
+                "CockroachDB": "INSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('abc', 1e5, '1');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (007, .5, '5.');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (' 5 ', +3, 'NaN');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('', -0, '0x10');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (NULL, NULL, NULL);",
+                "TimescaleDB": "INSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('abc', 1e5, '1');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (007, .5, '5.');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (' 5 ', +3, 'NaN');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('', -0, '0x10');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (NULL, NULL, NULL);",
+                "Neon": "INSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('abc', 1e5, '1');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (007, .5, '5.');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (' 5 ', +3, 'NaN');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('', -0, '0x10');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (NULL, NULL, NULL);",
+                "Supabase": "INSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('abc', 1e5, '1');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (007, .5, '5.');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (' 5 ', +3, 'NaN');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('', -0, '0x10');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (NULL, NULL, NULL);",
+                "TiDB": "INSERT INTO table_name (`n`, `d`, `s`) VALUES ('abc', 1e5, '1');\nINSERT INTO table_name (`n`, `d`, `s`) VALUES (007, .5, '5.');\nINSERT INTO table_name (`n`, `d`, `s`) VALUES (' 5 ', +3, 'NaN');\nINSERT INTO table_name (`n`, `d`, `s`) VALUES ('', -0, '0x10');\nINSERT INTO table_name (`n`, `d`, `s`) VALUES (NULL, NULL, NULL);",
+                "PlanetScale": "INSERT INTO table_name (`n`, `d`, `s`) VALUES ('abc', 1e5, '1');\nINSERT INTO table_name (`n`, `d`, `s`) VALUES (007, .5, '5.');\nINSERT INTO table_name (`n`, `d`, `s`) VALUES (' 5 ', +3, 'NaN');\nINSERT INTO table_name (`n`, `d`, `s`) VALUES ('', -0, '0x10');\nINSERT INTO table_name (`n`, `d`, `s`) VALUES (NULL, NULL, NULL);",
+                "AzureSql": "INSERT INTO table_name ([n], [d], [s]) VALUES ('abc', 1e5, '1');\nINSERT INTO table_name ([n], [d], [s]) VALUES (007, .5, '5.');\nINSERT INTO table_name ([n], [d], [s]) VALUES (' 5 ', +3, 'NaN');\nINSERT INTO table_name ([n], [d], [s]) VALUES ('', -0, '0x10');\nINSERT INTO table_name ([n], [d], [s]) VALUES (NULL, NULL, NULL);",
+                "H2": "INSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('abc', 1e5, '1');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (007, .5, '5.');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (' 5 ', +3, 'NaN');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('', -0, '0x10');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (NULL, NULL, NULL);",
+                "HSQLDB": "INSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('abc', 1e5, '1');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (007, .5, '5.');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (' 5 ', +3, 'NaN');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('', -0, '0x10');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (NULL, NULL, NULL);",
+                "Derby": "INSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('abc', 1e5, '1');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (007, .5, '5.');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (' 5 ', +3, 'NaN');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('', -0, '0x10');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (NULL, NULL, NULL);",
+                "OtherJdbc": "INSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('abc', 1e5, '1');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (007, .5, '5.');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (' 5 ', +3, 'NaN');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('', -0, '0x10');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (NULL, NULL, NULL);",
+                "CsvFile": "INSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('abc', 1e5, '1');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (007, .5, '5.');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (' 5 ', +3, 'NaN');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('', -0, '0x10');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (NULL, NULL, NULL);",
+                "ExcelFile": "INSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('abc', 1e5, '1');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (007, .5, '5.');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (' 5 ', +3, 'NaN');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('', -0, '0x10');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (NULL, NULL, NULL);",
+                "JsonFile": "INSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('abc', 1e5, '1');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (007, .5, '5.');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (' 5 ', +3, 'NaN');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES ('', -0, '0x10');\nINSERT INTO table_name (\"n\", \"d\", \"s\") VALUES (NULL, NULL, NULL);"
+            }
+        },
+        {
+            "name": "sql insert column names that need quoting",
+            "output": {
+                "PostgreSQL": "INSERT INTO table_name (\"we\"\"ird\", \"a b\", \"select\", \"back`tick\", \"br]acket\", \"ñ\") VALUES (1, '2', '3', '4', '5', '6');",
+                "MySQL": "INSERT INTO table_name (`we\"ird`, `a b`, `select`, `back``tick`, `br]acket`, `ñ`) VALUES (1, '2', '3', '4', '5', '6');",
+                "MariaDB": "INSERT INTO table_name (`we\"ird`, `a b`, `select`, `back``tick`, `br]acket`, `ñ`) VALUES (1, '2', '3', '4', '5', '6');",
+                "SQLite": "INSERT INTO table_name (\"we\"\"ird\", \"a b\", \"select\", \"back`tick\", \"br]acket\", \"ñ\") VALUES (1, '2', '3', '4', '5', '6');",
+                "SqlServer": "INSERT INTO table_name ([we\"ird], [a b], [select], [back`tick], [br]]acket], [ñ]) VALUES (1, '2', '3', '4', '5', '6');",
+                "ClickHouse": "INSERT INTO table_name (`we\"ird`, `a b`, `select`, `back\\`tick`, `br]acket`, `ñ`) VALUES (1, '2', '3', '4', '5', '6');",
+                "DuckDB": "INSERT INTO table_name (\"we\"\"ird\", \"a b\", \"select\", \"back`tick\", \"br]acket\", \"ñ\") VALUES (1, '2', '3', '4', '5', '6');",
+                "CockroachDB": "INSERT INTO table_name (\"we\"\"ird\", \"a b\", \"select\", \"back`tick\", \"br]acket\", \"ñ\") VALUES (1, '2', '3', '4', '5', '6');",
+                "TimescaleDB": "INSERT INTO table_name (\"we\"\"ird\", \"a b\", \"select\", \"back`tick\", \"br]acket\", \"ñ\") VALUES (1, '2', '3', '4', '5', '6');",
+                "Neon": "INSERT INTO table_name (\"we\"\"ird\", \"a b\", \"select\", \"back`tick\", \"br]acket\", \"ñ\") VALUES (1, '2', '3', '4', '5', '6');",
+                "Supabase": "INSERT INTO table_name (\"we\"\"ird\", \"a b\", \"select\", \"back`tick\", \"br]acket\", \"ñ\") VALUES (1, '2', '3', '4', '5', '6');",
+                "TiDB": "INSERT INTO table_name (`we\"ird`, `a b`, `select`, `back``tick`, `br]acket`, `ñ`) VALUES (1, '2', '3', '4', '5', '6');",
+                "PlanetScale": "INSERT INTO table_name (`we\"ird`, `a b`, `select`, `back``tick`, `br]acket`, `ñ`) VALUES (1, '2', '3', '4', '5', '6');",
+                "AzureSql": "INSERT INTO table_name ([we\"ird], [a b], [select], [back`tick], [br]]acket], [ñ]) VALUES (1, '2', '3', '4', '5', '6');",
+                "H2": "INSERT INTO table_name (\"we\"\"ird\", \"a b\", \"select\", \"back`tick\", \"br]acket\", \"ñ\") VALUES (1, '2', '3', '4', '5', '6');",
+                "HSQLDB": "INSERT INTO table_name (\"we\"\"ird\", \"a b\", \"select\", \"back`tick\", \"br]acket\", \"ñ\") VALUES (1, '2', '3', '4', '5', '6');",
+                "Derby": "INSERT INTO table_name (\"we\"\"ird\", \"a b\", \"select\", \"back`tick\", \"br]acket\", \"ñ\") VALUES (1, '2', '3', '4', '5', '6');",
+                "OtherJdbc": "INSERT INTO table_name (\"we\"\"ird\", \"a b\", \"select\", \"back`tick\", \"br]acket\", \"ñ\") VALUES (1, '2', '3', '4', '5', '6');",
+                "CsvFile": "INSERT INTO table_name (\"we\"\"ird\", \"a b\", \"select\", \"back`tick\", \"br]acket\", \"ñ\") VALUES (1, '2', '3', '4', '5', '6');",
+                "ExcelFile": "INSERT INTO table_name (\"we\"\"ird\", \"a b\", \"select\", \"back`tick\", \"br]acket\", \"ñ\") VALUES (1, '2', '3', '4', '5', '6');",
+                "JsonFile": "INSERT INTO table_name (\"we\"\"ird\", \"a b\", \"select\", \"back`tick\", \"br]acket\", \"ñ\") VALUES (1, '2', '3', '4', '5', '6');"
+            }
+        },
+        {
+            "name": "sql insert table names",
+            "output": {
+                "PostgreSQL": "INSERT INTO \"My Schema\".\"My Table\" (\"id\", \"name\") VALUES (1, 'a');",
+                "MySQL": "INSERT INTO \"My Schema\".\"My Table\" (`id`, `name`) VALUES (1, 'a');",
+                "MariaDB": "INSERT INTO \"My Schema\".\"My Table\" (`id`, `name`) VALUES (1, 'a');",
+                "SQLite": "INSERT INTO \"My Schema\".\"My Table\" (\"id\", \"name\") VALUES (1, 'a');",
+                "SqlServer": "INSERT INTO \"My Schema\".\"My Table\" ([id], [name]) VALUES (1, 'a');",
+                "ClickHouse": "INSERT INTO \"My Schema\".\"My Table\" (`id`, `name`) VALUES (1, 'a');",
+                "DuckDB": "INSERT INTO \"My Schema\".\"My Table\" (\"id\", \"name\") VALUES (1, 'a');",
+                "CockroachDB": "INSERT INTO \"My Schema\".\"My Table\" (\"id\", \"name\") VALUES (1, 'a');",
+                "TimescaleDB": "INSERT INTO \"My Schema\".\"My Table\" (\"id\", \"name\") VALUES (1, 'a');",
+                "Neon": "INSERT INTO \"My Schema\".\"My Table\" (\"id\", \"name\") VALUES (1, 'a');",
+                "Supabase": "INSERT INTO \"My Schema\".\"My Table\" (\"id\", \"name\") VALUES (1, 'a');",
+                "TiDB": "INSERT INTO \"My Schema\".\"My Table\" (`id`, `name`) VALUES (1, 'a');",
+                "PlanetScale": "INSERT INTO \"My Schema\".\"My Table\" (`id`, `name`) VALUES (1, 'a');",
+                "AzureSql": "INSERT INTO \"My Schema\".\"My Table\" ([id], [name]) VALUES (1, 'a');",
+                "H2": "INSERT INTO \"My Schema\".\"My Table\" (\"id\", \"name\") VALUES (1, 'a');",
+                "HSQLDB": "INSERT INTO \"My Schema\".\"My Table\" (\"id\", \"name\") VALUES (1, 'a');",
+                "Derby": "INSERT INTO \"My Schema\".\"My Table\" (\"id\", \"name\") VALUES (1, 'a');",
+                "OtherJdbc": "INSERT INTO \"My Schema\".\"My Table\" (\"id\", \"name\") VALUES (1, 'a');",
+                "CsvFile": "INSERT INTO \"My Schema\".\"My Table\" (\"id\", \"name\") VALUES (1, 'a');",
+                "ExcelFile": "INSERT INTO \"My Schema\".\"My Table\" (\"id\", \"name\") VALUES (1, 'a');",
+                "JsonFile": "INSERT INTO \"My Schema\".\"My Table\" (\"id\", \"name\") VALUES (1, 'a');"
+            }
+        },
+        {
+            "name": "sql insert unicode",
+            "output": {
+                "PostgreSQL": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'ñandú 😀 日本語');",
+                "MySQL": "INSERT INTO table_name (`id`, `name`) VALUES (1, 'ñandú 😀 日本語');",
+                "MariaDB": "INSERT INTO table_name (`id`, `name`) VALUES (1, 'ñandú 😀 日本語');",
+                "SQLite": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'ñandú 😀 日本語');",
+                "SqlServer": "INSERT INTO table_name ([id], [name]) VALUES (1, 'ñandú 😀 日本語');",
+                "ClickHouse": "INSERT INTO table_name (`id`, `name`) VALUES (1, 'ñandú 😀 日本語');",
+                "DuckDB": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'ñandú 😀 日本語');",
+                "CockroachDB": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'ñandú 😀 日本語');",
+                "TimescaleDB": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'ñandú 😀 日本語');",
+                "Neon": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'ñandú 😀 日本語');",
+                "Supabase": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'ñandú 😀 日本語');",
+                "TiDB": "INSERT INTO table_name (`id`, `name`) VALUES (1, 'ñandú 😀 日本語');",
+                "PlanetScale": "INSERT INTO table_name (`id`, `name`) VALUES (1, 'ñandú 😀 日本語');",
+                "AzureSql": "INSERT INTO table_name ([id], [name]) VALUES (1, 'ñandú 😀 日本語');",
+                "H2": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'ñandú 😀 日本語');",
+                "HSQLDB": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'ñandú 😀 日本語');",
+                "Derby": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'ñandú 😀 日本語');",
+                "OtherJdbc": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'ñandú 😀 日本語');",
+                "CsvFile": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'ñandú 😀 日本語');",
+                "ExcelFile": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'ñandú 😀 日本語');",
+                "JsonFile": "INSERT INTO table_name (\"id\", \"name\") VALUES (1, 'ñandú 😀 日本語');"
+            }
+        },
+        {
+            "name": "sql insert booleans and dates",
+            "output": {
+                "PostgreSQL": "INSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('true', '2024-01-01', '1');\nINSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('false', NULL, '0');",
+                "MySQL": "INSERT INTO table_name (`a`, `b`, `c`) VALUES ('true', '2024-01-01', '1');\nINSERT INTO table_name (`a`, `b`, `c`) VALUES ('false', NULL, '0');",
+                "MariaDB": "INSERT INTO table_name (`a`, `b`, `c`) VALUES ('true', '2024-01-01', '1');\nINSERT INTO table_name (`a`, `b`, `c`) VALUES ('false', NULL, '0');",
+                "SQLite": "INSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('true', '2024-01-01', '1');\nINSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('false', NULL, '0');",
+                "SqlServer": "INSERT INTO table_name ([a], [b], [c]) VALUES ('true', '2024-01-01', '1');\nINSERT INTO table_name ([a], [b], [c]) VALUES ('false', NULL, '0');",
+                "ClickHouse": "INSERT INTO table_name (`a`, `b`, `c`) VALUES ('true', '2024-01-01', '1');\nINSERT INTO table_name (`a`, `b`, `c`) VALUES ('false', NULL, '0');",
+                "DuckDB": "INSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('true', '2024-01-01', '1');\nINSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('false', NULL, '0');",
+                "CockroachDB": "INSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('true', '2024-01-01', '1');\nINSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('false', NULL, '0');",
+                "TimescaleDB": "INSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('true', '2024-01-01', '1');\nINSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('false', NULL, '0');",
+                "Neon": "INSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('true', '2024-01-01', '1');\nINSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('false', NULL, '0');",
+                "Supabase": "INSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('true', '2024-01-01', '1');\nINSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('false', NULL, '0');",
+                "TiDB": "INSERT INTO table_name (`a`, `b`, `c`) VALUES ('true', '2024-01-01', '1');\nINSERT INTO table_name (`a`, `b`, `c`) VALUES ('false', NULL, '0');",
+                "PlanetScale": "INSERT INTO table_name (`a`, `b`, `c`) VALUES ('true', '2024-01-01', '1');\nINSERT INTO table_name (`a`, `b`, `c`) VALUES ('false', NULL, '0');",
+                "AzureSql": "INSERT INTO table_name ([a], [b], [c]) VALUES ('true', '2024-01-01', '1');\nINSERT INTO table_name ([a], [b], [c]) VALUES ('false', NULL, '0');",
+                "H2": "INSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('true', '2024-01-01', '1');\nINSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('false', NULL, '0');",
+                "HSQLDB": "INSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('true', '2024-01-01', '1');\nINSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('false', NULL, '0');",
+                "Derby": "INSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('true', '2024-01-01', '1');\nINSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('false', NULL, '0');",
+                "OtherJdbc": "INSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('true', '2024-01-01', '1');\nINSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('false', NULL, '0');",
+                "CsvFile": "INSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('true', '2024-01-01', '1');\nINSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('false', NULL, '0');",
+                "ExcelFile": "INSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('true', '2024-01-01', '1');\nINSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('false', NULL, '0');",
+                "JsonFile": "INSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('true', '2024-01-01', '1');\nINSERT INTO table_name (\"a\", \"b\", \"c\") VALUES ('false', NULL, '0');"
+            }
+        },
+        {
+            "name": "sql insert no columns",
+            "output": {
+                "PostgreSQL": "INSERT INTO t () VALUES ();",
+                "MySQL": "INSERT INTO t () VALUES ();",
+                "MariaDB": "INSERT INTO t () VALUES ();",
+                "SQLite": "INSERT INTO t () VALUES ();",
+                "SqlServer": "INSERT INTO t () VALUES ();",
+                "ClickHouse": "INSERT INTO t () VALUES ();",
+                "DuckDB": "INSERT INTO t () VALUES ();",
+                "CockroachDB": "INSERT INTO t () VALUES ();",
+                "TimescaleDB": "INSERT INTO t () VALUES ();",
+                "Neon": "INSERT INTO t () VALUES ();",
+                "Supabase": "INSERT INTO t () VALUES ();",
+                "TiDB": "INSERT INTO t () VALUES ();",
+                "PlanetScale": "INSERT INTO t () VALUES ();",
+                "AzureSql": "INSERT INTO t () VALUES ();",
+                "H2": "INSERT INTO t () VALUES ();",
+                "HSQLDB": "INSERT INTO t () VALUES ();",
+                "Derby": "INSERT INTO t () VALUES ();",
+                "OtherJdbc": "INSERT INTO t () VALUES ();",
+                "CsvFile": "INSERT INTO t () VALUES ();",
+                "ExcelFile": "INSERT INTO t () VALUES ();",
+                "JsonFile": "INSERT INTO t () VALUES ();"
+            }
+        },
+        {
+            "name": "sql insert many rows",
+            "output": {
+                "PostgreSQL": "INSERT INTO table_name (\"id\", \"name\") VALUES (0, 'v0');\nINSERT INTO table_name (\"id\", \"name\") VALUES (1, 'v1');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, 'v2');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'v3');\nINSERT INTO table_name (\"id\", \"name\") VALUES (4, 'v4');",
+                "MySQL": "INSERT INTO table_name (`id`, `name`) VALUES (0, 'v0');\nINSERT INTO table_name (`id`, `name`) VALUES (1, 'v1');\nINSERT INTO table_name (`id`, `name`) VALUES (2, 'v2');\nINSERT INTO table_name (`id`, `name`) VALUES (3, 'v3');\nINSERT INTO table_name (`id`, `name`) VALUES (4, 'v4');",
+                "MariaDB": "INSERT INTO table_name (`id`, `name`) VALUES (0, 'v0');\nINSERT INTO table_name (`id`, `name`) VALUES (1, 'v1');\nINSERT INTO table_name (`id`, `name`) VALUES (2, 'v2');\nINSERT INTO table_name (`id`, `name`) VALUES (3, 'v3');\nINSERT INTO table_name (`id`, `name`) VALUES (4, 'v4');",
+                "SQLite": "INSERT INTO table_name (\"id\", \"name\") VALUES (0, 'v0');\nINSERT INTO table_name (\"id\", \"name\") VALUES (1, 'v1');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, 'v2');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'v3');\nINSERT INTO table_name (\"id\", \"name\") VALUES (4, 'v4');",
+                "SqlServer": "INSERT INTO table_name ([id], [name]) VALUES (0, 'v0');\nINSERT INTO table_name ([id], [name]) VALUES (1, 'v1');\nINSERT INTO table_name ([id], [name]) VALUES (2, 'v2');\nINSERT INTO table_name ([id], [name]) VALUES (3, 'v3');\nINSERT INTO table_name ([id], [name]) VALUES (4, 'v4');",
+                "ClickHouse": "INSERT INTO table_name (`id`, `name`) VALUES (0, 'v0');\nINSERT INTO table_name (`id`, `name`) VALUES (1, 'v1');\nINSERT INTO table_name (`id`, `name`) VALUES (2, 'v2');\nINSERT INTO table_name (`id`, `name`) VALUES (3, 'v3');\nINSERT INTO table_name (`id`, `name`) VALUES (4, 'v4');",
+                "DuckDB": "INSERT INTO table_name (\"id\", \"name\") VALUES (0, 'v0');\nINSERT INTO table_name (\"id\", \"name\") VALUES (1, 'v1');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, 'v2');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'v3');\nINSERT INTO table_name (\"id\", \"name\") VALUES (4, 'v4');",
+                "CockroachDB": "INSERT INTO table_name (\"id\", \"name\") VALUES (0, 'v0');\nINSERT INTO table_name (\"id\", \"name\") VALUES (1, 'v1');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, 'v2');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'v3');\nINSERT INTO table_name (\"id\", \"name\") VALUES (4, 'v4');",
+                "TimescaleDB": "INSERT INTO table_name (\"id\", \"name\") VALUES (0, 'v0');\nINSERT INTO table_name (\"id\", \"name\") VALUES (1, 'v1');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, 'v2');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'v3');\nINSERT INTO table_name (\"id\", \"name\") VALUES (4, 'v4');",
+                "Neon": "INSERT INTO table_name (\"id\", \"name\") VALUES (0, 'v0');\nINSERT INTO table_name (\"id\", \"name\") VALUES (1, 'v1');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, 'v2');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'v3');\nINSERT INTO table_name (\"id\", \"name\") VALUES (4, 'v4');",
+                "Supabase": "INSERT INTO table_name (\"id\", \"name\") VALUES (0, 'v0');\nINSERT INTO table_name (\"id\", \"name\") VALUES (1, 'v1');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, 'v2');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'v3');\nINSERT INTO table_name (\"id\", \"name\") VALUES (4, 'v4');",
+                "TiDB": "INSERT INTO table_name (`id`, `name`) VALUES (0, 'v0');\nINSERT INTO table_name (`id`, `name`) VALUES (1, 'v1');\nINSERT INTO table_name (`id`, `name`) VALUES (2, 'v2');\nINSERT INTO table_name (`id`, `name`) VALUES (3, 'v3');\nINSERT INTO table_name (`id`, `name`) VALUES (4, 'v4');",
+                "PlanetScale": "INSERT INTO table_name (`id`, `name`) VALUES (0, 'v0');\nINSERT INTO table_name (`id`, `name`) VALUES (1, 'v1');\nINSERT INTO table_name (`id`, `name`) VALUES (2, 'v2');\nINSERT INTO table_name (`id`, `name`) VALUES (3, 'v3');\nINSERT INTO table_name (`id`, `name`) VALUES (4, 'v4');",
+                "AzureSql": "INSERT INTO table_name ([id], [name]) VALUES (0, 'v0');\nINSERT INTO table_name ([id], [name]) VALUES (1, 'v1');\nINSERT INTO table_name ([id], [name]) VALUES (2, 'v2');\nINSERT INTO table_name ([id], [name]) VALUES (3, 'v3');\nINSERT INTO table_name ([id], [name]) VALUES (4, 'v4');",
+                "H2": "INSERT INTO table_name (\"id\", \"name\") VALUES (0, 'v0');\nINSERT INTO table_name (\"id\", \"name\") VALUES (1, 'v1');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, 'v2');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'v3');\nINSERT INTO table_name (\"id\", \"name\") VALUES (4, 'v4');",
+                "HSQLDB": "INSERT INTO table_name (\"id\", \"name\") VALUES (0, 'v0');\nINSERT INTO table_name (\"id\", \"name\") VALUES (1, 'v1');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, 'v2');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'v3');\nINSERT INTO table_name (\"id\", \"name\") VALUES (4, 'v4');",
+                "Derby": "INSERT INTO table_name (\"id\", \"name\") VALUES (0, 'v0');\nINSERT INTO table_name (\"id\", \"name\") VALUES (1, 'v1');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, 'v2');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'v3');\nINSERT INTO table_name (\"id\", \"name\") VALUES (4, 'v4');",
+                "OtherJdbc": "INSERT INTO table_name (\"id\", \"name\") VALUES (0, 'v0');\nINSERT INTO table_name (\"id\", \"name\") VALUES (1, 'v1');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, 'v2');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'v3');\nINSERT INTO table_name (\"id\", \"name\") VALUES (4, 'v4');",
+                "CsvFile": "INSERT INTO table_name (\"id\", \"name\") VALUES (0, 'v0');\nINSERT INTO table_name (\"id\", \"name\") VALUES (1, 'v1');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, 'v2');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'v3');\nINSERT INTO table_name (\"id\", \"name\") VALUES (4, 'v4');",
+                "ExcelFile": "INSERT INTO table_name (\"id\", \"name\") VALUES (0, 'v0');\nINSERT INTO table_name (\"id\", \"name\") VALUES (1, 'v1');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, 'v2');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'v3');\nINSERT INTO table_name (\"id\", \"name\") VALUES (4, 'v4');",
+                "JsonFile": "INSERT INTO table_name (\"id\", \"name\") VALUES (0, 'v0');\nINSERT INTO table_name (\"id\", \"name\") VALUES (1, 'v1');\nINSERT INTO table_name (\"id\", \"name\") VALUES (2, 'v2');\nINSERT INTO table_name (\"id\", \"name\") VALUES (3, 'v3');\nINSERT INTO table_name (\"id\", \"name\") VALUES (4, 'v4');"
+            }
+        },
+        {
+            "name": "sql in list dedupes",
+            "output": {
+                "PostgreSQL": "(1, 2, 3)",
+                "MySQL": "(1, 2, 3)",
+                "MariaDB": "(1, 2, 3)",
+                "SQLite": "(1, 2, 3)",
+                "SqlServer": "(1, 2, 3)",
+                "ClickHouse": "(1, 2, 3)",
+                "DuckDB": "(1, 2, 3)",
+                "CockroachDB": "(1, 2, 3)",
+                "TimescaleDB": "(1, 2, 3)",
+                "Neon": "(1, 2, 3)",
+                "Supabase": "(1, 2, 3)",
+                "TiDB": "(1, 2, 3)",
+                "PlanetScale": "(1, 2, 3)",
+                "AzureSql": "(1, 2, 3)",
+                "H2": "(1, 2, 3)",
+                "HSQLDB": "(1, 2, 3)",
+                "Derby": "(1, 2, 3)",
+                "OtherJdbc": "(1, 2, 3)",
+                "CsvFile": "(1, 2, 3)",
+                "ExcelFile": "(1, 2, 3)",
+                "JsonFile": "(1, 2, 3)"
+            }
+        },
+        {
+            "name": "sql in list strings",
+            "output": {
+                "PostgreSQL": "('a', 'it''s', NULL, 'x\\y', '')",
+                "MySQL": "('a', 'it''s', NULL, 'x\\\\y', '')",
+                "MariaDB": "('a', 'it''s', NULL, 'x\\\\y', '')",
+                "SQLite": "('a', 'it''s', NULL, 'x\\y', '')",
+                "SqlServer": "('a', 'it''s', NULL, 'x\\y', '')",
+                "ClickHouse": "('a', 'it\\'s', NULL, 'x\\\\y', '')",
+                "DuckDB": "('a', 'it''s', NULL, 'x\\y', '')",
+                "CockroachDB": "('a', 'it''s', NULL, 'x\\y', '')",
+                "TimescaleDB": "('a', 'it''s', NULL, 'x\\y', '')",
+                "Neon": "('a', 'it''s', NULL, 'x\\y', '')",
+                "Supabase": "('a', 'it''s', NULL, 'x\\y', '')",
+                "TiDB": "('a', 'it''s', NULL, 'x\\\\y', '')",
+                "PlanetScale": "('a', 'it''s', NULL, 'x\\\\y', '')",
+                "AzureSql": "('a', 'it''s', NULL, 'x\\y', '')",
+                "H2": "('a', 'it''s', NULL, 'x\\y', '')",
+                "HSQLDB": "('a', 'it''s', NULL, 'x\\y', '')",
+                "Derby": "('a', 'it''s', NULL, 'x\\y', '')",
+                "OtherJdbc": "('a', 'it''s', NULL, 'x\\y', '')",
+                "CsvFile": "('a', 'it''s', NULL, 'x\\y', '')",
+                "ExcelFile": "('a', 'it''s', NULL, 'x\\y', '')",
+                "JsonFile": "('a', 'it''s', NULL, 'x\\y', '')"
+            }
+        },
+        {
+            "name": "sql in list numbers that are not numbers",
+            "output": {
+                "PostgreSQL": "(1, 01, 'abc', 1e5, 1.0, ' 5', -3)",
+                "MySQL": "(1, 01, 'abc', 1e5, 1.0, ' 5', -3)",
+                "MariaDB": "(1, 01, 'abc', 1e5, 1.0, ' 5', -3)",
+                "SQLite": "(1, 01, 'abc', 1e5, 1.0, ' 5', -3)",
+                "SqlServer": "(1, 01, 'abc', 1e5, 1.0, ' 5', -3)",
+                "ClickHouse": "(1, 01, 'abc', 1e5, 1.0, ' 5', -3)",
+                "DuckDB": "(1, 01, 'abc', 1e5, 1.0, ' 5', -3)",
+                "CockroachDB": "(1, 01, 'abc', 1e5, 1.0, ' 5', -3)",
+                "TimescaleDB": "(1, 01, 'abc', 1e5, 1.0, ' 5', -3)",
+                "Neon": "(1, 01, 'abc', 1e5, 1.0, ' 5', -3)",
+                "Supabase": "(1, 01, 'abc', 1e5, 1.0, ' 5', -3)",
+                "TiDB": "(1, 01, 'abc', 1e5, 1.0, ' 5', -3)",
+                "PlanetScale": "(1, 01, 'abc', 1e5, 1.0, ' 5', -3)",
+                "AzureSql": "(1, 01, 'abc', 1e5, 1.0, ' 5', -3)",
+                "H2": "(1, 01, 'abc', 1e5, 1.0, ' 5', -3)",
+                "HSQLDB": "(1, 01, 'abc', 1e5, 1.0, ' 5', -3)",
+                "Derby": "(1, 01, 'abc', 1e5, 1.0, ' 5', -3)",
+                "OtherJdbc": "(1, 01, 'abc', 1e5, 1.0, ' 5', -3)",
+                "CsvFile": "(1, 01, 'abc', 1e5, 1.0, ' 5', -3)",
+                "ExcelFile": "(1, 01, 'abc', 1e5, 1.0, ' 5', -3)",
+                "JsonFile": "(1, 01, 'abc', 1e5, 1.0, ' 5', -3)"
+            }
+        },
+        {
+            "name": "sql in list the first column only",
+            "output": {
+                "PostgreSQL": "('x', 'y')",
+                "MySQL": "('x', 'y')",
+                "MariaDB": "('x', 'y')",
+                "SQLite": "('x', 'y')",
+                "SqlServer": "('x', 'y')",
+                "ClickHouse": "('x', 'y')",
+                "DuckDB": "('x', 'y')",
+                "CockroachDB": "('x', 'y')",
+                "TimescaleDB": "('x', 'y')",
+                "Neon": "('x', 'y')",
+                "Supabase": "('x', 'y')",
+                "TiDB": "('x', 'y')",
+                "PlanetScale": "('x', 'y')",
+                "AzureSql": "('x', 'y')",
+                "H2": "('x', 'y')",
+                "HSQLDB": "('x', 'y')",
+                "Derby": "('x', 'y')",
+                "OtherJdbc": "('x', 'y')",
+                "CsvFile": "('x', 'y')",
+                "ExcelFile": "('x', 'y')",
+                "JsonFile": "('x', 'y')"
+            }
+        },
+        {
+            "name": "sql in list single value",
+            "output": {
+                "PostgreSQL": "(7)",
+                "MySQL": "(7)",
+                "MariaDB": "(7)",
+                "SQLite": "(7)",
+                "SqlServer": "(7)",
+                "ClickHouse": "(7)",
+                "DuckDB": "(7)",
+                "CockroachDB": "(7)",
+                "TimescaleDB": "(7)",
+                "Neon": "(7)",
+                "Supabase": "(7)",
+                "TiDB": "(7)",
+                "PlanetScale": "(7)",
+                "AzureSql": "(7)",
+                "H2": "(7)",
+                "HSQLDB": "(7)",
+                "Derby": "(7)",
+                "OtherJdbc": "(7)",
+                "CsvFile": "(7)",
+                "ExcelFile": "(7)",
+                "JsonFile": "(7)"
+            }
+        },
+        {
+            "name": "sql in list ignores the header flag",
+            "output": {
+                "PostgreSQL": "(7, 8)",
+                "MySQL": "(7, 8)",
+                "MariaDB": "(7, 8)",
+                "SQLite": "(7, 8)",
+                "SqlServer": "(7, 8)",
+                "ClickHouse": "(7, 8)",
+                "DuckDB": "(7, 8)",
+                "CockroachDB": "(7, 8)",
+                "TimescaleDB": "(7, 8)",
+                "Neon": "(7, 8)",
+                "Supabase": "(7, 8)",
+                "TiDB": "(7, 8)",
+                "PlanetScale": "(7, 8)",
+                "AzureSql": "(7, 8)",
+                "H2": "(7, 8)",
+                "HSQLDB": "(7, 8)",
+                "Derby": "(7, 8)",
+                "OtherJdbc": "(7, 8)",
+                "CsvFile": "(7, 8)",
+                "ExcelFile": "(7, 8)",
+                "JsonFile": "(7, 8)"
+            }
+        },
+        {
+            "name": "sql in list ignores the table name",
+            "output": {
+                "PostgreSQL": "(7)",
+                "MySQL": "(7)",
+                "MariaDB": "(7)",
+                "SQLite": "(7)",
+                "SqlServer": "(7)",
+                "ClickHouse": "(7)",
+                "DuckDB": "(7)",
+                "CockroachDB": "(7)",
+                "TimescaleDB": "(7)",
+                "Neon": "(7)",
+                "Supabase": "(7)",
+                "TiDB": "(7)",
+                "PlanetScale": "(7)",
+                "AzureSql": "(7)",
+                "H2": "(7)",
+                "HSQLDB": "(7)",
+                "Derby": "(7)",
+                "OtherJdbc": "(7)",
+                "CsvFile": "(7)",
+                "ExcelFile": "(7)",
+                "JsonFile": "(7)"
+            }
+        },
+        {
+            "name": "tsv default table name is unused",
+            "output": "id\tname\n1\ta"
+        },
+        {
+            "name": "a large export",
+            "output": "id,name\n0,\"name 0, \"\"q\"\"\"\n1,\"name 1, \"\"q\"\"\"\n2,\"name 2, \"\"q\"\"\"\n3,\"name 3, \"\"q\"\"\"\n4,\"name 4, \"\"q\"\"\"\n5,\"name 5, \"\"q\"\"\"\n6,\"name 6, \"\"q\"\"\"\n7,\"name 7, \"\"q\"\"\"\n8,\"name 8, \"\"q\"\"\"\n9,\"name 9, \"\"q\"\"\"\n10,\"name 10, \"\"q\"\"\"\n11,\"name 11, \"\"q\"\"\"\n12,\"name 12, \"\"q\"\"\"\n13,\"name 13, \"\"q\"\"\"\n14,\"name 14, \"\"q\"\"\"\n15,\"name 15, \"\"q\"\"\"\n16,\"name 16, \"\"q\"\"\"\n17,\"name 17, \"\"q\"\"\"\n18,\"name 18, \"\"q\"\"\"\n19,\"name 19, \"\"q\"\"\"\n20,\"name 20, \"\"q\"\"\"\n21,\"name 21, \"\"q\"\"\"\n22,\"name 22, \"\"q\"\"\"\n23,\"name 23, \"\"q\"\"\"\n24,\"name 24, \"\"q\"\"\"\n25,\"name 25, \"\"q\"\"\"\n26,\"name 26, \"\"q\"\"\"\n27,\"name 27, \"\"q\"\"\"\n28,\"name 28, \"\"q\"\"\"\n29,\"name 29, \"\"q\"\"\"\n30,\"name 30, \"\"q\"\"\"\n31,\"name 31, \"\"q\"\"\"\n32,\"name 32, \"\"q\"\"\"\n33,\"name 33, \"\"q\"\"\"\n34,\"name 34, \"\"q\"\"\"\n35,\"name 35, \"\"q\"\"\"\n36,\"name 36, \"\"q\"\"\"\n37,\"name 37, \"\"q\"\"\"\n38,\"name 38, \"\"q\"\"\"\n39,\"name 39, \"\"q\"\"\"\n40,\"name 40, \"\"q\"\"\"\n41,\"name 41, \"\"q\"\"\"\n42,\"name 42, \"\"q\"\"\"\n43,\"name 43, \"\"q\"\"\"\n44,\"name 44, \"\"q\"\"\"\n45,\"name 45, \"\"q\"\"\"\n46,\"name 46, \"\"q\"\"\"\n47,\"name 47, \"\"q\"\"\"\n48,\"name 48, \"\"q\"\"\"\n49,\"name 49, \"\"q\"\"\"\n50,\"name 50, \"\"q\"\"\"\n51,\"name 51, \"\"q\"\"\"\n52,\"name 52, \"\"q\"\"\"\n53,\"name 53, \"\"q\"\"\"\n54,\"name 54, \"\"q\"\"\"\n55,\"name 55, \"\"q\"\"\"\n56,\"name 56, \"\"q\"\"\"\n57,\"name 57, \"\"q\"\"\"\n58,\"name 58, \"\"q\"\"\"\n59,\"name 59, \"\"q\"\"\"\n60,\"name 60, \"\"q\"\"\"\n61,\"name 61, \"\"q\"\"\"\n62,\"name 62, \"\"q\"\"\"\n63,\"name 63, \"\"q\"\"\"\n64,\"name 64, \"\"q\"\"\"\n65,\"name 65, \"\"q\"\"\"\n66,\"name 66, \"\"q\"\"\"\n67,\"name 67, \"\"q\"\"\"\n68,\"name 68, \"\"q\"\"\"\n69,\"name 69, \"\"q\"\"\"\n70,\"name 70, \"\"q\"\"\"\n71,\"name 71, \"\"q\"\"\"\n72,\"name 72, \"\"q\"\"\"\n73,\"name 73, \"\"q\"\"\"\n74,\"name 74, \"\"q\"\"\"\n75,\"name 75, \"\"q\"\"\"\n76,\"name 76, \"\"q\"\"\"\n77,\"name 77, \"\"q\"\"\"\n78,\"name 78, \"\"q\"\"\"\n79,\"name 79, \"\"q\"\"\"\n80,\"name 80, \"\"q\"\"\"\n81,\"name 81, \"\"q\"\"\"\n82,\"name 82, \"\"q\"\"\"\n83,\"name 83, \"\"q\"\"\"\n84,\"name 84, \"\"q\"\"\"\n85,\"name 85, \"\"q\"\"\"\n86,\"name 86, \"\"q\"\"\"\n87,\"name 87, \"\"q\"\"\"\n88,\"name 88, \"\"q\"\"\"\n89,\"name 89, \"\"q\"\"\"\n90,\"name 90, \"\"q\"\"\"\n91,\"name 91, \"\"q\"\"\"\n92,\"name 92, \"\"q\"\"\"\n93,\"name 93, \"\"q\"\"\"\n94,\"name 94, \"\"q\"\"\"\n95,\"name 95, \"\"q\"\"\"\n96,\"name 96, \"\"q\"\"\"\n97,\"name 97, \"\"q\"\"\"\n98,\"name 98, \"\"q\"\"\"\n99,\"name 99, \"\"q\"\"\"\n100,\"name 100, \"\"q\"\"\"\n101,\"name 101, \"\"q\"\"\"\n102,\"name 102, \"\"q\"\"\"\n103,\"name 103, \"\"q\"\"\"\n104,\"name 104, \"\"q\"\"\"\n105,\"name 105, \"\"q\"\"\"\n106,\"name 106, \"\"q\"\"\"\n107,\"name 107, \"\"q\"\"\"\n108,\"name 108, \"\"q\"\"\"\n109,\"name 109, \"\"q\"\"\"\n110,\"name 110, \"\"q\"\"\"\n111,\"name 111, \"\"q\"\"\"\n112,\"name 112, \"\"q\"\"\"\n113,\"name 113, \"\"q\"\"\"\n114,\"name 114, \"\"q\"\"\"\n115,\"name 115, \"\"q\"\"\"\n116,\"name 116, \"\"q\"\"\"\n117,\"name 117, \"\"q\"\"\"\n118,\"name 118, \"\"q\"\"\"\n119,\"name 119, \"\"q\"\"\"\n120,\"name 120, \"\"q\"\"\"\n121,\"name 121, \"\"q\"\"\"\n122,\"name 122, \"\"q\"\"\"\n123,\"name 123, \"\"q\"\"\"\n124,\"name 124, \"\"q\"\"\"\n125,\"name 125, \"\"q\"\"\"\n126,\"name 126, \"\"q\"\"\"\n127,\"name 127, \"\"q\"\"\"\n128,\"name 128, \"\"q\"\"\"\n129,\"name 129, \"\"q\"\"\"\n130,\"name 130, \"\"q\"\"\"\n131,\"name 131, \"\"q\"\"\"\n132,\"name 132, \"\"q\"\"\"\n133,\"name 133, \"\"q\"\"\"\n134,\"name 134, \"\"q\"\"\"\n135,\"name 135, \"\"q\"\"\"\n136,\"name 136, \"\"q\"\"\"\n137,\"name 137, \"\"q\"\"\"\n138,\"name 138, \"\"q\"\"\"\n139,\"name 139, \"\"q\"\"\"\n140,\"name 140, \"\"q\"\"\"\n141,\"name 141, \"\"q\"\"\"\n142,\"name 142, \"\"q\"\"\"\n143,\"name 143, \"\"q\"\"\"\n144,\"name 144, \"\"q\"\"\"\n145,\"name 145, \"\"q\"\"\"\n146,\"name 146, \"\"q\"\"\"\n147,\"name 147, \"\"q\"\"\"\n148,\"name 148, \"\"q\"\"\"\n149,\"name 149, \"\"q\"\"\"\n150,\"name 150, \"\"q\"\"\"\n151,\"name 151, \"\"q\"\"\"\n152,\"name 152, \"\"q\"\"\"\n153,\"name 153, \"\"q\"\"\"\n154,\"name 154, \"\"q\"\"\"\n155,\"name 155, \"\"q\"\"\"\n156,\"name 156, \"\"q\"\"\"\n157,\"name 157, \"\"q\"\"\"\n158,\"name 158, \"\"q\"\"\"\n159,\"name 159, \"\"q\"\"\"\n160,\"name 160, \"\"q\"\"\"\n161,\"name 161, \"\"q\"\"\"\n162,\"name 162, \"\"q\"\"\"\n163,\"name 163, \"\"q\"\"\"\n164,\"name 164, \"\"q\"\"\"\n165,\"name 165, \"\"q\"\"\"\n166,\"name 166, \"\"q\"\"\"\n167,\"name 167, \"\"q\"\"\"\n168,\"name 168, \"\"q\"\"\"\n169,\"name 169, \"\"q\"\"\"\n170,\"name 170, \"\"q\"\"\"\n171,\"name 171, \"\"q\"\"\"\n172,\"name 172, \"\"q\"\"\"\n173,\"name 173, \"\"q\"\"\"\n174,\"name 174, \"\"q\"\"\"\n175,\"name 175, \"\"q\"\"\"\n176,\"name 176, \"\"q\"\"\"\n177,\"name 177, \"\"q\"\"\"\n178,\"name 178, \"\"q\"\"\"\n179,\"name 179, \"\"q\"\"\"\n180,\"name 180, \"\"q\"\"\"\n181,\"name 181, \"\"q\"\"\"\n182,\"name 182, \"\"q\"\"\"\n183,\"name 183, \"\"q\"\"\"\n184,\"name 184, \"\"q\"\"\"\n185,\"name 185, \"\"q\"\"\"\n186,\"name 186, \"\"q\"\"\"\n187,\"name 187, \"\"q\"\"\"\n188,\"name 188, \"\"q\"\"\"\n189,\"name 189, \"\"q\"\"\"\n190,\"name 190, \"\"q\"\"\"\n191,\"name 191, \"\"q\"\"\"\n192,\"name 192, \"\"q\"\"\"\n193,\"name 193, \"\"q\"\"\"\n194,\"name 194, \"\"q\"\"\"\n195,\"name 195, \"\"q\"\"\"\n196,\"name 196, \"\"q\"\"\"\n197,\"name 197, \"\"q\"\"\"\n198,\"name 198, \"\"q\"\"\"\n199,\"name 199, \"\"q\"\"\"\n200,\"name 200, \"\"q\"\"\"\n201,\"name 201, \"\"q\"\"\"\n202,\"name 202, \"\"q\"\"\"\n203,\"name 203, \"\"q\"\"\"\n204,\"name 204, \"\"q\"\"\"\n205,\"name 205, \"\"q\"\"\"\n206,\"name 206, \"\"q\"\"\"\n207,\"name 207, \"\"q\"\"\"\n208,\"name 208, \"\"q\"\"\"\n209,\"name 209, \"\"q\"\"\"\n210,\"name 210, \"\"q\"\"\"\n211,\"name 211, \"\"q\"\"\"\n212,\"name 212, \"\"q\"\"\"\n213,\"name 213, \"\"q\"\"\"\n214,\"name 214, \"\"q\"\"\"\n215,\"name 215, \"\"q\"\"\"\n216,\"name 216, \"\"q\"\"\"\n217,\"name 217, \"\"q\"\"\"\n218,\"name 218, \"\"q\"\"\"\n219,\"name 219, \"\"q\"\"\"\n220,\"name 220, \"\"q\"\"\"\n221,\"name 221, \"\"q\"\"\"\n222,\"name 222, \"\"q\"\"\"\n223,\"name 223, \"\"q\"\"\"\n224,\"name 224, \"\"q\"\"\"\n225,\"name 225, \"\"q\"\"\"\n226,\"name 226, \"\"q\"\"\"\n227,\"name 227, \"\"q\"\"\"\n228,\"name 228, \"\"q\"\"\"\n229,\"name 229, \"\"q\"\"\"\n230,\"name 230, \"\"q\"\"\"\n231,\"name 231, \"\"q\"\"\"\n232,\"name 232, \"\"q\"\"\"\n233,\"name 233, \"\"q\"\"\"\n234,\"name 234, \"\"q\"\"\"\n235,\"name 235, \"\"q\"\"\"\n236,\"name 236, \"\"q\"\"\"\n237,\"name 237, \"\"q\"\"\"\n238,\"name 238, \"\"q\"\"\"\n239,\"name 239, \"\"q\"\"\"\n240,\"name 240, \"\"q\"\"\"\n241,\"name 241, \"\"q\"\"\"\n242,\"name 242, \"\"q\"\"\"\n243,\"name 243, \"\"q\"\"\"\n244,\"name 244, \"\"q\"\"\"\n245,\"name 245, \"\"q\"\"\"\n246,\"name 246, \"\"q\"\"\"\n247,\"name 247, \"\"q\"\"\"\n248,\"name 248, \"\"q\"\"\"\n249,\"name 249, \"\"q\"\"\"\n250,\"name 250, \"\"q\"\"\"\n251,\"name 251, \"\"q\"\"\"\n252,\"name 252, \"\"q\"\"\"\n253,\"name 253, \"\"q\"\"\"\n254,\"name 254, \"\"q\"\"\"\n255,\"name 255, \"\"q\"\"\"\n256,\"name 256, \"\"q\"\"\"\n257,\"name 257, \"\"q\"\"\"\n258,\"name 258, \"\"q\"\"\"\n259,\"name 259, \"\"q\"\"\"\n260,\"name 260, \"\"q\"\"\"\n261,\"name 261, \"\"q\"\"\"\n262,\"name 262, \"\"q\"\"\"\n263,\"name 263, \"\"q\"\"\"\n264,\"name 264, \"\"q\"\"\"\n265,\"name 265, \"\"q\"\"\"\n266,\"name 266, \"\"q\"\"\"\n267,\"name 267, \"\"q\"\"\"\n268,\"name 268, \"\"q\"\"\"\n269,\"name 269, \"\"q\"\"\"\n270,\"name 270, \"\"q\"\"\"\n271,\"name 271, \"\"q\"\"\"\n272,\"name 272, \"\"q\"\"\"\n273,\"name 273, \"\"q\"\"\"\n274,\"name 274, \"\"q\"\"\"\n275,\"name 275, \"\"q\"\"\"\n276,\"name 276, \"\"q\"\"\"\n277,\"name 277, \"\"q\"\"\"\n278,\"name 278, \"\"q\"\"\"\n279,\"name 279, \"\"q\"\"\"\n280,\"name 280, \"\"q\"\"\"\n281,\"name 281, \"\"q\"\"\"\n282,\"name 282, \"\"q\"\"\"\n283,\"name 283, \"\"q\"\"\"\n284,\"name 284, \"\"q\"\"\"\n285,\"name 285, \"\"q\"\"\"\n286,\"name 286, \"\"q\"\"\"\n287,\"name 287, \"\"q\"\"\"\n288,\"name 288, \"\"q\"\"\"\n289,\"name 289, \"\"q\"\"\"\n290,\"name 290, \"\"q\"\"\"\n291,\"name 291, \"\"q\"\"\"\n292,\"name 292, \"\"q\"\"\"\n293,\"name 293, \"\"q\"\"\"\n294,\"name 294, \"\"q\"\"\"\n295,\"name 295, \"\"q\"\"\"\n296,\"name 296, \"\"q\"\"\"\n297,\"name 297, \"\"q\"\"\"\n298,\"name 298, \"\"q\"\"\"\n299,\"name 299, \"\"q\"\"\""
+        }
+    ]
+}

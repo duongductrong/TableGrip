@@ -114,6 +114,35 @@ impl Decimal {
         out
     }
 
+    /// `BigDecimal.toString()`: plain notation unless the scale is negative or the value is below 1E-6, then
+    /// scientific (`1E+3`, `1.5E-7`).
+    pub fn to_java_string(&self) -> String {
+        if self.scale == 0 {
+            return self.to_plain_string();
+        }
+        let adjusted = -self.scale + (self.digits.len() as i64 - 1);
+        if self.scale >= 0 && adjusted >= -6 {
+            return self.to_plain_string();
+        }
+        let mut out = String::new();
+        if self.negative {
+            out.push('-');
+        }
+        out.push_str(&self.digits[..1]);
+        if self.digits.len() > 1 {
+            out.push('.');
+            out.push_str(&self.digits[1..]);
+        }
+        if adjusted != 0 {
+            out.push('E');
+            if adjusted > 0 {
+                out.push('+');
+            }
+            out.push_str(&adjusted.to_string());
+        }
+        out
+    }
+
     /// The integer digits and the fraction digits, with the fraction's trailing zeros removed.
     fn parts(&self) -> (String, String) {
         let plain = self.to_plain_string();
@@ -183,6 +212,20 @@ mod tests {
 
     fn plain(s: &str) -> String {
         Decimal::parse(s).unwrap().to_plain_string()
+    }
+
+    #[test]
+    fn prints_like_big_decimal_to_string() {
+        let java = |s: &str| Decimal::parse(s).unwrap().to_java_string();
+        assert_eq!(java("1e3"), "1E+3");
+        assert_eq!(java("1.50"), "1.50");
+        assert_eq!(java("0.000001"), "0.000001");
+        assert_eq!(java("0.0000001"), "1E-7");
+        assert_eq!(java("-12.5e-9"), "-1.25E-8");
+        assert_eq!(java("007"), "7");
+        assert_eq!(java("0.000"), "0.000");
+        assert_eq!(java("0e5"), "0E+5");
+        assert_eq!(java("123e-2"), "1.23");
     }
 
     #[test]
