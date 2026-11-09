@@ -103,6 +103,35 @@ pub struct SshTunnelSpec {
 }
 
 impl SshTunnelSpec {
+    /// The spec for a stored profile's tunnel. `secret` is what the secret store holds under `<id>:ssh`: the
+    /// password, or the key's passphrase. Like Kotlin, a missing password is sent as an empty one. A port outside
+    /// `1..=65535` (Kotlin would fail to connect) falls back to 22.
+    pub fn from_config(
+        config: &crate::connection::SshConfig,
+        secret: Option<String>,
+        known_hosts: PathBuf,
+    ) -> Self {
+        use crate::connection::SshAuth as Stored;
+        let auth = match config.auth {
+            Stored::Password => SshAuth::Password(secret.unwrap_or_default()),
+            Stored::PrivateKey => SshAuth::Key {
+                path: config.private_key_path.clone(),
+                passphrase: secret,
+            },
+        };
+        let port = u16::try_from(config.port)
+            .ok()
+            .filter(|p| *p != 0)
+            .unwrap_or(22);
+        Self::new(
+            config.host.clone(),
+            port,
+            config.user.clone(),
+            auth,
+            known_hosts,
+        )
+    }
+
     /// A spec with trust-on-first-use pinning in `known_hosts` and the 10 second connect timeout.
     pub fn new(
         host: impl Into<String>,

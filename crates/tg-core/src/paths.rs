@@ -60,6 +60,11 @@ impl TableGripPaths {
         self.home.join("session.json")
     }
 
+    /// Host keys pinned on first use by SSH tunnels (Kotlin: `TableGripPaths.home.resolve("known_hosts")`).
+    pub fn known_hosts(&self) -> PathBuf {
+        self.home.join("known_hosts")
+    }
+
     /// Downloaded JDBC drivers and the user's own driver jars.
     pub fn drivers(&self) -> PathBuf {
         self.home.join("drivers")

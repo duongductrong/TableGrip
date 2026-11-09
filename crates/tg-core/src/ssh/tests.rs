@@ -827,3 +827,35 @@ fn secrets_are_not_printed() {
     );
     assert!(!shown.contains("hunter"), "{shown}");
 }
+
+#[test]
+fn a_stored_profile_maps_onto_a_tunnel_spec() {
+    use crate::connection::{SshAuth as Stored, SshConfig};
+    let known = std::path::PathBuf::from("/home/me/.tablegrip/known_hosts");
+
+    let mut config = SshConfig::new("bastion", "deploy");
+    config.port = 2222;
+    config.private_key_path = Some("~/.ssh/id_ed25519".into());
+    let spec = SshTunnelSpec::from_config(&config, Some("phrase".into()), known.clone());
+    assert_eq!(
+        (spec.host.as_str(), spec.port, spec.user.as_str()),
+        ("bastion", 2222, "deploy")
+    );
+    assert_eq!(
+        spec.auth,
+        SshAuth::Key {
+            path: Some("~/.ssh/id_ed25519".into()),
+            passphrase: Some("phrase".into())
+        }
+    );
+    assert_eq!(
+        spec.host_keys,
+        HostKeyPolicy::TrustOnFirstUse(known.clone())
+    );
+
+    config.auth = Stored::Password;
+    config.port = 0;
+    let spec = SshTunnelSpec::from_config(&config, None, known);
+    assert_eq!(spec.auth, SshAuth::Password(String::new()));
+    assert_eq!(spec.port, 22);
+}
