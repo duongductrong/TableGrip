@@ -1,0 +1,169 @@
+{
+    "specimen": "radio",
+    "theme": "VS Code Light Modern",
+    "density": 2.0,
+    "width": 928,
+    "height": 152,
+    "regions": [
+        {
+            "tag": "icon:radio.disabled",
+            "kind": "icon",
+            "rect": [
+                32,
+                88,
+                48,
+                48
+            ]
+        },
+        {
+            "tag": "icon:radio.disabled.selected",
+            "kind": "icon",
+            "rect": [
+                256,
+                88,
+                48,
+                48
+            ]
+        },
+        {
+            "tag": "icon:radio.error",
+            "kind": "icon",
+            "rect": [
+                480,
+                88,
+                48,
+                48
+            ]
+        },
+        {
+            "tag": "icon:radio.error.selected",
+            "kind": "icon",
+            "rect": [
+                704,
+                88,
+                48,
+                48
+            ]
+        },
+        {
+            "tag": "icon:radio.focused",
+            "kind": "icon",
+            "rect": [
+                704,
+                24,
+                48,
+                48
+            ]
+        },
+        {
+            "tag": "icon:radio.hovered",
+            "kind": "icon",
+            "rect": [
+                480,
+                24,
+                48,
+                48
+            ]
+        },
+        {
+            "tag": "icon:radio.rest",
+            "kind": "icon",
+            "rect": [
+                32,
+                24,
+                48,
+                48
+            ]
+        },
+        {
+            "tag": "icon:radio.selected",
+            "kind": "icon",
+            "rect": [
+                256,
+                24,
+                48,
+                48
+            ]
+        },
+        {
+            "tag": "text:radio.disabled",
+            "kind": "text",
+            "rect": [
+                88,
+                97,
+                127,
+                31
+            ]
+        },
+        {
+            "tag": "text:radio.disabled.selected",
+            "kind": "text",
+            "rect": [
+                312,
+                97,
+                127,
+                31
+            ]
+        },
+        {
+            "tag": "text:radio.error",
+            "kind": "text",
+            "rect": [
+                536,
+                97,
+                127,
+                31
+            ]
+        },
+        {
+            "tag": "text:radio.error.selected",
+            "kind": "text",
+            "rect": [
+                760,
+                97,
+                127,
+                31
+            ]
+        },
+        {
+            "tag": "text:radio.focused",
+            "kind": "text",
+            "rect": [
+                760,
+                33,
+                127,
+                31
+            ]
+        },
+        {
+            "tag": "text:radio.hovered",
+            "kind": "text",
+            "rect": [
+                536,
+                33,
+                127,
+                31
+            ]
+        },
+        {
+            "tag": "text:radio.rest",
+            "kind": "text",
+            "rect": [
+                88,
+                33,
+                127,
+                31
+            ]
+        },
+        {
+            "tag": "text:radio.selected",
+            "kind": "text",
+            "rect": [
+                312,
+                33,
+                127,
+                31
+            ]
+        }
+    ]
+}

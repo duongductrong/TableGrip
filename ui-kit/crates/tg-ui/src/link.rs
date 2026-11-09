@@ -69,7 +69,7 @@ fn handle(enabled: bool, input: &Input) -> tg_ui_logic::link::LinkResponse {
     logic.handle(input)
 }
 
-fn key_input(event: &KeyDownEvent) -> Option<Input> {
+pub(crate) fn key_input(event: &KeyDownEvent) -> Option<Input> {
     let key = match event.keystroke.key.as_str() {
         "space" => Key::Space,
         "enter" => Key::Enter,

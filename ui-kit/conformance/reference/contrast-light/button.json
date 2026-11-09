@@ -1,0 +1,69 @@
+{
+    "specimen": "button",
+    "theme": "Contrast Light",
+    "density": 2.0,
+    "width": 688,
+    "height": 184,
+    "regions": [
+        {
+            "tag": "text:button.default.disabled",
+            "kind": "text",
+            "rect": [
+                394,
+                37,
+                61,
+                31
+            ]
+        },
+        {
+            "tag": "text:button.default.hovered",
+            "kind": "text",
+            "rect": [
+                234,
+                37,
+                61,
+                31
+            ]
+        },
+        {
+            "tag": "text:button.default.rest",
+            "kind": "text",
+            "rect": [
+                74,
+                37,
+                61,
+                31
+            ]
+        },
+        {
+            "tag": "text:button.outlined.disabled",
+            "kind": "text",
+            "rect": [
+                381,
+                117,
+                86,
+                31
+            ]
+        },
+        {
+            "tag": "text:button.outlined.focused",
+            "kind": "text",
+            "rect": [
+                221,
+                117,
+                86,
+                31
+            ]
+        },
+        {
+            "tag": "text:button.outlined.rest",
+            "kind": "text",
+            "rect": [
+                61,
+                117,
+                86,
+                31
+            ]
+        }
+    ]
+}

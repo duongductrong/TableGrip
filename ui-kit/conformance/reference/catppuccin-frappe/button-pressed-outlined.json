@@ -1,0 +1,29 @@
+{
+    "specimen": "button-pressed-outlined",
+    "theme": "Catppuccin Frappé",
+    "density": 2.0,
+    "width": 368,
+    "height": 184,
+    "regions": [
+        {
+            "tag": "text:button.default.rest",
+            "kind": "text",
+            "rect": [
+                74,
+                37,
+                61,
+                31
+            ]
+        },
+        {
+            "tag": "text:button.outlined.pressed",
+            "kind": "text",
+            "rect": [
+                61,
+                117,
+                86,
+                31
+            ]
+        }
+    ]
+}

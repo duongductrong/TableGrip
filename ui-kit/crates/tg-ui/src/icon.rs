@@ -18,6 +18,24 @@ pub struct Assets;
 
 impl AssetSource for Assets {
     fn load(&self, path: &str) -> gpui::Result<Option<Cow<'static, [u8]>>> {
+        // `<name>@<n>px.svg` is `<name>.svg` declared n pixels wide and high. GPUI rasterises an SVG at its declared
+        // size and then scales that to the element, which blurs small icons; declaring the size they are drawn at
+        // gives a 1:1 raster, as the Kotlin app draws them.
+        if let Some((base, px)) = path
+            .strip_suffix("px.svg")
+            .and_then(|rest| rest.rsplit_once('@'))
+            && let Ok(px) = px.parse::<u32>()
+        {
+            let Some(bytes) = self.load(&format!("{base}.svg"))? else {
+                return Ok(None);
+            };
+            let text = String::from_utf8_lossy(&bytes).replacen(
+                "width=\"16\" height=\"16\"",
+                &format!("width=\"{px}\" height=\"{px}\""),
+                1,
+            );
+            return Ok(Some(Cow::Owned(text.into_bytes())));
+        }
         Ok(generated::ASSETS
             .iter()
             .find(|(name, _)| *name == path)
@@ -57,6 +75,7 @@ pub struct Icon {
     key: &'static str,
     size: f32,
     tint: Option<Rgba>,
+    crisp: bool,
 }
 
 /// The icon [key] at 16dp.
@@ -65,6 +84,7 @@ pub fn icon(key: &'static str) -> Icon {
         key,
         size: 16.0,
         tint: None,
+        crisp: false,
     }
 }
 
@@ -72,6 +92,12 @@ impl Icon {
     /// Size in dp (the app uses 12, 14 and 16).
     pub fn size(mut self, dp: f32) -> Self {
         self.size = dp;
+        self
+    }
+
+    /// Rasterises the icon at exactly the pixels it is drawn in, for small icons that must look as the Kotlin app's do.
+    pub fn crisp(mut self) -> Self {
+        self.crisp = true;
         self
     }
 
@@ -83,7 +109,7 @@ impl Icon {
 }
 
 impl RenderOnce for Icon {
-    fn render(self, _: &mut Window, cx: &mut App) -> impl IntoElement {
+    fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         let t = cx.theme();
         let size = t.dp(self.size);
         let path = path(self.key, t.theme.is_dark())
@@ -94,6 +120,13 @@ impl RenderOnce for Icon {
                 .size(size)
                 .text_color(hsla(color))
                 .into_any_element(),
+            None if self.crisp => {
+                let device = (f32::from(size) * window.scale_factor()).round() as u32;
+                img(format!("{}@{device}px.svg", path.trim_end_matches(".svg")))
+                    .size(size)
+                    .flex_none()
+                    .into_any_element()
+            }
             None => img(path).size(size).flex_none().into_any_element(),
         }
     }

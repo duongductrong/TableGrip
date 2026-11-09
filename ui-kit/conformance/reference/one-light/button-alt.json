@@ -1,0 +1,29 @@
+{
+    "specimen": "button-alt",
+    "theme": "One Light",
+    "density": 2.0,
+    "width": 368,
+    "height": 184,
+    "regions": [
+        {
+            "tag": "text:button.default.focused",
+            "kind": "text",
+            "rect": [
+                74,
+                37,
+                61,
+                31
+            ]
+        },
+        {
+            "tag": "text:button.outlined.hovered",
+            "kind": "text",
+            "rect": [
+                61,
+                117,
+                86,
+                31
+            ]
+        }
+    ]
+}
