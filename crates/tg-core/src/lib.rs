@@ -14,6 +14,7 @@ pub mod paths;
 pub mod queries;
 pub mod session;
 pub mod settings;
+pub mod ssh;
 pub mod theme;
 
 pub use paths::TableGripPaths;
