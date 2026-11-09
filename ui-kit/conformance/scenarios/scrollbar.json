@@ -1,0 +1,210 @@
+{
+  "component": "scrollbar",
+  "description": "VerticalScrollbar over a ScrollState (viewport 200dp). Default behaviour pages by a viewport when the pointer has been over the bar; `jump` (KeyBrowserView's style) puts the thumb's top at the click.",
+  "cases": [
+    {
+      "name": "starts at the top",
+      "setup": {},
+      "steps": [],
+      "expect": {
+        "scroll": 0
+      }
+    },
+    {
+      "name": "a click before the pointer was over the bar is ignored",
+      "setup": {},
+      "steps": [
+        {
+          "click": "track"
+        }
+      ],
+      "expect": {
+        "scroll": 0
+      }
+    },
+    {
+      "name": "a track click pages down by a viewport",
+      "setup": {},
+      "steps": [
+        {
+          "hover": "track"
+        },
+        {
+          "click": "track"
+        }
+      ],
+      "expect": {
+        "scroll": 25
+      }
+    },
+    {
+      "name": "two clicks page twice",
+      "setup": {},
+      "steps": [
+        {
+          "hover": "track"
+        },
+        {
+          "click": "track"
+        },
+        {
+          "click": "track"
+        }
+      ],
+      "expect": {
+        "scroll": 50
+      }
+    },
+    {
+      "name": "the page is a viewport of the scrollable range",
+      "setup": {
+        "content": 2000
+      },
+      "steps": [
+        {
+          "hover": "track"
+        },
+        {
+          "click": "track"
+        }
+      ],
+      "expect": {
+        "scroll": 11
+      }
+    },
+    {
+      "name": "paging stops at the end",
+      "setup": {
+        "content": 400
+      },
+      "steps": [
+        {
+          "hover": "track"
+        },
+        {
+          "click": "track"
+        },
+        {
+          "click": "track"
+        },
+        {
+          "click": "track"
+        }
+      ],
+      "expect": {
+        "scroll": 100
+      }
+    },
+    {
+      "name": "a click above the thumb pages up",
+      "setup": {
+        "scroll": 100
+      },
+      "steps": [
+        {
+          "hover": "track"
+        },
+        {
+          "click": "track"
+        }
+      ],
+      "expect": {
+        "scroll": 75
+      }
+    },
+    {
+      "name": "content that fits has nothing to scroll",
+      "setup": {
+        "content": 100
+      },
+      "steps": [
+        {
+          "hover": "track"
+        },
+        {
+          "click": "track"
+        }
+      ],
+      "expect": {
+        "scroll": 0,
+        "max": 0
+      }
+    },
+    {
+      "name": "a jump click puts the thumb's top at the click",
+      "setup": {
+        "behavior": "jump"
+      },
+      "steps": [
+        {
+          "click": "track"
+        }
+      ],
+      "expect": {
+        "scroll": 63
+      }
+    },
+    {
+      "name": "a jump click with a smaller thumb",
+      "setup": {
+        "behavior": "jump",
+        "content": 2000
+      },
+      "steps": [
+        {
+          "click": "track"
+        }
+      ],
+      "expect": {
+        "scroll": 56
+      }
+    },
+    {
+      "name": "a jump click clamps at the end",
+      "setup": {
+        "behavior": "jump",
+        "content": 400
+      },
+      "steps": [
+        {
+          "click": "track"
+        }
+      ],
+      "expect": {
+        "scroll": 100
+      }
+    },
+    {
+      "name": "a jump click from the end",
+      "setup": {
+        "behavior": "jump",
+        "scroll": 100
+      },
+      "steps": [
+        {
+          "click": "track"
+        }
+      ],
+      "expect": {
+        "scroll": 63
+      }
+    },
+    {
+      "name": "a second jump click lands in the same place",
+      "setup": {
+        "behavior": "jump"
+      },
+      "steps": [
+        {
+          "click": "track"
+        },
+        {
+          "click": "track"
+        }
+      ],
+      "expect": {
+        "scroll": 63
+      }
+    }
+  ]
+}

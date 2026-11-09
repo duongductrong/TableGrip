@@ -1,0 +1,132 @@
+{
+  "component": "popup-list",
+  "description": "Hand-drawn popup list rows: keyboard highlight, hover, click.",
+  "cases": [
+    {
+      "name": "the first row starts highlighted",
+      "setup": {},
+      "steps": [],
+      "expect": {
+        "highlighted": 0,
+        "painted": "0"
+      }
+    },
+    {
+      "name": "Down highlights the next row",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Down"
+        }
+      ],
+      "expect": {
+        "highlighted": 1,
+        "painted": "1"
+      }
+    },
+    {
+      "name": "Down wraps from the last row to the first",
+      "setup": {
+        "rows": 3
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "Down"
+        },
+        {
+          "key": "Down"
+        },
+        {
+          "key": "Down"
+        }
+      ],
+      "expect": {
+        "highlighted": 0
+      }
+    },
+    {
+      "name": "Up wraps from the first row to the last",
+      "setup": {
+        "rows": 3
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "Up"
+        }
+      ],
+      "expect": {
+        "highlighted": 2
+      }
+    },
+    {
+      "name": "Enter picks the highlighted row",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Down"
+        },
+        {
+          "key": "Enter"
+        }
+      ],
+      "expect": {
+        "picked": 1
+      }
+    },
+    {
+      "name": "a click picks a row",
+      "setup": {},
+      "steps": [
+        {
+          "click": "row:2"
+        }
+      ],
+      "expect": {
+        "picked": 2,
+        "highlighted": 2
+      }
+    },
+    {
+      "name": "hovering paints a row without moving the highlight",
+      "setup": {},
+      "steps": [
+        {
+          "hover": "row:2"
+        }
+      ],
+      "expect": {
+        "hovered": 2,
+        "highlighted": 0,
+        "painted": "0,2"
+      }
+    },
+    {
+      "name": "leaving clears the hover",
+      "setup": {},
+      "steps": [
+        {
+          "hover": "row:2"
+        },
+        "unhover"
+      ],
+      "expect": {
+        "hovered": -1,
+        "painted": "0"
+      }
+    },
+    {
+      "name": "nothing is picked until asked",
+      "setup": {},
+      "steps": [
+        "focus"
+      ],
+      "expect": {
+        "picked": -1
+      }
+    }
+  ]
+}

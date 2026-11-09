@@ -1,0 +1,204 @@
+{
+  "component": "list-combo-box",
+  "description": "Non-editable ListComboBox: open by click or key, navigate, select, close.",
+  "cases": [
+    {
+      "name": "starts on the selected item",
+      "setup": {
+        "selected": 1
+      },
+      "steps": [],
+      "expect": {
+        "selected": 1,
+        "changes": 0
+      }
+    },
+    {
+      "name": "a click opens without changing the selection",
+      "setup": {},
+      "steps": [
+        "click"
+      ],
+      "expect": {
+        "selected": 0,
+        "changes": 0
+      }
+    },
+    {
+      "name": "a click focuses it",
+      "setup": {},
+      "steps": [
+        "click"
+      ],
+      "expect": {
+        "focused": true
+      }
+    },
+    {
+      "name": "Down in the open list selects the next item at once",
+      "setup": {},
+      "steps": [
+        "click",
+        {
+          "key": "Down"
+        }
+      ],
+      "expect": {
+        "selected": 1,
+        "changes": 1
+      }
+    },
+    {
+      "name": "Enter after Down keeps it",
+      "setup": {},
+      "steps": [
+        "click",
+        {
+          "key": "Down"
+        },
+        {
+          "key": "Enter"
+        }
+      ],
+      "expect": {
+        "selected": 1
+      }
+    },
+    {
+      "name": "Escape after Down keeps the new selection",
+      "setup": {},
+      "steps": [
+        "click",
+        {
+          "key": "Down"
+        },
+        {
+          "key": "Escape"
+        }
+      ],
+      "expect": {
+        "selected": 1
+      }
+    },
+    {
+      "name": "Up goes back",
+      "setup": {
+        "selected": 2
+      },
+      "steps": [
+        "click",
+        {
+          "key": "Up"
+        },
+        {
+          "key": "Enter"
+        }
+      ],
+      "expect": {
+        "selected": 1
+      }
+    },
+    {
+      "name": "Down on the closed box does nothing",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Down"
+        }
+      ],
+      "expect": {
+        "selected": 0
+      }
+    },
+    {
+      "name": "Space opens it",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Space"
+        },
+        {
+          "key": "Down"
+        },
+        {
+          "key": "Enter"
+        }
+      ],
+      "expect": {
+        "selected": 1
+      }
+    },
+    {
+      "name": "Enter does not open it",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Enter"
+        },
+        {
+          "key": "Down"
+        },
+        {
+          "key": "Enter"
+        }
+      ],
+      "expect": {
+        "selected": 0
+      }
+    },
+    {
+      "name": "a disabled box ignores clicks",
+      "setup": {
+        "enabled": false
+      },
+      "steps": [
+        "click",
+        {
+          "key": "Down"
+        },
+        {
+          "key": "Enter"
+        }
+      ],
+      "expect": {
+        "selected": 0,
+        "changes": 0
+      }
+    },
+    {
+      "name": "Tab moves on",
+      "setup": {
+        "next": true
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "Tab"
+        }
+      ],
+      "expect": {
+        "nextFocused": true
+      }
+    },
+    {
+      "name": "a second click closes it",
+      "setup": {},
+      "steps": [
+        "click",
+        "click",
+        {
+          "key": "Down"
+        },
+        {
+          "key": "Enter"
+        }
+      ],
+      "expect": {
+        "selected": 0
+      }
+    }
+  ]
+}

@@ -5,7 +5,11 @@ mod checkbox;
 mod focus_order;
 mod icon_button;
 mod link;
+mod list_combo_box;
+mod popup_list;
+mod popup_menu;
 mod radio_button;
+mod scrollbar;
 mod text;
 mod tooltip;
 mod tri_state_checkbox;
@@ -37,7 +41,11 @@ pub fn make(component: &str, setup: &Map<String, Value>) -> Option<Box<dyn Subje
         "link" => Some(Box::new(link::LinkSubject::new(setup))),
         "focus-order" => Some(Box::new(focus_order::FocusOrderSubject::new(setup))),
         "icon-button" => Some(Box::new(icon_button::IconButtonSubject::new(setup))),
+        "list-combo-box" => Some(Box::new(list_combo_box::ListComboBoxSubject::new(setup))),
+        "popup-list" => Some(Box::new(popup_list::PopupListSubject::new(setup))),
+        "popup-menu" => Some(Box::new(popup_menu::PopupMenuSubject::new(setup))),
         "radio-button" => Some(Box::new(radio_button::RadioButtonSubject::new(setup))),
+        "scrollbar" => Some(Box::new(scrollbar::ScrollbarSubject::new(setup))),
         "tooltip" => Some(Box::new(tooltip::TooltipSubject::new(setup))),
         "tri-state-checkbox" => Some(Box::new(tri_state_checkbox::TriStateCheckboxSubject::new(
             setup,
