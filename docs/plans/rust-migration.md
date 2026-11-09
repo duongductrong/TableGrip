@@ -194,8 +194,9 @@ Còn dở:
 
 ### S2 (10/11/2026)
 
-Nhánh `rust/storage` (cắt từ `rust/core-pure`, nên dùng được `tg_sql::model`). **SshTunnel không nằm ở đây**: nó ở nhánh
-`rust/storage-ssh`, một agent khác làm song song (module `tg_core::ssh`). ChatStore để S5.
+Nhánh `rust/storage` (cắt từ `rust/core-pure` ở `bc0e3b8`, nên dùng được `tg_sql::model`). SshTunnel làm song song ở
+nhánh `rust/storage-ssh` rồi đã merge vào `rust/storage`. ChatStore để S5. Đã thử merge thêm phần cuối của S1
+(`rust/core-pure`): chỉ xung đột ở nhật ký, toàn workspace vẫn xanh với `preserve_order`.
 
 Xong, trong `crates/tg-core`, mỗi mô-đun mirror một package Kotlin:
 - `paths`: `TableGripPaths` là struct giữ `home`. `from_env()` đọc `TABLEGRIP_HOME` (thay `tablegrip.home`), `new(path)` cho
@@ -244,8 +245,8 @@ Kiểu model tạm định nghĩa ở tg-core, **cần gộp về sau** (tg-sql 
 - `connection::DriverId` (14 giá trị, serialize theo tên) và `DriverId::for_type(&DatabaseType)` (bảng `drivers` của từng
   engine, suy từ family và id). Profile vẫn lưu field `driver`, nên cần giữ để đọc/ghi. Gợi ý: chuyển sang tg-driver (S3) khi
   tg-driver có enum driver riêng; tg-core giữ một bản tối giản để serialize.
-- `connection::SshConfig` / `SshAuth` (profile chứa chúng). Module `tg_core::ssh` ở nhánh `rust/storage-ssh` sẽ cần dùng lại
-  hai kiểu này: khi merge, giữ bản ở `connection::config` và để ssh `use` nó.
+- `connection::SshConfig` / `SshAuth` là kiểu lưu trong profile; `ssh::SshTunnelSpec` / `ssh::SshAuth` là đầu vào của
+  tunnel (có thêm secret và `Agent`). `SshTunnelSpec::from_config(&SshConfig, secret, paths.known_hosts())` nối hai bên.
 - `connection::ConnectionConfig`, `Environment`, `DataFileOptions`, `AiAccess` ở tg-core đúng chỗ (Kotlin cũng ở package
   `connection`), nhưng S3 sẽ import từ `tg_core::connection`; không cần chuyển.
 
@@ -269,7 +270,22 @@ Keychain (SecretStore):
   thuần Rust) với đúng attribute của java-keyring. Phương án B: dùng `keyring` rồi migrate item cũ lần chạy đầu. Đề xuất A,
   làm trong S6/S11 khi có máy Linux để thử.
 
+SshTunnel (`tg_core::ssh`, russh 0.65.1, backend crypto `ring` nên không cần OpenSSL/aws-lc/CMake):
+- API: `SshTunnel::open(&spec, host, port).await`, `open_blocking(&Handle, ...)` cho code sync, `local_port()`, `close()`
+  (drop cũng dừng). Tunnel bind `127.0.0.1:0`, keepalive 30 s, timeout kết nối 10 s như Kotlin.
+- Auth: password, key (OpenSSH, PKCS#1/SEC1 PEM, PKCS#8 mã hoá, có passphrase; `~/` được mở rộng; không có path thì thử
+  `~/.ssh/id_rsa`, `id_ed25519`, `id_ecdsa` như SSHJ), ssh-agent (`SSH_AUTH_SOCK`; Windows: named pipe rồi Pageant, chưa
+  build thử trên Windows). `pkcs5` với `sha1-insecure` chỉ để russh đọc được key PKCS#8 mã hoá kiểu cũ.
+- known_hosts: TOFU ở `~/.tablegrip/known_hosts` như Kotlin. Host lạ thì ghi thêm, key đổi thì lỗi `HostKeyChanged` và
+  không sửa file, đọc được dòng hash `|1|`, `[host]:port` khi port khác 22. Khác Kotlin: file chỉ được tạo khi pin lần
+  đầu. Có thêm chế độ `Strict` (không ghi).
+- Test: 2 test của SshTunnelTest port nguyên, cộng ~18 test (định dạng key, passphrase sai, agent thật qua
+  `ssh-agent -D` (bỏ qua nếu máy không có), đóng/drop giải phóng port, 8 kết nối đồng thời, đích từ chối). Server test là
+  russh chạy trong tiến trình, không cần docker. Fixture key chỉ dùng cho test ở `crates/tg-core/tests/fixtures/ssh/`.
+- `ring` theo giấy phép ISC/OpenSSL-style, đã ghi vào `NOTICE`.
+- Chưa làm: key PuTTY `.ppk`, chứng chỉ SSH (host và agent).
+
 Còn dở:
-- SshTunnel (`rust/storage-ssh`); ChatStore (S5); kiểm tay keychain như trên.
+- ChatStore (S5); kiểm tay keychain như trên.
 - `KeyringSecretStore::get` nuốt mọi lỗi thành None như Kotlin; nếu UI muốn phân biệt "chưa lưu" với "keychain từ chối" thì
   cần thêm `try_get`.
