@@ -9,6 +9,9 @@ license = "Apache-2.0"
 publish = false
 rust-version = "1.97"
 
+# Cargo.lock keeps libc at 0.2.189: gpui 0.2.2 pulls in xattr 0.2.3 (via zed-async-tar), which needs libc::ENOATTR on
+# Linux, and libc 0.2.190 removed it. Don't `cargo update -p libc` past it until gpui moves on.
+
 [workspace.dependencies]
 # Pinned exactly: GPUI's API still changes between releases.
 gpui = "=0.2.2"
