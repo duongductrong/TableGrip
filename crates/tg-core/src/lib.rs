@@ -5,10 +5,14 @@
 //! Ported from `core/src/main/kotlin/dev/tablegrip/core/{connection,settings,history,queries,session,activity,backup,theme}`
 //! (milestone M2 of docs/plans/rust-migration.md). Files the Kotlin app wrote must read back unchanged.
 
+pub mod activity;
 pub mod backup;
 pub mod connection;
+pub mod history;
 pub mod json;
 pub mod paths;
+pub mod queries;
+pub mod session;
 pub mod settings;
 pub mod theme;
 

@@ -5504,6 +5504,7 @@ dependencies = [
 name = "tg-core"
 version = "0.0.0"
 dependencies = [
+ "chrono",
  "indexmap",
  "keyring",
  "regex",
