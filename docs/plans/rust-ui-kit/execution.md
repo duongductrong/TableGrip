@@ -105,6 +105,14 @@ Xung đột kiểu một dòng thêm ở cùng vị trí là bình thường; se
 - **Expect dùng chung:** `focused`, `nextFocused`, `shown:<tag>` (có node mang tag đó trên màn hình). Mọi key khác do
   subject báo.
 - **Setup dùng chung:** `next: true` thêm một control focus được sau subject (tag `next`).
+- **Modifier `word`:** di chuyển theo từ, là Option trên macOS và Ctrl ở nơi khác. Hai runner tự quy đổi.
+- **Hook cho subject Rust** (mặc định không làm gì):
+  - `claims_key`: subject giữ phím trước khi focus chuyển, ví dụ Tab trong TextArea.
+  - `tab(backwards)`: subject có nhiều điểm dừng Tab của riêng nó, ví dụ các dòng radio.
+  - `pointer_focuses`: double-click hoặc click vào một phần của subject cũng làm nó nhận focus.
+- **Giới hạn đã biết:**
+  - Runner Kotlin chưa giả lập được IME composition, nên IME chỉ được kiểm trong Rust (`tg-text`).
+  - Item trong popup của Jewel mất test tag do semantics bị gộp.
 
 ## Định nghĩa "xong" cho mỗi session
 

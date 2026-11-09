@@ -52,6 +52,9 @@ impl Step {
                     Some("primary") => mods.primary = true,
                     Some("shift") => mods.shift = true,
                     Some("alt") => mods.alt = true,
+                    // Word-wise movement: Option on macOS, Ctrl elsewhere.
+                    Some("word") if cfg!(target_os = "macos") => mods.alt = true,
+                    Some("word") => mods.primary = true,
                     other => return Err(format!("unknown modifier {other:?}")),
                 }
             }

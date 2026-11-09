@@ -13,6 +13,9 @@ pub enum Key {
     Right,
     Up,
     Down,
+    PageUp,
+    PageDown,
+    F2,
     /// A letter key, upper case.
     Letter(char),
 }
@@ -33,6 +36,9 @@ impl Key {
             "Right" => Key::Right,
             "Up" => Key::Up,
             "Down" => Key::Down,
+            "PageUp" => Key::PageUp,
+            "PageDown" => Key::PageDown,
+            "F2" => Key::F2,
             _ => {
                 let mut chars = name.chars();
                 match (chars.next(), chars.next()) {

@@ -15,7 +15,7 @@ mod tooltip;
 mod tri_state_checkbox;
 
 use serde_json::{Map, Value};
-use tg_ui_logic::Input;
+use tg_ui_logic::{Input, Key, Modifiers};
 
 use crate::step::Step;
 
@@ -27,6 +27,23 @@ pub trait Subject {
     /// so a scenario can't pass by being ignored.
     fn step(&mut self, step: &Step) -> Result<(), String> {
         Err(format!("unsupported step {step:?}"))
+    }
+
+    /// Whether a pointer step the subject handled in [`Subject::step`] (a double-click, a click on a part) also gives
+    /// it focus, as a plain click does through [`Subject::input`].
+    fn pointer_focuses(&self, _step: &Step) -> bool {
+        false
+    }
+
+    /// Keys the subject takes before focus traversal while it has focus, such as Tab in a text area.
+    fn claims_key(&self, _key: Key, _mods: Modifiers) -> bool {
+        false
+    }
+
+    /// Tab or Shift+Tab ([`backwards`]) inside a subject with several stops of its own (radio rows): true when focus
+    /// moved to another of its stops, false to leave the subject and let the window's focus order move on.
+    fn tab(&mut self, _backwards: bool) -> bool {
+        false
     }
 
     /// The value of an `expect` key, or None when the subject can't report it.

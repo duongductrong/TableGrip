@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 
 use serde_json::{Map, Value};
 use step::Step;
-use tg_ui_logic::{FocusOrder, Input};
+use tg_ui_logic::{FocusOrder, Input, Key};
 
 fn scenarios_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../conformance/scenarios")
@@ -46,7 +46,13 @@ impl Harness {
             Step::Click(None) => self.send(Input::Click),
             Step::Focus => self.focus.focus(0),
             Step::Key(key, mods) => {
-                if !self.focus.handle_key(key, mods) && self.focus.focused() == Some(0) {
+                let on_subject = self.focus.focused() == Some(0);
+                let traversal = key == Key::Tab && !mods.primary && !mods.alt;
+                if on_subject && self.subject.claims_key(key, mods) {
+                    self.send(Input::Key(key, mods));
+                } else if on_subject && traversal && self.subject.tab(mods.shift) {
+                    // Focus moved between the subject's own stops.
+                } else if !self.focus.handle_key(key, mods) && on_subject {
                     self.send(Input::Key(key, mods));
                 }
             }
@@ -56,7 +62,12 @@ impl Harness {
                 }
             }
             // Steps the shared harness has no generic meaning for go to the subject (hover, waits, clicks on parts).
-            other => self.subject.step(&other)?,
+            other => {
+                self.subject.step(&other)?;
+                if self.subject.pointer_focuses(&other) {
+                    self.focus.focus(0);
+                }
+            }
         }
         Ok(())
     }

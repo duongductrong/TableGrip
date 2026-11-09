@@ -11,10 +11,11 @@ import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.isFocused
+import androidx.compose.ui.test.isRoot
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.doubleClick
-import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.rightClick
@@ -95,7 +96,8 @@ class ConformanceTest {
             is Step.DoubleClick -> node(step.tag).performMouseInput { doubleClick() }
             is Step.RightClick -> node(step.tag).performMouseInput { rightClick() }
             is Step.Hover -> node(step.tag).performMouseInput { moveTo(center) }
-            Step.Unhover -> onRoot().performMouseInput { moveTo(Offset(-1f, -1f)) }
+            // The window's own root: with a popup or tooltip open there is more than one.
+            Step.Unhover -> onAllNodes(isRoot()).onFirst().performMouseInput { moveTo(Offset(-1f, -1f)) }
             is Step.Wait -> mainClock.advanceTimeBy(step.ms)
             Step.Focus -> onAllNodes(within(SubjectTag) and SemanticsMatcher.keyIsDefined(SemanticsActions.RequestFocus)).onFirst().requestFocus()
             is Step.Key -> target().performKeyInput { withMods(step.mods) { pressKey(keyOf(step.key)) } }
@@ -112,7 +114,8 @@ class ConformanceTest {
 
     /** The focused node, where key presses go; the subject when nothing has focus. */
     private fun ComposeUiTest.target(): SemanticsNodeInteraction =
-        if (onAllNodes(isFocused()).fetchSemanticsNodes().isNotEmpty()) onNode(isFocused()) else onNode(hasTestTag(SubjectTag))
+        // With a popup open both its owner and the popup report focus; the popup, added last, gets the keys.
+        if (onAllNodes(isFocused()).fetchSemanticsNodes().isNotEmpty()) onAllNodes(isFocused()).onLast() else onNode(hasTestTag(SubjectTag))
 
     private fun ComposeUiTest.focusedWithin(tag: String): Boolean =
         onAllNodes(within(tag) and SemanticsMatcher.expectValue(SemanticsProperties.Focused, true)).fetchSemanticsNodes().isNotEmpty()
@@ -131,6 +134,8 @@ class ConformanceTest {
             "alt" -> Key.AltLeft
             "ctrl" -> Key.CtrlLeft
             "meta" -> Key.MetaLeft
+            // Word-wise movement: Option on macOS, Ctrl elsewhere.
+            "word" -> if (hostOs == OS.MacOS) Key.AltLeft else Key.CtrlLeft
             else -> error("Unknown modifier '$name'")
         }
 
