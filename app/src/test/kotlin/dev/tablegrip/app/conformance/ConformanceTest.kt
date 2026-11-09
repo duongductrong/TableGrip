@@ -12,7 +12,12 @@ import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.test.doubleClick
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performMouseInput
+import androidx.compose.ui.test.rightClick
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.pressKey
@@ -52,9 +57,9 @@ class ConformanceTest {
     fun `the runner rejects wrong expectations`() {
         val wrong =
             listOf(
-                Triple("checkbox", listOf(Step.Click), mapOf("checked" to "false")),
+                Triple("checkbox", listOf(Step.Click()), mapOf("checked" to "false")),
                 Triple("checkbox", listOf(Step.Focus), mapOf("focused" to "false")),
-                Triple("button", listOf(Step.Click), mapOf("clicks" to "2")),
+                Triple("button", listOf(Step.Click()), mapOf("clicks" to "2")),
                 Triple("text-field", listOf(Step.Focus, Step.Type("a")), mapOf("text" to "")),
             )
         for ((component, steps, expect) in wrong) {
@@ -73,9 +78,11 @@ class ConformanceTest {
         }
         val actual =
             case.expect.keys.associateWith { key ->
-                when (key) {
-                    "focused" -> focusedWithin(SubjectTag).toString()
-                    "nextFocused" -> focusedWithin(NextTag).toString()
+                when {
+                    key == "focused" -> focusedWithin(SubjectTag).toString()
+                    key == "nextFocused" -> focusedWithin(NextTag).toString()
+                    // `shown:<tag>`: whether a node with that tag is on screen (a tooltip, a popup, a menu item).
+                    key.startsWith("shown:") -> onAllNodes(hasTestTag(key.removePrefix("shown:"))).fetchSemanticsNodes().isNotEmpty().toString()
                     else -> runOnIdle { probe.readers[key]?.invoke() } ?: fail("Subject '$component' can't report '$key'")
                 }
             }
@@ -84,7 +91,12 @@ class ConformanceTest {
 
     private fun ComposeUiTest.perform(step: Step) {
         when (step) {
-            Step.Click -> onNode(hasTestTag(SubjectTag)).performClick()
+            is Step.Click -> node(step.tag).performClick()
+            is Step.DoubleClick -> node(step.tag).performMouseInput { doubleClick() }
+            is Step.RightClick -> node(step.tag).performMouseInput { rightClick() }
+            is Step.Hover -> node(step.tag).performMouseInput { moveTo(center) }
+            Step.Unhover -> onRoot().performMouseInput { moveTo(Offset(-1f, -1f)) }
+            is Step.Wait -> mainClock.advanceTimeBy(step.ms)
             Step.Focus -> onAllNodes(within(SubjectTag) and SemanticsMatcher.keyIsDefined(SemanticsActions.RequestFocus)).onFirst().requestFocus()
             is Step.Key -> target().performKeyInput { withMods(step.mods) { pressKey(keyOf(step.key)) } }
             // A control that can't take text (disabled, say) has no text action: typing into it does nothing.
@@ -94,6 +106,9 @@ class ConformanceTest {
             }
         }
     }
+
+    /** The subject, or the first node tagged [tag]. */
+    private fun ComposeUiTest.node(tag: String?): SemanticsNodeInteraction = onAllNodes(hasTestTag(tag ?: SubjectTag)).onFirst()
 
     /** The focused node, where key presses go; the subject when nothing has focus. */
     private fun ComposeUiTest.target(): SemanticsNodeInteraction =
@@ -133,11 +148,17 @@ class ConformanceTest {
             "Right" -> Key.DirectionRight
             "Up" -> Key.DirectionUp
             "Down" -> Key.DirectionDown
-            "A" -> Key.A
-            "C" -> Key.C
-            "V" -> Key.V
-            "X" -> Key.X
-            "Z" -> Key.Z
-            else -> error("Unknown key '$name'")
+            "PageUp" -> Key.PageUp
+            "PageDown" -> Key.PageDown
+            "F2" -> Key.F2
+            else -> if (name.length == 1 && name[0] in 'A'..'Z') Letters[name[0] - 'A'] else error("Unknown key '$name'")
         }
+
+    private companion object {
+        val Letters =
+            listOf(
+                Key.A, Key.B, Key.C, Key.D, Key.E, Key.F, Key.G, Key.H, Key.I, Key.J, Key.K, Key.L, Key.M,
+                Key.N, Key.O, Key.P, Key.Q, Key.R, Key.S, Key.T, Key.U, Key.V, Key.W, Key.X, Key.Y, Key.Z,
+            )
+    }
 }

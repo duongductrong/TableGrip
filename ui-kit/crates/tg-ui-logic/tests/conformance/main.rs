@@ -1,118 +1,72 @@
 //! Runs `ui-kit/conformance/scenarios` against the state machines in this crate: the same files the Kotlin app passes
-//! (`./gradlew :app:test --tests '*ConformanceTest*'`). Components this crate doesn't have yet are reported as pending.
+//! (`./gradlew :app:test --tests '*ConformanceTest*'`). Components without a subject here are reported as pending.
+//!
+//! Each component's harness lives in its own file under `subjects/`; adding one is a new file plus one line in
+//! `subjects/mod.rs`.
+
+mod step;
+mod subjects;
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use serde_json::{Map, Value};
-use tg_ui_logic::button::ButtonVariant;
-use tg_ui_logic::{Button, Checkbox, FocusOrder, Input, Key, Modifiers};
+use step::Step;
+use tg_ui_logic::{FocusOrder, Input};
 
 fn scenarios_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../conformance/scenarios")
 }
 
-/// The component under test, plus an optional second focusable control after it (`setup.next`).
-enum Subject {
-    Checkbox(Checkbox),
-    Button(Button, u32),
-}
-
+/// The component under test plus, with `setup.next`, a second focusable control after it. The subject is focus slot
+/// 0, the next control slot 1.
 struct Harness {
-    subject: Subject,
+    subject: Box<dyn subjects::Subject>,
     focus: FocusOrder,
 }
 
 impl Harness {
-    /// None when this crate has no state machine for the component yet.
     fn new(component: &str, setup: &Map<String, Value>) -> Option<Harness> {
-        let flag =
-            |name: &str, default: bool| setup.get(name).and_then(Value::as_bool).unwrap_or(default);
-        let subject = match component {
-            "checkbox" => Subject::Checkbox(Checkbox {
-                checked: flag("checked", false),
-                enabled: flag("enabled", true),
-            }),
-            "button" => {
-                let variant = match setup.get("variant").and_then(Value::as_str) {
-                    Some("outlined") => ButtonVariant::Outlined,
-                    _ => ButtonVariant::Default,
-                };
-                Subject::Button(
-                    Button {
-                        variant,
-                        enabled: flag("enabled", true),
-                    },
-                    0,
-                )
-            }
-            _ => return None,
-        };
+        let subject = subjects::make(component, setup)?;
+        let next = setup.get("next").and_then(Value::as_bool).unwrap_or(false);
         Some(Harness {
             subject,
-            focus: FocusOrder::new(if flag("next", false) { 2 } else { 1 }),
+            focus: FocusOrder::new(if next { 2 } else { 1 }),
         })
     }
 
-    fn send(&mut self, input: &Input) {
-        let wants_focus = match &mut self.subject {
-            Subject::Checkbox(c) => c.handle(input).focus,
-            Subject::Button(b, clicks) => {
-                let r = b.handle(input);
-                *clicks += r.activated as u32;
-                r.focus
-            }
-        };
-        if wants_focus {
+    fn send(&mut self, input: Input) {
+        if self.subject.input(&input) {
             self.focus.focus(0);
         }
     }
 
-    fn step(&mut self, step: &Value) -> Result<(), String> {
+    fn step(&mut self, step: Step) -> Result<(), String> {
         match step {
-            Value::String(s) if s == "click" => self.send(&Input::Click),
-            Value::String(s) if s == "focus" => self.focus.focus(0),
-            Value::Object(o) if o.contains_key("key") => {
-                let name = o["key"].as_str().unwrap_or_default();
-                let key = Key::from_name(name).ok_or(format!("unknown key {name}"))?;
-                let mut mods = Modifiers::default();
-                for m in o
-                    .get("mods")
-                    .and_then(Value::as_array)
-                    .into_iter()
-                    .flatten()
-                {
-                    match m.as_str() {
-                        Some("primary") => mods.primary = true,
-                        Some("shift") => mods.shift = true,
-                        Some("alt") => mods.alt = true,
-                        other => return Err(format!("unknown modifier {other:?}")),
-                    }
-                }
+            Step::Click(None) => self.send(Input::Click),
+            Step::Focus => self.focus.focus(0),
+            Step::Key(key, mods) => {
                 if !self.focus.handle_key(key, mods) && self.focus.focused() == Some(0) {
-                    self.send(&Input::Key(key, mods));
+                    self.send(Input::Key(key, mods));
                 }
             }
-            Value::Object(o) if o.contains_key("type") => {
+            Step::Type(text) => {
                 if self.focus.focused() == Some(0) {
-                    self.send(&Input::Text(
-                        o["type"].as_str().unwrap_or_default().to_owned(),
-                    ));
+                    self.send(Input::Text(text));
                 }
             }
-            other => return Err(format!("unknown step {other}")),
+            // Steps the shared harness has no generic meaning for go to the subject (hover, waits, clicks on parts).
+            other => self.subject.step(&other)?,
         }
         Ok(())
     }
 
     fn observe(&self, key: &str) -> Option<Value> {
-        Some(match (key, &self.subject) {
-            ("focused", _) => Value::Bool(self.focus.focused() == Some(0)),
-            ("nextFocused", _) => Value::Bool(self.focus.focused() == Some(1)),
-            ("checked", Subject::Checkbox(c)) => Value::Bool(c.checked),
-            ("clicks", Subject::Button(_, clicks)) => Value::from(*clicks),
-            _ => return None,
-        })
+        match key {
+            "focused" => Some(Value::Bool(self.focus.focused() == Some(0))),
+            "nextFocused" => Some(Value::Bool(self.focus.focused() == Some(1))),
+            _ => self.subject.observe(key),
+        }
     }
 }
 
@@ -132,7 +86,7 @@ fn run_case(component: &str, case: &Value) -> Result<Option<()>, String> {
         .into_iter()
         .flatten()
     {
-        harness.step(step)?;
+        harness.step(Step::parse(step)?)?;
     }
     let expect = case["expect"].as_object().ok_or("case has no expect")?;
     let mut wrong = BTreeMap::new();

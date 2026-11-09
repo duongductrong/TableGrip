@@ -21,8 +21,21 @@ data class ScenarioFile(val component: String, val cases: List<ScenarioCase>, va
 
 data class ScenarioCase(val name: String, val setup: JsonObject, val steps: List<Step>, val expect: Map<String, JsonPrimitive>)
 
+/**
+ * One thing a scenario does. Pointer steps act on the subject unless they name a test tag (a menu item, a tree row);
+ * key and text steps go to whatever has focus. The Rust runner understands the same vocabulary.
+ */
 sealed interface Step {
-    data object Click : Step
+    data class Click(val tag: String? = null) : Step
+
+    data class DoubleClick(val tag: String? = null) : Step
+
+    data class RightClick(val tag: String? = null) : Step
+
+    data class Hover(val tag: String? = null) : Step
+
+    /** Moves the pointer off every control. */
+    data object Unhover : Step
 
     data object Focus : Step
 
@@ -30,6 +43,9 @@ sealed interface Step {
     data class Key(val key: String, val mods: List<String>) : Step
 
     data class Type(val text: String) : Step
+
+    /** Lets [ms] milliseconds of (test) time pass, for delays such as a tooltip's. */
+    data class Wait(val ms: Long) : Step
 }
 
 object Scenarios {
@@ -59,15 +75,31 @@ object Scenarios {
         return ScenarioFile(json.getValue("component").jsonPrimitive.content, cases, file)
     }
 
-    private fun step(element: JsonElement): Step =
-        when {
-            element is JsonPrimitive && element.content == "click" -> Step.Click
-            element is JsonPrimitive && element.content == "focus" -> Step.Focus
-            element is JsonObject && "key" in element ->
-                Step.Key(element.getValue("key").jsonPrimitive.content, (element["mods"] as? JsonArray).orEmpty().map { it.jsonPrimitive.content })
-            element is JsonObject && "type" in element -> Step.Type(element.getValue("type").jsonPrimitive.content)
+    private fun step(element: JsonElement): Step {
+        if (element is JsonPrimitive) {
+            return when (element.content) {
+                "click" -> Step.Click()
+                "doubleClick" -> Step.DoubleClick()
+                "rightClick" -> Step.RightClick()
+                "hover" -> Step.Hover()
+                "unhover" -> Step.Unhover
+                "focus" -> Step.Focus
+                else -> error("Unknown step: $element")
+            }
+        }
+        val o = element.jsonObject
+        fun tag(name: String) = o.getValue(name).jsonPrimitive.content
+        return when {
+            "key" in o -> Step.Key(tag("key"), (o["mods"] as? JsonArray).orEmpty().map { it.jsonPrimitive.content })
+            "type" in o -> Step.Type(tag("type"))
+            "wait" in o -> Step.Wait(tag("wait").toLong())
+            "click" in o -> Step.Click(tag("click"))
+            "doubleClick" in o -> Step.DoubleClick(tag("doubleClick"))
+            "rightClick" in o -> Step.RightClick(tag("rightClick"))
+            "hover" in o -> Step.Hover(tag("hover"))
             else -> error("Unknown step: $element")
         }
+    }
 }
 
 fun JsonObject.string(name: String, default: String = ""): String = this[name]?.jsonPrimitive?.contentOrNull ?: default

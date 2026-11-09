@@ -118,6 +118,8 @@ Test Rust so khớp chính xác các giá trị này.
 
 ## Các phase
 
+Cách chạy song song các phase 1–6 (session, model, thứ tự, commit): [execution.md](rust-ui-kit/execution.md).
+
 Mỗi phase là một mốc. Trong mỗi phase, mỗi PR chỉ chứa một component hoặc một nhóm nhỏ (khoảng 600 dòng trở xuống),
 kèm kịch bản và test của nó. Phase sau chỉ bắt đầu khi phase trước đạt tiêu chí hoàn thành. Bản Kotlin chỉ được thêm
 code nằm trong `src/test`.

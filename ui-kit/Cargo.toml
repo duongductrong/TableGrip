@@ -1,6 +1,7 @@
 [workspace]
 resolver = "3"
-members = ["crates/tg-ui-logic", "crates/tg-spike"]
+# Every crate under crates/ is a member, so adding one never edits this file.
+members = ["crates/*"]
 
 [workspace.package]
 edition = "2024"
