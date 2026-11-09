@@ -50,8 +50,8 @@ import org.jetbrains.jewel.ui.component.separator
 import org.jetbrains.jewel.ui.icons.AllIconsKeys
 
 /** Amber for work that isn't saved yet: uncommitted statements, unsubmitted edits. */
-private val PendingColor = Color(0xFFD9822B)
-private val ConnectedColor = Color(0xFF5FB865)
+internal val PendingColor = Color(0xFFD9822B)
+internal val ConnectedColor = Color(0xFF5FB865)
 private val ConnectingColor = Color(0xFFE0A33A)
 private val FailedColor = Color(0xFFDB4B4B)
 
@@ -368,7 +368,7 @@ private fun reconnect(app: AppState, config: ConnectionConfig) =
  * widgets of IntelliJ's status bar.
  */
 @Composable
-private fun StatusWidget(tooltip: String, onClick: (() -> Unit)? = null, content: @Composable () -> Unit) =
+internal fun StatusWidget(tooltip: String, onClick: (() -> Unit)? = null, content: @Composable () -> Unit) =
     StatusWidget(tooltip = { Text(tooltip) }, onClick = onClick, content = content)
 
 @Composable
@@ -393,13 +393,13 @@ private fun StatusWidget(tooltip: @Composable () -> Unit, onClick: (() -> Unit)?
 
 /** A thin vertical rule between the left and right halves, and before the connection. */
 @Composable
-private fun StatusDivider() {
+internal fun StatusDivider() {
     Box(Modifier.padding(horizontal = 4.dp).width(1.dp).height(12.dp).background(JewelTheme.globalColors.borders.normal))
 }
 
 /** A small state dot; hollow when there is no state to show (e.g. not connected). */
 @Composable
-private fun Dot(color: Color?, hollow: Boolean = false) {
+internal fun Dot(color: Color?, hollow: Boolean = false) {
     val outline = JewelTheme.globalColors.text.info
     Canvas(Modifier.size(7.dp)) {
         val radius = size.minDimension / 2

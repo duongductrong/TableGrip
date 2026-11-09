@@ -8,7 +8,7 @@ use std::time::Duration;
 
 use gpui::{
     App, Div, ElementId, Entity, IntoElement, MouseButton, ParentElement, RenderOnce, SharedString,
-    Styled, Window, deferred, div, prelude::*,
+    Stateful, Styled, Window, deferred, div, prelude::*,
 };
 use tg_ui_logic::tooltip::SHOW_DELAY_MS;
 use tg_ui_logic::{Input, button::ButtonVariant};
@@ -86,10 +86,10 @@ impl IconButton {
 }
 
 /// What the pointer has done on the button, for its tooltip. [`Tooltip`] decides when it shows.
-struct TipState {
-    logic: tg_ui_logic::Tooltip,
+pub(crate) struct TipState {
+    pub(crate) logic: tg_ui_logic::Tooltip,
     /// Bumped whenever the pointer enters, leaves or presses, so a timer that was started earlier knows it is stale.
-    epoch: u64,
+    pub(crate) epoch: u64,
 }
 
 /// The tooltip bubble: the popup colours, the text in the UI style.
@@ -145,17 +145,7 @@ fn activated(input: &Input) -> bool {
 impl RenderOnce for IconButton {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         let focus = focus_handle(window, cx, &self.id, self.enabled);
-        let tip: Entity<TipState> = window
-            .use_keyed_state(
-                ElementId::Name(format!("{}.tooltip", self.id).into()),
-                cx,
-                |_, _| TipState {
-                    logic: tg_ui_logic::Tooltip::new(),
-                    epoch: 0,
-                },
-            )
-            .clone();
-        let tip_shown = self.tooltip.is_some() && tip.read(cx).logic.shown();
+        let tip = tip_state(window, cx, &self.id);
         let enabled = self.enabled;
         let look = self.look.unwrap_or_default();
         let focused = look.focused || (enabled && focus.is_focused(window));
@@ -238,45 +228,67 @@ impl RenderOnce for IconButton {
                 });
         }
         if let Some(label) = self.tooltip {
-            let on_hover_state = tip.clone();
-            let on_press_state = tip.clone();
-            el = el
-                .on_hover(move |hovered, window, cx| {
-                    if *hovered {
-                        let epoch =
-                            tip_changed(&on_hover_state, window, cx, |s| s.logic.pointer_enter());
-                        let state = on_hover_state.clone();
-                        window
-                            .spawn(cx, async move |cx| {
-                                cx.background_executor()
-                                    .timer(Duration::from_millis(SHOW_DELAY_MS))
-                                    .await;
-                                cx.update(|window, cx| {
-                                    let current = state.read(cx).epoch;
-                                    if current == epoch {
-                                        state.update(cx, |s, _| s.logic.advance(SHOW_DELAY_MS));
-                                        window.refresh();
-                                    }
-                                })
-                                .ok();
-                            })
-                            .detach();
-                    } else {
-                        tip_changed(&on_hover_state, window, cx, |s| s.logic.pointer_leave());
-                    }
-                })
-                .on_mouse_down(MouseButton::Left, move |_, window, cx| {
-                    tip_changed(&on_press_state, window, cx, |s| s.logic.press());
-                })
-                .when(tip_shown, |d| {
-                    d.child(deferred(
-                        bubble(&t, label.clone())
-                            .absolute()
-                            .top(t.dp(self.size + 4.0))
-                            .left_0(),
-                    ))
-                });
+            el = attach_tooltip(el, tip, label, &t, self.size + 4.0, cx);
         }
         el
     }
+}
+
+/// The tooltip state of the control `id`, kept across frames.
+pub(crate) fn tip_state(window: &mut Window, cx: &mut App, id: &SharedString) -> Entity<TipState> {
+    window
+        .use_keyed_state(
+            ElementId::Name(format!("{id}.tooltip").into()),
+            cx,
+            |_, _| TipState {
+                logic: tg_ui_logic::Tooltip::new(),
+                epoch: 0,
+            },
+        )
+        .clone()
+}
+
+/// Gives `el` a tooltip showing `label` [below_dp] under its top edge, following `tg_ui_logic::Tooltip`.
+pub(crate) fn attach_tooltip(
+    el: Stateful<Div>,
+    tip: Entity<TipState>,
+    label: SharedString,
+    t: &crate::theme::ActiveTheme,
+    below_dp: f32,
+    cx: &App,
+) -> Stateful<Div> {
+    let shown = tip.read(cx).logic.shown();
+    let on_hover_state = tip.clone();
+    let on_press_state = tip;
+    el.on_hover(move |hovered, window, cx| {
+        if *hovered {
+            let epoch = tip_changed(&on_hover_state, window, cx, |s| s.logic.pointer_enter());
+            let state = on_hover_state.clone();
+            window
+                .spawn(cx, async move |cx| {
+                    cx.background_executor()
+                        .timer(Duration::from_millis(SHOW_DELAY_MS))
+                        .await;
+                    cx.update(|window, cx| {
+                        let current = state.read(cx).epoch;
+                        if current == epoch {
+                            state.update(cx, |s, _| s.logic.advance(SHOW_DELAY_MS));
+                            window.refresh();
+                        }
+                    })
+                    .ok();
+                })
+                .detach();
+        } else {
+            tip_changed(&on_hover_state, window, cx, |s| s.logic.pointer_leave());
+        }
+    })
+    .on_mouse_down(MouseButton::Left, move |_, window, cx| {
+        tip_changed(&on_press_state, window, cx, |s| s.logic.press());
+    })
+    .when(shown, |d| {
+        d.child(deferred(
+            bubble(t, label).absolute().top(t.dp(below_dp)).left_0(),
+        ))
+    })
 }

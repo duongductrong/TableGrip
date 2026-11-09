@@ -11,6 +11,7 @@
 //! Phase 5 layout: the [tab_strip], the workspace's pill [workspace_tabs] (drag to reorder), the [split] layout whose
 //! 6dp gap between islands is the handle, and the virtualised [tree].
 
+pub mod app_dialog;
 pub mod button;
 pub mod checkbox;
 pub mod divider;
@@ -19,6 +20,7 @@ pub mod icon;
 pub mod icon_button;
 mod interact;
 pub mod island;
+pub mod keymap;
 pub mod link;
 pub mod list_combo;
 pub mod look;
@@ -31,13 +33,17 @@ pub mod radio;
 pub mod ring;
 pub mod scrollbar;
 pub mod split;
+pub mod status_bar;
 pub mod tab_strip;
 pub mod text;
 pub mod text_input;
 pub mod theme;
+pub mod tool_stripe;
 pub mod tree;
+pub mod window_chrome;
 pub mod workspace_tabs;
 
+pub use app_dialog::{AppDialog, app_dialog, dialog_interactive, dialog_title};
 pub use button::{Button, button};
 pub use checkbox::{Checkbox, checkbox};
 pub use divider::{Divider, divider, vertical_divider};
@@ -53,11 +59,15 @@ pub use radio::{RadioButton, radio_button};
 pub use ring::{RingSpec, ring};
 pub use scrollbar::{ScrollArea, Scrollbar, scroll_area, scrollbar};
 pub use split::{SplitLayout, split_layout};
+pub use status_bar::{
+    StatusBar, StatusWidget, status_bar, status_divider, status_dot, status_widget,
+};
 pub use tab_strip::{TabStrip, tab_strip};
 pub use text::{Text, TextColor, text};
 pub use text_input::{TextInput, TextInputLook};
 pub use tg_theme::zoom;
 pub use tg_ui_logic::ToggleState;
 pub use theme::{ActiveTheme, ThemeExt, hsla, set_theme};
+pub use tool_stripe::{StripeButton, ToolStripe, right_tool_stripe, stripe_button, tool_stripe};
 pub use tree::{Tree, tree};
 pub use workspace_tabs::{WorkspaceTab, WorkspaceTabs, workspace_tabs};

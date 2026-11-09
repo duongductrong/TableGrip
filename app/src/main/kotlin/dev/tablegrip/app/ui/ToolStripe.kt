@@ -122,7 +122,7 @@ private fun StripeItemButton(app: AppState, item: StripeItem) {
 }
 
 @Composable
-private fun StripeButton(icon: IconKey, tooltip: String, selected: Boolean, onClick: () -> Unit) {
+internal fun StripeButton(icon: IconKey, tooltip: String, selected: Boolean, onClick: () -> Unit) {
     val islands = LocalIslands.current
     val interaction = remember { MutableInteractionSource() }
     val hovered by interaction.collectIsHoveredAsState()

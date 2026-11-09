@@ -1,0 +1,79 @@
+{
+    "specimen": "tool-stripe",
+    "theme": "One Light",
+    "density": 2.0,
+    "width": 88,
+    "height": 640,
+    "regions": [
+        {
+            "tag": "icon:tool-stripe.explorer",
+            "kind": "icon",
+            "rect": [
+                12,
+                12,
+                64,
+                64
+            ]
+        },
+        {
+            "tag": "icon:tool-stripe.goto",
+            "kind": "icon",
+            "rect": [
+                12,
+                262,
+                64,
+                64
+            ]
+        },
+        {
+            "tag": "icon:tool-stripe.history",
+            "kind": "icon",
+            "rect": [
+                12,
+                88,
+                64,
+                64
+            ]
+        },
+        {
+            "tag": "icon:tool-stripe.new",
+            "kind": "icon",
+            "rect": [
+                12,
+                338,
+                64,
+                64
+            ]
+        },
+        {
+            "tag": "icon:tool-stripe.queries",
+            "kind": "icon",
+            "rect": [
+                12,
+                164,
+                64,
+                64
+            ]
+        },
+        {
+            "tag": "icon:tool-stripe.settings",
+            "kind": "icon",
+            "rect": [
+                12,
+                564,
+                64,
+                64
+            ]
+        },
+        {
+            "tag": "icon:tool-stripe.shortcuts",
+            "kind": "icon",
+            "rect": [
+                12,
+                488,
+                64,
+                64
+            ]
+        }
+    ]
+}

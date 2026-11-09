@@ -1,0 +1,69 @@
+{
+    "specimen": "main-screen",
+    "theme": "Alucard",
+    "density": 2.0,
+    "width": 960,
+    "height": 640,
+    "regions": [
+        {
+            "tag": "text:main-screen.connection",
+            "kind": "text",
+            "rect": [
+                831,
+                599,
+                101,
+                31
+            ]
+        },
+        {
+            "tag": "text:main-screen.crumb0",
+            "kind": "text",
+            "rect": [
+                20,
+                599,
+                101,
+                31
+            ]
+        },
+        {
+            "tag": "text:main-screen.crumb1",
+            "kind": "text",
+            "rect": [
+                161,
+                599,
+                75,
+                31
+            ]
+        },
+        {
+            "tag": "text:main-screen.crumb2",
+            "kind": "text",
+            "rect": [
+                276,
+                599,
+                68,
+                31
+            ]
+        },
+        {
+            "tag": "text:main-screen.message",
+            "kind": "text",
+            "rect": [
+                386,
+                599,
+                78,
+                31
+            ]
+        },
+        {
+            "tag": "text:main-screen.pending",
+            "kind": "text",
+            "rect": [
+                633,
+                599,
+                124,
+                31
+            ]
+        }
+    ]
+}
