@@ -6,6 +6,7 @@
 //! (milestone M2 of docs/plans/rust-migration.md). Files the Kotlin app wrote must read back unchanged.
 
 pub mod backup;
+pub mod connection;
 pub mod json;
 pub mod paths;
 pub mod settings;
