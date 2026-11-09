@@ -353,6 +353,8 @@ val bundledLicenses =
         "org.jetbrains.intellij.deps.kotlinx" to "Apache-2.0",
         "org.jetbrains" to "Apache-2.0",
         "org.jetbrains.runtime" to "Apache-2.0",
+        // The POM names no license; each icon SVG carries an Apache-2.0 header and the code comes from intellij-community
+        // (Apache-2.0). Sources: docs/plans/rust-ui-kit/icon-licence.md.
         "com.jetbrains.intellij.platform" to "Apache-2.0",
         "at.favre.lib" to "Apache-2.0",
         "com.hierynomus" to "Apache-2.0",

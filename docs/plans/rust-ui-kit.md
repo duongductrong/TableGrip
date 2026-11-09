@@ -15,7 +15,7 @@ khi bộ UI kit đã đạt parity.
   3. mã của chính TableGrip, ví dụ `ColorTheme`, `ThemedControls`, `UiZoom`, `Shortcuts` và các file theme JSON.
 - Màu mặc định của Graphite (những key mà theme file bỏ trống để Jewel tự lấp) được **đo từ ảnh render**, không chép từ
   bảng màu Int UI.
-- Icon: tự vẽ, xem mục "Quyết định đã chốt".
+- Icon: dùng lại SVG của IntelliJ theo Apache‑2.0, có ghi nguồn; xem mục "Quyết định đã chốt".
 
 ## Component cần làm
 
@@ -212,18 +212,15 @@ code nằm trong `src/test`.
 
 1. **Stack: GPUI 0.2.2.** Spike ở Phase 0 đạt trên macOS (xem [phase-0.md](rust-ui-kit/phase-0.md)). Chốt hẳn khi CI
    Rust xanh trên Linux và Windows.
-2. **Icon: tự vẽ, thuộc dự án, phát hành theo Apache‑2.0 cùng TableGrip.** Không dùng lại SVG của IntelliJ vì giấy
-   phép không chứng minh được:
-   - Artifact `com.jetbrains.intellij.platform:icons` không khai báo license trong POM, và trong jar không có file
-     license nào.
-   - `LICENSE.txt` của intellij-community hiện là "JetBrains Open-Source Build Terms" (bản 1.3, 06/2026). Văn bản này
-     áp dụng cho bản build IntelliJ IDEA và PyCharm, không nói gì về việc tách riêng icon để dùng lại.
-   - Dự án mã nguồn mở nên cần chắc chắn không có rủi ro bản quyền; giấy phép không rõ ràng thì không dùng.
-
-   Cách làm: vẽ lại 77 icon app đang dùng (danh sách ở [inventory.md](rust-ui-kit/inventory.md)) theo lưới 16px và
-   các quy ước nét chung (độ dày, bo góc, bảng màu theo theme). Vẽ mới từ đầu, không đồ lại hay chỉnh từ SVG của
-   IntelliJ. Icon sẽ giống về phong cách nhưng không giống từng nét; so ảnh sẽ loại vùng icon ra và kiểm riêng bằng mắt.
-   Nếu sau này cần một bộ có sẵn, chỉ chọn bộ có giấy phép rõ ràng ghi trong repo của nó (ví dụ MIT, ISC hoặc
-   Apache‑2.0), kèm bản giấy phép và dòng ghi nguồn trong `NOTICE`.
+2. **Icon: dùng lại SVG của IntelliJ theo Apache‑2.0, có ghi nguồn.** Bằng chứng ở
+   [icon-licence.md](rust-ui-kit/icon-licence.md): 3.505/3.662 file SVG trong artifact
+   `com.jetbrains.intellij.platform:icons` tự ghi Apache‑2.0 ngay trong file, và JetBrains đã xác nhận công khai.
+   POM thiếu `<licenses>` chỉ là thiếu metadata. Điều kiện khi dùng:
+   - Chỉ lấy file **có header Apache‑2.0**, giữ nguyên comment header trong từng SVG.
+   - Lấy từ đúng artifact đã ghim phiên bản, bằng script, kèm danh sách file và phiên bản nguồn.
+   - Kèm bản Apache License 2.0 và thêm vào `NOTICE`: "This software includes code from IntelliJ IDEA, Copyright (C)
+     JetBrains s.r.o." (theo `NOTICE.txt` của intellij-community). Ghi rõ nếu có chỉnh sửa file (Apache‑2.0 mục 4b).
+   - **Không** dùng file không có header Apache (ví dụ `toolWindowAskAI`, app đang dùng ở 3 chỗ: tự vẽ thay thế) và
+     **không** dùng logo hay ảnh sản phẩm JetBrains: Apache‑2.0 không cấp quyền nhãn hiệu (mục 6).
 3. **Vị trí:** `ui-kit/` trong repo này, dùng chung file theme và kịch bản.
 4. **Toolchain:** ghim Rust 1.97.1 (`ui-kit/rust-toolchain.toml`), `rust-version = "1.97"`.

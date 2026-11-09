@@ -50,8 +50,8 @@ Ghi lại golden khi cố ý đổi giao diện bản Kotlin:
 
 **Chọn GPUI 0.2.2, có điều kiện.** Bằng chứng trên macOS đã đủ. Lựa chọn được chốt hẳn khi job CI Rust xanh trên
 Linux và Windows. Danh sách thư viện Linux trong workflow chưa được chạy thử lần nào.
-- **Icon:** tự vẽ, phát hành theo Apache‑2.0 cùng dự án; không dùng SVG của IntelliJ vì giấy phép không chứng minh
-  được.
+- **Icon:** dùng lại SVG của IntelliJ theo Apache‑2.0, có ghi nguồn; trừ file không có header Apache và logo JetBrains
+  (xem [icon-licence.md](icon-licence.md)).
 - **Toolchain:** ghim Rust 1.97.1.
 - **Màu checkbox:** sửa để theo accent của theme (phát hiện 3).
 
@@ -70,9 +70,10 @@ Linux và Windows. Danh sách thư viện Linux trong workflow chưa được ch
 5. **Enter cũng bật/tắt checkbox,** không chỉ Space (đã kiểm trên Jewel). Hành vi này đã có trong kịch bản.
 6. **Toolchain:** ghim Rust 1.97.1. Lần cài đầu bị treo vì chạy song song với một lần build khác; cài lại riêng thì
    bình thường.
-7. **Giấy phép icon IntelliJ không rõ ràng.** Xem quyết định 2 trong [kế hoạch](../rust-ui-kit.md). Điều này cũng ảnh
-   hưởng bản Kotlin đang phát hành: `bundledLicenses` trong `app/build.gradle.kts` đang ghi nhóm
-   `com.jetbrains.intellij.platform` là Apache‑2.0. Cần rà lại.
+7. **Giấy phép icon IntelliJ: đã xác minh là Apache‑2.0.** Ban đầu nghi ngờ vì POM không khai báo license và
+   `LICENSE.txt` gốc đã đổi sang "Build Terms". Rà kỹ thì 96% file SVG tự ghi Apache‑2.0 trong file và JetBrains đã
+   xác nhận công khai. Mục `bundledLicenses` của bản Kotlin là đúng; đã thêm comment ghi nguồn. Chi tiết:
+   [icon-licence.md](icon-licence.md).
 
 ## Còn mở
 
