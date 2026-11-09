@@ -96,6 +96,9 @@ Xung đột kiểu một dòng thêm ở cùng vị trí là bình thường; se
 - **Step:**
   - Con trỏ: `click`, `doubleClick`, `rightClick`, `middleClick`, `hover`, `unhover`. Mỗi loại có thể nhắm một tag,
     ví dụ `{ "click": "<tag>" }`.
+  - Click kèm modifier: `{ "click": "<tag>", "mods": ["shift", "primary"] }`, nhận `primary`, `shift`, `alt`, `word`
+    (không nhận `ctrl`/`meta`). Kotlin dùng `performMultiModalInput`; Rust là `Step::ModClick`. Hai click liên tiếp vào
+    cùng một dòng thành double click, nên chèn `{ "wait": 1000 }` giữa chúng.
   - Kéo: `{ "drag": "<tag>" | null, "dx": <dp>, "dy": <dp> }`, tức nhấn ở tâm, kéo một đoạn rồi thả. `null` là kéo
     subject.
   - Bàn phím và chữ: `focus`, `{ "key": "<Tên>", "mods": ["primary", "shift", "alt"] }`, `{ "type": "..." }`.
@@ -123,7 +126,6 @@ Xung đột kiểu một dòng thêm ở cùng vị trí là bình thường; se
 - **Giới hạn đã biết:**
   - Runner Kotlin chưa giả lập được IME composition, nên IME chỉ được kiểm trong Rust (`tg-text`).
   - Item trong popup của Jewel mất test tag do semantics bị gộp.
-  - Chưa có click kèm modifier (Shift/Cmd+click trên tree): mô hình `LazyTree` chưa hỗ trợ.
 
 ## Định nghĩa "xong" cho mỗi session
 

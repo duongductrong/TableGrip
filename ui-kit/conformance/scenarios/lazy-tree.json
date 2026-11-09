@@ -1,6 +1,6 @@
 {
   "component": "lazy-tree",
-  "description": "The explorer's LazyTree over a fixed tree a(a1, a2(a2x)), b(b1, b2), c. Rows: arrows open, close and move the selection; Shift extends it additively; double-click opens and activates; lazy nodes load their children when first opened. Tab takes three presses to leave the tree, Shift+Tab one.",
+  "description": "The explorer's LazyTree over a fixed tree a(a1, a2(a2x)), b(b1, b2), c. Rows: arrows open, close and move the selection; Shift extends it additively; Shift+click adds the range from the active row, primary+click toggles one row, both make the clicked row active (it stays active when unselected); Up and Down at the ends change nothing; double-click opens and activates; lazy nodes load their children when first opened. Tab takes three presses to leave the tree, Shift+Tab one.",
   "cases": [
     {
       "name": "starts collapsed with nothing selected",
@@ -1295,6 +1295,514 @@
       ],
       "expect": {
         "selected": "a"
+      }
+    },
+    {
+      "name": "Shift+click adds the range from the active row",
+      "setup": {},
+      "steps": [
+        {
+          "click": "row:a"
+        },
+        {
+          "click": "row:c",
+          "mods": [
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "selected": "a,b,c",
+        "focused": true
+      }
+    },
+    {
+      "name": "Shift+click works backwards",
+      "setup": {},
+      "steps": [
+        {
+          "click": "row:c"
+        },
+        {
+          "click": "row:a",
+          "mods": [
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "selected": "a,b,c"
+      }
+    },
+    {
+      "name": "Shift+click never drops rows",
+      "setup": {},
+      "steps": [
+        {
+          "click": "row:a"
+        },
+        {
+          "click": "row:c",
+          "mods": [
+            "shift"
+          ]
+        },
+        {
+          "click": "row:b",
+          "mods": [
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "selected": "a,b,c"
+      }
+    },
+    {
+      "name": "Shift+click makes the clicked row active",
+      "setup": {},
+      "steps": [
+        {
+          "click": "row:a"
+        },
+        {
+          "click": "row:c",
+          "mods": [
+            "shift"
+          ]
+        },
+        {
+          "key": "Up"
+        }
+      ],
+      "expect": {
+        "selected": "b"
+      }
+    },
+    {
+      "name": "Shift+click spans open children",
+      "setup": {},
+      "steps": [
+        {
+          "click": "row:a"
+        },
+        {
+          "key": "Right"
+        },
+        {
+          "click": "row:b",
+          "mods": [
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "selected": "a,a1,a2,b",
+        "open": "a"
+      }
+    },
+    {
+      "name": "Shift+click with nothing selected selects that row",
+      "setup": {},
+      "steps": [
+        {
+          "click": "row:b",
+          "mods": [
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "selected": "b",
+        "focused": true
+      }
+    },
+    {
+      "name": "Shift+click from the same row keeps it alone",
+      "setup": {},
+      "steps": [
+        {
+          "click": "row:a"
+        },
+        {
+          "wait": 1000
+        },
+        {
+          "click": "row:a",
+          "mods": [
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "selected": "a"
+      }
+    },
+    {
+      "name": "primary+click adds a row",
+      "setup": {},
+      "steps": [
+        {
+          "click": "row:a"
+        },
+        {
+          "click": "row:c",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "selected": "a,c",
+        "focused": true
+      }
+    },
+    {
+      "name": "primary+click removes a selected row",
+      "setup": {},
+      "steps": [
+        {
+          "click": "row:a"
+        },
+        {
+          "click": "row:c",
+          "mods": [
+            "primary"
+          ]
+        },
+        {
+          "click": "row:a",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "selected": "c"
+      }
+    },
+    {
+      "name": "primary+click on the only selected row empties the selection",
+      "setup": {},
+      "steps": [
+        {
+          "click": "row:a"
+        },
+        {
+          "wait": 1000
+        },
+        {
+          "click": "row:a",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "selected": "",
+        "open": ""
+      }
+    },
+    {
+      "name": "primary+click makes the clicked row active",
+      "setup": {},
+      "steps": [
+        {
+          "click": "row:a"
+        },
+        {
+          "click": "row:c",
+          "mods": [
+            "primary"
+          ]
+        },
+        {
+          "key": "Up"
+        }
+      ],
+      "expect": {
+        "selected": "b"
+      }
+    },
+    {
+      "name": "primary+click takes a row out of a range",
+      "setup": {},
+      "steps": [
+        {
+          "click": "row:a"
+        },
+        {
+          "click": "row:c",
+          "mods": [
+            "shift"
+          ]
+        },
+        {
+          "click": "row:b",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "selected": "a,c"
+      }
+    },
+    {
+      "name": "Shift+click extends from the primary-clicked row",
+      "setup": {},
+      "steps": [
+        {
+          "click": "row:a"
+        },
+        {
+          "key": "Right"
+        },
+        {
+          "click": "row:a1"
+        },
+        {
+          "click": "row:c",
+          "mods": [
+            "primary"
+          ]
+        },
+        {
+          "click": "row:b",
+          "mods": [
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "selected": "a1,b,c"
+      }
+    },
+    {
+      "name": "Shift wins over primary on a click",
+      "setup": {},
+      "steps": [
+        {
+          "click": "row:a"
+        },
+        {
+          "click": "row:b",
+          "mods": [
+            "primary"
+          ]
+        },
+        {
+          "click": "row:c",
+          "mods": [
+            "shift",
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "selected": "a,b,c"
+      }
+    },
+    {
+      "name": "Alt+click is a plain click",
+      "setup": {},
+      "steps": [
+        {
+          "click": "row:a"
+        },
+        {
+          "click": "row:c",
+          "mods": [
+            "alt"
+          ]
+        }
+      ],
+      "expect": {
+        "selected": "c"
+      }
+    },
+    {
+      "name": "a row unselected by primary+click stays active",
+      "setup": {},
+      "steps": [
+        {
+          "click": "row:b"
+        },
+        {
+          "wait": 1000
+        },
+        {
+          "click": "row:b",
+          "mods": [
+            "primary"
+          ]
+        },
+        {
+          "key": "Down"
+        }
+      ],
+      "expect": {
+        "selected": "c"
+      }
+    },
+    {
+      "name": "Shift+click extends from an unselected active row",
+      "setup": {},
+      "steps": [
+        {
+          "click": "row:a"
+        },
+        {
+          "wait": 1000
+        },
+        {
+          "click": "row:a",
+          "mods": [
+            "primary"
+          ]
+        },
+        {
+          "click": "row:c",
+          "mods": [
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "selected": "a,b,c"
+      }
+    },
+    {
+      "name": "Right on an unselected active node opens it and selects nothing",
+      "setup": {},
+      "steps": [
+        {
+          "click": "row:b"
+        },
+        {
+          "wait": 1000
+        },
+        {
+          "click": "row:b",
+          "mods": [
+            "primary"
+          ]
+        },
+        {
+          "key": "Right"
+        }
+      ],
+      "expect": {
+        "selected": "",
+        "open": "b"
+      }
+    },
+    {
+      "name": "Down on the last row keeps a primary-click selection",
+      "setup": {},
+      "steps": [
+        {
+          "click": "row:a"
+        },
+        {
+          "click": "row:c",
+          "mods": [
+            "primary"
+          ]
+        },
+        {
+          "key": "Down"
+        }
+      ],
+      "expect": {
+        "selected": "a,c"
+      }
+    },
+    {
+      "name": "Up on the first row keeps a primary-click selection",
+      "setup": {},
+      "steps": [
+        {
+          "click": "row:c"
+        },
+        {
+          "click": "row:a",
+          "mods": [
+            "primary"
+          ]
+        },
+        {
+          "key": "Up"
+        }
+      ],
+      "expect": {
+        "selected": "a,c"
+      }
+    },
+    {
+      "name": "Shift+Up on the first row changes nothing",
+      "setup": {},
+      "steps": [
+        {
+          "click": "row:c"
+        },
+        {
+          "click": "row:a",
+          "mods": [
+            "primary"
+          ]
+        },
+        {
+          "key": "Up",
+          "mods": [
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "selected": "a,c"
+      }
+    },
+    {
+      "name": "Home after primary+click selects only the first row",
+      "setup": {},
+      "steps": [
+        {
+          "click": "row:c"
+        },
+        {
+          "click": "row:a",
+          "mods": [
+            "primary"
+          ]
+        },
+        {
+          "key": "Home"
+        }
+      ],
+      "expect": {
+        "selected": "a"
+      }
+    },
+    {
+      "name": "End on the last row selects only it",
+      "setup": {},
+      "steps": [
+        {
+          "click": "row:a"
+        },
+        {
+          "click": "row:c",
+          "mods": [
+            "primary"
+          ]
+        },
+        {
+          "key": "End"
+        }
+      ],
+      "expect": {
+        "selected": "c"
       }
     }
   ]

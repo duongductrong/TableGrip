@@ -73,6 +73,11 @@ pub enum TreeEvent<K> {
 /// - Down and Up move one row (clamped), Home and End go to the ends, PageDown and PageUp move a viewport of rows;
 /// - Right opens a closed node, and on an open node selects its first child; Left closes an open node and otherwise
 ///   selects the row above (not the parent), doing nothing on the first row;
+/// - Shift+click adds every row between the active row and the clicked one; primary+click (Cmd on macOS, Ctrl
+///   elsewhere) adds or removes the clicked row alone; Shift wins when both are held, Alt is ignored. Either makes the
+///   clicked row active, and it stays active when primary+click unselected it;
+/// - Up on the first row and Down on the last change nothing, with or without Shift (Home, End and the pages still
+///   collapse the selection to their row);
 /// - Shift with a movement key adds every row between the old and the new active row to the selection, and never
 ///   drops any; without Shift the selection collapses to the new row. Ctrl/Cmd+A selects every visible row and leaves
 ///   the active row where it was;
@@ -174,6 +179,30 @@ impl<K: Clone + Eq + Hash> LazyTree<K> {
         self.select_only(key);
     }
 
+    /// A click with modifiers held: Shift extends, primary toggles, anything else is a plain click.
+    pub fn click_with(&mut self, items: &[Item<K>], key: &K, mods: Modifiers) {
+        if mods.shift {
+            let rows = self.rows(items);
+            let at = |k: &K| rows.iter().position(|r| &r.key == k);
+            match (self.active.as_ref().and_then(at), at(key)) {
+                (Some(from), Some(to)) => {
+                    for row in &rows[from.min(to)..=from.max(to)] {
+                        self.selected.insert(row.key.clone());
+                    }
+                    self.active = Some(key.clone());
+                }
+                _ => self.select_only(key),
+            }
+        } else if mods.primary {
+            if !self.selected.remove(key) {
+                self.selected.insert(key.clone());
+            }
+            self.active = Some(key.clone());
+        } else {
+            self.select_only(key);
+        }
+    }
+
     pub fn double_click(&mut self, items: &[Item<K>], key: &K) -> Vec<TreeEvent<K>> {
         self.select_only(key);
         let mut events = Vec::new();
@@ -207,7 +236,10 @@ impl<K: Clone + Eq + Hash> LazyTree<K> {
         mods: Modifiers,
         events: &mut Vec<TreeEvent<K>>,
     ) -> bool {
-        self.focus(items);
+        // An active row the user unselected (primary+click) is still where keys move from.
+        if self.active.is_none() {
+            self.focus(items);
+        }
         let rows = self.rows(items);
         if rows.is_empty() {
             return false;
@@ -224,8 +256,11 @@ impl<K: Clone + Eq + Hash> LazyTree<K> {
                 return true;
             }
             _ if mods.primary || mods.alt => return false,
-            Key::Down => (at + 1).min(last),
-            Key::Up => at.saturating_sub(1),
+            // At the ends Up and Down are used but change nothing, not even a selection of several rows.
+            Key::Down if at == last => return true,
+            Key::Up if at == 0 => return true,
+            Key::Down => at + 1,
+            Key::Up => at - 1,
             Key::Home => 0,
             Key::End => last,
             Key::PageDown => (at + self.page).min(last),
@@ -354,6 +389,50 @@ mod tests {
         // The active row is b now, so a plain Up lands on a alone.
         press(&mut t, &items, Key::Up, false);
         assert_eq!(keys(&t), ["a"]);
+    }
+
+    fn click(
+        t: &mut LazyTree<&'static str>,
+        items: &[Item<&'static str>],
+        key: &'static str,
+        shift: bool,
+        primary: bool,
+    ) {
+        let mods = Modifiers {
+            shift,
+            primary,
+            ..Modifiers::default()
+        };
+        t.click_with(items, &key, mods);
+    }
+
+    #[test]
+    fn shift_click_adds_a_range_and_primary_click_toggles() {
+        let items = tree();
+        let mut t = LazyTree::new(5);
+        click(&mut t, &items, "c", false, false);
+        click(&mut t, &items, "a", true, false);
+        assert_eq!(keys(&t), ["a", "b", "c"]);
+        click(&mut t, &items, "b", false, true);
+        assert_eq!(keys(&t), ["a", "c"]);
+        assert_eq!(t.active(), Some(&"b"));
+        click(&mut t, &items, "b", false, true);
+        assert_eq!(keys(&t), ["a", "b", "c"]);
+    }
+
+    #[test]
+    fn an_unselected_active_row_is_where_keys_move_from() {
+        let items = tree();
+        let mut t = LazyTree::new(5);
+        click(&mut t, &items, "b", false, false);
+        click(&mut t, &items, "b", false, true);
+        assert_eq!(keys(&t), Vec::<&str>::new());
+        press(&mut t, &items, Key::Down, false);
+        assert_eq!(keys(&t), ["c"]);
+        // At the last row Down changes nothing, even a selection of several rows.
+        click(&mut t, &items, "a", false, true);
+        press(&mut t, &items, Key::Up, false);
+        assert_eq!(keys(&t), ["a", "c"]);
     }
 
     #[test]

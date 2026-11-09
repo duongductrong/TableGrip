@@ -15,10 +15,12 @@ import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.MouseButton
 import androidx.compose.ui.test.performMouseInput
+import androidx.compose.ui.test.performMultiModalInput
 import androidx.compose.ui.test.rightClick
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performTextInput
@@ -95,6 +97,13 @@ class ConformanceTest {
     private fun ComposeUiTest.perform(step: Step) {
         when (step) {
             is Step.Click -> node(step.tag).performClick()
+            is Step.ModClick ->
+                node(step.tag).performMultiModalInput {
+                    val keys = step.mods.map(::modifierKey)
+                    key { keys.forEach { keyDown(it) } }
+                    mouse { click(center) }
+                    key { keys.asReversed().forEach { keyUp(it) } }
+                }
             is Step.MiddleClick ->
                 node(step.tag).performMouseInput {
                     moveTo(center)

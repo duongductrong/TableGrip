@@ -28,6 +28,9 @@ data class ScenarioCase(val name: String, val setup: JsonObject, val steps: List
 sealed interface Step {
     data class Click(val tag: String? = null) : Step
 
+    /** A primary-button click on [tag] while [mods] are held (same names as [Key]'s): Shift+click, Cmd/Ctrl+click. */
+    data class ModClick(val tag: String?, val mods: List<String>) : Step
+
     /** The middle mouse button. */
     data class MiddleClick(val tag: String? = null) : Step
 
@@ -104,6 +107,7 @@ object Scenarios {
             "type" in o -> Step.Type(tag("type"))
             "wait" in o -> Step.Wait(tag("wait").toLong())
             "drag" in o -> Step.Drag((o["drag"] as? JsonPrimitive)?.contentOrNull, o.number("dx"), o.number("dy"))
+            "click" in o && "mods" in o -> Step.ModClick((o["click"] as? JsonPrimitive)?.contentOrNull, o.getValue("mods").jsonArray.map { it.jsonPrimitive.content })
             "click" in o -> Step.Click(tag("click"))
             "middleClick" in o -> Step.MiddleClick(tag("middleClick"))
             "doubleClick" in o -> Step.DoubleClick(tag("doubleClick"))

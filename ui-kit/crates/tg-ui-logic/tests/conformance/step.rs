@@ -7,6 +7,9 @@ use tg_ui_logic::{Code, Key, KeyEvent, Modifiers, Platform};
 #[derive(Clone, Debug, PartialEq)]
 pub enum Step {
     Click(Option<String>),
+    /// A click with modifiers held: `{ "click": "<tag>", "mods": [...] }` (Shift+click, Cmd/Ctrl+click on a tree row).
+    /// Takes `primary`, `shift`, `alt` and `word`; the physical `ctrl` and `meta` are for key steps only.
+    ModClick(Option<String>, Modifiers),
     /// The middle mouse button.
     MiddleClick(Option<String>),
     DoubleClick(Option<String>),
@@ -50,30 +53,16 @@ impl Step {
                 .map(str::to_owned)
                 .ok_or(format!("'{name}' must be a string"))
         };
+        let platform = Platform::current();
+        let (mods, ctrl, meta) = parse_mods(o.get("mods"), platform)?;
+        if o.contains_key("click") && o.contains_key("mods") {
+            if ctrl || meta {
+                return Err("a click takes primary, shift, alt or word, not ctrl or meta".into());
+            }
+            return Ok(Step::ModClick(o["click"].as_str().map(str::to_owned), mods));
+        }
         if o.contains_key("key") {
             let name = text("key")?;
-            let platform = Platform::current();
-            let mut mods = Modifiers::default();
-            let (mut ctrl, mut meta) = (false, false);
-            for m in o
-                .get("mods")
-                .and_then(Value::as_array)
-                .into_iter()
-                .flatten()
-            {
-                match m.as_str() {
-                    Some("primary") => mods.primary = true,
-                    Some("shift") => mods.shift = true,
-                    Some("alt") => mods.alt = true,
-                    // Word-wise movement: Option on macOS, Ctrl elsewhere.
-                    Some("word") if platform == Platform::Mac => mods.alt = true,
-                    Some("word") => mods.primary = true,
-                    // The physical Control and Meta (Cmd, Windows) keys.
-                    Some("ctrl") => ctrl = true,
-                    Some("meta") => meta = true,
-                    other => return Err(format!("unknown modifier {other:?}")),
-                }
-            }
             let key = Key::from_name(&name);
             if let (Some(key), false, false) = (key, ctrl, meta) {
                 return Ok(Step::Key(key, mods));
@@ -117,6 +106,27 @@ impl Step {
         }
         Err(format!("unknown step {value}"))
     }
+}
+
+/// The `mods` of a key or click step, plus whether the physical `ctrl` and `meta` keys are held.
+fn parse_mods(mods: Option<&Value>, platform: Platform) -> Result<(Modifiers, bool, bool), String> {
+    let mut out = Modifiers::default();
+    let (mut ctrl, mut meta) = (false, false);
+    for m in mods.and_then(Value::as_array).into_iter().flatten() {
+        match m.as_str() {
+            Some("primary") => out.primary = true,
+            Some("shift") => out.shift = true,
+            Some("alt") => out.alt = true,
+            // Word-wise movement: Option on macOS, Ctrl elsewhere.
+            Some("word") if platform == Platform::Mac => out.alt = true,
+            Some("word") => out.primary = true,
+            // The physical Control and Meta (Cmd, Windows) keys.
+            Some("ctrl") => ctrl = true,
+            Some("meta") => meta = true,
+            other => return Err(format!("unknown modifier {other:?}")),
+        }
+    }
+    Ok((out, ctrl, meta))
 }
 
 /// Key names beyond [`Key`], for shortcuts; the Kotlin runner maps the same names.

@@ -99,6 +99,13 @@ impl Subject for LazyTreeSubject {
                 self.tab_stop = 0;
                 self.tree.click(&Self::row_id(tag).unwrap().to_owned());
             }
+            Step::ModClick(Some(tag), mods) if Self::row_id(tag).is_some() => {
+                self.tab_stop = 0;
+                self.tree
+                    .click_with(&self.items, &Self::row_id(tag).unwrap().to_owned(), *mods);
+            }
+            // Time passing only keeps two clicks on one row from making a double click.
+            Step::Wait(_) => {}
             Step::DoubleClick(Some(tag)) if Self::row_id(tag).is_some() => {
                 self.tab_stop = 0;
                 let events = self
@@ -112,7 +119,10 @@ impl Subject for LazyTreeSubject {
     }
 
     fn pointer_focuses(&self, step: &Step) -> bool {
-        matches!(step, Step::Click(Some(_)) | Step::DoubleClick(Some(_)))
+        matches!(
+            step,
+            Step::Click(Some(_)) | Step::ModClick(Some(_), _) | Step::DoubleClick(Some(_))
+        )
     }
 
     fn on_focus(&mut self) {
