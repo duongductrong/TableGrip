@@ -522,6 +522,8 @@ tasks {
         useJUnitPlatform()
         providers.gradleProperty("snapshot.dir").orNull?.let { systemProperty("snapshot.dir", it) }
         providers.gradleProperty("snapshot.db").orNull?.let { systemProperty("snapshot.db", it) }
+        // `-Pconformance.record=true` rewrites ui-kit/conformance/golden and reference from the current app.
+        providers.gradleProperty("conformance.record").orNull?.let { systemProperty("conformance.record", it) }
         listOf("it.network", "it.postgres", "it.redis", "it.mongo", "it.etcd").forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
     }
 

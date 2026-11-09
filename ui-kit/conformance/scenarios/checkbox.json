@@ -1,0 +1,20 @@
+{
+  "component": "checkbox",
+  "description": "A labelled checkbox (CheckboxRow): the label and the box toggle together.",
+  "cases": [
+    { "name": "a click checks an unchecked box", "setup": { "label": "Read-only", "checked": false },
+      "steps": ["click"], "expect": { "checked": true } },
+    { "name": "a second click unchecks it again", "setup": { "label": "Read-only", "checked": false },
+      "steps": ["click", "click"], "expect": { "checked": false } },
+    { "name": "a disabled box ignores clicks", "setup": { "label": "Read-only", "checked": false, "enabled": false },
+      "steps": ["click"], "expect": { "checked": false } },
+    { "name": "Space toggles the focused box", "setup": { "label": "Read-only", "checked": false },
+      "steps": ["focus", { "key": "Space" }], "expect": { "checked": true, "focused": true } },
+    { "name": "Enter toggles the focused box", "setup": { "label": "Read-only", "checked": false },
+      "steps": ["focus", { "key": "Enter" }], "expect": { "checked": true, "focused": true } },
+    { "name": "a click focuses the box", "setup": { "label": "Read-only", "checked": false },
+      "steps": ["click"], "expect": { "focused": true } },
+    { "name": "Tab moves focus to the next control", "setup": { "label": "Read-only", "checked": false, "next": true },
+      "steps": ["focus", { "key": "Tab" }], "expect": { "focused": false, "nextFocused": true } }
+  ]
+}

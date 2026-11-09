@@ -1,0 +1,18 @@
+{
+  "component": "text-field",
+  "description": "A single-line TextField over a TextFieldState.",
+  "cases": [
+    { "name": "typing into an empty field", "setup": { "text": "" },
+      "steps": ["focus", { "type": "users" }], "expect": { "text": "users", "focused": true } },
+    { "name": "focusing puts the caret at the end", "setup": { "text": "user" },
+      "steps": ["focus", { "type": "s" }], "expect": { "text": "users" } },
+    { "name": "Backspace deletes before the caret", "setup": { "text": "users" },
+      "steps": ["focus", { "key": "Backspace" }], "expect": { "text": "user" } },
+    { "name": "select all then type replaces the text", "setup": { "text": "users" },
+      "steps": ["focus", { "key": "A", "mods": ["primary"] }, { "type": "orders" }], "expect": { "text": "orders" } },
+    { "name": "Home then type inserts at the start", "setup": { "text": "users" },
+      "steps": ["focus", { "key": "Home" }, { "type": "x" }], "expect": { "text": "xusers" } },
+    { "name": "a disabled field takes no input", "setup": { "text": "users", "enabled": false },
+      "steps": ["click", { "type": "x" }], "expect": { "text": "users", "focused": false } }
+  ]
+}

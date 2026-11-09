@@ -1,0 +1,18 @@
+{
+  "component": "button",
+  "description": "DefaultButton (variant=default) and OutlinedButton (variant=outlined).",
+  "cases": [
+    { "name": "a click fires once", "setup": { "variant": "default", "label": "Save" },
+      "steps": ["click"], "expect": { "clicks": 1 } },
+    { "name": "an outlined button fires on click", "setup": { "variant": "outlined", "label": "Cancel" },
+      "steps": ["click"], "expect": { "clicks": 1 } },
+    { "name": "a disabled button doesn't fire", "setup": { "variant": "default", "label": "Save", "enabled": false },
+      "steps": ["click"], "expect": { "clicks": 0 } },
+    { "name": "Space fires the focused button", "setup": { "variant": "default", "label": "Save" },
+      "steps": ["focus", { "key": "Space" }], "expect": { "clicks": 1, "focused": true } },
+    { "name": "Enter fires the focused button", "setup": { "variant": "outlined", "label": "Cancel" },
+      "steps": ["focus", { "key": "Enter" }], "expect": { "clicks": 1, "focused": true } },
+    { "name": "a click focuses the button", "setup": { "variant": "default", "label": "Save" },
+      "steps": ["click"], "expect": { "focused": true } }
+  ]
+}
