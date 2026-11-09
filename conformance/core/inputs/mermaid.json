@@ -1,0 +1,263 @@
+{
+  "subject": "mermaid",
+  "cases": [
+    {
+      "name": "keys and optional relationships",
+      "tables": [
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "teams"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "users"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "teams_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "users_teams",
+              "columns": [
+                "teams_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "teams"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "orders"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "users_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "orders_users",
+              "columns": [
+                "users_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "users"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "order items"
+          },
+          "columns": [],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null
+        }
+      ]
+    },
+    {
+      "name": "types, unique and not null",
+      "tables": [
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "t\"q"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "int4",
+              "size": 10,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "price",
+              "typeName": "numeric",
+              "size": 10,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": 2
+            },
+            {
+              "name": "note",
+              "typeName": "character varying",
+              "size": 50,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "u",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "w",
+              "typeName": "Nullable(String), x",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [
+            {
+              "name": "u_uq",
+              "columns": [
+                "u"
+              ],
+              "unique": true
+            },
+            {
+              "name": "multi",
+              "columns": [
+                "u",
+                "note"
+              ],
+              "unique": true
+            }
+          ],
+          "foreignKeys": [],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "a-b"
+          },
+          "columns": [
+            {
+              "name": "x",
+              "typeName": "integer",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "f",
+              "columns": [
+                "x"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "t\"q"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        }
+      ]
+    }
+  ]
+}

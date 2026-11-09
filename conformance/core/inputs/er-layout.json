@@ -1,0 +1,6383 @@
+{
+  "subject": "er-layout",
+  "cases": [
+    {
+      "name": "layered with loose table",
+      "tables": [
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "teams"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "users"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "teams_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "users_teams",
+              "columns": [
+                "teams_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "teams"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "orders"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "users_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "orders_users",
+              "columns": [
+                "users_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "users"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "products"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "items"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "orders_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "products_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "items_orders",
+              "columns": [
+                "orders_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "orders"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            },
+            {
+              "name": "items_products",
+              "columns": [
+                "products_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "products"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "log"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null
+        }
+      ],
+      "focus": "orders"
+    },
+    {
+      "name": "cycles and self references",
+      "tables": [
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "a"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "b_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "a_b",
+              "columns": [
+                "b_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "b"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "b"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "a_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "b_a",
+              "columns": [
+                "a_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "a"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "c"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "c_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "c_c",
+              "columns": [
+                "c_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "c"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        }
+      ],
+      "widths": {
+        "a": 180,
+        "b": 180,
+        "c": 180
+      }
+    },
+    {
+      "name": "empty",
+      "tables": []
+    },
+    {
+      "name": "only loose tables",
+      "tables": [
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "t0"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "t1"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "t2"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "t3"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "t4"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "t5"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c4",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "t6"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c4",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c5",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null
+        }
+      ],
+      "widths": {
+        "t0": 100.0,
+        "t1": 113.3,
+        "t2": 126.6,
+        "t3": 139.9,
+        "t4": 153.2,
+        "t5": 166.5,
+        "t6": 179.8
+      }
+    },
+    {
+      "name": "tall layer wraps",
+      "tables": [
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "root"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf00"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf00_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf01"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf01_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf02"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c4",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c5",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf02_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf03"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c4",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c5",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c6",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c7",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c8",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf03_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf04"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c4",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c5",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c6",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c7",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c8",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c9",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c10",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c11",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf04_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf05"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c4",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c5",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c6",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c7",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c8",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c9",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c10",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c11",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c12",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c13",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c14",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf05_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf06"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c4",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c5",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c6",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c7",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c8",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c9",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c10",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c11",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c12",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c13",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c14",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c15",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c16",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c17",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf06_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf07"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c4",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c5",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c6",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c7",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c8",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c9",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c10",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c11",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c12",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c13",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c14",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c15",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c16",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c17",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c18",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c19",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c20",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf07_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf08"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c4",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c5",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c6",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c7",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c8",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c9",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c10",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c11",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c12",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c13",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c14",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c15",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c16",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c17",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c18",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c19",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c20",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c21",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c22",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c23",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf08_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf09"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf09_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf10"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c4",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf10_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf11"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c4",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c5",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c6",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c7",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf11_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf12"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c4",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c5",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c6",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c7",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c8",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c9",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c10",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf12_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf13"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c4",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c5",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c6",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c7",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c8",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c9",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c10",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c11",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c12",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c13",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf13_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf14"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c4",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c5",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c6",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c7",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c8",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c9",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c10",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c11",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c12",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c13",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c14",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c15",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c16",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf14_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf15"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c4",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c5",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c6",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c7",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c8",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c9",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c10",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c11",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c12",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c13",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c14",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c15",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c16",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c17",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c18",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c19",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf15_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf16"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c4",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c5",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c6",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c7",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c8",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c9",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c10",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c11",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c12",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c13",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c14",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c15",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c16",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c17",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c18",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c19",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c20",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c21",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c22",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf16_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf17"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf17_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf18"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf18_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf19"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c4",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c5",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c6",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf19_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf20"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c4",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c5",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c6",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c7",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c8",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c9",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf20_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf21"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c4",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c5",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c6",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c7",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c8",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c9",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c10",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c11",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c12",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf21_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf22"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c4",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c5",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c6",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c7",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c8",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c9",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c10",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c11",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c12",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c13",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c14",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c15",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf22_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf23"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c4",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c5",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c6",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c7",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c8",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c9",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c10",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c11",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c12",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c13",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c14",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c15",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c16",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c17",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c18",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf23_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf24"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c4",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c5",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c6",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c7",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c8",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c9",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c10",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c11",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c12",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c13",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c14",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c15",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c16",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c17",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c18",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c19",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c20",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c21",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf24_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf25"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf25_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf26"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf26_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf27"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c4",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c5",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf27_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf28"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c4",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c5",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c6",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c7",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c8",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf28_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "leaf29"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "root_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c0",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c1",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c2",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c3",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c4",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c5",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c6",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c7",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c8",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c9",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c10",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "c11",
+              "typeName": "text",
+              "size": null,
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "leaf29_root",
+              "columns": [
+                "root_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "root"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "z1"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "z2"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null
+        }
+      ],
+      "widths": {
+        "leaf00": 150,
+        "leaf01": 151,
+        "leaf02": 152,
+        "leaf03": 153,
+        "leaf04": 154,
+        "leaf05": 155,
+        "leaf06": 156,
+        "leaf07": 157,
+        "leaf08": 158,
+        "leaf09": 159,
+        "leaf10": 160,
+        "leaf11": 161,
+        "leaf12": 162,
+        "leaf13": 163,
+        "leaf14": 164,
+        "leaf15": 165,
+        "leaf16": 166,
+        "leaf17": 167,
+        "leaf18": 168,
+        "leaf19": 169,
+        "leaf20": 170,
+        "leaf21": 171,
+        "leaf22": 172,
+        "leaf23": 173,
+        "leaf24": 174,
+        "leaf25": 175,
+        "leaf26": 176,
+        "leaf27": 177,
+        "leaf28": 178,
+        "leaf29": 179
+      },
+      "focus": "root"
+    },
+    {
+      "name": "unknown reference and case",
+      "tables": [
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "A"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "b"
+          },
+          "columns": [
+            {
+              "name": "a_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "x",
+              "columns": [
+                "a_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "a"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            },
+            {
+              "name": "y",
+              "columns": [
+                "q"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "missing"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        }
+      ]
+    },
+    {
+      "name": "long chain with skips",
+      "tables": [
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "n0"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "n1"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "n0_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "n0_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "n1_n0",
+              "columns": [
+                "n0_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "n0"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            },
+            {
+              "name": "n1_n0",
+              "columns": [
+                "n0_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "n0"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "n2"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "n1_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "n0_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "n2_n1",
+              "columns": [
+                "n1_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "n1"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            },
+            {
+              "name": "n2_n0",
+              "columns": [
+                "n0_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "n0"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "n3"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "n2_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "n0_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "n3_n2",
+              "columns": [
+                "n2_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "n2"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            },
+            {
+              "name": "n3_n0",
+              "columns": [
+                "n0_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "n0"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "n4"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "n3_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "n1_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "n4_n3",
+              "columns": [
+                "n3_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "n3"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            },
+            {
+              "name": "n4_n1",
+              "columns": [
+                "n1_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "n1"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "n5"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "n4_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "n2_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "n5_n4",
+              "columns": [
+                "n4_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "n4"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            },
+            {
+              "name": "n5_n2",
+              "columns": [
+                "n2_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "n2"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "n6"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "n5_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "n3_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "n6_n5",
+              "columns": [
+                "n5_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "n5"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            },
+            {
+              "name": "n6_n3",
+              "columns": [
+                "n3_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "n3"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "n7"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "n6_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "n4_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "n7_n6",
+              "columns": [
+                "n6_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "n6"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            },
+            {
+              "name": "n7_n4",
+              "columns": [
+                "n4_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "n4"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "n8"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": true,
+              "primaryKey": true,
+              "scale": null
+            },
+            {
+              "name": "n7_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            },
+            {
+              "name": "n5_id",
+              "typeName": "integer",
+              "size": null,
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "primaryKey": false,
+              "scale": null
+            }
+          ],
+          "indexes": [],
+          "foreignKeys": [
+            {
+              "name": "n8_n7",
+              "columns": [
+                "n7_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "n7"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            },
+            {
+              "name": "n8_n5",
+              "columns": [
+                "n5_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "app",
+                "name": "n5"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null
+        }
+      ],
+      "widths": {
+        "n0": 0.1,
+        "n1": 1.1,
+        "n2": 2.1,
+        "n3": 3.1,
+        "n4": 4.1,
+        "n5": 5.1,
+        "n6": 6.1,
+        "n7": 7.1,
+        "n8": 8.1
+      }
+    }
+  ]
+}

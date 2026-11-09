@@ -4,6 +4,8 @@
 mod filter;
 #[path = "support/harness.rs"]
 mod harness;
+#[path = "golden/schema.rs"]
+mod schema;
 
 use harness::{opt_str, str, u16};
 use serde_json::{Value, json};
@@ -325,6 +327,12 @@ fn run(subject: &str, case: &Value) -> Option<Value> {
         "filter-operators" => filter::operators(case),
         "filter-compiler" => filter::compiler(case),
         "projection" => filter::projection(case),
+        "ddl-script" => schema::script(case),
+        "ddl-design" => schema::design_from(case),
+        "ddl-column-types" => schema::column_types(case),
+        "schema-compare" => schema::compare(case),
+        "er-layout" => schema::er(case),
+        "mermaid" => schema::mermaid(case),
         _ => return None,
     })
 }

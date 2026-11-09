@@ -6,6 +6,7 @@
 //! the `&str` they index; the golden tests convert them to the UTF-16 offsets Kotlin records.
 
 pub mod classifier;
+pub mod ddl;
 pub mod decimal;
 pub mod dialect;
 pub mod filter;
@@ -15,6 +16,7 @@ pub mod kt;
 pub mod lexer;
 pub mod model;
 pub mod parameters;
+pub mod schema;
 pub mod splitter;
 pub mod syntax;
 
