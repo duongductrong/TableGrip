@@ -35,6 +35,7 @@ import dev.tablegrip.app.chart.ChartAssistState
 import dev.tablegrip.app.chart.CanvasChartRenderer
 import dev.tablegrip.app.chart.ResultChartColors
 import dev.tablegrip.app.ui.LocalIslands
+import dev.tablegrip.app.ui.TableGripIcons
 import dev.tablegrip.core.chart.Aggregate
 import dev.tablegrip.core.chart.ChartSpec
 import dev.tablegrip.core.chart.ChartType
@@ -201,7 +202,7 @@ private fun ChartAsk(tab: ConsoleTab, view: ResultSetView) {
             enter
         },
         placeholder = { Text("Describe a chart, e.g. revenue by month") },
-        leadingIcon = { Icon(AllIconsKeys.Toolwindows.ToolWindowAskAI, null, Modifier.size(14.dp).padding(end = 2.dp)) },
+        leadingIcon = { Icon(TableGripIcons.Agent, null, Modifier.size(14.dp).padding(end = 2.dp)) },
     )
     when (val assist = chart.assist) {
         null -> Unit

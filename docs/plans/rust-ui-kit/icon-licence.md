@@ -12,9 +12,9 @@ ngay trong file, và JetBrains đã nói công khai như vậy. Mục `"com.jetb
 
 Hai điểm còn lại (chi tiết ở phần "Rủi ro còn lại"):
 
-1. `AllIconsKeys.Toolwindows.ToolWindowAskAI` (app dùng ở 3 chỗ) là một trong số ít file không có dòng Apache, chỉ có
-   dòng copyright. Nó vẫn nằm dưới giấy phép Apache‑2.0 của repo tại thời điểm commit, nhưng hình dáng có thể gần với
-   nhận diện của JetBrains AI. Chưa xác minh được.
+1. `AllIconsKeys.Toolwindows.ToolWindowAskAI` là một trong số ít file không có dòng Apache, chỉ có dòng copyright, và
+   hình dáng có thể gần với nhận diện của JetBrains AI. **Đã xử lý:** app không còn dùng icon này; thay bằng icon tự
+   vẽ `TableGripIcons.Agent` (xem "Thay đổi mã").
 2. Jar chứa vài ảnh logo/promo sản phẩm JetBrains. Apache‑2.0 không cấp quyền nhãn hiệu (mục 6). TableGrip không hiển
    thị các ảnh này, chỉ mang theo trong jar.
 
@@ -84,8 +84,9 @@ cụ tải trang (render bằng JavaScript), nên không trích được quy đ�
 
 1. **`ToolWindowAskAI`.** Chỉ có dòng copyright, không có dòng Apache. Nó vẫn thuộc Apache‑2.0 theo `LICENSE.txt` của
    repo lúc thêm vào, nhưng không có khẳng định trong file. Hình dạng (ba nét bo tròn đan nhau) có thể được xem là
-   gần nhận diện của sản phẩm JetBrains AI; chưa có nguồn xác nhận hay phủ nhận. Rủi ro thấp, nhưng là icon duy nhất
-   app dùng mà không có header Apache. Cách loại bỏ hẳn: thay bằng một icon tự vẽ cho tab Agent.
+   gần nhận diện của sản phẩm JetBrains AI; chưa có nguồn xác nhận hay phủ nhận. Nó là icon duy nhất app dùng mà không
+   có header Apache, nên đã được thay bằng icon tự vẽ (bong bóng chat có ngôi sao bốn cánh). Giờ mọi icon IntelliJ app
+   hiển thị đều có header Apache‑2.0. File vẫn còn trong jar, như các icon không dùng khác.
 2. **Logo sản phẩm trong jar.** Jar có `idea_logo_welcome.png`, `ultimate/ideaUltimatePromo.svg`,
    `ultimate/pycharmPromo.svg`, `codeWithMe/cwmLogoToolbar.svg`, `welcome/learnTab/jetBrainsAcademy.svg`… Apache‑2.0
    mục 6 không cho quyền dùng nhãn hiệu. TableGrip không hiển thị các file này nên không "dùng" nhãn hiệu; chỉ cần
@@ -96,5 +97,9 @@ cụ tải trang (render bằng JavaScript), nên không trích được quy đ�
 
 ## Thay đổi mã
 
-Chỉ thêm comment ghi nguồn cạnh `"com.jetbrains.intellij.platform" to "Apache-2.0"` trong `app/build.gradle.kts`.
-Không đổi giá trị, không đổi hành vi build.
+- Thêm comment ghi nguồn cạnh `"com.jetbrains.intellij.platform" to "Apache-2.0"` trong `app/build.gradle.kts`. Không
+  đổi giá trị, không đổi hành vi build.
+- Thay `ToolWindowAskAI` ở cả 6 chỗ dùng (`ToolStripe.kt`, `AgentPanel.kt` ×3, `FixView.kt`, `ChartView.kt`) bằng
+  `TableGripIcons.Agent` (`app/src/main/kotlin/dev/tablegrip/app/ui/TableGripIcons.kt`). SVG nằm ở
+  `app/src/main/resources/icons/agent.svg` và `agent_dark.svg`, tự vẽ cho TableGrip, phát hành theo Apache‑2.0 cùng dự
+  án, dùng màu xám Int UI (`#6C707E` / `#CED0D6`) để tint và bảng màu theme áp dụng như với `AllIconsKeys`.
