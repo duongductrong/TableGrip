@@ -8,6 +8,8 @@
 //! they draw as an overlay outside their bounds.
 //! Phase 4 popups: [popup_menu], [list_combo_box], [popup_list] and the [scrollbar] with its [scroll_area], on the
 //! shared [popup] surface.
+//! Phase 5 layout: the [tab_strip], the workspace's pill [workspace_tabs] (drag to reorder), the [split] layout whose
+//! 6dp gap between islands is the handle, and the virtualised [tree].
 
 pub mod button;
 pub mod checkbox;
@@ -28,9 +30,13 @@ pub mod popup_menu;
 pub mod radio;
 pub mod ring;
 pub mod scrollbar;
+pub mod split;
+pub mod tab_strip;
 pub mod text;
 pub mod text_input;
 pub mod theme;
+pub mod tree;
+pub mod workspace_tabs;
 
 pub use button::{Button, button};
 pub use checkbox::{Checkbox, checkbox};
@@ -46,8 +52,12 @@ pub use popup_menu::{MenuItem, PopupMenu, menu_item, popup_menu};
 pub use radio::{RadioButton, radio_button};
 pub use ring::{RingSpec, ring};
 pub use scrollbar::{ScrollArea, Scrollbar, scroll_area, scrollbar};
+pub use split::{SplitLayout, split_layout};
+pub use tab_strip::{TabStrip, tab_strip};
 pub use text::{Text, TextColor, text};
 pub use text_input::{TextInput, TextInputLook};
 pub use tg_theme::zoom;
 pub use tg_ui_logic::ToggleState;
 pub use theme::{ActiveTheme, ThemeExt, hsla, set_theme};
+pub use tree::{Tree, tree};
+pub use workspace_tabs::{WorkspaceTab, WorkspaceTabs, workspace_tabs};

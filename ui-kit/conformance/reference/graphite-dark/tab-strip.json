@@ -1,0 +1,39 @@
+{
+    "specimen": "tab-strip",
+    "theme": "Graphite Dark",
+    "density": 2.0,
+    "width": 600,
+    "height": 112,
+    "regions": [
+        {
+            "tag": "text:tab-strip.0",
+            "kind": "text",
+            "rect": [
+                32,
+                41,
+                133,
+                31
+            ]
+        },
+        {
+            "tag": "text:tab-strip.1",
+            "kind": "text",
+            "rect": [
+                197,
+                41,
+                119,
+                31
+            ]
+        },
+        {
+            "tag": "text:tab-strip.2",
+            "kind": "text",
+            "rect": [
+                348,
+                41,
+                60,
+                31
+            ]
+        }
+    ]
+}

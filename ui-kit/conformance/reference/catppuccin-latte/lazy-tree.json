@@ -1,0 +1,59 @@
+{
+    "specimen": "lazy-tree",
+    "theme": "Catppuccin Latte",
+    "density": 2.0,
+    "width": 440,
+    "height": 280,
+    "regions": [
+        {
+            "tag": "text:lazy-tree.audit",
+            "kind": "text",
+            "rect": [
+                60,
+                175,
+                61,
+                31
+            ]
+        },
+        {
+            "tag": "text:lazy-tree.orders",
+            "kind": "text",
+            "rect": [
+                92,
+                123,
+                80,
+                31
+            ]
+        },
+        {
+            "tag": "text:lazy-tree.public",
+            "kind": "text",
+            "rect": [
+                60,
+                19,
+                75,
+                31
+            ]
+        },
+        {
+            "tag": "text:lazy-tree.readme",
+            "kind": "text",
+            "rect": [
+                60,
+                227,
+                94,
+                31
+            ]
+        },
+        {
+            "tag": "text:lazy-tree.users",
+            "kind": "text",
+            "rect": [
+                92,
+                71,
+                68,
+                31
+            ]
+        }
+    ]
+}

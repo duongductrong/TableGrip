@@ -1,0 +1,89 @@
+{
+    "specimen": "workspace-tabs",
+    "theme": "Graphite Light",
+    "density": 2.0,
+    "width": 720,
+    "height": 84,
+    "regions": [
+        {
+            "tag": "icon:General.CloseSmall",
+            "kind": "icon",
+            "rect": [
+                158,
+                26,
+                32,
+                32
+            ]
+        },
+        {
+            "tag": "icon:General.CloseSmall",
+            "kind": "icon",
+            "rect": [
+                635,
+                26,
+                32,
+                32
+            ]
+        },
+        {
+            "tag": "icon:Nodes.Console",
+            "kind": "icon",
+            "rect": [
+                228,
+                26,
+                32,
+                32
+            ]
+        },
+        {
+            "tag": "icon:Nodes.DataTables",
+            "kind": "icon",
+            "rect": [
+                32,
+                26,
+                32,
+                32
+            ]
+        },
+        {
+            "tag": "icon:Nodes.DataTables",
+            "kind": "icon",
+            "rect": [
+                497,
+                26,
+                32,
+                32
+            ]
+        },
+        {
+            "tag": "text:workspace-tabs.0",
+            "kind": "text",
+            "rect": [
+                76,
+                27,
+                68,
+                31
+            ]
+        },
+        {
+            "tag": "text:workspace-tabs.1",
+            "kind": "text",
+            "rect": [
+                272,
+                27,
+                141,
+                31
+            ]
+        },
+        {
+            "tag": "text:workspace-tabs.2",
+            "kind": "text",
+            "rect": [
+                541,
+                27,
+                80,
+                31
+            ]
+        }
+    ]
+}
