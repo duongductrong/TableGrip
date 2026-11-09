@@ -1,5 +1,7 @@
 //! Holds tg-sql to the Kotlin core's golden files; see `support/harness.rs`.
 
+#[path = "golden/filter.rs"]
+mod filter;
 #[path = "support/harness.rs"]
 mod harness;
 
@@ -142,7 +144,9 @@ fn param(v: &Value) -> SqlParam {
         "Uuid" => ParamValue::Uuid(text.to_lowercase()),
         "Date" => ParamValue::Date(NaiveDate::parse_from_str(text, "%Y-%m-%d").unwrap()),
         "DateTime" => ParamValue::DateTime(
-            NaiveDateTime::parse_from_str(text, "%Y-%m-%dT%H:%M:%S%.f").unwrap(),
+            NaiveDateTime::parse_from_str(text, "%Y-%m-%dT%H:%M:%S%.f")
+                .or_else(|_| NaiveDateTime::parse_from_str(text, "%Y-%m-%dT%H:%M"))
+                .unwrap(),
         ),
         "Time" => ParamValue::Time(
             NaiveTime::parse_from_str(text, "%H:%M:%S%.f")
@@ -317,6 +321,10 @@ fn run(subject: &str, case: &Value) -> Option<Value> {
         "sql-parameters" => parameters(case),
         "sql-keywords" => keywords(case),
         "sql-dialect" => dialect(case),
+        "filter-values" => filter::values(case),
+        "filter-operators" => filter::operators(case),
+        "filter-compiler" => filter::compiler(case),
+        "projection" => filter::projection(case),
         _ => return None,
     })
 }

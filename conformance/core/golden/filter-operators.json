@@ -1,0 +1,904 @@
+{
+    "subject": "filter-operators",
+    "cases": [
+        {
+            "name": "all",
+            "output": {
+                "Text": {
+                    "label": "text",
+                    "isTemporal": false,
+                    "default": "Contains",
+                    "forKind regex=true": [
+                        [
+                            "Equals",
+                            "NotEquals",
+                            "Contains",
+                            "NotContains",
+                            "StartsWith",
+                            "EndsWith"
+                        ],
+                        [
+                            "In",
+                            "NotIn",
+                            "Like",
+                            "NotLike",
+                            "Regex",
+                            "NotRegex"
+                        ],
+                        [
+                            "IsEmpty",
+                            "IsNotEmpty",
+                            "IsNull",
+                            "IsNotNull"
+                        ],
+                        [
+                            "Less",
+                            "LessOrEqual",
+                            "Greater",
+                            "GreaterOrEqual",
+                            "Between",
+                            "NotBetween"
+                        ]
+                    ],
+                    "forKind regex=false": [
+                        [
+                            "Equals",
+                            "NotEquals",
+                            "Contains",
+                            "NotContains",
+                            "StartsWith",
+                            "EndsWith"
+                        ],
+                        [
+                            "In",
+                            "NotIn",
+                            "Like",
+                            "NotLike"
+                        ],
+                        [
+                            "IsEmpty",
+                            "IsNotEmpty",
+                            "IsNull",
+                            "IsNotNull"
+                        ],
+                        [
+                            "Less",
+                            "LessOrEqual",
+                            "Greater",
+                            "GreaterOrEqual",
+                            "Between",
+                            "NotBetween"
+                        ]
+                    ],
+                    "labels": {
+                        "Equals": "=",
+                        "NotEquals": "≠",
+                        "Less": "<",
+                        "LessOrEqual": "≤",
+                        "Greater": ">",
+                        "GreaterOrEqual": "≥",
+                        "Between": "between",
+                        "NotBetween": "not between",
+                        "In": "is one of",
+                        "NotIn": "is none of",
+                        "Contains": "contains",
+                        "NotContains": "doesn't contain",
+                        "StartsWith": "starts with",
+                        "EndsWith": "ends with",
+                        "Like": "like",
+                        "NotLike": "not like",
+                        "Regex": "matches regex",
+                        "NotRegex": "doesn't match regex",
+                        "IsEmpty": "is empty",
+                        "IsNotEmpty": "is not empty",
+                        "IsTrue": "is true",
+                        "IsFalse": "is false",
+                        "Today": "is today",
+                        "Yesterday": "is yesterday",
+                        "ThisWeek": "is this week",
+                        "ThisMonth": "is this month",
+                        "ThisYear": "is this year",
+                        "LastDays": "in the last … days",
+                        "IsNull": "is NULL",
+                        "IsNotNull": "is not NULL"
+                    }
+                },
+                "Number": {
+                    "label": "number",
+                    "isTemporal": false,
+                    "default": "Equals",
+                    "forKind regex=true": [
+                        [
+                            "Equals",
+                            "NotEquals",
+                            "Less",
+                            "LessOrEqual",
+                            "Greater",
+                            "GreaterOrEqual"
+                        ],
+                        [
+                            "Between",
+                            "NotBetween",
+                            "In",
+                            "NotIn"
+                        ],
+                        [
+                            "IsNull",
+                            "IsNotNull"
+                        ],
+                        [
+                            "Contains",
+                            "StartsWith",
+                            "EndsWith"
+                        ]
+                    ],
+                    "forKind regex=false": [
+                        [
+                            "Equals",
+                            "NotEquals",
+                            "Less",
+                            "LessOrEqual",
+                            "Greater",
+                            "GreaterOrEqual"
+                        ],
+                        [
+                            "Between",
+                            "NotBetween",
+                            "In",
+                            "NotIn"
+                        ],
+                        [
+                            "IsNull",
+                            "IsNotNull"
+                        ],
+                        [
+                            "Contains",
+                            "StartsWith",
+                            "EndsWith"
+                        ]
+                    ],
+                    "labels": {
+                        "Equals": "=",
+                        "NotEquals": "≠",
+                        "Less": "<",
+                        "LessOrEqual": "≤",
+                        "Greater": ">",
+                        "GreaterOrEqual": "≥",
+                        "Between": "between",
+                        "NotBetween": "not between",
+                        "In": "is one of",
+                        "NotIn": "is none of",
+                        "Contains": "contains",
+                        "NotContains": "doesn't contain",
+                        "StartsWith": "starts with",
+                        "EndsWith": "ends with",
+                        "Like": "like",
+                        "NotLike": "not like",
+                        "Regex": "matches regex",
+                        "NotRegex": "doesn't match regex",
+                        "IsEmpty": "is empty",
+                        "IsNotEmpty": "is not empty",
+                        "IsTrue": "is true",
+                        "IsFalse": "is false",
+                        "Today": "is today",
+                        "Yesterday": "is yesterday",
+                        "ThisWeek": "is this week",
+                        "ThisMonth": "is this month",
+                        "ThisYear": "is this year",
+                        "LastDays": "in the last … days",
+                        "IsNull": "is NULL",
+                        "IsNotNull": "is not NULL"
+                    }
+                },
+                "Boolean": {
+                    "label": "boolean",
+                    "isTemporal": false,
+                    "default": "IsTrue",
+                    "forKind regex=true": [
+                        [
+                            "IsTrue",
+                            "IsFalse"
+                        ],
+                        [
+                            "IsNull",
+                            "IsNotNull"
+                        ]
+                    ],
+                    "forKind regex=false": [
+                        [
+                            "IsTrue",
+                            "IsFalse"
+                        ],
+                        [
+                            "IsNull",
+                            "IsNotNull"
+                        ]
+                    ],
+                    "labels": {
+                        "Equals": "=",
+                        "NotEquals": "≠",
+                        "Less": "<",
+                        "LessOrEqual": "≤",
+                        "Greater": ">",
+                        "GreaterOrEqual": "≥",
+                        "Between": "between",
+                        "NotBetween": "not between",
+                        "In": "is one of",
+                        "NotIn": "is none of",
+                        "Contains": "contains",
+                        "NotContains": "doesn't contain",
+                        "StartsWith": "starts with",
+                        "EndsWith": "ends with",
+                        "Like": "like",
+                        "NotLike": "not like",
+                        "Regex": "matches regex",
+                        "NotRegex": "doesn't match regex",
+                        "IsEmpty": "is empty",
+                        "IsNotEmpty": "is not empty",
+                        "IsTrue": "is true",
+                        "IsFalse": "is false",
+                        "Today": "is today",
+                        "Yesterday": "is yesterday",
+                        "ThisWeek": "is this week",
+                        "ThisMonth": "is this month",
+                        "ThisYear": "is this year",
+                        "LastDays": "in the last … days",
+                        "IsNull": "is NULL",
+                        "IsNotNull": "is not NULL"
+                    }
+                },
+                "Date": {
+                    "label": "date",
+                    "isTemporal": true,
+                    "default": "Equals",
+                    "forKind regex=true": [
+                        [
+                            "Equals",
+                            "NotEquals",
+                            "Less",
+                            "LessOrEqual",
+                            "Greater",
+                            "GreaterOrEqual"
+                        ],
+                        [
+                            "Between",
+                            "NotBetween",
+                            "In",
+                            "NotIn"
+                        ],
+                        [
+                            "Today",
+                            "Yesterday",
+                            "ThisWeek",
+                            "ThisMonth",
+                            "ThisYear",
+                            "LastDays"
+                        ],
+                        [
+                            "IsNull",
+                            "IsNotNull"
+                        ]
+                    ],
+                    "forKind regex=false": [
+                        [
+                            "Equals",
+                            "NotEquals",
+                            "Less",
+                            "LessOrEqual",
+                            "Greater",
+                            "GreaterOrEqual"
+                        ],
+                        [
+                            "Between",
+                            "NotBetween",
+                            "In",
+                            "NotIn"
+                        ],
+                        [
+                            "Today",
+                            "Yesterday",
+                            "ThisWeek",
+                            "ThisMonth",
+                            "ThisYear",
+                            "LastDays"
+                        ],
+                        [
+                            "IsNull",
+                            "IsNotNull"
+                        ]
+                    ],
+                    "labels": {
+                        "Equals": "is on",
+                        "NotEquals": "is not on",
+                        "Less": "is before",
+                        "LessOrEqual": "is on or before",
+                        "Greater": "is after",
+                        "GreaterOrEqual": "is on or after",
+                        "Between": "between",
+                        "NotBetween": "not between",
+                        "In": "is one of",
+                        "NotIn": "is none of",
+                        "Contains": "contains",
+                        "NotContains": "doesn't contain",
+                        "StartsWith": "starts with",
+                        "EndsWith": "ends with",
+                        "Like": "like",
+                        "NotLike": "not like",
+                        "Regex": "matches regex",
+                        "NotRegex": "doesn't match regex",
+                        "IsEmpty": "is empty",
+                        "IsNotEmpty": "is not empty",
+                        "IsTrue": "is true",
+                        "IsFalse": "is false",
+                        "Today": "is today",
+                        "Yesterday": "is yesterday",
+                        "ThisWeek": "is this week",
+                        "ThisMonth": "is this month",
+                        "ThisYear": "is this year",
+                        "LastDays": "in the last … days",
+                        "IsNull": "is NULL",
+                        "IsNotNull": "is not NULL"
+                    }
+                },
+                "Time": {
+                    "label": "time",
+                    "isTemporal": true,
+                    "default": "Equals",
+                    "forKind regex=true": [
+                        [
+                            "Equals",
+                            "NotEquals",
+                            "Less",
+                            "LessOrEqual",
+                            "Greater",
+                            "GreaterOrEqual"
+                        ],
+                        [
+                            "Between",
+                            "NotBetween"
+                        ],
+                        [
+                            "IsNull",
+                            "IsNotNull"
+                        ]
+                    ],
+                    "forKind regex=false": [
+                        [
+                            "Equals",
+                            "NotEquals",
+                            "Less",
+                            "LessOrEqual",
+                            "Greater",
+                            "GreaterOrEqual"
+                        ],
+                        [
+                            "Between",
+                            "NotBetween"
+                        ],
+                        [
+                            "IsNull",
+                            "IsNotNull"
+                        ]
+                    ],
+                    "labels": {
+                        "Equals": "is at",
+                        "NotEquals": "is not at",
+                        "Less": "is before",
+                        "LessOrEqual": "is at or before",
+                        "Greater": "is after",
+                        "GreaterOrEqual": "is at or after",
+                        "Between": "between",
+                        "NotBetween": "not between",
+                        "In": "is one of",
+                        "NotIn": "is none of",
+                        "Contains": "contains",
+                        "NotContains": "doesn't contain",
+                        "StartsWith": "starts with",
+                        "EndsWith": "ends with",
+                        "Like": "like",
+                        "NotLike": "not like",
+                        "Regex": "matches regex",
+                        "NotRegex": "doesn't match regex",
+                        "IsEmpty": "is empty",
+                        "IsNotEmpty": "is not empty",
+                        "IsTrue": "is true",
+                        "IsFalse": "is false",
+                        "Today": "is today",
+                        "Yesterday": "is yesterday",
+                        "ThisWeek": "is this week",
+                        "ThisMonth": "is this month",
+                        "ThisYear": "is this year",
+                        "LastDays": "in the last … days",
+                        "IsNull": "is NULL",
+                        "IsNotNull": "is not NULL"
+                    }
+                },
+                "DateTime": {
+                    "label": "date-time",
+                    "isTemporal": true,
+                    "default": "Equals",
+                    "forKind regex=true": [
+                        [
+                            "Equals",
+                            "NotEquals",
+                            "Less",
+                            "LessOrEqual",
+                            "Greater",
+                            "GreaterOrEqual"
+                        ],
+                        [
+                            "Between",
+                            "NotBetween",
+                            "In",
+                            "NotIn"
+                        ],
+                        [
+                            "Today",
+                            "Yesterday",
+                            "ThisWeek",
+                            "ThisMonth",
+                            "ThisYear",
+                            "LastDays"
+                        ],
+                        [
+                            "IsNull",
+                            "IsNotNull"
+                        ]
+                    ],
+                    "forKind regex=false": [
+                        [
+                            "Equals",
+                            "NotEquals",
+                            "Less",
+                            "LessOrEqual",
+                            "Greater",
+                            "GreaterOrEqual"
+                        ],
+                        [
+                            "Between",
+                            "NotBetween",
+                            "In",
+                            "NotIn"
+                        ],
+                        [
+                            "Today",
+                            "Yesterday",
+                            "ThisWeek",
+                            "ThisMonth",
+                            "ThisYear",
+                            "LastDays"
+                        ],
+                        [
+                            "IsNull",
+                            "IsNotNull"
+                        ]
+                    ],
+                    "labels": {
+                        "Equals": "is on",
+                        "NotEquals": "is not on",
+                        "Less": "is before",
+                        "LessOrEqual": "is on or before",
+                        "Greater": "is after",
+                        "GreaterOrEqual": "is on or after",
+                        "Between": "between",
+                        "NotBetween": "not between",
+                        "In": "is one of",
+                        "NotIn": "is none of",
+                        "Contains": "contains",
+                        "NotContains": "doesn't contain",
+                        "StartsWith": "starts with",
+                        "EndsWith": "ends with",
+                        "Like": "like",
+                        "NotLike": "not like",
+                        "Regex": "matches regex",
+                        "NotRegex": "doesn't match regex",
+                        "IsEmpty": "is empty",
+                        "IsNotEmpty": "is not empty",
+                        "IsTrue": "is true",
+                        "IsFalse": "is false",
+                        "Today": "is today",
+                        "Yesterday": "is yesterday",
+                        "ThisWeek": "is this week",
+                        "ThisMonth": "is this month",
+                        "ThisYear": "is this year",
+                        "LastDays": "in the last … days",
+                        "IsNull": "is NULL",
+                        "IsNotNull": "is not NULL"
+                    }
+                },
+                "Uuid": {
+                    "label": "uuid",
+                    "isTemporal": false,
+                    "default": "Equals",
+                    "forKind regex=true": [
+                        [
+                            "Equals",
+                            "NotEquals",
+                            "In",
+                            "NotIn"
+                        ],
+                        [
+                            "StartsWith",
+                            "Contains"
+                        ],
+                        [
+                            "IsNull",
+                            "IsNotNull"
+                        ]
+                    ],
+                    "forKind regex=false": [
+                        [
+                            "Equals",
+                            "NotEquals",
+                            "In",
+                            "NotIn"
+                        ],
+                        [
+                            "StartsWith",
+                            "Contains"
+                        ],
+                        [
+                            "IsNull",
+                            "IsNotNull"
+                        ]
+                    ],
+                    "labels": {
+                        "Equals": "=",
+                        "NotEquals": "≠",
+                        "Less": "<",
+                        "LessOrEqual": "≤",
+                        "Greater": ">",
+                        "GreaterOrEqual": "≥",
+                        "Between": "between",
+                        "NotBetween": "not between",
+                        "In": "is one of",
+                        "NotIn": "is none of",
+                        "Contains": "contains",
+                        "NotContains": "doesn't contain",
+                        "StartsWith": "starts with",
+                        "EndsWith": "ends with",
+                        "Like": "like",
+                        "NotLike": "not like",
+                        "Regex": "matches regex",
+                        "NotRegex": "doesn't match regex",
+                        "IsEmpty": "is empty",
+                        "IsNotEmpty": "is not empty",
+                        "IsTrue": "is true",
+                        "IsFalse": "is false",
+                        "Today": "is today",
+                        "Yesterday": "is yesterday",
+                        "ThisWeek": "is this week",
+                        "ThisMonth": "is this month",
+                        "ThisYear": "is this year",
+                        "LastDays": "in the last … days",
+                        "IsNull": "is NULL",
+                        "IsNotNull": "is not NULL"
+                    }
+                },
+                "Json": {
+                    "label": "json",
+                    "isTemporal": false,
+                    "default": "Contains",
+                    "forKind regex=true": [
+                        [
+                            "Contains",
+                            "NotContains",
+                            "Equals",
+                            "NotEquals",
+                            "Regex",
+                            "NotRegex"
+                        ],
+                        [
+                            "IsNull",
+                            "IsNotNull"
+                        ]
+                    ],
+                    "forKind regex=false": [
+                        [
+                            "Contains",
+                            "NotContains",
+                            "Equals",
+                            "NotEquals"
+                        ],
+                        [
+                            "IsNull",
+                            "IsNotNull"
+                        ]
+                    ],
+                    "labels": {
+                        "Equals": "=",
+                        "NotEquals": "≠",
+                        "Less": "<",
+                        "LessOrEqual": "≤",
+                        "Greater": ">",
+                        "GreaterOrEqual": "≥",
+                        "Between": "between",
+                        "NotBetween": "not between",
+                        "In": "is one of",
+                        "NotIn": "is none of",
+                        "Contains": "contains",
+                        "NotContains": "doesn't contain",
+                        "StartsWith": "starts with",
+                        "EndsWith": "ends with",
+                        "Like": "like",
+                        "NotLike": "not like",
+                        "Regex": "matches regex",
+                        "NotRegex": "doesn't match regex",
+                        "IsEmpty": "is empty",
+                        "IsNotEmpty": "is not empty",
+                        "IsTrue": "is true",
+                        "IsFalse": "is false",
+                        "Today": "is today",
+                        "Yesterday": "is yesterday",
+                        "ThisWeek": "is this week",
+                        "ThisMonth": "is this month",
+                        "ThisYear": "is this year",
+                        "LastDays": "in the last … days",
+                        "IsNull": "is NULL",
+                        "IsNotNull": "is not NULL"
+                    }
+                },
+                "Binary": {
+                    "label": "binary",
+                    "isTemporal": false,
+                    "default": "IsNotNull",
+                    "forKind regex=true": [
+                        [
+                            "IsNull",
+                            "IsNotNull"
+                        ]
+                    ],
+                    "forKind regex=false": [
+                        [
+                            "IsNull",
+                            "IsNotNull"
+                        ]
+                    ],
+                    "labels": {
+                        "Equals": "=",
+                        "NotEquals": "≠",
+                        "Less": "<",
+                        "LessOrEqual": "≤",
+                        "Greater": ">",
+                        "GreaterOrEqual": "≥",
+                        "Between": "between",
+                        "NotBetween": "not between",
+                        "In": "is one of",
+                        "NotIn": "is none of",
+                        "Contains": "contains",
+                        "NotContains": "doesn't contain",
+                        "StartsWith": "starts with",
+                        "EndsWith": "ends with",
+                        "Like": "like",
+                        "NotLike": "not like",
+                        "Regex": "matches regex",
+                        "NotRegex": "doesn't match regex",
+                        "IsEmpty": "is empty",
+                        "IsNotEmpty": "is not empty",
+                        "IsTrue": "is true",
+                        "IsFalse": "is false",
+                        "Today": "is today",
+                        "Yesterday": "is yesterday",
+                        "ThisWeek": "is this week",
+                        "ThisMonth": "is this month",
+                        "ThisYear": "is this year",
+                        "LastDays": "in the last … days",
+                        "IsNull": "is NULL",
+                        "IsNotNull": "is not NULL"
+                    }
+                },
+                "Other": {
+                    "label": "other",
+                    "isTemporal": false,
+                    "default": "Equals",
+                    "forKind regex=true": [
+                        [
+                            "Equals",
+                            "NotEquals",
+                            "In",
+                            "NotIn"
+                        ],
+                        [
+                            "Contains",
+                            "NotContains",
+                            "StartsWith",
+                            "EndsWith",
+                            "Regex",
+                            "NotRegex"
+                        ],
+                        [
+                            "Less",
+                            "LessOrEqual",
+                            "Greater",
+                            "GreaterOrEqual",
+                            "Between"
+                        ],
+                        [
+                            "IsNull",
+                            "IsNotNull"
+                        ]
+                    ],
+                    "forKind regex=false": [
+                        [
+                            "Equals",
+                            "NotEquals",
+                            "In",
+                            "NotIn"
+                        ],
+                        [
+                            "Contains",
+                            "NotContains",
+                            "StartsWith",
+                            "EndsWith"
+                        ],
+                        [
+                            "Less",
+                            "LessOrEqual",
+                            "Greater",
+                            "GreaterOrEqual",
+                            "Between"
+                        ],
+                        [
+                            "IsNull",
+                            "IsNotNull"
+                        ]
+                    ],
+                    "labels": {
+                        "Equals": "=",
+                        "NotEquals": "≠",
+                        "Less": "<",
+                        "LessOrEqual": "≤",
+                        "Greater": ">",
+                        "GreaterOrEqual": "≥",
+                        "Between": "between",
+                        "NotBetween": "not between",
+                        "In": "is one of",
+                        "NotIn": "is none of",
+                        "Contains": "contains",
+                        "NotContains": "doesn't contain",
+                        "StartsWith": "starts with",
+                        "EndsWith": "ends with",
+                        "Like": "like",
+                        "NotLike": "not like",
+                        "Regex": "matches regex",
+                        "NotRegex": "doesn't match regex",
+                        "IsEmpty": "is empty",
+                        "IsNotEmpty": "is not empty",
+                        "IsTrue": "is true",
+                        "IsFalse": "is false",
+                        "Today": "is today",
+                        "Yesterday": "is yesterday",
+                        "ThisWeek": "is this week",
+                        "ThisMonth": "is this month",
+                        "ThisYear": "is this year",
+                        "LastDays": "in the last … days",
+                        "IsNull": "is NULL",
+                        "IsNotNull": "is not NULL"
+                    }
+                },
+                "operators": {
+                    "Equals": {
+                        "arity": "One",
+                        "matchesText": false
+                    },
+                    "NotEquals": {
+                        "arity": "One",
+                        "matchesText": false
+                    },
+                    "Less": {
+                        "arity": "One",
+                        "matchesText": false
+                    },
+                    "LessOrEqual": {
+                        "arity": "One",
+                        "matchesText": false
+                    },
+                    "Greater": {
+                        "arity": "One",
+                        "matchesText": false
+                    },
+                    "GreaterOrEqual": {
+                        "arity": "One",
+                        "matchesText": false
+                    },
+                    "Between": {
+                        "arity": "Two",
+                        "matchesText": false
+                    },
+                    "NotBetween": {
+                        "arity": "Two",
+                        "matchesText": false
+                    },
+                    "In": {
+                        "arity": "List",
+                        "matchesText": false
+                    },
+                    "NotIn": {
+                        "arity": "List",
+                        "matchesText": false
+                    },
+                    "Contains": {
+                        "arity": "One",
+                        "matchesText": true
+                    },
+                    "NotContains": {
+                        "arity": "One",
+                        "matchesText": true
+                    },
+                    "StartsWith": {
+                        "arity": "One",
+                        "matchesText": true
+                    },
+                    "EndsWith": {
+                        "arity": "One",
+                        "matchesText": true
+                    },
+                    "Like": {
+                        "arity": "One",
+                        "matchesText": true
+                    },
+                    "NotLike": {
+                        "arity": "One",
+                        "matchesText": true
+                    },
+                    "Regex": {
+                        "arity": "One",
+                        "matchesText": true
+                    },
+                    "NotRegex": {
+                        "arity": "One",
+                        "matchesText": true
+                    },
+                    "IsEmpty": {
+                        "arity": "None",
+                        "matchesText": false
+                    },
+                    "IsNotEmpty": {
+                        "arity": "None",
+                        "matchesText": false
+                    },
+                    "IsTrue": {
+                        "arity": "None",
+                        "matchesText": false
+                    },
+                    "IsFalse": {
+                        "arity": "None",
+                        "matchesText": false
+                    },
+                    "Today": {
+                        "arity": "None",
+                        "matchesText": false
+                    },
+                    "Yesterday": {
+                        "arity": "None",
+                        "matchesText": false
+                    },
+                    "ThisWeek": {
+                        "arity": "None",
+                        "matchesText": false
+                    },
+                    "ThisMonth": {
+                        "arity": "None",
+                        "matchesText": false
+                    },
+                    "ThisYear": {
+                        "arity": "None",
+                        "matchesText": false
+                    },
+                    "LastDays": {
+                        "arity": "One",
+                        "matchesText": false
+                    },
+                    "IsNull": {
+                        "arity": "None",
+                        "matchesText": false
+                    },
+                    "IsNotNull": {
+                        "arity": "None",
+                        "matchesText": false
+                    }
+                }
+            }
+        }
+    ]
+}

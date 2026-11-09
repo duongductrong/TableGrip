@@ -5,6 +5,7 @@ import dev.tablegrip.core.connection.DatabaseType
 import dev.tablegrip.core.dialect.SortColumn
 import dev.tablegrip.core.dialect.SortDirection
 import dev.tablegrip.core.dialect.SqlDialect
+import dev.tablegrip.core.filter.FilterValues
 import dev.tablegrip.core.filter.SelectFunction
 import dev.tablegrip.core.filter.SqlParam
 import dev.tablegrip.core.filter.SqlProjection
@@ -77,23 +78,23 @@ internal fun sqlParam(json: JsonObject): SqlParam {
     return SqlParam(value, ValueKind.valueOf(json.stringOrNull("kind") ?: "Text"))
 }
 
-/** A parameter as JSON, the inverse of [sqlParam]. */
+/** A parameter as JSON: its type, its value as SQL text ([FilterValues.format]) and its kind. */
 internal fun paramJson(param: SqlParam): JsonObject =
     buildJsonObject {
-        val (type, text) =
+        val type =
             when (val v = param.value) {
-                is String -> "Text" to v
-                is Long -> "Long" to v.toString()
-                is BigDecimal -> "Decimal" to v.toPlainString()
-                is Boolean -> "Bool" to v.toString()
-                is UUID -> "Uuid" to v.toString()
-                is LocalDate -> "Date" to v.toString()
-                is LocalDateTime -> "DateTime" to v.toString()
-                is LocalTime -> "Time" to v.toString()
+                is String -> "Text"
+                is Long -> "Long"
+                is BigDecimal -> "Decimal"
+                is Boolean -> "Bool"
+                is UUID -> "Uuid"
+                is LocalDate -> "Date"
+                is LocalDateTime -> "DateTime"
+                is LocalTime -> "Time"
                 else -> error("unexpected param ${v::class}")
             }
         put("type", type)
-        put("value", text)
+        put("value", FilterValues.format(param.value))
         put("kind", param.kind.name)
     }
 

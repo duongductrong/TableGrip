@@ -1,10 +1,15 @@
 //! Table viewer filters and select lists: the model (`Filter.kt`), value parsing (`FilterValues.kt`), and their
 //! compilers to SQL (`FilterCompiler.kt`, `Projection.kt`).
 
+pub mod compiler;
 pub mod projection;
 pub mod values;
 
-pub use projection::{FunctionArgument, SelectFunction, SqlProjection};
+pub use compiler::{CompiledFilter, FilterCompiler, SqlFilter};
+pub use projection::{
+    CompiledProjection, FunctionArgument, Projection, ProjectionCompiler, SelectExpression,
+    SelectField, SelectFunction, SelectItem, SqlProjection,
+};
 
 pub use values::{FilterResult, FilterValueError, ParamValue, SqlParam, TemporalValue};
 

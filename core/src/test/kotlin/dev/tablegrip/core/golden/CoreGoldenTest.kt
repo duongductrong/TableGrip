@@ -28,7 +28,7 @@ class CoreGoldenTest {
     private val record = System.getProperty("conformance.record") == "true"
     private val pretty = Json { prettyPrint = true }
 
-    private val subjects: Map<String, Subject> = sqlSubjects + dialectSubjects
+    private val subjects: Map<String, Subject> = sqlSubjects + dialectSubjects + filterSubjects
 
     @Test
     fun golden() {

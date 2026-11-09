@@ -1,0 +1,2220 @@
+{
+    "subject": "filter-compiler",
+    "cases": [
+        {
+            "name": "empty",
+            "output": {
+                "filter": null,
+                "issues": {}
+            }
+        },
+        {
+            "name": "all disabled",
+            "output": {
+                "filter": null,
+                "issues": {}
+            }
+        },
+        {
+            "name": "typed values bound",
+            "output": {
+                "filter": {
+                    "sql": "\"qty\" >= ? AND \"total\" < ? AND \"name\" = ?",
+                    "preview": "\"qty\" >= 10 AND \"total\" < 99.5 AND \"name\" = 'O''Brien'",
+                    "parameters": [
+                        {
+                            "type": "Long",
+                            "value": "10",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Decimal",
+                            "value": "99.5",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "O'Brien",
+                            "kind": "Text"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "contains escapes wildcards",
+            "output": {
+                "filter": {
+                    "sql": "\"name\" ILIKE ? ESCAPE '!'",
+                    "preview": "\"name\" ILIKE '%50!%!_off!!%' ESCAPE '!'",
+                    "parameters": [
+                        {
+                            "type": "Text",
+                            "value": "%50!%!_off!!%",
+                            "kind": "Text"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "not contains case sensitive",
+            "output": {
+                "filter": {
+                    "sql": "\"name\" NOT LIKE ? ESCAPE '!'",
+                    "preview": "\"name\" NOT LIKE '%a%' ESCAPE '!'",
+                    "parameters": [
+                        {
+                            "type": "Text",
+                            "value": "%a%",
+                            "kind": "Text"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "starts and ends",
+            "output": {
+                "filter": {
+                    "sql": "\"name\" ILIKE ? ESCAPE '!' AND \"name\" ILIKE ? ESCAPE '!'",
+                    "preview": "\"name\" ILIKE 'ab%' ESCAPE '!' AND \"name\" ILIKE '%ab' ESCAPE '!'",
+                    "parameters": [
+                        {
+                            "type": "Text",
+                            "value": "ab%",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "%ab",
+                            "kind": "Text"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "text matching MySQL",
+            "output": {
+                "filter": {
+                    "sql": "LOWER(`name`) LIKE LOWER(?) ESCAPE '!' AND CAST(`name` AS BINARY) LIKE CAST(? AS BINARY) ESCAPE '!' AND CAST(`name` AS BINARY) NOT LIKE CAST(? AS BINARY) ESCAPE '!' AND LOWER(CAST(`qty` AS CHAR)) LIKE LOWER(?) ESCAPE '!'",
+                    "preview": "LOWER(`name`) LIKE LOWER('%a*b!%%') ESCAPE '!' AND CAST(`name` AS BINARY) LIKE CAST('%a*b!_%' AS BINARY) ESCAPE '!' AND CAST(`name` AS BINARY) NOT LIKE CAST('x!!_%' AS BINARY) ESCAPE '!' AND LOWER(CAST(`qty` AS CHAR)) LIKE LOWER('12%') ESCAPE '!'",
+                    "parameters": [
+                        {
+                            "type": "Text",
+                            "value": "%a*b!%%",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "%a*b!_%",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "x!!_%",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "12%",
+                            "kind": "Text"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "regex MySQL",
+            "output": {
+                "filter": {
+                    "sql": "`name` REGEXP ? AND `name` NOT REGEXP ?",
+                    "preview": "`name` REGEXP '^a' AND `name` NOT REGEXP '^a'",
+                    "parameters": [
+                        {
+                            "type": "Text",
+                            "value": "^a",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "^a",
+                            "kind": "Text"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "values MySQL",
+            "output": {
+                "filter": {
+                    "sql": "`active` = ? AND `active` = ? AND `total` BETWEEN ? AND ? AND `born` = ? AND (`name` IN (?, ?) OR `name` IS NULL) AND `token` = ?",
+                    "preview": "`active` = TRUE AND `active` = FALSE AND `total` BETWEEN -1.5 AND 20 AND `born` = '2026-01-05' AND (`name` IN ('a', 'b') OR `name` IS NULL) AND `token` = '6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5'",
+                    "parameters": [
+                        {
+                            "type": "Bool",
+                            "value": "true",
+                            "kind": "Boolean"
+                        },
+                        {
+                            "type": "Bool",
+                            "value": "false",
+                            "kind": "Boolean"
+                        },
+                        {
+                            "type": "Decimal",
+                            "value": "-1.5",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Long",
+                            "value": "20",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Date",
+                            "value": "2026-01-05",
+                            "kind": "Date"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "a",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "b",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Uuid",
+                            "value": "6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5",
+                            "kind": "Uuid"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "text matching SQLite",
+            "output": {
+                "filter": {
+                    "sql": "\"name\" LIKE ? ESCAPE '!' AND \"name\" GLOB ? AND \"name\" NOT GLOB ? AND CAST(\"qty\" AS TEXT) LIKE ? ESCAPE '!'",
+                    "preview": "\"name\" LIKE '%a*b!%%' ESCAPE '!' AND \"name\" GLOB '*a[*]b_*' AND \"name\" NOT GLOB 'x!?*' AND CAST(\"qty\" AS TEXT) LIKE '12%' ESCAPE '!'",
+                    "parameters": [
+                        {
+                            "type": "Text",
+                            "value": "%a*b!%%",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "*a[*]b_*",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "x!?*",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "12%",
+                            "kind": "Text"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "regex SQLite",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "25": "“matches regex” doesn't apply to text columns",
+                    "26": "“doesn't match regex” doesn't apply to text columns"
+                }
+            }
+        },
+        {
+            "name": "values SQLite",
+            "output": {
+                "filter": {
+                    "sql": "\"active\" = ? AND \"active\" = ? AND \"total\" BETWEEN ? AND ? AND \"born\" = ? AND (\"name\" IN (?, ?) OR \"name\" IS NULL) AND \"token\" = ?",
+                    "preview": "\"active\" = TRUE AND \"active\" = FALSE AND \"total\" BETWEEN -1.5 AND 20 AND \"born\" = '2026-01-05' AND (\"name\" IN ('a', 'b') OR \"name\" IS NULL) AND \"token\" = '6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5'",
+                    "parameters": [
+                        {
+                            "type": "Bool",
+                            "value": "true",
+                            "kind": "Boolean"
+                        },
+                        {
+                            "type": "Bool",
+                            "value": "false",
+                            "kind": "Boolean"
+                        },
+                        {
+                            "type": "Decimal",
+                            "value": "-1.5",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Long",
+                            "value": "20",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Date",
+                            "value": "2026-01-05",
+                            "kind": "Date"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "a",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "b",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Uuid",
+                            "value": "6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5",
+                            "kind": "Uuid"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "text matching SqlServer",
+            "output": {
+                "filter": {
+                    "sql": "LOWER([name]) LIKE LOWER(?) ESCAPE '!' AND [name] COLLATE Latin1_General_CS_AS LIKE ? ESCAPE '!' AND [name] COLLATE Latin1_General_CS_AS NOT LIKE ? ESCAPE '!' AND LOWER(CAST([qty] AS NVARCHAR(4000))) LIKE LOWER(?) ESCAPE '!'",
+                    "preview": "LOWER([name]) LIKE LOWER('%a*b!%%') ESCAPE '!' AND [name] COLLATE Latin1_General_CS_AS LIKE '%a*b!_%' ESCAPE '!' AND [name] COLLATE Latin1_General_CS_AS NOT LIKE 'x!!_%' ESCAPE '!' AND LOWER(CAST([qty] AS NVARCHAR(4000))) LIKE LOWER('12%') ESCAPE '!'",
+                    "parameters": [
+                        {
+                            "type": "Text",
+                            "value": "%a*b!%%",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "%a*b!_%",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "x!!_%",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "12%",
+                            "kind": "Text"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "regex SqlServer",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "37": "“matches regex” doesn't apply to text columns",
+                    "38": "“doesn't match regex” doesn't apply to text columns"
+                }
+            }
+        },
+        {
+            "name": "values SqlServer",
+            "output": {
+                "filter": {
+                    "sql": "[active] = ? AND [active] = ? AND [total] BETWEEN ? AND ? AND [born] = ? AND ([name] IN (?, ?) OR [name] IS NULL) AND [token] = ?",
+                    "preview": "[active] = 1 AND [active] = 0 AND [total] BETWEEN -1.5 AND 20 AND [born] = '2026-01-05' AND ([name] IN ('a', 'b') OR [name] IS NULL) AND [token] = '6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5'",
+                    "parameters": [
+                        {
+                            "type": "Bool",
+                            "value": "true",
+                            "kind": "Boolean"
+                        },
+                        {
+                            "type": "Bool",
+                            "value": "false",
+                            "kind": "Boolean"
+                        },
+                        {
+                            "type": "Decimal",
+                            "value": "-1.5",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Long",
+                            "value": "20",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Date",
+                            "value": "2026-01-05",
+                            "kind": "Date"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "a",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "b",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Uuid",
+                            "value": "6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5",
+                            "kind": "Uuid"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "text matching ClickHouse",
+            "output": {
+                "filter": {
+                    "sql": "`name` ILIKE ? AND `name` LIKE ? AND `name` NOT LIKE ? AND toString(`qty`) ILIKE ?",
+                    "preview": "`name` ILIKE '%a*b\\\\%%' AND `name` LIKE '%a*b\\\\_%' AND `name` NOT LIKE 'x\\\\!_%' AND toString(`qty`) ILIKE '12%'",
+                    "parameters": [
+                        {
+                            "type": "Text",
+                            "value": "%a*b\\%%",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "%a*b\\_%",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "x\\!_%",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "12%",
+                            "kind": "Text"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "regex ClickHouse",
+            "output": {
+                "filter": {
+                    "sql": "match(`name`, concat('(?i)', ?)) AND NOT match(`name`, ?)",
+                    "preview": "match(`name`, concat('(?i)', '^a')) AND NOT match(`name`, '^a')",
+                    "parameters": [
+                        {
+                            "type": "Text",
+                            "value": "^a",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "^a",
+                            "kind": "Text"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "values ClickHouse",
+            "output": {
+                "filter": {
+                    "sql": "`active` = ? AND `active` = ? AND `total` BETWEEN ? AND ? AND `born` = ? AND (`name` IN (?, ?) OR `name` IS NULL) AND `token` = ?",
+                    "preview": "`active` = TRUE AND `active` = FALSE AND `total` BETWEEN -1.5 AND 20 AND `born` = '2026-01-05' AND (`name` IN ('a', 'b') OR `name` IS NULL) AND `token` = '6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5'",
+                    "parameters": [
+                        {
+                            "type": "Bool",
+                            "value": "true",
+                            "kind": "Boolean"
+                        },
+                        {
+                            "type": "Bool",
+                            "value": "false",
+                            "kind": "Boolean"
+                        },
+                        {
+                            "type": "Decimal",
+                            "value": "-1.5",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Long",
+                            "value": "20",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Date",
+                            "value": "2026-01-05",
+                            "kind": "Date"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "a",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "b",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Uuid",
+                            "value": "6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5",
+                            "kind": "Uuid"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "text matching DuckDB",
+            "output": {
+                "filter": {
+                    "sql": "\"name\" ILIKE ? ESCAPE '!' AND \"name\" LIKE ? ESCAPE '!' AND \"name\" NOT LIKE ? ESCAPE '!' AND CAST(\"qty\" AS VARCHAR) ILIKE ? ESCAPE '!'",
+                    "preview": "\"name\" ILIKE '%a*b!%%' ESCAPE '!' AND \"name\" LIKE '%a*b!_%' ESCAPE '!' AND \"name\" NOT LIKE 'x!!_%' ESCAPE '!' AND CAST(\"qty\" AS VARCHAR) ILIKE '12%' ESCAPE '!'",
+                    "parameters": [
+                        {
+                            "type": "Text",
+                            "value": "%a*b!%%",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "%a*b!_%",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "x!!_%",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "12%",
+                            "kind": "Text"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "regex DuckDB",
+            "output": {
+                "filter": {
+                    "sql": "regexp_matches(\"name\", ?, 'i') AND NOT regexp_matches(\"name\", ?)",
+                    "preview": "regexp_matches(\"name\", '^a', 'i') AND NOT regexp_matches(\"name\", '^a')",
+                    "parameters": [
+                        {
+                            "type": "Text",
+                            "value": "^a",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "^a",
+                            "kind": "Text"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "values DuckDB",
+            "output": {
+                "filter": {
+                    "sql": "\"active\" = ? AND \"active\" = ? AND \"total\" BETWEEN ? AND ? AND \"born\" = ? AND (\"name\" IN (?, ?) OR \"name\" IS NULL) AND \"token\" = ?",
+                    "preview": "\"active\" = TRUE AND \"active\" = FALSE AND \"total\" BETWEEN -1.5 AND 20 AND \"born\" = '2026-01-05' AND (\"name\" IN ('a', 'b') OR \"name\" IS NULL) AND \"token\" = '6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5'",
+                    "parameters": [
+                        {
+                            "type": "Bool",
+                            "value": "true",
+                            "kind": "Boolean"
+                        },
+                        {
+                            "type": "Bool",
+                            "value": "false",
+                            "kind": "Boolean"
+                        },
+                        {
+                            "type": "Decimal",
+                            "value": "-1.5",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Long",
+                            "value": "20",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Date",
+                            "value": "2026-01-05",
+                            "kind": "Date"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "a",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "b",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Uuid",
+                            "value": "6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5",
+                            "kind": "Uuid"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "text matching H2",
+            "output": {
+                "filter": {
+                    "sql": "LOWER(\"name\") LIKE LOWER(?) ESCAPE '!' AND \"name\" LIKE ? ESCAPE '!' AND \"name\" NOT LIKE ? ESCAPE '!' AND LOWER(CAST(\"qty\" AS VARCHAR(4000))) LIKE LOWER(?) ESCAPE '!'",
+                    "preview": "LOWER(\"name\") LIKE LOWER('%a*b!%%') ESCAPE '!' AND \"name\" LIKE '%a*b!_%' ESCAPE '!' AND \"name\" NOT LIKE 'x!!_%' ESCAPE '!' AND LOWER(CAST(\"qty\" AS VARCHAR(4000))) LIKE LOWER('12%') ESCAPE '!'",
+                    "parameters": [
+                        {
+                            "type": "Text",
+                            "value": "%a*b!%%",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "%a*b!_%",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "x!!_%",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "12%",
+                            "kind": "Text"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "regex H2",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "73": "“matches regex” doesn't apply to text columns",
+                    "74": "“doesn't match regex” doesn't apply to text columns"
+                }
+            }
+        },
+        {
+            "name": "values H2",
+            "output": {
+                "filter": {
+                    "sql": "\"active\" = ? AND \"active\" = ? AND \"total\" BETWEEN ? AND ? AND \"born\" = ? AND (\"name\" IN (?, ?) OR \"name\" IS NULL) AND \"token\" = ?",
+                    "preview": "\"active\" = TRUE AND \"active\" = FALSE AND \"total\" BETWEEN -1.5 AND 20 AND \"born\" = '2026-01-05' AND (\"name\" IN ('a', 'b') OR \"name\" IS NULL) AND \"token\" = '6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5'",
+                    "parameters": [
+                        {
+                            "type": "Bool",
+                            "value": "true",
+                            "kind": "Boolean"
+                        },
+                        {
+                            "type": "Bool",
+                            "value": "false",
+                            "kind": "Boolean"
+                        },
+                        {
+                            "type": "Decimal",
+                            "value": "-1.5",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Long",
+                            "value": "20",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Date",
+                            "value": "2026-01-05",
+                            "kind": "Date"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "a",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "b",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Uuid",
+                            "value": "6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5",
+                            "kind": "Uuid"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "text matching CockroachDB",
+            "output": {
+                "filter": {
+                    "sql": "\"name\" ILIKE ? ESCAPE '!' AND \"name\" LIKE ? ESCAPE '!' AND \"name\" NOT LIKE ? ESCAPE '!' AND CAST(\"qty\" AS TEXT) ILIKE ? ESCAPE '!'",
+                    "preview": "\"name\" ILIKE '%a*b!%%' ESCAPE '!' AND \"name\" LIKE '%a*b!_%' ESCAPE '!' AND \"name\" NOT LIKE 'x!!_%' ESCAPE '!' AND CAST(\"qty\" AS TEXT) ILIKE '12%' ESCAPE '!'",
+                    "parameters": [
+                        {
+                            "type": "Text",
+                            "value": "%a*b!%%",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "%a*b!_%",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "x!!_%",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "12%",
+                            "kind": "Text"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "regex CockroachDB",
+            "output": {
+                "filter": {
+                    "sql": "\"name\" ~* ? AND \"name\" !~ ?",
+                    "preview": "\"name\" ~* '^a' AND \"name\" !~ '^a'",
+                    "parameters": [
+                        {
+                            "type": "Text",
+                            "value": "^a",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "^a",
+                            "kind": "Text"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "values CockroachDB",
+            "output": {
+                "filter": {
+                    "sql": "\"active\" = ? AND \"active\" = ? AND \"total\" BETWEEN ? AND ? AND \"born\" = ? AND (\"name\" IN (?, ?) OR \"name\" IS NULL) AND \"token\" = ?",
+                    "preview": "\"active\" = TRUE AND \"active\" = FALSE AND \"total\" BETWEEN -1.5 AND 20 AND \"born\" = '2026-01-05' AND (\"name\" IN ('a', 'b') OR \"name\" IS NULL) AND \"token\" = '6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5'",
+                    "parameters": [
+                        {
+                            "type": "Bool",
+                            "value": "true",
+                            "kind": "Boolean"
+                        },
+                        {
+                            "type": "Bool",
+                            "value": "false",
+                            "kind": "Boolean"
+                        },
+                        {
+                            "type": "Decimal",
+                            "value": "-1.5",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Long",
+                            "value": "20",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Date",
+                            "value": "2026-01-05",
+                            "kind": "Date"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "a",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "b",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Uuid",
+                            "value": "6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5",
+                            "kind": "Uuid"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "like keeps wildcards",
+            "output": {
+                "filter": {
+                    "sql": "\"name\" ILIKE ? ESCAPE '!'",
+                    "preview": "\"name\" ILIKE 'a%b_!!' ESCAPE '!'",
+                    "parameters": [
+                        {
+                            "type": "Text",
+                            "value": "a%b_!!",
+                            "kind": "Text"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "non-text matched as text",
+            "output": {
+                "filter": {
+                    "sql": "CAST(\"qty\" AS TEXT) ILIKE ? ESCAPE '!'",
+                    "preview": "CAST(\"qty\" AS TEXT) ILIKE '12%' ESCAPE '!'",
+                    "parameters": [
+                        {
+                            "type": "Text",
+                            "value": "12%",
+                            "kind": "Text"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "regex postgres",
+            "output": {
+                "filter": {
+                    "sql": "\"name\" ~* ? AND \"name\" !~ ?",
+                    "preview": "\"name\" ~* '^a' AND \"name\" !~ '^a'",
+                    "parameters": [
+                        {
+                            "type": "Text",
+                            "value": "^a",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "^a",
+                            "kind": "Text"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "date on datetime is whole day",
+            "output": {
+                "filter": {
+                    "sql": "(\"created_at\" >= ? AND \"created_at\" < ?)",
+                    "preview": "(\"created_at\" >= '2026-01-15 00:00:00' AND \"created_at\" < '2026-01-16 00:00:00')",
+                    "parameters": [
+                        {
+                            "type": "DateTime",
+                            "value": "2026-01-15 00:00:00",
+                            "kind": "DateTime"
+                        },
+                        {
+                            "type": "DateTime",
+                            "value": "2026-01-16 00:00:00",
+                            "kind": "DateTime"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "date on datetime NotEquals",
+            "output": {
+                "filter": {
+                    "sql": "(\"created_at\" < ? OR \"created_at\" >= ?)",
+                    "preview": "(\"created_at\" < '2026-01-15 00:00:00' OR \"created_at\" >= '2026-01-16 00:00:00')",
+                    "parameters": [
+                        {
+                            "type": "DateTime",
+                            "value": "2026-01-15 00:00:00",
+                            "kind": "DateTime"
+                        },
+                        {
+                            "type": "DateTime",
+                            "value": "2026-01-16 00:00:00",
+                            "kind": "DateTime"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "date on datetime Less",
+            "output": {
+                "filter": {
+                    "sql": "\"created_at\" < ?",
+                    "preview": "\"created_at\" < '2026-01-15 00:00:00'",
+                    "parameters": [
+                        {
+                            "type": "DateTime",
+                            "value": "2026-01-15 00:00:00",
+                            "kind": "DateTime"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "date on datetime LessOrEqual",
+            "output": {
+                "filter": {
+                    "sql": "\"created_at\" < ?",
+                    "preview": "\"created_at\" < '2026-01-16 00:00:00'",
+                    "parameters": [
+                        {
+                            "type": "DateTime",
+                            "value": "2026-01-16 00:00:00",
+                            "kind": "DateTime"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "date on datetime Greater",
+            "output": {
+                "filter": {
+                    "sql": "\"created_at\" >= ?",
+                    "preview": "\"created_at\" >= '2026-01-16 00:00:00'",
+                    "parameters": [
+                        {
+                            "type": "DateTime",
+                            "value": "2026-01-16 00:00:00",
+                            "kind": "DateTime"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "date on datetime GreaterOrEqual",
+            "output": {
+                "filter": {
+                    "sql": "\"created_at\" >= ?",
+                    "preview": "\"created_at\" >= '2026-01-15 00:00:00'",
+                    "parameters": [
+                        {
+                            "type": "DateTime",
+                            "value": "2026-01-15 00:00:00",
+                            "kind": "DateTime"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "exact moment converted",
+            "output": {
+                "filter": {
+                    "sql": "\"created_at\" = ?",
+                    "preview": "\"created_at\" = '2026-01-15 08:00:00.25'",
+                    "parameters": [
+                        {
+                            "type": "DateTime",
+                            "value": "2026-01-15 08:00:00.25",
+                            "kind": "DateTime"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "exact moment in another zone",
+            "output": {
+                "filter": {
+                    "sql": "\"created_at\" = ?",
+                    "preview": "\"created_at\" = '2026-01-15 15:00:00.25'",
+                    "parameters": [
+                        {
+                            "type": "DateTime",
+                            "value": "2026-01-15 15:00:00.25",
+                            "kind": "DateTime"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "relative dates",
+            "output": {
+                "filter": {
+                    "sql": "\"born\" >= ? AND \"created_at\" > ? AND \"born\" < ? AND \"born\" = ?",
+                    "preview": "\"born\" >= '2026-10-21' AND \"created_at\" > '2026-10-28 11:45:30' AND \"born\" < '2026-07-28' AND \"born\" = '2026-10-27'",
+                    "parameters": [
+                        {
+                            "type": "Date",
+                            "value": "2026-10-21",
+                            "kind": "Date"
+                        },
+                        {
+                            "type": "DateTime",
+                            "value": "2026-10-28 11:45:30",
+                            "kind": "DateTime"
+                        },
+                        {
+                            "type": "Date",
+                            "value": "2026-07-28",
+                            "kind": "Date"
+                        },
+                        {
+                            "type": "Date",
+                            "value": "2026-10-27",
+                            "kind": "Date"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "moment on date column",
+            "output": {
+                "filter": {
+                    "sql": "\"born\" = ?",
+                    "preview": "\"born\" = '2026-01-15'",
+                    "parameters": [
+                        {
+                            "type": "Date",
+                            "value": "2026-01-15",
+                            "kind": "Date"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "time column",
+            "output": {
+                "filter": {
+                    "sql": "\"opens\" = ? AND \"opens\" < ?",
+                    "preview": "\"opens\" = '09:00:00' AND \"opens\" < '08:30:00'",
+                    "parameters": [
+                        {
+                            "type": "Time",
+                            "value": "09:00:00",
+                            "kind": "Time"
+                        },
+                        {
+                            "type": "Time",
+                            "value": "08:30:00",
+                            "kind": "Time"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "time column refuses a day",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "112": "Enter a time of day, e.g. 13:45"
+                }
+            }
+        },
+        {
+            "name": "date column refuses a time",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "113": "Enter a date, e.g. 2026-10-28"
+                }
+            }
+        },
+        {
+            "name": "preset Today date",
+            "output": {
+                "filter": {
+                    "sql": "(\"born\" >= ? AND \"born\" < ?)",
+                    "preview": "(\"born\" >= '2026-10-28' AND \"born\" < '2026-10-29')",
+                    "parameters": [
+                        {
+                            "type": "Date",
+                            "value": "2026-10-28",
+                            "kind": "Date"
+                        },
+                        {
+                            "type": "Date",
+                            "value": "2026-10-29",
+                            "kind": "Date"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "preset Today datetime",
+            "output": {
+                "filter": {
+                    "sql": "(\"created_at\" >= ? AND \"created_at\" < ?)",
+                    "preview": "(\"created_at\" >= '2026-10-28 00:00:00' AND \"created_at\" < '2026-10-29 00:00:00')",
+                    "parameters": [
+                        {
+                            "type": "DateTime",
+                            "value": "2026-10-28 00:00:00",
+                            "kind": "DateTime"
+                        },
+                        {
+                            "type": "DateTime",
+                            "value": "2026-10-29 00:00:00",
+                            "kind": "DateTime"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "preset Yesterday date",
+            "output": {
+                "filter": {
+                    "sql": "(\"born\" >= ? AND \"born\" < ?)",
+                    "preview": "(\"born\" >= '2026-10-27' AND \"born\" < '2026-10-28')",
+                    "parameters": [
+                        {
+                            "type": "Date",
+                            "value": "2026-10-27",
+                            "kind": "Date"
+                        },
+                        {
+                            "type": "Date",
+                            "value": "2026-10-28",
+                            "kind": "Date"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "preset Yesterday datetime",
+            "output": {
+                "filter": {
+                    "sql": "(\"created_at\" >= ? AND \"created_at\" < ?)",
+                    "preview": "(\"created_at\" >= '2026-10-27 00:00:00' AND \"created_at\" < '2026-10-28 00:00:00')",
+                    "parameters": [
+                        {
+                            "type": "DateTime",
+                            "value": "2026-10-27 00:00:00",
+                            "kind": "DateTime"
+                        },
+                        {
+                            "type": "DateTime",
+                            "value": "2026-10-28 00:00:00",
+                            "kind": "DateTime"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "preset ThisWeek date",
+            "output": {
+                "filter": {
+                    "sql": "(\"born\" >= ? AND \"born\" < ?)",
+                    "preview": "(\"born\" >= '2026-10-26' AND \"born\" < '2026-11-02')",
+                    "parameters": [
+                        {
+                            "type": "Date",
+                            "value": "2026-10-26",
+                            "kind": "Date"
+                        },
+                        {
+                            "type": "Date",
+                            "value": "2026-11-02",
+                            "kind": "Date"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "preset ThisWeek datetime",
+            "output": {
+                "filter": {
+                    "sql": "(\"created_at\" >= ? AND \"created_at\" < ?)",
+                    "preview": "(\"created_at\" >= '2026-10-26 00:00:00' AND \"created_at\" < '2026-11-02 00:00:00')",
+                    "parameters": [
+                        {
+                            "type": "DateTime",
+                            "value": "2026-10-26 00:00:00",
+                            "kind": "DateTime"
+                        },
+                        {
+                            "type": "DateTime",
+                            "value": "2026-11-02 00:00:00",
+                            "kind": "DateTime"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "preset ThisMonth date",
+            "output": {
+                "filter": {
+                    "sql": "(\"born\" >= ? AND \"born\" < ?)",
+                    "preview": "(\"born\" >= '2026-10-01' AND \"born\" < '2026-11-01')",
+                    "parameters": [
+                        {
+                            "type": "Date",
+                            "value": "2026-10-01",
+                            "kind": "Date"
+                        },
+                        {
+                            "type": "Date",
+                            "value": "2026-11-01",
+                            "kind": "Date"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "preset ThisMonth datetime",
+            "output": {
+                "filter": {
+                    "sql": "(\"created_at\" >= ? AND \"created_at\" < ?)",
+                    "preview": "(\"created_at\" >= '2026-10-01 00:00:00' AND \"created_at\" < '2026-11-01 00:00:00')",
+                    "parameters": [
+                        {
+                            "type": "DateTime",
+                            "value": "2026-10-01 00:00:00",
+                            "kind": "DateTime"
+                        },
+                        {
+                            "type": "DateTime",
+                            "value": "2026-11-01 00:00:00",
+                            "kind": "DateTime"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "preset ThisYear date",
+            "output": {
+                "filter": {
+                    "sql": "(\"born\" >= ? AND \"born\" < ?)",
+                    "preview": "(\"born\" >= '2026-01-01' AND \"born\" < '2027-01-01')",
+                    "parameters": [
+                        {
+                            "type": "Date",
+                            "value": "2026-01-01",
+                            "kind": "Date"
+                        },
+                        {
+                            "type": "Date",
+                            "value": "2027-01-01",
+                            "kind": "Date"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "preset ThisYear datetime",
+            "output": {
+                "filter": {
+                    "sql": "(\"created_at\" >= ? AND \"created_at\" < ?)",
+                    "preview": "(\"created_at\" >= '2026-01-01 00:00:00' AND \"created_at\" < '2027-01-01 00:00:00')",
+                    "parameters": [
+                        {
+                            "type": "DateTime",
+                            "value": "2026-01-01 00:00:00",
+                            "kind": "DateTime"
+                        },
+                        {
+                            "type": "DateTime",
+                            "value": "2027-01-01 00:00:00",
+                            "kind": "DateTime"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "this week starting sunday",
+            "output": {
+                "filter": {
+                    "sql": "(\"born\" >= ? AND \"born\" < ?)",
+                    "preview": "(\"born\" >= '2026-10-25' AND \"born\" < '2026-11-01')",
+                    "parameters": [
+                        {
+                            "type": "Date",
+                            "value": "2026-10-25",
+                            "kind": "Date"
+                        },
+                        {
+                            "type": "Date",
+                            "value": "2026-11-01",
+                            "kind": "Date"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "this week on a sunday, monday start",
+            "output": {
+                "filter": {
+                    "sql": "(\"born\" >= ? AND \"born\" < ?)",
+                    "preview": "(\"born\" >= '2026-10-26' AND \"born\" < '2026-11-02')",
+                    "parameters": [
+                        {
+                            "type": "Date",
+                            "value": "2026-10-26",
+                            "kind": "Date"
+                        },
+                        {
+                            "type": "Date",
+                            "value": "2026-11-02",
+                            "kind": "Date"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "this week on a sunday, sunday start",
+            "output": {
+                "filter": {
+                    "sql": "(\"born\" >= ? AND \"born\" < ?)",
+                    "preview": "(\"born\" >= '2026-11-01' AND \"born\" < '2026-11-08')",
+                    "parameters": [
+                        {
+                            "type": "Date",
+                            "value": "2026-11-01",
+                            "kind": "Date"
+                        },
+                        {
+                            "type": "Date",
+                            "value": "2026-11-08",
+                            "kind": "Date"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "last days",
+            "output": {
+                "filter": {
+                    "sql": "(\"born\" >= ? AND \"born\" < ?) AND (\"created_at\" >= ? AND \"created_at\" < ?)",
+                    "preview": "(\"born\" >= '2026-10-22' AND \"born\" < '2026-10-29') AND (\"created_at\" >= '2026-10-28 00:00:00' AND \"created_at\" < '2026-10-29 00:00:00')",
+                    "parameters": [
+                        {
+                            "type": "Date",
+                            "value": "2026-10-22",
+                            "kind": "Date"
+                        },
+                        {
+                            "type": "Date",
+                            "value": "2026-10-29",
+                            "kind": "Date"
+                        },
+                        {
+                            "type": "DateTime",
+                            "value": "2026-10-28 00:00:00",
+                            "kind": "DateTime"
+                        },
+                        {
+                            "type": "DateTime",
+                            "value": "2026-10-29 00:00:00",
+                            "kind": "DateTime"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "last days '1.5'",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "129": "Enter a whole number of days"
+                }
+            }
+        },
+        {
+            "name": "last days '0'",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "130": "Enter a whole number of days"
+                }
+            }
+        },
+        {
+            "name": "last days '36501'",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "131": "Enter a whole number of days"
+                }
+            }
+        },
+        {
+            "name": "last days 'x'",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "132": "“x” isn't a number"
+                }
+            }
+        },
+        {
+            "name": "last days ''",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "133": "Enter a number"
+                }
+            }
+        },
+        {
+            "name": "last days '7.0'",
+            "output": {
+                "filter": {
+                    "sql": "(\"born\" >= ? AND \"born\" < ?)",
+                    "preview": "(\"born\" >= '2026-10-22' AND \"born\" < '2026-10-29')",
+                    "parameters": [
+                        {
+                            "type": "Date",
+                            "value": "2026-10-22",
+                            "kind": "Date"
+                        },
+                        {
+                            "type": "Date",
+                            "value": "2026-10-29",
+                            "kind": "Date"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "between numbers",
+            "output": {
+                "filter": {
+                    "sql": "\"qty\" BETWEEN ? AND ? AND \"qty\" NOT BETWEEN ? AND ?",
+                    "preview": "\"qty\" BETWEEN 1 AND 5 AND \"qty\" NOT BETWEEN 1 AND 5",
+                    "parameters": [
+                        {
+                            "type": "Long",
+                            "value": "1",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Long",
+                            "value": "5",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Long",
+                            "value": "1",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Long",
+                            "value": "5",
+                            "kind": "Number"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "between reversed",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "137": "The first bound is after the second"
+                }
+            }
+        },
+        {
+            "name": "between missing bound",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "138": "Enter both bounds"
+                }
+            }
+        },
+        {
+            "name": "between days on datetime",
+            "output": {
+                "filter": {
+                    "sql": "(\"created_at\" >= ? AND \"created_at\" < ?) AND (\"created_at\" < ? OR \"created_at\" >= ?)",
+                    "preview": "(\"created_at\" >= '2026-01-01 00:00:00' AND \"created_at\" < '2026-02-01 00:00:00') AND (\"created_at\" < '2026-01-01 00:00:00' OR \"created_at\" >= '2026-02-01 00:00:00')",
+                    "parameters": [
+                        {
+                            "type": "DateTime",
+                            "value": "2026-01-01 00:00:00",
+                            "kind": "DateTime"
+                        },
+                        {
+                            "type": "DateTime",
+                            "value": "2026-02-01 00:00:00",
+                            "kind": "DateTime"
+                        },
+                        {
+                            "type": "DateTime",
+                            "value": "2026-01-01 00:00:00",
+                            "kind": "DateTime"
+                        },
+                        {
+                            "type": "DateTime",
+                            "value": "2026-02-01 00:00:00",
+                            "kind": "DateTime"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "between moments",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "142": "The first bound is after the second"
+                }
+            }
+        },
+        {
+            "name": "between times",
+            "output": {
+                "filter": {
+                    "sql": "(\"opens\" >= ? AND \"opens\" <= ?)",
+                    "preview": "(\"opens\" >= '09:00:00' AND \"opens\" <= '17:30:00')",
+                    "parameters": [
+                        {
+                            "type": "Time",
+                            "value": "09:00:00",
+                            "kind": "Time"
+                        },
+                        {
+                            "type": "Time",
+                            "value": "17:30:00",
+                            "kind": "Time"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "between dates on date",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "144": "The first bound is after the second"
+                }
+            }
+        },
+        {
+            "name": "between text",
+            "output": {
+                "filter": {
+                    "sql": "\"name\" BETWEEN ? AND ?",
+                    "preview": "\"name\" BETWEEN 'b' AND 'a'",
+                    "parameters": [
+                        {
+                            "type": "Text",
+                            "value": "b",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "a",
+                            "kind": "Text"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "between decimals",
+            "output": {
+                "filter": {
+                    "sql": "\"total\" BETWEEN ? AND ? AND \"total\" BETWEEN ? AND ?",
+                    "preview": "\"total\" BETWEEN 10.50 AND 10.5 AND \"total\" BETWEEN 2 AND 10",
+                    "parameters": [
+                        {
+                            "type": "Decimal",
+                            "value": "10.50",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Decimal",
+                            "value": "10.5",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Long",
+                            "value": "2",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Long",
+                            "value": "10",
+                            "kind": "Number"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "lists parse quotes and NULL",
+            "output": {
+                "filter": {
+                    "sql": "(\"name\" IN (?, ?, ?) OR \"name\" IS NULL)",
+                    "preview": "(\"name\" IN ('alice', 'b, c', 'd\"e') OR \"name\" IS NULL)",
+                    "parameters": [
+                        {
+                            "type": "Text",
+                            "value": "alice",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "b, c",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "d\"e",
+                            "kind": "Text"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "not in",
+            "output": {
+                "filter": {
+                    "sql": "\"qty\" NOT IN (?, ?)",
+                    "preview": "\"qty\" NOT IN (1, 2)",
+                    "parameters": [
+                        {
+                            "type": "Long",
+                            "value": "1",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Long",
+                            "value": "2",
+                            "kind": "Number"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "not in with null",
+            "output": {
+                "filter": {
+                    "sql": "NOT (\"qty\" IN (?) OR \"qty\" IS NULL)",
+                    "preview": "NOT (\"qty\" IN (1) OR \"qty\" IS NULL)",
+                    "parameters": [
+                        {
+                            "type": "Long",
+                            "value": "1",
+                            "kind": "Number"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "in bad number",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "151": "“x” isn't a number"
+                }
+            }
+        },
+        {
+            "name": "in empty",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "152": "Enter one or more values, separated by commas"
+                }
+            }
+        },
+        {
+            "name": "in only null",
+            "output": {
+                "filter": {
+                    "sql": "\"name\" IS NULL AND NOT (\"name\" IS NULL)",
+                    "preview": "\"name\" IS NULL AND NOT (\"name\" IS NULL)",
+                    "parameters": []
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "in dates on datetime",
+            "output": {
+                "filter": {
+                    "sql": "(\"created_at\" IN (?) OR (\"created_at\" >= ? AND \"created_at\" < ?) OR \"created_at\" IS NULL) AND NOT ((\"created_at\" >= ? AND \"created_at\" < ?))",
+                    "preview": "(\"created_at\" IN ('2026-01-02 10:00:00') OR (\"created_at\" >= '2026-01-01 00:00:00' AND \"created_at\" < '2026-01-02 00:00:00') OR \"created_at\" IS NULL) AND NOT ((\"created_at\" >= '2026-01-01 00:00:00' AND \"created_at\" < '2026-01-02 00:00:00'))",
+                    "parameters": [
+                        {
+                            "type": "DateTime",
+                            "value": "2026-01-02 10:00:00",
+                            "kind": "DateTime"
+                        },
+                        {
+                            "type": "DateTime",
+                            "value": "2026-01-01 00:00:00",
+                            "kind": "DateTime"
+                        },
+                        {
+                            "type": "DateTime",
+                            "value": "2026-01-02 00:00:00",
+                            "kind": "DateTime"
+                        },
+                        {
+                            "type": "DateTime",
+                            "value": "2026-01-01 00:00:00",
+                            "kind": "DateTime"
+                        },
+                        {
+                            "type": "DateTime",
+                            "value": "2026-01-02 00:00:00",
+                            "kind": "DateTime"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "in dates on date",
+            "output": {
+                "filter": {
+                    "sql": "\"born\" IN (?, ?)",
+                    "preview": "\"born\" IN ('2026-01-01', '2026-10-28')",
+                    "parameters": [
+                        {
+                            "type": "Date",
+                            "value": "2026-01-01",
+                            "kind": "Date"
+                        },
+                        {
+                            "type": "Date",
+                            "value": "2026-10-28",
+                            "kind": "Date"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "in decimals distinct",
+            "output": {
+                "filter": {
+                    "sql": "\"total\" IN (?, ?, ?)",
+                    "preview": "\"total\" IN (1, 1.50, 1.5)",
+                    "parameters": [
+                        {
+                            "type": "Long",
+                            "value": "1",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Decimal",
+                            "value": "1.50",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Decimal",
+                            "value": "1.5",
+                            "kind": "Number"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "in uuid",
+            "output": {
+                "filter": {
+                    "sql": "\"token\" IN (?)",
+                    "preview": "\"token\" IN ('6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5')",
+                    "parameters": [
+                        {
+                            "type": "Uuid",
+                            "value": "6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5",
+                            "kind": "Uuid"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "in other with empty",
+            "output": {
+                "filter": {
+                    "sql": "\"mood\" IN (?, ?, ?)",
+                    "preview": "\"mood\" IN ('happy', '', 'sad')",
+                    "parameters": [
+                        {
+                            "type": "Text",
+                            "value": "happy",
+                            "kind": "Other"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "",
+                            "kind": "Other"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "sad",
+                            "kind": "Other"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "too many values",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "161": "At most 1000 values"
+                }
+            }
+        },
+        {
+            "name": "booleans",
+            "output": {
+                "filter": {
+                    "sql": "\"active\" = ? AND \"active\" = ?",
+                    "preview": "\"active\" = TRUE AND \"active\" = FALSE",
+                    "parameters": [
+                        {
+                            "type": "Bool",
+                            "value": "true",
+                            "kind": "Boolean"
+                        },
+                        {
+                            "type": "Bool",
+                            "value": "false",
+                            "kind": "Boolean"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "uuid",
+            "output": {
+                "filter": {
+                    "sql": "\"token\" = ?",
+                    "preview": "\"token\" = '6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5'",
+                    "parameters": [
+                        {
+                            "type": "Uuid",
+                            "value": "6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5",
+                            "kind": "Uuid"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "bad uuid",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "165": "“nope” isn't a UUID"
+                }
+            }
+        },
+        {
+            "name": "json",
+            "output": {
+                "filter": {
+                    "sql": "CAST(\"payload\" AS TEXT) = ? AND CAST(\"payload\" AS TEXT) ILIKE ? ESCAPE '!' AND CAST(\"payload\" AS TEXT) ~* ?",
+                    "preview": "CAST(\"payload\" AS TEXT) = '{}' AND CAST(\"payload\" AS TEXT) ILIKE '%k%' ESCAPE '!' AND CAST(\"payload\" AS TEXT) ~* 'a+'",
+                    "parameters": [
+                        {
+                            "type": "Text",
+                            "value": "{}",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "%k%",
+                            "kind": "Text"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "a+",
+                            "kind": "Text"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "other",
+            "output": {
+                "filter": {
+                    "sql": "\"mood\" = ? AND \"mood\" < ?",
+                    "preview": "\"mood\" = 'happy' AND \"mood\" < 'b'",
+                    "parameters": [
+                        {
+                            "type": "Text",
+                            "value": "happy",
+                            "kind": "Other"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "b",
+                            "kind": "Other"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "empty and null tests",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "172": "“is not empty” doesn't apply to number columns"
+                }
+            }
+        },
+        {
+            "name": "binary refuses equality",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "175": "“=” doesn't apply to binary columns"
+                }
+            }
+        },
+        {
+            "name": "bool scalar via in",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "176": "“is one of” doesn't apply to boolean columns"
+                }
+            }
+        },
+        {
+            "name": "groups nest, negate and raw",
+            "output": {
+                "filter": {
+                    "sql": "(\"qty\" = ? OR \"qty\" = ?) AND NOT (\"name\" = ?) AND (length(name) > 3)",
+                    "preview": "(\"qty\" = 1 OR \"qty\" = 2) AND NOT (\"name\" = 'x') AND (length(name) > 3)",
+                    "parameters": [
+                        {
+                            "type": "Long",
+                            "value": "1",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Long",
+                            "value": "2",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Text",
+                            "value": "x",
+                            "kind": "Text"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "any root",
+            "output": {
+                "filter": {
+                    "sql": "\"qty\" IS NULL OR (\"qty\" = ? OR \"qty\" = ?)",
+                    "preview": "\"qty\" IS NULL OR (\"qty\" = 1 OR \"qty\" = 2)",
+                    "parameters": [
+                        {
+                            "type": "Long",
+                            "value": "1",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Long",
+                            "value": "2",
+                            "kind": "Number"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "negated root",
+            "output": {
+                "filter": {
+                    "sql": "NOT (\"qty\" IS NULL AND \"name\" IS NULL)",
+                    "preview": "NOT (\"qty\" IS NULL AND \"name\" IS NULL)",
+                    "parameters": []
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "single child group",
+            "output": {
+                "filter": {
+                    "sql": "\"qty\" IS NULL AND \"name\" IS NULL",
+                    "preview": "\"qty\" IS NULL AND \"name\" IS NULL",
+                    "parameters": []
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "disabled group and raw",
+            "output": {
+                "filter": {
+                    "sql": "\"name\" IS NULL",
+                    "preview": "\"name\" IS NULL",
+                    "parameters": []
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "problems per node",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "190": "Enter a value",
+                    "191": "No column “gone” in this table",
+                    "192": "“someday” isn't a date or time; try 2026-10-28, 13:45 or today-7d"
+                }
+            }
+        },
+        {
+            "name": "empty column name",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "194": "Choose a column"
+                }
+            }
+        },
+        {
+            "name": "operator not for kind",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "195": "“contains” doesn't apply to boolean columns"
+                }
+            }
+        },
+        {
+            "name": "blank raw",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "196": "Enter a SQL condition"
+                }
+            }
+        },
+        {
+            "name": "raw question mark alone",
+            "output": {
+                "filter": {
+                    "sql": "(payload ? 'key')",
+                    "preview": "(payload ? 'key')",
+                    "parameters": []
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "raw question mark with values",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "9": "“?” can't be combined with other conditions; use the SQL filter for this expression"
+                }
+            }
+        },
+        {
+            "name": "raw question mark in string",
+            "output": {
+                "filter": {
+                    "sql": "(name = 'why?') AND \"qty\" = ?",
+                    "preview": "(name = 'why?') AND \"qty\" = 1",
+                    "parameters": [
+                        {
+                            "type": "Long",
+                            "value": "1",
+                            "kind": "Number"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        },
+        {
+            "name": "raw question mark nested",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "11": "“?” can't be combined with other conditions; use the SQL filter for this expression"
+                }
+            }
+        },
+        {
+            "name": "raw question mark mysql",
+            "output": {
+                "filter": null,
+                "issues": {
+                    "12": "“?” can't be combined with other conditions; use the SQL filter for this expression"
+                }
+            }
+        },
+        {
+            "name": "number formats",
+            "output": {
+                "filter": {
+                    "sql": "\"qty\" = ? AND \"total\" = ? AND \"total\" = ?",
+                    "preview": "\"qty\" = 1000 AND \"total\" = 0.001 AND \"total\" = 0",
+                    "parameters": [
+                        {
+                            "type": "Long",
+                            "value": "1000",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Decimal",
+                            "value": "0.001",
+                            "kind": "Number"
+                        },
+                        {
+                            "type": "Long",
+                            "value": "0",
+                            "kind": "Number"
+                        }
+                    ]
+                },
+                "issues": {}
+            }
+        }
+    ]
+}
