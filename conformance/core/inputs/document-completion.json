@@ -1,0 +1,400 @@
+{
+  "subject": "document-completion",
+  "cases": [
+    {
+      "name": "Filter {|}",
+      "text": "{|}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {sta|}",
+      "text": "{sta|}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {status: 'A', tot|}",
+      "text": "{status: 'A', tot|}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {cit|}",
+      "text": "{cit|}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {first|}",
+      "text": "{first|}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {'addr|ess.c': 'x'}",
+      "text": "{'addr|ess.c': 'x'}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter stat|",
+      "text": "stat|",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {total: {$g|}}",
+      "text": "{total: {$g|}}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {total: {$i|}}",
+      "text": "{total: {$i|}}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {tags: {$elem|}}",
+      "text": "{tags: {$elem|}}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {status: 'a|",
+      "text": "{status: 'a|",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {status: 'ar|'}",
+      "text": "{status: 'ar|'}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {status: |}",
+      "text": "{status: |}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {total: {$gt: |}}",
+      "text": "{total: {$gt: |}}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {tags: {$in: ['ink', |]}}",
+      "text": "{tags: {$in: ['ink', |]}}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {address: {$exists: |}}",
+      "text": "{address: {$exists: |}}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {_id: {$type: |}}",
+      "text": "{_id: {$type: |}}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {'address.city': |}",
+      "text": "{'address.city': |}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {$or: [{|}]}",
+      "text": "{$or: [{|}]}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {$o|}",
+      "text": "{$o|}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {items: {$elemMatch: {|}}}",
+      "text": "{items: {$elemMatch: {|}}}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {items: {$elemMatch: {sku: |}}}",
+      "text": "{items: {$elemMatch: {sku: |}}}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {address: {ci|}}",
+      "text": "{address: {ci|}}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {$text: {|}}",
+      "text": "{$text: {|}}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {$expr: {|}}",
+      "text": "{$expr: {|}}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {status: 'A' |}",
+      "text": "{status: 'A' |}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {_id: ObjectId('65|')}",
+      "text": "{_id: ObjectId('65|')}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {total: {$gt: 1} |}",
+      "text": "{total: {$gt: 1} |}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {} |",
+      "text": "{} |",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter |",
+      "text": "|",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {status: /ab|/}",
+      "text": "{status: /ab|/}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {status: /a\\/b/, |}",
+      "text": "{status: /a\\/b/, |}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {$and: [{total: 1}, {|}]}",
+      "text": "{$and: [{total: 1}, {|}]}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {$and: |}",
+      "text": "{$and: |}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {$expr: |}",
+      "text": "{$expr: |}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {$text: |}",
+      "text": "{$text: |}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {$comment: |}",
+      "text": "{$comment: |}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {$text: {$caseSensitive: |}}",
+      "text": "{$text: {$caseSensitive: |}}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {$text: {$language: |}}",
+      "text": "{$text: {$language: |}}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {status: {$regex: 'a', $options: |}}",
+      "text": "{status: {$regex: 'a', $options: |}}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {status: {$regex: |}}",
+      "text": "{status: {$regex: |}}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {tags: {$all: |}}",
+      "text": "{tags: {$all: |}}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {tags: {$not: |}}",
+      "text": "{tags: {$not: |}}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {tags: {$not: {|}}}",
+      "text": "{tags: {$not: {|}}}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {address: {city: |}}",
+      "text": "{address: {city: |}}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {address: {city: {$in: [|]}}}",
+      "text": "{address: {city: {$in: [|]}}}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {\"stat|\"}",
+      "text": "{\"stat|\"}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {status: \"x\\\"|\"}",
+      "text": "{status: \"x\\\"|\"}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {total: 1, |}",
+      "text": "{total: 1, |}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {total: 1|}",
+      "text": "{total: 1|}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {tot|al: 1}",
+      "text": "{tot|al: 1}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {$expr: {$eq: [|]}}",
+      "text": "{$expr: {$eq: [|]}}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {$expr: {$eq: [{|}]}}",
+      "text": "{$expr: {$eq: [{|}]}}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {$and: [[|]]}",
+      "text": "{$and: [[|]]}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {tags: [|]}",
+      "text": "{tags: [|]}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {status: 'A', $|}",
+      "text": "{status: 'A', $|}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {status: {$|}}",
+      "text": "{status: {$|}}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {items.s|}",
+      "text": "{items.s|}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter { ITEMS|}",
+      "text": "{ ITEMS|}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {_id: ObjectId(|)}",
+      "text": "{_id: ObjectId(|)}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {x: {y: {|}}}",
+      "text": "{x: {y: {|}}}",
+      "query": "Filter"
+    },
+    {
+      "name": "Filter {status: 'ồ|'}",
+      "text": "{status: 'ồ|'}",
+      "query": "Filter"
+    },
+    {
+      "name": "Sort {tot|}",
+      "text": "{tot|}",
+      "query": "Sort"
+    },
+    {
+      "name": "Projection {tot|}",
+      "text": "{tot|}",
+      "query": "Projection"
+    },
+    {
+      "name": "Sort {total: |}",
+      "text": "{total: |}",
+      "query": "Sort"
+    },
+    {
+      "name": "Projection {total: |}",
+      "text": "{total: |}",
+      "query": "Projection"
+    },
+    {
+      "name": "Sort {|}",
+      "text": "{|}",
+      "query": "Sort"
+    },
+    {
+      "name": "Projection {|}",
+      "text": "{|}",
+      "query": "Projection"
+    },
+    {
+      "name": "Sort {total: -|}",
+      "text": "{total: -|}",
+      "query": "Sort"
+    },
+    {
+      "name": "Projection {total: -|}",
+      "text": "{total: -|}",
+      "query": "Projection"
+    },
+    {
+      "name": "Sort {$|}",
+      "text": "{$|}",
+      "query": "Sort"
+    },
+    {
+      "name": "Projection {$|}",
+      "text": "{$|}",
+      "query": "Projection"
+    },
+    {
+      "name": "plain values",
+      "text": "{a: |}",
+      "query": "Filter",
+      "fields": [
+        {
+          "path": "a",
+          "types": [],
+          "values": [
+            "ISODate('2024-01-01')",
+            "'x)y'",
+            "(odd",
+            "'Bob'",
+            "'bobby'",
+            "'Alibob'"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "values starting first",
+      "text": "{a: 'bo|",
+      "query": "Filter",
+      "fields": [
+        {
+          "path": "a",
+          "types": [],
+          "values": [
+            "'Alibob'",
+            "'Bob'",
+            "'bobby'"
+          ]
+        }
+      ]
+    }
+  ]
+}

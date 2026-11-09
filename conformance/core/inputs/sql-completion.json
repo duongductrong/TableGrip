@@ -1,0 +1,717 @@
+{
+  "subject": "sql-completion",
+  "cases": [
+    {
+      "name": "sel|",
+      "text": "sel|"
+    },
+    {
+      "name": "SELECT * FROM |",
+      "text": "SELECT * FROM |"
+    },
+    {
+      "name": "SELECT * FROM or|",
+      "text": "SELECT * FROM or|"
+    },
+    {
+      "name": "SELECT * FROM au|",
+      "text": "SELECT * FROM au|"
+    },
+    {
+      "name": "SELECT * FROM audit.|",
+      "text": "SELECT * FROM audit.|"
+    },
+    {
+      "name": "SELECT | FROM users u",
+      "text": "SELECT | FROM users u"
+    },
+    {
+      "name": "SELECT u.na| FROM users u JOIN orders o ON o.user_id = u.id",
+      "text": "SELECT u.na| FROM users u JOIN orders o ON o.user_id = u.id"
+    },
+    {
+      "name": "SELECT o.to| FROM users u JOIN orders o ON o.user_id = u.id",
+      "text": "SELECT o.to| FROM users u JOIN orders o ON o.user_id = u.id"
+    },
+    {
+      "name": "SELECT o.| FROM orders AS o",
+      "text": "SELECT o.| FROM orders AS o"
+    },
+    {
+      "name": "SELECT stat| FROM users u JOIN orders o ON o.user_id = u.id",
+      "text": "SELECT stat| FROM users u JOIN orders o ON o.user_id = u.id"
+    },
+    {
+      "name": "SELECT * FROM orders WHERE uid|",
+      "text": "SELECT * FROM orders WHERE uid|"
+    },
+    {
+      "name": "SELECT * FROM oi|",
+      "text": "SELECT * FROM oi|"
+    },
+    {
+      "name": "SELECT * FROM users u JOIN |",
+      "text": "SELECT * FROM users u JOIN |"
+    },
+    {
+      "name": "SELECT * FROM users JOIN |",
+      "text": "SELECT * FROM users JOIN |"
+    },
+    {
+      "name": "INSERT INTO orders (|",
+      "text": "INSERT INTO orders (|"
+    },
+    {
+      "name": "WITH x AS (SELECT name AS n, id FROM users) SELECT x.| FROM x",
+      "text": "WITH x AS (SELECT name AS n, id FROM users) SELECT x.| FROM x"
+    },
+    {
+      "name": "SELECT * FROM orders WHERE status = 'pa|'",
+      "text": "SELECT * FROM orders WHERE status = 'pa|'"
+    },
+    {
+      "name": "SELECT * FROM orders o WHERE o.status IN ('paid', |",
+      "text": "SELECT * FROM orders o WHERE o.status IN ('paid', |"
+    },
+    {
+      "name": "SELECT * FROM orders o JOIN users u ON o.user_id = u.|",
+      "text": "SELECT * FROM orders o JOIN users u ON o.user_id = u.|"
+    },
+    {
+      "name": "SELECT * FROM orders WHERE total > |",
+      "text": "SELECT * FROM orders WHERE total > |"
+    },
+    {
+      "name": "SELECT * FROM orders WHERE status |",
+      "text": "SELECT * FROM orders WHERE status |"
+    },
+    {
+      "name": "SELECT * FROM orders WHERE status i|",
+      "text": "SELECT * FROM orders WHERE status i|"
+    },
+    {
+      "name": "SELECT 1 -- fr|",
+      "text": "SELECT 1 -- fr|"
+    },
+    {
+      "name": "SELECT 1; SELECT * FROM us|; SELECT 2",
+      "text": "SELECT 1; SELECT * FROM us|; SELECT 2"
+    },
+    {
+      "name": "SELECT * FROM users\n\nsel|",
+      "text": "SELECT * FROM users\n\nsel|"
+    },
+    {
+      "name": "SELECT * FROM users\nsel|",
+      "text": "SELECT * FROM users\nsel|"
+    },
+    {
+      "name": "SELECT * FROM teams t\n\nSELECT * FROM orders WHERE |",
+      "text": "SELECT * FROM teams t\n\nSELECT * FROM orders WHERE |"
+    },
+    {
+      "name": "SELECT * FROM users WHERE id = 1\n\nSELECT | FROM orders",
+      "text": "SELECT * FROM users WHERE id = 1\n\nSELECT | FROM orders"
+    },
+    {
+      "name": "SELECT *\nFROM users\n\nWHERE em|",
+      "text": "SELECT *\nFROM users\n\nWHERE em|"
+    },
+    {
+      "name": "SELECT name FROM users\nUNION\n\nSELECT | FROM teams",
+      "text": "SELECT name FROM users\nUNION\n\nSELECT | FROM teams"
+    },
+    {
+      "name": "SELECT * FROM users WHERE id IN (SELECT user_id FROM orders) AND |",
+      "text": "SELECT * FROM users WHERE id IN (SELECT user_id FROM orders) AND |"
+    },
+    {
+      "name": "SELECT * FROM users u WHERE EXISTS (SELECT 1 FROM orders o WHERE o.user_id = |",
+      "text": "SELECT * FROM users u WHERE EXISTS (SELECT 1 FROM orders o WHERE o.user_id = |"
+    },
+    {
+      "name": "SELECT * FROM users UNION SELECT | FROM orders",
+      "text": "SELECT * FROM users UNION SELECT | FROM orders"
+    },
+    {
+      "name": "SELECT t.| FROM (SELECT id, name AS n FROM users) t",
+      "text": "SELECT t.| FROM (SELECT id, name AS n FROM users) t"
+    },
+    {
+      "name": "SELECT * FROM users ORDER |",
+      "text": "SELECT * FROM users ORDER |"
+    },
+    {
+      "name": "SELECT * FROM users GROUP |",
+      "text": "SELECT * FROM users GROUP |"
+    },
+    {
+      "name": "SELECT * FROM users u LEFT |",
+      "text": "SELECT * FROM users u LEFT |"
+    },
+    {
+      "name": "SELECT * FROM users WHERE name IS |",
+      "text": "SELECT * FROM users WHERE name IS |"
+    },
+    {
+      "name": "SELECT * FROM users WHERE name IS NOT |",
+      "text": "SELECT * FROM users WHERE name IS NOT |"
+    },
+    {
+      "name": "SELECT 1 UNION |",
+      "text": "SELECT 1 UNION |"
+    },
+    {
+      "name": "SELECT * FROM users LIMIT 10 |",
+      "text": "SELECT * FROM users LIMIT 10 |"
+    },
+    {
+      "name": "INSERT INTO users (id, name) |",
+      "text": "INSERT INTO users (id, name) |"
+    },
+    {
+      "name": "SELECT id AS |",
+      "text": "SELECT id AS |"
+    },
+    {
+      "name": "SELECT * FROM users WH|",
+      "text": "SELECT * FROM users WH|"
+    },
+    {
+      "name": "SELECT * FROM users u WHERE u.na|me = 1",
+      "text": "SELECT * FROM users u WHERE u.na|me = 1"
+    },
+    {
+      "name": "UPDATE users SET name = 'a', |",
+      "text": "UPDATE users SET name = 'a', |"
+    },
+    {
+      "name": "INSERT INTO users (id, |",
+      "text": "INSERT INTO users (id, |"
+    },
+    {
+      "name": "SELECT * FROM users WHERE name = :na|",
+      "text": "SELECT * FROM users WHERE name = :na|"
+    },
+    {
+      "name": "|",
+      "text": "|"
+    },
+    {
+      "name": "  |  ",
+      "text": "  |  "
+    },
+    {
+      "name": "CREATE |",
+      "text": "CREATE |"
+    },
+    {
+      "name": "CREATE TABLE |",
+      "text": "CREATE TABLE |"
+    },
+    {
+      "name": "ALTER |",
+      "text": "ALTER |"
+    },
+    {
+      "name": "ALTER TABLE users |",
+      "text": "ALTER TABLE users |"
+    },
+    {
+      "name": "DROP |",
+      "text": "DROP |"
+    },
+    {
+      "name": "WITH |",
+      "text": "WITH |"
+    },
+    {
+      "name": "DELETE |",
+      "text": "DELETE |"
+    },
+    {
+      "name": "INSERT |",
+      "text": "INSERT |"
+    },
+    {
+      "name": "SELECT * FROM users u INNER |",
+      "text": "SELECT * FROM users u INNER |"
+    },
+    {
+      "name": "SELECT 1 UNION ALL |",
+      "text": "SELECT 1 UNION ALL |"
+    },
+    {
+      "name": "SELECT * FROM users WHERE active = TRUE |",
+      "text": "SELECT * FROM users WHERE active = TRUE |"
+    },
+    {
+      "name": "SELECT * FROM users ORDER BY name DESC |",
+      "text": "SELECT * FROM users ORDER BY name DESC |"
+    },
+    {
+      "name": "SELECT CASE WHEN a THEN 1 END |",
+      "text": "SELECT CASE WHEN a THEN 1 END |"
+    },
+    {
+      "name": "SELECT * FROM users, |",
+      "text": "SELECT * FROM users, |"
+    },
+    {
+      "name": "SELECT * FROM users u, orders o WHERE |",
+      "text": "SELECT * FROM users u, orders o WHERE |"
+    },
+    {
+      "name": "SELECT count(|) FROM users",
+      "text": "SELECT count(|) FROM users"
+    },
+    {
+      "name": "SELECT * |",
+      "text": "SELECT * |"
+    },
+    {
+      "name": "SELECT u.* |",
+      "text": "SELECT u.* |"
+    },
+    {
+      "name": "SELECT a * | FROM users",
+      "text": "SELECT a * | FROM users"
+    },
+    {
+      "name": "SELECT * FROM users WHERE (id = 1) |",
+      "text": "SELECT * FROM users WHERE (id = 1) |"
+    },
+    {
+      "name": "INSERT INTO public.users (|",
+      "text": "INSERT INTO public.users (|"
+    },
+    {
+      "name": "INSERT INTO users |",
+      "text": "INSERT INTO users |"
+    },
+    {
+      "name": "INSERT INTO users VALUES (|",
+      "text": "INSERT INTO users VALUES (|"
+    },
+    {
+      "name": "SELECT * FROM users OFFSET 5 |",
+      "text": "SELECT * FROM users OFFSET 5 |"
+    },
+    {
+      "name": "SELECT * FROM users WHERE name LIKE |",
+      "text": "SELECT * FROM users WHERE name LIKE |"
+    },
+    {
+      "name": "SELECT * FROM users WHERE name LIKE 'a|'",
+      "text": "SELECT * FROM users WHERE name LIKE 'a|'"
+    },
+    {
+      "name": "SELECT * FROM users WHERE users.name <> 'x|",
+      "text": "SELECT * FROM users WHERE users.name <> 'x|"
+    },
+    {
+      "name": "SELECT * FROM users WHERE id IN (1, 2, |",
+      "text": "SELECT * FROM users WHERE id IN (1, 2, |"
+    },
+    {
+      "name": "SELECT * FROM users WHERE id BETWEEN |",
+      "text": "SELECT * FROM users WHERE id BETWEEN |"
+    },
+    {
+      "name": "SELECT * FROM \"Users\" \"U\" WHERE \"U\".|",
+      "text": "SELECT * FROM \"Users\" \"U\" WHERE \"U\".|"
+    },
+    {
+      "name": "SELECT * FROM public.users pu WHERE pu.|",
+      "text": "SELECT * FROM public.users pu WHERE pu.|"
+    },
+    {
+      "name": "SELECT * FROM public.us|",
+      "text": "SELECT * FROM public.us|"
+    },
+    {
+      "name": "SELECT public.users.| FROM public.users",
+      "text": "SELECT public.users.| FROM public.users"
+    },
+    {
+      "name": "SELECT * FROM users WHERE x = 'unterminated|",
+      "text": "SELECT * FROM users WHERE x = 'unterminated|"
+    },
+    {
+      "name": "SELECT * FROM users WHERE x = 'done' |",
+      "text": "SELECT * FROM users WHERE x = 'done' |"
+    },
+    {
+      "name": "SELECT * FROM users WHERE x = '' AND |",
+      "text": "SELECT * FROM users WHERE x = '' AND |"
+    },
+    {
+      "name": "SELECT * FROM mystery m WHERE m.|",
+      "text": "SELECT * FROM mystery m WHERE m.|"
+    },
+    {
+      "name": "SELECT * FROM mystery JOIN |",
+      "text": "SELECT * FROM mystery JOIN |"
+    },
+    {
+      "name": "SELECT users.| FROM orders",
+      "text": "SELECT users.| FROM orders"
+    },
+    {
+      "name": "SELECT tea| ",
+      "text": "SELECT tea| "
+    },
+    {
+      "name": "SELECT *, | FROM users",
+      "text": "SELECT *, | FROM users"
+    },
+    {
+      "name": "SELECT * FROM users WHERE NOT |",
+      "text": "SELECT * FROM users WHERE NOT |"
+    },
+    {
+      "name": "SELECT * FROM users WHERE id = $1 AND |",
+      "text": "SELECT * FROM users WHERE id = $1 AND |"
+    },
+    {
+      "name": "SELECT * FROM users WHERE ? = |",
+      "text": "SELECT * FROM users WHERE ? = |"
+    },
+    {
+      "name": "UPDATE |",
+      "text": "UPDATE |"
+    },
+    {
+      "name": "UPDATE users |",
+      "text": "UPDATE users |"
+    },
+    {
+      "name": "UPDATE users SET |",
+      "text": "UPDATE users SET |"
+    },
+    {
+      "name": "DELETE FROM users WHERE |",
+      "text": "DELETE FROM users WHERE |"
+    },
+    {
+      "name": "SELECT * FROM users RETURNING |",
+      "text": "SELECT * FROM users RETURNING |"
+    },
+    {
+      "name": "SELECT * FROM users WHERE name ILIKE |",
+      "text": "SELECT * FROM users WHERE name ILIKE |"
+    },
+    {
+      "name": "SELECT DISTINCT |",
+      "text": "SELECT DISTINCT |"
+    },
+    {
+      "name": "SELECT * FROM users GROUP BY |",
+      "text": "SELECT * FROM users GROUP BY |"
+    },
+    {
+      "name": "SELECT * FROM users GROUP BY id HAVING |",
+      "text": "SELECT * FROM users GROUP BY id HAVING |"
+    },
+    {
+      "name": "SELECT * FROM users ORDER BY |",
+      "text": "SELECT * FROM users ORDER BY |"
+    },
+    {
+      "name": "SELECT * FROM users u JOIN orders o ON |",
+      "text": "SELECT * FROM users u JOIN orders o ON |"
+    },
+    {
+      "name": "SELECT * FROM users u JOIN orders o ON o.user_id = u.id\nWH|",
+      "text": "SELECT * FROM users u JOIN orders o ON o.user_id = u.id\nWH|"
+    },
+    {
+      "name": "WITH a AS (SELECT 1 AS x), b AS (SELECT x FROM a) SELECT | FROM b",
+      "text": "WITH a AS (SELECT 1 AS x), b AS (SELECT x FROM a) SELECT | FROM b"
+    },
+    {
+      "name": "WITH a AS (SELECT 1 AS x) SELECT * FROM |",
+      "text": "WITH a AS (SELECT 1 AS x) SELECT * FROM |"
+    },
+    {
+      "name": "SELECT * FROM (SELECT id FROM users) AS s, (SELECT name FROM teams) t WHERE |",
+      "text": "SELECT * FROM (SELECT id FROM users) AS s, (SELECT name FROM teams) t WHERE |"
+    },
+    {
+      "name": "SELECT * FROM users u JOIN LATERAL (SELECT id FROM orders) l ON |",
+      "text": "SELECT * FROM users u JOIN LATERAL (SELECT id FROM orders) l ON |"
+    },
+    {
+      "name": "CREATE TRIGGER t AFTER INSERT ON users BEGIN\n\nSELECT 1; |",
+      "text": "CREATE TRIGGER t AFTER INSERT ON users BEGIN\n\nSELECT 1; |"
+    },
+    {
+      "name": "SELECT 1\n\n\n|",
+      "text": "SELECT 1\n\n\n|"
+    },
+    {
+      "name": "SELECT 1\n\n|\nSELECT 2",
+      "text": "SELECT 1\n\n|\nSELECT 2"
+    },
+    {
+      "name": "SELECT 1 FROM users WHERE id = (\n\nSELECT | FROM orders)",
+      "text": "SELECT 1 FROM users WHERE id = (\n\nSELECT | FROM orders)"
+    },
+    {
+      "name": "SELECT * FROM users u -- note\n  WHERE u.|",
+      "text": "SELECT * FROM users u -- note\n  WHERE u.|"
+    },
+    {
+      "name": "/* c */ SEL|",
+      "text": "/* c */ SEL|"
+    },
+    {
+      "name": "SELECT * FROM users WHERE name = 'ồ|'",
+      "text": "SELECT * FROM users WHERE name = 'ồ|'"
+    },
+    {
+      "name": "SELECT 'chào' AS x, | FROM users",
+      "text": "SELECT 'chào' AS x, | FROM users"
+    },
+    {
+      "name": "SELECT * FROM users u WHERE u.\"na|\"",
+      "text": "SELECT * FROM users u WHERE u.\"na|\""
+    },
+    {
+      "name": "SELECT * FROM users WHERE email IN (SELECT | FROM orders)",
+      "text": "SELECT * FROM users WHERE email IN (SELECT | FROM orders)"
+    },
+    {
+      "name": "SELECT * FROM users UNION SELECT * FROM teams WHERE |",
+      "text": "SELECT * FROM users UNION SELECT * FROM teams WHERE |"
+    },
+    {
+      "name": "SELECT * FROM users WHERE id IN (SELECT id FROM teams UNION SELECT | FROM orders)",
+      "text": "SELECT * FROM users WHERE id IN (SELECT id FROM teams UNION SELECT | FROM orders)"
+    },
+    {
+      "name": "SELECT * FROM orders o JOIN users u ON u.id = o.user_id JOIN |",
+      "text": "SELECT * FROM orders o JOIN users u ON u.id = o.user_id JOIN |"
+    },
+    {
+      "name": "SELECT * FROM order_items oi JOIN |",
+      "text": "SELECT * FROM order_items oi JOIN |"
+    },
+    {
+      "name": "SELECT * FROM users JOIN teams ON teams.id = users.team_id JOIN |",
+      "text": "SELECT * FROM users JOIN teams ON teams.id = users.team_id JOIN |"
+    },
+    {
+      "name": "SELECT * FROM users u WHERE u.name = 'x' \n|",
+      "text": "SELECT * FROM users u WHERE u.name = 'x' \n|"
+    },
+    {
+      "name": "alias that is a keyword",
+      "text": "SELECT * FROM users AS user |"
+    },
+    {
+      "name": "max items",
+      "text": "SELECT | FROM users u",
+      "maxItems": 3
+    },
+    {
+      "name": "mysql dialect",
+      "text": "SELECT * FROM users WHERE |",
+      "dialect": "MySQL"
+    },
+    {
+      "name": "mysql backticks",
+      "text": "SELECT * FROM `users` u WHERE u.|",
+      "dialect": "MySQL"
+    },
+    {
+      "name": "tsql brackets",
+      "text": "SELECT * FROM [users] u WHERE u.|",
+      "dialect": "SqlServer"
+    },
+    {
+      "name": "tsql bracket prefix",
+      "text": "SELECT * FROM users WHERE name = [ab|",
+      "dialect": "SqlServer"
+    },
+    {
+      "name": "quoted table",
+      "text": "SELECT | FROM \"Order\"",
+      "schema": {
+        "defaultNamespace": null,
+        "namespaces": [],
+        "tables": {},
+        "columns": {
+          "Order": [
+            {
+              "name": "Total Amount",
+              "type": "numeric"
+            },
+            {
+              "name": "user",
+              "type": "int"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "no default namespace",
+      "text": "SELECT * FROM |",
+      "schema": {
+        "defaultNamespace": null,
+        "namespaces": [
+          "a",
+          "b"
+        ],
+        "tables": {
+          "a": [
+            {
+              "name": "x"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "schema members",
+      "text": "SELECT * FROM a.|",
+      "schema": {
+        "defaultNamespace": "main",
+        "namespaces": [
+          "a"
+        ],
+        "tables": {
+          "a": [
+            {
+              "name": "x"
+            },
+            {
+              "name": "v",
+              "view": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "relations not loaded",
+      "text": "SELECT * FROM t JOIN |",
+      "schema": {
+        "defaultNamespace": "main",
+        "namespaces": [
+          "main"
+        ],
+        "tables": {
+          "main": [
+            {
+              "name": "t"
+            }
+          ]
+        },
+        "columns": {}
+      }
+    },
+    {
+      "name": "alias numbering",
+      "text": "SELECT * FROM order_items oi JOIN |",
+      "schema": {
+        "defaultNamespace": "main",
+        "namespaces": [
+          "main"
+        ],
+        "tables": {
+          "main": []
+        },
+        "relations": [
+          {
+            "fromTable": "order_items",
+            "fromColumns": [
+              "order_id",
+              "x"
+            ],
+            "toTable": "orders",
+            "toColumns": [
+              "id",
+              "y"
+            ]
+          },
+          {
+            "fromTable": "order_items",
+            "fromColumns": [
+              "o2"
+            ],
+            "toTable": "orders_old",
+            "toColumns": [
+              "id"
+            ]
+          },
+          {
+            "fromTable": "order_items",
+            "fromColumns": [
+              "i"
+            ],
+            "toTable": "in",
+            "toColumns": [
+              "id"
+            ]
+          },
+          {
+            "fromTable": "order_items",
+            "fromColumns": [
+              "s"
+            ],
+            "toTable": "Set_",
+            "toColumns": [
+              "id"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "unloaded columns pending",
+      "text": "SELECT | FROM a, b",
+      "schema": {
+        "defaultNamespace": "main",
+        "namespaces": [],
+        "tables": {}
+      }
+    },
+    {
+      "name": "tables in statements",
+      "op": "tablesIn",
+      "text": "WITH c AS (SELECT 1) SELECT * FROM users u JOIN public.orders o ON 1 = 1, c, Users, (SELECT * FROM teams) t WHERE x IN (SELECT id FROM audit.events) UNION SELECT * FROM USERS"
+    },
+    {
+      "name": "tables in update and insert",
+      "op": "tablesIn",
+      "text": "UPDATE users SET a = 1; INSERT INTO log SELECT * FROM x"
+    },
+    {
+      "name": "quote names",
+      "op": "quote",
+      "names": [
+        "Order",
+        "user",
+        "orders",
+        "Total Amount",
+        "_x",
+        "1a",
+        "select",
+        "ồ"
+      ]
+    },
+    {
+      "name": "quote names mysql",
+      "op": "quote",
+      "dialect": "MySQL",
+      "names": [
+        "Order",
+        "user",
+        "orders",
+        "Total Amount"
+      ]
+    }
+  ]
+}

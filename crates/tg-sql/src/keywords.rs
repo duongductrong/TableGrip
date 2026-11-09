@@ -25,3 +25,12 @@ pub fn all() -> &'static HashSet<&'static str> {
 pub fn is_keyword(word: &str) -> bool {
     ALL.contains(word.to_uppercase().as_str())
 }
+
+/// The keywords in the order they are listed, as Kotlin's keyword set iterates.
+pub fn in_order() -> Vec<&'static str> {
+    let mut seen = HashSet::new();
+    WORDS
+        .split_whitespace()
+        .filter(|w| seen.insert(*w))
+        .collect()
+}

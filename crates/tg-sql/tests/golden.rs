@@ -1,5 +1,7 @@
 //! Holds tg-sql to the Kotlin core's golden files; see `support/harness.rs`.
 
+#[path = "golden/completion.rs"]
+mod completion;
 #[path = "golden/filter.rs"]
 mod filter;
 #[path = "support/harness.rs"]
@@ -333,6 +335,8 @@ fn run(subject: &str, case: &Value) -> Option<Value> {
         "schema-compare" => schema::compare(case),
         "er-layout" => schema::er(case),
         "mermaid" => schema::mermaid(case),
+        "sql-completion" => completion::sql(case),
+        "document-completion" => completion::document(case),
         _ => return None,
     })
 }
