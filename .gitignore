@@ -13,3 +13,6 @@ derby.log
 
 # JVM crash logs
 hs_err_pid*.log
+
+# Rust
+/target/

@@ -14,7 +14,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * A conformance scenario file from `ui-kit/conformance/scenarios`: one component and the cases it must pass. The same
+ * A conformance scenario file from `conformance/scenarios`: one component and the cases it must pass. The same
  * files run against the Rust UI kit, so they describe behaviour, not Compose or Jewel APIs.
  */
 data class ScenarioFile(val component: String, val cases: List<ScenarioCase>, val source: File)
@@ -61,12 +61,12 @@ sealed interface Step {
 }
 
 object Scenarios {
-    /** `ui-kit/conformance`, found from Gradle's working directory (the module) or the repository root. */
+    /** `conformance`, found from Gradle's working directory (the module) or the repository root. */
     val root: File by lazy {
         generateSequence(File("").absoluteFile) { it.parentFile }
-            .map { File(it, "ui-kit/conformance") }
+            .map { File(it, "conformance") }
             .firstOrNull { it.isDirectory }
-            ?: error("ui-kit/conformance not found above ${File("").absolutePath}")
+            ?: error("conformance not found above ${File("").absolutePath}")
     }
 
     fun load(): List<ScenarioFile> =

@@ -53,8 +53,8 @@ biến.
 ## Kiến trúc
 
 ```
-ui-kit/                     cargo workspace, nằm trong repo này
-  crates/tg-theme/          đọc thẳng app/src/main/resources/themes/*.json + overrides + accent → token
+(gốc repo)                  cargo workspace; từ M0 của rust-migration.md nằm ở gốc repo thay vì ui-kit/
+  crates/tg-theme/          đọc thẳng resources/themes/*.json + overrides + accent → token
   crates/tg-ui-logic/       state machine từng component, thuần Rust, không phụ thuộc GPUI
   crates/tg-ui/             phần vẽ bằng GPUI, mỏng, gọi tg-ui-logic
   crates/tg-gallery/        app hiển thị mọi component × mọi trạng thái, dùng để chụp ảnh so sánh
@@ -224,5 +224,5 @@ code nằm trong `src/test`.
      JetBrains s.r.o." (theo `NOTICE.txt` của intellij-community). Ghi rõ nếu có chỉnh sửa file (Apache‑2.0 mục 4b).
    - **Không** dùng file không có header Apache (ví dụ `toolWindowAskAI`, app đang dùng ở 3 chỗ: tự vẽ thay thế) và
      **không** dùng logo hay ảnh sản phẩm JetBrains: Apache‑2.0 không cấp quyền nhãn hiệu (mục 6).
-3. **Vị trí:** `ui-kit/` trong repo này, dùng chung file theme và kịch bản.
-4. **Toolchain:** ghim Rust 1.97.1 (`ui-kit/rust-toolchain.toml`), `rust-version = "1.97"`.
+3. **Vị trí:** ban đầu là `ui-kit/`; từ M0 ([rust-migration.md](rust-migration.md)) workspace nằm ở gốc repo (`crates/`, `conformance/`), theme và icon dùng chung ở `resources/`.
+4. **Toolchain:** ghim Rust 1.97.1 (`rust-toolchain.toml` ở gốc repo), `rust-version = "1.97"`.

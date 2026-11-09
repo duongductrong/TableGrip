@@ -13,7 +13,7 @@ Settings pick one theme for dark mode and one for light mode.
 | Catppuccin | Catppuccin Frappé | Catppuccin Latte |
 | Contrast | Contrast Dark | Contrast Light |
 
-The built-ins live in `app/src/main/resources/themes/` and use the same format users do. Graphite leaves out the text
+The built-ins live in `resources/themes/` (shared with the Rust `tg-theme` crate) and use the same format users do. Graphite leaves out the text
 and control keys, so Jewel's Int UI colours (and today's look) stay exactly as they were.
 
 ## Settings

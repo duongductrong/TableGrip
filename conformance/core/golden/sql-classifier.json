@@ -1,0 +1,203 @@
+{
+    "subject": "sql-classifier",
+    "cases": [
+        {
+            "name": "select",
+            "output": {
+                "kind": "Read",
+                "verb": "SELECT",
+                "danger": null,
+                "changesData": false
+            }
+        },
+        {
+            "name": "with select",
+            "output": {
+                "kind": "Read",
+                "verb": "SELECT",
+                "danger": null,
+                "changesData": false
+            }
+        },
+        {
+            "name": "with delete",
+            "output": {
+                "kind": "Write",
+                "verb": "DELETE",
+                "danger": null,
+                "changesData": true
+            }
+        },
+        {
+            "name": "insert",
+            "output": {
+                "kind": "Write",
+                "verb": "INSERT",
+                "danger": null,
+                "changesData": true
+            }
+        },
+        {
+            "name": "update without where",
+            "output": {
+                "kind": "Write",
+                "verb": "UPDATE",
+                "danger": "UPDATE without WHERE affects every row",
+                "changesData": true
+            }
+        },
+        {
+            "name": "update with where",
+            "output": {
+                "kind": "Write",
+                "verb": "UPDATE",
+                "danger": null,
+                "changesData": true
+            }
+        },
+        {
+            "name": "delete without where",
+            "output": {
+                "kind": "Write",
+                "verb": "DELETE",
+                "danger": "DELETE without WHERE affects every row",
+                "changesData": true
+            }
+        },
+        {
+            "name": "truncate",
+            "output": {
+                "kind": "Ddl",
+                "verb": "TRUNCATE",
+                "danger": "TRUNCATE removes every row",
+                "changesData": true
+            }
+        },
+        {
+            "name": "drop table",
+            "output": {
+                "kind": "Ddl",
+                "verb": "DROP",
+                "danger": "DROP permanently removes table",
+                "changesData": true
+            }
+        },
+        {
+            "name": "create index",
+            "output": {
+                "kind": "Ddl",
+                "verb": "CREATE",
+                "danger": null,
+                "changesData": true
+            }
+        },
+        {
+            "name": "begin",
+            "output": {
+                "kind": "Transaction",
+                "verb": "BEGIN",
+                "danger": null,
+                "changesData": false
+            }
+        },
+        {
+            "name": "commit",
+            "output": {
+                "kind": "Transaction",
+                "verb": "COMMIT",
+                "danger": null,
+                "changesData": false
+            }
+        },
+        {
+            "name": "explain",
+            "output": {
+                "kind": "Read",
+                "verb": "EXPLAIN",
+                "danger": null,
+                "changesData": false
+            }
+        },
+        {
+            "name": "explain analyze delete",
+            "output": {
+                "kind": "Write",
+                "verb": "EXPLAIN",
+                "danger": null,
+                "changesData": true
+            }
+        },
+        {
+            "name": "show",
+            "output": {
+                "kind": "Read",
+                "verb": "SHOW",
+                "danger": null,
+                "changesData": false
+            }
+        },
+        {
+            "name": "set",
+            "output": {
+                "kind": "Other",
+                "verb": "SET",
+                "danger": null,
+                "changesData": false
+            }
+        },
+        {
+            "name": "pragma",
+            "output": {
+                "kind": "Other",
+                "verb": "PRAGMA",
+                "danger": null,
+                "changesData": false
+            }
+        },
+        {
+            "name": "leading comment",
+            "output": {
+                "kind": "Read",
+                "verb": "SELECT",
+                "danger": null,
+                "changesData": false
+            }
+        },
+        {
+            "name": "empty",
+            "output": {
+                "kind": "Other",
+                "verb": "",
+                "danger": null,
+                "changesData": false
+            }
+        },
+        {
+            "name": "grant",
+            "output": {
+                "kind": "Ddl",
+                "verb": "GRANT",
+                "danger": null,
+                "changesData": true
+            }
+        },
+        {
+            "name": "call",
+            "output": {
+                "kind": "Write",
+                "verb": "CALL",
+                "danger": null,
+                "changesData": true
+            }
+        },
+        {
+            "name": "merge",
+            "output": {
+                "kind": "Write",
+                "verb": "MERGE",
+                "danger": null,
+                "changesData": true
+            }
+        }
+    ]
+}

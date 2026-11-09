@@ -44,7 +44,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.fail
 
 /**
- * Runs every scenario in `ui-kit/conformance/scenarios` against the components the app uses today. A scenario belongs
+ * Runs every scenario in `conformance/scenarios` against the components the app uses today. A scenario belongs
  * in the suite only once it passes here: the Kotlin app is the reference the Rust UI kit is held to.
  *
  * `./gradlew :app:test --tests '*ConformanceTest*'`

@@ -1,0 +1,222 @@
+{
+    "subject": "sql-splitter",
+    "cases": [
+        {
+            "name": "two statements",
+            "output": {
+                "statements": [
+                    {
+                        "text": "SELECT 1",
+                        "start": 0,
+                        "end": 8,
+                        "delimiterEnd": 9
+                    },
+                    {
+                        "text": "SELECT 2",
+                        "start": 10,
+                        "end": 18,
+                        "delimiterEnd": 19
+                    }
+                ],
+                "statementAt": [
+                    {
+                        "start": 0,
+                        "end": 8
+                    },
+                    {
+                        "start": 0,
+                        "end": 8
+                    },
+                    {
+                        "start": 10,
+                        "end": 18
+                    },
+                    {
+                        "start": 10,
+                        "end": 18
+                    }
+                ]
+            }
+        },
+        {
+            "name": "semicolon in string and comment",
+            "output": {
+                "statements": [
+                    {
+                        "text": "SELECT ';'",
+                        "start": 0,
+                        "end": 10,
+                        "delimiterEnd": 11
+                    },
+                    {
+                        "text": "SELECT 2",
+                        "start": 26,
+                        "end": 34,
+                        "delimiterEnd": 34
+                    }
+                ],
+                "statementAt": [
+                    {
+                        "start": 0,
+                        "end": 10
+                    },
+                    {
+                        "start": 26,
+                        "end": 34
+                    }
+                ]
+            }
+        },
+        {
+            "name": "trailing statement without semicolon",
+            "output": {
+                "statements": [
+                    {
+                        "text": "SELECT 1",
+                        "start": 0,
+                        "end": 8,
+                        "delimiterEnd": 9
+                    },
+                    {
+                        "text": "SELECT 2",
+                        "start": 11,
+                        "end": 19,
+                        "delimiterEnd": 19
+                    }
+                ],
+                "statementAt": [
+                    {
+                        "start": 11,
+                        "end": 19
+                    }
+                ]
+            }
+        },
+        {
+            "name": "empty statements",
+            "output": {
+                "statements": [],
+                "statementAt": [
+                    null,
+                    null
+                ]
+            }
+        },
+        {
+            "name": "postgres function body",
+            "output": {
+                "statements": [
+                    {
+                        "text": "CREATE FUNCTION f() RETURNS int AS $$ BEGIN RETURN 1; END $$ LANGUAGE plpgsql",
+                        "start": 0,
+                        "end": 77,
+                        "delimiterEnd": 78
+                    },
+                    {
+                        "text": "SELECT f()",
+                        "start": 79,
+                        "end": 89,
+                        "delimiterEnd": 90
+                    }
+                ],
+                "statementAt": [
+                    {
+                        "start": 0,
+                        "end": 77
+                    },
+                    {
+                        "start": 79,
+                        "end": 89
+                    }
+                ]
+            }
+        },
+        {
+            "name": "mysql delimiter command",
+            "output": {
+                "statements": [
+                    {
+                        "text": "CREATE PROCEDURE p() BEGIN SELECT 1; SELECT 2; END",
+                        "start": 13,
+                        "end": 63,
+                        "delimiterEnd": 66
+                    },
+                    {
+                        "text": "CALL p()",
+                        "start": 79,
+                        "end": 87,
+                        "delimiterEnd": 88
+                    }
+                ],
+                "statementAt": [
+                    {
+                        "start": 13,
+                        "end": 63
+                    },
+                    {
+                        "start": 79,
+                        "end": 87
+                    }
+                ]
+            }
+        },
+        {
+            "name": "tsql GO batches",
+            "output": {
+                "statements": [
+                    {
+                        "text": "SELECT 1",
+                        "start": 0,
+                        "end": 8,
+                        "delimiterEnd": 11
+                    },
+                    {
+                        "text": "SELECT 2",
+                        "start": 12,
+                        "end": 20,
+                        "delimiterEnd": 23
+                    }
+                ],
+                "statementAt": [
+                    {
+                        "start": 0,
+                        "end": 8
+                    },
+                    {
+                        "start": 12,
+                        "end": 20
+                    }
+                ]
+            }
+        },
+        {
+            "name": "non-ascii",
+            "output": {
+                "statements": [
+                    {
+                        "text": "SELECT 'ồ'",
+                        "start": 0,
+                        "end": 10,
+                        "delimiterEnd": 11
+                    },
+                    {
+                        "text": "SELECT '😀'",
+                        "start": 11,
+                        "end": 22,
+                        "delimiterEnd": 23
+                    }
+                ],
+                "statementAt": [
+                    {
+                        "start": 0,
+                        "end": 10
+                    },
+                    {
+                        "start": 11,
+                        "end": 22
+                    }
+                ]
+            }
+        }
+    ]
+}

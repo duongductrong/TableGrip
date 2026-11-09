@@ -1,0 +1,863 @@
+{
+    "subject": "sql-lexer",
+    "cases": [
+        {
+            "name": "plain select",
+            "output": [
+                {
+                    "type": "Keyword",
+                    "start": 0,
+                    "end": 6,
+                    "text": "SELECT"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 6,
+                    "end": 7,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 7,
+                    "end": 9,
+                    "text": "id"
+                },
+                {
+                    "type": "Operator",
+                    "start": 9,
+                    "end": 10,
+                    "text": ","
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 10,
+                    "end": 11,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 11,
+                    "end": 15,
+                    "text": "name"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 15,
+                    "end": 16,
+                    "text": " "
+                },
+                {
+                    "type": "Keyword",
+                    "start": 16,
+                    "end": 20,
+                    "text": "FROM"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 20,
+                    "end": 21,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 21,
+                    "end": 26,
+                    "text": "users"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 26,
+                    "end": 27,
+                    "text": " "
+                },
+                {
+                    "type": "Keyword",
+                    "start": 27,
+                    "end": 32,
+                    "text": "WHERE"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 32,
+                    "end": 33,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 33,
+                    "end": 35,
+                    "text": "id"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 35,
+                    "end": 36,
+                    "text": " "
+                },
+                {
+                    "type": "Operator",
+                    "start": 36,
+                    "end": 37,
+                    "text": "="
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 37,
+                    "end": 38,
+                    "text": " "
+                },
+                {
+                    "type": "Number",
+                    "start": 38,
+                    "end": 40,
+                    "text": "42"
+                },
+                {
+                    "type": "Operator",
+                    "start": 40,
+                    "end": 41,
+                    "text": ";"
+                }
+            ]
+        },
+        {
+            "name": "line and block comments",
+            "output": [
+                {
+                    "type": "Comment",
+                    "start": 0,
+                    "end": 7,
+                    "text": "-- head"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 7,
+                    "end": 8,
+                    "text": "\n"
+                },
+                {
+                    "type": "Keyword",
+                    "start": 8,
+                    "end": 14,
+                    "text": "SELECT"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 14,
+                    "end": 15,
+                    "text": " "
+                },
+                {
+                    "type": "Comment",
+                    "start": 15,
+                    "end": 27,
+                    "text": "/* inline */"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 27,
+                    "end": 28,
+                    "text": " "
+                },
+                {
+                    "type": "Number",
+                    "start": 28,
+                    "end": 29,
+                    "text": "1"
+                }
+            ]
+        },
+        {
+            "name": "unterminated string runs to end",
+            "output": [
+                {
+                    "type": "Keyword",
+                    "start": 0,
+                    "end": 6,
+                    "text": "SELECT"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 6,
+                    "end": 7,
+                    "text": " "
+                },
+                {
+                    "type": "String",
+                    "start": 7,
+                    "end": 11,
+                    "text": "'abc"
+                }
+            ]
+        },
+        {
+            "name": "postgres dollar quote",
+            "output": [
+                {
+                    "type": "Keyword",
+                    "start": 0,
+                    "end": 6,
+                    "text": "SELECT"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 6,
+                    "end": 7,
+                    "text": " "
+                },
+                {
+                    "type": "String",
+                    "start": 7,
+                    "end": 30,
+                    "text": "$tag$ it's ; here $tag$"
+                },
+                {
+                    "type": "Operator",
+                    "start": 30,
+                    "end": 31,
+                    "text": ","
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 31,
+                    "end": 32,
+                    "text": " "
+                },
+                {
+                    "type": "Parameter",
+                    "start": 32,
+                    "end": 34,
+                    "text": "$1"
+                }
+            ]
+        },
+        {
+            "name": "postgres cast and params",
+            "output": [
+                {
+                    "type": "Keyword",
+                    "start": 0,
+                    "end": 6,
+                    "text": "SELECT"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 6,
+                    "end": 7,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 7,
+                    "end": 8,
+                    "text": "x"
+                },
+                {
+                    "type": "Operator",
+                    "start": 8,
+                    "end": 9,
+                    "text": ":"
+                },
+                {
+                    "type": "Operator",
+                    "start": 9,
+                    "end": 10,
+                    "text": ":"
+                },
+                {
+                    "type": "Keyword",
+                    "start": 10,
+                    "end": 13,
+                    "text": "int"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 13,
+                    "end": 14,
+                    "text": " "
+                },
+                {
+                    "type": "Keyword",
+                    "start": 14,
+                    "end": 18,
+                    "text": "FROM"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 18,
+                    "end": 19,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 19,
+                    "end": 20,
+                    "text": "t"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 20,
+                    "end": 21,
+                    "text": " "
+                },
+                {
+                    "type": "Keyword",
+                    "start": 21,
+                    "end": 26,
+                    "text": "WHERE"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 26,
+                    "end": 27,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 27,
+                    "end": 28,
+                    "text": "a"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 28,
+                    "end": 29,
+                    "text": " "
+                },
+                {
+                    "type": "Operator",
+                    "start": 29,
+                    "end": 30,
+                    "text": "="
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 30,
+                    "end": 31,
+                    "text": " "
+                },
+                {
+                    "type": "Parameter",
+                    "start": 31,
+                    "end": 33,
+                    "text": "$2"
+                }
+            ]
+        },
+        {
+            "name": "mysql backtick, hash, double-quoted string",
+            "output": [
+                {
+                    "type": "Keyword",
+                    "start": 0,
+                    "end": 6,
+                    "text": "SELECT"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 6,
+                    "end": 7,
+                    "text": " "
+                },
+                {
+                    "type": "QuotedIdentifier",
+                    "start": 7,
+                    "end": 12,
+                    "text": "`col`"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 12,
+                    "end": 13,
+                    "text": " "
+                },
+                {
+                    "type": "Keyword",
+                    "start": 13,
+                    "end": 17,
+                    "text": "FROM"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 17,
+                    "end": 18,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 18,
+                    "end": 19,
+                    "text": "t"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 19,
+                    "end": 20,
+                    "text": " "
+                },
+                {
+                    "type": "Comment",
+                    "start": 20,
+                    "end": 26,
+                    "text": "# note"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 26,
+                    "end": 27,
+                    "text": "\n"
+                },
+                {
+                    "type": "Keyword",
+                    "start": 27,
+                    "end": 32,
+                    "text": "WHERE"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 32,
+                    "end": 33,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 33,
+                    "end": 34,
+                    "text": "a"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 34,
+                    "end": 35,
+                    "text": " "
+                },
+                {
+                    "type": "Operator",
+                    "start": 35,
+                    "end": 36,
+                    "text": "="
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 36,
+                    "end": 37,
+                    "text": " "
+                },
+                {
+                    "type": "String",
+                    "start": 37,
+                    "end": 43,
+                    "text": "\"b\\\"c\""
+                }
+            ]
+        },
+        {
+            "name": "tsql brackets",
+            "output": [
+                {
+                    "type": "Keyword",
+                    "start": 0,
+                    "end": 6,
+                    "text": "SELECT"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 6,
+                    "end": 7,
+                    "text": " "
+                },
+                {
+                    "type": "QuotedIdentifier",
+                    "start": 7,
+                    "end": 19,
+                    "text": "[first name]"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 19,
+                    "end": 20,
+                    "text": " "
+                },
+                {
+                    "type": "Keyword",
+                    "start": 20,
+                    "end": 24,
+                    "text": "FROM"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 24,
+                    "end": 25,
+                    "text": " "
+                },
+                {
+                    "type": "QuotedIdentifier",
+                    "start": 25,
+                    "end": 30,
+                    "text": "[dbo]"
+                },
+                {
+                    "type": "Operator",
+                    "start": 30,
+                    "end": 31,
+                    "text": "."
+                },
+                {
+                    "type": "QuotedIdentifier",
+                    "start": 31,
+                    "end": 39,
+                    "text": "[people]"
+                }
+            ]
+        },
+        {
+            "name": "numbers",
+            "output": [
+                {
+                    "type": "Keyword",
+                    "start": 0,
+                    "end": 6,
+                    "text": "SELECT"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 6,
+                    "end": 7,
+                    "text": " "
+                },
+                {
+                    "type": "Number",
+                    "start": 7,
+                    "end": 8,
+                    "text": "1"
+                },
+                {
+                    "type": "Operator",
+                    "start": 8,
+                    "end": 9,
+                    "text": ","
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 9,
+                    "end": 10,
+                    "text": " "
+                },
+                {
+                    "type": "Number",
+                    "start": 10,
+                    "end": 13,
+                    "text": "1.5"
+                },
+                {
+                    "type": "Operator",
+                    "start": 13,
+                    "end": 14,
+                    "text": ","
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 14,
+                    "end": 15,
+                    "text": " "
+                },
+                {
+                    "type": "Number",
+                    "start": 15,
+                    "end": 17,
+                    "text": ".5"
+                },
+                {
+                    "type": "Operator",
+                    "start": 17,
+                    "end": 18,
+                    "text": ","
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 18,
+                    "end": 19,
+                    "text": " "
+                },
+                {
+                    "type": "Number",
+                    "start": 19,
+                    "end": 23,
+                    "text": "1e10"
+                },
+                {
+                    "type": "Operator",
+                    "start": 23,
+                    "end": 24,
+                    "text": ","
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 24,
+                    "end": 25,
+                    "text": " "
+                },
+                {
+                    "type": "Number",
+                    "start": 25,
+                    "end": 26,
+                    "text": "0"
+                },
+                {
+                    "type": "Identifier",
+                    "start": 26,
+                    "end": 29,
+                    "text": "x1F"
+                }
+            ]
+        },
+        {
+            "name": "named and positional parameters",
+            "output": [
+                {
+                    "type": "Keyword",
+                    "start": 0,
+                    "end": 6,
+                    "text": "SELECT"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 6,
+                    "end": 7,
+                    "text": " "
+                },
+                {
+                    "type": "Operator",
+                    "start": 7,
+                    "end": 8,
+                    "text": "*"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 8,
+                    "end": 9,
+                    "text": " "
+                },
+                {
+                    "type": "Keyword",
+                    "start": 9,
+                    "end": 13,
+                    "text": "FROM"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 13,
+                    "end": 14,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 14,
+                    "end": 15,
+                    "text": "t"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 15,
+                    "end": 16,
+                    "text": " "
+                },
+                {
+                    "type": "Keyword",
+                    "start": 16,
+                    "end": 21,
+                    "text": "WHERE"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 21,
+                    "end": 22,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 22,
+                    "end": 23,
+                    "text": "a"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 23,
+                    "end": 24,
+                    "text": " "
+                },
+                {
+                    "type": "Operator",
+                    "start": 24,
+                    "end": 25,
+                    "text": "="
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 25,
+                    "end": 26,
+                    "text": " "
+                },
+                {
+                    "type": "Parameter",
+                    "start": 26,
+                    "end": 31,
+                    "text": ":name"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 31,
+                    "end": 32,
+                    "text": " "
+                },
+                {
+                    "type": "Keyword",
+                    "start": 32,
+                    "end": 35,
+                    "text": "AND"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 35,
+                    "end": 36,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 36,
+                    "end": 37,
+                    "text": "b"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 37,
+                    "end": 38,
+                    "text": " "
+                },
+                {
+                    "type": "Operator",
+                    "start": 38,
+                    "end": 39,
+                    "text": "="
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 39,
+                    "end": 40,
+                    "text": " "
+                },
+                {
+                    "type": "Parameter",
+                    "start": 40,
+                    "end": 41,
+                    "text": "?"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 41,
+                    "end": 42,
+                    "text": " "
+                },
+                {
+                    "type": "Keyword",
+                    "start": 42,
+                    "end": 45,
+                    "text": "AND"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 45,
+                    "end": 46,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 46,
+                    "end": 47,
+                    "text": "c"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 47,
+                    "end": 48,
+                    "text": " "
+                },
+                {
+                    "type": "Operator",
+                    "start": 48,
+                    "end": 49,
+                    "text": "="
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 49,
+                    "end": 50,
+                    "text": " "
+                },
+                {
+                    "type": "Operator",
+                    "start": 50,
+                    "end": 51,
+                    "text": "@"
+                },
+                {
+                    "type": "Identifier",
+                    "start": 51,
+                    "end": 52,
+                    "text": "v"
+                }
+            ]
+        },
+        {
+            "name": "non-ascii text",
+            "output": [
+                {
+                    "type": "Keyword",
+                    "start": 0,
+                    "end": 6,
+                    "text": "SELECT"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 6,
+                    "end": 7,
+                    "text": " "
+                },
+                {
+                    "type": "String",
+                    "start": 7,
+                    "end": 22,
+                    "text": "'Tiếng Việt 😀'"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 22,
+                    "end": 23,
+                    "text": " "
+                },
+                {
+                    "type": "Keyword",
+                    "start": 23,
+                    "end": 25,
+                    "text": "AS"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 25,
+                    "end": 26,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 26,
+                    "end": 30,
+                    "text": "chào"
+                }
+            ]
+        },
+        {
+            "name": "empty",
+            "output": []
+        }
+    ]
+}

@@ -36,7 +36,7 @@ import org.jetbrains.jewel.ui.component.styling.LocalDividerStyle
 import org.jetbrains.jewel.ui.theme.linkStyle
 
 /**
- * Every colour token the app resolves for a theme, dumped to `ui-kit/conformance/golden/themes/<name>.json` so the Rust
+ * Every colour token the app resolves for a theme, dumped to `conformance/golden/themes/<name>.json` so the Rust
  * `tg-theme` crate can be checked value by value.
  *
  * One file per built-in variant (default settings), plus one per case in `fixtures/themes/cases.json`, which adds the

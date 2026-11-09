@@ -24,8 +24,8 @@ const val SkipRegionTag = "skip:"
 
 /**
  * One gallery specimen: components drawn the way the app draws them, on a canvas of a fixed [size], which the Rust
- * gallery (`ui-kit/crates/tg-gallery/src/specimens/<name>.rs`) lays out identically. [GoldenTest] renders every
- * specimen in every built-in theme to `ui-kit/conformance/reference/<theme>/<name>.png`, with the text, icon and skip
+ * gallery (`crates/tg-gallery/src/specimens/<name>.rs`) lays out identically. [GoldenTest] renders every
+ * specimen in every built-in theme to `conformance/reference/<theme>/<name>.png`, with the text, icon and skip
  * regions tagged inside it in `<name>.json`, and merges what [measure] records into `golden/<theme>.json`.
  *
  * Each lives in its own file in the `gallery` package as an `object`; [Gallery] finds them, so adding a specimen

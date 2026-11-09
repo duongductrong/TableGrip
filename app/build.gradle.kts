@@ -196,6 +196,12 @@ kotlin {
     }
 }
 
+// Theme files and the app's own icons are shared with the Rust crates (tg-theme, tg-ui), so they live at the repository
+// root in resources/ and are packaged at the same paths (/themes, /icons) as before.
+sourceSets.main {
+    resources.srcDir(rootProject.layout.projectDirectory.dir("resources"))
+}
+
 /** TableGrip's adapters for non-JDBC clients: shipped as jars inside the app, loaded only with their client's download. */
 val engineAdapters by configurations.creating {
     isCanBeConsumed = false
@@ -524,7 +530,7 @@ tasks {
         useJUnitPlatform()
         providers.gradleProperty("snapshot.dir").orNull?.let { systemProperty("snapshot.dir", it) }
         providers.gradleProperty("snapshot.db").orNull?.let { systemProperty("snapshot.db", it) }
-        // `-Pconformance.record=true` rewrites ui-kit/conformance/golden and reference from the current app.
+        // `-Pconformance.record=true` rewrites conformance/golden and reference from the current app.
         providers.gradleProperty("conformance.record").orNull?.let { systemProperty("conformance.record", it) }
         listOf("it.network", "it.postgres", "it.redis", "it.mongo", "it.etcd").forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
     }

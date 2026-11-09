@@ -1,0 +1,73 @@
+{
+  "subject": "sql-splitter",
+  "cases": [
+    {
+      "name": "two statements",
+      "sql": "SELECT 1;\nSELECT 2;",
+      "at": [
+        0,
+        5,
+        10,
+        18
+      ]
+    },
+    {
+      "name": "semicolon in string and comment",
+      "sql": "SELECT ';'; -- ; not here\nSELECT 2",
+      "at": [
+        3,
+        30
+      ]
+    },
+    {
+      "name": "trailing statement without semicolon",
+      "sql": "SELECT 1;\n\nSELECT 2",
+      "at": [
+        11
+      ]
+    },
+    {
+      "name": "empty statements",
+      "sql": ";;  ;\n",
+      "at": [
+        0,
+        3
+      ]
+    },
+    {
+      "name": "postgres function body",
+      "syntax": "PostgreSQL",
+      "sql": "CREATE FUNCTION f() RETURNS int AS $$ BEGIN RETURN 1; END $$ LANGUAGE plpgsql;\nSELECT f();",
+      "at": [
+        50,
+        85
+      ]
+    },
+    {
+      "name": "mysql delimiter command",
+      "syntax": "MySQL",
+      "sql": "DELIMITER //\nCREATE PROCEDURE p() BEGIN SELECT 1; SELECT 2; END //\nDELIMITER ;\nCALL p();",
+      "at": [
+        30,
+        80
+      ]
+    },
+    {
+      "name": "tsql GO batches",
+      "syntax": "TSql",
+      "sql": "SELECT 1\nGO\nSELECT 2\ngo\n",
+      "at": [
+        2,
+        13
+      ]
+    },
+    {
+      "name": "non-ascii",
+      "sql": "SELECT 'ồ';SELECT '😀';",
+      "at": [
+        1,
+        14
+      ]
+    }
+  ]
+}

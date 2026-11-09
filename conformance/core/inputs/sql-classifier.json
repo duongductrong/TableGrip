@@ -1,0 +1,115 @@
+{
+  "subject": "sql-classifier",
+  "cases": [
+    {
+      "name": "select",
+      "syntax": "Standard",
+      "sql": "SELECT * FROM t"
+    },
+    {
+      "name": "with select",
+      "syntax": "Standard",
+      "sql": "WITH a AS (SELECT 1) SELECT * FROM a"
+    },
+    {
+      "name": "with delete",
+      "syntax": "PostgreSQL",
+      "sql": "WITH a AS (SELECT id FROM t) DELETE FROM t WHERE id IN (SELECT id FROM a)"
+    },
+    {
+      "name": "insert",
+      "syntax": "Standard",
+      "sql": "INSERT INTO t VALUES (1)"
+    },
+    {
+      "name": "update without where",
+      "syntax": "Standard",
+      "sql": "UPDATE t SET a = 1"
+    },
+    {
+      "name": "update with where",
+      "syntax": "Standard",
+      "sql": "UPDATE t SET a = 1 WHERE id = 2"
+    },
+    {
+      "name": "delete without where",
+      "syntax": "Standard",
+      "sql": "DELETE FROM t"
+    },
+    {
+      "name": "truncate",
+      "syntax": "Standard",
+      "sql": "TRUNCATE TABLE t"
+    },
+    {
+      "name": "drop table",
+      "syntax": "Standard",
+      "sql": "DROP TABLE t"
+    },
+    {
+      "name": "create index",
+      "syntax": "Standard",
+      "sql": "CREATE INDEX i ON t(a)"
+    },
+    {
+      "name": "begin",
+      "syntax": "Standard",
+      "sql": "BEGIN"
+    },
+    {
+      "name": "commit",
+      "syntax": "Standard",
+      "sql": "COMMIT"
+    },
+    {
+      "name": "explain",
+      "syntax": "PostgreSQL",
+      "sql": "EXPLAIN SELECT 1"
+    },
+    {
+      "name": "explain analyze delete",
+      "syntax": "PostgreSQL",
+      "sql": "EXPLAIN ANALYZE DELETE FROM t"
+    },
+    {
+      "name": "show",
+      "syntax": "MySQL",
+      "sql": "SHOW TABLES"
+    },
+    {
+      "name": "set",
+      "syntax": "Standard",
+      "sql": "SET search_path = public"
+    },
+    {
+      "name": "pragma",
+      "syntax": "SQLite",
+      "sql": "PRAGMA table_info(t)"
+    },
+    {
+      "name": "leading comment",
+      "syntax": "Standard",
+      "sql": "/* why */ -- note\nselect 1"
+    },
+    {
+      "name": "empty",
+      "syntax": "Standard",
+      "sql": "   "
+    },
+    {
+      "name": "grant",
+      "syntax": "Standard",
+      "sql": "GRANT SELECT ON t TO bob"
+    },
+    {
+      "name": "call",
+      "syntax": "MySQL",
+      "sql": "CALL p()"
+    },
+    {
+      "name": "merge",
+      "syntax": "TSql",
+      "sql": "MERGE INTO t USING s ON t.id = s.id WHEN MATCHED THEN DELETE;"
+    }
+  ]
+}

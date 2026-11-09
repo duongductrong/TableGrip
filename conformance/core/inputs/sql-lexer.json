@@ -1,0 +1,53 @@
+{
+  "subject": "sql-lexer",
+  "cases": [
+    {
+      "name": "plain select",
+      "sql": "SELECT id, name FROM users WHERE id = 42;"
+    },
+    {
+      "name": "line and block comments",
+      "sql": "-- head\nSELECT /* inline */ 1"
+    },
+    {
+      "name": "unterminated string runs to end",
+      "sql": "SELECT 'abc"
+    },
+    {
+      "name": "postgres dollar quote",
+      "syntax": "PostgreSQL",
+      "sql": "SELECT $tag$ it's ; here $tag$, $1"
+    },
+    {
+      "name": "postgres cast and params",
+      "syntax": "PostgreSQL",
+      "sql": "SELECT x::int FROM t WHERE a = $2"
+    },
+    {
+      "name": "mysql backtick, hash, double-quoted string",
+      "syntax": "MySQL",
+      "sql": "SELECT `col` FROM t # note\nWHERE a = \"b\\\"c\""
+    },
+    {
+      "name": "tsql brackets",
+      "syntax": "TSql",
+      "sql": "SELECT [first name] FROM [dbo].[people]"
+    },
+    {
+      "name": "numbers",
+      "sql": "SELECT 1, 1.5, .5, 1e10, 0x1F"
+    },
+    {
+      "name": "named and positional parameters",
+      "sql": "SELECT * FROM t WHERE a = :name AND b = ? AND c = @v"
+    },
+    {
+      "name": "non-ascii text",
+      "sql": "SELECT 'Tiếng Việt 😀' AS chào"
+    },
+    {
+      "name": "empty",
+      "sql": ""
+    }
+  ]
+}

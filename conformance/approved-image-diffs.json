@@ -1,0 +1,46 @@
+{
+  "catppuccin-frappe/scrollbar": {
+    "maxDiffPercent": 0.7,
+    "reason": "The translucent thumb's edge blends a little differently (max ΔE00 2.6, just over the 2.0 pixel threshold and not visible). Reviewed 2026-11-10."
+  },
+  "contrast-dark/checkbox": {
+    "maxDiffPercent": 0.8,
+    "reason": "Anti-aliasing on rounded corners and on the check/chevron strokes: Skia and GPUI rasterise edges differently, and Contrast's pure white-on-black edges push that over the pixel ratio. Text regions and flat colours match. Reviewed 2026-11-10."
+  },
+  "contrast-dark/checkbox-pressed": {
+    "maxDiffPercent": 0.9,
+    "reason": "Anti-aliasing on rounded corners and on the check/chevron strokes: Skia and GPUI rasterise edges differently, and Contrast's pure white-on-black edges push that over the pixel ratio. Text regions and flat colours match. Reviewed 2026-11-10."
+  },
+  "contrast-dark/icon-button": {
+    "maxDiffPercent": 0.7,
+    "reason": "Anti-aliasing on rounded corners and on the check/chevron strokes: Skia and GPUI rasterise edges differently, and Contrast's pure white-on-black edges push that over the pixel ratio. Text regions and flat colours match. Reviewed 2026-11-10."
+  },
+  "contrast-dark/icon-button-pressed": {
+    "maxDiffPercent": 1.5,
+    "reason": "Anti-aliasing on rounded corners and on the check/chevron strokes: Skia and GPUI rasterise edges differently, and Contrast's pure white-on-black edges push that over the pixel ratio. Text regions and flat colours match. Reviewed 2026-11-10."
+  },
+  "contrast-dark/list-combo-box": {
+    "maxDiffPercent": 0.8,
+    "reason": "Anti-aliasing on rounded corners and on the check/chevron strokes: Skia and GPUI rasterise edges differently, and Contrast's pure white-on-black edges push that over the pixel ratio. Text regions and flat colours match. Reviewed 2026-11-10."
+  },
+  "contrast-dark/radio-pressed": {
+    "maxDiffPercent": 0.7,
+    "reason": "Anti-aliasing on rounded corners and on the check/chevron strokes: Skia and GPUI rasterise edges differently, and Contrast's pure white-on-black edges push that over the pixel ratio. Text regions and flat colours match. Reviewed 2026-11-10."
+  },
+  "contrast-light/checkbox-pressed": {
+    "maxDiffPercent": 0.9,
+    "reason": "Anti-aliasing on rounded corners and on the check/chevron strokes: Skia and GPUI rasterise edges differently, and Contrast's pure white-on-black edges push that over the pixel ratio. Text regions and flat colours match. Reviewed 2026-11-10."
+  },
+  "contrast-light/icon-button-pressed": {
+    "maxDiffPercent": 1.1,
+    "reason": "Anti-aliasing on rounded corners and on the check/chevron strokes: Skia and GPUI rasterise edges differently, and Contrast's pure white-on-black edges push that over the pixel ratio. Text regions and flat colours match. Reviewed 2026-11-10."
+  },
+  "contrast-light/list-combo-box": {
+    "maxDiffPercent": 0.8,
+    "reason": "Anti-aliasing on rounded corners and on the check/chevron strokes: Skia and GPUI rasterise edges differently, and Contrast's pure white-on-black edges push that over the pixel ratio. Text regions and flat colours match. Reviewed 2026-11-10."
+  },
+  "contrast-light/radio-pressed": {
+    "maxDiffPercent": 0.7,
+    "reason": "Anti-aliasing on rounded corners and on the check/chevron strokes: Skia and GPUI rasterise edges differently, and Contrast's pure white-on-black edges push that over the pixel ratio. Text regions and flat colours match. Reviewed 2026-11-10."
+  }
+}

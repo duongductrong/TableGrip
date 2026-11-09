@@ -39,7 +39,7 @@ import kotlinx.serialization.json.put
 
 /**
  * Sizes and colours of the components as the app draws them today, measured from offscreen renders of the gallery
- * specimens ([Gallery]): `ui-kit/conformance/golden/<theme>.json`, plus each render in `reference/<theme>/<name>.png`
+ * specimens ([Gallery]): `conformance/golden/<theme>.json`, plus each render in `reference/<theme>/<name>.png`
  * and its tagged text, icon and skip regions in `reference/<theme>/<name>.json`. The Rust UI kit is checked against
  * these files, for every built-in theme.
  *
