@@ -6,6 +6,8 @@
 //! Phase 1 foundations: [island], [divider], [text], [link], [icon], plus the theme global and zoom.
 //! Phase 2 controls: [button], [checkbox] (and its tri-state header), [radio], [icon_button], with the focus [ring]
 //! they draw as an overlay outside their bounds.
+//! Phase 4 popups: [popup_menu], [list_combo_box], [popup_list] and the [scrollbar] with its [scroll_area], on the
+//! shared [popup] surface.
 
 pub mod button;
 pub mod checkbox;
@@ -16,11 +18,16 @@ pub mod icon_button;
 mod interact;
 pub mod island;
 pub mod link;
+pub mod list_combo;
 pub mod look;
 mod marks;
 pub mod palette;
+pub mod popup;
+pub mod popup_list;
+pub mod popup_menu;
 pub mod radio;
 pub mod ring;
+pub mod scrollbar;
 pub mod text;
 pub mod text_input;
 pub mod theme;
@@ -32,9 +39,13 @@ pub use icon::{Assets, Icon, icon};
 pub use icon_button::{IconButton, icon_button};
 pub use island::{Island, island};
 pub use link::{Link, LinkLook, link};
+pub use list_combo::{ListComboBox, list_combo_box};
 pub use look::Look;
+pub use popup_list::{PopupList, popup_list};
+pub use popup_menu::{MenuItem, PopupMenu, menu_item, popup_menu};
 pub use radio::{RadioButton, radio_button};
 pub use ring::{RingSpec, ring};
+pub use scrollbar::{ScrollArea, Scrollbar, scroll_area, scrollbar};
 pub use text::{Text, TextColor, text};
 pub use text_input::{TextInput, TextInputLook};
 pub use tg_theme::zoom;

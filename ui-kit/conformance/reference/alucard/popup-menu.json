@@ -1,0 +1,49 @@
+{
+    "specimen": "popup-menu",
+    "theme": "Alucard",
+    "density": 2.0,
+    "width": 480,
+    "height": 320,
+    "regions": [
+        {
+            "tag": "text:popup-menu.0",
+            "kind": "text",
+            "rect": [
+                60,
+                38,
+                160,
+                31
+            ]
+        },
+        {
+            "tag": "text:popup-menu.1",
+            "kind": "text",
+            "rect": [
+                60,
+                85,
+                188,
+                31
+            ]
+        },
+        {
+            "tag": "text:popup-menu.2",
+            "kind": "text",
+            "rect": [
+                60,
+                150,
+                95,
+                31
+            ]
+        },
+        {
+            "tag": "text:popup-menu.3",
+            "kind": "text",
+            "rect": [
+                60,
+                197,
+                113,
+                31
+            ]
+        }
+    ]
+}

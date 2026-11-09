@@ -1,0 +1,49 @@
+{
+    "specimen": "list-combo-box",
+    "theme": "Graphite Light",
+    "density": 2.0,
+    "width": 480,
+    "height": 288,
+    "regions": [
+        {
+            "tag": "skip:combo.disabled",
+            "kind": "skip",
+            "rect": [
+                52,
+                228,
+                144,
+                32
+            ]
+        },
+        {
+            "tag": "text:combo.focused",
+            "kind": "text",
+            "rect": [
+                52,
+                164,
+                144,
+                32
+            ]
+        },
+        {
+            "tag": "text:combo.hovered",
+            "kind": "text",
+            "rect": [
+                52,
+                100,
+                144,
+                32
+            ]
+        },
+        {
+            "tag": "text:combo.rest",
+            "kind": "text",
+            "rect": [
+                52,
+                36,
+                144,
+                32
+            ]
+        }
+    ]
+}

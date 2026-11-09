@@ -1,0 +1,49 @@
+{
+    "specimen": "popup-list",
+    "theme": "One Light",
+    "density": 2.0,
+    "width": 352,
+    "height": 288,
+    "regions": [
+        {
+            "tag": "text:popup-list.0",
+            "kind": "text",
+            "rect": [
+                48,
+                37,
+                77,
+                31
+            ]
+        },
+        {
+            "tag": "text:popup-list.1",
+            "kind": "text",
+            "rect": [
+                48,
+                93,
+                71,
+                31
+            ]
+        },
+        {
+            "tag": "text:popup-list.2",
+            "kind": "text",
+            "rect": [
+                48,
+                149,
+                76,
+                31
+            ]
+        },
+        {
+            "tag": "text:popup-list.3",
+            "kind": "text",
+            "rect": [
+                48,
+                205,
+                77,
+                31
+            ]
+        }
+    ]
+}

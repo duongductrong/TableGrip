@@ -66,6 +66,22 @@
             "width": 120.0,
             "height": 96.0
         },
+        "combo.rest": {
+            "width": 200.0,
+            "height": 28.0
+        },
+        "row:0": {
+            "width": 144.0,
+            "height": 28.0
+        },
+        "menu": {
+            "width": 122.0,
+            "height": 117.0
+        },
+        "scroll.top": {
+            "width": 64.0,
+            "height": 160.0
+        },
         "text:normal": {
             "width": 77.5,
             "height": 15.5
