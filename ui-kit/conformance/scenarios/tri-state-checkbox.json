@@ -1,0 +1,20 @@
+{
+  "component": "tri-state-checkbox",
+  "description": "TriStateCheckbox as a group header: the app derives the state from its children and a click selects all unless all are selected.",
+  "cases": [
+    { "name": "off becomes on", "setup": { "selected": 0, "total": 3 },
+      "steps": ["click"], "expect": { "state": "on", "selected": 3 } },
+    { "name": "on becomes off", "setup": { "selected": 3, "total": 3 },
+      "steps": ["click"], "expect": { "state": "off", "selected": 0 } },
+    { "name": "indeterminate becomes on", "setup": { "selected": 1, "total": 3 },
+      "steps": ["click"], "expect": { "state": "on", "selected": 3 } },
+    { "name": "the initial state reflects the children", "setup": { "selected": 2, "total": 3 },
+      "steps": [], "expect": { "state": "indeterminate" } },
+    { "name": "Space toggles the focused box", "setup": { "selected": 0, "total": 3 },
+      "steps": ["focus", { "key": "Space" }], "expect": { "state": "on", "focused": true } },
+    { "name": "Enter toggles the focused box", "setup": { "selected": 0, "total": 3 },
+      "steps": ["focus", { "key": "Enter" }], "expect": { "state": "on" } },
+    { "name": "a click focuses the box", "setup": { "selected": 0, "total": 3 },
+      "steps": ["click"], "expect": { "focused": true } }
+  ]
+}

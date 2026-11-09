@@ -1,0 +1,219 @@
+{
+  "component": "tooltip",
+  "description": "Tooltip timing around an icon button or text: delay before showing, hiding, keyboard focus.",
+  "cases": [
+    {
+      "name": "nothing shows without hover",
+      "setup": {},
+      "steps": [
+        {
+          "wait": 2000
+        }
+      ],
+      "expect": {
+        "shown:tip": false
+      }
+    },
+    {
+      "name": "not shown immediately on hover",
+      "setup": {},
+      "steps": [
+        "hover"
+      ],
+      "expect": {
+        "shown:tip": false
+      }
+    },
+    {
+      "name": "leaving before the delay cancels it",
+      "setup": {},
+      "steps": [
+        "hover",
+        {
+          "wait": 100
+        },
+        "unhover",
+        {
+          "wait": 1500
+        }
+      ],
+      "expect": {
+        "shown:tip": false
+      }
+    },
+    {
+      "name": "keyboard focus doesn't show it",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "wait": 1500
+        }
+      ],
+      "expect": {
+        "shown:tip": false
+      }
+    },
+    {
+      "name": "a click hides it",
+      "setup": {},
+      "steps": [
+        "hover",
+        {
+          "wait": 1500
+        },
+        "click",
+        {
+          "wait": 100
+        }
+      ],
+      "expect": {
+        "shown:tip": false
+      }
+    },
+    {
+      "name": "works over text",
+      "setup": {
+        "target": "text"
+      },
+      "steps": [
+        "hover",
+        {
+          "wait": 1500
+        }
+      ],
+      "expect": {
+        "shown:tip": true
+      }
+    },
+    {
+      "name": "not shown at 450ms",
+      "setup": {},
+      "steps": [
+        "hover",
+        {
+          "wait": 450
+        }
+      ],
+      "expect": {
+        "shown:tip": false
+      }
+    },
+    {
+      "name": "shown at 500ms",
+      "setup": {},
+      "steps": [
+        "hover",
+        {
+          "wait": 500
+        }
+      ],
+      "expect": {
+        "shown:tip": true
+      }
+    },
+    {
+      "name": "shown at 550ms",
+      "setup": {},
+      "steps": [
+        "hover",
+        {
+          "wait": 550
+        }
+      ],
+      "expect": {
+        "shown:tip": true
+      }
+    },
+    {
+      "name": "stays shown while hovering",
+      "setup": {},
+      "steps": [
+        "hover",
+        {
+          "wait": 5000
+        }
+      ],
+      "expect": {
+        "shown:tip": true
+      }
+    },
+    {
+      "name": "hidden as soon as the pointer leaves",
+      "setup": {},
+      "steps": [
+        "hover",
+        {
+          "wait": 1000
+        },
+        {
+          "hover": "away"
+        }
+      ],
+      "expect": {
+        "shown:tip": false
+      }
+    },
+    {
+      "name": "hidden 100ms after leaving",
+      "setup": {},
+      "steps": [
+        "hover",
+        {
+          "wait": 1000
+        },
+        {
+          "hover": "away"
+        },
+        {
+          "wait": 100
+        }
+      ],
+      "expect": {
+        "shown:tip": false
+      }
+    },
+    {
+      "name": "hidden 1500ms after leaving",
+      "setup": {},
+      "steps": [
+        "hover",
+        {
+          "wait": 1000
+        },
+        {
+          "hover": "away"
+        },
+        {
+          "wait": 1500
+        }
+      ],
+      "expect": {
+        "shown:tip": false
+      }
+    },
+    {
+      "name": "comes back on re-entering",
+      "setup": {},
+      "steps": [
+        "hover",
+        {
+          "wait": 1000
+        },
+        {
+          "hover": "away"
+        },
+        {
+          "wait": 1500
+        },
+        "hover",
+        {
+          "wait": 1000
+        }
+      ],
+      "expect": {
+        "shown:tip": true
+      }
+    }
+  ]
+}

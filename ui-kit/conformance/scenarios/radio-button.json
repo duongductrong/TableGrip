@@ -1,0 +1,108 @@
+{
+  "component": "radio-button",
+  "description": "RadioButtonRow as the app uses it: the app owns the exclusive selection, the row only reports clicks.",
+  "cases": [
+    {
+      "name": "a click selects that row",
+      "setup": {
+        "selected": -1
+      },
+      "steps": [
+        {
+          "click": "row:1"
+        }
+      ],
+      "expect": {
+        "selected": 1
+      }
+    },
+    {
+      "name": "clicking another row moves the selection",
+      "setup": {
+        "selected": 0
+      },
+      "steps": [
+        {
+          "click": "row:2"
+        }
+      ],
+      "expect": {
+        "selected": 2
+      }
+    },
+    {
+      "name": "clicking the selected row keeps it selected",
+      "setup": {
+        "selected": 1
+      },
+      "steps": [
+        {
+          "click": "row:1"
+        }
+      ],
+      "expect": {
+        "selected": 1
+      }
+    },
+    {
+      "name": "Space selects the focused row",
+      "setup": {
+        "selected": -1
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "Space"
+        }
+      ],
+      "expect": {
+        "selected": 0,
+        "focused": true
+      }
+    },
+    {
+      "name": "Enter selects the focused row",
+      "setup": {
+        "selected": -1
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "Enter"
+        }
+      ],
+      "expect": {
+        "selected": 0,
+        "focused": true
+      }
+    },
+    {
+      "name": "arrow down moves nothing",
+      "setup": {
+        "selected": 0
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "Down"
+        }
+      ],
+      "expect": {
+        "selected": 0,
+        "focused": true
+      }
+    },
+    {
+      "name": "a click on the group focuses a row",
+      "setup": {
+        "selected": -1
+      },
+      "steps": [
+        "click"
+      ],
+      "expect": {
+        "focused": true
+      }
+    }
+  ]
+}

@@ -2,7 +2,12 @@
 
 mod button;
 mod checkbox;
+mod focus_order;
+mod icon_button;
 mod link;
+mod radio_button;
+mod tooltip;
+mod tri_state_checkbox;
 
 use serde_json::{Map, Value};
 use tg_ui_logic::Input;
@@ -29,6 +34,13 @@ pub fn make(component: &str, setup: &Map<String, Value>) -> Option<Box<dyn Subje
         "button" => Some(Box::new(button::ButtonSubject::new(setup))),
         "checkbox" => Some(Box::new(checkbox::CheckboxSubject::new(setup))),
         "link" => Some(Box::new(link::LinkSubject::new(setup))),
+        "focus-order" => Some(Box::new(focus_order::FocusOrderSubject::new(setup))),
+        "icon-button" => Some(Box::new(icon_button::IconButtonSubject::new(setup))),
+        "radio-button" => Some(Box::new(radio_button::RadioButtonSubject::new(setup))),
+        "tooltip" => Some(Box::new(tooltip::TooltipSubject::new(setup))),
+        "tri-state-checkbox" => Some(Box::new(tri_state_checkbox::TriStateCheckboxSubject::new(
+            setup,
+        ))),
         _ => None,
     }
 }

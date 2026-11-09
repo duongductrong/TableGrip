@@ -1,0 +1,142 @@
+{
+ "component": "focus-order",
+ "description": "Tab order around a button: Shift+Tab, the ends, disabled controls.",
+ "cases": [
+  {
+   "name": "Tab moves forward",
+   "setup": {
+    "next": true
+   },
+   "steps": [
+    "focus",
+    {
+     "key": "Tab"
+    }
+   ],
+   "expect": {
+    "focused": false,
+    "nextFocused": true
+   }
+  },
+  {
+   "name": "Shift+Tab moves back",
+   "setup": {
+    "next": true
+   },
+   "steps": [
+    "focus",
+    {
+     "key": "Tab"
+    },
+    {
+     "key": "Tab",
+     "mods": [
+      "shift"
+     ]
+    }
+   ],
+   "expect": {
+    "focused": true,
+    "nextFocused": false
+   }
+  },
+  {
+   "name": "Tab at the last control wraps to the first",
+   "setup": {
+    "next": true
+   },
+   "steps": [
+    "focus",
+    {
+     "key": "Tab"
+    },
+    {
+     "key": "Tab"
+    }
+   ],
+   "expect": {
+    "focused": true,
+    "nextFocused": false
+   }
+  },
+  {
+   "name": "Shift+Tab at the first control wraps to the last",
+   "setup": {
+    "next": true
+   },
+   "steps": [
+    "focus",
+    {
+     "key": "Tab",
+     "mods": [
+      "shift"
+     ]
+    }
+   ],
+   "expect": {
+    "focused": false,
+    "nextFocused": true
+   }
+  },
+  {
+   "name": "Tab skips a disabled control",
+   "setup": {
+    "next": true,
+    "disabledAfter": true
+   },
+   "steps": [
+    "focus",
+    {
+     "key": "Tab"
+    }
+   ],
+   "expect": {
+    "focused": false,
+    "nextFocused": true
+   }
+  },
+  {
+   "name": "Shift+Tab skips a disabled control",
+   "setup": {
+    "next": true,
+    "disabledAfter": true
+   },
+   "steps": [
+    "focus",
+    {
+     "key": "Tab"
+    },
+    {
+     "key": "Tab",
+     "mods": [
+      "shift"
+     ]
+    }
+   ],
+   "expect": {
+    "focused": true,
+    "nextFocused": false
+   }
+  },
+  {
+   "name": "Shift+Tab from a control after a disabled one wraps round",
+   "setup": {
+    "next": true,
+    "disabledBefore": true
+   },
+   "steps": [
+    "focus",
+    {
+     "key": "Tab",
+     "mods": [
+      "shift"
+     ]
+    }
+   ],
+   "expect": {
+    "focused": false,
+    "nextFocused": true
+   }
+  }
+ ]
+}
