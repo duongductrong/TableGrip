@@ -156,3 +156,6 @@ pub enum SshError {
     #[error("{0}")]
     Io(#[from] std::io::Error),
 }
+
+#[cfg(test)]
+mod tests;
