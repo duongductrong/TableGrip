@@ -110,6 +110,86 @@
       "name": "merge",
       "syntax": "TSql",
       "sql": "MERGE INTO t USING s ON t.id = s.id WHEN MATCHED THEN DELETE;"
+    },
+    {
+      "name": "kotlin: leading comment select",
+      "syntax": "PostgreSQL",
+      "sql": "-- note\n select 1"
+    },
+    {
+      "name": "kotlin: explain select",
+      "syntax": "PostgreSQL",
+      "sql": "EXPLAIN SELECT * FROM t"
+    },
+    {
+      "name": "kotlin: explain analyze delete with where",
+      "syntax": "PostgreSQL",
+      "sql": "EXPLAIN ANALYZE DELETE FROM t WHERE id = 1"
+    },
+    {
+      "name": "kotlin: lower insert",
+      "syntax": "PostgreSQL",
+      "sql": "insert into t values (1)"
+    },
+    {
+      "name": "kotlin: create table",
+      "syntax": "PostgreSQL",
+      "sql": "CREATE TABLE t (id int)"
+    },
+    {
+      "name": "kotlin: set search path",
+      "syntax": "PostgreSQL",
+      "sql": "SET search_path = app"
+    },
+    {
+      "name": "kotlin: cte select",
+      "syntax": "PostgreSQL",
+      "sql": "WITH x AS (SELECT 1) SELECT * FROM x"
+    },
+    {
+      "name": "kotlin: data-modifying cte",
+      "syntax": "PostgreSQL",
+      "sql": "WITH x AS (DELETE FROM t RETURNING *) SELECT * FROM x"
+    },
+    {
+      "name": "kotlin: cte then delete",
+      "syntax": "PostgreSQL",
+      "sql": "WITH ids AS (SELECT id FROM t) DELETE FROM u WHERE id IN (SELECT id FROM ids)"
+    },
+    {
+      "name": "kotlin: lower update without where",
+      "syntax": "PostgreSQL",
+      "sql": "update users set active = false"
+    },
+    {
+      "name": "kotlin: where only in subquery",
+      "syntax": "PostgreSQL",
+      "sql": "UPDATE t SET x = (SELECT max(y) FROM u WHERE u.k = 1)"
+    },
+    {
+      "name": "kotlin: truncate without table",
+      "syntax": "PostgreSQL",
+      "sql": "TRUNCATE users"
+    },
+    {
+      "name": "alter drop column",
+      "sql": "ALTER TABLE t DROP COLUMN c"
+    },
+    {
+      "name": "alter add column",
+      "sql": "ALTER TABLE t ADD COLUMN c int"
+    },
+    {
+      "name": "drop alone",
+      "sql": "DROP"
+    },
+    {
+      "name": "rollback",
+      "sql": "rollback"
+    },
+    {
+      "name": "starts with a number",
+      "sql": "42"
     }
   ]
 }

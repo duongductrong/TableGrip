@@ -2,4 +2,21 @@
 //! projections, DDL scripts, schema diffs and completion.
 //!
 //! Ported from `core/src/main/kotlin/dev/tablegrip/core/{sql,dialect,filter,ddl,schema,completion}` (milestone M1 of
-//! docs/plans/rust-migration.md), held to the Kotlin output through `conformance/core`.
+//! docs/plans/rust-migration.md), held to the Kotlin output through `conformance/core`. Offsets are byte offsets into
+//! the `&str` they index; the golden tests convert them to the UTF-16 offsets Kotlin records.
+
+pub mod classifier;
+pub mod formatter;
+pub mod keywords;
+pub mod kt;
+pub mod lexer;
+pub mod parameters;
+pub mod splitter;
+pub mod syntax;
+
+pub use classifier::{SqlClassifier, StatementInfo, StatementKind};
+pub use formatter::{KeywordCase, SqlFormatter};
+pub use lexer::{SqlLexer, Token, TokenType};
+pub use parameters::SqlParameters;
+pub use splitter::{SqlSplitter, SqlStatement};
+pub use syntax::SqlSyntax;

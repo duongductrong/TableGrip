@@ -1,78 +1,130 @@
-//! Holds this crate to `conformance/core/golden`, which the Kotlin core records (`CoreGoldenTest`) from the inputs in
-//! `conformance/core/inputs`. Each subject this crate implements gets a runner in `run`; the others are reported as
-//! pending until it does. Offsets in the golden files are UTF-16 code units and every span also carries its text.
+//! Holds tg-sql to the Kotlin core's golden files; see `support/harness.rs`.
 
-use serde_json::Value;
-use std::path::{Path, PathBuf};
+#[path = "support/harness.rs"]
+mod harness;
 
-fn root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../conformance/core")
-}
+use harness::{opt_str, str, u16};
+use serde_json::{Value, json};
+use std::collections::HashMap;
+use tg_sql::*;
 
-fn read(path: &Path) -> Value {
-    serde_json::from_str(&std::fs::read_to_string(path).unwrap())
-        .unwrap_or_else(|e| panic!("{}: {e}", path.display()))
-}
-
-/// The output for one case of `subject`, or `None` while the subject isn't ported.
-#[allow(clippy::match_single_binding)] // an arm per subject arrives with its port (M1)
-fn run(subject: &str, _case: &Value) -> Option<Value> {
-    match subject {
-        _ => None,
+fn syntax(case: &Value) -> SqlSyntax {
+    match opt_str(case, "syntax").unwrap_or("Standard") {
+        "PostgreSQL" => SqlSyntax::POSTGRESQL,
+        "MySQL" => SqlSyntax::MYSQL,
+        "SQLite" => SqlSyntax::SQLITE,
+        "TSql" => SqlSyntax::TSQL,
+        "ClickHouse" => SqlSyntax::CLICKHOUSE,
+        "Standard" => SqlSyntax::STANDARD,
+        other => panic!("unknown syntax {other}"),
     }
 }
 
-fn json_files(dir: &Path) -> Vec<PathBuf> {
-    let mut files: Vec<_> = std::fs::read_dir(dir)
-        .unwrap()
-        .map(|e| e.unwrap().path())
-        .filter(|p| p.extension().is_some_and(|e| e == "json"))
+fn lexer(case: &Value) -> Value {
+    let sql = str(case, "sql");
+    SqlLexer::new(syntax(case))
+        .tokenize(sql)
+        .iter()
+        .map(|t| {
+            json!({
+                "type": t.kind.name(),
+                "start": u16(sql, t.start),
+                "end": u16(sql, t.end),
+                "text": t.text(sql),
+            })
+        })
+        .collect()
+}
+
+fn splitter(case: &Value) -> Value {
+    let sql = str(case, "sql");
+    let splitter = SqlSplitter::new(syntax(case));
+    let statements: Vec<Value> = splitter
+        .split(sql)
+        .iter()
+        .map(|s| {
+            json!({
+                "text": s.text,
+                "start": u16(sql, s.start),
+                "end": u16(sql, s.end),
+                "delimiterEnd": u16(sql, s.delimiter_end),
+            })
+        })
         .collect();
-    files.sort();
-    files
+    let mut out = json!({ "statements": statements });
+    if let Some(at) = case.get("at") {
+        out["statementAt"] = at
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|o| {
+                let offset = harness::byte(sql, o.as_u64().unwrap() as usize);
+                splitter.statement_at(sql, offset).map_or(
+                    Value::Null,
+                    |s| json!({ "start": u16(sql, s.start), "end": u16(sql, s.end) }),
+                )
+            })
+            .collect();
+    }
+    out
+}
+
+fn classifier(case: &Value) -> Value {
+    let info = SqlClassifier::new(syntax(case)).classify(str(case, "sql"));
+    json!({
+        "kind": info.kind.name(),
+        "verb": info.verb,
+        "danger": info.danger,
+        "changesData": info.changes_data(),
+    })
+}
+
+fn formatter(case: &Value) -> Value {
+    let indent = opt_str(case, "indent").unwrap_or("    ");
+    let keyword_case = KeywordCase::of(opt_str(case, "keywordCase").unwrap_or("Upper"));
+    Value::from(
+        SqlFormatter::with_options(syntax(case), indent, keyword_case).format(str(case, "sql")),
+    )
+}
+
+fn parameters(case: &Value) -> Value {
+    let sql = str(case, "sql");
+    let params = SqlParameters::new(syntax(case));
+    let mut out = json!({ "find": params.find(sql) });
+    if let Some(values) = case.get("values") {
+        let values: HashMap<String, String> = serde_json::from_value(values.clone()).unwrap();
+        out["substitute"] = params.substitute(sql, &values).into();
+    }
+    out
+}
+
+fn keywords(_case: &Value) -> Value {
+    let mut all: Vec<&str> = tg_sql::keywords::all().iter().copied().collect();
+    all.sort_unstable();
+    json!(all)
+}
+
+fn run(subject: &str, case: &Value) -> Option<Value> {
+    Some(match subject {
+        "sql-lexer" => lexer(case),
+        "sql-splitter" => splitter(case),
+        "sql-classifier" => classifier(case),
+        "sql-formatter" => formatter(case),
+        "sql-parameters" => parameters(case),
+        "sql-keywords" => keywords(case),
+        _ => return None,
+    })
 }
 
 #[test]
 fn golden() {
-    let mut problems = Vec::new();
-    let mut pending = Vec::new();
-    let mut passed = 0;
-    for input_path in json_files(&root().join("inputs")) {
-        let name = input_path.file_name().unwrap().to_str().unwrap().to_owned();
-        let input = read(&input_path);
-        let golden_path = root().join("golden").join(&name);
-        if !golden_path.is_file() {
-            problems.push(format!(
-                "{name}: no golden file; record it on the Kotlin side"
-            ));
-            continue;
-        }
-        let golden = read(&golden_path);
-        let subject = input["subject"].as_str().unwrap();
-        assert_eq!(golden["subject"], input["subject"], "{name}");
-        let cases = input["cases"].as_array().unwrap();
-        let expected = golden["cases"].as_array().unwrap();
-        let names = |v: &[Value]| v.iter().map(|c| c["name"].clone()).collect::<Vec<_>>();
-        if names(cases) != names(expected) {
-            problems.push(format!(
-                "{name}: golden cases don't match the inputs; re-record"
-            ));
-            continue;
-        }
-        for (case, want) in cases.iter().zip(expected) {
-            match run(subject, case) {
-                None => {
-                    pending.push(subject.to_owned());
-                    break;
-                }
-                Some(got) if got == want["output"] => passed += 1,
-                Some(got) => problems.push(format!(
-                    "{name} / {}: expected {}, got {got}",
-                    case["name"], want["output"]
-                )),
-            }
-        }
+    harness::check("tg-sql", run);
+}
+
+#[test]
+fn utf16_offsets_round_trip() {
+    let s = "a😀ồb";
+    for b in [0, 1, 5, 8, 9] {
+        assert_eq!(harness::byte(s, u16(s, b)), b);
     }
-    println!("core golden: {passed} passed, pending subjects: {pending:?}");
-    assert!(problems.is_empty(), "{}", problems.join("\n"));
 }
