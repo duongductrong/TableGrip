@@ -2,8 +2,11 @@
 
 mod button;
 mod checkbox;
+mod dialog;
 mod focus_order;
 mod icon_button;
+mod key_dispatch;
+mod keymap;
 mod lazy_tree;
 mod link;
 mod list_combo_box;
@@ -16,6 +19,7 @@ mod tab_strip;
 mod text;
 mod tooltip;
 mod tri_state_checkbox;
+mod zoom;
 
 use serde_json::{Map, Value};
 use tg_ui_logic::{Input, Key, Modifiers};
@@ -59,8 +63,11 @@ pub fn make(component: &str, setup: &Map<String, Value>) -> Option<Box<dyn Subje
         "button" => Some(Box::new(button::ButtonSubject::new(setup))),
         "checkbox" => Some(Box::new(checkbox::CheckboxSubject::new(setup))),
         "link" => Some(Box::new(link::LinkSubject::new(setup))),
+        "dialog" => Some(Box::new(dialog::DialogSubject::new(setup))),
         "focus-order" => Some(Box::new(focus_order::FocusOrderSubject::new(setup))),
         "icon-button" => Some(Box::new(icon_button::IconButtonSubject::new(setup))),
+        "key-dispatch" => Some(Box::new(key_dispatch::KeyDispatchSubject::new(setup))),
+        "keymap" => Some(Box::new(keymap::KeymapSubject::new(setup))),
         "lazy-tree" => Some(Box::new(lazy_tree::LazyTreeSubject::new(setup))),
         "list-combo-box" => Some(Box::new(list_combo_box::ListComboBoxSubject::new(setup))),
         "popup-list" => Some(Box::new(popup_list::PopupListSubject::new(setup))),
@@ -73,6 +80,7 @@ pub fn make(component: &str, setup: &Map<String, Value>) -> Option<Box<dyn Subje
         "tri-state-checkbox" => Some(Box::new(tri_state_checkbox::TriStateCheckboxSubject::new(
             setup,
         ))),
+        "zoom" => Some(Box::new(zoom::ZoomSubject::new(setup))),
         "text-area" | "text-field" => Some(Box::new(text::TextSubject::new(component, setup))),
         _ => None,
     }

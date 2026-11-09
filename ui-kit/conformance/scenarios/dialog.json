@@ -1,0 +1,259 @@
+{
+  "component": "dialog",
+  "description": "AppDialog's key handling: its handler gets the key first (after the focused content), and a bare Escape key-down closes the dialog only if nobody used it and closeOnEscape is on.",
+  "cases": [
+    {
+      "name": "a bare Escape closes the dialog",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Escape"
+        }
+      ],
+      "expect": {
+        "closed": true,
+        "innerHits": 0,
+        "handlerHits": 0
+      }
+    },
+    {
+      "name": "Escape with Shift does not close it",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Escape",
+          "mods": [
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "closed": false,
+        "innerHits": 0,
+        "handlerHits": 0
+      }
+    },
+    {
+      "name": "Escape with Alt does not close it",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Escape",
+          "mods": [
+            "alt"
+          ]
+        }
+      ],
+      "expect": {
+        "closed": false,
+        "innerHits": 0,
+        "handlerHits": 0
+      }
+    },
+    {
+      "name": "Escape with the primary modifier does not close it",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Escape",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "closed": false,
+        "innerHits": 0,
+        "handlerHits": 0
+      }
+    },
+    {
+      "name": "Escape with several modifiers does not close it",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Escape",
+          "mods": [
+            "primary",
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "closed": false,
+        "innerHits": 0,
+        "handlerHits": 0
+      }
+    },
+    {
+      "name": "Enter does not close the dialog",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Enter"
+        }
+      ],
+      "expect": {
+        "closed": false,
+        "innerHits": 0,
+        "handlerHits": 0
+      }
+    },
+    {
+      "name": "a letter does not close the dialog",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "A"
+        }
+      ],
+      "expect": {
+        "closed": false,
+        "innerHits": 0,
+        "handlerHits": 0
+      }
+    },
+    {
+      "name": "a control inside that uses Escape keeps the dialog open",
+      "setup": {
+        "inner": [
+          "Escape"
+        ]
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "Escape"
+        }
+      ],
+      "expect": {
+        "closed": false,
+        "innerHits": 1,
+        "handlerHits": 0
+      }
+    },
+    {
+      "name": "the caller's key handler can use Escape",
+      "setup": {
+        "handler": [
+          "Escape"
+        ]
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "Escape"
+        }
+      ],
+      "expect": {
+        "closed": false,
+        "innerHits": 0,
+        "handlerHits": 1
+      }
+    },
+    {
+      "name": "closeOnEscape off keeps the dialog open",
+      "setup": {
+        "closeOnEscape": false
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "Escape"
+        }
+      ],
+      "expect": {
+        "closed": false,
+        "innerHits": 0,
+        "handlerHits": 0
+      }
+    },
+    {
+      "name": "a handler that took another key does not stop Escape",
+      "setup": {
+        "handler": [
+          "Enter"
+        ]
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "Enter"
+        },
+        {
+          "key": "Escape"
+        }
+      ],
+      "expect": {
+        "closed": true,
+        "innerHits": 0,
+        "handlerHits": 1
+      }
+    },
+    {
+      "name": "a control that took Enter leaves Escape alone",
+      "setup": {
+        "inner": [
+          "Enter"
+        ]
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "Enter"
+        },
+        {
+          "key": "Escape"
+        }
+      ],
+      "expect": {
+        "closed": true,
+        "innerHits": 1,
+        "handlerHits": 0
+      }
+    },
+    {
+      "name": "a handler that keeps using Escape keeps the dialog open",
+      "setup": {
+        "handler": [
+          "Escape"
+        ]
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "Escape"
+        },
+        {
+          "key": "Escape"
+        }
+      ],
+      "expect": {
+        "closed": false,
+        "innerHits": 0,
+        "handlerHits": 2
+      }
+    },
+    {
+      "name": "with nothing focused a key reaches no one",
+      "setup": {},
+      "steps": [
+        {
+          "key": "Escape"
+        }
+      ],
+      "expect": {
+        "closed": false,
+        "innerHits": 0,
+        "handlerHits": 0
+      }
+    }
+  ]
+}

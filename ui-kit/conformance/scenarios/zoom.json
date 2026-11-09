@@ -1,0 +1,398 @@
+{
+  "component": "zoom",
+  "description": "UiZoom: 13 levels from 50% to 300%; steps go to the next level above or below the stored value, stopping at the ends; the drawn level is the stored value snapped to the nearest level (ties to the lower); the status bar control shows away from 100%. Keyboard shortcuts are covered in keymap unit tests.",
+  "cases": [
+    {
+      "name": "zoom starts at 100% with no status bar control",
+      "setup": {},
+      "steps": [],
+      "expect": {
+        "zoom": 100,
+        "level": 100,
+        "controlShown": false
+      }
+    },
+    {
+      "name": "zoom in steps to the next level",
+      "setup": {},
+      "steps": [
+        {
+          "click": "in"
+        }
+      ],
+      "expect": {
+        "zoom": 110,
+        "level": 110,
+        "controlShown": true
+      }
+    },
+    {
+      "name": "zoom in again",
+      "setup": {},
+      "steps": [
+        {
+          "click": "in"
+        },
+        {
+          "click": "in"
+        }
+      ],
+      "expect": {
+        "zoom": 125,
+        "level": 125,
+        "controlShown": true
+      }
+    },
+    {
+      "name": "zoom out steps to the previous level",
+      "setup": {},
+      "steps": [
+        {
+          "click": "out"
+        }
+      ],
+      "expect": {
+        "zoom": 90,
+        "level": 90,
+        "controlShown": true
+      }
+    },
+    {
+      "name": "zoom out stops at 50%",
+      "setup": {},
+      "steps": [
+        {
+          "click": "out"
+        },
+        {
+          "click": "out"
+        },
+        {
+          "click": "out"
+        },
+        {
+          "click": "out"
+        },
+        {
+          "click": "out"
+        },
+        {
+          "click": "out"
+        },
+        {
+          "click": "out"
+        },
+        {
+          "click": "out"
+        }
+      ],
+      "expect": {
+        "zoom": 50,
+        "level": 50,
+        "controlShown": true
+      }
+    },
+    {
+      "name": "zoom in stops at 300%",
+      "setup": {},
+      "steps": [
+        {
+          "click": "in"
+        },
+        {
+          "click": "in"
+        },
+        {
+          "click": "in"
+        },
+        {
+          "click": "in"
+        },
+        {
+          "click": "in"
+        },
+        {
+          "click": "in"
+        },
+        {
+          "click": "in"
+        },
+        {
+          "click": "in"
+        },
+        {
+          "click": "in"
+        },
+        {
+          "click": "in"
+        },
+        {
+          "click": "in"
+        },
+        {
+          "click": "in"
+        }
+      ],
+      "expect": {
+        "zoom": 300,
+        "level": 300,
+        "controlShown": true
+      }
+    },
+    {
+      "name": "reset goes back to 100%",
+      "setup": {},
+      "steps": [
+        {
+          "click": "in"
+        },
+        {
+          "click": "in"
+        },
+        {
+          "click": "reset"
+        }
+      ],
+      "expect": {
+        "zoom": 100,
+        "level": 100,
+        "controlShown": false
+      }
+    },
+    {
+      "name": "stepping back to 100% hides the control again",
+      "setup": {},
+      "steps": [
+        {
+          "click": "in"
+        },
+        {
+          "click": "out"
+        }
+      ],
+      "expect": {
+        "zoom": 100,
+        "level": 100,
+        "controlShown": false
+      }
+    },
+    {
+      "name": "a hand-typed value is drawn at the nearest level",
+      "setup": {
+        "zoom": 87
+      },
+      "steps": [],
+      "expect": {
+        "zoom": 87,
+        "level": 90,
+        "controlShown": true
+      }
+    },
+    {
+      "name": "a hand-typed value halfway between levels snaps to the lower one",
+      "setup": {
+        "zoom": 85
+      },
+      "steps": [],
+      "expect": {
+        "zoom": 85,
+        "level": 80,
+        "controlShown": true
+      }
+    },
+    {
+      "name": "zoom in from a hand-typed value steps to the next level above it",
+      "setup": {
+        "zoom": 87
+      },
+      "steps": [
+        {
+          "click": "in"
+        }
+      ],
+      "expect": {
+        "zoom": 90,
+        "level": 90,
+        "controlShown": true
+      }
+    },
+    {
+      "name": "zoom out from a hand-typed value steps to the next level below it",
+      "setup": {
+        "zoom": 87
+      },
+      "steps": [
+        {
+          "click": "out"
+        }
+      ],
+      "expect": {
+        "zoom": 80,
+        "level": 80,
+        "controlShown": true
+      }
+    },
+    {
+      "name": "a hand-typed value far above is drawn at 300%",
+      "setup": {
+        "zoom": 1000
+      },
+      "steps": [],
+      "expect": {
+        "zoom": 1000,
+        "level": 300,
+        "controlShown": true
+      }
+    },
+    {
+      "name": "a hand-typed value far below is drawn at 50%",
+      "setup": {
+        "zoom": 0
+      },
+      "steps": [],
+      "expect": {
+        "zoom": 0,
+        "level": 50,
+        "controlShown": true
+      }
+    },
+    {
+      "name": "a hand-typed value near 100% is drawn at 100% and hides the control",
+      "setup": {
+        "zoom": 102
+      },
+      "steps": [],
+      "expect": {
+        "zoom": 102,
+        "level": 100,
+        "controlShown": false
+      }
+    },
+    {
+      "name": "zoom in at the top stays",
+      "setup": {
+        "zoom": 300
+      },
+      "steps": [
+        {
+          "click": "in"
+        }
+      ],
+      "expect": {
+        "zoom": 300,
+        "level": 300,
+        "controlShown": true
+      }
+    },
+    {
+      "name": "zoom out at the bottom stays",
+      "setup": {
+        "zoom": 50
+      },
+      "steps": [
+        {
+          "click": "out"
+        }
+      ],
+      "expect": {
+        "zoom": 50,
+        "level": 50,
+        "controlShown": true
+      }
+    },
+    {
+      "name": "the levels above 100% are 110, 125, 150, 175, 200",
+      "setup": {},
+      "steps": [
+        {
+          "click": "in"
+        },
+        {
+          "click": "in"
+        },
+        {
+          "click": "in"
+        },
+        {
+          "click": "in"
+        },
+        {
+          "click": "in"
+        }
+      ],
+      "expect": {
+        "zoom": 200,
+        "level": 200,
+        "controlShown": true
+      }
+    },
+    {
+      "name": "the levels below 100% are 90, 80, 75, 67, 50",
+      "setup": {},
+      "steps": [
+        {
+          "click": "out"
+        },
+        {
+          "click": "out"
+        },
+        {
+          "click": "out"
+        }
+      ],
+      "expect": {
+        "zoom": 75,
+        "level": 75,
+        "controlShown": true
+      }
+    },
+    {
+      "name": "between 150 and 175 zoom in goes to 175",
+      "setup": {
+        "zoom": 160
+      },
+      "steps": [
+        {
+          "click": "in"
+        }
+      ],
+      "expect": {
+        "zoom": 175,
+        "level": 175,
+        "controlShown": true
+      }
+    },
+    {
+      "name": "between 150 and 175 zoom out goes to 150",
+      "setup": {
+        "zoom": 160
+      },
+      "steps": [
+        {
+          "click": "out"
+        }
+      ],
+      "expect": {
+        "zoom": 150,
+        "level": 150,
+        "controlShown": true
+      }
+    },
+    {
+      "name": "from a level, zoom in skips to the next one",
+      "setup": {
+        "zoom": 175
+      },
+      "steps": [
+        {
+          "click": "in"
+        }
+      ],
+      "expect": {
+        "zoom": 200,
+        "level": 200,
+        "controlShown": true
+      }
+    }
+  ]
+}

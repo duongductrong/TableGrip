@@ -1,0 +1,406 @@
+{
+  "component": "key-dispatch",
+  "description": "Nested key handlers around a focused control: preview handlers run from the outermost layer inward, bubble handlers from the innermost outward, and the first to consume the key stops it.",
+  "cases": [
+    {
+      "name": "a key nobody takes goes in through the previews and back out through the bubbles",
+      "setup": {
+        "layers": [
+          {
+            "preview": [],
+            "bubble": []
+          },
+          {
+            "preview": [],
+            "bubble": []
+          },
+          {
+            "preview": [],
+            "bubble": []
+          }
+        ]
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "A"
+        }
+      ],
+      "expect": {
+        "trace": "0.preview,1.preview,2.preview,2.bubble,1.bubble,0.bubble",
+        "consumedBy": ""
+      }
+    },
+    {
+      "name": "the outermost preview sees a key first and can keep it from everyone",
+      "setup": {
+        "layers": [
+          {
+            "preview": [
+              "A"
+            ],
+            "bubble": []
+          },
+          {
+            "preview": [],
+            "bubble": []
+          },
+          {
+            "preview": [],
+            "bubble": []
+          }
+        ]
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "A"
+        }
+      ],
+      "expect": {
+        "trace": "0.preview",
+        "consumedBy": "0.preview"
+      }
+    },
+    {
+      "name": "a middle preview stops the key before the inner layers",
+      "setup": {
+        "layers": [
+          {
+            "preview": [],
+            "bubble": []
+          },
+          {
+            "preview": [
+              "A"
+            ],
+            "bubble": []
+          },
+          {
+            "preview": [],
+            "bubble": []
+          }
+        ]
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "A"
+        }
+      ],
+      "expect": {
+        "trace": "0.preview,1.preview",
+        "consumedBy": "1.preview"
+      }
+    },
+    {
+      "name": "the innermost bubble takes the key first on the way out",
+      "setup": {
+        "layers": [
+          {
+            "preview": [],
+            "bubble": []
+          },
+          {
+            "preview": [],
+            "bubble": []
+          },
+          {
+            "preview": [],
+            "bubble": [
+              "A"
+            ]
+          }
+        ]
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "A"
+        }
+      ],
+      "expect": {
+        "trace": "0.preview,1.preview,2.preview,2.bubble",
+        "consumedBy": "2.bubble"
+      }
+    },
+    {
+      "name": "a middle bubble takes it after the inner one declined",
+      "setup": {
+        "layers": [
+          {
+            "preview": [],
+            "bubble": []
+          },
+          {
+            "preview": [],
+            "bubble": [
+              "A"
+            ]
+          },
+          {
+            "preview": [],
+            "bubble": []
+          }
+        ]
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "A"
+        }
+      ],
+      "expect": {
+        "trace": "0.preview,1.preview,2.preview,2.bubble,1.bubble",
+        "consumedBy": "1.bubble"
+      }
+    },
+    {
+      "name": "the outermost bubble is the last to see the key",
+      "setup": {
+        "layers": [
+          {
+            "preview": [],
+            "bubble": [
+              "A"
+            ]
+          },
+          {
+            "preview": [],
+            "bubble": []
+          },
+          {
+            "preview": [],
+            "bubble": []
+          }
+        ]
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "A"
+        }
+      ],
+      "expect": {
+        "trace": "0.preview,1.preview,2.preview,2.bubble,1.bubble,0.bubble",
+        "consumedBy": "0.bubble"
+      }
+    },
+    {
+      "name": "a parent's preview wins over a child's bubble",
+      "setup": {
+        "layers": [
+          {
+            "preview": [
+              "A"
+            ],
+            "bubble": []
+          },
+          {
+            "preview": [],
+            "bubble": []
+          },
+          {
+            "preview": [],
+            "bubble": [
+              "A"
+            ]
+          }
+        ]
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "A"
+        }
+      ],
+      "expect": {
+        "trace": "0.preview",
+        "consumedBy": "0.preview"
+      }
+    },
+    {
+      "name": "a layer's own preview runs before its bubble",
+      "setup": {
+        "layers": [
+          {
+            "preview": [],
+            "bubble": []
+          },
+          {
+            "preview": [
+              "A"
+            ],
+            "bubble": [
+              "A"
+            ]
+          }
+        ]
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "A"
+        }
+      ],
+      "expect": {
+        "trace": "0.preview,1.preview",
+        "consumedBy": "1.preview"
+      }
+    },
+    {
+      "name": "only the last key's trace is reported",
+      "setup": {
+        "layers": [
+          {
+            "preview": [
+              "A"
+            ],
+            "bubble": []
+          },
+          {
+            "preview": [],
+            "bubble": []
+          }
+        ]
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "A"
+        },
+        {
+          "key": "B"
+        }
+      ],
+      "expect": {
+        "trace": "0.preview,1.preview,1.bubble,0.bubble",
+        "consumedBy": ""
+      }
+    },
+    {
+      "name": "a key the layer does not list passes on",
+      "setup": {
+        "layers": [
+          {
+            "preview": [
+              "A"
+            ],
+            "bubble": []
+          },
+          {
+            "preview": [],
+            "bubble": []
+          }
+        ]
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "B"
+        }
+      ],
+      "expect": {
+        "trace": "0.preview,1.preview,1.bubble,0.bubble",
+        "consumedBy": ""
+      }
+    },
+    {
+      "name": "modifiers do not change what a layer consumes",
+      "setup": {
+        "layers": [
+          {
+            "preview": [
+              "A"
+            ],
+            "bubble": []
+          },
+          {
+            "preview": [],
+            "bubble": []
+          }
+        ]
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "A",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "trace": "0.preview",
+        "consumedBy": "0.preview"
+      }
+    },
+    {
+      "name": "a single layer sees its preview then its bubble",
+      "setup": {
+        "layers": [
+          {
+            "preview": [],
+            "bubble": []
+          }
+        ]
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "A"
+        }
+      ],
+      "expect": {
+        "trace": "0.preview,0.bubble",
+        "consumedBy": ""
+      }
+    },
+    {
+      "name": "with no handlers nothing is reached",
+      "setup": {
+        "layers": []
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "A"
+        }
+      ],
+      "expect": {
+        "trace": "",
+        "consumedBy": ""
+      }
+    },
+    {
+      "name": "a consumed key does not leave a trace for the next one",
+      "setup": {
+        "layers": [
+          {
+            "preview": [
+              "A"
+            ],
+            "bubble": []
+          },
+          {
+            "preview": [],
+            "bubble": []
+          }
+        ]
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "A"
+        },
+        {
+          "key": "A"
+        }
+      ],
+      "expect": {
+        "trace": "0.preview",
+        "consumedBy": "0.preview"
+      }
+    }
+  ]
+}

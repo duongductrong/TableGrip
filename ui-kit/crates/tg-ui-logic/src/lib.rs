@@ -6,9 +6,12 @@
 
 pub mod button;
 pub mod checkbox;
+pub mod dialog;
 pub mod focus;
 pub mod icon_button;
 pub mod input;
+pub mod key_dispatch;
+pub mod keymap;
 pub mod lazy_tree;
 pub mod link;
 pub mod list_combo;
@@ -22,12 +25,15 @@ pub mod tab_strip;
 pub mod tooltip;
 pub mod tri_state;
 pub mod virtual_list;
+pub mod zoom;
 
 pub use button::Button;
 pub use checkbox::Checkbox;
 pub use focus::FocusOrder;
 pub use icon_button::IconButton;
 pub use input::{Input, Key, Modifiers};
+pub use key_dispatch::{Dispatch, Phase, Visit, dispatch};
+pub use keymap::{Code, KeyEvent, Keymap, Platform, Preset, Shortcut};
 pub use lazy_tree::{Item, LazyTree, Row, TreeEvent};
 pub use link::Link;
 pub use list_combo::ListComboBox;
