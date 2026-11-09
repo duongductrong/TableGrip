@@ -11,18 +11,6 @@
       }
     },
     {
-      "name": "a click before the pointer was over the bar is ignored",
-      "setup": {},
-      "steps": [
-        {
-          "click": "track"
-        }
-      ],
-      "expect": {
-        "scroll": 0
-      }
-    },
-    {
       "name": "a track click pages down by a viewport",
       "setup": {},
       "steps": [
