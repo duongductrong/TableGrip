@@ -5439,6 +5439,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "tg-text"
+version = "0.0.0"
+dependencies = [
+ "tg-ui-logic",
+ "unicode-segmentation",
+]
+
+[[package]]
 name = "tg-theme"
 version = "0.0.0"
 dependencies = [
@@ -5462,6 +5470,7 @@ version = "0.0.0"
 dependencies = [
  "serde",
  "serde_json",
+ "tg-text",
 ]
 
 [[package]]

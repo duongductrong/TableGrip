@@ -6,6 +6,7 @@ mod focus_order;
 mod icon_button;
 mod link;
 mod radio_button;
+mod text;
 mod tooltip;
 mod tri_state_checkbox;
 
@@ -41,6 +42,7 @@ pub fn make(component: &str, setup: &Map<String, Value>) -> Option<Box<dyn Subje
         "tri-state-checkbox" => Some(Box::new(tri_state_checkbox::TriStateCheckboxSubject::new(
             setup,
         ))),
+        "text-area" | "text-field" => Some(Box::new(text::TextSubject::new(component, setup))),
         _ => None,
     }
 }
