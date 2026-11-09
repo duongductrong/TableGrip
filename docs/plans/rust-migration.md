@@ -166,3 +166,28 @@ M3/M4/M5 song song; trong M6–M7 mỗi màn hình một session sau khi shell x
   thanh cuộn Catppuccin Frappé) được ghi vào `conformance/approved-image-diffs.json`, mỗi mục có trần riêng và lý do;
   `tg-imgdiff` có thêm `--approved`.
 - Còn lại: CI `rust.yml` xanh trên Windows và Linux, chỉ xác nhận được sau khi push.
+
+### S1 (10/11/2026, đang dở)
+
+Nhánh `rust/core-pure`. Xong: bước 1–4 (tg-sql: lexer → completion), 743 ca golden khớp Kotlin.
+
+- **Model dùng chung ở `tg_sql::model`** (DatabaseType, Namespace, TableRef, ColumnInfo, TableDetails, constraint,
+  trigger, `jdbc_types`). Lý do: dialect, filter, DDL, schema diff và completion đều cần, còn tg-sql không phụ thuộc
+  crate TableGrip nào. Vì vậy tg-core (S2) và tg-driver (S3) dùng được mà không phụ thuộc lẫn nhau. DatabaseType
+  serialize theo `id` như Kotlin. Danh sách DriverId và defaultProperties của JDBC bị bỏ khỏi descriptor (D2), để
+  tg-driver tự giữ theo engine. H2/HSQLDB/Derby/OtherJdbc vẫn còn trong danh sách để profile cũ vẫn đọc được (D1).
+- `SqlDialect` là enum gồm 8 dialect. Phần bind JDBC chuyển cho driver. `list_namespaces` nhận tên schema/catalog mà
+  driver đã đọc.
+- Offset tính theo byte. Runner golden đổi sang UTF-16. Khác Kotlin ở ký tự ngoài BMP nằm ngoài chuỗi/comment
+  (`tg_sql::kt`).
+- FilterCompiler: giờ hiện tại và múi giờ là tham số, ngày đầu tuần là một setting (mặc định thứ Hai, Kotlin lấy theo
+  locale).
+- Harness golden dùng chung: `crates/tg-sql/tests/support/harness.rs`. Subject `chart-*` thuộc về tg-chart, `data-*`
+  thuộc về tg-data. Subject được ghi golden nhưng chưa có runner thì test fail.
+- Float trong golden: ER layout dùng bit pattern. tg-chart bật `serde_json/float_roundtrip`.
+
+Còn dở:
+- Bước 5 tg-chart: đã có code (spec, suggest, profile, data, query) và build sạch, nhưng **chưa có golden**. Cần thêm
+  `ChartSubjects.kt` (chart-values/profile/suggest/spec/data/query), input lấy từ ChartTest/ChartQueryTest (tránh
+  series có tổng bằng nhau, vì Kotlin phá hòa theo thứ tự hash), và runner ở `crates/tg-chart/tests/golden.rs`.
+- Bước 6 tg-data: TypeInference, ResultFormats, ClipboardTable chưa làm.

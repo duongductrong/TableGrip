@@ -343,7 +343,7 @@ fn digits(s: &str, n: usize) -> Option<u32> {
 }
 
 /// `DateTimeFormatter.ISO_LOCAL_DATE`, for four-digit years.
-fn parse_date(s: &str) -> Option<NaiveDate> {
+pub fn parse_date(s: &str) -> Option<NaiveDate> {
     let mut parts = s.split('-');
     let (y, m, d) = (parts.next()?, parts.next()?, parts.next()?);
     if parts.next().is_some() {
@@ -353,7 +353,7 @@ fn parse_date(s: &str) -> Option<NaiveDate> {
 }
 
 /// `DateTimeFormatter.ISO_LOCAL_TIME`: `HH:mm[:ss[.fraction]]`.
-fn parse_time(s: &str) -> Option<NaiveTime> {
+pub fn parse_time(s: &str) -> Option<NaiveTime> {
     let (hm, rest) = (s.get(..5)?, &s[5..]);
     let (h, m) = hm.split_once(':')?;
     let (h, m) = (digits(h, 2)?, digits(m, 2)?);
@@ -379,7 +379,7 @@ fn parse_time(s: &str) -> Option<NaiveTime> {
 }
 
 /// `ZoneOffset.of`: `Z`, `±h`, `±hh`, `±hh:mm`, `±hhmm`.
-fn parse_offset(id: &str) -> Option<FixedOffset> {
+pub fn parse_offset(id: &str) -> Option<FixedOffset> {
     if id == "Z" {
         return FixedOffset::east_opt(0);
     }
