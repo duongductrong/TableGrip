@@ -9,8 +9,10 @@ rust-version.workspace = true
 
 [dependencies]
 gpui.workspace = true
+tg-text = { path = "../tg-text" }
 tg-theme = { path = "../tg-theme" }
 tg-ui-logic = { path = "../tg-ui-logic" }
+unicode-segmentation.workspace = true
 
 [build-dependencies]
 serde_json.workspace = true

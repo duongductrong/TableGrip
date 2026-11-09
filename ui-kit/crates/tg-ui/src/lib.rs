@@ -22,6 +22,7 @@ pub mod palette;
 pub mod radio;
 pub mod ring;
 pub mod text;
+pub mod text_input;
 pub mod theme;
 
 pub use button::{Button, button};
@@ -35,6 +36,7 @@ pub use look::Look;
 pub use radio::{RadioButton, radio_button};
 pub use ring::{RingSpec, ring};
 pub use text::{Text, TextColor, text};
+pub use text_input::{TextInput, TextInputLook};
 pub use tg_theme::zoom;
 pub use tg_ui_logic::ToggleState;
 pub use theme::{ActiveTheme, ThemeExt, hsla, set_theme};

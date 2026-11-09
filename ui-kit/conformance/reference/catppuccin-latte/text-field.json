@@ -1,0 +1,79 @@
+{
+    "specimen": "text-field",
+    "theme": "Catppuccin Latte",
+    "density": 2.0,
+    "width": 832,
+    "height": 352,
+    "regions": [
+        {
+            "tag": "text:area",
+            "kind": "text",
+            "rect": [
+                40,
+                200,
+                488,
+                112
+            ]
+        },
+        {
+            "tag": "text:field",
+            "kind": "text",
+            "rect": [
+                40,
+                40,
+                224,
+                40
+            ]
+        },
+        {
+            "tag": "text:field.disabled",
+            "kind": "text",
+            "rect": [
+                568,
+                40,
+                224,
+                40
+            ]
+        },
+        {
+            "tag": "text:field.error",
+            "kind": "text",
+            "rect": [
+                40,
+                120,
+                224,
+                40
+            ]
+        },
+        {
+            "tag": "text:field.focused",
+            "kind": "text",
+            "rect": [
+                568,
+                120,
+                224,
+                40
+            ]
+        },
+        {
+            "tag": "text:field.password",
+            "kind": "text",
+            "rect": [
+                304,
+                120,
+                224,
+                40
+            ]
+        },
+        {
+            "tag": "text:field.placeholder",
+            "kind": "text",
+            "rect": [
+                304,
+                40,
+                224,
+                40
+            ]
+        }
+    ]
+}
