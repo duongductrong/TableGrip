@@ -1,0 +1,401 @@
+[
+    {
+        "id": "conn-00",
+        "name": "PostgreSQL sample",
+        "type": "PostgreSQL",
+        "host": "db0.example.com",
+        "port": 5432,
+        "database": "app_0",
+        "user": "user0",
+        "readOnly": true,
+        "confirmWrites": true,
+        "properties": {
+            "sslmode": "require",
+            "connectTimeout": "10"
+        },
+        "group": "Client A",
+        "favorite": true
+    },
+    {
+        "id": "conn-01",
+        "name": "MySQL sample",
+        "type": "MySQL",
+        "host": "db1.example.com",
+        "port": 3307,
+        "database": "app_1",
+        "user": "user1",
+        "environment": "Local",
+        "aiAccess": "Off"
+    },
+    {
+        "id": "conn-02",
+        "name": "MariaDB sample",
+        "type": "MariaDB",
+        "host": "db2.example.com",
+        "port": 3308,
+        "database": "app_2",
+        "user": "user2",
+        "environment": "Development",
+        "properties": {
+            "sslmode": "require",
+            "connectTimeout": "10"
+        },
+        "aiAccess": "SchemaAndSamples"
+    },
+    {
+        "id": "conn-03",
+        "name": "SQLite sample",
+        "type": "SQLite",
+        "database": "/data/sample-3.db",
+        "environment": "Local"
+    },
+    {
+        "id": "conn-04",
+        "name": "SQL Server sample",
+        "type": "SqlServer",
+        "host": "db4.example.com",
+        "port": 1434,
+        "database": "app_4",
+        "user": "user4",
+        "environment": "Production",
+        "readOnly": true,
+        "properties": {
+            "sslmode": "require",
+            "connectTimeout": "10"
+        }
+    },
+    {
+        "id": "conn-05",
+        "name": "ClickHouse sample",
+        "type": "ClickHouse",
+        "host": "db5.example.com",
+        "port": 8125,
+        "database": "app_5",
+        "user": "user5",
+        "group": "Client A",
+        "aiAccess": "Off"
+    },
+    {
+        "id": "conn-06",
+        "name": "DuckDB sample",
+        "type": "DuckDB",
+        "database": ":memory:",
+        "environment": "Local"
+    },
+    {
+        "id": "conn-07",
+        "name": "MongoDB sample",
+        "type": "MongoDB",
+        "host": "db7.example.com",
+        "port": 27018,
+        "database": "app_7",
+        "user": "user7",
+        "environment": "Development",
+        "group": "Client B/Staging"
+    },
+    {
+        "id": "conn-08",
+        "name": "Redis sample",
+        "type": "Redis",
+        "host": "db8.example.com",
+        "port": 6381,
+        "database": "app_8",
+        "user": "user8",
+        "environment": "Staging",
+        "readOnly": true,
+        "properties": {
+            "sslmode": "require",
+            "connectTimeout": "10"
+        }
+    },
+    {
+        "id": "conn-09",
+        "name": "Valkey sample",
+        "type": "Valkey",
+        "host": "db9.example.com",
+        "port": 6379,
+        "database": "app_9",
+        "user": "user9",
+        "environment": "Production",
+        "confirmWrites": true,
+        "aiAccess": "Off"
+    },
+    {
+        "id": "conn-10",
+        "name": "CockroachDB sample",
+        "type": "CockroachDB",
+        "host": "db10.example.com",
+        "port": 26258,
+        "database": "app_10",
+        "user": "user10",
+        "properties": {
+            "sslmode": "require",
+            "connectTimeout": "10"
+        },
+        "group": "Client A",
+        "aiAccess": "SchemaAndSamples"
+    },
+    {
+        "id": "conn-11",
+        "name": "TimescaleDB sample",
+        "type": "TimescaleDB",
+        "host": "db11.example.com",
+        "port": 5434,
+        "database": "app_11",
+        "user": "user11",
+        "environment": "Local"
+    },
+    {
+        "id": "conn-12",
+        "name": "Neon sample",
+        "type": "Neon",
+        "host": "db12.example.com",
+        "port": 5432,
+        "database": "app_12",
+        "user": "user12",
+        "environment": "Development",
+        "readOnly": true,
+        "confirmWrites": true,
+        "properties": {
+            "sslmode": "require",
+            "connectTimeout": "10"
+        },
+        "favorite": true
+    },
+    {
+        "id": "conn-13",
+        "name": "Supabase sample",
+        "type": "Supabase",
+        "host": "db13.example.com",
+        "port": 5433,
+        "database": "app_13",
+        "user": "user13",
+        "environment": "Staging",
+        "aiAccess": "Off"
+    },
+    {
+        "id": "conn-14",
+        "name": "TiDB sample",
+        "type": "TiDB",
+        "host": "db14.example.com",
+        "port": 4002,
+        "database": "app_14",
+        "user": "user14",
+        "environment": "Production",
+        "properties": {
+            "sslmode": "require",
+            "connectTimeout": "10"
+        },
+        "group": "Client B/Staging",
+        "aiAccess": "SchemaAndSamples"
+    },
+    {
+        "id": "conn-15",
+        "name": "PlanetScale sample",
+        "type": "PlanetScale",
+        "host": "db15.example.com",
+        "port": 3306,
+        "database": "app_15",
+        "user": "user15",
+        "confirmWrites": true,
+        "group": "Client A"
+    },
+    {
+        "id": "conn-16",
+        "name": "Azure SQL sample",
+        "type": "AzureSql",
+        "host": "db16.example.com",
+        "port": 1434,
+        "database": "app_16",
+        "user": "user16",
+        "environment": "Local",
+        "readOnly": true,
+        "properties": {
+            "sslmode": "require",
+            "connectTimeout": "10"
+        }
+    },
+    {
+        "id": "conn-17",
+        "name": "KeyDB sample",
+        "type": "KeyDB",
+        "host": "db17.example.com",
+        "port": 6381,
+        "database": "app_17",
+        "user": "user17",
+        "environment": "Development",
+        "aiAccess": "Off"
+    },
+    {
+        "id": "conn-18",
+        "name": "Dragonfly sample",
+        "type": "Dragonfly",
+        "host": "db18.example.com",
+        "port": 6379,
+        "database": "app_18",
+        "user": "user18",
+        "environment": "Staging",
+        "confirmWrites": true,
+        "properties": {
+            "sslmode": "require",
+            "connectTimeout": "10"
+        },
+        "favorite": true,
+        "aiAccess": "SchemaAndSamples"
+    },
+    {
+        "id": "conn-19",
+        "name": "etcd sample",
+        "type": "Etcd",
+        "host": "db19.example.com",
+        "port": 2380,
+        "database": "app_19",
+        "user": "user19",
+        "environment": "Production"
+    },
+    {
+        "id": "conn-20",
+        "name": "FerretDB sample",
+        "type": "FerretDB",
+        "host": "db20.example.com",
+        "port": 27019,
+        "database": "app_20",
+        "user": "user20",
+        "readOnly": true,
+        "properties": {
+            "sslmode": "require",
+            "connectTimeout": "10"
+        },
+        "group": "Client A"
+    },
+    {
+        "id": "conn-21",
+        "name": "H2 sample",
+        "type": "H2",
+        "database": "/data/sample-21.db",
+        "environment": "Local"
+    },
+    {
+        "id": "conn-22",
+        "name": "HSQLDB sample",
+        "type": "HSQLDB",
+        "database": "/data/sample-22.db",
+        "environment": "Local"
+    },
+    {
+        "id": "conn-23",
+        "name": "Apache Derby sample",
+        "type": "Derby",
+        "database": "/data/sample-23.db",
+        "environment": "Local"
+    },
+    {
+        "id": "conn-24",
+        "name": "Other (JDBC driver) sample",
+        "type": "OtherJdbc",
+        "user": "scott",
+        "driver": "Generic",
+        "url": "jdbc:oracle:thin:@db.example.com:1521:orcl",
+        "driverJars": [
+            "/jars/ojdbc11.jar",
+            "/jars/orai18n.jar"
+        ]
+    },
+    {
+        "id": "conn-25",
+        "name": "CSV / TSV file sample",
+        "type": "CsvFile",
+        "database": "/data/sample.csv",
+        "dataFile": {}
+    },
+    {
+        "id": "conn-26",
+        "name": "Excel workbook sample",
+        "type": "ExcelFile",
+        "database": "/data/sample.excel",
+        "dataFile": {
+            "delimiter": ";",
+            "hasHeader": false,
+            "charset": "windows-1252"
+        }
+    },
+    {
+        "id": "conn-27",
+        "name": "JSON / NDJSON file sample",
+        "type": "JsonFile",
+        "database": "/data/sample.json",
+        "dataFile": {}
+    },
+    {
+        "id": "ssh-key",
+        "name": "Via bastion (key)",
+        "type": "PostgreSQL",
+        "host": "10.0.0.5",
+        "port": 5432,
+        "database": "prod",
+        "user": "app",
+        "environment": "Production",
+        "readOnly": true,
+        "ssh": {
+            "host": "bastion.example.com",
+            "port": 2222,
+            "user": "deploy",
+            "privateKeyPath": "~/.ssh/id_ed25519"
+        }
+    },
+    {
+        "id": "ssh-agent",
+        "name": "Via bastion (agent)",
+        "type": "MySQL",
+        "host": "10.0.0.6",
+        "database": "shop",
+        "user": "app",
+        "ssh": {
+            "host": "bastion.example.com",
+            "user": "deploy"
+        }
+    },
+    {
+        "id": "ssh-password",
+        "name": "Via bastion (password)",
+        "type": "Redis",
+        "host": "cache.internal",
+        "user": "default",
+        "ssh": {
+            "host": "jump.example.com",
+            "user": "ops",
+            "auth": "Password"
+        }
+    },
+    {
+        "id": "by-url",
+        "name": "Replicated MariaDB",
+        "type": "MariaDB",
+        "user": "root",
+        "driver": "MariaDB",
+        "url": "jdbc:mariadb:replication://primary:3306,replica:3306/db?useSSL=false",
+        "group": "Client A",
+        "favorite": true
+    },
+    {
+        "id": "unicode",
+        "name": "Café \"quotes\" and \\ back\tslash ✓",
+        "type": "SQLite",
+        "database": "/Users/me/données.db"
+    },
+    {
+        "id": "future",
+        "name": "From the future",
+        "type": "QuantumDB",
+        "host": "q.example.com",
+        "extra": {
+            "nested": [
+                1,
+                2,
+                {
+                    "a": null
+                }
+            ]
+        }
+    }
+]

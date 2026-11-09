@@ -1,0 +1,33 @@
+{
+  "name": "Mine",
+  "author": "Fixture",
+  "license": "MIT",
+  "themes": [
+    {
+      "name": "Mine Dark",
+      "colors": {
+        "accent": "#FF8800",
+        "island.background": "#1E1F22",
+        "some.future.key": "#000000"
+      },
+      "syntax": {
+        "keyword": "#C678DD",
+        "comment": {
+          "color": "#5C6370",
+          "fontStyle": "italic"
+        },
+        "string": {
+          "fontWeight": "bold"
+        }
+      },
+      "chart": [
+        "#4D78CC",
+        "#E5C07B"
+      ]
+    },
+    {
+      "name": "Mine Light",
+      "appearance": "light"
+    }
+  ]
+}

@@ -352,3 +352,17 @@ fn pruning_touches_only_the_schedules_own_oldest_backups() {
         ]
     );
 }
+
+#[test]
+fn settings_this_version_doesnt_know_are_ignored() {
+    let dir = tempfile::tempdir().unwrap();
+    let store = store(&dir);
+    fs::write(
+        store.file(),
+        r#"{ "futureSetting": { "a": 1 }, "pageSize": 7 }"#,
+    )
+    .unwrap();
+    let loaded = store.load();
+    assert_eq!(store.load_error(), None);
+    assert_eq!(loaded.page_size, 7);
+}
