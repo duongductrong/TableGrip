@@ -6,3 +6,7 @@ This product is licensed under the Apache License, Version 2.0 (see LICENSE).
 It includes open source libraries listed, with their licenses, in THIRD-PARTY-NOTICES.txt, which ships with the
 app. JDBC drivers and database clients are not included: they are downloaded separately at the user's request,
 under their own licenses.
+
+The Rust UI kit (ui-kit/) includes icons from IntelliJ IDEA (com.jetbrains.intellij.platform:icons), each under the
+Apache License, Version 2.0 as stated in the file itself; ui-kit/crates/tg-ui/assets/icons/intellij/manifest.json
+lists them. This software includes code from IntelliJ IDEA, Copyright (C) JetBrains s.r.o.

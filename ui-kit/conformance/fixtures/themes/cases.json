@@ -1,0 +1,32 @@
+{
+  "comment": "Settings cases resolved against the built-in themes plus the user themes in user/. Each case's resolved tokens are dumped by ThemeTokensGoldenTest to golden/themes/case-<id>.json.",
+  "cases": [
+    { "id": "accent-graphite-dark", "dark": true, "theme": "Graphite Dark", "accentColor": "#E5A33E" },
+    { "id": "accent-light-on-graphite-light", "dark": false, "theme": "Graphite Light", "accentColor": "#F2E36B" },
+    { "id": "accent-argb", "dark": false, "theme": "One Light", "accentColor": "#80FF0000" },
+    { "id": "accent-invalid", "dark": true, "theme": "Dracula", "accentColor": "blue" },
+    {
+      "id": "overrides-one-dark",
+      "dark": true,
+      "theme": "One Dark",
+      "accentColor": "#98C379",
+      "themeOverrides": {
+        "One Dark": {
+          "colors": { "island.background": "#101215", "text.link": "#FF79C6", "accent.foreground": "#000000" },
+          "syntax": { "keyword": { "color": "#123456", "fontWeight": "bold" }, "string": { "fontStyle": "italic" } },
+          "chart": ["#111111", "#222222"]
+        },
+        "Graphite Dark": { "colors": { "accent": "#FF0000" } }
+      }
+    },
+    { "id": "override-graphite-enables-controls", "dark": true, "theme": "Graphite Dark", "themeOverrides": { "Graphite Dark": { "colors": { "border": "#5A5D63" } } } },
+    { "id": "override-graphite-light-island", "dark": false, "theme": "Graphite Light", "themeOverrides": { "Graphite Light": { "colors": { "island.background": "#F7F8FA", "text": "#000000" } } } },
+    { "id": "user-sunset", "dark": true, "theme": "Sunset" },
+    { "id": "user-replaces-one-light", "dark": false, "theme": "One Light" },
+    { "id": "user-short-hex", "dark": false, "theme": "Short Light" },
+    { "id": "unknown-theme", "dark": true, "theme": "Nope" },
+    { "id": "wrong-mode", "dark": true, "theme": "One Light" },
+    { "id": "fonts-and-radius", "dark": false, "theme": "Catppuccin Latte", "uiFontSize": 15, "islandCornerRadius": 30 },
+    { "id": "negative-radius", "dark": true, "theme": "Contrast Dark", "islandCornerRadius": -4 }
+  ]
+}

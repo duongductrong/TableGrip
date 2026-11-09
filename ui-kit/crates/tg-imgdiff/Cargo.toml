@@ -1,0 +1,13 @@
+[package]
+name = "tg-imgdiff"
+version = "0.0.0"
+description = "Compares gallery captures with the Kotlin app's reference renders and writes an HTML report."
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+image.workspace = true
+serde.workspace = true
+serde_json.workspace = true

@@ -1,0 +1,99 @@
+{
+    "specimen": "text",
+    "theme": "VS Code Dark Modern",
+    "density": 2.0,
+    "width": 640,
+    "height": 400,
+    "regions": [
+        {
+            "tag": "text:bold",
+            "kind": "text",
+            "rect": [
+                352,
+                24,
+                85,
+                31
+            ]
+        },
+        {
+            "tag": "text:disabled",
+            "kind": "text",
+            "rect": [
+                32,
+                216,
+                127,
+                31
+            ]
+        },
+        {
+            "tag": "text:editor",
+            "kind": "text",
+            "rect": [
+                32,
+                264,
+                297,
+                34
+            ]
+        },
+        {
+            "tag": "text:ellipsis",
+            "kind": "text",
+            "rect": [
+                352,
+                72,
+                192,
+                31
+            ]
+        },
+        {
+            "tag": "text:error",
+            "kind": "text",
+            "rect": [
+                32,
+                120,
+                243,
+                31
+            ]
+        },
+        {
+            "tag": "text:info",
+            "kind": "text",
+            "rect": [
+                32,
+                72,
+                176,
+                31
+            ]
+        },
+        {
+            "tag": "text:normal",
+            "kind": "text",
+            "rect": [
+                32,
+                24,
+                155,
+                31
+            ]
+        },
+        {
+            "tag": "text:small",
+            "kind": "text",
+            "rect": [
+                32,
+                320,
+                147,
+                27
+            ]
+        },
+        {
+            "tag": "text:warning",
+            "kind": "text",
+            "rect": [
+                32,
+                168,
+                221,
+                31
+            ]
+        }
+    ]
+}

@@ -1,0 +1,19 @@
+[package]
+name = "tg-ui"
+version = "0.0.0"
+description = "TableGrip's UI components on GPUI, drawn from tg-theme's tokens with behaviour from tg-ui-logic."
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+gpui.workspace = true
+tg-theme = { path = "../tg-theme" }
+tg-ui-logic = { path = "../tg-ui-logic" }
+
+[build-dependencies]
+serde_json.workspace = true
+
+[dev-dependencies]
+gpui = { workspace = true, features = ["test-support"] }

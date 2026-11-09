@@ -49,6 +49,34 @@
         "divider": {
             "width": 200.0,
             "height": 1.0
+        },
+        "divider.horizontal": {
+            "width": 240.0,
+            "height": 1.0
+        },
+        "divider.vertical": {
+            "width": 1.0,
+            "height": 71.0
+        },
+        "divider.toolbar": {
+            "width": 1.0,
+            "height": 18.0
+        },
+        "island": {
+            "width": 120.0,
+            "height": 96.0
+        },
+        "text:normal": {
+            "width": 77.5,
+            "height": 15.5
+        },
+        "text:editor": {
+            "width": 148.5,
+            "height": 17.0
+        },
+        "text:small": {
+            "width": 73.5,
+            "height": 13.5
         }
     },
     "colors": {
@@ -83,6 +111,12 @@
         "checkbox.checked.box.fill": "#4D78CC",
         "checkbox.disabled.box.border": "#5A5D63",
         "checkbox.disabled.box.fill": "#393B40",
-        "divider": "#3B4048"
+        "divider": "#3B4048",
+        "divider.horizontal": "#3B4048",
+        "divider.vertical": "#3B4048",
+        "divider.toolbar": "#3B4048",
+        "island.fill": "#282C34",
+        "island.edge": "#31353D",
+        "frame.background": "#21252B"
     }
 }

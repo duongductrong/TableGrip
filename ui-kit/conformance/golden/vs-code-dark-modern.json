@@ -1,0 +1,122 @@
+{
+    "theme": "VS Code Dark Modern",
+    "density": 2.0,
+    "metrics": {
+        "button.default": {
+            "width": 72.0,
+            "height": 28.0
+        },
+        "button.default.disabled": {
+            "width": 72.0,
+            "height": 28.0
+        },
+        "button.outlined": {
+            "width": 72.0,
+            "height": 28.0
+        },
+        "button.outlined.disabled": {
+            "width": 72.0,
+            "height": 28.0
+        },
+        "checkbox.unchecked": {
+            "width": 92.5,
+            "height": 24.0
+        },
+        "checkbox.checked": {
+            "width": 92.5,
+            "height": 24.0
+        },
+        "checkbox.disabled": {
+            "width": 92.5,
+            "height": 24.0
+        },
+        "textfield": {
+            "width": 120.0,
+            "height": 28.0
+        },
+        "textfield.disabled": {
+            "width": 120.0,
+            "height": 28.0
+        },
+        "textfield.error": {
+            "width": 120.0,
+            "height": 28.0
+        },
+        "textfield.focused": {
+            "width": 120.0,
+            "height": 28.0
+        },
+        "divider": {
+            "width": 200.0,
+            "height": 1.0
+        },
+        "divider.horizontal": {
+            "width": 240.0,
+            "height": 1.0
+        },
+        "divider.vertical": {
+            "width": 1.0,
+            "height": 71.0
+        },
+        "divider.toolbar": {
+            "width": 1.0,
+            "height": 18.0
+        },
+        "island": {
+            "width": 120.0,
+            "height": 96.0
+        },
+        "text:normal": {
+            "width": 77.5,
+            "height": 15.5
+        },
+        "text:editor": {
+            "width": 148.5,
+            "height": 17.0
+        },
+        "text:small": {
+            "width": 73.5,
+            "height": 13.5
+        }
+    },
+    "colors": {
+        "island.background": "#1F1F1F",
+        "button.default.fill": "#0078D4",
+        "button.default.border": "#0078D4",
+        "button.default.outline": "#1F1F1F",
+        "button.default.disabled.fill": "#1F1F1F",
+        "button.default.disabled.border": "#3C3C3C",
+        "button.default.disabled.outline": "#1F1F1F",
+        "button.outlined.fill": "#1F1F1F",
+        "button.outlined.border": "#3C3C3C",
+        "button.outlined.outline": "#1F1F1F",
+        "button.outlined.disabled.fill": "#1F1F1F",
+        "button.outlined.disabled.border": "#303030",
+        "button.outlined.disabled.outline": "#1F1F1F",
+        "textfield.fill": "#313131",
+        "textfield.border": "#3C3C3C",
+        "textfield.outline": "#1F1F1F",
+        "textfield.disabled.fill": "#1F1F1F",
+        "textfield.disabled.border": "#3C3C3C",
+        "textfield.disabled.outline": "#1F1F1F",
+        "textfield.error.fill": "#313131",
+        "textfield.error.border": "#472B2B",
+        "textfield.error.outline": "#472B2B",
+        "textfield.focused.fill": "#313131",
+        "textfield.focused.border": "#0078D4",
+        "textfield.focused.outline": "#0078D4",
+        "checkbox.unchecked.box.border": "#5A5D63",
+        "checkbox.unchecked.box.fill": "#2B2D30",
+        "checkbox.checked.box.border": "#0078D4",
+        "checkbox.checked.box.fill": "#0078D4",
+        "checkbox.disabled.box.border": "#5A5D63",
+        "checkbox.disabled.box.fill": "#393B40",
+        "divider": "#2B2B2B",
+        "divider.horizontal": "#2B2B2B",
+        "divider.vertical": "#2B2B2B",
+        "divider.toolbar": "#2B2B2B",
+        "island.fill": "#1F1F1F",
+        "island.edge": "#2C2C2C",
+        "frame.background": "#181818"
+    }
+}

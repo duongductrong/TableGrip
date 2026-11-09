@@ -5,9 +5,23 @@ name: UI kit
 on:
   push:
     branches: [master]
-    paths: ["ui-kit/**", "app/src/test/kotlin/dev/tablegrip/app/conformance/**", ".github/workflows/ui-kit.yml"]
+    paths:
+      - "ui-kit/**"
+      - "app/src/test/kotlin/dev/tablegrip/app/conformance/**"
+      # tg-theme and tg-ui read the app's theme files and icons; the golden files follow its theme code.
+      - "app/src/main/resources/themes/**"
+      - "app/src/main/resources/icons/**"
+      - "app/src/main/kotlin/dev/tablegrip/app/ui/**"
+      - ".github/workflows/ui-kit.yml"
   pull_request:
-    paths: ["ui-kit/**", "app/src/test/kotlin/dev/tablegrip/app/conformance/**", ".github/workflows/ui-kit.yml"]
+    paths:
+      - "ui-kit/**"
+      - "app/src/test/kotlin/dev/tablegrip/app/conformance/**"
+      # tg-theme and tg-ui read the app's theme files and icons; the golden files follow its theme code.
+      - "app/src/main/resources/themes/**"
+      - "app/src/main/resources/icons/**"
+      - "app/src/main/kotlin/dev/tablegrip/app/ui/**"
+      - ".github/workflows/ui-kit.yml"
   workflow_dispatch:
 
 permissions:

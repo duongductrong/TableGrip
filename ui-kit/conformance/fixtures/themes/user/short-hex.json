@@ -1,0 +1,6 @@
+{
+  "name": "Short",
+  "themes": [
+    { "name": "Short Light", "appearance": "light", "colors": { "accent": "#0A8", "island.background": "#FFFE", "border.focused": "#08F" } }
+  ]
+}

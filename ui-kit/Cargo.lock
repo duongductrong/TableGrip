@@ -5409,10 +5409,50 @@ dependencies = [
 ]
 
 [[package]]
+name = "tg-gallery"
+version = "0.0.0"
+dependencies = [
+ "gpui",
+ "image",
+ "objc",
+ "raw-window-handle",
+ "serde_json",
+ "tg-theme",
+ "tg-ui",
+]
+
+[[package]]
+name = "tg-imgdiff"
+version = "0.0.0"
+dependencies = [
+ "image",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "tg-spike"
 version = "0.0.0"
 dependencies = [
  "gpui",
+ "tg-ui-logic",
+]
+
+[[package]]
+name = "tg-theme"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "tg-ui"
+version = "0.0.0"
+dependencies = [
+ "gpui",
+ "serde_json",
+ "tg-theme",
  "tg-ui-logic",
 ]
 
