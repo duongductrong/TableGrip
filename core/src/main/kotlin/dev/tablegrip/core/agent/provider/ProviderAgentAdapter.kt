@@ -1,5 +1,6 @@
 package dev.tablegrip.core.agent.provider
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.agent.AgentAdapter
 import dev.tablegrip.core.agent.AgentDescriptor
 import dev.tablegrip.core.agent.AgentEvent
@@ -64,16 +65,16 @@ class ProviderAgentAdapter(
             send(AgentEvent.Thinking)
             val key = withContext(Dispatchers.IO) { apiKey(config.protocol)?.takeIf { it.isNotBlank() } }
             if (key == null && config.protocol == ProviderProtocol.Anthropic) {
-                throw AgentException("No API key for $title. Add one in Settings › Agent, or set ${config.protocol.keyVariable}.")
+                throw AgentException(tr("No API key for {0}. Add one in Settings › Agent, or set {1}.", title, config.protocol.keyVariable))
             }
             // Cancelling the await cancels the future, which aborts the exchange.
             val response =
                 try {
                     http.sendAsync(httpRequest(request, key), HttpResponse.BodyHandlers.ofInputStream()).await()
                 } catch (e: java.util.concurrent.CompletionException) {
-                    throw AgentException("Couldn't reach $title at ${config.baseUrl}.", e.cause ?: e)
+                    throw AgentException(tr("Couldn't reach {0} at {1}.", title, config.baseUrl), e.cause ?: e)
                 } catch (e: java.io.IOException) {
-                    throw AgentException("Couldn't reach $title at ${config.baseUrl}.", e)
+                    throw AgentException(tr("Couldn't reach {0} at {1}.", title, config.baseUrl), e)
                 }
             val body = response.body()
             try {

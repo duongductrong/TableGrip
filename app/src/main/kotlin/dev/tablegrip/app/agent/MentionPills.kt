@@ -1,5 +1,6 @@
 package dev.tablegrip.app.agent
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
@@ -181,25 +182,25 @@ internal object AboveAnchor : PopupPositionProvider {
 /** How a pill's details read: a line under its name, a block of code or text, and a note under it. */
 private class PreviewContent(val detail: String, val body: String?, val note: String? = null, val noteIsError: Boolean = false)
 
-private fun lines(range: IntRange) = if (range.first == range.last) "line ${range.first}" else "lines ${range.first}–${range.last}"
+private fun lines(range: IntRange) = if (range.first == range.last) tr("line {0}", range.first) else tr("lines {0}–{1}", range.first, range.last)
 
 private fun previewOf(mention: Mention): PreviewContent =
     when (mention) {
         is Mention.Sql -> PreviewContent("${mention.engine} · ${lines(mention.lines)}", mention.sql)
-        is Mention.Error -> PreviewContent("${mention.engine} · failed statement", mention.sql, mention.message, noteIsError = true)
-        is Mention.Table -> PreviewContent("${mention.engine} · ${mention.connection} · ${mention.qualified}", mention.details, if (mention.details == null) "Its columns, keys and indexes are read when the message is sent." else null)
-        is Mention.Column -> PreviewContent("${mention.engine} · ${mention.connection}", "${mention.type.lowercase()}${if (mention.primaryKey) ", primary key" else ""}")
-        is Mention.Query -> PreviewContent("Saved query", mention.sql)
-        is Mention.Saved -> PreviewContent("As the agent read it", mention.context)
+        is Mention.Error -> PreviewContent(tr("{0} · failed statement", mention.engine), mention.sql, mention.message, noteIsError = true)
+        is Mention.Table -> PreviewContent("${mention.engine} · ${mention.connection} · ${mention.qualified}", mention.details, if (mention.details == null) tr("Its columns, keys and indexes are read when the message is sent.") else null)
+        is Mention.Column -> PreviewContent("${mention.engine} · ${mention.connection}", "${mention.type.lowercase()}${if (mention.primaryKey) tr(", primary key") else ""}")
+        is Mention.Query -> PreviewContent(tr("Saved query"), mention.sql)
+        is Mention.Saved -> PreviewContent(tr("As the agent read it"), mention.context)
         is Mention.Cells -> {
             val header = mention.columns.joinToString(" | ") { it.name }
             val body = mention.values?.take(PreviewRows)?.joinToString("\n", prefix = "$header\n") { row -> row.joinToString(" | ") { it?.take(40) ?: "NULL" } } ?: header
-            val more = mention.values?.let { if (it.size > PreviewRows) "${it.size - PreviewRows} more rows are sent too." else null }
-            val unsaved = if (mention.notes.isEmpty()) null else "${mention.notes.size} row(s) have edits not saved yet."
+            val more = mention.values?.let { if (it.size > PreviewRows) tr("{0} more rows are sent too.", it.size - PreviewRows) else null }
+            val unsaved = if (mention.notes.isEmpty()) null else tr("{0} row(s) have edits not saved yet.", mention.notes.size)
             PreviewContent(
-                "${mention.engine} · ${mention.columns.size} column(s) × ${mention.rowCount} row(s)",
+                tr("{0} · {1} column(s) × {2} row(s)", mention.engine, mention.columns.size, mention.rowCount),
                 body,
-                if (mention.values == null) "Values aren't sent: this connection only shares its schema with agents." else listOfNotNull(more, unsaved).joinToString(" ").ifEmpty { null },
+                if (mention.values == null) tr("Values aren't sent: this connection only shares its schema with agents.") else listOfNotNull(more, unsaved).joinToString(" ").ifEmpty { null },
             )
         }
     }
@@ -229,7 +230,7 @@ internal fun MentionPreview(mention: Mention, onDismiss: () -> Unit, onRemove: (
                         Text(content.detail, color = JewelTheme.globalColors.text.info, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                     if (onRemove != null) {
-                        Tooltip({ Text("Remove from message") }) { IconButton(onClick = onRemove) { Icon(AllIconsKeys.Actions.Close, "Remove from message") } }
+                        Tooltip({ Text(tr("Remove from message")) }) { IconButton(onClick = onRemove) { Icon(AllIconsKeys.Actions.Close, tr("Remove from message")) } }
                     }
                 }
                 content.body?.let { body ->

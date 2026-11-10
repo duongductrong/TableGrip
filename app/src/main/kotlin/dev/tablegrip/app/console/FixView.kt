@@ -1,5 +1,6 @@
 package dev.tablegrip.app.console
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.app.ui.AppIcons
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -43,13 +44,13 @@ internal fun FailureActions(app: AppState, tab: ConsoleTab, failure: StatementFa
     Row(Modifier.padding(start = 72.dp, top = 2.dp, bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
         quick?.let { fix ->
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                Link("Quick fix", onClick = { tab.proposeQuickFix(failure, fix) })
+                Link(tr("Quick fix"), onClick = { tab.proposeQuickFix(failure, fix) })
                 Text(fix.explanation, color = JewelTheme.globalColors.text.info)
             }
         }
         if (tab.canAskAgent) {
-            Link("Fix with AI", onClick = { tab.askAgentToFix(failure) }, enabled = tab.fix !is FixState.Asking)
-            Link("Ask in chat", onClick = { tab.discussInChat(failure) })
+            Link(tr("Fix with AI"), onClick = { tab.askAgentToFix(failure) }, enabled = tab.fix !is FixState.Asking)
+            Link(tr("Ask in chat"), onClick = { tab.discussInChat(failure) })
         }
     }
 }
@@ -70,22 +71,22 @@ internal fun FixCard(tab: ConsoleTab, fix: FixState) {
             is FixState.Asking ->
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     CircularProgressIndicator()
-                    Text("Asking ${fix.agent ?: "the agent"} for a fix…", Modifier.weight(1f))
-                    OutlinedButton(onClick = tab::cancelFix) { Text("Cancel") }
+                    Text(tr("Asking {0} for a fix…", fix.agent ?: tr("the agent")), Modifier.weight(1f))
+                    OutlinedButton(onClick = tab::cancelFix) { Text(tr("Cancel")) }
                 }
             is FixState.NoFix -> {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(AllIconsKeys.General.Information, null, Modifier.size(14.dp))
-                    Text("No fix", fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                    OutlinedButton(onClick = tab::cancelFix) { Text("Dismiss") }
+                    Text(tr("No fix"), fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                    OutlinedButton(onClick = tab::cancelFix) { Text(tr("Dismiss")) }
                 }
                 Text(fix.message)
             }
             is FixState.Proposed -> {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(AppIcons.Agent, null, Modifier.size(14.dp))
-                    Text("Proposed fix", fontWeight = FontWeight.SemiBold)
-                    Text("from ${fix.source}", color = info)
+                    Text(tr("Proposed fix"), fontWeight = FontWeight.SemiBold)
+                    Text(tr("from {0}", fix.source), color = info)
                 }
                 Text(fix.explanation)
                 warnings.forEach { warning ->
@@ -96,10 +97,10 @@ internal fun FixCard(tab: ConsoleTab, fix: FixState) {
                 }
                 FixDiff(fix.failure.sql, fix.sql)
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Replaces the failed statement in the editor; ⌘Z undoes it.", Modifier.weight(1f), color = info)
-                    OutlinedButton(onClick = tab::cancelFix) { Text("Discard") }
-                    if (warnings.isEmpty()) OutlinedButton(onClick = { tab.applyFix(andRun = true) }, enabled = !tab.running) { Text("Apply & Run") }
-                    DefaultButton(onClick = { tab.applyFix() }) { Text("Apply") }
+                    Text(tr("Replaces the failed statement in the editor; ⌘Z undoes it."), Modifier.weight(1f), color = info)
+                    OutlinedButton(onClick = tab::cancelFix) { Text(tr("Discard")) }
+                    if (warnings.isEmpty()) OutlinedButton(onClick = { tab.applyFix(andRun = true) }, enabled = !tab.running) { Text(tr("Apply & Run")) }
+                    DefaultButton(onClick = { tab.applyFix() }) { Text(tr("Apply")) }
                 }
             }
         }

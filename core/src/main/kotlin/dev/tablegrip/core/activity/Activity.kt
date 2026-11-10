@@ -1,5 +1,6 @@
 package dev.tablegrip.core.activity
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.connection.DatabaseType
 import dev.tablegrip.core.connection.EngineFamily
 import dev.tablegrip.core.connection.Paradigm
@@ -15,12 +16,12 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 enum class SessionState(val label: String) {
-    Active("active"),
+    Active(tr("active")),
     /** Waiting on a lock held by another session. */
-    Blocked("blocked"),
-    IdleInTransaction("idle in transaction"),
-    Idle("idle"),
-    Other("other"),
+    Blocked(tr("blocked")),
+    IdleInTransaction(tr("idle in transaction")),
+    Idle(tr("idle")),
+    Other(tr("other")),
 }
 
 /** One server session, as the activity monitor lists it. */
@@ -68,7 +69,7 @@ sealed interface ActivitySupport {
             when {
                 type.paradigm != Paradigm.Relational || !type.isServer || type.family == EngineFamily.Generic -> NotApplicable
                 ActivityReader.of(type) != null -> Supported
-                else -> NotYet("The activity monitor doesn't support ${type.displayName} yet. It supports PostgreSQL, MySQL and MariaDB.")
+                else -> NotYet(tr("The activity monitor doesn't support {0} yet. It supports PostgreSQL, MySQL and MariaDB.", type.displayName))
             }
     }
 }
@@ -166,7 +167,7 @@ internal object PostgresActivity : ActivityReader() {
 
     private fun signal(connection: Connection, function: String, id: String): Boolean =
         connection.prepareStatement("SELECT $function(?)").use { ps ->
-            ps.setInt(1, id.toIntOrNull() ?: throw SQLException("Not a PostgreSQL backend pid: $id"))
+            ps.setInt(1, id.toIntOrNull() ?: throw SQLException(tr("Not a PostgreSQL backend pid: {0}", id)))
             ps.executeQuery().use { rs -> rs.next() && rs.getBoolean(1) }
         }
 
@@ -183,8 +184,8 @@ internal object PostgresActivity : ActivityReader() {
                 st.executeQuery(sql).use { rs ->
                     if (!rs.next() || rs.getBoolean("rolsuper")) return emptyList()
                     listOfNotNull(
-                        "pg_read_all_stats — other users' queries and states are hidden".takeUnless { rs.getBoolean("read_stats") },
-                        "pg_signal_backend — only your own user's sessions can be cancelled or terminated".takeUnless { rs.getBoolean("signal") },
+                        tr("pg_read_all_stats — other users' queries and states are hidden").takeUnless { rs.getBoolean("read_stats") },
+                        tr("pg_signal_backend — only your own user's sessions can be cancelled or terminated").takeUnless { rs.getBoolean("signal") },
                     )
                 }
             }
@@ -299,7 +300,7 @@ internal object MySqlActivity : ActivityReader() {
     override fun terminate(connection: Connection, id: String): Boolean = kill(connection, "KILL", id)
 
     private fun kill(connection: Connection, statement: String, id: String): Boolean {
-        val thread = id.toLongOrNull() ?: throw SQLException("Not a MySQL connection id: $id")
+        val thread = id.toLongOrNull() ?: throw SQLException(tr("Not a MySQL connection id: {0}", id))
         return try {
             connection.createStatement().use { it.execute("$statement $thread") }
             true
@@ -318,8 +319,8 @@ internal object MySqlActivity : ActivityReader() {
                 connection.createStatement().use { st -> st.executeQuery(sql).use { rs -> buildSet { while (rs.next()) add(rs.getString(1).uppercase()) } } }
             }.getOrElse { return emptyList() }
         return listOfNotNull(
-            "PROCESS — only your own user's sessions are listed, and lock waits are hidden".takeUnless { "PROCESS" in privileges },
-            "CONNECTION_ADMIN or SUPER — only your own user's sessions can be cancelled or terminated"
+            tr("PROCESS — only your own user's sessions are listed, and lock waits are hidden").takeUnless { "PROCESS" in privileges },
+            tr("CONNECTION_ADMIN or SUPER — only your own user's sessions can be cancelled or terminated")
                 .takeUnless { "SUPER" in privileges || "CONNECTION_ADMIN" in privileges },
         )
     }
@@ -337,12 +338,12 @@ class ActivityMonitor(private val connection: Connection, private val reader: Ac
     suspend fun missingPrivileges(): List<String> = io { reader.missingPrivileges(connection) }
 
     suspend fun cancel(id: String): Boolean {
-        if (readOnly) throw ReadOnlyViolationException("cancelling other sessions' queries")
+        if (readOnly) throw ReadOnlyViolationException(tr("cancelling other sessions' queries"))
         return io { reader.cancel(connection, id) }
     }
 
     suspend fun terminate(id: String): Boolean {
-        if (readOnly) throw ReadOnlyViolationException("terminating sessions")
+        if (readOnly) throw ReadOnlyViolationException(tr("terminating sessions"))
         return io { reader.terminate(connection, id) }
     }
 

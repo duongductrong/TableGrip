@@ -1,5 +1,6 @@
 package dev.tablegrip.core.datafile
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.connection.DataFileOptions
 import dev.tablegrip.core.connection.DatabaseType
 import dev.tablegrip.core.importer.ImportException
@@ -31,7 +32,7 @@ object CsvFormat : DataFileFormat {
     override fun open(path: Path, options: DataFileOptions): DataFileDocument {
         val charset =
             options.charset?.let { name ->
-                runCatching { Charset.forName(name) }.getOrElse { throw DataFileException("Unknown encoding \"$name\"") }
+                runCatching { Charset.forName(name) }.getOrElse { throw DataFileException(tr("Unknown encoding \"{0}\"", name)) }
             }
         val importOptions =
             ImportOptions(
@@ -59,7 +60,7 @@ object CsvFormat : DataFileFormat {
         try {
             ImportReader.open(path.toFile(), options)
         } catch (e: ImportException) {
-            throw DataFileException(e.message ?: "Couldn't read ${path.fileName}", e)
+            throw DataFileException(e.message ?: tr("Couldn't read {0}", path.fileName), e)
         }
 
     private data class Layout(val charset: Charset, val bom: Boolean, val delimiter: Char, val quote: Char, val hasHeader: Boolean, val lineEnding: String)
@@ -79,7 +80,7 @@ object CsvFormat : DataFileFormat {
                                 try {
                                     for (row in it.rows()) yield(row.values)
                                 } catch (e: ImportException) {
-                                    throw DataFileException(e.message ?: "Couldn't read the file", e)
+                                    throw DataFileException(e.message ?: tr("Couldn't read the file"), e)
                                 }
                             }
                         }
@@ -108,7 +109,7 @@ object CsvFormat : DataFileFormat {
                         for (row in table.rows()) record(row.map(DataValues::text))
                         out.flush()
                     } catch (e: CharacterCodingException) {
-                        throw DataFileException("Line $line has characters ${layout.charset.displayName()} can't hold. Change the connection's encoding to UTF-8.", e)
+                        throw DataFileException(tr("Line {0} has characters {1} can't hold. Change the connection's encoding to UTF-8.", line, layout.charset.displayName()), e)
                     }
                 }
             }

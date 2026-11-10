@@ -1,5 +1,6 @@
 package dev.tablegrip.app.schema
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -59,7 +60,7 @@ internal fun ImportDialog(app: AppState, wizard: ImportWizard) {
     AppDialog(
         onCloseRequest = { if (!running) app.importWizard = null },
         size = DpSize(920.dp, 660.dp),
-        title = "Import Data into ${wizard.config.name}",
+        title = tr("Import Data into {0}", wizard.config.name),
         closeOnEscape = !running,
     ) {
         ImportDialogContent(app, wizard)
@@ -89,7 +90,7 @@ internal fun ImportDialogContent(app: AppState, wizard: ImportWizard) {
 private fun Steps(wizard: ImportWizard) {
     Row(Modifier.fillMaxWidth().height(44.dp).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
         val current = if (wizard.step == ImportStep.Done) 3 else wizard.step.ordinal + 1
-        listOf("Choose file", "Choose target", "Import").forEachIndexed { i, label ->
+        listOf(tr("Choose file"), tr("Choose target"), tr("Import")).forEachIndexed { i, label ->
             if (i > 0) Icon(AllIconsKeys.General.ChevronRight, null, tint = JewelTheme.globalColors.text.info)
             val number = i + 1
             val done = number < current || wizard.step == ImportStep.Done
@@ -120,12 +121,12 @@ private fun SourceStep(wizard: ImportWizard) {
     if (file == null) {
         Box(Modifier.fillMaxSize().border(1.dp, JewelTheme.globalColors.borders.normal, RoundedCornerShape(8.dp))) {
             EmptyState(
-                "Choose a file to import",
-                "CSV or TSV, Excel workbooks (.xlsx) and JSON (an array of objects, or one object per line). " +
-                    "You'll see the first rows and pick the target before anything is written.",
+                tr("Choose a file to import"),
+                tr("CSV or TSV, Excel workbooks (.xlsx) and JSON (an array of objects, or one object per line). ") +
+                    tr("You'll see the first rows and pick the target before anything is written."),
                 Modifier.align(Alignment.Center),
             ) {
-                DefaultButton(onClick = wizard::chooseFile) { Text("Choose File…") }
+                DefaultButton(onClick = wizard::chooseFile) { Text(tr("Choose File…")) }
                 wizard.previewError?.let { Notice(it, NoticeKind.Error) }
             }
         }
@@ -136,7 +137,7 @@ private fun SourceStep(wizard: ImportWizard) {
             Icon(AllIconsKeys.FileTypes.Text, null)
             Text(file.name, fontWeight = FontWeight.SemiBold)
             Text("${byteSize(file.length())} · ${wizard.formatLabel}", color = JewelTheme.globalColors.text.info)
-            Link("Change…", onClick = wizard::chooseFile)
+            Link(tr("Change…"), onClick = wizard::chooseFile)
             Box(Modifier.weight(1f))
             if (wizard.loadingPreview) CircularProgressIndicator()
         }
@@ -156,7 +157,7 @@ private fun SourceStep(wizard: ImportWizard) {
                     )
                 }
             Text(
-                "First ${preview.rows.size} row(s) · ${preview.columns.size} column(s)" + if (preview.rows.size >= 200) ". The whole file is imported." else "",
+                tr("First {0} row(s) · {1} column(s)", preview.rows.size, preview.columns.size) + if (preview.rows.size >= 200) tr(". The whole file is imported.") else "",
                 color = JewelTheme.globalColors.text.info,
             )
             Box(Modifier.weight(1f).fillMaxWidth().border(1.dp, JewelTheme.globalColors.borders.normal, RoundedCornerShape(4.dp))) {
@@ -172,30 +173,30 @@ private fun OptionsRow(wizard: ImportWizard) {
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
         when (options.format) {
             ImportFormat.Csv -> {
-                Text("Delimiter", color = JewelTheme.globalColors.text.info)
+                Text(tr("Delimiter"), color = JewelTheme.globalColors.text.info)
                 Picker(
-                    Delimiters.firstOrNull { it.second == options.delimiter }?.first ?: "Detect",
+                    Delimiters.firstOrNull { it.second == options.delimiter }?.first ?: tr("Detect"),
                     placeholder = false,
                     options = Delimiters,
                     onPick = wizard::setDelimiter,
                     modifier = Modifier.width(130.dp),
                 )
-                Text("Encoding", color = JewelTheme.globalColors.text.info)
+                Text(tr("Encoding"), color = JewelTheme.globalColors.text.info)
                 Picker(
-                    options.charset?.displayName() ?: "Detect",
+                    options.charset?.displayName() ?: tr("Detect"),
                     placeholder = false,
                     options = Encodings.map { it to java.nio.charset.Charset.forName(it) },
                     onPick = wizard::setCharset,
                     modifier = Modifier.width(140.dp),
                 )
-                CheckboxRow("First row is the header", options.hasHeader, onCheckedChange = wizard::setHeader)
+                CheckboxRow(tr("First row is the header"), options.hasHeader, onCheckedChange = wizard::setHeader)
             }
             ImportFormat.Xlsx -> {
-                Text("Sheet", color = JewelTheme.globalColors.text.info)
-                Picker(options.sheet ?: "First sheet", placeholder = false, options = wizard.preview?.sheets.orEmpty().map { it to it }, onPick = wizard::setSheet, modifier = Modifier.width(180.dp))
-                CheckboxRow("First row is the header", options.hasHeader, onCheckedChange = wizard::setHeader)
+                Text(tr("Sheet"), color = JewelTheme.globalColors.text.info)
+                Picker(options.sheet ?: tr("First sheet"), placeholder = false, options = wizard.preview?.sheets.orEmpty().map { it to it }, onPick = wizard::setSheet, modifier = Modifier.width(180.dp))
+                CheckboxRow(tr("First row is the header"), options.hasHeader, onCheckedChange = wizard::setHeader)
             }
-            ImportFormat.Json -> Text("Each object becomes a row; nested values are kept as JSON text.", color = JewelTheme.globalColors.text.info)
+            ImportFormat.Json -> Text(tr("Each object becomes a row; nested values are kept as JSON text."), color = JewelTheme.globalColors.text.info)
         }
     }
 }
@@ -208,11 +209,11 @@ private fun OptionsRow(wizard: ImportWizard) {
 private fun TargetStep(wizard: ImportWizard) {
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            RadioButtonRow("New table", selected = !wizard.intoExisting, onClick = { wizard.intoExisting = false })
+            RadioButtonRow(tr("New table"), selected = !wizard.intoExisting, onClick = { wizard.intoExisting = false })
             TextField(wizard.newTableName, Modifier.width(220.dp), enabled = !wizard.intoExisting, placeholder = { Text("table_name") })
-            RadioButtonRow("Existing table", selected = wizard.intoExisting, onClick = { wizard.intoExisting = true })
+            RadioButtonRow(tr("Existing table"), selected = wizard.intoExisting, onClick = { wizard.intoExisting = true })
             Picker(
-                wizard.targetTable?.name ?: "Choose table",
+                wizard.targetTable?.name ?: tr("Choose table"),
                 placeholder = wizard.targetTable == null,
                 options = wizard.tables.map { it.name to it },
                 onPick = { table ->
@@ -234,10 +235,10 @@ private fun NewMapping(wizard: ImportWizard, modifier: Modifier) {
     Column(modifier.fillMaxWidth()) {
         MappingHeader {
             Box(Modifier.width(32.dp))
-            HeaderCell("File column", Modifier.weight(1f))
-            HeaderCell("Column", Modifier.weight(1f))
-            HeaderCell("Type", Modifier.weight(1f))
-            HeaderCell("Found in the first rows", Modifier.weight(1f))
+            HeaderCell(tr("File column"), Modifier.weight(1f))
+            HeaderCell(tr("Column"), Modifier.weight(1f))
+            HeaderCell(tr("Type"), Modifier.weight(1f))
+            HeaderCell(tr("Found in the first rows"), Modifier.weight(1f))
         }
         LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
             items(wizard.newColumns, key = { it.source }) { plan ->
@@ -248,7 +249,7 @@ private fun NewMapping(wizard: ImportWizard, modifier: Modifier) {
                     Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                         TextField(plan.type, Modifier.weight(1f), enabled = plan.include)
                     }
-                    Text(typeLabel(plan.inferred) + if (plan.inferred.nullable) ", has blanks" else "", Modifier.weight(1f), color = JewelTheme.globalColors.text.info, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(typeLabel(plan.inferred) + if (plan.inferred.nullable) tr(", has blanks") else "", Modifier.weight(1f), color = JewelTheme.globalColors.text.info, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
         }
@@ -260,12 +261,12 @@ private fun ExistingMapping(wizard: ImportWizard, modifier: Modifier) {
     val sources = wizard.preview?.columns.orEmpty()
     Column(modifier.fillMaxWidth()) {
         MappingHeader {
-            HeaderCell("Table column", Modifier.weight(1f))
-            HeaderCell("Type", Modifier.weight(0.7f))
-            HeaderCell("Filled from", Modifier.weight(1.2f))
+            HeaderCell(tr("Table column"), Modifier.weight(1f))
+            HeaderCell(tr("Type"), Modifier.weight(0.7f))
+            HeaderCell(tr("Filled from"), Modifier.weight(1.2f))
         }
         if (wizard.targetTable == null) {
-            Box(Modifier.weight(1f).fillMaxWidth()) { Text("Choose a table above.", Modifier.align(Alignment.Center), color = JewelTheme.globalColors.text.info) }
+            Box(Modifier.weight(1f).fillMaxWidth()) { Text(tr("Choose a table above."), Modifier.align(Alignment.Center), color = JewelTheme.globalColors.text.info) }
             return
         }
         LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
@@ -275,11 +276,11 @@ private fun ExistingMapping(wizard: ImportWizard, modifier: Modifier) {
                 Row(Modifier.fillMaxWidth().height(36.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Row(Modifier.weight(1f).padding(start = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(column.name, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = if (column.primaryKey) FontWeight.SemiBold else FontWeight.Normal)
-                        if (required) Tag("REQUIRED", WarningColor)
-                        if (column.autoIncrement) Tag("AUTO", ChangedColor)
+                        if (required) Tag(tr("REQUIRED"), WarningColor)
+                        if (column.autoIncrement) Tag(tr("AUTO"), ChangedColor)
                     }
                     Text(column.typeName.lowercase(), Modifier.weight(0.7f), color = JewelTheme.globalColors.text.info)
-                    val skip = if (column.autoIncrement || column.defaultValue != null) "Leave to the database" else "Leave empty (NULL)"
+                    val skip = if (column.autoIncrement || column.defaultValue != null) tr("Leave to the database") else tr("Leave empty (NULL)")
                     Picker(
                         plan.source?.let { sources.getOrNull(it) } ?: skip,
                         placeholder = plan.source == null,
@@ -304,8 +305,8 @@ private fun MappingHeader(content: @Composable androidx.compose.foundation.layou
 private fun RunningStep(wizard: ImportWizard, modifier: Modifier) {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         CircularProgressIndicatorBig()
-        Text("Importing %,d rows…".format(wizard.imported), fontWeight = FontWeight.SemiBold)
-        Text("Everything goes in one transaction: cancelling or a bad row leaves the database as it was.", color = JewelTheme.globalColors.text.info)
+        Text(tr("Importing {0} rows…", "%,d".format(wizard.imported)), fontWeight = FontWeight.SemiBold)
+        Text(tr("Everything goes in one transaction: cancelling or a bad row leaves the database as it was."), color = JewelTheme.globalColors.text.info)
     }
 }
 
@@ -313,13 +314,13 @@ private fun RunningStep(wizard: ImportWizard, modifier: Modifier) {
 private fun DoneStep(app: AppState, wizard: ImportWizard, modifier: Modifier) {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Icon(AllIconsKeys.General.InspectionsOK, null, Modifier.size(32.dp))
-        Text("Imported %,d rows into ${wizard.result?.name}".format(wizard.imported), fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-        Text("from ${wizard.file?.name}", color = JewelTheme.globalColors.text.info)
+        Text(tr("Imported {0} rows into {1}", "%,d".format(wizard.imported), wizard.result?.name), fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+        Text(tr("from {0}", wizard.file?.name), color = JewelTheme.globalColors.text.info)
         wizard.result?.let { table ->
             DefaultButton(onClick = {
                 app.importWizard = null
                 app.workspace.openTable(wizard.config, table)
-            }) { Text("Open ${table.name}") }
+            }) { Text(tr("Open {0}", table.name)) }
         }
     }
 }
@@ -329,41 +330,41 @@ private fun Footer(app: AppState, wizard: ImportWizard) {
     Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         if (wizard.config.environment == Environment.Production && wizard.step == ImportStep.Target) {
             Icon(AllIconsKeys.General.Warning, null)
-            Text("Writes to a Production connection", color = WarningColor)
+            Text(tr("Writes to a Production connection"), color = WarningColor)
         }
-        if (wizard.config.readOnly) Text("This connection is read-only.", color = JewelTheme.globalColors.text.error)
+        if (wizard.config.readOnly) Text(tr("This connection is read-only."), color = JewelTheme.globalColors.text.error)
         Box(Modifier.weight(1f))
         when (wizard.step) {
             ImportStep.Source -> {
-                OutlinedButton(onClick = { app.importWizard = null }) { Text("Cancel") }
-                DefaultButton(onClick = wizard::next, enabled = wizard.canContinue) { Text("Next") }
+                OutlinedButton(onClick = { app.importWizard = null }) { Text(tr("Cancel")) }
+                DefaultButton(onClick = wizard::next, enabled = wizard.canContinue) { Text(tr("Next")) }
             }
             ImportStep.Target -> {
-                OutlinedButton(onClick = wizard::back) { Text("Back") }
-                OutlinedButton(onClick = { app.importWizard = null }) { Text("Cancel") }
+                OutlinedButton(onClick = wizard::back) { Text(tr("Back")) }
+                OutlinedButton(onClick = { app.importWizard = null }) { Text(tr("Cancel")) }
                 DefaultButton(onClick = wizard::start, enabled = wizard.targetProblem == null && !wizard.config.readOnly) {
-                    Text(if (wizard.intoExisting) "Import" else "Create Table & Import")
+                    Text(if (wizard.intoExisting) tr("Import") else tr("Create Table & Import"))
                 }
             }
-            ImportStep.Running -> OutlinedButton(onClick = wizard::cancel) { Text("Cancel Import") }
-            ImportStep.Done -> DefaultButton(onClick = { app.importWizard = null }) { Text("Close") }
+            ImportStep.Running -> OutlinedButton(onClick = wizard::cancel) { Text(tr("Cancel Import")) }
+            ImportStep.Done -> DefaultButton(onClick = { app.importWizard = null }) { Text(tr("Close")) }
         }
     }
 }
 
-private val Delimiters = listOf("Comma  ," to ',', "Semicolon  ;" to ';', "Tab" to '\t', "Pipe  |" to '|')
+private val Delimiters = listOf(tr("Comma  ,") to ',', tr("Semicolon  ;") to ';', tr("Tab") to '\t', tr("Pipe  |") to '|')
 private val Encodings = listOf("UTF-8", "UTF-16", "windows-1252", "ISO-8859-1")
 
 private fun typeLabel(type: InferredType): String =
     when (type.kind) {
-        InferredType.Kind.Integer -> "integer"
-        InferredType.Kind.BigInteger -> "big integer"
-        InferredType.Kind.Decimal -> "decimal"
-        InferredType.Kind.Boolean -> "boolean"
-        InferredType.Kind.Date -> "date"
-        InferredType.Kind.Timestamp -> "timestamp"
-        InferredType.Kind.Json -> "json"
-        InferredType.Kind.Text -> if (type.maxLength > 0) "text, up to ${type.maxLength} chars" else "text"
+        InferredType.Kind.Integer -> tr("integer")
+        InferredType.Kind.BigInteger -> tr("big integer")
+        InferredType.Kind.Decimal -> tr("decimal")
+        InferredType.Kind.Boolean -> tr("boolean")
+        InferredType.Kind.Date -> tr("date")
+        InferredType.Kind.Timestamp -> tr("timestamp")
+        InferredType.Kind.Json -> tr("json")
+        InferredType.Kind.Text -> if (type.maxLength > 0) tr("text, up to {0} chars", type.maxLength) else tr("text")
     }
 
 internal fun byteSize(bytes: Long): String =

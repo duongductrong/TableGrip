@@ -1,5 +1,6 @@
 package dev.tablegrip.app.schema
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -70,8 +71,8 @@ internal fun AppState.schemaChanged(config: ConnectionConfig, namespace: Namespa
 
 /** What the script dialog says about how a script runs on [dialect]. */
 internal fun transactionNote(script: DdlScript, dialect: SqlDialect): String =
-    if (script.transactional) "Runs in one transaction: if any statement fails, nothing changes."
-    else "$dialect can't roll back schema changes: statements apply one by one and stop at the first failure."
+    if (script.transactional) tr("Runs in one transaction: if any statement fails, nothing changes.")
+    else tr("{0} can't roll back schema changes: statements apply one by one and stop at the first failure.", dialect)
 
 /**
  * A script waiting for the user's go-ahead, and then running. [onDone] runs on the UI thread once it succeeded.
@@ -80,7 +81,7 @@ internal class ScriptRun(
     val title: String,
     val config: ConnectionConfig,
     val script: DdlScript,
-    val runLabel: String = "Apply",
+    val runLabel: String = tr("Apply"),
     val onDone: (statements: Int) -> Unit,
 ) {
     var running by mutableStateOf(false)
@@ -138,11 +139,11 @@ internal fun ScriptDialogContent(app: AppState, run: ScriptRun, onClose: () -> U
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(if (production) AllIconsKeys.General.Warning else AllIconsKeys.General.Information, null)
-            Text("${run.script.statements.size} statement(s) on ${run.config.name}", fontWeight = FontWeight.SemiBold)
+            Text(tr("{0} statement(s) on {1}", run.script.statements.size, run.config.name), fontWeight = FontWeight.SemiBold)
             EnvironmentChip(run.config)
         }
         Text(transactionNote(run.script, dialect), color = JewelTheme.globalColors.text.info)
-        if (production) Notice("This is a Production connection. Read the statements before running them.", NoticeKind.Warning)
+        if (production) Notice(tr("This is a Production connection. Read the statements before running them."), NoticeKind.Warning)
         run.script.warnings.forEach { Notice(it, NoticeKind.Warning) }
         val text = remember(run.script) { TextFieldState(run.script.text) }
         Box(Modifier.weight(1f).fillMaxWidth().border(1.dp, JewelTheme.globalColors.borders.normal, RoundedCornerShape(4.dp))) {
@@ -150,26 +151,26 @@ internal fun ScriptDialogContent(app: AppState, run: ScriptRun, onClose: () -> U
         }
         run.error?.let { message ->
             Notice(
-                if (run.partial) "$message\nRefresh the explorer to see the schema as it is now." else message,
+                if (run.partial) tr("{0}\nRefresh the explorer to see the schema as it is now.", message) else message,
                 NoticeKind.Error,
             )
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             if (run.running) {
-                Text("Running ${(run.progress + 1).coerceAtMost(run.script.statements.size)} of ${run.script.statements.size}…", color = JewelTheme.globalColors.text.info)
+                Text(tr("Running {0} of {1}…", (run.progress + 1).coerceAtMost(run.script.statements.size), run.script.statements.size), color = JewelTheme.globalColors.text.info)
             }
             Box(Modifier.weight(1f))
-            OutlinedButton(onClick = { copyToClipboard(run.script.text) }) { Text("Copy") }
+            OutlinedButton(onClick = { copyToClipboard(run.script.text) }) { Text(tr("Copy")) }
             OutlinedButton(
                 onClick = {
                     onClose()
                     app.workspace.openConsole(run.config, run.script.text)
                 },
                 enabled = !run.running,
-            ) { Text("Open in Console") }
-            OutlinedButton(onClick = onClose, enabled = !run.running) { Text("Cancel") }
+            ) { Text(tr("Open in Console")) }
+            OutlinedButton(onClick = onClose, enabled = !run.running) { Text(tr("Cancel")) }
             DefaultButton(onClick = { run.start(app, onClose) }, enabled = !run.running && !run.script.isEmpty) {
-                Text(if (production) "${run.runLabel} on Production" else run.runLabel)
+                Text(if (production) tr("{0} on Production", run.runLabel) else run.runLabel)
             }
         }
     }
@@ -252,7 +253,7 @@ internal fun EmptyState(title: String, detail: String, modifier: Modifier = Modi
 }
 
 /** The native save dialog, starting in Downloads; null when cancelled. */
-internal fun chooseSaveFile(suggested: String, title: String = "Save"): java.io.File? {
+internal fun chooseSaveFile(suggested: String, title: String = tr("Save")): java.io.File? {
     val dialog = java.awt.FileDialog(null as java.awt.Frame?, title, java.awt.FileDialog.SAVE)
     dialog.directory = System.getProperty("user.home") + "/Downloads"
     dialog.file = suggested
@@ -288,11 +289,11 @@ internal fun AppState.withDefaultNamespace(config: ConnectionConfig, action: (Na
             val database = databases.database(config)
             val namespaces = database.namespaces()
             val name = database.dialect.defaultNamespace(namespaces.map { it.displayName }, config.database)
-            (namespaces.firstOrNull { it.displayName == name } ?: namespaces.firstOrNull())?.let(action) ?: run { status = "${config.name} has no schemas" }
+            (namespaces.firstOrNull { it.displayName == name } ?: namespaces.firstOrNull())?.let(action) ?: run { status = tr("{0} has no schemas", config.name) }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            status = "Couldn't connect to ${config.name}: ${e.message}"
+            status = tr("Couldn't connect to {0}: {1}", config.name, e.message)
         }
     }
 }
@@ -301,9 +302,9 @@ internal fun AppState.withDefaultNamespace(config: ConnectionConfig, action: (Na
 internal fun schemaTools(app: AppState, config: ConnectionConfig): List<androidx.compose.foundation.ContextMenuItem> {
     if (config.type.paradigm != dev.tablegrip.core.connection.Paradigm.Relational) return emptyList()
     return listOfNotNull(
-        androidx.compose.foundation.ContextMenuItem("New Table…") { app.withDefaultNamespace(config) { app.workspace.openTableDesigner(config, it) } }.takeUnless { config.readOnly },
-        androidx.compose.foundation.ContextMenuItem("Import Data…") { app.withDefaultNamespace(config) { app.openImport(config, it) } }.takeUnless { config.readOnly },
-        androidx.compose.foundation.ContextMenuItem("Show ER Diagram") { app.withDefaultNamespace(config) { app.workspace.openErDiagram(config, it) } },
-        androidx.compose.foundation.ContextMenuItem("Compare Schema With…") { app.withDefaultNamespace(config) { app.workspace.openSchemaCompare(config, it) } },
+        androidx.compose.foundation.ContextMenuItem(tr("New Table…")) { app.withDefaultNamespace(config) { app.workspace.openTableDesigner(config, it) } }.takeUnless { config.readOnly },
+        androidx.compose.foundation.ContextMenuItem(tr("Import Data…")) { app.withDefaultNamespace(config) { app.openImport(config, it) } }.takeUnless { config.readOnly },
+        androidx.compose.foundation.ContextMenuItem(tr("Show ER Diagram")) { app.withDefaultNamespace(config) { app.workspace.openErDiagram(config, it) } },
+        androidx.compose.foundation.ContextMenuItem(tr("Compare Schema With…")) { app.withDefaultNamespace(config) { app.workspace.openSchemaCompare(config, it) } },
     )
 }

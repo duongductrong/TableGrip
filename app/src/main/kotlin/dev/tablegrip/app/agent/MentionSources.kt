@@ -1,5 +1,6 @@
 package dev.tablegrip.app.agent
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.app.AppState
 import dev.tablegrip.app.console.ConsoleTab
 import dev.tablegrip.app.search.fuzzyScore
@@ -15,10 +16,10 @@ import org.slf4j.LoggerFactory
 class MentionCandidate(val kind: Kind, val title: String, val detail: String?, val mention: Mention) {
     /** In the order the list shows them. */
     enum class Kind(val label: String) {
-        Tab("Open tabs"),
-        Table("Tables"),
-        Column("Columns"),
-        Query("Saved queries"),
+        Tab(tr("Open tabs")),
+        Table(tr("Tables")),
+        Column(tr("Columns")),
+        Query(tr("Saved queries")),
     }
 }
 
@@ -81,7 +82,7 @@ class MentionSources(private val app: AppState) {
     private fun tables(): List<MentionCandidate> {
         val config = relational() ?: return emptyList()
         return app.schemaCache(config).allTables().map { (ref, isView) ->
-            MentionCandidate(MentionCandidate.Kind.Table, ref.name, "${if (isView) "view" else "table"} · ${ref.namespace.displayName}", table(config, ref))
+            MentionCandidate(MentionCandidate.Kind.Table, ref.name, "${if (isView) tr("view") else tr("table")} · ${ref.namespace.displayName}", table(config, ref))
         }
     }
 

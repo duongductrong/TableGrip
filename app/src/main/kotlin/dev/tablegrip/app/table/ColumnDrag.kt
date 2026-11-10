@@ -1,5 +1,6 @@
 package dev.tablegrip.app.table
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -95,8 +96,8 @@ internal fun ColumnDragGhost(drag: ColumnDragState, root: GroupState, origin: Of
     val at = drag.pointer - origin + Offset(gap, gap / 2)
     val action =
         when (val target = drag.hovered) {
-            is ColumnDrop.Into -> if (target.group === root) "Add condition" else "Add to group"
-            is ColumnDrop.Onto -> "Use in this condition"
+            is ColumnDrop.Into -> if (target.group === root) tr("Add condition") else tr("Add to group")
+            is ColumnDrop.Onto -> tr("Use in this condition")
             null -> null
         }
     val shape = RoundedCornerShape(6.dp)
@@ -115,7 +116,7 @@ internal fun ColumnDragGhost(drag: ColumnDragState, root: GroupState, origin: Of
             Icon(AllIconsKeys.General.ArrowRight, null)
             Text(action)
         } else {
-            Text("Drop on a condition or group of the filter", color = JewelTheme.globalColors.text.info)
+            Text(tr("Drop on a condition or group of the filter"), color = JewelTheme.globalColors.text.info)
         }
     }
 }

@@ -1,5 +1,6 @@
 package dev.tablegrip.app.schema
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -64,21 +65,21 @@ internal fun SchemaCompareView(app: AppState, tab: SchemaCompareTab) {
             comparison == null ->
                 Box(Modifier.fillMaxSize()) {
                     EmptyState(
-                        "Compare two schemas",
-                        "Pick the source — the schema as it should be — and the target to bring in line, e.g. staging → production. " +
-                            "Nothing changes until you review the migration script and run it.",
+                        tr("Compare two schemas"),
+                        tr("Pick the source — the schema as it should be — and the target to bring in line, e.g. staging → production. ") +
+                            tr("Nothing changes until you review the migration script and run it."),
                         Modifier.align(Alignment.Center),
                     ) {
-                        DefaultButton(onClick = tab::compare, enabled = tab.canCompare) { Text("Compare") }
+                        DefaultButton(onClick = tab::compare, enabled = tab.canCompare) { Text(tr("Compare")) }
                     }
                 }
             comparison.isEmpty ->
                 Box(Modifier.fillMaxSize()) {
                     EmptyState(
-                        "The schemas match",
-                        "${comparison.identical} table(s) have the same columns, keys and indexes on both sides.",
+                        tr("The schemas match"),
+                        tr("{0} table(s) have the same columns, keys and indexes on both sides.", comparison.identical),
                         Modifier.align(Alignment.Center),
-                    ) { OutlinedButton(onClick = tab::compare) { Text("Compare Again") } }
+                    ) { OutlinedButton(onClick = tab::compare) { Text(tr("Compare Again")) } }
                 }
             else ->
                 HorizontalSplitLayout(
@@ -101,18 +102,18 @@ private fun CompareBar(tab: SchemaCompareTab) {
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        SidePicker("Source", tab.source, tab)
-        Tooltip({ Text("Swap source and target") }) {
-            IconButton(onClick = tab::swap, enabled = !tab.comparing) { Icon(AllIconsKeys.Diff.ArrowLeftRight, "Swap") }
+        SidePicker(tr("Source"), tab.source, tab)
+        Tooltip({ Text(tr("Swap source and target")) }) {
+            IconButton(onClick = tab::swap, enabled = !tab.comparing) { Icon(AllIconsKeys.Diff.ArrowLeftRight, tr("Swap")) }
         }
-        SidePicker("Target", tab.target, tab)
+        SidePicker(tr("Target"), tab.target, tab)
         Box(Modifier.weight(1f))
         if (tab.comparing) {
             Progress(tab, Modifier)
-            OutlinedButton(onClick = tab::cancel) { Text("Cancel") }
+            OutlinedButton(onClick = tab::cancel) { Text(tr("Cancel")) }
         } else {
-            if (tab.isStale) Text("Target changed since the comparison", color = WarningColor)
-            DefaultButton(onClick = tab::compare, enabled = tab.canCompare) { Text(if (tab.comparison == null) "Compare" else "Compare Again") }
+            if (tab.isStale) Text(tr("Target changed since the comparison"), color = WarningColor)
+            DefaultButton(onClick = tab::compare, enabled = tab.canCompare) { Text(if (tab.comparison == null) tr("Compare") else tr("Compare Again")) }
         }
     }
 }
@@ -122,7 +123,7 @@ private fun SidePicker(label: String, side: CompareSide, tab: SchemaCompareTab) 
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(label, color = JewelTheme.globalColors.text.info)
         Picker(
-            label = side.config?.name ?: "Choose connection",
+            label = side.config?.name ?: tr("Choose connection"),
             placeholder = side.config == null,
             options = tab.candidates.map { it.name to it },
             onPick = { side.pick(it) },
@@ -131,7 +132,7 @@ private fun SidePicker(label: String, side: CompareSide, tab: SchemaCompareTab) 
         side.config?.let { EnvironmentChip(it) }
         if (side.namespaces.size > 1 || side.loadingNamespaces) {
             Picker(
-                label = side.namespace?.displayName ?: if (side.loadingNamespaces) "Loading…" else "Choose schema",
+                label = side.namespace?.displayName ?: if (side.loadingNamespaces) tr("Loading…") else tr("Choose schema"),
                 placeholder = side.namespace == null,
                 options = side.namespaces.map { it.displayName to it },
                 onPick = { side.namespace = it },
@@ -149,8 +150,8 @@ private fun Progress(tab: SchemaCompareTab, modifier: Modifier) {
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         CircularProgressIndicator()
         fun part(name: String, side: CompareSide) = side.progress?.let { (done, total) -> "$name $done/$total" }
-        val detail = listOfNotNull(part("source", tab.source), part("target", tab.target)).joinToString(" · ")
-        Text(if (detail.isEmpty()) "Reading schemas…" else "Reading tables: $detail", color = JewelTheme.globalColors.text.info)
+        val detail = listOfNotNull(part(tr("source"), tab.source), part(tr("target"), tab.target)).joinToString(" · ")
+        Text(if (detail.isEmpty()) tr("Reading schemas…") else tr("Reading tables: {0}", detail), color = JewelTheme.globalColors.text.info)
     }
 }
 
@@ -161,13 +162,13 @@ private fun DiffList(tab: SchemaCompareTab) {
     val comparison = tab.comparison ?: return
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().height(32.dp).padding(horizontal = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("${comparison.diffs.size} table(s) differ", fontWeight = FontWeight.SemiBold)
-            if (comparison.identical > 0) Text("${comparison.identical} identical", color = JewelTheme.globalColors.text.info)
+            Text(tr("{0} table(s) differ", comparison.diffs.size), fontWeight = FontWeight.SemiBold)
+            if (comparison.identical > 0) Text(tr("{0} identical", comparison.identical), color = JewelTheme.globalColors.text.info)
             Box(Modifier.weight(1f))
-            Text("Select", color = JewelTheme.globalColors.text.info)
-            Tooltip({ Text("Everything except drops") }) { Link("Safe", onClick = { tab.selectAll(on = true, includeDrops = false) }) }
-            Tooltip({ Text("Including drops, which lose data") }) { Link("All", onClick = { tab.selectAll(on = true, includeDrops = true) }) }
-            Link("None", onClick = { tab.selectAll(on = false, includeDrops = true) })
+            Text(tr("Select"), color = JewelTheme.globalColors.text.info)
+            Tooltip({ Text(tr("Everything except drops")) }) { Link(tr("Safe"), onClick = { tab.selectAll(on = true, includeDrops = false) }) }
+            Tooltip({ Text(tr("Including drops, which lose data")) }) { Link(tr("All"), onClick = { tab.selectAll(on = true, includeDrops = true) }) }
+            Link(tr("None"), onClick = { tab.selectAll(on = false, includeDrops = true) })
         }
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
         LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
@@ -190,9 +191,9 @@ private fun DiffList(tab: SchemaCompareTab) {
 private fun GroupHeader(kind: TableDiffKind, count: Int) {
     val (title, hint) =
         when (kind) {
-            TableDiffKind.Added -> "Only in source" to "created in the target"
-            TableDiffKind.Changed -> "Different" to "altered in the target"
-            TableDiffKind.Removed -> "Only in target" to "dropped from the target if selected"
+            TableDiffKind.Added -> tr("Only in source") to tr("created in the target")
+            TableDiffKind.Changed -> tr("Different") to tr("altered in the target")
+            TableDiffKind.Removed -> tr("Only in target") to tr("dropped from the target if selected")
         }
     Row(Modifier.fillMaxWidth().padding(start = 10.dp, top = 10.dp, bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(title.uppercase(), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = JewelTheme.globalColors.text.info)
@@ -246,7 +247,7 @@ private fun ItemRow(tab: SchemaCompareTab, diff: TableDiff, item: DiffItem) {
         Checkbox(tab.isSelected(key), { tab.toggle(key, it) })
         Text(sign, Modifier.width(10.dp), color = color, fontWeight = FontWeight.Bold)
         Text(item.label, Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
-        if (item.destructive) Tooltip({ Text("Loses data or structure; not selected by default") }) { Icon(AllIconsKeys.General.Warning, "Destructive", Modifier.size(14.dp)) }
+        if (item.destructive) Tooltip({ Text(tr("Loses data or structure; not selected by default")) }) { Icon(AllIconsKeys.General.Warning, tr("Destructive"), Modifier.size(14.dp)) }
     }
 }
 
@@ -258,8 +259,8 @@ private fun MigrationPane(tab: SchemaCompareTab) {
     val dialect = tab.targetDialect ?: return
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().height(32.dp).padding(horizontal = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Migration for ${tab.target.label}", fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-            Text("${script.statements.size} statement(s)", color = JewelTheme.globalColors.text.info)
+            Text(tr("Migration for {0}", tab.target.label), fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            Text(tr("{0} statement(s)", script.statements.size), color = JewelTheme.globalColors.text.info)
         }
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
         script.warnings.forEach { Notice(it, NoticeKind.Warning, Modifier.padding(horizontal = 8.dp, vertical = 2.dp)) }
@@ -267,7 +268,7 @@ private fun MigrationPane(tab: SchemaCompareTab) {
         LaunchedEffect(script) { text.setTextAndPlaceCursorAtEnd(script.text) }
         Box(Modifier.weight(1f).fillMaxWidth()) {
             if (script.isEmpty) {
-                Text("Select differences on the left to build the migration.", Modifier.align(Alignment.Center), color = JewelTheme.globalColors.text.info)
+                Text(tr("Select differences on the left to build the migration."), Modifier.align(Alignment.Center), color = JewelTheme.globalColors.text.info)
             } else {
                 SqlEditor(text, dialect.syntax, tab.editorFontSize, Modifier.fillMaxSize(), readOnly = true)
             }
@@ -275,10 +276,10 @@ private fun MigrationPane(tab: SchemaCompareTab) {
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
         Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(transactionNote(script, dialect), Modifier.weight(1f), color = JewelTheme.globalColors.text.info, maxLines = 2, overflow = TextOverflow.Ellipsis, fontSize = 12.sp)
-            OutlinedButton(onClick = { copyToClipboard(script.text) }, enabled = !script.isEmpty) { Text("Copy") }
-            OutlinedButton(onClick = { chooseSaveFile("migration.sql")?.let(tab::saveScript) }, enabled = !script.isEmpty) { Text("Save…") }
-            OutlinedButton(onClick = tab::openInConsole, enabled = !script.isEmpty) { Text("Open in Console") }
-            DefaultButton(onClick = tab::requestApply, enabled = !script.isEmpty && !tab.isStale && tab.target.config?.readOnly != true) { Text("Run…") }
+            OutlinedButton(onClick = { copyToClipboard(script.text) }, enabled = !script.isEmpty) { Text(tr("Copy")) }
+            OutlinedButton(onClick = { chooseSaveFile("migration.sql")?.let(tab::saveScript) }, enabled = !script.isEmpty) { Text(tr("Save…")) }
+            OutlinedButton(onClick = tab::openInConsole, enabled = !script.isEmpty) { Text(tr("Open in Console")) }
+            DefaultButton(onClick = tab::requestApply, enabled = !script.isEmpty && !tab.isStale && tab.target.config?.readOnly != true) { Text(tr("Run…")) }
         }
     }
 }

@@ -1,5 +1,6 @@
 package dev.tablegrip.core.imports
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.connection.ConnectionConfig
 import dev.tablegrip.core.connection.ConnectionString
 import dev.tablegrip.core.connection.DatabaseType
@@ -18,12 +19,12 @@ import kotlin.io.path.readText
 
 /** The tools and files TableGrip reads connections from. */
 enum class ImportFormat(val label: String, val shortLabel: String = label) {
-    MacPlist("Connections.plist (macOS)", "Connections.plist"),
+    MacPlist(tr("Connections.plist (macOS)"), tr("Connections.plist")),
     DBeaver("DBeaver"),
-    IdeDataSources("IDE data sources (.idea/dataSources.xml)", "IDE data sources"),
+    IdeDataSources(tr("IDE data sources (.idea/dataSources.xml)"), tr("IDE data sources")),
     PgPass(".pgpass"),
     PgService("pg_service.conf"),
-    DotEnv(".env files", ".env"),
+    DotEnv(tr(".env files"), ".env"),
 }
 
 /** A place connections can be read from: one file, or a folder for [ImportFormat.DotEnv]. */
@@ -148,7 +149,7 @@ object ConnectionImport {
             val config = candidate.config
             if (candidate.password != null || config.type.family != EngineFamily.PostgreSQL || config.url != null) return@map candidate
             val password = PgPassImporter.lookup(entries, config.host, config.port ?: 5432, config.database.ifEmpty { config.user }, config.user)
-            if (password == null) candidate else candidate.copy(password = password, notes = candidate.notes + "Password from ~/.pgpass")
+            if (password == null) candidate else candidate.copy(password = password, notes = candidate.notes + tr("Password from ~/.pgpass"))
         }
     }
 

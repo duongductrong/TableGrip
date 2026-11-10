@@ -1,5 +1,7 @@
 package dev.tablegrip.app.chart
 
+import dev.tablegrip.core.i18n.I18n
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.chart.TimeBucket
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
@@ -88,10 +90,10 @@ object ChartScales {
     )
 
     private val Hm = DateTimeFormatter.ofPattern("HH:mm", Locale.ENGLISH)
-    private val MonthDay = DateTimeFormatter.ofPattern("MMM d", Locale.ENGLISH)
-    private val MonthDayHm = DateTimeFormatter.ofPattern("MMM d HH:mm", Locale.ENGLISH)
-    private val Month = DateTimeFormatter.ofPattern("MMM", Locale.ENGLISH)
-    private val MonthYear = DateTimeFormatter.ofPattern("MMM yyyy", Locale.ENGLISH)
+    private val MonthDay = I18n.dates("MMM d")
+    private val MonthDayHm = I18n.dates("MMM d HH:mm")
+    private val Month = I18n.dates("MMM")
+    private val MonthYear = I18n.dates("MMM yyyy")
 
     private fun hours(step: Int) =
         TimeUnit(step * HourMillis, { it.truncatedTo(ChronoUnit.HOURS).withHour(it.hour / step * step) }, { it.plusHours(step.toLong()) }) { t, p ->
@@ -126,7 +128,7 @@ object ChartScales {
             TimeBucket.Year -> "${time.year}"
             TimeBucket.Quarter -> "Q${(time.monthValue - 1) / 3 + 1} ${time.year}"
             TimeBucket.Month -> MonthYear.format(time)
-            TimeBucket.Week -> "Week of ${IsoDate.format(time)}"
+            TimeBucket.Week -> tr("Week of {0}", IsoDate.format(time))
             TimeBucket.Day -> IsoDate.format(time)
             TimeBucket.Hour, null -> if (time.toLocalTime() == LocalTime.MIDNIGHT) IsoDate.format(time) else IsoMinute.format(time)
         }

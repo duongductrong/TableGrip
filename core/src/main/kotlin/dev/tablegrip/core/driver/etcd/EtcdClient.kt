@@ -1,5 +1,6 @@
 package dev.tablegrip.core.driver.etcd
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.connection.ConnectionConfig
 import dev.tablegrip.core.driver.KeyEdit
 import dev.tablegrip.core.driver.KeyInfo
@@ -84,14 +85,14 @@ class EtcdClient : KeyValueClient {
                 try {
                     http.send(request.build(), HttpResponse.BodyHandlers.ofString())
                 } catch (e: IOException) {
-                    throw IOException("Couldn't reach etcd at $base: ${e.message ?: e.javaClass.simpleName}", e)
+                    throw IOException(tr("Couldn't reach etcd at {0}: {1}", base, e.message ?: e.javaClass.simpleName), e)
                 }
             val json = runCatching { Json.parseToJsonElement(response.body()).jsonObject }.getOrNull()
             if (response.statusCode() != 200) {
                 val message = json?.get("message")?.jsonPrimitive?.content ?: json?.get("error")?.jsonPrimitive?.content ?: response.body().take(200)
                 throw IOException("etcd: $message")
             }
-            return json ?: throw IOException("etcd sent something that isn't JSON: ${response.body().take(200)}")
+            return json ?: throw IOException(tr("etcd sent something that isn't JSON: {0}", response.body().take(200)))
         }
 
         private suspend fun <T> io(block: () -> T): T = withContext(Dispatchers.IO) { block() }
@@ -105,10 +106,10 @@ class EtcdClient : KeyValueClient {
                 try {
                     http.send(request, HttpResponse.BodyHandlers.ofString()).body()
                 } catch (e: IOException) {
-                    throw IOException("Couldn't reach etcd at $base: ${e.message ?: e.javaClass.simpleName}", e)
+                    throw IOException(tr("Couldn't reach etcd at {0}: {1}", base, e.message ?: e.javaClass.simpleName), e)
                 }
             val version = runCatching { Json.parseToJsonElement(body).jsonObject["etcdserver"]?.jsonPrimitive?.content }.getOrNull()
-                ?: throw IOException("$base doesn't look like etcd: ${body.take(100)}")
+                ?: throw IOException(tr("{0} doesn't look like etcd: {1}", base, body.take(100)))
             return "etcd $version"
         }
 
@@ -162,7 +163,7 @@ class EtcdClient : KeyValueClient {
         override suspend fun edit(keyspace: Int, key: String, edit: KeyEdit) =
             io {
                 single(keyspace)
-                val value = (edit as? KeyEdit.SetText)?.value ?: throw IllegalArgumentException("etcd keys hold plain values.")
+                val value = (edit as? KeyEdit.SetText)?.value ?: throw IllegalArgumentException(tr("etcd keys hold plain values."))
                 // Existing keys keep their lease (and so their TTL); new ones get none.
                 val exists = post("/v3/kv/range", buildJsonObject { put("key", b64(key)); put("count_only", true) }).long("count") == 1L
                 post("/v3/kv/put", buildJsonObject { put("key", b64(key)); put("value", b64(value)); if (exists) put("ignore_lease", true) })
@@ -180,7 +181,7 @@ class EtcdClient : KeyValueClient {
             io {
                 single(keyspace)
                 val kv = post("/v3/kv/range", buildJsonObject { put("key", b64(from)) })["kvs"]?.jsonArray?.firstOrNull()?.jsonObject
-                    ?: throw IllegalStateException("$from no longer exists.")
+                    ?: throw IllegalStateException(tr("{0} no longer exists.", from))
                 val reply =
                     post(
                         "/v3/kv/txn",
@@ -206,7 +207,7 @@ class EtcdClient : KeyValueClient {
                             )
                         },
                     )
-                if (reply["succeeded"]?.jsonPrimitive?.content != "true") throw IllegalStateException("A key named \"$to\" already exists.")
+                if (reply["succeeded"]?.jsonPrimitive?.content != "true") throw IllegalStateException(tr("A key named \"{0}\" already exists.", to))
             }
 
         /** A TTL is a lease: grant one and attach it, or detach the key from its lease to keep it forever. */
@@ -238,7 +239,7 @@ class EtcdClient : KeyValueClient {
         private fun run(arguments: List<String>): String {
             val flags = arguments.filter { it.startsWith("--") }.associate { it.removePrefix("--").substringBefore('=') to it.substringAfter('=', "") }
             val args = arguments.filterNot { it.startsWith("--") }
-            fun arg(i: Int) = args.getOrNull(i) ?: throw IllegalArgumentException("Usage: ${Usage[args.first().lowercase()] ?: args.joinToString(" ")}")
+            fun arg(i: Int) = args.getOrNull(i) ?: throw IllegalArgumentException(tr("Usage: {0}", Usage[args.first().lowercase()] ?: args.joinToString(" ")))
             return when (args.firstOrNull()?.lowercase()) {
                 "get" -> {
                     val key = arg(1).toByteArray()
@@ -282,7 +283,7 @@ class EtcdClient : KeyValueClient {
                         }
                         "list" -> post("/v3/lease/leases", buildJsonObject {})["leases"]?.jsonArray.orEmpty().joinToString("\n") { it.jsonObject.string("ID").toULong().toString(16) }
                             .ifEmpty { "found 0 leases" }
-                        else -> throw IllegalArgumentException("Usage: ${Usage["lease"]}")
+                        else -> throw IllegalArgumentException(tr("Usage: {0}", Usage["lease"]))
                     }
                 "member" ->
                     post("/v3/cluster/member/list", buildJsonObject {})["members"]?.jsonArray.orEmpty().joinToString("\n") { m ->
@@ -301,11 +302,11 @@ class EtcdClient : KeyValueClient {
                 }
                 "version" -> version()
                 null -> ""
-                else -> throw IllegalArgumentException("Unknown command ${args.first()}. Try: ${Usage.values.joinToString(" · ")}")
+                else -> throw IllegalArgumentException(tr("Unknown command {0}. Try: {1}", args.first(), Usage.values.joinToString(" · ")))
             }
         }
 
-        private fun single(keyspace: Int) = require(keyspace == 0) { "etcd has a single keyspace." }
+        private fun single(keyspace: Int) = require(keyspace == 0) { tr("etcd has a single keyspace.") }
 
         override fun close() = Unit
     }
@@ -314,7 +315,7 @@ class EtcdClient : KeyValueClient {
         const val TextLimit = 1_000_000
 
         /** etcdctl prints lease IDs in hex; the gateway wants them in decimal. */
-        fun leaseId(text: String): String = (text.toULongOrNull(16) ?: throw IllegalArgumentException("$text isn't a lease ID")).toString()
+        fun leaseId(text: String): String = (text.toULongOrNull(16) ?: throw IllegalArgumentException(tr("{0} isn't a lease ID", text))).toString()
 
         val Usage =
             linkedMapOf(
@@ -344,7 +345,7 @@ class EtcdClient : KeyValueClient {
             return byteArrayOf(0)
         }
 
-        private fun JsonObject.string(name: String): String = this[name]?.jsonPrimitive?.content ?: throw IOException("etcd's reply has no $name")
+        private fun JsonObject.string(name: String): String = this[name]?.jsonPrimitive?.content ?: throw IOException(tr("etcd's reply has no {0}", name))
 
         private fun JsonObject.long(name: String): Long? = this[name]?.jsonPrimitive?.content?.toLongOrNull() ?: 0L.takeIf { name !in this }
 

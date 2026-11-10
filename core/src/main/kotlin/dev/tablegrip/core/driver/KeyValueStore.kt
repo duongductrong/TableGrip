@@ -1,5 +1,6 @@
 package dev.tablegrip.core.driver
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.connection.ConnectionConfig
 import dev.tablegrip.core.connection.EngineFamily
 import dev.tablegrip.core.connection.Paradigm
@@ -13,7 +14,7 @@ import kotlinx.coroutines.withContext
 object KeyValueStore {
     suspend fun connect(config: ConnectionConfig, password: String?, sshSecret: String? = null, drivers: DriverLibrary = DriverLibrary.shared): KeyValueConnection =
         withContext(Dispatchers.IO) {
-            require(config.type.paradigm == Paradigm.KeyValue) { "${config.type.displayName} isn't a key-value store" }
+            require(config.type.paradigm == Paradigm.KeyValue) { tr("{0} isn't a key-value store", config.type.displayName) }
             val client = drivers.loadClient(config.effectiveDriver) as KeyValueClient
             val tunnel = config.ssh?.let { ssh -> SshTunnel.open(ssh, sshSecret, config.host.trim(), config.port ?: defaultPort(config)) }
             try {
@@ -31,7 +32,7 @@ object KeyValueStore {
     suspend fun test(config: ConnectionConfig, password: String?, sshSecret: String? = null, drivers: DriverLibrary = DriverLibrary.shared): String =
         connect(config, password, sshSecret, drivers).use { it.server() }
 
-    private fun defaultPort(config: ConnectionConfig) = config.type.defaultPort ?: throw SQLException("${config.type.displayName} needs a port.")
+    private fun defaultPort(config: ConnectionConfig) = config.type.defaultPort ?: throw SQLException(tr("{0} needs a port.", config.type.displayName))
 
     /**
      * Splits a console line into arguments the way redis-cli does: spaces separate, double quotes allow escapes
@@ -68,7 +69,7 @@ object KeyValueStore {
                 }
                 i++
             }
-            if (quote != null) throw IllegalArgumentException("Unbalanced quotes")
+            if (quote != null) throw IllegalArgumentException(tr("Unbalanced quotes"))
             arguments += current.toString()
         }
         return arguments
@@ -115,13 +116,13 @@ object KeyValueStore {
         KeyValueConnection by inner {
         private fun refuse(what: String): Nothing = throw ReadOnlyViolationException(what)
 
-        override suspend fun edit(keyspace: Int, key: String, edit: KeyEdit) = if (readOnly) refuse("editing keys") else inner.edit(keyspace, key, edit)
+        override suspend fun edit(keyspace: Int, key: String, edit: KeyEdit) = if (readOnly) refuse(tr("editing keys")) else inner.edit(keyspace, key, edit)
 
-        override suspend fun delete(keyspace: Int, keys: List<String>): Long = if (readOnly) refuse("deleting keys") else inner.delete(keyspace, keys)
+        override suspend fun delete(keyspace: Int, keys: List<String>): Long = if (readOnly) refuse(tr("deleting keys")) else inner.delete(keyspace, keys)
 
-        override suspend fun rename(keyspace: Int, from: String, to: String) = if (readOnly) refuse("renaming keys") else inner.rename(keyspace, from, to)
+        override suspend fun rename(keyspace: Int, from: String, to: String) = if (readOnly) refuse(tr("renaming keys")) else inner.rename(keyspace, from, to)
 
-        override suspend fun expire(keyspace: Int, key: String, ttlMillis: Long?) = if (readOnly) refuse("changing TTL") else inner.expire(keyspace, key, ttlMillis)
+        override suspend fun expire(keyspace: Int, key: String, ttlMillis: Long?) = if (readOnly) refuse(tr("changing TTL")) else inner.expire(keyspace, key, ttlMillis)
 
         override suspend fun command(keyspace: Int, arguments: List<String>): String {
             val name = arguments.firstOrNull()?.uppercase() ?: return ""

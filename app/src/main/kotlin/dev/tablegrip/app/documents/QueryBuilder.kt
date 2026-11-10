@@ -1,5 +1,6 @@
 package dev.tablegrip.app.documents
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.getValue
@@ -20,15 +21,15 @@ internal enum class FilterOperator(val symbol: String, val takesValue: Boolean =
     Gte("≥"),
     Lt("<"),
     Lte("≤"),
-    In("in"),
-    Nin("not in"),
-    Contains("contains"),
-    StartsWith("starts with"),
-    EndsWith("ends with"),
-    Regex("matches regex"),
-    Exists("exists", takesValue = false),
-    Missing("doesn't exist", takesValue = false),
-    Size("array size");
+    In(tr("in")),
+    Nin(tr("not in")),
+    Contains(tr("contains")),
+    StartsWith(tr("starts with")),
+    EndsWith(tr("ends with")),
+    Regex(tr("matches regex")),
+    Exists(tr("exists"), takesValue = false),
+    Missing(tr("doesn't exist"), takesValue = false),
+    Size(tr("array size"));
 
     /** The operator `find()` writes it with; the text matches share `$regex`. */
     val key: String
@@ -138,7 +139,7 @@ internal class QueryBuilder {
         val sortText = if (sort.isEmpty()) "{}" else sort.joinToString(", ", "{", "}") { "${key(it.field)}: ${if (it.ascending) 1 else -1}" }
         val projectionText = if (projection.isEmpty()) "{}" else projection.joinToString(", ", "{", "}") { "${key(it.field)}: ${if (it.include) 1 else 0}" }
         val shown = projection.filter { it.field != "_id" }
-        if (shown.any { it.include } && shown.any { !it.include }) problems += "A projection either shows fields or hides them; only _id can be hidden among shown fields."
+        if (shown.any { it.include } && shown.any { !it.include }) problems += tr("A projection either shows fields or hides them; only _id can be hidden among shown fields.")
         return Rendered(filter(clauses), sortText, projectionText, problems)
     }
 
@@ -174,7 +175,7 @@ internal class QueryBuilder {
             operator == FilterOperator.Exists -> operators("\$exists" to "true")
             operator == FilterOperator.Missing -> operators("\$exists" to "false")
             operator.isText -> {
-                if (text.isEmpty()) throw IllegalArgumentException("type the text to look for")
+                if (text.isEmpty()) throw IllegalArgumentException(tr("type the text to look for"))
                 val escaped = RegexSpecial.replace(text) { "\\" + it.value }
                 val pattern = when (operator) {
                     FilterOperator.StartsWith -> "^$escaped"
@@ -184,12 +185,12 @@ internal class QueryBuilder {
                 operators("\$regex" to shellString(pattern), "\$options" to "'i'")
             }
             operator == FilterOperator.Regex -> {
-                if (text.isEmpty()) throw IllegalArgumentException("type a pattern")
-                runCatching { Regex(text) }.onFailure { throw IllegalArgumentException("isn't a valid pattern") }
+                if (text.isEmpty()) throw IllegalArgumentException(tr("type a pattern"))
+                runCatching { Regex(text) }.onFailure { throw IllegalArgumentException(tr("isn't a valid pattern")) }
                 operators("\$regex" to shellString(text))
             }
             operator == FilterOperator.Size -> {
-                val size = text.trim().toIntOrNull()?.takeIf { it >= 0 } ?: throw IllegalArgumentException("an array size is a whole number")
+                val size = text.trim().toIntOrNull()?.takeIf { it >= 0 } ?: throw IllegalArgumentException(tr("an array size is a whole number"))
                 operators("\$size" to size.toString())
             }
             operator.isList -> {
@@ -490,7 +491,7 @@ private class Reader(private val text: String) {
         return node
     }
 
-    private fun fail(): Nothing = throw IllegalArgumentException("Can't read the query at ${text.drop(i).take(20)}")
+    private fun fail(): Nothing = throw IllegalArgumentException(tr("Can't read the query at {0}", text.drop(i).take(20)))
 
     private fun space() {
         while (i < text.length && text[i].isWhitespace()) i++

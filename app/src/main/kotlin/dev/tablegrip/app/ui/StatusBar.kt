@@ -1,5 +1,6 @@
 package dev.tablegrip.app.ui
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -140,8 +141,8 @@ private fun Breadcrumbs(app: AppState, connection: ConnectionConfig?) {
 private fun RunningWidget(tab: Any?) {
     val text =
         when {
-            tab is ConsoleTab && tab.running -> "Executing…"
-            tab is TableDataTab && tab.loading -> "Loading rows…"
+            tab is ConsoleTab && tab.running -> tr("Executing…")
+            tab is TableDataTab && tab.loading -> tr("Loading rows…")
             else -> return
         }
     StatusWidget(tooltip = text) {
@@ -155,7 +156,7 @@ private fun RunningWidget(tab: Any?) {
 private fun SelectionWidget(tab: Any?) {
     val grid = (tab as? dev.tablegrip.app.workspace.WorkspaceTab)?.activeGrid ?: return
     val stats = SelectionStats.of(grid.first, grid.second) ?: return
-    StatusWidget(tooltip = "${stats.cells} cell(s) selected · ${stats.numbers} numeric") {
+    StatusWidget(tooltip = tr("{0} cell(s) selected · {1} numeric", stats.cells, stats.numbers)) {
         Text(stats.summary, color = JewelTheme.globalColors.text.normal, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
@@ -165,9 +166,9 @@ private fun SelectionWidget(tab: Any?) {
 private fun PendingEditsWidget(tab: TableDataTab) {
     val changes = tab.model?.changeCount ?: 0
     if (changes == 0) return
-    StatusWidget(tooltip = "$changes change(s) to ${tab.table.name} not submitted yet") {
+    StatusWidget(tooltip = tr("{0} change(s) to {1} not submitted yet", changes, tab.table.name)) {
         Dot(PendingColor)
-        Text("$changes pending", color = PendingColor, maxLines = 1)
+        Text(tr("{0} pending", changes), color = PendingColor, maxLines = 1)
     }
 }
 
@@ -189,13 +190,13 @@ private fun CaretWidget(tab: ConsoleTab) {
         }
     val selected = selection.length
     val lines = if (selected == 0) 0 else remember(text, selection) { text.subSequence(selection.min, selection.max).count { it == '\n' } + 1 }
-    val tooltip = "Line $line, column $column" + if (selected > 0) " · $selected character(s) selected on $lines line(s)" else ""
+    val tooltip = tr("Line {0}, column {1}", line, column) + if (selected > 0) tr(" · {0} character(s) selected on {1} line(s)", selected, lines) else ""
     StatusWidget(tooltip = tooltip) {
         Text(
             "$line:$column" + when {
                 selected == 0 -> ""
-                lines > 1 -> " ($selected chars, $lines lines)"
-                else -> " ($selected chars)"
+                lines > 1 -> tr(" ({0} chars, {1} lines)", selected, lines)
+                else -> tr(" ({0} chars)", selected)
             },
             color = JewelTheme.globalColors.text.info,
             maxLines = 1,
@@ -214,28 +215,28 @@ private fun TransactionWidget(tab: ConsoleTab) {
         StatusWidget(
             tooltip =
                 when {
-                    tab.config.readOnly -> "Read-only connection: auto-commit"
-                    tab.autoCommit -> "Each statement is committed as it runs. Click to switch to manual commit."
-                    tab.uncommitted > 0 -> "${tab.uncommitted} statement(s) waiting for Commit or Roll Back"
-                    else -> "Changes stay pending until you commit them"
+                    tab.config.readOnly -> tr("Read-only connection: auto-commit")
+                    tab.autoCommit -> tr("Each statement is committed as it runs. Click to switch to manual commit.")
+                    tab.uncommitted > 0 -> tr("{0} statement(s) waiting for Commit or Roll Back", tab.uncommitted)
+                    else -> tr("Changes stay pending until you commit them")
                 },
             onClick = if (enabled) ({ open = true }) else null,
         ) {
             if (tab.hasOpenTransaction) Dot(PendingColor)
-            Text(if (tab.autoCommit) "Auto-commit" else "Manual", color = info, maxLines = 1)
-            if (tab.uncommitted > 0) Text("· ${tab.uncommitted} pending", color = PendingColor, maxLines = 1)
+            Text(if (tab.autoCommit) tr("Auto-commit") else tr("Manual"), color = info, maxLines = 1)
+            if (tab.uncommitted > 0) Text(tr("· {0} pending", tab.uncommitted), color = PendingColor, maxLines = 1)
         }
         if (open) {
             PopupMenu(onDismissRequest = { open = false; true }, horizontalAlignment = Alignment.End) {
-                selectableItem(selected = tab.autoCommit, onClick = { open = false; tab.changeAutoCommit(true) }) { Text("Auto-commit") }
-                selectableItem(selected = !tab.autoCommit, onClick = { open = false; tab.changeAutoCommit(false) }) { Text("Manual commit") }
+                selectableItem(selected = tab.autoCommit, onClick = { open = false; tab.changeAutoCommit(true) }) { Text(tr("Auto-commit")) }
+                selectableItem(selected = !tab.autoCommit, onClick = { open = false; tab.changeAutoCommit(false) }) { Text(tr("Manual commit")) }
                 if (!tab.autoCommit) {
                     separator()
                     selectableItem(selected = false, iconKey = AllIconsKeys.Actions.Commit, enabled = tab.uncommitted > 0, onClick = { open = false; tab.commit() }) {
-                        Text("Commit")
+                        Text(tr("Commit"))
                     }
                     selectableItem(selected = false, iconKey = AllIconsKeys.Actions.Rollback, enabled = tab.uncommitted > 0, onClick = { open = false; tab.rollback() }) {
-                        Text("Roll Back")
+                        Text(tr("Roll Back"))
                     }
                 }
             }
@@ -245,9 +246,9 @@ private fun TransactionWidget(tab: ConsoleTab) {
 
 @Composable
 private fun ReadOnlyWidget() {
-    StatusWidget(tooltip = "Read-only connection: writes and DDL are rejected") {
+    StatusWidget(tooltip = tr("Read-only connection: writes and DDL are rejected")) {
         Icon(AllIconsKeys.Nodes.Padlock, null, Modifier.size(12.dp), tint = JewelTheme.globalColors.text.info)
-        Text("Read-only", color = JewelTheme.globalColors.text.info, maxLines = 1)
+        Text(tr("Read-only"), color = JewelTheme.globalColors.text.info, maxLines = 1)
     }
 }
 
@@ -255,9 +256,9 @@ private fun ReadOnlyWidget() {
 @Composable
 private fun BlockedSessionsWidget(app: AppState) {
     val tab = app.workspace.tabs.filterIsInstance<ActivityTab>().filter { it.stuck > 0 }.maxByOrNull { it.connectionId == app.currentConnectionId } ?: return
-    StatusWidget(tooltip = "Sessions on ${tab.config.name} waiting on a lock for more than 5 s. Click to show them.", onClick = tab::showBlocked) {
+    StatusWidget(tooltip = tr("Sessions on {0} waiting on a lock for more than 5 s. Click to show them.", tab.config.name), onClick = tab::showBlocked) {
         Icon(AllIconsKeys.General.Warning, null, Modifier.size(12.dp))
-        Text("${tab.stuck} blocked", color = FailedColor, maxLines = 1)
+        Text(tr("{0} blocked", tab.stuck), color = FailedColor, maxLines = 1)
     }
 }
 
@@ -272,10 +273,10 @@ private fun ConnectionWidget(app: AppState, config: ConnectionConfig) {
     var open by remember { mutableStateOf(false) }
     val (dotColor, stateText) =
         when (status) {
-            is ConnectionStatus.Connected -> ConnectedColor to "Connected"
+            is ConnectionStatus.Connected -> ConnectedColor to tr("Connected")
             is ConnectionStatus.Connecting -> ConnectingColor to connectingText(config, status)
-            is ConnectionStatus.Failed -> FailedColor to "Failed: ${status.message}"
-            ConnectionStatus.Disconnected -> null to "Not connected"
+            is ConnectionStatus.Failed -> FailedColor to tr("Failed: {0}", status.message)
+            ConnectionStatus.Disconnected -> null to tr("Not connected")
         }
     Box {
         StatusWidget(
@@ -291,15 +292,15 @@ private fun ConnectionWidget(app: AppState, config: ConnectionConfig) {
             PopupMenu(onDismissRequest = { open = false; true }, horizontalAlignment = Alignment.End) {
                 when (status) {
                     is ConnectionStatus.Connected -> {
-                        selectableItem(selected = false, onClick = { close(); reconnect(app, config) }) { Text("Reconnect") }
-                        selectableItem(selected = false, onClick = { close(); app.explorer.disconnect(config.id) }) { Text("Disconnect") }
+                        selectableItem(selected = false, onClick = { close(); reconnect(app, config) }) { Text(tr("Reconnect")) }
+                        selectableItem(selected = false, onClick = { close(); app.explorer.disconnect(config.id) }) { Text(tr("Disconnect")) }
                     }
-                    is ConnectionStatus.Connecting -> selectableItem(selected = false, enabled = false, onClick = close) { Text("Connecting…") }
-                    else -> selectableItem(selected = false, onClick = { close(); connect(app, config) }) { Text("Connect") }
+                    is ConnectionStatus.Connecting -> selectableItem(selected = false, enabled = false, onClick = close) { Text(tr("Connecting…")) }
+                    else -> selectableItem(selected = false, onClick = { close(); connect(app, config) }) { Text(tr("Connect")) }
                 }
                 separator()
                 selectableItem(selected = false, iconKey = AllIconsKeys.Actions.Edit, onClick = { close(); app.connections.openEdit(config) }) {
-                    Text("Edit “${config.name}”…")
+                    Text(tr("Edit “{0}”…", config.name))
                 }
             }
         }
@@ -314,19 +315,19 @@ private fun ConnectionTooltip(config: ConnectionConfig, state: String) {
         Text(state, color = info)
         val rows =
             buildList {
-                add("Engine" to config.type.displayName)
+                add(tr("Engine") to config.type.displayName)
                 when {
-                    config.type.isFile -> add("File" to config.database)
-                    config.url != null -> add("URL" to config.url!!)
+                    config.type.isFile -> add(tr("File") to config.database)
+                    config.url != null -> add(tr("URL") to config.url!!)
                     else -> {
-                        add("Host" to "${config.host}${(config.port ?: config.type.defaultPort)?.let { ":$it" }.orEmpty()}")
-                        if (config.database.isNotBlank()) add("Database" to config.database)
+                        add(tr("Host") to "${config.host}${(config.port ?: config.type.defaultPort)?.let { ":$it" }.orEmpty()}")
+                        if (config.database.isNotBlank()) add(tr("Database") to config.database)
                     }
                 }
-                if (config.user.isNotBlank() && !config.type.isFile) add("User" to config.user)
-                config.ssh?.let { add("SSH" to it.host) }
-                environmentTag(config.environment)?.let { _ -> add("Environment" to config.environment.label) }
-                if (config.readOnly) add("Mode" to "Read-only")
+                if (config.user.isNotBlank() && !config.type.isFile) add(tr("User") to config.user)
+                config.ssh?.let { add(tr("SSH") to it.host) }
+                environmentTag(config.environment)?.let { _ -> add(tr("Environment") to config.environment.label) }
+                if (config.readOnly) add(tr("Mode") to tr("Read-only"))
             }
         rows.forEach { (label, value) ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -352,8 +353,8 @@ private fun endpoint(config: ConnectionConfig): String? =
 private fun connect(app: AppState, config: ConnectionConfig) {
     app.scope.launch {
         runCatching { app.databases.connection(config) }
-            .onSuccess { app.status = "Connected to ${config.name}" }
-            .onFailure { app.status = "Couldn't connect to ${config.name}: ${it.message}" }
+            .onSuccess { app.status = tr("Connected to {0}", config.name) }
+            .onFailure { app.status = tr("Couldn't connect to {0}: {1}", config.name, it.message) }
     }
 }
 

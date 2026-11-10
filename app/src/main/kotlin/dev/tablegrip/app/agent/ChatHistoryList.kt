@@ -1,5 +1,6 @@
 package dev.tablegrip.app.agent
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -138,12 +139,12 @@ internal fun ChatHistoryPopup(agent: AgentViewModel, onDismiss: () -> Unit) {
                         else -> false
                     }
                 },
-                placeholder = { Text("Search chats") },
+                placeholder = { Text(tr("Search chats")) },
                 leadingIcon = { Icon(AllIconsKeys.Actions.Search, null, Modifier.padding(end = 6.dp)) },
             )
             if (chats.isEmpty()) {
                 Text(
-                    if (agent.chats.isEmpty()) "No chats yet. Chats are kept here once you send a message." else "No chat matches.",
+                    if (agent.chats.isEmpty()) tr("No chats yet. Chats are kept here once you send a message.") else tr("No chat matches."),
                     Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
                     color = JewelTheme.globalColors.text.info,
                 )
@@ -219,8 +220,8 @@ private fun ChatRow(chat: ChatSummary, time: String, current: Boolean, highlight
         Box(Modifier.width(56.dp), contentAlignment = Alignment.CenterEnd) {
             if (hovered) {
                 Row {
-                    RowAction(AllIconsKeys.Actions.Edit, "Rename", onRename)
-                    RowAction(AllIconsKeys.General.Delete, "Delete", onDelete)
+                    RowAction(AllIconsKeys.Actions.Edit, tr("Rename"), onRename)
+                    RowAction(AllIconsKeys.General.Delete, tr("Delete"), onDelete)
                 }
             } else {
                 Text(time, Modifier.padding(end = 6.dp), color = JewelTheme.globalColors.text.info, fontSize = 11.sp, maxLines = 1)
@@ -264,8 +265,8 @@ private fun DeleteRow(onConfirm: () -> Unit, onCancel: () -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text("Delete this chat?", Modifier.weight(1f), maxLines = 1)
-        Text("Cancel", Modifier.clickable(onClick = onCancel), color = JewelTheme.globalColors.text.info)
-        Text("Delete", Modifier.clickable(onClick = onConfirm), color = JewelTheme.globalColors.text.error, fontWeight = FontWeight.SemiBold)
+        Text(tr("Delete this chat?"), Modifier.weight(1f), maxLines = 1)
+        Text(tr("Cancel"), Modifier.clickable(onClick = onCancel), color = JewelTheme.globalColors.text.info)
+        Text(tr("Delete"), Modifier.clickable(onClick = onConfirm), color = JewelTheme.globalColors.text.error, fontWeight = FontWeight.SemiBold)
     }
 }

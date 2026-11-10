@@ -1,5 +1,6 @@
 package dev.tablegrip.app.completion
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -86,7 +87,7 @@ class CompletionController(private val scope: CoroutineScope) {
             values =
                 cache.values(context).map { value ->
                     val literal = if (numeric && !context.quoted && value.toBigDecimalOrNull() != null) value else source.dialect.literal(value, numeric = false)
-                    CompletionItem(value, literal, CompletionKind.Value, "${context.column} value")
+                    CompletionItem(value, literal, CompletionKind.Value, tr("{0} value", context.column))
                 }
         }
     }

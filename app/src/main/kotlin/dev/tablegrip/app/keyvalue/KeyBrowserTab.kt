@@ -1,5 +1,6 @@
 package dev.tablegrip.app.keyvalue
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -25,7 +26,7 @@ class KeyBrowserTab(private val app: AppState, val config: ConnectionConfig, val
     /** etcd: one keyspace of plain values, rather than Redis's numbered databases of typed values. */
     val plainValues = config.type.family == EngineFamily.Etcd
 
-    override val title = if (plainValues) "${config.name} · keys" else "${config.name} · db$keyspace"
+    override val title = if (plainValues) tr("{0} · keys", config.name) else "${config.name} · db$keyspace"
 
     val readOnly: Boolean
         get() = config.readOnly
@@ -152,7 +153,7 @@ class KeyBrowserTab(private val app: AppState, val config: ConnectionConfig, val
                 if (value == null) {
                     // Deleted or expired since it was listed.
                     keys = keys.filterNot { it.name == key }
-                    message = Message("$key no longer exists.", isError = false)
+                    message = Message(tr("{0} no longer exists.", key), isError = false)
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -188,13 +189,13 @@ class KeyBrowserTab(private val app: AppState, val config: ConnectionConfig, val
     fun create(key: String, edit: KeyEdit, ttlSeconds: Long? = null, onCreated: () -> Unit = {}) {
         if (key.isBlank()) return
         act { redis ->
-            if (redis.read(keyspace, key) != null) throw IllegalStateException("$key already exists.")
+            if (redis.read(keyspace, key) != null) throw IllegalStateException(tr("{0} already exists.", key))
             redis.edit(keyspace, key, edit)
             if (ttlSeconds != null) redis.expire(keyspace, key, ttlSeconds * 1_000)
             readSelected(redis, key)
             keys = (keys + KeyInfo(key, typeOf(edit), value?.ttlMillis)).sortedBy { it.name }
             selectedKey = key
-            message = Message("Created $key.", isError = false)
+            message = Message(tr("Created {0}.", key), isError = false)
             onCreated()
         }
     }
@@ -211,7 +212,7 @@ class KeyBrowserTab(private val app: AppState, val config: ConnectionConfig, val
             keys = keys.filterNot { it.name == key }
             selectedKey = null
             value = null
-            message = Message("Deleted $key.", isError = false)
+            message = Message(tr("Deleted {0}.", key), isError = false)
         }
     }
 
@@ -223,7 +224,7 @@ class KeyBrowserTab(private val app: AppState, val config: ConnectionConfig, val
             keys = keys.map { if (it.name == from) it.copy(name = to) else it }.sortedBy { it.name }
             selectedKey = to
             readSelected(redis, to)
-            message = Message("Renamed $from to $to.", isError = false)
+            message = Message(tr("Renamed {0} to {1}.", from, to), isError = false)
         }
     }
 
@@ -234,7 +235,7 @@ class KeyBrowserTab(private val app: AppState, val config: ConnectionConfig, val
             redis.expire(keyspace, key, seconds?.times(1_000))
             readSelected(redis, key)
             keys = keys.map { if (it.name == key) it.copy(ttlMillis = value?.ttlMillis) else it }
-            message = Message(if (seconds == null) "$key no longer expires." else "$key expires in ${formatTtl(seconds * 1_000)}.", isError = false)
+            message = Message(if (seconds == null) tr("{0} no longer expires.", key) else tr("{0} expires in {1}.", key, formatTtl(seconds * 1_000)), isError = false)
         }
     }
 

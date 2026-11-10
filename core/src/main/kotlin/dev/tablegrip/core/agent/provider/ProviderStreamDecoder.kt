@@ -1,5 +1,6 @@
 package dev.tablegrip.core.agent.provider
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.agent.AgentEvent
 import dev.tablegrip.core.agent.AgentException
 import kotlinx.serialization.json.Json
@@ -54,8 +55,8 @@ private abstract class TextStreamDecoder(protected val title: String) : Provider
         val answer = text.toString().trim()
         return when {
             answer.isNotEmpty() -> answer
-            refused -> throw AgentException("$title declined to answer.")
-            else -> throw AgentException("$title returned nothing.")
+            refused -> throw AgentException(tr("{0} declined to answer.", title))
+            else -> throw AgentException(tr("{0} returned nothing.", title))
         }
     }
 }
@@ -74,7 +75,7 @@ private class AnthropicStreamDecoder(title: String) : TextStreamDecoder(title) {
                 }
             }
             "message_delta" -> emptyList<AgentEvent>().also { if (json.obj("delta")?.string("stop_reason") == "refusal") refused = true }
-            "error" -> throw AgentException(json.obj("error")?.string("message") ?: "$title failed.")
+            "error" -> throw AgentException(json.obj("error")?.string("message") ?: tr("{0} failed.", title))
             else -> emptyList()
         }
     }
@@ -88,7 +89,7 @@ private class OpenAiStreamDecoder(title: String) : TextStreamDecoder(title) {
     override fun data(payload: String): List<AgentEvent> {
         if (payload == "[DONE]") return emptyList()
         val json = parse(payload) ?: return emptyList()
-        json.obj("error")?.let { throw AgentException(it.string("message") ?: "$title failed.") }
+        json.obj("error")?.let { throw AgentException(it.string("message") ?: tr("{0} failed.", title)) }
         val choice = (json["choices"] as? JsonArray)?.firstOrNull() as? JsonObject ?: return emptyList()
         if (choice.string("finish_reason") == "content_filter") refused = true
         val delta = choice.obj("delta")

@@ -1,5 +1,6 @@
 package dev.tablegrip.core.filter
 
+import dev.tablegrip.core.i18n.tr
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -62,14 +63,14 @@ object FilterValues {
 
     fun number(text: String): BigDecimal {
         val cleaned = text.trim().replace("_", "").replace(" ", "")
-        return cleaned.toBigDecimalOrNull() ?: throw FilterValueException(if (cleaned.isEmpty()) "Enter a number" else "“$text” isn't a number")
+        return cleaned.toBigDecimalOrNull() ?: throw FilterValueException(if (cleaned.isEmpty()) tr("Enter a number") else tr("“{0}” isn't a number", text))
     }
 
     private val UuidPattern = Regex("[0-9a-fA-F]{8}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{12}")
 
     fun uuid(text: String): UUID {
         val trimmed = text.trim().removePrefix("{").removeSuffix("}")
-        if (!UuidPattern.matches(trimmed)) throw FilterValueException("“$text” isn't a UUID")
+        if (!UuidPattern.matches(trimmed)) throw FilterValueException(tr("“{0}” isn't a UUID", text))
         val hex = trimmed.replace("-", "")
         return UUID.fromString("${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}")
     }
@@ -94,9 +95,9 @@ object FilterValues {
      */
     fun temporal(text: String, now: LocalDateTime, zone: ZoneId = ZoneId.systemDefault()): TemporalValue {
         val input = text.trim().lowercase()
-        if (input.isEmpty()) throw FilterValueException("Enter a date")
+        if (input.isEmpty()) throw FilterValueException(tr("Enter a date"))
         relative(input, now)?.let { return it }
-        return absolute(input, zone) ?: throw FilterValueException("“${text.trim()}” isn't a date or time; try 2026-10-28, 13:45 or today-7d")
+        return absolute(input, zone) ?: throw FilterValueException(tr("“{0}” isn't a date or time; try 2026-10-28, 13:45 or today-7d", text.trim()))
     }
 
     private fun relative(input: String, now: LocalDateTime): TemporalValue? {
@@ -147,7 +148,7 @@ object FilterValues {
             "w", "wk", "week", "weeks" -> ChronoUnit.WEEKS
             "mo", "mon", "month", "months" -> ChronoUnit.MONTHS
             "y", "yr", "year", "years" -> ChronoUnit.YEARS
-            else -> throw FilterValueException("Unknown unit “$name”; use s, min, h, d, w, mo or y")
+            else -> throw FilterValueException(tr("Unknown unit “{0}”; use s, min, h, d, w, mo or y", name))
         }
 
     private fun absolute(input: String, zone: ZoneId): TemporalValue? {

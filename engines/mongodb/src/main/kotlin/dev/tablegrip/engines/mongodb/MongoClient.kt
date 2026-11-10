@@ -1,5 +1,6 @@
 package dev.tablegrip.engines.mongodb
 
+import dev.tablegrip.core.i18n.tr
 import com.mongodb.ConnectionString
 import com.mongodb.MongoClientSettings
 import com.mongodb.MongoCommandException
@@ -134,11 +135,11 @@ class MongoClient : DocumentClient {
             io {
                 val key = Shell.value(id)
                 val replacement = Shell.document(document)
-                replacement["_id"]?.let { if (it != key) throw IllegalArgumentException("A document's _id can't change; insert a new document instead.") }
+                replacement["_id"]?.let { if (it != key) throw IllegalArgumentException(tr("A document's _id can't change; insert a new document instead.")) }
                 val coll = db(database).getCollection(collection, BsonDocument::class.java)
                 if (original == null) {
                     val result = coll.replaceOne(Filters.eq("_id", key), replacement)
-                    if (result.matchedCount == 0L) throw IllegalStateException("The document no longer exists.")
+                    if (result.matchedCount == 0L) throw IllegalStateException(tr("The document no longer exists."))
                     return@io
                 }
                 val before = Shell.document(original)
@@ -147,7 +148,7 @@ class MongoClient : DocumentClient {
                 if (set.isEmpty() && unset.isEmpty()) return@io
                 val expected = (set.keys + unset).associateWith { before[it] }
                 if (!updateFields(coll, key, set, unset, expected)) {
-                    throw IllegalStateException("The document was changed or deleted since it was loaded; nothing was saved. Reload it and try again.")
+                    throw IllegalStateException(tr("The document was changed or deleted since it was loaded; nothing was saved. Reload it and try again."))
                 }
             }
 
@@ -216,8 +217,8 @@ class MongoClient : DocumentClient {
             expected: Map<String, BsonValue?>,
         ): Boolean {
             (set.keys + unset).forEach { field ->
-                require(field.isNotEmpty() && '.' !in field && !field.startsWith('$')) { "Field “$field” can't be edited here: names with dots or a leading $ need the console." }
-                require(field != "_id") { "A document's _id can't change; insert a new document instead." }
+                require(field.isNotEmpty() && '.' !in field && !field.startsWith('$')) { tr("Field “{0}” can't be edited here: names with dots or a leading $ need the console.", field) }
+                require(field != "_id") { tr("A document's _id can't change; insert a new document instead.") }
             }
             val filter = BsonDocument("_id", key)
             expected.forEach { (field, value) ->
@@ -264,19 +265,19 @@ internal object Shell {
             return when (match.groupValues[1].lowercase()) {
                 "dbs", "databases" -> client.listDatabaseNames().joinToString("\n")
                 "collections", "tables" -> db.listCollectionNames().sorted().joinToString("\n")
-                else -> throw IllegalArgumentException("Unknown: show ${match.groupValues[1]}")
+                else -> throw IllegalArgumentException(tr("Unknown: show {0}", match.groupValues[1]))
             }
         }
-        require(text.startsWith("db.") || text.startsWith("db ")) { "Commands start with db. or show; this console runs no JavaScript." }
+        require(text.startsWith("db.") || text.startsWith("db ")) { tr("Commands start with db. or show; this console runs no JavaScript.") }
         var rest = text.removePrefix("db").trimStart().removePrefix(".").trimStart()
         // db.getCollection('name').method(…)
         val collection: String?
         if (rest.startsWith("getCollection")) {
             val (call, after) = parseCall(rest)
-            collection = (value(call.arguments.single()) as? BsonString)?.value ?: throw IllegalArgumentException("getCollection takes a name")
+            collection = (value(call.arguments.single()) as? BsonString)?.value ?: throw IllegalArgumentException(tr("getCollection takes a name"))
             rest = after.trimStart().removePrefix(".").trimStart()
         } else {
-            val name = Regex("""^[A-Za-z_$][\w$]*""").find(rest)?.value ?: throw IllegalArgumentException("Expected a collection or method after db.")
+            val name = Regex("""^[A-Za-z_$][\w$]*""").find(rest)?.value ?: throw IllegalArgumentException(tr("Expected a collection or method after db."))
             val after = rest.substring(name.length).trimStart()
             if (after.startsWith("(")) {
                 collection = null
@@ -291,7 +292,7 @@ internal object Shell {
             calls += call
             rest = after.trimStart().removePrefix(".").trimStart()
         }
-        require(calls.isNotEmpty()) { "Expected a method call" }
+        require(calls.isNotEmpty()) { tr("Expected a method call") }
         return if (collection == null) database(client, db, calls.single()) else collection(db, collection, calls)
     }
 
@@ -307,7 +308,7 @@ internal object Shell {
                 "{ ok: 1 }"
             }
             "dropDatabase" -> pretty(db.runCommand(BsonDocument("dropDatabase", BsonInt32(1)), BsonDocument::class.java))
-            else -> throw IllegalArgumentException("db.${call.name}() isn't supported here; db.runCommand({...}) runs any command.")
+            else -> throw IllegalArgumentException(tr("db.{0}() isn't supported here; db.runCommand({...}) runs any command.", call.name))
         }
     }
 
@@ -323,7 +324,7 @@ internal object Shell {
                 var limit = DefaultLimit
                 var limited = false
                 calls.drop(1).forEach { modifier ->
-                    val a = modifier.arguments.singleOrNull() ?: throw IllegalArgumentException(".${modifier.name}() takes one argument")
+                    val a = modifier.arguments.singleOrNull() ?: throw IllegalArgumentException(tr(".{0}() takes one argument", modifier.name))
                     when (modifier.name) {
                         "sort" -> cursor = cursor.sort(document(a))
                         "projection" -> cursor = cursor.projection(document(a))
@@ -332,7 +333,7 @@ internal object Shell {
                             limit = number(a)
                             limited = true
                         }
-                        else -> throw IllegalArgumentException(".${modifier.name}() isn't supported after find()")
+                        else -> throw IllegalArgumentException(tr(".{0}() isn't supported after find()", modifier.name))
                     }
                 }
                 val documents = cursor.limit(if (limited) limit else limit + 1).toList()
@@ -345,12 +346,12 @@ internal object Shell {
             "estimatedDocumentCount" -> coll.estimatedDocumentCount().toString()
             "distinct" -> coll.distinct(string(args.first()), arg(1), BsonValue::class.java).toList().let { BsonArray(it) }.let(::prettyValue)
             "aggregate" -> {
-                val pipeline = (value(args.single()) as? BsonArray ?: throw IllegalArgumentException("aggregate takes an array of stages")).map { it.asDocument() }
+                val pipeline = (value(args.single()) as? BsonArray ?: throw IllegalArgumentException(tr("aggregate takes an array of stages"))).map { it.asDocument() }
                 coll.aggregate(pipeline).toList().joinToString("\n", transform = ::pretty).ifEmpty { "(no documents)" }
             }
             "insertOne" -> "{ acknowledged: true, insertedId: ${coll.insertOne(arg(0)).insertedId?.let(MongoClient::idJson)} }"
             "insertMany" -> {
-                val documents = (value(args.single()) as? BsonArray ?: throw IllegalArgumentException("insertMany takes an array")).map { it.asDocument() }
+                val documents = (value(args.single()) as? BsonArray ?: throw IllegalArgumentException(tr("insertMany takes an array"))).map { it.asDocument() }
                 "{ acknowledged: true, insertedCount: ${coll.insertMany(documents).insertedIds.size} }"
             }
             "updateOne" -> coll.updateOne(arg(0), arg(1)).let { "{ matchedCount: ${it.matchedCount}, modifiedCount: ${it.modifiedCount} }" }
@@ -376,13 +377,13 @@ internal object Shell {
                 "true"
             }
             "stats" -> pretty(db.runCommand(BsonDocument("collStats", BsonString(name)), BsonDocument::class.java))
-            else -> throw IllegalArgumentException("db.$name.${first.name}() isn't supported here.")
+            else -> throw IllegalArgumentException(tr("db.{0}.{1}() isn't supported here.", name, first.name))
         }
     }
 
-    private fun string(text: String): String = (value(text) as? BsonString)?.value ?: throw IllegalArgumentException("Expected a string, got $text")
+    private fun string(text: String): String = (value(text) as? BsonString)?.value ?: throw IllegalArgumentException(tr("Expected a string, got {0}", text))
 
-    private fun number(text: String): Int = value(text).let { if (it.isNumber) it.asNumber().intValue() else throw IllegalArgumentException("Expected a number, got $text") }
+    private fun number(text: String): Int = value(text).let { if (it.isNumber) it.asNumber().intValue() else throw IllegalArgumentException(tr("Expected a number, got {0}", text)) }
 
     private fun pretty(document: BsonDocument): String = document.toJson(MongoClient.PrettyJson)
 
@@ -392,10 +393,10 @@ internal object Shell {
 
     /** `name(arg, arg)rest` → the call and what follows it. Commas and parentheses inside strings and brackets don't count. */
     private fun parseCall(text: String): Pair<Call, String> {
-        val name = Regex("""^[A-Za-z_$][\w$]*""").find(text)?.value ?: throw IllegalArgumentException("Expected a method at: ${text.take(30)}")
+        val name = Regex("""^[A-Za-z_$][\w$]*""").find(text)?.value ?: throw IllegalArgumentException(tr("Expected a method at: {0}", text.take(30)))
         var i = name.length
         while (i < text.length && text[i].isWhitespace()) i++
-        require(i < text.length && text[i] == '(') { "Expected ( after $name" }
+        require(i < text.length && text[i] == '(') { tr("Expected ( after {0}", name) }
         i++
         val arguments = mutableListOf<String>()
         val current = StringBuilder()
@@ -437,6 +438,6 @@ internal object Shell {
             }
             i++
         }
-        throw IllegalArgumentException("Unbalanced parentheses in $name(…)")
+        throw IllegalArgumentException(tr("Unbalanced parentheses in {0}(…)", name))
     }
 }

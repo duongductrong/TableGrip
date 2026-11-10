@@ -1,5 +1,6 @@
 package dev.tablegrip.app.documents
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.RowScope
@@ -173,7 +174,7 @@ internal fun QueryBuilderPanel(tab: DocumentBrowserTab) {
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             if (builder.unreadable) {
-                Notice(AllIconsKeys.General.Information, "The current query is more than the builder can show. It's kept until you change something here, which replaces it.")
+                Notice(AllIconsKeys.General.Information, tr("The current query is more than the builder can show. It's kept until you change something here, which replaces it."))
             }
             rendered.problems.forEach { Notice(AllIconsKeys.General.Warning, it) }
             FilterCard(tab)
@@ -204,12 +205,12 @@ private fun FieldList(tab: DocumentBrowserTab, modifier: Modifier) {
     val shown = fields.filter { query.isEmpty() || query in it.path.lowercase() }
     Column(modifier.padding(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("Fields", fontWeight = FontWeight.SemiBold)
+            Text(tr("Fields"), fontWeight = FontWeight.SemiBold)
             if (fields.isNotEmpty()) Text(fields.size.toString(), color = JewelTheme.globalColors.text.info)
         }
-        TextField(search, Modifier.fillMaxWidth(), placeholder = { Text("Search fields") })
-        Text("Drag onto a card on the right", color = JewelTheme.globalColors.text.info)
-        if (fields.isEmpty()) Text("No fields seen yet.", color = JewelTheme.globalColors.text.info)
+        TextField(search, Modifier.fillMaxWidth(), placeholder = { Text(tr("Search fields")) })
+        Text(tr("Drag onto a card on the right"), color = JewelTheme.globalColors.text.info)
+        if (fields.isEmpty()) Text(tr("No fields seen yet."), color = JewelTheme.globalColors.text.info)
         LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
             items(shown, key = { it.path }) { field ->
                 FieldRow(tab, field.path, field.types.joinToString(" | "))
@@ -224,7 +225,7 @@ private fun FieldRow(tab: DocumentBrowserTab, path: String, types: String) {
     val origin = remember { arrayOf(Offset.Zero) }
     val current by rememberUpdatedState(path)
     val shape = RoundedCornerShape(4.dp)
-    Tooltip({ Text("Drag onto Filter, Sort or Show; double-click to add a condition") }) {
+    Tooltip({ Text(tr("Drag onto Filter, Sort or Show; double-click to add a condition")) }) {
         Row(
             Modifier.fillMaxWidth()
                 .clip(shape)
@@ -260,9 +261,9 @@ private fun FieldRow(tab: DocumentBrowserTab, path: String, types: String) {
 
 /** The cards of the builder, by the part of the query each one writes. */
 internal enum class BuilderScope(val zone: FieldZone, val title: String, val icon: IconKey) {
-    Filter(FieldZone.Filter, "Filter", AllIconsKeys.General.Filter),
-    Sort(FieldZone.Sort, "Sort", AllIconsKeys.ObjectBrowser.Sorted),
-    Show(FieldZone.Projection, "Show", AllIconsKeys.Actions.Show);
+    Filter(FieldZone.Filter, tr("Filter"), AllIconsKeys.General.Filter),
+    Sort(FieldZone.Sort, tr("Sort"), AllIconsKeys.ObjectBrowser.Sorted),
+    Show(FieldZone.Projection, tr("Show"), AllIconsKeys.Actions.Show);
 
     companion object {
         fun of(zone: FieldZone) = entries.first { it.zone == zone }
@@ -375,20 +376,20 @@ private fun FilterCard(tab: DocumentBrowserTab) {
         count = builder.conditions.count { it.enabled && it.field.isNotBlank() },
         actions = {
             if (builder.conditions.size > 1) {
-                Text("Match", color = JewelTheme.globalColors.text.info)
+                Text(tr("Match"), color = JewelTheme.globalColors.text.info)
                 ViewChipGroup {
-                    ViewChip("all", !builder.matchAny) { builder.matchAny = false }
-                    ViewChip("any", builder.matchAny) { builder.matchAny = true }
+                    ViewChip(tr("all"), !builder.matchAny) { builder.matchAny = false }
+                    ViewChip(tr("any"), builder.matchAny) { builder.matchAny = true }
                 }
             }
-            Link("Add condition", onClick = { builder.focus = builder.addCondition() })
-            if (builder.conditions.isNotEmpty()) Link("Clear", onClick = { builder.conditions.clear() })
+            Link(tr("Add condition"), onClick = { builder.focus = builder.addCondition() })
+            if (builder.conditions.isNotEmpty()) Link(tr("Clear"), onClick = { builder.conditions.clear() })
         },
     ) {
         builder.conditions.forEachIndexed { index, condition ->
             ConditionRow(tab, condition, if (index == 0) "WHERE" else if (builder.matchAny) "OR" else "AND")
         }
-        if (builder.conditions.isEmpty()) DropPlaceholder("Drop a field to filter by it", "or double-click one. Without conditions, every document matches.")
+        if (builder.conditions.isEmpty()) DropPlaceholder(tr("Drop a field to filter by it"), tr("or double-click one. Without conditions, every document matches."))
     }
 }
 
@@ -409,11 +410,11 @@ private fun ConditionRow(tab: DocumentBrowserTab, condition: FilterCondition, jo
             style = JewelTheme.editorTextStyle.copy(textAlign = TextAlign.Center, fontWeight = FontWeight.SemiBold),
             color = JewelTheme.globalColors.text.info,
         )
-        Tooltip({ Text(if (condition.enabled) "Leave out of the query" else "Put back into the query") }) {
+        Tooltip({ Text(if (condition.enabled) tr("Leave out of the query") else tr("Put back into the query")) }) {
             Checkbox(condition.enabled, { condition.enabled = it })
         }
         ListComboBox(
-            items = if (condition.field.isEmpty()) listOf("Field…") + fields else fields,
+            items = if (condition.field.isEmpty()) listOf(tr("Field…")) + fields else fields,
             selectedIndex = if (condition.field.isEmpty()) 0 else fields.indexOf(condition.field).coerceAtLeast(0),
             onSelectedItemChange = { index ->
                 val list = if (condition.field.isEmpty()) listOf("") + fields else fields
@@ -448,7 +449,7 @@ private fun ConditionRow(tab: DocumentBrowserTab, condition: FilterCondition, jo
                 placeholder = { Text(placeholder(tab, condition, kind)) },
             )
         } else Box(Modifier.weight(1f))
-        ToolButton(AllIconsKeys.General.CloseSmall, "Remove condition") { builder.conditions.remove(condition) }
+        ToolButton(AllIconsKeys.General.CloseSmall, tr("Remove condition")) { builder.conditions.remove(condition) }
     }
 }
 
@@ -470,13 +471,13 @@ private fun operatorsFor(kind: BsonKind?): List<FilterOperator> {
 private fun placeholder(tab: DocumentBrowserTab, condition: FilterCondition, kind: BsonKind?): String {
     val example = tab.completionFields.firstOrNull { it.path == condition.field }?.values?.firstOrNull()?.let { if (kind == BsonKind.String) it.trim('\'') else it }
     return when {
-        condition.operator.isList -> "values, comma-separated" + (example?.let { " (e.g. $it)" } ?: "")
-        condition.operator == FilterOperator.Regex -> "pattern, e.g. ^A.*z$"
-        condition.operator == FilterOperator.Size -> "number of elements"
-        condition.operator.isText -> "text, any case"
+        condition.operator.isList -> tr("values, comma-separated") + (example?.let { " (e.g. $it)" } ?: "")
+        condition.operator == FilterOperator.Regex -> tr("pattern, e.g. ^A.*z$")
+        condition.operator == FilterOperator.Size -> tr("number of elements")
+        condition.operator.isText -> tr("text, any case")
         kind == BsonKind.Date -> "2026-10-31 or 2026-10-31T09:30:00Z"
         example != null -> "e.g. $example"
-        else -> "value"
+        else -> tr("value")
     }
 }
 
@@ -490,24 +491,24 @@ private fun SortCard(tab: DocumentBrowserTab, modifier: Modifier) {
         scope,
         count = builder.sort.size,
         modifier = modifier,
-        actions = { if (builder.sort.isNotEmpty()) Link("Clear", onClick = { builder.sort.clear() }) },
+        actions = { if (builder.sort.isNotEmpty()) Link(tr("Clear"), onClick = { builder.sort.clear() }) },
     ) {
         if (builder.sort.isEmpty()) {
-            DropPlaceholder("Drop fields to sort by")
-            Hint("Unsorted: documents come in the order the server keeps them.")
+            DropPlaceholder(tr("Drop fields to sort by"))
+            Hint(tr("Unsorted: documents come in the order the server keeps them."))
         } else {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 builder.sort.forEachIndexed { index, sort ->
                     Chip(
                         label = (if (builder.sort.size > 1) "${index + 1}  " else "") + sort.field,
                         trailing = if (sort.ascending) "A→Z" else "Z→A",
-                        tooltip = if (sort.ascending) "Ascending (1); click for descending" else "Descending (-1); click for ascending",
+                        tooltip = if (sort.ascending) tr("Ascending (1); click for descending") else tr("Descending (-1); click for ascending"),
                         onClick = { sort.ascending = !sort.ascending },
                         onRemove = { builder.sort.remove(sort) },
                     )
                 }
             }
-            Hint(if (builder.sort.size > 1) "Ties in a field are ordered by the next one." else "Click a field to flip its direction.")
+            Hint(if (builder.sort.size > 1) tr("Ties in a field are ordered by the next one.") else tr("Click a field to flip its direction."))
         }
     }
 }
@@ -522,18 +523,18 @@ private fun ShowCard(tab: DocumentBrowserTab, modifier: Modifier) {
         scope,
         count = builder.projection.size,
         modifier = modifier,
-        actions = { if (builder.projection.isNotEmpty()) Link("Clear", onClick = { builder.projection.clear() }) },
+        actions = { if (builder.projection.isNotEmpty()) Link(tr("Clear"), onClick = { builder.projection.clear() }) },
     ) {
         if (builder.projection.isEmpty()) {
-            DropPlaceholder("Drop fields to show only those")
-            Hint("All fields are shown.")
+            DropPlaceholder(tr("Drop fields to show only those"))
+            Hint(tr("All fields are shown."))
         } else {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 builder.projection.forEach { field ->
                     Chip(
                         label = field.field,
-                        trailing = if (field.include) "shown" else "hidden",
-                        tooltip = if (field.include) "Shown (1); click to hide it instead" else "Hidden (0); click to show it instead",
+                        trailing = if (field.include) tr("shown") else tr("hidden"),
+                        tooltip = if (field.include) tr("Shown (1); click to hide it instead") else tr("Hidden (0); click to show it instead"),
                         onClick = { field.include = !field.include },
                         onRemove = { builder.projection.remove(field) },
                         muted = !field.include,
@@ -543,8 +544,8 @@ private fun ShowCard(tab: DocumentBrowserTab, modifier: Modifier) {
             val shown = builder.projection.filter { it.field != "_id" }
             Hint(
                 when {
-                    shown.isEmpty() || shown.all { !it.include } -> "Every other field is shown."
-                    else -> "Only these fields" + (if (builder.projection.none { it.field == "_id" && !it.include }) ", and _id," else "") + " are shown."
+                    shown.isEmpty() || shown.all { !it.include } -> tr("Every other field is shown.")
+                    else -> if (builder.projection.none { it.field == "_id" && !it.include }) tr("Only these fields, and _id, are shown.") else tr("Only these fields are shown.")
                 }
             )
         }
@@ -580,7 +581,7 @@ private fun Chip(label: String, trailing: String, tooltip: String, onClick: () -
                 Text(trailing, color = JewelTheme.globalColors.text.info, fontSize = 11.sp)
             }
         }
-        ToolButton(AllIconsKeys.General.CloseSmall, "Remove", onClick = onRemove)
+        ToolButton(AllIconsKeys.General.CloseSmall, tr("Remove"), onClick = onRemove)
     }
 }
 
@@ -610,7 +611,7 @@ internal fun FieldDragGhost(drag: FieldDragState, origin: Offset) {
             Icon(AllIconsKeys.General.ArrowRight, null)
             Text(target.title)
         } else {
-            Text("Drop on Filter, Sort or Show", color = JewelTheme.globalColors.text.info)
+            Text(tr("Drop on Filter, Sort or Show"), color = JewelTheme.globalColors.text.info)
         }
     }
 }

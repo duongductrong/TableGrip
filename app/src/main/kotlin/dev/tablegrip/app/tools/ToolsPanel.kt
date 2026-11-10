@@ -1,5 +1,6 @@
 package dev.tablegrip.app.tools
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -61,7 +62,7 @@ internal fun ToolsPanel(app: AppState, family: ToolFamily) {
         Text(ToolCatalog.installHint(family), color = info, fontSize = 12.sp)
         val all = found
         if (all == null) {
-            Text("Looking for ${family.displayName} tools…", color = info)
+            Text(tr("Looking for {0} tools…", family.displayName), color = info)
             return@Column
         }
         for ((tool, copies) in all) {
@@ -84,20 +85,20 @@ private fun ToolRow(app: AppState, tool: Tool, copies: List<InstalledTool>) {
             Text(tool.command, fontWeight = FontWeight.SemiBold)
             Text("  ${tool.purpose}", color = info, fontSize = 12.sp)
             Spacer(Modifier.weight(1f))
-            Text(used?.let { "${it.version ?: "?"} · ${it.source.label}" } ?: "Not found", color = if (used == null) JewelTheme.globalColors.text.warning else info, fontSize = 12.sp)
+            Text(used?.let { "${it.version ?: "?"} · ${it.source.label}" } ?: tr("Not found"), color = if (used == null) JewelTheme.globalColors.text.warning else info, fontSize = 12.sp)
         }
         copies.forEach { copy ->
             val marker = if (copy == used) "▸ " else "   "
-            Text("$marker${copy.path}  ${copy.version ?: "(doesn't run)"}", color = info, fontSize = 12.sp, maxLines = 1)
+            Text("$marker${copy.path}  ${copy.version ?: tr("(doesn't run)")}", color = info, fontSize = 12.sp, maxLines = 1)
         }
         Row(Modifier.padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            Link("Choose…", onClick = {
-                val dialog = java.awt.FileDialog(null as java.awt.Frame?, "Choose ${tool.executable}", java.awt.FileDialog.LOAD)
+            Link(tr("Choose…"), onClick = {
+                val dialog = java.awt.FileDialog(null as java.awt.Frame?, tr("Choose {0}", tool.executable), java.awt.FileDialog.LOAD)
                 dialog.isVisible = true
                 dialog.file?.let { app.tools.choose(tool, Path.of(dialog.directory, it)) }
             })
-            if (copies.any { it.source == ToolSource.Custom }) Link("Find automatically", onClick = { app.tools.forget(tool) })
-            used?.let { copy -> Link("Show in folder", onClick = { reveal(copy.path.parent) }) }
+            if (copies.any { it.source == ToolSource.Custom }) Link(tr("Find automatically"), onClick = { app.tools.forget(tool) })
+            used?.let { copy -> Link(tr("Show in folder"), onClick = { reveal(copy.path.parent) }) }
         }
     }
 }
@@ -116,39 +117,39 @@ private fun PackageCard(app: AppState, pkg: ToolPackage) {
         verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("${pkg.family.displayName} ${pkg.version} client tools", fontWeight = FontWeight.SemiBold)
+            Text(tr("{0} {1} client tools", pkg.family.displayName, pkg.version), fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.weight(1f))
             val status =
                 when {
-                    progress != null -> "Downloading… ${if (progress.second > 0) progress.first * 100 / progress.second else 0}%"
-                    installed -> "Downloaded · ${byteSize(size)}"
-                    else -> "Not downloaded"
+                    progress != null -> tr("Downloading… {0}%", if (progress.second > 0) progress.first * 100 / progress.second else 0)
+                    installed -> tr("Downloaded · {0}", byteSize(size))
+                    else -> tr("Not downloaded")
                 }
             Text(status, color = info, fontSize = 12.sp)
         }
-        Text("${pkg.tools.joinToString { it.command }} from ${pkg.publisher}", color = info, fontSize = 12.sp)
-        tools.failures[pkg.id]?.let { Text("Couldn't download: $it", color = JewelTheme.globalColors.text.error, fontSize = 12.sp) }
+        Text(tr("{0} from {1}", pkg.tools.joinToString { it.command }, pkg.publisher), color = info, fontSize = 12.sp)
+        tools.failures[pkg.id]?.let { Text(tr("Couldn't download: {0}", it), color = JewelTheme.globalColors.text.error, fontSize = 12.sp) }
         if (confirmRemove) {
-            Text("Delete the downloaded ${pkg.family.displayName} ${pkg.version} tools (${byteSize(size)})? Backups will use other copies or ask to download again.")
+            Text(tr("Delete the downloaded {0} {1} tools ({2})? Backups will use other copies or ask to download again.", pkg.family.displayName, pkg.version, byteSize(size)))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 DefaultButton(onClick = {
                     confirmRemove = false
                     tools.uninstall(pkg)
-                }) { Text("Delete") }
-                OutlinedButton(onClick = { confirmRemove = false }) { Text("Cancel") }
+                }) { Text(tr("Delete")) }
+                OutlinedButton(onClick = { confirmRemove = false }) { Text(tr("Cancel")) }
             }
             return@Column
         }
         Row(Modifier.padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             when {
-                progress != null -> Link("Cancel download", onClick = { tools.cancelDownload(pkg) })
+                progress != null -> Link(tr("Cancel download"), onClick = { tools.cancelDownload(pkg) })
                 installed -> {
-                    Link("Remove", onClick = { confirmRemove = true })
-                    Link("Show files", onClick = { reveal(tools.library.folder.resolve(pkg.id)) })
+                    Link(tr("Remove"), onClick = { confirmRemove = true })
+                    Link(tr("Show files"), onClick = { reveal(tools.library.folder.resolve(pkg.id)) })
                 }
-                else -> Link("Download…", onClick = { tools.requestDownload(pkg) })
+                else -> Link(tr("Download…"), onClick = { tools.requestDownload(pkg) })
             }
-            Link("Open tools folder", onClick = {
+            Link(tr("Open tools folder"), onClick = {
                 Files.createDirectories(tools.library.folder)
                 reveal(tools.library.folder)
             })
@@ -160,7 +161,7 @@ private fun PackageCard(app: AppState, pkg: ToolPackage) {
 @Composable
 internal fun ToolDownloadDialog(app: AppState, request: ToolDownloadRequest) {
     val pkg = request.pkg
-    AppDialog(onCloseRequest = { app.tools.pending = null }, size = DpSize(600.dp, 400.dp), title = "Download ${pkg.family.displayName} Tools?", resizable = false) {
+    AppDialog(onCloseRequest = { app.tools.pending = null }, size = DpSize(600.dp, 400.dp), title = tr("Download {0} Tools?", pkg.family.displayName), resizable = false) {
         Column(
             Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -170,25 +171,25 @@ internal fun ToolDownloadDialog(app: AppState, request: ToolDownloadRequest) {
                 Text("${pkg.tools.joinToString { it.command }} ${pkg.version}", fontWeight = FontWeight.SemiBold)
             }
             request.reason?.let { Text(it) }
-            Fact("Source", pkg.url)
-            Fact("Publisher", pkg.publisher)
-            Fact("License", pkg.license)
-            Fact("Download", "${byteSize(pkg.downloadBytes)}, checked against a pinned SHA-256")
-            Fact("Kept", "Only the ${pkg.tools.size} tools and their libraries (about 25 MB), in ${app.tools.library.folder.resolve(pkg.id)}")
+            Fact(tr("Source"), pkg.url)
+            Fact(tr("Publisher"), pkg.publisher)
+            Fact(tr("License"), pkg.license)
+            Fact(tr("Download"), tr("{0}, checked against a pinned SHA-256", byteSize(pkg.downloadBytes)))
+            Fact(tr("Kept"), tr("Only the {0} tools and their libraries (about 25 MB), in {1}", pkg.tools.size, app.tools.library.folder.resolve(pkg.id)))
             Text(
-                "TableGrip downloads nothing without asking. Remove the tools any time in Settings → Tools.",
+                tr("TableGrip downloads nothing without asking. Remove the tools any time in Settings → Tools."),
                 color = JewelTheme.globalColors.text.info,
                 fontSize = 12.sp,
             )
             Spacer(Modifier.weight(1f))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End), verticalAlignment = Alignment.CenterVertically) {
-                Link("Install them myself", onClick = {
+                Link(tr("Install them myself"), onClick = {
                     app.tools.pending = null
                     browse(if (pkg.family == ToolFamily.PostgreSQL) "https://www.postgresql.org/download/" else "https://dev.mysql.com/downloads/")
                 })
                 Spacer(Modifier.width(8.dp))
-                OutlinedButton(onClick = { app.tools.pending = null }) { Text("Cancel") }
-                DefaultButton(onClick = app.tools::confirmDownload) { Text("Download") }
+                OutlinedButton(onClick = { app.tools.pending = null }) { Text(tr("Cancel")) }
+                DefaultButton(onClick = app.tools::confirmDownload) { Text(tr("Download")) }
             }
         }
     }

@@ -1,5 +1,6 @@
 package dev.tablegrip.core.queries
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.TableGripPaths
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
@@ -60,7 +61,7 @@ class QueryLibrary(val root: Path = TableGripPaths.queries) {
     fun rename(query: SavedQuery, name: String, folder: String = query.folder): SavedQuery {
         val target = fileFor(name, folder)
         if (target == query.file) return query
-        require(!target.exists()) { "A query named ${target.nameWithoutExtension} already exists there" }
+        require(!target.exists()) { tr("A query named {0} already exists there", target.nameWithoutExtension) }
         target.parent.createDirectories()
         query.file.moveTo(target)
         return read(target)

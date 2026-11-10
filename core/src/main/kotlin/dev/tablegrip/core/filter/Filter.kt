@@ -1,5 +1,6 @@
 package dev.tablegrip.core.filter
 
+import dev.tablegrip.core.i18n.tr
 import java.sql.Types
 
 /** How a column's values are compared, parsed and bound: decides which operators and value editors a filter offers. */
@@ -74,41 +75,41 @@ enum class FilterOperator(val label: String, val arity: Arity) {
     LessOrEqual("≤", Arity.One),
     Greater(">", Arity.One),
     GreaterOrEqual("≥", Arity.One),
-    Between("between", Arity.Two),
-    NotBetween("not between", Arity.Two),
-    In("is one of", Arity.List),
-    NotIn("is none of", Arity.List),
-    Contains("contains", Arity.One),
-    NotContains("doesn't contain", Arity.One),
-    StartsWith("starts with", Arity.One),
-    EndsWith("ends with", Arity.One),
-    Like("like", Arity.One),
-    NotLike("not like", Arity.One),
-    Regex("matches regex", Arity.One),
-    NotRegex("doesn't match regex", Arity.One),
-    IsEmpty("is empty", Arity.None),
-    IsNotEmpty("is not empty", Arity.None),
-    IsTrue("is true", Arity.None),
-    IsFalse("is false", Arity.None),
-    Today("is today", Arity.None),
-    Yesterday("is yesterday", Arity.None),
-    ThisWeek("is this week", Arity.None),
-    ThisMonth("is this month", Arity.None),
-    ThisYear("is this year", Arity.None),
-    LastDays("in the last … days", Arity.One),
-    IsNull("is NULL", Arity.None),
-    IsNotNull("is not NULL", Arity.None);
+    Between(tr("between"), Arity.Two),
+    NotBetween(tr("not between"), Arity.Two),
+    In(tr("is one of"), Arity.List),
+    NotIn(tr("is none of"), Arity.List),
+    Contains(tr("contains"), Arity.One),
+    NotContains(tr("doesn't contain"), Arity.One),
+    StartsWith(tr("starts with"), Arity.One),
+    EndsWith(tr("ends with"), Arity.One),
+    Like(tr("like"), Arity.One),
+    NotLike(tr("not like"), Arity.One),
+    Regex(tr("matches regex"), Arity.One),
+    NotRegex(tr("doesn't match regex"), Arity.One),
+    IsEmpty(tr("is empty"), Arity.None),
+    IsNotEmpty(tr("is not empty"), Arity.None),
+    IsTrue(tr("is true"), Arity.None),
+    IsFalse(tr("is false"), Arity.None),
+    Today(tr("is today"), Arity.None),
+    Yesterday(tr("is yesterday"), Arity.None),
+    ThisWeek(tr("is this week"), Arity.None),
+    ThisMonth(tr("is this month"), Arity.None),
+    ThisYear(tr("is this year"), Arity.None),
+    LastDays(tr("in the last … days"), Arity.One),
+    IsNull(tr("is NULL"), Arity.None),
+    IsNotNull(tr("is not NULL"), Arity.None);
 
     /** Comparisons read better as words for dates and times. */
     fun label(kind: ValueKind): String =
         when {
             !kind.isTemporal -> label
-            this == Equals -> if (kind == ValueKind.Time) "is at" else "is on"
-            this == NotEquals -> if (kind == ValueKind.Time) "is not at" else "is not on"
-            this == Less -> "is before"
-            this == LessOrEqual -> if (kind == ValueKind.Time) "is at or before" else "is on or before"
-            this == Greater -> "is after"
-            this == GreaterOrEqual -> if (kind == ValueKind.Time) "is at or after" else "is on or after"
+            this == Equals -> if (kind == ValueKind.Time) tr("is at") else tr("is on")
+            this == NotEquals -> if (kind == ValueKind.Time) tr("is not at") else tr("is not on")
+            this == Less -> tr("is before")
+            this == LessOrEqual -> if (kind == ValueKind.Time) tr("is at or before") else tr("is on or before")
+            this == Greater -> tr("is after")
+            this == GreaterOrEqual -> if (kind == ValueKind.Time) tr("is at or after") else tr("is on or after")
             else -> label
         }
 

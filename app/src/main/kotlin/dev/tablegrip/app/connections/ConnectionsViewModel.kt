@@ -1,5 +1,6 @@
 package dev.tablegrip.app.connections
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -81,7 +82,7 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
         val moved = configs.filter { it.group.trim() != name || it.favorite }
         if (moved.isEmpty()) return
         updateProfiles(moved.map { it.copy(group = name, favorite = false) })
-        app.status = describe(moved) + if (name.isEmpty()) " moved out of its group" else " moved to $name"
+        app.status = describe(moved) + if (name.isEmpty()) tr(" moved out of its group") else tr(" moved to {0}", name)
     }
 
     fun addToFavorites(configs: List<ConnectionConfig>) {
@@ -100,10 +101,10 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
     /** Removes a group, moving its connections to the top level. */
     fun ungroup(name: String) {
         updateProfiles(profiles.filter { it.group.trim() == name }.map { it.copy(group = "") })
-        app.status = "Ungrouped $name"
+        app.status = tr("Ungrouped {0}", name)
     }
 
-    private fun describe(configs: List<ConnectionConfig>) = if (configs.size == 1) configs[0].name else "${configs.size} connections"
+    private fun describe(configs: List<ConnectionConfig>) = if (configs.size == 1) configs[0].name else tr("{0} connections", configs.size)
 
     fun toggleFavorite(config: ConnectionConfig) = updateProfile(config.copy(favorite = !config.favorite))
 
@@ -120,7 +121,7 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
         app.scope.launch {
             runCatching { withContext(writes) { configs.fold(emptyList<ConnectionConfig>()) { _, config -> store.save(config, password = null, sshSecret = null) } } }
                 .onSuccess { if (edit == edits) replaceAll(it) }
-                .onFailure { app.status = "Failed to save: ${it.message}" }
+                .onFailure { app.status = tr("Failed to save: {0}", it.message) }
         }
     }
 
@@ -129,7 +130,7 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
         app.scope.launch {
             runCatching { withContext(writes) { store.save(config, password = null, sshSecret = null) } }
                 .onSuccess(::replaceAll)
-                .onFailure { app.status = "Failed to save ${config.name}: ${it.message}" }
+                .onFailure { app.status = tr("Failed to save {0}: {1}", config.name, it.message) }
         }
     }
 
@@ -143,7 +144,7 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
     init {
         runCatching { store.load() }
             .onSuccess { profiles.addAll(it) }
-            .onFailure { app.status = "Failed to load connections: ${it.message}" }
+            .onFailure { app.status = tr("Failed to load connections: {0}", it.message) }
     }
 
     fun byId(id: String): ConnectionConfig? = profiles.firstOrNull { it.id == id }
@@ -199,8 +200,8 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
         importHint = null
         val missing = items.count { (config, password, _) -> password == null && config.type.isServer }
         app.status =
-            (if (items.size == 1) "Imported ${items[0].first.name}" else "Imported ${items.size} connections") +
-                if (missing > 0) " · $missing without a password: add it with Edit Connection" else ""
+            (if (items.size == 1) tr("Imported {0}", items[0].first.name) else tr("Imported {0} connections", items.size)) +
+                if (missing > 0) tr(" · {0} without a password: add it with Edit Connection", missing) else ""
     }
 
     /** Reads the stored password off the UI thread: the OS keychain may block or prompt. */
@@ -249,15 +250,15 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
             runCatching { withContext(writes) { store.delete(config.id) } }
                 .onSuccess {
                     replaceAll(it)
-                    app.status = "Deleted ${config.name}"
+                    app.status = tr("Deleted {0}", config.name)
                 }
-                .onFailure { app.status = "Failed to delete ${config.name}: ${it.message}" }
+                .onFailure { app.status = tr("Failed to delete {0}: {1}", config.name, it.message) }
         }
     }
 
     /** Asks for data files (CSV, Excel, JSON) and hands them to [open]: as connections in the main window by default. */
     fun chooseDataFiles(open: (List<File>) -> Unit = ::openDataFiles) {
-        val dialog = java.awt.FileDialog(null as java.awt.Frame?, "Open Data File", java.awt.FileDialog.LOAD)
+        val dialog = java.awt.FileDialog(null as java.awt.Frame?, tr("Open Data File"), java.awt.FileDialog.LOAD)
         dialog.isMultipleMode = true
         val extensions = DataFileFormats.all.flatMap { it.extensions }.toSet()
         dialog.setFilenameFilter { _, name -> name.substringAfterLast('.', "").lowercase() in extensions }
@@ -274,15 +275,15 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
         app.scope.launch {
             for (file in files) {
                 val config = dataFileProfile(file) ?: continue
-                app.status = "Opening ${file.name}…"
+                app.status = tr("Opening {0}…", file.name)
                 runCatching {
                     val database = app.databases.database(config)
                     database.namespaces().firstOrNull()?.let { namespace -> database.tables(namespace).firstOrNull() }
                 }.onSuccess { table ->
                     app.explorer.treeState.openNodes(listOf(dev.tablegrip.app.explorer.ConnectionKey(config.id)))
                     if (table != null) app.workspace.openTable(config, table.ref) else app.workspace.openConsole(config)
-                    app.status = "Opened ${file.name}"
-                }.onFailure { app.status = "Couldn't open ${file.name}: ${it.message}" }
+                    app.status = tr("Opened {0}", file.name)
+                }.onFailure { app.status = tr("Couldn't open {0}: {1}", file.name, it.message) }
             }
         }
     }
@@ -297,12 +298,12 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
         val profile = DataFileStore.profileFor(path, UUID.randomUUID().toString())
         if (profile == null) {
             val known = DataFileFormats.all.flatMap { it.extensions }.sorted().joinToString(", ") { ".$it" }
-            app.status = "${file.name} isn't a data file TableGrip opens ($known)"
+            app.status = tr("{0} isn't a data file TableGrip opens ({1})", file.name, known)
             return null
         }
         return runCatching { withContext(writes) { store.save(profile, "", "") } }
             .onSuccess(::replaceAll)
-            .onFailure { app.status = "Couldn't save a connection for ${file.name}: ${it.message}" }
+            .onFailure { app.status = tr("Couldn't save a connection for {0}: {1}", file.name, it.message) }
             .getOrNull()
             ?.let { profile }
     }

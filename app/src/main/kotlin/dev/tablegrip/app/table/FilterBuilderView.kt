@@ -1,5 +1,7 @@
 package dev.tablegrip.app.table
 
+import dev.tablegrip.core.i18n.I18n
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -186,16 +188,16 @@ internal fun BuilderFilterBar(tab: TableDataTab, maxBodyHeight: Dp = 300.dp) {
             ) {
                 Icon(AllIconsKeys.General.Filter, null)
                 FilterModeSwitch(tab)
-                Tooltip({ Text(if (showColumns) "Hide columns" else "Show columns to drag into the filter") }) {
-                    ViewChip("Columns", showColumns) { tab.showFilterColumns = !showColumns }
+                Tooltip({ Text(if (showColumns) tr("Hide columns") else tr("Show columns to drag into the filter")) }) {
+                    ViewChip(tr("Columns"), showColumns) { tab.showFilterColumns = !showColumns }
                 }
                 Separator()
                 // What the filter is (or how to start one) takes the middle and gives way first; the actions keep their place on the right.
                 Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                     if (root.children.isEmpty()) {
-                        Tooltip({ Text("Add condition (${Shortcuts.FocusFilter})") }) { Link("Add condition", onClick = { context.addCondition(root) }) }
+                        Tooltip({ Text(tr("Add condition ({0})", Shortcuts.FocusFilter)) }) { Link(tr("Add condition"), onClick = { context.addCondition(root) }) }
                         Text(
-                            "drag a column here, or ${Shortcuts.FilterByValue} on a cell to filter by its value",
+                            tr("drag a column here, or {0} on a cell to filter by its value", Shortcuts.FilterByValue),
                             Modifier.weight(1f, fill = false),
                             color = info,
                             maxLines = 1,
@@ -309,25 +311,25 @@ private fun FilterCard(context: BuilderContext) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(AllIconsKeys.General.Filter, null)
-            Text("Filter", fontWeight = FontWeight.SemiBold)
+            Text(tr("Filter"), fontWeight = FontWeight.SemiBold)
             if (count > 0) CountBadge(count)
             if (root.children.size > 1) {
                 Spacer(Modifier.width(4.dp))
-                Text("Match", color = JewelTheme.globalColors.text.info)
+                Text(tr("Match"), color = JewelTheme.globalColors.text.info)
                 CombinatorSwitch(root)
-                Text("of these conditions", color = JewelTheme.globalColors.text.info)
+                Text(tr("of these conditions"), color = JewelTheme.globalColors.text.info)
             }
             Box(Modifier.weight(1f))
             AddLinks(context, root, depth = 0)
             if (root.children.isNotEmpty()) {
-                Tooltip({ Text("Remove every condition") }) { Link("Remove all", onClick = builder::clear) }
+                Tooltip({ Text(tr("Remove every condition")) }) { Link(tr("Remove all"), onClick = builder::clear) }
             }
         }
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
         Column(Modifier.fillMaxWidth().padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             if (root.children.isEmpty()) {
                 DropPlaceholder()
-                Hint("Without conditions, every row is shown.")
+                Hint(tr("Without conditions, every row is shown."))
             } else {
                 GroupBody(context, root, depth = 0)
             }
@@ -369,7 +371,7 @@ private fun DropPlaceholder() {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(AllIconsKeys.General.Add, null)
-        Text("Drop a column here to filter by it, or double-click one", color = JewelTheme.globalColors.text.info)
+        Text(tr("Drop a column here to filter by it, or double-click one"), color = JewelTheme.globalColors.text.info)
     }
 }
 
@@ -393,17 +395,17 @@ private fun ColumnPanel(context: BuilderContext, modifier: Modifier) {
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("Columns", fontWeight = FontWeight.SemiBold)
+            Text(tr("Columns"), fontWeight = FontWeight.SemiBold)
             if (context.columns.isNotEmpty()) CountBadge(context.columns.size)
         }
         TextField(
             search,
             Modifier.fillMaxWidth(),
-            placeholder = { Text("Search ${context.columns.size} columns") },
+            placeholder = { Text(tr("Search {0} columns", context.columns.size)) },
             leadingIcon = { Icon(AllIconsKeys.Actions.Search, null) },
         )
-        Hint("Drag onto the filter, or double-click")
-        if (shown.isEmpty()) Text("No matching column", Modifier.padding(4.dp), color = JewelTheme.globalColors.text.info)
+        Hint(tr("Drag onto the filter, or double-click"))
+        if (shown.isEmpty()) Text(tr("No matching column"), Modifier.padding(4.dp), color = JewelTheme.globalColors.text.info)
         val list = rememberLazyListState()
         Box(Modifier.weight(1f).fillMaxWidth()) {
             LazyColumn(Modifier.fillMaxSize().padding(end = ScrollbarGutter), state = list) {
@@ -419,7 +421,7 @@ private fun ColumnRow(context: BuilderContext, column: FilterColumn, query: Stri
     val drag = context.tab.columnDrag
     val origin = remember { arrayOf(Offset.Zero) }
     val current by rememberUpdatedState(column)
-    Tooltip({ Text("Drag onto a group to add a condition, or onto a condition to use this column; double-click to add one") }) {
+    Tooltip({ Text(tr("Drag onto a group to add a condition, or onto a condition to use this column; double-click to add one")) }) {
         Row(
             Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(4.dp))
@@ -543,10 +545,10 @@ private fun ConditionState.canMatchCase(tab: TableDataTab): Boolean {
 @Composable
 internal fun FilterModeSwitch(tab: TableDataTab) {
     Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
-        Tooltip({ Text("Switch between builder and SQL (${Shortcuts.ToggleFilterMode})") }) {
+        Tooltip({ Text(tr("Switch between builder and SQL ({0})", Shortcuts.ToggleFilterMode)) }) {
             Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
-                ViewChip("Builder", tab.filterMode == FilterMode.Builder) { tab.switchFilterMode(FilterMode.Builder) }
-                ViewChip("SQL", tab.filterMode == FilterMode.Sql) { tab.switchFilterMode(FilterMode.Sql) }
+                ViewChip(tr("Builder"), tab.filterMode == FilterMode.Builder) { tab.switchFilterMode(FilterMode.Builder) }
+                ViewChip(tr("SQL"), tab.filterMode == FilterMode.Sql) { tab.switchFilterMode(FilterMode.Sql) }
             }
         }
     }
@@ -562,14 +564,14 @@ internal fun FilterActions(tab: TableDataTab, draft: CompiledFilter? = null) {
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
         if (invalid) {
             val count = draft.issues.size
-            FilterStatus(if (count == 1) "1 condition needs attention" else "$count conditions need attention", JewelTheme.globalColors.text.error)
+            FilterStatus(if (count == 1) tr("1 condition needs attention") else tr("{0} conditions need attention", count), JewelTheme.globalColors.text.error)
         } else if (tab.isFilterDirty) {
-            FilterStatus("Not applied", LocalIslands.current.accent, JewelTheme.globalColors.text.info)
+            FilterStatus(tr("Not applied"), LocalIslands.current.accent, JewelTheme.globalColors.text.info)
         }
         val canClear = tab.hasAppliedFilter || !tab.builder.isEmpty || tab.filter.text.isNotBlank()
-        if (canClear) Tooltip({ Text("Clear filter (${Shortcuts.ClearFilter})") }) { Link("Clear", onClick = tab::clearFilter) }
-        Tooltip({ Text("Apply filter (⏎ in any field, ${Shortcuts.ApplyFilter})") }) {
-            DefaultButton(onClick = tab::applyFilter, enabled = tab.isFilterDirty || invalid) { Text("Apply") }
+        if (canClear) Tooltip({ Text(tr("Clear filter ({0})", Shortcuts.ClearFilter)) }) { Link(tr("Clear"), onClick = tab::clearFilter) }
+        Tooltip({ Text(tr("Apply filter (⏎ in any field, {0})", Shortcuts.ApplyFilter)) }) {
+            DefaultButton(onClick = tab::applyFilter, enabled = tab.isFilterDirty || invalid) { Text(tr("Apply")) }
         }
     }
 }
@@ -587,7 +589,7 @@ internal fun FilterStatus(text: String, dot: Color, color: Color = dot) {
 private fun CombinatorSwitch(group: GroupState) {
     Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
         Combinator.entries.forEach { combinator ->
-            Tooltip({ Text((if (combinator == Combinator.All) "Every condition must hold (AND)" else "At least one condition holds (OR)") + " · ${Shortcuts.ToggleCombinator} in a condition") }) {
+            Tooltip({ Text((if (combinator == Combinator.All) tr("Every condition must hold (AND)") else tr("At least one condition holds (OR)")) + tr(" · {0} in a condition", Shortcuts.ToggleCombinator)) }) {
                 ViewChip(combinator.label, group.combinator == combinator) { group.combinator = combinator }
             }
         }
@@ -628,7 +630,7 @@ private fun Joiner(group: GroupState) {
     val interactions = remember { MutableInteractionSource() }
     val hovered by interactions.collectIsHoveredAsState()
     val islands = LocalIslands.current
-    Tooltip({ Text("Switch this group to ${other.keyword} (${Shortcuts.ToggleCombinator} in a condition). To mix AND with OR, use + Group.") }) {
+    Tooltip({ Text(tr("Switch this group to {0} ({1} in a condition). To mix AND with OR, use + Group.", other.keyword, Shortcuts.ToggleCombinator)) }) {
         Text(
             group.combinator.keyword,
             Modifier.clip(RoundedCornerShape(4.dp))
@@ -664,13 +666,13 @@ private fun NestedGroup(context: BuilderContext, group: GroupState, depth: Int) 
     ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
             Checkbox(group.enabled, { group.enabled = it })
-            Tooltip({ Text("Match rows this group would not match") }) { ViewChip("NOT", group.negated) { group.negated = !group.negated } }
-            Text("Match", color = JewelTheme.globalColors.text.info)
+            Tooltip({ Text(tr("Match rows this group would not match")) }) { ViewChip("NOT", group.negated) { group.negated = !group.negated } }
+            Text(tr("Match"), color = JewelTheme.globalColors.text.info)
             CombinatorSwitch(group)
-            Text("of", color = JewelTheme.globalColors.text.info)
+            Text(tr("of"), color = JewelTheme.globalColors.text.info)
             Box(Modifier.weight(1f))
             AddLinks(context, group, depth)
-            RemoveButton("Remove group") { context.builder.remove(group) }
+            RemoveButton(tr("Remove group")) { context.builder.remove(group) }
         }
         Box(Modifier.alpha(if (group.enabled) 1f else 0.5f)) { GroupBody(context, group, depth) }
         context.issue(group)?.let { IssueText(it) }
@@ -680,16 +682,16 @@ private fun NestedGroup(context: BuilderContext, group: GroupState, depth: Int) 
 @Composable
 private fun AddLinks(context: BuilderContext, group: GroupState, depth: Int) {
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-        Tooltip({ Text("Add condition (${Shortcuts.AddCondition} in a condition adds one below it)") }) {
-            Link("+ Condition", onClick = { context.addCondition(group) })
+        Tooltip({ Text(tr("Add condition ({0} in a condition adds one below it)", Shortcuts.AddCondition)) }) {
+            Link(tr("+ Condition"), onClick = { context.addCondition(group) })
         }
         if (depth < MaxDepth) {
-            Tooltip({ Text("A nested group combines its conditions the other way (AND inside OR, or OR inside AND) · ${Shortcuts.AddConditionGroup}") }) {
-                Link("+ Group", onClick = { context.addGroup(group) })
+            Tooltip({ Text(tr("A nested group combines its conditions the other way (AND inside OR, or OR inside AND) · {0}", Shortcuts.AddConditionGroup)) }) {
+                Link(tr("+ Group"), onClick = { context.addGroup(group) })
             }
         }
-        Tooltip({ Text("A hand-written SQL condition, e.g. length(name) > 3 · ${Shortcuts.AddSqlCondition}") }) {
-            Link("+ SQL", onClick = { context.tab.focusFilterNode = context.builder.addRaw(group).id })
+        Tooltip({ Text(tr("A hand-written SQL condition, e.g. length(name) > 3 · {0}", Shortcuts.AddSqlCondition)) }) {
+            Link(tr("+ SQL"), onClick = { context.tab.focusFilterNode = context.builder.addRaw(group).id })
         }
     }
 }
@@ -758,7 +760,7 @@ private fun ConditionRow(context: BuilderContext, condition: ConditionState) {
                 ValueEditor(context, condition, column, kind, if (issue != null && column != null) Outline.Error else Outline.None, focus, Modifier.weight(1f))
                 if (condition.canMatchCase(tab)) CaseToggle(condition)
             }
-            RemoveButton("Remove condition (${Shortcuts.DeleteLine})") { context.builder.remove(condition) }
+            RemoveButton(tr("Remove condition ({0})", Shortcuts.DeleteLine)) { context.builder.remove(condition) }
         }
         issue?.let { IssueText(it, Modifier.padding(start = 28.dp)) }
     }
@@ -784,10 +786,10 @@ private fun RawRow(context: BuilderContext, raw: RawState) {
                 Modifier.weight(1f).alpha(if (raw.enabled) 1f else 0.5f).focusRequester(focus),
                 textStyle = JewelTheme.editorTextStyle,
                 outline = if (issue != null) Outline.Error else Outline.None,
-                placeholder = { Text("any SQL condition, e.g. length(name) > 3") },
+                placeholder = { Text(tr("any SQL condition, e.g. length(name) > 3")) },
                 onKeyboardAction = KeyboardActionHandler { tab.applyFilter() },
             )
-            RemoveButton("Remove condition (${Shortcuts.DeleteLine})") { context.builder.remove(raw) }
+            RemoveButton(tr("Remove condition ({0})", Shortcuts.DeleteLine)) { context.builder.remove(raw) }
         }
         issue?.let { IssueText(it, Modifier.padding(start = 28.dp)) }
     }
@@ -805,7 +807,7 @@ internal fun RemoveButton(tooltip: String, onClick: () -> Unit) {
 
 @Composable
 private fun CaseToggle(condition: ConditionState) {
-    Tooltip({ Text((if (condition.caseSensitive) "Match case (on)" else "Match case (off)") + " · ${Shortcuts.MatchCase}") }) {
+    Tooltip({ Text((if (condition.caseSensitive) tr("Match case (on)") else tr("Match case (off)")) + " · ${Shortcuts.MatchCase}") }) {
         ViewChip("Aa", condition.caseSensitive) { condition.caseSensitive = !condition.caseSensitive }
     }
 }
@@ -828,10 +830,10 @@ private fun SqlPreview(tab: TableDataTab, draft: CompiledFilter, modifier: Modif
                     fontSize = 11.sp,
                 )
             }
-            Tooltip({ Text("Copy WHERE clause") }) { IconButton(onClick = { copyToClipboard(preview) }) { Icon(AllIconsKeys.Actions.Copy, "Copy") } }
-            Tooltip({ Text("Edit as SQL (${Shortcuts.ToggleFilterMode})") }) { Link("Edit as SQL", onClick = { tab.switchFilterMode(FilterMode.Sql) }) }
+            Tooltip({ Text(tr("Copy WHERE clause")) }) { IconButton(onClick = { copyToClipboard(preview) }) { Icon(AllIconsKeys.Actions.Copy, tr("Copy")) } }
+            Tooltip({ Text(tr("Edit as SQL ({0})", Shortcuts.ToggleFilterMode)) }) { Link(tr("Edit as SQL"), onClick = { tab.switchFilterMode(FilterMode.Sql) }) }
         } else if (draft.isValid) {
-            Text("No active conditions", color = info, fontSize = 11.sp)
+            Text(tr("No active conditions"), color = info, fontSize = 11.sp)
         }
     }
 }
@@ -908,7 +910,7 @@ internal fun ColumnPicker(
         PickerButton(error, modifier, onClick = { onOpenChange(true) }) {
             Icon(AllIconsKeys.Nodes.DataColumn, null)
             Text(
-                selected.ifEmpty { "Choose column" },
+                selected.ifEmpty { tr("Choose column") },
                 Modifier.weight(1f),
                 color = if (current == null) JewelTheme.globalColors.text.info else Color.Unspecified,
                 maxLines = 1,
@@ -972,11 +974,11 @@ private fun ColumnList(columns: List<FilterColumn>, selected: String, onDismiss:
                 }
                 true
             },
-            placeholder = { Text("Search ${columns.size} columns") },
+            placeholder = { Text(tr("Search {0} columns", columns.size)) },
             leadingIcon = { Icon(AllIconsKeys.Actions.Search, null) },
         )
         if (matches.isEmpty()) {
-            Text("No matching column", Modifier.padding(8.dp), color = JewelTheme.globalColors.text.info)
+            Text(tr("No matching column"), Modifier.padding(8.dp), color = JewelTheme.globalColors.text.info)
         }
         LazyColumn(Modifier.heightIn(max = 300.dp), state = listState) {
             itemsIndexed(matches, key = { _, column -> column.name }) { index, column ->
@@ -1056,12 +1058,12 @@ private fun ValueEditor(
         operator == FilterOperator.LastDays ->
             Row(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                 ValueField(context, condition.value, null, ValueKind.Number, list = false, outline, "7", Modifier.width(90.dp), focus)
-                Text("days, including today", color = info)
+                Text(tr("days, including today"), color = info)
             }
         operator.arity == Arity.Two ->
             Row(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                 ValueField(context, condition.value, column, kind, list = false, outline, placeholder(kind, operator), Modifier.weight(1f), focus)
-                Text("and", color = info)
+                Text(tr("and"), color = info)
                 ValueField(context, condition.value2, column, kind, list = false, outline, placeholder(kind, operator), Modifier.weight(1f))
             }
         else -> ValueField(context, condition.value, column, kind, list = operator.arity == Arity.List, outline, placeholder(kind, operator), modifier, focus)
@@ -1071,17 +1073,17 @@ private fun ValueEditor(
 private fun placeholder(kind: ValueKind, operator: FilterOperator): String =
     when {
         operator.arity == Arity.List -> if (kind.isTemporal) "2026-10-01, 2026-10-15" else "a, b, \"c, d\", NULL"
-        operator == FilterOperator.Like || operator == FilterOperator.NotLike -> "pattern: % any text, _ one character"
-        operator == FilterOperator.Regex || operator == FilterOperator.NotRegex -> "regular expression"
+        operator == FilterOperator.Like || operator == FilterOperator.NotLike -> tr("pattern: % any text, _ one character")
+        operator == FilterOperator.Regex || operator == FilterOperator.NotRegex -> tr("regular expression")
         else ->
             when (kind) {
-                ValueKind.Number -> "number"
+                ValueKind.Number -> tr("number")
                 ValueKind.Date -> "2026-10-28, today-7d, 1 month ago…"
                 ValueKind.DateTime -> "2026-10-28 13:45, now-2h, yesterday…"
                 ValueKind.Time -> "13:45"
-                ValueKind.Uuid -> "uuid"
-                ValueKind.Json -> "text in the JSON"
-                else -> "value"
+                ValueKind.Uuid -> tr("uuid")
+                ValueKind.Json -> tr("text in the JSON")
+                else -> tr("value")
             }
     }
 
@@ -1212,8 +1214,8 @@ private fun SuggestionList(values: List<String>, highlighted: Int, prefix: Strin
     }
 }
 
-private val DayFormat = DateTimeFormatter.ofPattern("EEE d MMM yyyy")
-private val MomentFormat = DateTimeFormatter.ofPattern("EEE d MMM yyyy, HH:mm")
+private val DayFormat = I18n.dates("EEE d MMM yyyy")
+private val MomentFormat = I18n.dates("EEE d MMM yyyy, HH:mm")
 
 /** Inside a value field, after the text: list size, a relative date's resolved value, date quick picks. */
 @Composable
@@ -1223,7 +1225,7 @@ private fun ValueHint(state: TextFieldState, kind: ValueKind, list: Boolean) {
     Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
         if (list && text.isNotBlank()) {
             val count = FilterValues.parseList(text).size
-            Text(if (count == 1) "1 value" else "$count values", color = info, fontSize = 11.sp)
+            Text(if (count == 1) tr("1 value") else tr("{0} values", count), color = info, fontSize = 11.sp)
         }
         if (kind.isTemporal && !list) {
             resolvedDate(text)?.let { Text("= $it", color = info, fontSize = 11.sp, maxLines = 1) }
@@ -1243,16 +1245,16 @@ private fun resolvedDate(text: String): String? {
 }
 
 private val DateQuickPicks =
-    listOf("Today" to "today", "Yesterday" to "yesterday", "Tomorrow" to "tomorrow", "7 days ago" to "today-7d", "30 days ago" to "today-30d", "1 month ago" to "today-1mo", "1 year ago" to "today-1y")
+    listOf(tr("Today") to "today", tr("Yesterday") to "yesterday", tr("Tomorrow") to "tomorrow", tr("7 days ago") to "today-7d", tr("30 days ago") to "today-30d", tr("1 month ago") to "today-1mo", tr("1 year ago") to "today-1y")
 private val DateTimeQuickPicks =
-    listOf("Now" to "now", "1 hour ago" to "now-1h", "24 hours ago" to "now-24h") + DateQuickPicks
+    listOf(tr("Now") to "now", tr("1 hour ago") to "now-1h", tr("24 hours ago") to "now-24h") + DateQuickPicks
 
 @Composable
 private fun QuickPicks(state: TextFieldState, kind: ValueKind) {
     var open by remember { mutableStateOf(false) }
     Box {
-        Tooltip({ Text("Quick picks; you can also type expressions like today-7d or now-2h") }) {
-            IconButton(onClick = { open = !open }, Modifier.width(20.dp)) { Icon(AllIconsKeys.General.ChevronDown, "Quick picks") }
+        Tooltip({ Text(tr("Quick picks; you can also type expressions like today-7d or now-2h")) }) {
+            IconButton(onClick = { open = !open }, Modifier.width(20.dp)) { Icon(AllIconsKeys.General.ChevronDown, tr("Quick picks")) }
         }
         if (open) {
             PopupMenu(onDismissRequest = { open = false; true }, horizontalAlignment = Alignment.End) {

@@ -1,5 +1,6 @@
 package dev.tablegrip.core.testdata
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.filter.ValueKind
 import dev.tablegrip.core.metadata.ColumnInfo
 import java.math.BigDecimal
@@ -59,35 +60,35 @@ class TestDataGenerator(
             when (plan.kind) {
                 GeneratorKind.Skip ->
                     if (!column.nullable && column.defaultValue == null && !column.autoIncrement) {
-                        problems += "$name: NOT NULL with no default, so it needs a generator"
+                        problems += tr("{0}: NOT NULL with no default, so it needs a generator", name)
                     }
-                GeneratorKind.Null -> if (!column.nullable) problems += "$name: NOT NULL, so it can't always be NULL"
+                GeneratorKind.Null -> if (!column.nullable) problems += tr("{0}: NOT NULL, so it can't always be NULL", name)
                 GeneratorKind.Constant -> {
-                    if (plan.constant == null && !column.nullable) problems += "$name: NOT NULL, so the fixed value can't be NULL"
-                    if (plan.unique && count > 1) problems += "$name: unique, but a fixed value repeats on every row"
+                    if (plan.constant == null && !column.nullable) problems += tr("{0}: NOT NULL, so the fixed value can't be NULL", name)
+                    if (plan.unique && count > 1) problems += tr("{0}: unique, but a fixed value repeats on every row", name)
                 }
                 GeneratorKind.ForeignKey ->
                     if (pools[name].isNullOrEmpty() && (!column.nullable || plan.nullRatio < 1.0)) {
-                        problems += "$name: no rows in the referenced table"
+                        problems += tr("{0}: no rows in the referenced table", name)
                     }
                 else -> {}
             }
             if (plan.kind == GeneratorKind.Skip || plan.kind == GeneratorKind.Null) continue
             if (plan.kind !in GeneratorSuggestion.choices(column, foreignKey = true)) {
-                problems += "$name: ${plan.kind.label} values don't fit a ${column.typeName} column"
+                problems += tr("{0}: {1} values don't fit a {2} column", name, plan.kind.label, column.typeName)
                 continue
             }
-            if (plan.min != null && plan.max != null && plan.min > plan.max) problems += "$name: the minimum is above the maximum"
+            if (plan.min != null && plan.max != null && plan.min > plan.max) problems += tr("{0}: the minimum is above the maximum", name)
             val generator = generator(plan)
             if (generator is SequenceGenerator && generator.start + count - 1 > generator.last) {
-                problems += "$name: $count rows run past ${generator.last}, the most this ${column.typeName} column holds"
+                problems += tr("{0}: {1} rows run past {2}, the most this {3} column holds", name, count, generator.last, column.typeName)
             }
             if (!plan.unique || count <= 1) continue
             val space = generator.space
             when {
-                space != null && space < count -> problems += "$name: unique with only $space possible values"
+                space != null && space < count -> problems += tr("{0}: unique with only {1} possible values", name, space)
                 generator is TextGenerator && type.textLimit != null && ColumnType.pow10(type.textLimit) < count ->
-                    problems += "$name: ${type.textLimit} characters are too few for $count unique values"
+                    problems += tr("{0}: {1} characters are too few for {2} unique values", name, type.textLimit, count)
             }
         }
         return problems
@@ -180,7 +181,7 @@ class TestDataGenerator(
                 if (used.add(value)) return value
             }
             // Random draws keep colliding as the range fills up; walk to the next free value instead.
-            check(used.size < space) { "${plan.column.name}: unique with only $space possible values" }
+            check(used.size < space) { tr("{0}: unique with only {1} possible values", plan.column.name, space) }
             while (true) {
                 value = if (value >= last) first else value + 1
                 if (used.add(value)) return value
@@ -218,7 +219,7 @@ class TestDataGenerator(
         private fun fitText(value: String, extra: String): String {
             val (head, tail) = split(value)
             val limit = type.textLimit ?: return head + extra + tail
-            check(extra.length < limit) { "${plan.column.name}: ${type.textLimit} characters are too few for more unique values" }
+            check(extra.length < limit) { tr("{0}: {1} characters are too few for more unique values", plan.column.name, type.textLimit) }
             if (head.length + extra.length + tail.length <= limit) return head + extra + tail
             val room = limit - extra.length - tail.length
             // An email keeps its domain, a file name its extension; when even that doesn't fit, the value is just cut.
@@ -258,7 +259,7 @@ class TestDataGenerator(
                 if (pool.isEmpty()) {
                     object : Generator(plan) {
                         override val space = 0L
-                        override fun value(row: Row, index: Int): String = error("${plan.column.name}: no rows in the referenced table")
+                        override fun value(row: Row, index: Int): String = error(tr("{0}: no rows in the referenced table", plan.column.name))
                     }
                 } else {
                     words(pool)

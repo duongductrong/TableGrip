@@ -1,5 +1,6 @@
 package dev.tablegrip.app.ui
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -48,21 +49,21 @@ internal fun DecoratedWindowScope.TitleBarView(app: AppState) {
         }
 
         // The centre names the screen in front: Settings while it is open, otherwise the selected tab.
-        Text(if (app.settingsOpen) "Settings" else app.workspace.selected?.title ?: title, color = JewelTheme.globalColors.text.info)
+        Text(if (app.settingsOpen) tr("Settings") else app.workspace.selected?.title ?: title, color = JewelTheme.globalColors.text.info)
 
         Row(Modifier.align(Alignment.End).padding(end = 6.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
             val console = app.workspace.selected as? ConsoleTab
-            HeaderButton("new_console", AllIconsKeys.Nodes.Console, "New console (${Shortcuts.NewConsole})", enabled = current != null) {
+            HeaderButton("new_console", AllIconsKeys.Nodes.Console, tr("New console ({0})", Shortcuts.NewConsole), enabled = current != null) {
                 current?.let(app.workspace::openConsole)
             }
             if (console?.running == true) {
-                HeaderButton("stop", AllIconsKeys.Actions.Suspend, "Cancel query (${Shortcuts.Cancel})") { console.cancel() }
+                HeaderButton("stop", AllIconsKeys.Actions.Suspend, tr("Cancel query ({0})", Shortcuts.Cancel)) { console.cancel() }
             } else {
-                HeaderButton("run", AllIconsKeys.Actions.Execute, "Execute statement (${Shortcuts.RunStatement})", enabled = console != null) {
+                HeaderButton("run", AllIconsKeys.Actions.Execute, tr("Execute statement ({0})", Shortcuts.RunStatement), enabled = console != null) {
                     console?.run(RunMode.Current)
                 }
             }
-            HeaderButton("settings", AllIconsKeys.General.Settings, "Settings (${Shortcuts.Settings})") { app.settingsOpen = !app.settingsOpen }
+            HeaderButton("settings", AllIconsKeys.General.Settings, tr("Settings ({0})", Shortcuts.Settings)) { app.settingsOpen = !app.settingsOpen }
         }
     }
 }
@@ -83,18 +84,18 @@ private fun ConnectionWidget(app: AppState, current: ConnectionConfig?) {
                 }
             }
             if (app.connections.profiles.isNotEmpty()) separator()
-            selectableItem(selected = false, iconKey = AllIconsKeys.General.Add, onClick = app.connections::openNew) { Text("New Connection…") }
-            selectableItem(selected = false, iconKey = AllIconsKeys.ToolbarDecorator.Import, onClick = app.connections::openImport) { Text("Import Connections…") }
+            selectableItem(selected = false, iconKey = AllIconsKeys.General.Add, onClick = app.connections::openNew) { Text(tr("New Connection…")) }
+            selectableItem(selected = false, iconKey = AllIconsKeys.ToolbarDecorator.Import, onClick = app.connections::openImport) { Text(tr("Import Connections…")) }
             if (current != null) {
                 selectableItem(selected = false, iconKey = AllIconsKeys.Actions.Edit, onClick = { app.connections.openEdit(current) }) {
-                    Text("Edit “${current.name}”…")
+                    Text(tr("Edit “{0}”…", current.name))
                 }
             }
         },
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             if (current == null) {
-                Text("No connection", color = JewelTheme.globalColors.text.info)
+                Text(tr("No connection"), color = JewelTheme.globalColors.text.info)
             } else {
                 Badge(current, size = 20)
                 Text(current.name, fontWeight = FontWeight.Medium)

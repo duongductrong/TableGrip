@@ -1,5 +1,6 @@
 package dev.tablegrip.core.importer
 
+import dev.tablegrip.core.i18n.tr
 import java.io.BufferedReader
 import java.io.Closeable
 import java.io.File
@@ -110,7 +111,7 @@ internal class JsonSource(private val file: File, requested: ImportOptions, prev
                 '['.code -> return Shape.Array
                 '{'.code -> Unit
                 -1 -> return Shape.Lines // empty file: no records
-                else -> throw ImportException("${file.name} doesn't start with [ or {; expected a JSON array of objects, an object wrapping one, or NDJSON")
+                else -> throw ImportException(tr("{0} doesn't start with [ or {; expected a JSON array of objects, an object wrapping one, or NDJSON", file.name))
             }
             val firstLine = StringBuilder("{")
             while (firstLine.length < MAX_LINE_CHARS) {
@@ -126,8 +127,8 @@ internal class JsonSource(private val file: File, requested: ImportOptions, prev
         }
         if (file.length() > MAX_DOCUMENT_BYTES) {
             throw ImportException(
-                "${file.name} is one JSON object of ${file.length() / (1024 * 1024)} MB; an object wrapping the rows is read into memory and must be " +
-                    "under ${MAX_DOCUMENT_BYTES / (1024 * 1024)} MB. Save it as a top-level array or NDJSON (one object per line) instead.",
+                tr("{0} is one JSON object of {1} MB; an object wrapping the rows is read into memory and must be ", file.name, file.length() / (1024 * 1024)) +
+                    tr("under {0} MB. Save it as a top-level array or NDJSON (one object per line) instead.", MAX_DOCUMENT_BYTES / (1024 * 1024)),
             )
         }
         val values = decode(DecodeSequenceMode.WHITESPACE_SEPARATED).map { it.second }.toList()
@@ -158,9 +159,9 @@ internal class JsonSource(private val file: File, requested: ImportOptions, prev
                         if (!iterator.hasNext()) break
                         iterator.next()
                     } catch (e: SerializationException) {
-                        throw ImportException("Invalid JSON in record ${index + 1}: ${e.message?.lineSequence()?.first()}", index + 1, e)
+                        throw ImportException(tr("Invalid JSON in record {0}: {1}", index + 1, e.message?.lineSequence()?.first()), index + 1, e)
                     } catch (e: IllegalArgumentException) {
-                        throw ImportException("Invalid JSON in record ${index + 1}: ${e.message?.lineSequence()?.first()}", index + 1, e)
+                        throw ImportException(tr("Invalid JSON in record {0}: {1}", index + 1, e.message?.lineSequence()?.first()), index + 1, e)
                     }
                 yield(++index to next)
             }
@@ -180,7 +181,7 @@ internal class JsonSource(private val file: File, requested: ImportOptions, prev
                     try {
                         Json.parseToJsonElement(text)
                     } catch (e: SerializationException) {
-                        throw ImportException("Line $line isn't valid JSON: ${e.message?.lineSequence()?.first()}", line, e)
+                        throw ImportException(tr("Line {0} isn't valid JSON: {1}", line, e.message?.lineSequence()?.first()), line, e)
                     }
                 yield(++index to element)
             }

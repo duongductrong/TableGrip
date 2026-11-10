@@ -1,5 +1,6 @@
 package dev.tablegrip.app.settings
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -71,7 +72,7 @@ internal fun SettingsScreen(app: AppState) {
         Divider(Orientation.Vertical, Modifier.fillMaxHeight())
         Box(Modifier.weight(1f).fillMaxHeight()) {
             if (page == null) {
-                Text("No settings match \"${needle.trim()}\"", Modifier.align(Alignment.Center), color = JewelTheme.globalColors.text.info)
+                Text(tr("No settings match \"{0}\"", needle.trim()), Modifier.align(Alignment.Center), color = JewelTheme.globalColors.text.info)
             } else {
                 PageContent(page, app, form, needle)
             }
@@ -93,7 +94,7 @@ private fun Sidebar(
         TextField(
             query,
             Modifier.fillMaxWidth().focusRequester(focus),
-            placeholder = { Text("Search settings") },
+            placeholder = { Text(tr("Search settings")) },
             leadingIcon = { Icon(AllIconsKeys.Actions.Search, null, Modifier.padding(end = 6.dp)) },
         )
         Spacer(Modifier.height(8.dp))
@@ -127,7 +128,7 @@ private fun SidebarItem(page: SettingsPage, selected: Boolean, hasError: Boolean
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(page.title, Modifier.weight(1f), maxLines = 1)
-        if (hasError) Icon(AllIconsKeys.General.Error, "Has errors")
+        if (hasError) Icon(AllIconsKeys.General.Error, tr("Has errors"))
     }
 }
 
@@ -139,7 +140,7 @@ private fun PageContent(page: SettingsPage, app: AppState, form: SettingsForm, q
                 Text("${page.group}  ›  ", color = JewelTheme.globalColors.text.info)
                 Text(page.title, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                 Spacer(Modifier.weight(1f))
-                Link("Reset to defaults", onClick = { form.reset(page) })
+                Link(tr("Reset to defaults"), onClick = { form.reset(page) })
             }
             Text(page.description, color = JewelTheme.globalColors.text.info)
             SettingsFileError(app)

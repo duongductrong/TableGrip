@@ -1,5 +1,6 @@
 package dev.tablegrip.app.schema
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -83,7 +84,7 @@ class SchemaCompareTab(private val app: AppState, sourceConfig: ConnectionConfig
 
     override val connectionId: String
         get() = (target.config ?: source.config)?.id.orEmpty()
-    override val title: String = "Schema Compare"
+    override val title: String = tr("Schema Compare")
 
     var comparison by mutableStateOf<SchemaComparison?>(null)
         private set
@@ -145,11 +146,11 @@ class SchemaCompareTab(private val app: AppState, sourceConfig: ConnectionConfig
                     result.defaultSelection().forEach { selected[it] = true }
                     expanded.clear()
                     expanded.addAll(result.diffs.filter { it.kind == TableDiffKind.Changed }.take(8).map { it.id })
-                    app.status = if (result.isEmpty) "Schemas are identical" else "${result.diffs.size} table(s) differ"
+                    app.status = if (result.isEmpty) tr("Schemas are identical") else tr("{0} table(s) differ", result.diffs.size)
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    error = "Couldn't compare: ${e.message ?: e}"
+                    error = tr("Couldn't compare: {0}", e.message ?: e)
                 } finally {
                     comparing = false
                     source.progress = null
@@ -206,7 +207,7 @@ class SchemaCompareTab(private val app: AppState, sourceConfig: ConnectionConfig
         val script = SchemaDiff.migration(comparison, keys, DdlGenerator(SqlDialect.of(targetConfig.type)))
         val crossEngine = source.config?.let { SqlDialect.of(it.type)::class != SqlDialect.of(targetConfig.type)::class } == true
         return if (crossEngine && !script.isEmpty) {
-            script.copy(warnings = listOf("Source and target are different engines: column types are copied as the source spells them. Check them before running.") + script.warnings)
+            script.copy(warnings = listOf(tr("Source and target are different engines: column types are copied as the source spells them. Check them before running.")) + script.warnings)
         } else {
             script
         }
@@ -221,8 +222,8 @@ class SchemaCompareTab(private val app: AppState, sourceConfig: ConnectionConfig
         if (script.isEmpty) return
         val tables = comparison?.diffs?.mapNotNull { it.target?.table }.orEmpty()
         pendingRun =
-            ScriptRun("Migrate ${target.label}", config, script, runLabel = "Run Migration") {
-                app.status = "Migrated ${config.name}: ${script.statements.size} statement(s)"
+            ScriptRun(tr("Migrate {0}", target.label), config, script, runLabel = tr("Run Migration")) {
+                app.status = tr("Migrated {0}: {1} statement(s)", config.name, script.statements.size)
                 app.schemaChanged(config, namespace, tables)
                 compare()
             }
@@ -235,8 +236,8 @@ class SchemaCompareTab(private val app: AppState, sourceConfig: ConnectionConfig
 
     fun saveScript(file: File) {
         runCatching { file.writeText(script().text + "\n") }
-            .onSuccess { app.status = "Saved the migration to ${file.path}" }
-            .onFailure { error = "Couldn't save ${file.name}: ${it.message}" }
+            .onSuccess { app.status = tr("Saved the migration to {0}", file.path) }
+            .onFailure { error = tr("Couldn't save {0}: {1}", file.name, it.message) }
     }
 
     override fun dispose() {

@@ -1,15 +1,16 @@
 package dev.tablegrip.core.connection
 
+import dev.tablegrip.core.i18n.tr
 import kotlinx.serialization.Serializable
 
 /** Where a database lives; drives the connection's colour and how cautious the UI is. */
 @Serializable
 enum class Environment(val label: String) {
-    None("None"),
-    Local("Local"),
-    Development("Development"),
-    Staging("Staging"),
-    Production("Production"),
+    None(tr("None")),
+    Local(tr("Local")),
+    Development(tr("Development")),
+    Staging(tr("Staging")),
+    Production(tr("Production")),
 }
 
 @Serializable

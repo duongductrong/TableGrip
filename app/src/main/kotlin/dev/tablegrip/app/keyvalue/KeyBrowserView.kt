@@ -1,5 +1,6 @@
 package dev.tablegrip.app.keyvalue
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -125,15 +126,15 @@ private fun KeyListPane(tab: KeyBrowserTab, onSelect: () -> Unit, onNew: () -> U
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(if (tab.plainValues) "Keys" else "Database ${tab.keyspace}", fontWeight = FontWeight.SemiBold)
-            if (tab.readOnly) Pill("read-only", info)
+            Text(if (tab.plainValues) tr("Keys") else tr("Database {0}", tab.keyspace), fontWeight = FontWeight.SemiBold)
+            if (tab.readOnly) Pill(tr("read-only"), info)
             Spacer(Modifier.weight(1f))
-            Tooltip({ Text("Scan again") }) { IconButton(onClick = tab::reload, enabled = !tab.scanning) { Icon(AllIconsKeys.Actions.Refresh, "Scan again") } }
+            Tooltip({ Text(tr("Scan again")) }) { IconButton(onClick = tab::reload, enabled = !tab.scanning) { Icon(AllIconsKeys.Actions.Refresh, tr("Scan again")) } }
             if (!tab.readOnly) {
                 DefaultButton(onClick = onNew) {
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(AllIconsKeys.General.Add, null, Modifier.size(14.dp))
-                        Text("New key")
+                        Text(tr("New key"))
                     }
                 }
             }
@@ -144,14 +145,14 @@ private fun KeyListPane(tab: KeyBrowserTab, onSelect: () -> Unit, onNew: () -> U
                 tab.pattern,
                 Modifier.fillMaxWidth(),
                 textStyle = JewelTheme.editorTextStyle,
-                placeholder = { Text(if (tab.plainValues) "Search keys, e.g. /services/*" else "Search keys, e.g. user:*") },
+                placeholder = { Text(if (tab.plainValues) tr("Search keys, e.g. /services/*") else tr("Search keys, e.g. user:*")) },
                 leadingIcon = { Icon(AllIconsKeys.Actions.Search, null, Modifier.padding(end = 6.dp)) },
                 trailingIcon =
                     if (tab.pattern.text.isNotEmpty() && tab.pattern.text.toString() != "*") {
                         {
                             Icon(
                                 AllIconsKeys.Actions.Close,
-                                "Clear search",
+                                tr("Clear search"),
                                 Modifier.size(16.dp).pointerHoverIcon(PointerIcon.Hand).clickable {
                                     tab.pattern.setTextAndPlaceCursorAtEnd("*")
                                     tab.reload()
@@ -165,22 +166,22 @@ private fun KeyListPane(tab: KeyBrowserTab, onSelect: () -> Unit, onNew: () -> U
                 if (!tab.plainValues) {
                     val filters = listOf<KeyType?>(null) + EditableTypes
                     ListComboBox(
-                        items = filters.map { it?.label?.let { label -> "Type: $label" } ?: "All types" },
+                        items = filters.map { it?.label?.let { label -> tr("Type: {0}", label) } ?: tr("All types") },
                         selectedIndex = filters.indexOf(tab.typeFilter).coerceAtLeast(0),
                         onSelectedItemChange = { tab.typeFilter = filters[it] },
                         modifier = Modifier.width(130.dp),
                     )
                 }
                 Spacer(Modifier.weight(1f))
-                Tooltip({ Text(if (tab.treeView) "Show as a flat list" else "Group by \"${tab.delimiter}\" into folders") }) {
+                Tooltip({ Text(if (tab.treeView) tr("Show as a flat list") else tr("Group by \"{0}\" into folders", tab.delimiter)) }) {
                     IconButton(onClick = { tab.treeView = !tab.treeView }) {
-                        Icon(if (tab.treeView) AllIconsKeys.Actions.ListFiles else AllIconsKeys.Actions.ShowAsTree, "Toggle tree")
+                        Icon(if (tab.treeView) AllIconsKeys.Actions.ListFiles else AllIconsKeys.Actions.ShowAsTree, tr("Toggle tree"))
                     }
                 }
                 if (tab.treeView) {
-                    Tooltip({ Text("Expand all") }) { IconButton(onClick = { tab.collapsed = emptySet() }) { Icon(AllIconsKeys.Actions.Expandall, "Expand all") } }
-                    Tooltip({ Text("Collapse all") }) {
-                        IconButton(onClick = { tab.collapsed = keyGroups(tab.visibleKeys, tab.delimiter) }) { Icon(AllIconsKeys.Actions.Collapseall, "Collapse all") }
+                    Tooltip({ Text(tr("Expand all")) }) { IconButton(onClick = { tab.collapsed = emptySet() }) { Icon(AllIconsKeys.Actions.Expandall, tr("Expand all")) } }
+                    Tooltip({ Text(tr("Collapse all")) }) {
+                        IconButton(onClick = { tab.collapsed = keyGroups(tab.visibleKeys, tab.delimiter) }) { Icon(AllIconsKeys.Actions.Collapseall, tr("Collapse all")) }
                     }
                 }
             }
@@ -200,13 +201,13 @@ private fun KeyListPane(tab: KeyBrowserTab, onSelect: () -> Unit, onNew: () -> U
             val shown = tab.visibleKeys.size
             val count =
                 when {
-                    tab.scanning -> "Scanning…"
-                    tab.typeFilter != null -> "$shown of ${tab.keys.size} keys"
-                    else -> "%,d %s".format(shown, if (shown == 1) "key" else "keys") + if (tab.cursor != null) " loaded" else ""
+                    tab.scanning -> tr("Scanning…")
+                    tab.typeFilter != null -> tr("{0} of {1} keys", shown, tab.keys.size)
+                    else -> "%,d %s".format(shown, if (shown == 1) tr("key") else tr("keys")) + if (tab.cursor != null) tr(" loaded") else ""
                 }
             Text(count, color = info, fontSize = 12.sp)
             Spacer(Modifier.weight(1f))
-            if (tab.cursor != null) Link("Load more", onClick = tab::loadMore, enabled = !tab.scanning)
+            if (tab.cursor != null) Link(tr("Load more"), onClick = tab::loadMore, enabled = !tab.scanning)
         }
     }
 }
@@ -300,14 +301,14 @@ private fun EmptyKeys(tab: KeyBrowserTab) {
     ) {
         Icon(AllIconsKeys.Actions.Search, null, Modifier.size(24.dp))
         val filtered = pattern.isNotEmpty() && pattern != "*" || tab.typeFilter != null
-        Text(if (filtered) "No keys match" else "This database is empty", fontWeight = FontWeight.SemiBold)
+        Text(if (filtered) tr("No keys match") else tr("This database is empty"), fontWeight = FontWeight.SemiBold)
         Text(
-            if (filtered) "Try a wider pattern: * matches anything, ? one character." else "Create a key to get started.",
+            if (filtered) tr("Try a wider pattern: * matches anything, ? one character.") else tr("Create a key to get started."),
             color = JewelTheme.globalColors.text.info,
             textAlign = TextAlign.Center,
         )
         if (filtered) {
-            Link("Clear filters", onClick = {
+            Link(tr("Clear filters"), onClick = {
                 tab.typeFilter = null
                 tab.pattern.setTextAndPlaceCursorAtEnd("*")
                 tab.reload()
@@ -361,7 +362,7 @@ private fun KeyRowView(row: KeyRow.Key, selected: Boolean, showBadge: Boolean, o
         }
         row.info.ttlMillis?.let {
             Row(horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(AllIconsKeys.Vcs.History, "Expires", Modifier.size(11.dp))
+                Icon(AllIconsKeys.Vcs.History, tr("Expires"), Modifier.size(11.dp))
                 Text(formatTtl(it), color = JewelTheme.globalColors.text.info, fontSize = 11.sp, maxLines = 1, softWrap = false)
             }
         }
@@ -435,7 +436,7 @@ private fun MessageBanner(tab: KeyBrowserTab, message: KeyBrowserTab.Message) {
     }
     val modifier = Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, top = 10.dp)
     val dismiss: org.jetbrains.jewel.ui.component.banner.BannerIconActionScope.() -> Unit = {
-        iconAction(AllIconsKeys.Actions.Close, "Dismiss", "Dismiss") { tab.message = null }
+        iconAction(AllIconsKeys.Actions.Close, tr("Dismiss"), tr("Dismiss")) { tab.message = null }
     }
     if (message.isError) InlineErrorBanner(message.text, modifier, iconActions = dismiss)
     else InlineSuccessBanner(message.text, modifier, iconActions = dismiss)
@@ -448,13 +449,13 @@ private fun NoSelection(tab: KeyBrowserTab, onNew: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text("No key selected", fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+        Text(tr("No key selected"), fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
         Text(
-            "Pick a key on the left to see and edit its value.\nUse ↑ and ↓ to step through the list.",
+            tr("Pick a key on the left to see and edit its value.\nUse ↑ and ↓ to step through the list."),
             color = JewelTheme.globalColors.text.info,
             textAlign = TextAlign.Center,
         )
-        if (!tab.readOnly) Link("Create a new key", onClick = onNew)
+        if (!tab.readOnly) Link(tr("Create a new key"), onClick = onNew)
     }
 }
 
@@ -477,14 +478,14 @@ private fun ValuePane(tab: KeyBrowserTab, value: KeyValue) {
                         tab,
                         ElementSpec(
                             type = KeyType.Hash,
-                            headers = listOf("Field", "Value"),
+                            headers = listOf(tr("Field"), tr("Value")),
                             weights = listOf(0.35f, 0.65f),
                             rows = value.fields.map { listOf(it.first, it.second) },
                             total = value.total,
                             remove = { KeyEdit.DeleteField(it[0]) },
                             editColumn = 1,
                             update = { row, new -> listOf(KeyEdit.SetField(row[0], new)) },
-                            addLabels = listOf("Field", "Value"),
+                            addLabels = listOf(tr("Field"), tr("Value")),
                             add = { if (it[0].isBlank()) null else KeyEdit.SetField(it[0], it[1]) },
                         ),
                     )
@@ -493,14 +494,14 @@ private fun ValuePane(tab: KeyBrowserTab, value: KeyValue) {
                         tab,
                         ElementSpec(
                             type = KeyType.List,
-                            headers = listOf("Index", "Value"),
+                            headers = listOf(tr("Index"), tr("Value")),
                             weights = listOf(0.12f, 0.88f),
                             rows = value.items.mapIndexed { i, item -> listOf(i.toString(), item) },
                             total = value.total,
                             remove = { KeyEdit.RemoveItem(it[1]) },
                             editColumn = 1,
                             update = { row, new -> listOf(KeyEdit.SetItem(row[0].toLong(), new)) },
-                            addLabels = listOf("Value to append"),
+                            addLabels = listOf(tr("Value to append")),
                             add = { if (it[0].isEmpty()) null else KeyEdit.AppendItem(it[0]) },
                         ),
                     )
@@ -509,7 +510,7 @@ private fun ValuePane(tab: KeyBrowserTab, value: KeyValue) {
                         tab,
                         ElementSpec(
                             type = KeyType.Set,
-                            headers = listOf("Member"),
+                            headers = listOf(tr("Member")),
                             weights = listOf(1f),
                             rows = value.members.map { listOf(it) },
                             total = value.total,
@@ -517,7 +518,7 @@ private fun ValuePane(tab: KeyBrowserTab, value: KeyValue) {
                             editColumn = 0,
                             // Members can't change in place: swap the old one for the new.
                             update = { row, new -> if (new == row[0]) emptyList() else listOf(KeyEdit.AddMember(new), KeyEdit.RemoveMember(row[0])) },
-                            addLabels = listOf("Member"),
+                            addLabels = listOf(tr("Member")),
                             add = { if (it[0].isEmpty()) null else KeyEdit.AddMember(it[0]) },
                         ),
                     )
@@ -526,16 +527,16 @@ private fun ValuePane(tab: KeyBrowserTab, value: KeyValue) {
                         tab,
                         ElementSpec(
                             type = KeyType.SortedSet,
-                            headers = listOf("Member", "Score"),
+                            headers = listOf(tr("Member"), tr("Score")),
                             weights = listOf(0.7f, 0.3f),
                             rows = value.members.map { listOf(it.first, formatScore(it.second)) },
                             total = value.total,
                             remove = { KeyEdit.RemoveMember(it[0]) },
                             editColumn = 1,
                             update = { row, new -> new.trim().toDoubleOrNull()?.let { listOf(KeyEdit.SetScore(row[0], it)) } },
-                            addLabels = listOf("Member", "Score"),
+                            addLabels = listOf(tr("Member"), tr("Score")),
                             add = { fields -> fields[1].trim().toDoubleOrNull()?.takeIf { fields[0].isNotEmpty() }?.let { KeyEdit.SetScore(fields[0], it) } },
-                            invalidHint = "Score must be a number.",
+                            invalidHint = tr("Score must be a number."),
                         ),
                     )
                 is KeyValue.Stream ->
@@ -543,22 +544,22 @@ private fun ValuePane(tab: KeyBrowserTab, value: KeyValue) {
                         tab,
                         ElementSpec(
                             type = KeyType.Stream,
-                            headers = listOf("ID", "Fields"),
+                            headers = listOf(tr("ID"), tr("Fields")),
                             weights = listOf(0.3f, 0.7f),
                             rows = value.entries.map { entry -> listOf(entry.id, entry.fields.joinToString("  ") { "${it.first}=${it.second}" }) },
                             total = value.total,
                             remove = { KeyEdit.DeleteEntry(it[0]) },
                             editColumn = null,
                             update = null,
-                            addLabels = listOf("field=value, field=value"),
+                            addLabels = listOf(tr("field=value, field=value")),
                             add = { fields -> parseFields(fields[0])?.let { KeyEdit.AddEntry(it) } },
-                            invalidHint = "Write fields as name=value, separated by commas.",
+                            invalidHint = tr("Write fields as name=value, separated by commas."),
                         ),
                     )
                 is KeyValue.Other ->
                     Column(Modifier.fillMaxWidth().card().padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text("A ${value.type} value", fontWeight = FontWeight.SemiBold)
-                        Text("The browser can't edit this type yet; use the console to work with it.", color = JewelTheme.globalColors.text.info)
+                        Text(tr("A {0} value", value.type), fontWeight = FontWeight.SemiBold)
+                        Text(tr("The browser can't edit this type yet; use the console to work with it."), color = JewelTheme.globalColors.text.info)
                         if (value.description.isNotEmpty()) SelectionContainer { Text(value.description, style = JewelTheme.editorTextStyle) }
                     }
             }
@@ -581,11 +582,11 @@ private fun KeyHeader(tab: KeyBrowserTab, value: KeyValue) {
                 SelectionContainer(Modifier.weight(1f)) {
                     Text(value.key, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
-                Tooltip({ Text("Copy key name") }) { IconButton(onClick = { copyToClipboard(value.key); tab.message = KeyBrowserTab.Message("Copied the key name.", isError = false) }) { Icon(AllIconsKeys.Actions.Copy, "Copy key name") } }
-                Tooltip({ Text("Reload value") }) { IconButton(onClick = tab::refreshValue) { Icon(AllIconsKeys.Actions.Refresh, "Reload value") } }
+                Tooltip({ Text(tr("Copy key name")) }) { IconButton(onClick = { copyToClipboard(value.key); tab.message = KeyBrowserTab.Message(tr("Copied the key name."), isError = false) }) { Icon(AllIconsKeys.Actions.Copy, tr("Copy key name")) } }
+                Tooltip({ Text(tr("Reload value")) }) { IconButton(onClick = tab::refreshValue) { Icon(AllIconsKeys.Actions.Refresh, tr("Reload value")) } }
                 if (!tab.readOnly) {
-                    Tooltip({ Text("Rename key") }) { IconButton(onClick = { mode = HeaderMode.Rename }) { Icon(AllIconsKeys.Actions.Edit, "Rename key") } }
-                    Tooltip({ Text("Delete key") }) { IconButton(onClick = { mode = HeaderMode.ConfirmDelete }) { Icon(AllIconsKeys.General.Delete, "Delete key") } }
+                    Tooltip({ Text(tr("Rename key")) }) { IconButton(onClick = { mode = HeaderMode.Rename }) { Icon(AllIconsKeys.Actions.Edit, tr("Rename key")) } }
+                    Tooltip({ Text(tr("Delete key")) }) { IconButton(onClick = { mode = HeaderMode.ConfirmDelete }) { Icon(AllIconsKeys.General.Delete, tr("Delete key")) } }
                 }
             }
         }
@@ -624,10 +625,10 @@ private fun RenameField(tab: KeyBrowserTab, key: String, onClose: () -> Unit, mo
                 textStyle = JewelTheme.editorTextStyle,
                 onKeyboardAction = KeyboardActionHandler { submit() },
             )
-            if (exists) Text("A key named $target already exists.", color = JewelTheme.globalColors.text.error, fontSize = 11.sp)
+            if (exists) Text(tr("A key named {0} already exists.", target), color = JewelTheme.globalColors.text.error, fontSize = 11.sp)
         }
-        DefaultButton(onClick = ::submit, enabled = target.isNotEmpty() && target != key && !exists) { Text("Rename") }
-        OutlinedButton(onClick = onClose) { Text("Cancel") }
+        DefaultButton(onClick = ::submit, enabled = target.isNotEmpty() && target != key && !exists) { Text(tr("Rename")) }
+        OutlinedButton(onClick = onClose) { Text(tr("Cancel")) }
     }
 }
 
@@ -649,9 +650,9 @@ private fun TtlChip(tab: KeyBrowserTab, value: KeyValue, onClick: (() -> Unit)?)
     val remaining = ttl?.let { it - (now - tab.valueReadAt) }
     val text =
         when {
-            remaining == null -> "No expiry"
-            remaining <= 0 -> "Expired"
-            else -> "Expires in ${formatTtl(remaining)}"
+            remaining == null -> tr("No expiry")
+            remaining <= 0 -> tr("Expired")
+            else -> tr("Expires in {0}", formatTtl(remaining))
         }
     val color = if (remaining != null && remaining < 60_000) Color(0xFFE5A23C) else JewelTheme.globalColors.text.info
     val content =
@@ -664,7 +665,7 @@ private fun TtlChip(tab: KeyBrowserTab, value: KeyValue, onClick: (() -> Unit)?)
         }
     if (onClick == null) content()
     else {
-        Tooltip({ Text("Change expiry") }) {
+        Tooltip({ Text(tr("Change expiry")) }) {
             Box(Modifier.clip(RoundedCornerShape(4.dp)).pointerHoverIcon(PointerIcon.Hand).clickable(onClick = onClick).padding(horizontal = 4.dp, vertical = 2.dp)) {
                 content()
             }
@@ -682,18 +683,18 @@ private fun TtlEditor(tab: KeyBrowserTab, value: KeyValue, onClose: () -> Unit) 
     Column(Modifier.fillMaxWidth().padding(top = 2.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Expire after")
+            Text(tr("Expire after"))
             TextField(
                 amount,
                 Modifier.width(80.dp).onPreviewKeyEvent { event -> isEscape(event).also { if (it) onClose() } },
                 onKeyboardAction = KeyboardActionHandler { seconds?.let { tab.expire(it); onClose() } },
             )
             ListComboBox(items = TtlUnit.entries.map { it.label }, selectedIndex = unit.ordinal, onSelectedItemChange = { unit = TtlUnit.entries[it] }, modifier = Modifier.width(110.dp))
-            DefaultButton(onClick = { seconds?.let { tab.expire(it); onClose() } }, enabled = seconds != null) { Text("Set expiry") }
-            OutlinedButton(onClick = onClose) { Text("Cancel") }
+            DefaultButton(onClick = { seconds?.let { tab.expire(it); onClose() } }, enabled = seconds != null) { Text(tr("Set expiry")) }
+            OutlinedButton(onClick = onClose) { Text(tr("Cancel")) }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Quick:", color = info)
+            Text(tr("Quick:"), color = info)
             TtlPresets.forEach { (label, presetSeconds) ->
                 Chip(label) {
                     tab.expire(presetSeconds)
@@ -701,9 +702,9 @@ private fun TtlEditor(tab: KeyBrowserTab, value: KeyValue, onClose: () -> Unit) 
                 }
             }
             Spacer(Modifier.weight(1f))
-            if (value.ttlMillis != null) Link("Remove expiry", onClick = { tab.expire(null); onClose() })
+            if (value.ttlMillis != null) Link(tr("Remove expiry"), onClick = { tab.expire(null); onClose() })
         }
-        if (amount.text.isNotBlank() && seconds == null) Text("Enter a whole number greater than 0.", color = JewelTheme.globalColors.text.error, fontSize = 11.sp)
+        if (amount.text.isNotBlank() && seconds == null) Text(tr("Enter a whole number greater than 0."), color = JewelTheme.globalColors.text.error, fontSize = 11.sp)
     }
 }
 
@@ -735,15 +736,15 @@ private fun DeleteConfirmation(tab: KeyBrowserTab, value: KeyValue, onClose: () 
     ) {
         Icon(AllIconsKeys.General.Warning, null)
         Column(Modifier.weight(1f)) {
-            Text("Delete ${value.key}?", fontWeight = FontWeight.SemiBold)
+            Text(tr("Delete {0}?", value.key), fontWeight = FontWeight.SemiBold)
             Text(
-                (value.size?.let { "Its ${elementNoun(value.type, it)} will be removed. " } ?: "") + "This can't be undone.",
+                (value.size?.let { tr("Its {0} will be removed. ", elementNoun(value.type, it)) } ?: "") + tr("This can't be undone."),
                 color = JewelTheme.globalColors.text.info,
                 fontSize = 12.sp,
             )
         }
-        OutlinedButton(onClick = onClose) { Text("Cancel") }
-        DefaultButton(onClick = { tab.delete(); onClose() }) { Text("Delete") }
+        OutlinedButton(onClick = onClose) { Text(tr("Cancel")) }
+        DefaultButton(onClick = { tab.delete(); onClose() }) { Text(tr("Delete")) }
     }
 }
 
@@ -759,19 +760,19 @@ private fun TextValue(tab: KeyBrowserTab, value: KeyValue.Text) {
     val dirty = current != value.value
     val info = JewelTheme.globalColors.text.info
     fun save() {
-        if (editable && dirty) tab.edit(KeyEdit.SetText(current), confirmationFor = "Saved ${value.key}.")
+        if (editable && dirty) tab.edit(KeyEdit.SetText(current), confirmationFor = tr("Saved {0}.", value.key))
     }
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Segmented(listOf("Text", "JSON"), selected = if (showJson && json != null) 1 else 0, enabled = listOf(true, json != null)) { showJson = it == 1 }
-            if (json == null && current.isNotBlank()) Text("Not JSON", color = info, fontSize = 12.sp)
+            Segmented(listOf(tr("Text"), tr("JSON")), selected = if (showJson && json != null) 1 else 0, enabled = listOf(true, json != null)) { showJson = it == 1 }
+            if (json == null && current.isNotBlank()) Text(tr("Not JSON"), color = info, fontSize = 12.sp)
             Spacer(Modifier.weight(1f))
             if (editable && json != null) {
-                Tooltip({ Text("Pretty-print the JSON") }) {
-                    Link("Format JSON", onClick = { text.setTextAndPlaceCursorAtEnd(prettyJson(json)); showJson = false })
+                Tooltip({ Text(tr("Pretty-print the JSON")) }) {
+                    Link(tr("Format JSON"), onClick = { text.setTextAndPlaceCursorAtEnd(prettyJson(json)); showJson = false })
                 }
             }
-            Tooltip({ Text("Copy value") }) { IconButton(onClick = { copyToClipboard(current); tab.message = KeyBrowserTab.Message("Copied the value.", isError = false) }) { Icon(AllIconsKeys.Actions.Copy, "Copy value") } }
+            Tooltip({ Text(tr("Copy value")) }) { IconButton(onClick = { copyToClipboard(current); tab.message = KeyBrowserTab.Message(tr("Copied the value."), isError = false) }) { Icon(AllIconsKeys.Actions.Copy, tr("Copy value")) } }
         }
         Box(Modifier.weight(1f).fillMaxWidth()) {
             if (showJson && json != null) {
@@ -782,24 +783,24 @@ private fun TextValue(tab: KeyBrowserTab, value: KeyValue.Text) {
                     Modifier.fillMaxSize().onPreviewKeyEvent { event -> isSave(event).also { if (it) save() } },
                     textStyle = JewelTheme.editorTextStyle,
                     readOnly = !editable,
-                    placeholder = { Text("Empty string") },
+                    placeholder = { Text(tr("Empty string")) },
                 )
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 when {
-                    value.truncated -> "Showing the first %,d characters; edit it from the console.".format(value.value.length)
-                    else -> "%,d characters".format(current.length) + if (json != null) " · valid JSON" else ""
+                    value.truncated -> tr("Showing the first {0} characters; edit it from the console.", "%,d".format(value.value.length))
+                    else -> tr("{0} characters", "%,d".format(current.length)) + if (json != null) tr(" · valid JSON") else ""
                 },
                 color = info,
                 fontSize = 12.sp,
             )
-            if (dirty) Pill("Unsaved changes", Color(0xFFE5A23C))
+            if (dirty) Pill(tr("Unsaved changes"), Color(0xFFE5A23C))
             Spacer(Modifier.weight(1f))
             if (editable) {
-                OutlinedButton(onClick = { text.setTextAndPlaceCursorAtEnd(value.value) }, enabled = dirty) { Text("Revert") }
-                Tooltip({ Text("Save (⌘S)") }) { DefaultButton(onClick = ::save, enabled = dirty) { Text("Save") } }
+                OutlinedButton(onClick = { text.setTextAndPlaceCursorAtEnd(value.value) }, enabled = dirty) { Text(tr("Revert")) }
+                Tooltip({ Text(tr("Save (⌘S)")) }) { DefaultButton(onClick = ::save, enabled = dirty) { Text(tr("Save")) } }
             }
         }
     }
@@ -860,14 +861,14 @@ private fun Elements(tab: KeyBrowserTab, spec: ElementSpec) {
             TextField(
                 filter,
                 Modifier.width(240.dp),
-                placeholder = { Text("Filter ${elementNoun(spec.type, 2).substringAfter(' ')}") },
+                placeholder = { Text(tr("Filter {0}", elementNoun(spec.type, 2).substringAfter(' '))) },
                 leadingIcon = { Icon(AllIconsKeys.General.Filter, null, Modifier.padding(end = 6.dp)) },
             )
             Spacer(Modifier.weight(1f))
             // The header already gives the full count; say more only when the table shows part of it.
             when {
-                query.isNotEmpty() -> "${rows.size} of ${elementNoun(spec.type, spec.rows.size.toLong())} match"
-                spec.rows.size.toLong() != spec.total -> "Showing the first %,d".format(spec.rows.size)
+                query.isNotEmpty() -> tr("{0} of {1} match", rows.size, elementNoun(spec.type, spec.rows.size.toLong()))
+                spec.rows.size.toLong() != spec.total -> tr("Showing the first {0}", "%,d".format(spec.rows.size))
                 else -> null
             }?.let { Text(it, color = info, fontSize = 12.sp) }
         }
@@ -882,7 +883,7 @@ private fun Elements(tab: KeyBrowserTab, spec: ElementSpec) {
             Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
             if (rows.isEmpty()) {
                 Box(Modifier.fillMaxWidth().padding(20.dp), contentAlignment = Alignment.Center) {
-                    Text(if (query.isEmpty()) "No ${elementNoun(spec.type, 2).substringAfter(' ')}" else "Nothing matches \"$query\"", color = info)
+                    Text(if (query.isEmpty()) tr("No {0}", elementNoun(spec.type, 2).substringAfter(' ')) else tr("Nothing matches \"{0}\"", query), color = info)
                 }
             }
             val tableState = rememberLazyListState()
@@ -936,9 +937,9 @@ private fun ElementRow(tab: KeyBrowserTab, spec: ElementSpec, row: List<String>,
             // Actions appear on hover so a long table stays calm.
             if ((hovered || editing) && !editing) {
                 val copied = row.getOrElse(spec.editColumn ?: (row.size - 1)) { row.last() }
-                Tooltip({ Text("Copy value") }) { IconButton(onClick = { copyToClipboard(copied) }) { Icon(AllIconsKeys.Actions.Copy, "Copy value") } }
-                if (canEdit) Tooltip({ Text("Edit") }) { IconButton(onClick = { onEdit(true) }) { Icon(AllIconsKeys.Actions.Edit, "Edit") } }
-                if (!tab.readOnly) Tooltip({ Text("Remove") }) { IconButton(onClick = { tab.edit(spec.remove(row)) }) { Icon(AllIconsKeys.General.Delete, "Remove") } }
+                Tooltip({ Text(tr("Copy value")) }) { IconButton(onClick = { copyToClipboard(copied) }) { Icon(AllIconsKeys.Actions.Copy, tr("Copy value")) } }
+                if (canEdit) Tooltip({ Text(tr("Edit")) }) { IconButton(onClick = { onEdit(true) }) { Icon(AllIconsKeys.Actions.Edit, tr("Edit")) } }
+                if (!tab.readOnly) Tooltip({ Text(tr("Remove")) }) { IconButton(onClick = { tab.edit(spec.remove(row)) }) { Icon(AllIconsKeys.General.Delete, tr("Remove")) } }
             }
         }
     }
@@ -958,8 +959,8 @@ private fun InlineEditor(initial: String, modifier: Modifier, isValid: (String) 
             outline = if (valid) org.jetbrains.jewel.ui.Outline.None else org.jetbrains.jewel.ui.Outline.Error,
             onKeyboardAction = KeyboardActionHandler { if (valid) onSave(state.text.toString()) },
         )
-        DefaultButton(onClick = { onSave(state.text.toString()) }, enabled = valid) { Text("Save") }
-        OutlinedButton(onClick = onCancel) { Text("Cancel") }
+        DefaultButton(onClick = { onSave(state.text.toString()) }, enabled = valid) { Text(tr("Save")) }
+        OutlinedButton(onClick = onCancel) { Text(tr("Cancel")) }
     }
 }
 
@@ -975,7 +976,7 @@ private fun AddElementRow(tab: KeyBrowserTab, spec: ElementSpec) {
         inputs.forEach { it.clearText() }
     }
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text("Add ${elementNoun(spec.type, 1).substringAfter(' ')}", fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+        Text(tr("Add {0}", elementNoun(spec.type, 1).substringAfter(' ')), fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
             inputs.forEachIndexed { i, input ->
                 TextField(
@@ -986,11 +987,11 @@ private fun AddElementRow(tab: KeyBrowserTab, spec: ElementSpec) {
                     onKeyboardAction = KeyboardActionHandler { submit() },
                 )
             }
-            DefaultButton(onClick = ::submit, enabled = edit != null) { Text("Add") }
+            DefaultButton(onClick = ::submit, enabled = edit != null) { Text(tr("Add")) }
         }
         if (typed && edit == null && spec.invalidHint != null) Text(spec.invalidHint, color = JewelTheme.globalColors.text.error, fontSize = 11.sp)
         if (spec.type == KeyType.Hash && edit != null && spec.rows.any { it[0] == values[0] }) {
-            Text("${values[0]} exists; adding replaces its value.", color = JewelTheme.globalColors.text.info, fontSize = 11.sp)
+            Text(tr("{0} exists; adding replaces its value.", values[0]), color = JewelTheme.globalColors.text.info, fontSize = 11.sp)
         }
     }
 }
@@ -1037,10 +1038,10 @@ private fun NewKeyForm(tab: KeyBrowserTab, onDone: () -> Unit) {
     VerticallyScrollableContainer(Modifier.fillMaxSize(), style = visibleScrollbarStyle()) {
     Column(Modifier.widthIn(max = 640.dp).padding(end = ScrollbarGutter + 4.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text("New key", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-            Text(if (tab.plainValues) "Adds a key to this etcd cluster." else "Adds a key to database ${tab.keyspace}.", color = info)
+            Text(tr("New key"), fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+            Text(if (tab.plainValues) tr("Adds a key to this etcd cluster.") else tr("Adds a key to database {0}.", tab.keyspace), color = info)
         }
-        FormField("Key name", error = if (exists) "A key named $keyName already exists." else null, hint = "Use \"${tab.delimiter}\" to group keys, e.g. user${tab.delimiter}42${tab.delimiter}profile") {
+        FormField(tr("Key name"), error = if (exists) tr("A key named {0} already exists.", keyName) else null, hint = tr("Use \"{0}\" to group keys, e.g. user{1}42{2}profile", tab.delimiter, tab.delimiter, tab.delimiter)) {
             TextField(
                 name,
                 Modifier.fillMaxWidth().focusRequester(focus).onPreviewKeyEvent { event -> isEscape(event).also { if (it) onDone() } },
@@ -1051,7 +1052,7 @@ private fun NewKeyForm(tab: KeyBrowserTab, onDone: () -> Unit) {
             )
         }
         if (types.size > 1) {
-            FormField("Type", hint = typeDescription(type)) {
+            FormField(tr("Type"), hint = typeDescription(type)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     types.forEach { candidate -> TypeOption(candidate, selected = candidate == type) { type = candidate } }
                 }
@@ -1059,42 +1060,42 @@ private fun NewKeyForm(tab: KeyBrowserTab, onDone: () -> Unit) {
         }
         when (type) {
             KeyType.Text ->
-                FormField("Value") {
-                    TextArea(text, Modifier.fillMaxWidth().heightIn(min = 120.dp, max = 260.dp), textStyle = JewelTheme.editorTextStyle, placeholder = { Text("Text, a number, or JSON") })
+                FormField(tr("Value")) {
+                    TextArea(text, Modifier.fillMaxWidth().heightIn(min = 120.dp, max = 260.dp), textStyle = JewelTheme.editorTextStyle, placeholder = { Text(tr("Text, a number, or JSON")) })
                 }
             KeyType.Hash ->
-                FormField("First field", hint = "Add more fields after the key is created.") {
+                FormField(tr("First field"), hint = tr("Add more fields after the key is created.")) {
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        TextField(first, Modifier.weight(0.4f), textStyle = JewelTheme.editorTextStyle, placeholder = { Text("Field") })
-                        TextField(second, Modifier.weight(0.6f), textStyle = JewelTheme.editorTextStyle, placeholder = { Text("Value") })
+                        TextField(first, Modifier.weight(0.4f), textStyle = JewelTheme.editorTextStyle, placeholder = { Text(tr("Field")) })
+                        TextField(second, Modifier.weight(0.6f), textStyle = JewelTheme.editorTextStyle, placeholder = { Text(tr("Value")) })
                     }
                 }
             KeyType.SortedSet ->
-                FormField("First member", error = if (b.isNotBlank() && b.trim().toDoubleOrNull() == null) "Score must be a number." else null) {
+                FormField(tr("First member"), error = if (b.isNotBlank() && b.trim().toDoubleOrNull() == null) tr("Score must be a number.") else null) {
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        TextField(first, Modifier.weight(0.7f), textStyle = JewelTheme.editorTextStyle, placeholder = { Text("Member") })
-                        TextField(second, Modifier.weight(0.3f), textStyle = JewelTheme.editorTextStyle, placeholder = { Text("Score") })
+                        TextField(first, Modifier.weight(0.7f), textStyle = JewelTheme.editorTextStyle, placeholder = { Text(tr("Member")) })
+                        TextField(second, Modifier.weight(0.3f), textStyle = JewelTheme.editorTextStyle, placeholder = { Text(tr("Score")) })
                     }
                 }
             KeyType.Stream ->
-                FormField("First entry", error = if (a.isNotBlank() && edit == null) "Write fields as name=value, separated by commas." else null, hint = "e.g. event=signup, user=42") {
-                    TextField(first, Modifier.fillMaxWidth(), textStyle = JewelTheme.editorTextStyle, placeholder = { Text("field=value, field=value") })
+                FormField(tr("First entry"), error = if (a.isNotBlank() && edit == null) tr("Write fields as name=value, separated by commas.") else null, hint = tr("e.g. event=signup, user=42")) {
+                    TextField(first, Modifier.fillMaxWidth(), textStyle = JewelTheme.editorTextStyle, placeholder = { Text(tr("field=value, field=value")) })
                 }
             else ->
-                FormField(if (type == KeyType.List) "First item" else "First member", hint = "Redis has no empty ${type.label}s, so a key starts with one element.") {
+                FormField(if (type == KeyType.List) tr("First item") else tr("First member"), hint = tr("Redis has no empty {0}, so a key starts with one element.", elementNoun(type, 2).substringAfter(' '))) {
                     TextField(first, Modifier.fillMaxWidth(), textStyle = JewelTheme.editorTextStyle)
                 }
         }
-        FormField("Expiry", error = if (!ttlValid) "Enter a whole number greater than 0, or leave it empty." else null, hint = "Leave empty to keep the key forever.") {
+        FormField(tr("Expiry"), error = if (!ttlValid) tr("Enter a whole number greater than 0, or leave it empty.") else null, hint = tr("Leave empty to keep the key forever.")) {
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("Expire after", color = info)
-                TextField(ttl, Modifier.width(80.dp), placeholder = { Text("never") })
+                Text(tr("Expire after"), color = info)
+                TextField(ttl, Modifier.width(80.dp), placeholder = { Text(tr("never")) })
                 ListComboBox(items = TtlUnit.entries.map { it.label }, selectedIndex = ttlUnit.ordinal, onSelectedItemChange = { ttlUnit = TtlUnit.entries[it] }, modifier = Modifier.width(110.dp))
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            DefaultButton(onClick = ::create, enabled = ready) { Text("Create key") }
-            OutlinedButton(onClick = onDone) { Text("Cancel") }
+            DefaultButton(onClick = ::create, enabled = ready) { Text(tr("Create key")) }
+            OutlinedButton(onClick = onDone) { Text(tr("Cancel")) }
         }
     }
     }

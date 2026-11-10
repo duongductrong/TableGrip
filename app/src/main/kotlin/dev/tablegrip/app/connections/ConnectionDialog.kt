@@ -1,5 +1,6 @@
 package dev.tablegrip.app.connections
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -185,7 +186,7 @@ private class ConnectionForm(existing: ConnectionConfig?, group: String = "") {
     /** `key=value` per line; blank lines and `#` comments are ignored. */
     fun parseProperties(): Result<Map<String, String>> = runCatching {
         properties.text.lines().map { it.trim() }.filter { it.isNotEmpty() && !it.startsWith("#") }.associate { line ->
-            require('=' in line) { "Driver property \"$line\" must look like key=value." }
+            require('=' in line) { tr("Driver property \"{0}\" must look like key=value.", line) }
             line.substringBefore('=').trim() to line.substringAfter('=').trim()
         }
     }
@@ -197,46 +198,46 @@ private class ConnectionForm(existing: ConnectionConfig?, group: String = "") {
         if (useUrl && document) {
             val raw = url.text.toString().trim()
             return when {
-                raw.isEmpty() -> "Connection string is required."
-                !raw.startsWith("mongodb://") && !raw.startsWith("mongodb+srv://") -> "A connection string starts with mongodb:// or mongodb+srv://."
-                ssh -> "SSH tunnels need host and port, not a connection string."
+                raw.isEmpty() -> tr("Connection string is required.")
+                !raw.startsWith("mongodb://") && !raw.startsWith("mongodb+srv://") -> tr("A connection string starts with mongodb:// or mongodb+srv://.")
+                ssh -> tr("SSH tunnels need host and port, not a connection string.")
                 else -> null
             }
         }
         if (useUrl) {
             val raw = url.text.toString().trim()
             return when {
-                raw.isEmpty() -> "JDBC URL is required."
-                !raw.startsWith("jdbc:") -> "A JDBC URL starts with jdbc: — paste other formats into Connection string."
-                ssh && runCatching { JdbcUrls.build(toConfig(), via = "127.0.0.1" to 1) }.isFailure -> "SSH tunnels need a single-host URL."
+                raw.isEmpty() -> tr("JDBC URL is required.")
+                !raw.startsWith("jdbc:") -> tr("A JDBC URL starts with jdbc: — paste other formats into Connection string.")
+                ssh && runCatching { JdbcUrls.build(toConfig(), via = "127.0.0.1" to 1) }.isFailure -> tr("SSH tunnels need a single-host URL.")
                 // Only checkable once the driver is here; until then the driver banner asks for it.
                 drivers.library.resolve(toConfig()) is DriverResolution.Ready && !drivers.library.load(toConfig()).acceptsURL(JdbcUrls.build(toConfig())) ->
-                    "${driver.displayName} doesn't accept this URL."
+                    tr("{0} doesn't accept this URL.", driver.displayName)
                 else -> null
             }
         }
         return when {
-            relational && database.text.isBlank() -> if (isServer) "Database is required." else "Database file is required."
+            relational && database.text.isBlank() -> if (isServer) tr("Database is required.") else tr("Database file is required.")
             fileMismatch() != null -> fileMismatch()
-            isServer && host.text.isBlank() -> "Host is required."
-            ssh && ',' in host.text -> "SSH tunnels need a single host."
-            isServer && port.isNotEmpty() && port.toIntOrNull() !in 1..65535 -> "Port must be between 1 and 65535."
-            ssh && sshHost.text.isBlank() -> "SSH host is required."
-            ssh && sshUser.text.isBlank() -> "SSH user is required."
-            ssh && sshPort.text.toString().toIntOrNull() !in 1..65535 -> "SSH port must be between 1 and 65535."
+            isServer && host.text.isBlank() -> tr("Host is required.")
+            ssh && ',' in host.text -> tr("SSH tunnels need a single host.")
+            isServer && port.isNotEmpty() && port.toIntOrNull() !in 1..65535 -> tr("Port must be between 1 and 65535.")
+            ssh && sshHost.text.isBlank() -> tr("SSH host is required.")
+            ssh && sshUser.text.isBlank() -> tr("SSH user is required.")
+            ssh && sshPort.text.toString().toIntOrNull() !in 1..65535 -> tr("SSH port must be between 1 and 65535.")
             else -> null
         }
     }
 
     private fun validateDataFile(): String? {
         val raw = database.text.toString().trim()
-        if (raw.isEmpty()) return "File is required."
-        val path = runCatching { DataFileStore.pathOf(raw) }.getOrNull() ?: return "That isn't a valid path."
-        if (!java.nio.file.Files.isRegularFile(path)) return "$path doesn't exist or isn't a file."
+        if (raw.isEmpty()) return tr("File is required.")
+        val path = runCatching { DataFileStore.pathOf(raw) }.getOrNull() ?: return tr("That isn't a valid path.")
+        if (!java.nio.file.Files.isRegularFile(path)) return tr("{0} doesn't exist or isn't a file.", path)
         val format = DataFileFormats.detect(path)
         return when {
-            format != null && format.type != type -> "${path.fileName} looks like a ${format.type.displayName}; choose that type, or rename the file."
-            charset != null && runCatching { java.nio.charset.Charset.forName(charset) }.isFailure -> "Unknown encoding \"$charset\"."
+            format != null && format.type != type -> tr("{0} looks like a {1}; choose that type, or rename the file.", path.fileName, format.type.displayName)
+            charset != null && runCatching { java.nio.charset.Charset.forName(charset) }.isFailure -> tr("Unknown encoding \"{0}\".", charset)
             else -> null
         }
     }
@@ -299,7 +300,7 @@ internal fun ConnectionDialog(state: ConnectionsViewModel, request: ConnectionDi
     AppDialog(
         onCloseRequest = state::closeDialog,
         size = DpSize(640.dp, 600.dp),
-        title = if (request.existing == null) "New Connection" else "Edit Connection",
+        title = if (request.existing == null) tr("New Connection") else tr("Edit Connection"),
         resizable = false,
     ) {
         ConnectionDialogContent(state, request)
@@ -328,7 +329,7 @@ internal fun ConnectionDialogContent(state: ConnectionsViewModel, request: Conne
             return
         }
         busy = true
-        message = Message(if (test) "Connecting…" else "Saving…", isError = false)
+        message = Message(if (test) tr("Connecting…") else tr("Saving…"), isError = false)
         scope.launch {
             val config = form.toConfig()
             val password = form.password.text.toString()
@@ -340,9 +341,9 @@ internal fun ConnectionDialogContent(state: ConnectionsViewModel, request: Conne
                             val detected = outcome.suggested
                             when {
                                 detected != null ->
-                                    Message("Connection succeeded. This server is ${detected.displayName}.", isError = false, action = "Use ${detected.displayName}" to { form.changeType(detected) })
-                                outcome.server != null -> Message("Connected to ${outcome.server}.", isError = false)
-                                else -> Message("Connection succeeded.", isError = false)
+                                    Message(tr("Connection succeeded. This server is {0}.", detected.displayName), isError = false, action = tr("Use {0}", detected.displayName) to { form.changeType(detected) })
+                                outcome.server != null -> Message(tr("Connected to {0}.", outcome.server), isError = false)
+                                else -> Message(tr("Connection succeeded."), isError = false)
                             }
                         },
                         onFailure = { Message(it.message ?: it.toString(), isError = true) },
@@ -365,9 +366,9 @@ internal fun ConnectionDialogContent(state: ConnectionsViewModel, request: Conne
                             content = { tabState ->
                                 SimpleTabContent(
                                     when (entry) {
-                                        DialogTab.General -> "General"
-                                        DialogTab.Ssh -> if (form.useSsh) "SSH ✓" else "SSH"
-                                        DialogTab.Options -> "Options"
+                                        DialogTab.General -> tr("General")
+                                        DialogTab.Ssh -> if (form.useSsh) tr("SSH ✓") else tr("SSH")
+                                        DialogTab.Options -> tr("Options")
                                     },
                                     tabState,
                                 )
@@ -399,10 +400,10 @@ internal fun ConnectionDialogContent(state: ConnectionsViewModel, request: Conne
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                OutlinedButton(onClick = { submit(test = true) }, enabled = !busy) { Text("Test Connection") }
+                OutlinedButton(onClick = { submit(test = true) }, enabled = !busy) { Text(tr("Test Connection")) }
                 Spacer(Modifier.weight(1f))
-                OutlinedButton(onClick = state::closeDialog) { Text("Cancel") }
-                DefaultButton(onClick = { submit(test = false) }, enabled = !busy) { Text("Save") }
+                OutlinedButton(onClick = state::closeDialog) { Text(tr("Cancel")) }
+                DefaultButton(onClick = { submit(test = false) }, enabled = !busy) { Text(tr("Save")) }
             }
         }
     }
@@ -416,7 +417,7 @@ private fun GeneralTab(form: ConnectionForm, drivers: DriverDownloads, onMessage
         if (runCatching { DataFileFormats.detect(DataFileStore.pathOf(text)) }.getOrNull() != null) {
             form.useDataFile(text.trim())
             form.connectionString.setTextAndPlaceCursorAtEnd("")
-            onMessage(Message("Opens ${form.database.text.toString().substringAfterLast('/')} as a ${form.type.displayName}.", isError = false))
+            onMessage(Message(tr("Opens {0} as a {1}.", form.database.text.toString().substringAfterLast('/'), form.type.displayName), isError = false))
             return
         }
         onMessage(
@@ -425,13 +426,13 @@ private fun GeneralTab(form: ConnectionForm, drivers: DriverDownloads, onMessage
                     onSuccess = { parsed ->
                         val warnings = form.apply(parsed)
                         form.connectionString.setTextAndPlaceCursorAtEnd("")
-                        Message((listOf("Filled in from the connection string.") + warnings).joinToString("\n"), isError = false)
+                        Message((listOf(tr("Filled in from the connection string.")) + warnings).joinToString("\n"), isError = false)
                     },
-                    onFailure = { Message(it.message ?: "Couldn't parse the connection string.", isError = true) },
+                    onFailure = { Message(it.message ?: tr("Couldn't parse the connection string."), isError = true) },
                 )
         )
     }
-    FormRow("Paste") {
+    FormRow(tr("Paste")) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             TextField(
                 form.connectionString,
@@ -440,11 +441,11 @@ private fun GeneralTab(form: ConnectionForm, drivers: DriverDownloads, onMessage
                 placeholder = { Text("postgres://user:pass@host/db, mongodb+srv://…, jdbc:…, path.db, data.csv") },
                 onKeyboardAction = KeyboardActionHandler { parse() },
             )
-            OutlinedButton(onClick = ::parse) { Text("Parse") }
+            OutlinedButton(onClick = ::parse) { Text(tr("Parse")) }
         }
     }
-    FormRow("Name") { TextField(form.name, Modifier.fillMaxWidth(), placeholder = { Text("Optional") }) }
-    FormRow("Type") {
+    FormRow(tr("Name")) { TextField(form.name, Modifier.fillMaxWidth(), placeholder = { Text(tr("Optional")) }) }
+    FormRow(tr("Type")) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             ListComboBox(
                 items = DatabaseType.entries.map { it.displayName },
@@ -475,9 +476,9 @@ private fun GeneralTab(form: ConnectionForm, drivers: DriverDownloads, onMessage
         DataFileFields(form)
         return
     }
-    if (!form.urlOnly && (form.relational || form.document)) FormRow("Connect by") {
+    if (!form.urlOnly && (form.relational || form.document)) FormRow(tr("Connect by")) {
         ListComboBox(
-            items = listOf(if (form.isServer) "Host and port" else "File", if (form.document) "Connection string" else "JDBC URL"),
+            items = listOf(if (form.isServer) tr("Host and port") else tr("File"), if (form.document) tr("Connection string") else tr("JDBC URL")),
             selectedIndex = if (form.useUrl) 1 else 0,
             onSelectedItemChange = { index ->
                 form.useUrl = index == 1
@@ -499,37 +500,37 @@ private fun GeneralTab(form: ConnectionForm, drivers: DriverDownloads, onMessage
                 form.urlOnly -> "jdbc:firebirdsql://host:3050/employee"
                 else -> "jdbc:mysql:replication://primary,replica/db"
             }
-        FormRow("URL") { TextField(form.url, Modifier.fillMaxWidth(), textStyle = JewelTheme.editorTextStyle, placeholder = { Text(example) }) }
+        FormRow(tr("URL")) { TextField(form.url, Modifier.fillMaxWidth(), textStyle = JewelTheme.editorTextStyle, placeholder = { Text(example) }) }
         if (form.isServer || form.urlOnly) {
-            FormRow("User") { TextField(form.user, Modifier.fillMaxWidth()) }
-            FormRow("Password") {
-                TextField(form.password, Modifier.fillMaxWidth(), outputTransformation = MaskPassword, placeholder = { Text("Saved in the system keychain") })
+            FormRow(tr("User")) { TextField(form.user, Modifier.fillMaxWidth()) }
+            FormRow(tr("Password")) {
+                TextField(form.password, Modifier.fillMaxWidth(), outputTransformation = MaskPassword, placeholder = { Text(tr("Saved in the system keychain")) })
             }
         }
         return
     }
     if (form.isServer) {
-        FormRow("Host") {
+        FormRow(tr("Host")) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                TextField(form.host, Modifier.weight(1f), placeholder = { Text("host, or host1:port1,host2:port2") })
-                Text("Port")
+                TextField(form.host, Modifier.weight(1f), placeholder = { Text(tr("host, or host1:port1,host2:port2")) })
+                Text(tr("Port"))
                 TextField(form.port, Modifier.width(80.dp), placeholder = { Text(form.type.defaultPort.toString()) })
             }
         }
-        if (form.relational) FormRow("Database") { TextField(form.database, Modifier.fillMaxWidth()) }
-        if (form.document) FormRow("Database") { TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text("Optional: opened first, and the default auth source") }) }
-        FormRow("User") { TextField(form.user, Modifier.fillMaxWidth()) }
-        FormRow("Password") {
-            TextField(form.password, Modifier.fillMaxWidth(), outputTransformation = MaskPassword, placeholder = { Text("Saved in the system keychain") })
+        if (form.relational) FormRow(tr("Database")) { TextField(form.database, Modifier.fillMaxWidth()) }
+        if (form.document) FormRow(tr("Database")) { TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text(tr("Optional: opened first, and the default auth source")) }) }
+        FormRow(tr("User")) { TextField(form.user, Modifier.fillMaxWidth()) }
+        FormRow(tr("Password")) {
+            TextField(form.password, Modifier.fillMaxWidth(), outputTransformation = MaskPassword, placeholder = { Text(tr("Saved in the system keychain")) })
         }
     } else {
-        FormRow("File") {
-            TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text(form.type.databaseHint ?: "/path/to/database.sqlite or :memory:") })
+        FormRow(tr("File")) {
+            TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text(form.type.databaseHint ?: tr("/path/to/database.sqlite or :memory:")) })
         }
     }
     val preview = if (form.relational) runCatching { JdbcUrls.build(form.toConfig()) }.getOrNull() else null
     if (preview != null) {
-        FormRow("JDBC URL") {
+        FormRow(tr("JDBC URL")) {
             Text(preview, color = JewelTheme.globalColors.text.info, style = JewelTheme.editorTextStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
@@ -537,14 +538,14 @@ private fun GeneralTab(form: ConnectionForm, drivers: DriverDownloads, onMessage
 
 @Composable
 private fun SshTab(form: ConnectionForm) {
-    CheckboxRow("Connect through an SSH tunnel", form.useSsh, onCheckedChange = { form.useSsh = it })
+    CheckboxRow(tr("Connect through an SSH tunnel"), form.useSsh, onCheckedChange = { form.useSsh = it })
     if (!form.useSsh) return
     val sshHosts by produceState(emptyList<SshHost>()) { value = withContext(Dispatchers.IO) { runCatching { SshHosts.read() }.getOrDefault(emptyList()) } }
     if (sshHosts.isNotEmpty()) {
         var picked by remember { mutableStateOf(0) }
-        FormRow("From config") {
+        FormRow(tr("From config")) {
             ListComboBox(
-                items = listOf("Choose a host in ~/.ssh/config…") + sshHosts.map { if (it.hostName == it.alias) it.alias else "${it.alias}  (${it.hostName})" },
+                items = listOf(tr("Choose a host in ~/.ssh/config…")) + sshHosts.map { if (it.hostName == it.alias) it.alias else "${it.alias}  (${it.hostName})" },
                 selectedIndex = picked,
                 onSelectedItemChange = { index ->
                     picked = index
@@ -554,44 +555,44 @@ private fun SshTab(form: ConnectionForm) {
             )
         }
     }
-    FormRow("Host") {
+    FormRow(tr("Host")) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             TextField(form.sshHost, Modifier.weight(1f), placeholder = { Text("bastion.example.com") })
-            Text("Port")
+            Text(tr("Port"))
             TextField(form.sshPort, Modifier.width(80.dp))
         }
     }
-    FormRow("User") { TextField(form.sshUser, Modifier.fillMaxWidth()) }
-    FormRow("Auth") {
+    FormRow(tr("User")) { TextField(form.sshUser, Modifier.fillMaxWidth()) }
+    FormRow(tr("Auth")) {
         ListComboBox(
-            items = listOf("Key pair", "Password"),
+            items = listOf(tr("Key pair"), tr("Password")),
             selectedIndex = if (form.sshAuth == SshAuth.PrivateKey) 0 else 1,
             onSelectedItemChange = { form.sshAuth = if (it == 0) SshAuth.PrivateKey else SshAuth.Password },
             modifier = Modifier.width(180.dp),
         )
     }
     if (form.sshAuth == SshAuth.PrivateKey) {
-        FormRow("Key file") {
+        FormRow(tr("Key file")) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                TextField(form.sshKeyPath, Modifier.weight(1f), placeholder = { Text("Default keys in ~/.ssh") })
-                OutlinedButton(onClick = { chooseFile("Private key")?.let { form.sshKeyPath.setTextAndPlaceCursorAtEnd(it) } }) { Text("Browse…") }
+                TextField(form.sshKeyPath, Modifier.weight(1f), placeholder = { Text(tr("Default keys in ~/.ssh")) })
+                OutlinedButton(onClick = { chooseFile(tr("Private key"))?.let { form.sshKeyPath.setTextAndPlaceCursorAtEnd(it) } }) { Text(tr("Browse…")) }
             }
         }
-        FormRow("Passphrase") {
-            TextField(form.sshSecret, Modifier.fillMaxWidth(), outputTransformation = MaskPassword, placeholder = { Text("If the key has one") })
+        FormRow(tr("Passphrase")) {
+            TextField(form.sshSecret, Modifier.fillMaxWidth(), outputTransformation = MaskPassword, placeholder = { Text(tr("If the key has one")) })
         }
     } else {
-        FormRow("Password") { TextField(form.sshSecret, Modifier.fillMaxWidth(), outputTransformation = MaskPassword) }
+        FormRow(tr("Password")) { TextField(form.sshSecret, Modifier.fillMaxWidth(), outputTransformation = MaskPassword) }
     }
     Text(
-        "The server's host key is trusted on first connect and pinned; a changed key is refused.",
+        tr("The server's host key is trusted on first connect and pinned; a changed key is refused."),
         color = JewelTheme.globalColors.text.info,
     )
 }
 
 @Composable
 private fun OptionsTab(form: ConnectionForm) {
-    FormRow("Environment") {
+    FormRow(tr("Environment")) {
         ListComboBox(
             items = Environment.entries.map { it.label },
             selectedIndex = form.environment.ordinal,
@@ -603,17 +604,17 @@ private fun OptionsTab(form: ConnectionForm) {
             modifier = Modifier.width(180.dp),
         )
     }
-    Text("Colours the connection everywhere it appears, so production stands out.", color = JewelTheme.globalColors.text.info)
-    FormRow("Group") { TextField(form.group, Modifier.width(240.dp), placeholder = { Text("e.g. a project or client") }) }
+    Text(tr("Colours the connection everywhere it appears, so production stands out."), color = JewelTheme.globalColors.text.info)
+    FormRow(tr("Group")) { TextField(form.group, Modifier.width(240.dp), placeholder = { Text(tr("e.g. a project or client")) }) }
     Spacer(Modifier.height(4.dp))
-    CheckboxRow("Read-only: refuse statements that change data or schema", form.readOnly, onCheckedChange = { form.readOnly = it })
-    CheckboxRow("Confirm before running statements that change data or schema", form.confirmWrites, onCheckedChange = { form.confirmWrites = it })
-    Text("Dangerous statements (DELETE/UPDATE without WHERE, DROP, TRUNCATE) always ask.", color = JewelTheme.globalColors.text.info)
+    CheckboxRow(tr("Read-only: refuse statements that change data or schema"), form.readOnly, onCheckedChange = { form.readOnly = it })
+    CheckboxRow(tr("Confirm before running statements that change data or schema"), form.confirmWrites, onCheckedChange = { form.confirmWrites = it })
+    Text(tr("Dangerous statements (DELETE/UPDATE without WHERE, DROP, TRUNCATE) always ask."), color = JewelTheme.globalColors.text.info)
     Spacer(Modifier.height(4.dp))
-    FormRow("AI agents") {
+    FormRow(tr("AI agents")) {
         val choices = listOf(null) + AiAccess.entries
         ListComboBox(
-            items = choices.map { it?.label ?: "Use default (Settings › Agent)" },
+            items = choices.map { it?.label ?: tr("Use default (Settings › Agent)") },
             selectedIndex = choices.indexOf(form.aiAccess),
             onSelectedItemChange = { form.aiAccess = choices[it] },
             modifier = Modifier.width(240.dp),
@@ -622,20 +623,20 @@ private fun OptionsTab(form: ConnectionForm) {
     Text(
         when {
             form.aiAccess != null -> form.aiAccess!!.description
-            form.environment == Environment.Production -> "Follows Settings › Agent, but never shares data from a production connection."
-            else -> "Follows Settings › Agent."
+            form.environment == Environment.Production -> tr("Follows Settings › Agent, but never shares data from a production connection.")
+            else -> tr("Follows Settings › Agent.")
         },
         color = JewelTheme.globalColors.text.info,
     )
     if (form.aiAccess == AiAccess.SchemaAndSamples && form.environment == Environment.Production) {
-        Text("Values from this production database may be sent to the agent's provider.", color = JewelTheme.globalColors.text.warning)
+        Text(tr("Values from this production database may be sent to the agent's provider."), color = JewelTheme.globalColors.text.warning)
     }
     if (form.dataFile) {
-        Text("Data files are read into a working copy; every committed change is written back to the file.", color = JewelTheme.globalColors.text.info)
+        Text(tr("Data files are read into a working copy; every committed change is written back to the file."), color = JewelTheme.globalColors.text.info)
         return
     }
     Spacer(Modifier.height(4.dp))
-    Text("Driver properties (${form.driver.displayName})")
+    Text(tr("Driver properties ({0})", form.driver.displayName))
     TextArea(
         form.properties,
         Modifier.fillMaxWidth().height(96.dp),
@@ -662,14 +663,14 @@ private val PropertyExamples =
 /** The file and how to read it: delimiter and encoding for CSV, whether the first row is the header. */
 @Composable
 private fun DataFileFields(form: ConnectionForm) {
-    FormRow("File") {
+    FormRow(tr("File")) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             TextField(form.database, Modifier.weight(1f), placeholder = { Text(form.type.databaseHint.orEmpty()) })
-            OutlinedButton(onClick = { chooseDataFile()?.let(form::useDataFile) }) { Text("Browse…") }
+            OutlinedButton(onClick = { chooseDataFile()?.let(form::useDataFile) }) { Text(tr("Browse…")) }
         }
     }
     if (form.type == DatabaseType.CsvFile) {
-        FormRow("Delimiter") {
+        FormRow(tr("Delimiter")) {
             ListComboBox(
                 items = Delimiters.map { it.second },
                 selectedIndex = Delimiters.indexOfFirst { it.first == form.delimiter }.coerceAtLeast(0),
@@ -677,9 +678,9 @@ private fun DataFileFields(form: ConnectionForm) {
                 modifier = Modifier.width(180.dp),
             )
         }
-        FormRow("Encoding") {
+        FormRow(tr("Encoding")) {
             ListComboBox(
-                items = Encodings.map { it ?: "Detect" },
+                items = Encodings.map { it ?: tr("Detect") },
                 selectedIndex = Encodings.indexOf(form.charset).coerceAtLeast(0),
                 onSelectedItemChange = { form.charset = Encodings[it] },
                 modifier = Modifier.width(180.dp),
@@ -687,21 +688,21 @@ private fun DataFileFields(form: ConnectionForm) {
         }
     }
     if (form.type != DatabaseType.JsonFile) {
-        CheckboxRow("The first row names the columns", form.hasHeader, onCheckedChange = { form.hasHeader = it })
+        CheckboxRow(tr("The first row names the columns"), form.hasHeader, onCheckedChange = { form.hasHeader = it })
     }
     Text(
-        "Opens as tables you can query with SQL and edit. Committed changes are saved to the file straight away, " +
-            "keeping its format; changes made to the file elsewhere are picked up.",
+        tr("Opens as tables you can query with SQL and edit. Committed changes are saved to the file straight away, ") +
+            tr("keeping its format; changes made to the file elsewhere are picked up."),
         color = JewelTheme.globalColors.text.info,
     )
 }
 
-private val Delimiters = listOf(null to "Detect", ',' to "Comma ,", ';' to "Semicolon ;", '\t' to "Tab", '|' to "Pipe |")
+private val Delimiters = listOf(null to tr("Detect"), ',' to tr("Comma ,"), ';' to tr("Semicolon ;"), '\t' to tr("Tab"), '|' to tr("Pipe |"))
 private val Encodings = listOf(null, "UTF-8", "windows-1252", "ISO-8859-1", "UTF-16LE", "UTF-16BE", "Shift_JIS", "GB18030", "windows-1258")
 
 /** A file chooser that shows the files a data file profile opens. */
 private fun chooseDataFile(): String? {
-    val dialog = java.awt.FileDialog(null as java.awt.Frame?, "Choose a Data File", java.awt.FileDialog.LOAD)
+    val dialog = java.awt.FileDialog(null as java.awt.Frame?, tr("Choose a Data File"), java.awt.FileDialog.LOAD)
     val extensions = DataFileFormats.all.flatMap { it.extensions }.toSet()
     dialog.setFilenameFilter { _, name -> name.substringAfterLast('.', "").lowercase() in extensions }
     dialog.isVisible = true
@@ -732,18 +733,18 @@ internal fun DeleteConnectionDialog(state: ConnectionsViewModel, config: Connect
     AppDialog(
         onCloseRequest = { state.pendingDelete = null },
         size = DpSize(420.dp, 160.dp),
-        title = "Delete Connection",
+        title = tr("Delete Connection"),
         resizable = false,
     ) {
         Column(
             Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("Delete “${config.name}”? Its saved password will be removed from the keychain too.")
+            Text(tr("Delete “{0}”? Its saved password will be removed from the keychain too.", config.name))
             Spacer(Modifier.weight(1f))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                OutlinedButton(onClick = { state.pendingDelete = null }) { Text("Cancel") }
-                DefaultButton(onClick = { state.delete(config) }) { Text("Delete") }
+                OutlinedButton(onClick = { state.pendingDelete = null }) { Text(tr("Cancel")) }
+                DefaultButton(onClick = { state.delete(config) }) { Text(tr("Delete")) }
             }
         }
     }
@@ -769,7 +770,7 @@ internal fun MissingDriverDialog(state: ConnectionsViewModel, config: Connection
     AppDialog(
         onCloseRequest = { state.driverPrompt = null },
         size = DpSize(520.dp, 240.dp),
-        title = "Driver Needed",
+        title = tr("Driver Needed"),
         resizable = false,
     ) {
         Column(
@@ -777,8 +778,8 @@ internal fun MissingDriverDialog(state: ConnectionsViewModel, config: Connection
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                if (config.type.isDataFile) "Data files open in a SQLite working copy, and ${driver.displayName} isn't on this computer yet. It's a one-time download."
-                else "“${config.name}” uses ${driver.displayName}, which isn't on this computer yet.",
+                if (config.type.isDataFile) tr("Data files open in a SQLite working copy, and {0} isn't on this computer yet. It's a one-time download.", driver.displayName)
+                else tr("“{0}” uses {1}, which isn't on this computer yet.", config.name, driver.displayName),
             )
             DriverBanner(
                 driver,
@@ -792,8 +793,8 @@ internal fun MissingDriverDialog(state: ConnectionsViewModel, config: Connection
             error?.let { Text(it, color = JewelTheme.globalColors.text.error, maxLines = 3) }
             Spacer(Modifier.weight(1f))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                OutlinedButton(onClick = { state.driverPrompt = null }) { Text("Cancel") }
-                DefaultButton(onClick = ::connect, enabled = ready) { Text("Connect") }
+                OutlinedButton(onClick = { state.driverPrompt = null }) { Text(tr("Cancel")) }
+                DefaultButton(onClick = ::connect, enabled = ready) { Text(tr("Connect")) }
             }
         }
     }
@@ -813,9 +814,9 @@ internal fun GroupDialog(state: ConnectionsViewModel, request: GroupRequest) {
     }
     val title =
         when {
-            renaming != null -> "Rename Group"
-            request.newGroup -> "New Group"
-            else -> "Move to Group"
+            renaming != null -> tr("Rename Group")
+            request.newGroup -> tr("New Group")
+            else -> tr("Move to Group")
         }
     AppDialog(onCloseRequest = { state.groupRequest = null }, size = DpSize(440.dp, 210.dp), title = title, resizable = false) {
         Column(
@@ -824,21 +825,21 @@ internal fun GroupDialog(state: ConnectionsViewModel, request: GroupRequest) {
             },
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            val placeholder = if (renaming != null || request.newGroup) "e.g. a project or client" else "Leave blank for no group"
-            FormRow("Group") { TextField(group, Modifier.fillMaxWidth().focusRequester(focus), placeholder = { Text(placeholder) }) }
+            val placeholder = if (renaming != null || request.newGroup) tr("e.g. a project or client") else tr("Leave blank for no group")
+            FormRow(tr("Group")) { TextField(group, Modifier.fillMaxWidth().focusRequester(focus), placeholder = { Text(placeholder) }) }
             val existing = state.groups.filter { it != renaming && it != request.configs.singleOrNull()?.group }
             if (existing.isNotEmpty() && renaming == null) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Existing:", color = JewelTheme.globalColors.text.info)
+                    Text(tr("Existing:"), color = JewelTheme.globalColors.text.info)
                     existing.take(6).forEach { name -> Link(name, onClick = { group.setTextAndPlaceCursorAtEnd(name) }) }
                 }
             } else if (request.configs.size > 1) {
-                Text("${request.configs.size} connections", color = JewelTheme.globalColors.text.info)
+                Text(tr("{0} connections", request.configs.size), color = JewelTheme.globalColors.text.info)
             }
             Spacer(Modifier.weight(1f))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                OutlinedButton(onClick = { state.groupRequest = null }) { Text("Cancel") }
-                DefaultButton(onClick = ::submit) { Text(if (renaming != null) "Rename" else if (request.newGroup) "Create" else "Move") }
+                OutlinedButton(onClick = { state.groupRequest = null }) { Text(tr("Cancel")) }
+                DefaultButton(onClick = ::submit) { Text(if (renaming != null) tr("Rename") else if (request.newGroup) tr("Create") else tr("Move")) }
             }
         }
     }

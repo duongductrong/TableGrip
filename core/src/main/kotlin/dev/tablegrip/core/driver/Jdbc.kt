@@ -1,5 +1,6 @@
 package dev.tablegrip.core.driver
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.export.ResultWriter
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -34,7 +35,7 @@ private suspend fun <S : Statement, T> Connection.runStatement(create: Connectio
                 block(statement)
             } catch (e: SQLException) {
                 // The driver reports our own cancel as an error; surface it as a cancellation instead.
-                if (cancelled.get()) throw CancellationException("Query cancelled").apply { initCause(e) } else throw e
+                if (cancelled.get()) throw CancellationException(tr("Query cancelled")).apply { initCause(e) } else throw e
             }
         }
         try {

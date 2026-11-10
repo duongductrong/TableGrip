@@ -1,5 +1,6 @@
 package dev.tablegrip.app.console
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -586,24 +587,24 @@ private fun FindBar(find: FindState, state: TextFieldState, onClose: () -> Unit)
                     else if (it.type == KeyEventType.KeyDown && (it.key == Key.Enter || it.key == Key.NumPadEnter)) find.step(if (it.isShiftPressed) -1 else 1, state).let { true }
                     else false
                 },
-                placeholder = { Text("Find") },
+                placeholder = { Text(tr("Find")) },
                 leadingIcon = { Icon(AllIconsKeys.Actions.Search, null) },
             )
             val count = find.matches.size
-            Text(if (find.query.text.isEmpty()) "" else if (count == 0) "0 results" else "${find.current + 1}/$count", Modifier.width(72.dp), color = JewelTheme.globalColors.text.info)
-            Tooltip({ Text("Previous (⇧Enter)") }) { IconButton(onClick = { find.step(-1, state) }, enabled = count > 0) { Icon(AllIconsKeys.Actions.PreviousOccurence, "Previous") } }
-            Tooltip({ Text("Next (Enter)") }) { IconButton(onClick = { find.step(1, state) }, enabled = count > 0) { Icon(AllIconsKeys.Actions.NextOccurence, "Next") } }
-            Tooltip({ Text(if (find.matchCase) "Match case: on" else "Match case: off") }) {
+            Text(if (find.query.text.isEmpty()) "" else if (count == 0) tr("0 results") else "${find.current + 1}/$count", Modifier.width(72.dp), color = JewelTheme.globalColors.text.info)
+            Tooltip({ Text(tr("Previous (⇧Enter)")) }) { IconButton(onClick = { find.step(-1, state) }, enabled = count > 0) { Icon(AllIconsKeys.Actions.PreviousOccurence, tr("Previous")) } }
+            Tooltip({ Text(tr("Next (Enter)")) }) { IconButton(onClick = { find.step(1, state) }, enabled = count > 0) { Icon(AllIconsKeys.Actions.NextOccurence, tr("Next")) } }
+            Tooltip({ Text(if (find.matchCase) tr("Match case: on") else tr("Match case: off")) }) {
                 IconButton(onClick = { find.matchCase = !find.matchCase }) { Text("Aa", color = if (find.matchCase) JewelTheme.globalColors.outlines.focused else JewelTheme.globalColors.text.info) }
             }
             Box(Modifier.weight(1f))
-            Tooltip({ Text("Close (Esc)") }) { IconButton(onClick = onClose) { Icon(AllIconsKeys.Actions.Close, "Close") } }
+            Tooltip({ Text(tr("Close (Esc)")) }) { IconButton(onClick = onClose) { Icon(AllIconsKeys.Actions.Close, tr("Close")) } }
         }
         if (find.showReplace) {
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                TextField(find.replacement, Modifier.width(260.dp), placeholder = { Text("Replace") }, onKeyboardAction = KeyboardActionHandler { replaceCurrent(find, state) })
-                OutlinedButton(onClick = { replaceCurrent(find, state) }, enabled = find.matches.isNotEmpty()) { Text("Replace") }
-                OutlinedButton(onClick = { replaceAll(find, state) }, enabled = find.matches.isNotEmpty()) { Text("Replace All") }
+                TextField(find.replacement, Modifier.width(260.dp), placeholder = { Text(tr("Replace")) }, onKeyboardAction = KeyboardActionHandler { replaceCurrent(find, state) })
+                OutlinedButton(onClick = { replaceCurrent(find, state) }, enabled = find.matches.isNotEmpty()) { Text(tr("Replace")) }
+                OutlinedButton(onClick = { replaceAll(find, state) }, enabled = find.matches.isNotEmpty()) { Text(tr("Replace All")) }
             }
         }
     }

@@ -1,5 +1,6 @@
 package dev.tablegrip.core.imports
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.connection.DatabaseType
 import dev.tablegrip.core.connection.SshAuth
 import dev.tablegrip.core.connection.SshConfig
@@ -60,13 +61,13 @@ internal object IdeDataSourcesImporter {
             val uuid = source.getAttribute("uuid")
             val details = localById[uuid]
             val rawUrl = source.child("jdbc-url") ?: run {
-                skipped += "IDE data sources: “$name” has no JDBC URL."
+                skipped += tr("IDE data sources: “{0}” has no JDBC URL.", name)
                 continue
             }
             val url = expandMacros(rawUrl, projectDir, home)
             val parsed = ConnectionImport.parseOrNull(url)
             if (parsed == null) {
-                skipped += "IDE data sources: “$name” isn't supported ($url)."
+                skipped += tr("IDE data sources: “{0}” isn't supported ({1}).", name, url)
                 continue
             }
             val type = refine(parsed.type, source.child("driver-ref"), details?.firstElement("database-info")?.getAttribute("dbms"))
@@ -82,7 +83,7 @@ internal object IdeDataSourcesImporter {
                 )
             val notes = buildList {
                 addAll(parsed.warnings)
-                if (type == DatabaseType.OtherJdbc) add("Choose the driver's jar when connecting")
+                if (type == DatabaseType.OtherJdbc) add(tr("Choose the driver's jar when connecting"))
             }
             candidates += ImportCandidate(config, password = parsed.password, origin = file.toString(), notes = notes)
         }

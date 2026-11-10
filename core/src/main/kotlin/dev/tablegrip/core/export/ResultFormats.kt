@@ -1,5 +1,6 @@
 package dev.tablegrip.core.export
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.dialect.SqlDialect
 import dev.tablegrip.core.driver.ResultColumn
 import java.io.StringWriter
@@ -10,12 +11,12 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 enum class CopyFormat(val label: String, val extension: String) {
-    Tsv("Tab-separated", "tsv"),
+    Tsv(tr("Tab-separated"), "tsv"),
     Csv("CSV", "csv"),
     Json("JSON", "json"),
     Markdown("Markdown", "md"),
     SqlInsert("SQL INSERT", "sql"),
-    SqlInList("SQL IN list", "sql"),
+    SqlInList(tr("SQL IN list"), "sql"),
 }
 
 /**

@@ -1,5 +1,6 @@
 package dev.tablegrip.app.backup
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -126,15 +127,15 @@ class BackupState(private val app: AppState, val config: ConnectionConfig, val r
         get() =
             when {
                 support is BackupSupport.NotYet -> support.reason
-                restore && config.readOnly -> "${config.name} is read-only: restoring writes to the server."
-                check is ToolCheck.Checking -> "Looking for the tools…"
+                restore && config.readOnly -> tr("{0} is read-only: restoring writes to the server.", config.name)
+                check is ToolCheck.Checking -> tr("Looking for the tools…")
                 check is ToolCheck.Missing -> (check as ToolCheck.Missing).message
-                restore && source == null -> "Choose the backup to restore."
-                restore && targetDatabase.text.isBlank() -> "Name the database to restore into."
+                restore && source == null -> tr("Choose the backup to restore.")
+                restore && targetDatabase.text.isBlank() -> tr("Name the database to restore into.")
                 restore && production && confirmName.text.toString() != targetDatabase.text.toString() ->
-                    "Type the target database's name to confirm restoring on Production."
-                !restore && database.text.isBlank() && support !is BackupSupport.Native -> "Name the database to back up."
-                !restore && target == null -> "Choose where to save the backup."
+                    tr("Type the target database's name to confirm restoring on Production.")
+                !restore && database.text.isBlank() && support !is BackupSupport.Native -> tr("Name the database to back up.")
+                !restore && target == null -> tr("Choose where to save the backup.")
                 else -> null
             }
 
@@ -157,10 +158,10 @@ class BackupState(private val app: AppState, val config: ConnectionConfig, val r
                 if (found != null) ToolCheck.Ready(found)
                 else {
                     val older = app.tools.find(wanted.first()).mapNotNull { it.version }.maxOrNull()
-                    val needs = if (family == ToolFamily.PostgreSQL && serverMajor != null) "${wanted.first().command} $serverMajor or newer" else wanted.first().command
+                    val needs = if (family == ToolFamily.PostgreSQL && serverMajor != null) tr("{0} {1} or newer", wanted.first().command, serverMajor) else wanted.first().command
                     val why =
-                        if (older != null) "${wanted.first().command} $older is too old for this ${config.type.displayName} $serverMajor server: it needs $needs."
-                        else "${if (restore) "Restoring" else "Backing up"} ${config.name} needs $needs, which isn't on this machine."
+                        if (older != null) tr("{0} {1} is too old for this {2} {3} server: it needs {4}.", wanted.first().command, older, config.type.displayName, serverMajor, needs)
+                        else tr("{0} {1} needs {2}, which isn't on this machine.", if (restore) tr("Restoring") else tr("Backing up"), config.name, needs)
                     ToolCheck.Missing(why, ToolCatalog.packageFor(family))
                 }
         }
@@ -206,7 +207,7 @@ class BackupState(private val app: AppState, val config: ConnectionConfig, val r
         app.scope.launch {
             try {
                 val restoreTool = app.tools.best(Tool.PgRestore, null) ?: return@launch
-                val run = ToolRunner.runChecked(BackupCommands.pgRestoreList(restoreTool.path, path), "Reading the backup")
+                val run = ToolRunner.runChecked(BackupCommands.pgRestoreList(restoreTool.path, path), tr("Reading the backup"))
                 entries += RestoreEntry.parse(run.log)
             } catch (e: CancellationException) {
                 throw e
@@ -258,7 +259,7 @@ class BackupState(private val app: AppState, val config: ConnectionConfig, val r
             val options = backupOptions()
             if (family == ToolFamily.MySQL) BackupCommands.mysqlDump(tool, server, options, secrets) else BackupCommands.pgDump(tool, server, options)
         } else {
-            val options = restoreOptions() ?: throw IllegalStateException("No backup chosen")
+            val options = restoreOptions() ?: throw IllegalStateException(tr("No backup chosen"))
             when {
                 family == ToolFamily.MySQL -> BackupCommands.mysqlRestore(tool, server, options, secrets)
                 options.format == BackupFormat.PgPlain -> BackupCommands.psqlRestore(tool, server, options)
@@ -272,7 +273,7 @@ class BackupState(private val app: AppState, val config: ConnectionConfig, val r
         done = null
         running = true
         lastLine = ""
-        val what = if (restore) "Restore of ${source?.fileName} into ${targetDatabase.text}" else "Backup of ${config.name}"
+        val what = if (restore) tr("Restore of {0} into {1}", source?.fileName, targetDatabase.text) else tr("Backup of {0}", config.name)
         val log = TableGripPaths.home.resolve("logs").resolve("backup").resolve("${LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"))}-${safeName(config.name)}.log")
         logFile = log
         app.status = "$what…"
@@ -298,18 +299,18 @@ class BackupState(private val app: AppState, val config: ConnectionConfig, val r
                         val command = command(tool, server, scratch.resolve("client.cnf"), listFile)
                         ToolRunner.runChecked(command, what, log) { line -> app.scope.launch { lastLine = line } }
                     }
-                    val message = if (restore) "Restored ${source?.fileName} into ${targetDatabase.text}" else "Backed up ${config.name} to ${backupOptions().target}"
+                    val message = if (restore) tr("Restored {0} into {1}", source?.fileName, targetDatabase.text) else tr("Backed up {0} to {1}", config.name, backupOptions().target)
                     done = message
                     app.status = message
                     if (restore) app.explorer.refresh(dev.tablegrip.app.explorer.ConnectionKey(config.id))
                 } catch (e: CancellationException) {
                     if (!restore) ToolRunner.discard(backupOptions().target)
-                    app.status = "$what cancelled"
-                    error = "Cancelled.${if (!restore) " The partial backup was deleted." else " What was restored so far stays."}"
+                    app.status = tr("{0} cancelled", what)
+                    error = tr("Cancelled.{0}", if (!restore) tr(" The partial backup was deleted.") else tr(" What was restored so far stays."))
                 } catch (e: Exception) {
                     if (!restore) ToolRunner.discard(backupOptions().target)
                     error = e.message ?: e.toString()
-                    app.status = "$what failed"
+                    app.status = tr("{0} failed", what)
                 } finally {
                     tunnel?.close()
                     runCatching { scratch.toFile().deleteRecursively() }

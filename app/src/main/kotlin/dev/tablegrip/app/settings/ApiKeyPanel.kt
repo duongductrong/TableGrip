@@ -1,5 +1,6 @@
 package dev.tablegrip.app.settings
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -50,25 +51,25 @@ internal fun ApiKeyPanel(app: AppState) {
                 .onSuccess {
                     saved = value.isNotBlank()
                     key.clearText()
-                    message = if (value.isBlank()) "Key removed." else "Key saved in the system keychain."
+                    message = if (value.isBlank()) tr("Key removed.") else tr("Key saved in the system keychain.")
                 }
-                .onFailure { message = "Couldn't reach the keychain: ${it.message ?: it}" }
+                .onFailure { message = tr("Couldn't reach the keychain: {0}", it.message ?: it) }
         }
 
     Column(Modifier.fillMaxWidth().padding(vertical = 6.dp, horizontal = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("API key", Modifier.width(172.dp))
+            Text(tr("API key"), Modifier.width(172.dp))
             TextField(
                 key,
                 Modifier.weight(1f),
                 outputTransformation = MaskPassword,
-                placeholder = { Text(if (saved == true) "Saved — type to replace" else "Not set") },
+                placeholder = { Text(if (saved == true) tr("Saved — type to replace") else tr("Not set")) },
             )
-            OutlinedButton(onClick = { store(key.text.toString()) }, enabled = key.text.isNotBlank()) { Text("Save") }
-            if (saved == true) Link("Remove", onClick = { store("") })
+            OutlinedButton(onClick = { store(key.text.toString()) }, enabled = key.text.isNotBlank()) { Text(tr("Save")) }
+            if (saved == true) Link(tr("Remove"), onClick = { store("") })
         }
         Text(
-            message ?: "Stored in the system keychain. Without one, ${protocol.keyVariable} is used if set; local OpenAI-compatible servers usually need none.",
+            message ?: tr("Stored in the system keychain. Without one, {0} is used if set; local OpenAI-compatible servers usually need none.", protocol.keyVariable),
             Modifier.padding(start = 180.dp),
             color = JewelTheme.globalColors.text.info,
             fontSize = 12.sp,

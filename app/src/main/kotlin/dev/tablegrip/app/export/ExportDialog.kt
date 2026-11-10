@@ -1,5 +1,6 @@
 package dev.tablegrip.app.export
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -71,24 +72,24 @@ internal fun ExportDialog(app: AppState, request: ExportRequest) {
         val includeHeader = header
         val everything = all && request.streamAll != null
         app.scope.launch {
-            app.status = "Exporting ${request.title}…"
+            app.status = tr("Exporting {0}…", request.title)
             try {
                 val count =
                     withContext(Dispatchers.IO) {
                         file.bufferedWriter().use { out ->
                             fun writer(columns: List<ResultColumn>) = ResultWriter(chosenFormat, columns, out, includeHeader, request.dialect, request.tableName)
                             if (everything) {
-                                request.streamAll!!.invoke(::writer) { rows -> app.status = "Exporting ${request.title}: %,d rows…".format(rows) }
+                                request.streamAll!!.invoke(::writer) { rows -> app.status = tr("Exporting {0}: {1} rows…", request.title, "%,d".format(rows)) }
                             } else {
                                 writeLoaded(writer(request.columns), request.loadedRows)
                             }
                         }
                     }
-                app.status = "Exported %,d rows to ${file.path}".format(count)
+                app.status = tr("Exported {0} rows to {1}", "%,d".format(count), file.path)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                app.status = "Export failed: ${e.message}"
+                app.status = tr("Export failed: {0}", e.message)
                 runCatching { file.delete() }
             }
         }
@@ -97,7 +98,7 @@ internal fun ExportDialog(app: AppState, request: ExportRequest) {
     AppDialog(
         onCloseRequest = { app.exportRequest = null },
         size = DpSize(460.dp, 300.dp),
-        title = "Export ${request.title}",
+        title = tr("Export {0}", request.title),
         resizable = false,
     ) {
         Column(
@@ -105,7 +106,7 @@ internal fun ExportDialog(app: AppState, request: ExportRequest) {
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Format", Modifier.width(80.dp))
+                Text(tr("Format"), Modifier.width(80.dp))
                 ListComboBox(
                     items = Formats.map { it.label },
                     selectedIndex = Formats.indexOf(format),
@@ -114,18 +115,18 @@ internal fun ExportDialog(app: AppState, request: ExportRequest) {
                 )
             }
             if (format == CopyFormat.Csv || format == CopyFormat.Tsv) {
-                CheckboxRow("Include column names", header, onCheckedChange = { header = it })
+                CheckboxRow(tr("Include column names"), header, onCheckedChange = { header = it })
             }
             if (request.streamAll != null) {
-                RadioButtonRow("All rows (with the current filter and sort)", selected = all, onClick = { all = true })
-                RadioButtonRow("Only the %,d rows loaded".format(request.loadedRows.size), selected = !all, onClick = { all = false })
+                RadioButtonRow(tr("All rows (with the current filter and sort)"), selected = all, onClick = { all = true })
+                RadioButtonRow(tr("Only the {0} rows loaded", "%,d".format(request.loadedRows.size)), selected = !all, onClick = { all = false })
             } else {
-                Text("%,d rows".format(request.loadedRows.size), color = JewelTheme.globalColors.text.info)
+                Text(tr("{0} rows", "%,d".format(request.loadedRows.size)), color = JewelTheme.globalColors.text.info)
             }
             Box(Modifier.weight(1f))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                OutlinedButton(onClick = { app.exportRequest = null }) { Text("Cancel") }
-                DefaultButton(onClick = ::export) { Text("Export…") }
+                OutlinedButton(onClick = { app.exportRequest = null }) { Text(tr("Cancel")) }
+                DefaultButton(onClick = ::export) { Text(tr("Export…")) }
             }
         }
     }
@@ -139,7 +140,7 @@ private fun writeLoaded(writer: ResultWriter, rows: List<List<String?>>): Long {
 
 /** Native save dialog; null when cancelled. */
 private fun chooseTarget(suggested: String): File? {
-    val dialog = FileDialog(null as Frame?, "Export", FileDialog.SAVE)
+    val dialog = FileDialog(null as Frame?, tr("Export"), FileDialog.SAVE)
     dialog.directory = System.getProperty("user.home") + "/Downloads"
     dialog.file = suggested
     dialog.isVisible = true

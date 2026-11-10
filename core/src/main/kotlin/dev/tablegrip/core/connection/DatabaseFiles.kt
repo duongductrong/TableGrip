@@ -1,5 +1,6 @@
 package dev.tablegrip.core.connection
 
+import dev.tablegrip.core.i18n.tr
 import java.nio.file.Path
 import kotlin.io.path.inputStream
 import kotlin.io.path.isRegularFile
@@ -30,8 +31,8 @@ object DatabaseFiles {
         val detected = detect(path)
         return when (detected) {
             type -> null
-            null -> "${path.fileName} isn't a ${type.displayName} database: its header doesn't match."
-            else -> "${path.fileName} is a ${detected.displayName} database, not ${type.displayName}."
+            null -> tr("{0} isn't a {1} database: its header doesn't match.", path.fileName, type.displayName)
+            else -> tr("{0} is a {1} database, not {2}.", path.fileName, detected.displayName, type.displayName)
         }
     }
 }

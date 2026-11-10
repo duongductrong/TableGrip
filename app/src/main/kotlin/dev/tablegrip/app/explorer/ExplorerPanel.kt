@@ -1,5 +1,6 @@
 package dev.tablegrip.app.explorer
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.activity.ActivitySupport
 import dev.tablegrip.core.backup.BackupSupport
 import dev.tablegrip.core.agent.Mention
@@ -99,7 +100,7 @@ internal fun ExplorerPanel(app: AppState) {
             Modifier.fillMaxWidth().height(36.dp).padding(start = TreeRowInset, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Connections", Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
+            Text(tr("Connections"), Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
             AddConnectionMenu(app)
         }
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
@@ -112,7 +113,7 @@ internal fun ExplorerPanel(app: AppState) {
         TextField(
             explorer.search,
             Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp),
-            placeholder = { Text("Search connections and tables") },
+            placeholder = { Text(tr("Search connections and tables")) },
             leadingIcon = { Icon(AllIconsKeys.Actions.Search, null, Modifier.padding(end = 6.dp)) },
         )
         val tree by remember { derivedStateOf { explorer.buildTree() } }
@@ -120,7 +121,7 @@ internal fun ExplorerPanel(app: AppState) {
         // Groups start open, like folders in a sidebar; closing one is remembered for the session.
         val groups = remember { mutableSetOf<GroupKey>() }
         LaunchedEffect(tree) {
-            val fresh = app.connections.profiles.map { GroupKey(if (it.favorite) "Favorites" else it.group.trim(), it.favorite) }.filter { it.name.isNotEmpty() && groups.add(it) }
+            val fresh = app.connections.profiles.map { GroupKey(if (it.favorite) tr("Favorites") else it.group.trim(), it.favorite) }.filter { it.name.isNotEmpty() && groups.add(it) }
             if (fresh.isNotEmpty()) explorer.treeState.openNodes(fresh)
         }
         // While searching, open the way to every match that's already loaded.
@@ -238,15 +239,15 @@ private fun sidebarMenu(app: AppState): List<ContextMenuItem> {
     val connected = app.connections.profiles.map { it.id }.filter { app.databases.status(it) is ConnectionStatus.Connected }
     val tree =
         listOfNotNull(
-            ContextMenuItem("Collapse All") { app.explorer.treeState.openNodes = emptySet() }.takeIf { app.explorer.treeState.openNodes.isNotEmpty() },
-            ContextMenuItem("Disconnect All") {
+            ContextMenuItem(tr("Collapse All")) { app.explorer.treeState.openNodes = emptySet() }.takeIf { app.explorer.treeState.openNodes.isNotEmpty() },
+            ContextMenuItem(tr("Disconnect All")) {
                 app.confirmDataFiles(connected) { connected.forEach(app.explorer::disconnectNow) }
             }.takeIf { connected.isNotEmpty() },
         )
     return listOf(
-        ContextMenuItem("New Connection…") { app.connections.openNew() },
-        ContextMenuItem("Open Data File…") { app.connections.chooseDataFiles() },
-        ContextMenuItem("Import from Other Tools…") { app.connections.openImport() },
+        ContextMenuItem(tr("New Connection…")) { app.connections.openNew() },
+        ContextMenuItem(tr("Open Data File…")) { app.connections.chooseDataFiles() },
+        ContextMenuItem(tr("Import from Other Tools…")) { app.connections.openImport() },
     ) + (if (tree.isEmpty()) emptyList() else listOf(ContextMenuDivider) + tree)
 }
 
@@ -256,98 +257,98 @@ private fun contextMenu(app: AppState, node: ExplorerNode): List<ContextMenuItem
             val config = node.config
             val connected = app.databases.status(config.id) is ConnectionStatus.Connected
             listOfNotNull(
-                ContextMenuItem("New Console") { app.workspace.openConsole(config) },
+                ContextMenuItem(tr("New Console")) { app.workspace.openConsole(config) },
                 *schemaTools(app, config).toTypedArray(),
-                ContextMenuItem("Activity") { app.workspace.openActivity(config) }
+                ContextMenuItem(tr("Activity")) { app.workspace.openActivity(config) }
                     .takeUnless { ActivitySupport.of(config.type) == ActivitySupport.NotApplicable },
-                ContextMenuItem("Back Up…") { app.backup = BackupState(app, config, restore = false) }
+                ContextMenuItem(tr("Back Up…")) { app.backup = BackupState(app, config, restore = false) }
                     .takeUnless { BackupSupport.of(config.type) == BackupSupport.NotApplicable },
-                ContextMenuItem("Restore…") { app.backup = BackupState(app, config, restore = true) }
+                ContextMenuItem(tr("Restore…")) { app.backup = BackupState(app, config, restore = true) }
                     .takeUnless { BackupSupport.of(config.type) == BackupSupport.NotApplicable },
                 *(if (config.type.isDataFile) dataFileMenu(app, config).toTypedArray() else emptyArray()),
-                ContextMenuItem("Refresh") { app.explorer.refresh(node.key) },
-                ContextMenuItem("Disconnect") { app.explorer.disconnect(config.id) }.takeIf { connected },
-                ContextMenuItem(if (config.favorite) "Remove from Favorites" else "Add to Favorites") { app.connections.toggleFavorite(config) },
-                ContextMenuItem("Move to Group…") { app.connections.groupRequest = GroupRequest(listOf(config)) },
-                ContextMenuItem("Remove from Group") { app.connections.moveToGroup(listOf(config), "") }.takeIf { config.group.isNotBlank() && !config.favorite },
-                ContextMenuItem("Edit…") { app.connections.openEdit(config) },
-                ContextMenuItem("Delete…") { app.connections.pendingDelete = config },
+                ContextMenuItem(tr("Refresh")) { app.explorer.refresh(node.key) },
+                ContextMenuItem(tr("Disconnect")) { app.explorer.disconnect(config.id) }.takeIf { connected },
+                ContextMenuItem(if (config.favorite) tr("Remove from Favorites") else tr("Add to Favorites")) { app.connections.toggleFavorite(config) },
+                ContextMenuItem(tr("Move to Group…")) { app.connections.groupRequest = GroupRequest(listOf(config)) },
+                ContextMenuItem(tr("Remove from Group")) { app.connections.moveToGroup(listOf(config), "") }.takeIf { config.group.isNotBlank() && !config.favorite },
+                ContextMenuItem(tr("Edit…")) { app.connections.openEdit(config) },
+                ContextMenuItem(tr("Delete…")) { app.connections.pendingDelete = config },
             )
         }
         is ExplorerNode.Group ->
             if (node.favorites) emptyList()
             else
                 listOf(
-                    ContextMenuItem("New Connection in ${node.name}…") { app.connections.openNew(group = node.name) },
-                    ContextMenuItem("Rename Group…") {
+                    ContextMenuItem(tr("New Connection in {0}…", node.name)) { app.connections.openNew(group = node.name) },
+                    ContextMenuItem(tr("Rename Group…")) {
                         app.connections.groupRequest = GroupRequest(node.children.mapNotNull { (it as? ExplorerNode.Connection)?.config }, renaming = node.name)
                     },
-                    ContextMenuItem("Ungroup") { app.connections.ungroup(node.name) },
+                    ContextMenuItem(tr("Ungroup")) { app.connections.ungroup(node.name) },
                 )
         is ExplorerNode.Schema -> {
             val config = app.connections.byId(node.connectionId) ?: return emptyList()
             listOfNotNull(
-                ContextMenuItem("New Table…") { app.workspace.openTableDesigner(config, node.namespace) }.takeUnless { config.readOnly },
-                ContextMenuItem("Import Data…") { app.openImport(config, node.namespace) }.takeUnless { config.readOnly },
-                ContextMenuItem("Show ER Diagram") { app.workspace.openErDiagram(config, node.namespace) },
-                ContextMenuItem("Compare Schema With…") { app.workspace.openSchemaCompare(config, node.namespace) },
-                ContextMenuItem("Refresh") { app.explorer.refresh(node.key) },
+                ContextMenuItem(tr("New Table…")) { app.workspace.openTableDesigner(config, node.namespace) }.takeUnless { config.readOnly },
+                ContextMenuItem(tr("Import Data…")) { app.openImport(config, node.namespace) }.takeUnless { config.readOnly },
+                ContextMenuItem(tr("Show ER Diagram")) { app.workspace.openErDiagram(config, node.namespace) },
+                ContextMenuItem(tr("Compare Schema With…")) { app.workspace.openSchemaCompare(config, node.namespace) },
+                ContextMenuItem(tr("Refresh")) { app.explorer.refresh(node.key) },
             )
         }
         is ExplorerNode.DocumentDatabase -> {
             val config = app.connections.byId(node.connectionId) ?: return emptyList()
             listOf(
-                ContextMenuItem("New Console") { app.workspace.openConsole(config, database = node.name) },
-                ContextMenuItem("Copy Name") { copyToClipboard(node.name) },
-                ContextMenuItem("Refresh") { app.explorer.refresh(node.key) },
+                ContextMenuItem(tr("New Console")) { app.workspace.openConsole(config, database = node.name) },
+                ContextMenuItem(tr("Copy Name")) { copyToClipboard(node.name) },
+                ContextMenuItem(tr("Refresh")) { app.explorer.refresh(node.key) },
             )
         }
         is ExplorerNode.Collection -> {
             val config = app.connections.byId(node.connectionId) ?: return emptyList()
             listOf(
-                ContextMenuItem("Open Documents") { app.workspace.openCollection(config, node.database, node.info.name) },
-                ContextMenuItem("New Console with find()") {
+                ContextMenuItem(tr("Open Documents")) { app.workspace.openCollection(config, node.database, node.info.name) },
+                ContextMenuItem(tr("New Console with find()")) {
                     app.workspace.openConsole(config, database = node.database, initialSql = "db.getCollection('${node.info.name}').find({})")
                 },
-                ContextMenuItem("Copy Name") { copyToClipboard(node.info.name) },
+                ContextMenuItem(tr("Copy Name")) { copyToClipboard(node.info.name) },
             )
         }
         is ExplorerNode.Keyspace -> {
             val config = app.connections.byId(node.connectionId) ?: return emptyList()
             listOf(
-                ContextMenuItem("Browse Keys") { app.workspace.openKeys(config, node.keyspace.index) },
-                ContextMenuItem("New Console") { app.workspace.openConsole(config, keyspace = node.keyspace.index) },
+                ContextMenuItem(tr("Browse Keys")) { app.workspace.openKeys(config, node.keyspace.index) },
+                ContextMenuItem(tr("New Console")) { app.workspace.openConsole(config, keyspace = node.keyspace.index) },
             )
         }
         is ExplorerNode.Table -> {
             val config = app.connections.byId(node.connectionId) ?: return emptyList()
             val ref = node.info.ref
             listOf(
-                ContextMenuItem("Open Data") { app.workspace.openTable(config, ref) },
-                ContextMenuItem("Open Structure") { app.workspace.openTable(config, ref, StructureSection.Columns) },
-                ContextMenuItem("Show DDL") { app.workspace.openTable(config, ref, StructureSection.Ddl) },
-                ContextMenuItem("Edit Structure…") { app.workspace.openTableDesigner(config, ref.namespace, ref) }.takeUnless { config.readOnly || node.info.isView },
-                ContextMenuItem("Show in ER Diagram") { app.workspace.openErDiagram(config, ref.namespace, ref) },
-                ContextMenuItem("Import Data…") { app.openImport(config, ref.namespace, ref) }.takeUnless { config.readOnly || node.info.isView },
-                ContextMenuItem("Generate Test Data…") { app.openTestData(config, ref) }.takeUnless { config.readOnly || node.info.isView },
-                ContextMenuItem("Copy DDL") { app.explorer.copyDdl(config, ref) },
-                ContextMenuItem("New Console with SELECT") {
+                ContextMenuItem(tr("Open Data")) { app.workspace.openTable(config, ref) },
+                ContextMenuItem(tr("Open Structure")) { app.workspace.openTable(config, ref, StructureSection.Columns) },
+                ContextMenuItem(tr("Show DDL")) { app.workspace.openTable(config, ref, StructureSection.Ddl) },
+                ContextMenuItem(tr("Edit Structure…")) { app.workspace.openTableDesigner(config, ref.namespace, ref) }.takeUnless { config.readOnly || node.info.isView },
+                ContextMenuItem(tr("Show in ER Diagram")) { app.workspace.openErDiagram(config, ref.namespace, ref) },
+                ContextMenuItem(tr("Import Data…")) { app.openImport(config, ref.namespace, ref) }.takeUnless { config.readOnly || node.info.isView },
+                ContextMenuItem(tr("Generate Test Data…")) { app.openTestData(config, ref) }.takeUnless { config.readOnly || node.info.isView },
+                ContextMenuItem(tr("Copy DDL")) { app.explorer.copyDdl(config, ref) },
+                ContextMenuItem(tr("New Console with SELECT")) {
                     val name = SqlDialect.of(config.type).qualifiedName(ref)
                     app.workspace.openConsole(config, "SELECT * FROM $name;")
                 },
-                ContextMenuItem("Copy Name") { copyToClipboard(ref.name) },
-                ContextMenuItem("Add to Chat") {
+                ContextMenuItem(tr("Copy Name")) { copyToClipboard(ref.name) },
+                ContextMenuItem(tr("Add to Chat")) {
                     app.agent.mention(Mention.Table(config.id, config.name, config.type.displayName, ref.namespace.displayName, ref.name))
                 }.takeIf { app.aiAccess(config).sharesSchema },
-                ContextMenuItem("Refresh") { app.explorer.refresh(node.key) },
+                ContextMenuItem(tr("Refresh")) { app.explorer.refresh(node.key) },
             ).filterNotNull()
         }
         is ExplorerNode.Column -> {
             val config = app.connections.byId(node.table.connectionId)
             listOfNotNull(
-                ContextMenuItem("Copy Name") { copyToClipboard(node.column.name) },
+                ContextMenuItem(tr("Copy Name")) { copyToClipboard(node.column.name) },
                 config?.takeIf { app.aiAccess(it).sharesSchema }?.let {
-                    ContextMenuItem("Add to Chat") {
+                    ContextMenuItem(tr("Add to Chat")) {
                         val column = node.column
                         app.agent.mention(Mention.Column(it.name, it.type.displayName, node.table.ref.name, column.name, column.typeName, column.primaryKey))
                     }
@@ -368,14 +369,14 @@ private fun NodeRow(app: AppState, node: ExplorerNode, modifier: Modifier = Modi
                 StatusBadge(node.config, status)
                 Text(node.config.name, Modifier.weight(1f, fill = false), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 EnvironmentChip(node.config)
-                if (node.config.readOnly) Text("read-only", color = info, maxLines = 1, softWrap = false)
+                if (node.config.readOnly) Text(tr("read-only"), color = info, maxLines = 1, softWrap = false)
                 app.databases.dataFile(node.config.id)?.let { DataFileBadge(it) }
                 when (status) {
                     // The spinner stays on the row itself, so a collapsed connection still shows it's being opened.
                     is ConnectionStatus.Connecting -> Tooltip({ Text(connectingText(node.config, status)) }) { CircularProgressIndicator() }
                     is ConnectionStatus.Failed ->
                         Tooltip({ Text(friendlyError(status.message).headline) }) {
-                            Text("failed", color = JewelTheme.globalColors.text.error, maxLines = 1, softWrap = false)
+                            Text(tr("failed"), color = JewelTheme.globalColors.text.error, maxLines = 1, softWrap = false)
                         }
                     is ConnectionStatus.Connected ->
                         Text(node.config.type.displayName, color = info, maxLines = 1, softWrap = false)
@@ -401,13 +402,13 @@ private fun NodeRow(app: AppState, node: ExplorerNode, modifier: Modifier = Modi
             is ExplorerNode.Column -> {
                 val column = node.column
                 NodeIcon(if (column.primaryKey) AllIconsKeys.Nodes.FieldPK else AllIconsKeys.Nodes.DataColumn)
-                NameAndDetail(column.name, column.typeName.lowercase() + if (column.nullable) "" else " not null", Modifier.weight(1f))
+                NameAndDetail(column.name, column.typeName.lowercase() + if (column.nullable) "" else tr(" not null"), Modifier.weight(1f))
             }
             is ExplorerNode.Index -> {
                 NodeIcon(AllIconsKeys.Nodes.FieldPK)
                 NameAndDetail(
                     node.index.name,
-                    (if (node.index.unique) "unique " else "") + "(${node.index.columns.joinToString()})",
+                    (if (node.index.unique) tr("unique ") else "") + "(${node.index.columns.joinToString()})",
                     Modifier.weight(1f),
                 )
             }
@@ -426,13 +427,13 @@ private fun NodeRow(app: AppState, node: ExplorerNode, modifier: Modifier = Modi
             }
             is ExplorerNode.Collection -> {
                 NodeIcon(AllIconsKeys.Nodes.DataTables)
-                val detail = listOfNotNull(node.info.kind.takeIf { it != "collection" }, node.info.documents?.let { "~$it docs" }).joinToString(" · ")
+                val detail = listOfNotNull(node.info.kind.takeIf { it != "collection" }, node.info.documents?.let { tr("~{0} docs", it) }).joinToString(" · ")
                 NameAndDetail(node.info.name, detail, Modifier.weight(1f))
             }
             is ExplorerNode.Keyspace -> {
                 NodeIcon(AllIconsKeys.Nodes.DataSchema)
                 val etcd = app.connections.byId(node.connectionId)?.type?.family == EngineFamily.Etcd
-                NameAndDetail(if (etcd) "keys" else "db${node.keyspace.index}", node.keyspace.keys?.let { "$it ${if (it == 1L) "key" else "keys"}" }.orEmpty(), Modifier.weight(1f))
+                NameAndDetail(if (etcd) tr("keys") else "db${node.keyspace.index}", node.keyspace.keys?.let { if (it == 1L) tr("1 key") else tr("{0} keys", it) }.orEmpty(), Modifier.weight(1f))
             }
             is ExplorerNode.Loading -> LoadingRow(app, node.parent, Modifier.weight(1f))
             is ExplorerNode.Failure -> FailureRow(app, node, Modifier.weight(1f))
@@ -486,14 +487,14 @@ private fun LoadingRow(app: AppState, parent: Any, modifier: Modifier = Modifier
         when (parent) {
             is ConnectionKey ->
                 when (config?.type?.paradigm) {
-                    Paradigm.Document -> "Loading databases…"
-                    Paradigm.KeyValue -> "Loading keys…"
-                    else -> "Loading schemas…"
+                    Paradigm.Document -> tr("Loading databases…")
+                    Paradigm.KeyValue -> tr("Loading keys…")
+                    else -> tr("Loading schemas…")
                 }
-            is ExplorerNode.Schema -> "Loading tables…"
-            is ExplorerNode.DocumentDatabase -> "Loading collections…"
-            is TableKey -> "Loading columns…"
-            else -> "Loading…"
+            is ExplorerNode.Schema -> tr("Loading tables…")
+            is ExplorerNode.DocumentDatabase -> tr("Loading collections…")
+            is TableKey -> tr("Loading columns…")
+            else -> tr("Loading…")
         }
     ProgressLine(text, modifier, since = startedAt)
 }
@@ -514,9 +515,9 @@ private fun FailureRow(app: AppState, node: ExplorerNode.Failure, modifier: Modi
         }
         error.hint?.let { Text(it, Modifier.padding(start = textInset), color = JewelTheme.globalColors.text.info, maxLines = 2) }
         Row(Modifier.padding(start = textInset), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Link("Retry", onClick = { app.explorer.refresh(node.parent) })
-            if (config != null) Link("Edit…", onClick = { app.connections.openEdit(config) })
-            Link("Copy details", onClick = { copyToClipboard(error.detail) })
+            Link(tr("Retry"), onClick = { app.explorer.refresh(node.parent) })
+            if (config != null) Link(tr("Edit…"), onClick = { app.connections.openEdit(config) })
+            Link(tr("Copy details"), onClick = { copyToClipboard(error.detail) })
         }
     }
 }
@@ -558,10 +559,10 @@ private fun AddConnectionMenu(app: AppState) {
     var open by remember { mutableStateOf(false) }
     LaunchedEffect(open) { if (open) app.connections.lookForImports() }
     Box {
-        Tooltip({ Text("New or imported connection") }) {
+        Tooltip({ Text(tr("New or imported connection")) }) {
             IconButton(onClick = { open = !open }) {
                 Row(Modifier.padding(horizontal = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(AllIconsKeys.General.Add, "Add connection")
+                    Icon(AllIconsKeys.General.Add, tr("Add connection"))
                     Icon(AllIconsKeys.General.ChevronDown, null, Modifier.size(10.dp))
                 }
             }
@@ -571,11 +572,11 @@ private fun AddConnectionMenu(app: AppState) {
                 selectableItem(selected = false, iconKey = AllIconsKeys.General.Add, onClick = {
                     open = false
                     app.connections.openNew()
-                }) { MenuEntry("New Connection…", "Connect to a database server") }
+                }) { MenuEntry(tr("New Connection…"), tr("Connect to a database server")) }
                 selectableItem(selected = false, iconKey = AllIconsKeys.Actions.MenuOpen, onClick = {
                     open = false
                     app.connections.chooseDataFiles()
-                }) { MenuEntry("Open Data File…", "CSV, Excel, JSON — or drop files on the window") }
+                }) { MenuEntry(tr("Open Data File…"), tr("CSV, Excel, JSON — or drop files on the window")) }
                 separator()
                 selectableItem(selected = false, iconKey = AllIconsKeys.ToolbarDecorator.Import, onClick = {
                     open = false
@@ -583,8 +584,8 @@ private fun AddConnectionMenu(app: AppState) {
                 }) {
                     val hint = app.connections.importHint
                     MenuEntry(
-                        if (hint == null) "Import from Other Tools…" else "Import ${hint.count} from ${hint.tools.joinToString(", ")}…",
-                        "DBeaver, IDE data sources, .pgpass, .env",
+                        if (hint == null) tr("Import from Other Tools…") else tr("Import {0} from {1}…", hint.count, hint.tools.joinToString(", ")),
+                        tr("DBeaver, IDE data sources, .pgpass, .env"),
                     )
                 }
             }
@@ -609,21 +610,21 @@ private fun EmptyExplorer(app: AppState) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         LaunchedEffect(Unit) { app.connections.lookForImports() }
-        Text("No connections yet", color = JewelTheme.globalColors.text.info)
+        Text(tr("No connections yet"), color = JewelTheme.globalColors.text.info)
         val hint = app.connections.importHint
         if (hint != null) {
             Text(
-                (if (hint.count == 1) "1 connection" else "${hint.count} connections") + " found in " + hint.tools.joinToString(", "),
+                if (hint.count == 1) tr("1 connection found in {0}", hint.tools.joinToString(", ")) else tr("{0} connections found in {1}", hint.count, hint.tools.joinToString(", ")),
                 color = JewelTheme.globalColors.text.info,
                 textAlign = TextAlign.Center,
             )
-            DefaultButton(onClick = app.connections::openImport) { Text(if (hint.count == 1) "Import It…" else "Import Them…") }
-            OutlinedButton(onClick = app.connections::openNew) { Text("New Connection…") }
-            OutlinedButton(onClick = app.connections::chooseDataFiles) { Text("Open Data File…") }
+            DefaultButton(onClick = app.connections::openImport) { Text(if (hint.count == 1) tr("Import It…") else tr("Import Them…")) }
+            OutlinedButton(onClick = app.connections::openNew) { Text(tr("New Connection…")) }
+            OutlinedButton(onClick = app.connections::chooseDataFiles) { Text(tr("Open Data File…")) }
         } else {
-            OutlinedButton(onClick = app.connections::openNew) { Text("New Connection…") }
-            OutlinedButton(onClick = app.connections::chooseDataFiles) { Text("Open Data File…") }
-            Link("Import from another tool…", onClick = app.connections::openImport)
+            OutlinedButton(onClick = app.connections::openNew) { Text(tr("New Connection…")) }
+            OutlinedButton(onClick = app.connections::chooseDataFiles) { Text(tr("Open Data File…")) }
+            Link(tr("Import from another tool…"), onClick = app.connections::openImport)
         }
     }
 }

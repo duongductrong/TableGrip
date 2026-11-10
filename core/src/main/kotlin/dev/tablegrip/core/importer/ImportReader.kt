@@ -1,14 +1,15 @@
 package dev.tablegrip.core.importer
 
+import dev.tablegrip.core.i18n.tr
 import java.io.File
 import java.io.IOException
 import java.nio.charset.Charset
 
 /** File formats rows can be imported from. */
 enum class ImportFormat(val label: String, val extensions: Set<String>) {
-    Csv("CSV / TSV", setOf("csv", "tsv", "txt")),
-    Json("JSON / NDJSON", setOf("json", "ndjson", "jsonl")),
-    Xlsx("Excel workbook", setOf("xlsx", "xlsm"));
+    Csv(tr("CSV / TSV"), setOf("csv", "tsv", "txt")),
+    Json(tr("JSON / NDJSON"), setOf("json", "ndjson", "jsonl")),
+    Xlsx(tr("Excel workbook"), setOf("xlsx", "xlsm"));
 
     companion object {
         /** The format [file]'s extension implies, or null when it isn't one TableGrip reads (e.g. legacy `.xls`). */
@@ -41,8 +42,8 @@ data class ImportOptions(
 ) {
     init {
         require(skipRows >= 0) { "skipRows must not be negative" }
-        require(delimiter != quote) { "The delimiter and the quote must differ" }
-        require(delimiter != '\n' && delimiter != '\r' && quote != '\n' && quote != '\r') { "Line breaks can't be delimiters or quotes" }
+        require(delimiter != quote) { tr("The delimiter and the quote must differ") }
+        require(delimiter != '\n' && delimiter != '\r' && quote != '\n' && quote != '\r') { tr("Line breaks can't be delimiters or quotes") }
     }
 }
 
@@ -97,8 +98,8 @@ object ImportReader {
 
     /** [previewRows] lets a format read only what the preview needs (XLSX/JSON then size columns from those rows alone). */
     private fun openSource(file: File, options: ImportOptions, previewRows: Int?): ImportSource {
-        if (!file.isFile) throw ImportException("${file.path} doesn't exist or isn't a file")
-        if (!file.canRead()) throw ImportException("${file.path} can't be read; check its permissions")
+        if (!file.isFile) throw ImportException(tr("{0} doesn't exist or isn't a file", file.path))
+        if (!file.canRead()) throw ImportException(tr("{0} can't be read; check its permissions", file.path))
         return guard {
             when (options.format) {
                 ImportFormat.Csv -> CsvSource(file, options)
@@ -112,7 +113,7 @@ object ImportReader {
         try {
             block()
         } catch (e: IOException) {
-            throw ImportException("Couldn't read the file: ${e.message ?: e.javaClass.simpleName}", cause = e)
+            throw ImportException(tr("Couldn't read the file: {0}", e.message ?: e.javaClass.simpleName), cause = e)
         }
 }
 
@@ -138,5 +139,5 @@ internal fun fitRow(line: Long, values: List<String?>, width: Int, unit: String)
     if (values.size == width) return ImportRow(line, values)
     if (values.size < width) return ImportRow(line, values + arrayOfNulls<String>(width - values.size))
     if (values.subList(width, values.size).all { it.isNullOrBlank() }) return ImportRow(line, values.subList(0, width).toList())
-    throw ImportException("$unit $line has ${values.size} fields but there are only $width columns", line)
+    throw ImportException(tr("{0} {1} has {2} fields but there are only {3} columns", unit, line, values.size, width), line)
 }

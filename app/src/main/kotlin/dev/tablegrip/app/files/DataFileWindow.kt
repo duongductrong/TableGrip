@@ -1,5 +1,6 @@
 package dev.tablegrip.app.files
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -59,7 +60,7 @@ class DataFileWindow(private val app: AppState, val file: File) {
                         tables = found
                         found.firstOrNull()?.let(::select)
                     }
-                    .onFailure { error = "Couldn't open ${file.name}: ${it.message}" }
+                    .onFailure { error = tr("Couldn't open {0}: {1}", file.name, it.message) }
             } finally {
                 loading = false
             }

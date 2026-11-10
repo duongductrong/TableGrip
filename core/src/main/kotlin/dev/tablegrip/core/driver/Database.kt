@@ -1,5 +1,6 @@
 package dev.tablegrip.core.driver
 
+import dev.tablegrip.core.i18n.tr
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import com.zaxxer.hikari.pool.HikariPool
@@ -182,7 +183,7 @@ class Database private constructor(
      * number of rows, e.g. because the row changed since it was read.
      */
     override suspend fun applyChanges(statements: List<ChangeStatement>): Int {
-        if (config.readOnly) throw ReadOnlyViolationException("editing data")
+        if (config.readOnly) throw ReadOnlyViolationException(tr("editing data"))
         return withMetadata { connection ->
             val autoCommit = connection.autoCommit
             connection.autoCommit = false
@@ -196,8 +197,8 @@ class Database private constructor(
                         }
                     if (change.expectedRows != null && affected != change.expectedRows) {
                         throw SQLException(
-                            "Expected ${change.expectedRows} row(s) but $affected would be affected by: ${change.preview(dialect)}. " +
-                                "Nothing was saved."
+                            tr("Expected {0} row(s) but {1} would be affected by: {2}. ", change.expectedRows, affected, change.preview(dialect)) +
+                                tr("Nothing was saved.")
                         )
                     }
                     total += affected
@@ -234,7 +235,7 @@ class Database private constructor(
     }
 
     override suspend fun executeScript(script: DdlScript, onProgress: (Int) -> Unit): Int {
-        if (config.readOnly) throw ReadOnlyViolationException("changing the schema")
+        if (config.readOnly) throw ReadOnlyViolationException(tr("changing the schema"))
         val prologue = script.statements.filter { it.phase == DdlPhase.Prologue }.map { it.sql }
         val epilogue = script.statements.filter { it.phase == DdlPhase.Epilogue }.map { it.sql }
         val body = script.statements.filter { it.phase != DdlPhase.Prologue && it.phase != DdlPhase.Epilogue }.map { it.sql }
@@ -261,11 +262,11 @@ class Database private constructor(
                             val reason = (e as? SQLException)?.message ?: e.toString()
                             val outcome =
                                 when {
-                                    rolledBack -> "Nothing was changed."
-                                    index == 0 -> "Nothing was changed."
-                                    else -> "The $index statement(s) before it were applied and stay applied: $dialect can't roll back DDL."
+                                    rolledBack -> tr("Nothing was changed.")
+                                    index == 0 -> tr("Nothing was changed.")
+                                    else -> tr("The {0} statement(s) before it were applied and stay applied: {1} can't roll back DDL.", index, dialect)
                                 }
-                            throw ScriptException("Statement ${index + 1} of ${body.size} failed: $reason\n$outcome", sql, index, rolledBack, e)
+                            throw ScriptException(tr("Statement {0} of {1} failed: {2}\n{3}", index + 1, body.size, reason, outcome), sql, index, rolledBack, e)
                         }
                     }
                     if (sqliteForeignKeys != null) {
@@ -273,7 +274,7 @@ class Database private constructor(
                         if (violations.isNotEmpty()) {
                             connection.rollback()
                             throw ScriptException(
-                                "The change leaves rows whose foreign keys point nowhere (in ${violations.distinct().joinToString()}). Nothing was changed.",
+                                tr("The change leaves rows whose foreign keys point nowhere (in {0}). Nothing was changed.", violations.distinct().joinToString()),
                                 "PRAGMA foreign_key_check", body.size, rolledBack = true, cause = null,
                             )
                         }
@@ -301,7 +302,7 @@ class Database private constructor(
         describe: (index: Long, row: T) -> String,
         onProgress: (Long) -> Unit,
     ): Long {
-        if (config.readOnly) throw ReadOnlyViolationException("inserting rows")
+        if (config.readOnly) throw ReadOnlyViolationException(tr("inserting rows"))
         require(columns.isNotEmpty()) { "No columns to insert into" }
         val sql =
             "INSERT INTO ${dialect.qualifiedName(table)} (${columns.joinToString(", ") { dialect.quoteIdentifier(it.name) }}) " +
@@ -325,9 +326,9 @@ class Database private constructor(
                                     counts.indexOfFirst { it == Statement.EXECUTE_FAILED }.takeIf { it >= 0 } ?: counts.size.takeIf { it < pending.size }
                                 }
                                 val culprit = failed?.let { pending.getOrNull(it) }
-                                val where = culprit?.let { (index, row) -> describe(index, row) } ?: "rows ${pending.first().first + 1}–${pending.last().first + 1}"
+                                val where = culprit?.let { (index, row) -> describe(index, row) } ?: tr("rows {0}–{1}", pending.first().first + 1, pending.last().first + 1)
                                 val reason = generateSequence<Throwable>(e) { (it as? SQLException)?.nextException ?: it.cause }.drop(1).firstOrNull()?.message ?: e.message
-                                throw InsertException("Couldn't insert $where: $reason. Nothing was imported.", where, e)
+                                throw InsertException(tr("Couldn't insert {0}: {1}. Nothing was imported.", where, reason), where, e)
                             }
                             count += pending.size
                             pending.clear()
@@ -373,13 +374,13 @@ class Database private constructor(
             when (dialect) {
                 is SqlDialect.SQLiteDialect -> "VACUUM INTO '$path'"
                 is SqlDialect.DuckDBDialect -> "EXPORT DATABASE '$path' (FORMAT PARQUET)"
-                else -> throw UnsupportedOperationException("${config.type.displayName} can't back itself up")
+                else -> throw UnsupportedOperationException(tr("{0} can't back itself up", config.type.displayName))
             }
         withMetadata { connection -> connection.createStatement().use { it.execute(sql) } }
     }
 
     override suspend fun openActivityMonitor(): ActivityMonitor {
-        val reader = ActivityReader.of(config.type) ?: throw UnsupportedOperationException("${config.type.displayName} has no activity monitor")
+        val reader = ActivityReader.of(config.type) ?: throw UnsupportedOperationException(tr("{0} has no activity monitor", config.type.displayName))
         return withContext(Dispatchers.IO) {
             ActivityMonitor(newConnection(driver, jdbcUrl, config, password), reader, config.readOnly)
         }
@@ -477,13 +478,13 @@ class Database private constructor(
 
         /** The database host and port as seen from the SSH server. */
         private fun tunnelTarget(config: ConnectionConfig): Pair<String, Int> {
-            val defaultPort = config.type.defaultPort ?: throw SQLException("${config.type.displayName} doesn't use a network connection.")
+            val defaultPort = config.type.defaultPort ?: throw SQLException(tr("{0} doesn't use a network connection.", config.type.displayName))
             config.url?.let { url ->
                 val parsed = ConnectionString.parse(url)
-                val host = parsed.host?.takeIf { ',' !in it } ?: throw SQLException("SSH tunnels need a single-host URL.")
+                val host = parsed.host?.takeIf { ',' !in it } ?: throw SQLException(tr("SSH tunnels need a single-host URL."))
                 return host.trim('[', ']') to (parsed.port ?: defaultPort)
             }
-            if (',' in config.host) throw SQLException("SSH tunnels need a single host.")
+            if (',' in config.host) throw SQLException(tr("SSH tunnels need a single host."))
             return config.host to (config.port ?: defaultPort)
         }
 
@@ -494,6 +495,6 @@ class Database private constructor(
         /** Connects with the profile's own driver, so it handles the URL even if another driver also claims it. */
         private fun newConnection(driver: java.sql.Driver, url: String, config: ConnectionConfig, password: String?): Connection =
             driver.connect(url, JdbcUrls.properties(config, password))
-                ?: throw SQLException("${config.effectiveDriver.displayName} doesn't accept the URL $url")
+                ?: throw SQLException(tr("{0} doesn't accept the URL {1}", config.effectiveDriver.displayName, url))
     }
 }

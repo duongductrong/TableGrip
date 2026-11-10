@@ -1,5 +1,6 @@
 package dev.tablegrip.app.ui
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -42,7 +43,7 @@ internal fun ShortcutsDialog(app: AppState) {
     AppDialog(
         onCloseRequest = { app.shortcutsOpen = false },
         size = DpSize(560.dp, 620.dp),
-        title = "Keyboard Shortcuts",
+        title = tr("Keyboard Shortcuts"),
     ) {
         LaunchedEffect(Unit) { focus.requestFocus() }
         Column(
@@ -52,7 +53,7 @@ internal fun ShortcutsDialog(app: AppState) {
             TextField(
                 query,
                 Modifier.fillMaxWidth().focusRequester(focus),
-                placeholder = { Text("Search actions or keys") },
+                placeholder = { Text(tr("Search actions or keys")) },
                 leadingIcon = { Icon(AllIconsKeys.Actions.Search, null, Modifier.padding(end = 6.dp)) },
             )
             val needle = query.text.toString().trim()
@@ -63,7 +64,7 @@ internal fun ShortcutsDialog(app: AppState) {
                 }
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 if (groups.isEmpty()) {
-                    Text("No matching shortcuts", Modifier.align(Alignment.Center), color = JewelTheme.globalColors.text.info)
+                    Text(tr("No matching shortcuts"), Modifier.align(Alignment.Center), color = JewelTheme.globalColors.text.info)
                 }
                 LazyColumn(Modifier.fillMaxSize()) {
                     groups.forEachIndexed { index, (title, entries) ->
@@ -81,7 +82,7 @@ internal fun ShortcutsDialog(app: AppState) {
                 }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                DefaultButton(onClick = { app.shortcutsOpen = false }) { Text("Close") }
+                DefaultButton(onClick = { app.shortcutsOpen = false }) { Text(tr("Close")) }
             }
         }
     }

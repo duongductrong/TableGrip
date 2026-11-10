@@ -57,6 +57,8 @@ data class Settings(
     val backupSchedules: List<dev.tablegrip.core.backup.BackupSchedule> = emptyList(),
 
     // Appearance
+    /** The interface language: `system`, or a [dev.tablegrip.core.i18n.Language] tag (`en`, `vi`, `zh-CN`, `zh-TW`). */
+    val language: String = "system",
     /** `#RRGGBB`; blank means the theme's own accent. */
     val accentColor: String = "",
     /** Keys laid over a theme, by the theme's name, e.g. `{ "One Dark": { "colors": { "accent": "#E5C07B" } } }`. */

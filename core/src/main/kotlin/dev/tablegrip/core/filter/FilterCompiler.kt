@@ -1,5 +1,6 @@
 package dev.tablegrip.core.filter
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.dialect.SqlDialect
 import dev.tablegrip.core.sql.SqlLexer
 import dev.tablegrip.core.sql.TokenType
@@ -83,7 +84,7 @@ class FilterCompiler(private val dialect: SqlDialect, columns: List<FilterColumn
     private fun raw(node: RawCondition): Sql? {
         val sql = SqlFilter.raw(node.sql)?.sql
         if (sql == null) {
-            issues[node.id] = "Enter a SQL condition"
+            issues[node.id] = tr("Enter a SQL condition")
             return null
         }
         return t("($sql)")
@@ -95,7 +96,7 @@ class FilterCompiler(private val dialect: SqlDialect, columns: List<FilterColumn
             is FilterGroup -> node.children.filter { it.enabled }.forEach(::flagPlaceholders)
             is RawCondition ->
                 if (SqlLexer(dialect.syntax).tokenize(node.sql).any { it.type == TokenType.Parameter && it.text(node.sql) == "?" }) {
-                    issues[node.id] = "“?” can't be combined with other conditions; use the SQL filter for this expression"
+                    issues[node.id] = tr("“?” can't be combined with other conditions; use the SQL filter for this expression")
                 }
             is FilterCondition -> Unit
         }
@@ -104,11 +105,11 @@ class FilterCompiler(private val dialect: SqlDialect, columns: List<FilterColumn
     private fun condition(condition: FilterCondition): Sql? {
         val column = columns[condition.column]
         if (column == null) {
-            issues[condition.id] = if (condition.column.isEmpty()) "Choose a column" else "No column “${condition.column}” in this table"
+            issues[condition.id] = if (condition.column.isEmpty()) tr("Choose a column") else tr("No column “{0}” in this table", condition.column)
             return null
         }
         if (FilterOperator.forKind(column.kind, dialect.supportsRegex).none { condition.operator in it }) {
-            issues[condition.id] = "“${condition.operator.label(column.kind)}” doesn't apply to ${column.kind.label} columns"
+            issues[condition.id] = tr("“{0}” doesn't apply to {1} columns", condition.operator.label(column.kind), column.kind.label)
             return null
         }
         return try {
@@ -145,7 +146,7 @@ class FilterCompiler(private val dialect: SqlDialect, columns: List<FilterColumn
             FilterOperator.Regex, FilterOperator.NotRegex -> {
                 val (before, after) =
                     dialect.regexMatch(text, condition.caseSensitive, negated = op == FilterOperator.NotRegex)
-                        ?: throw FilterValueException("This database has no regular expressions; use “like” instead")
+                        ?: throw FilterValueException(tr("This database has no regular expressions; use “like” instead"))
                 t(before) + p(SqlParam(required(condition.value), ValueKind.Text)) + after
             }
             FilterOperator.Equals, FilterOperator.NotEquals, FilterOperator.Less, FilterOperator.LessOrEqual, FilterOperator.Greater,
@@ -160,7 +161,7 @@ class FilterCompiler(private val dialect: SqlDialect, columns: List<FilterColumn
         }
     }
 
-    private fun required(value: String): String = value.ifEmpty { throw FilterValueException("Enter a value") }
+    private fun required(value: String): String = value.ifEmpty { throw FilterValueException(tr("Enter a value")) }
 
     private fun escapeLike(value: String) = value.replace("!", "!!").replace("%", "!%").replace("_", "!_")
 
@@ -193,7 +194,7 @@ class FilterCompiler(private val dialect: SqlDialect, columns: List<FilterColumn
     }
 
     private fun between(c: String, kind: ValueKind, condition: FilterCondition, negated: Boolean): Sql {
-        if (condition.value.isEmpty() || condition.value2.isEmpty()) throw FilterValueException("Enter both bounds")
+        if (condition.value.isEmpty() || condition.value2.isEmpty()) throw FilterValueException(tr("Enter both bounds"))
         if (kind.isTemporal) {
             val from = bindable(temporal(condition.value, kind), kind)
             val to = temporal(condition.value2, kind)
@@ -220,13 +221,13 @@ class FilterCompiler(private val dialect: SqlDialect, columns: List<FilterColumn
                 from is Comparable<*> && from::class == to::class -> (from as Comparable<Any>) <= to
                 else -> true
             }
-        if (!ordered) throw FilterValueException("The first bound is after the second")
+        if (!ordered) throw FilterValueException(tr("The first bound is after the second"))
     }
 
     private fun inList(c: String, kind: ValueKind, input: String, negated: Boolean): Sql {
         val items = FilterValues.parseList(input)
-        if (items.isEmpty()) throw FilterValueException("Enter one or more values, separated by commas")
-        if (items.size > MaxListSize) throw FilterValueException("At most $MaxListSize values")
+        if (items.isEmpty()) throw FilterValueException(tr("Enter one or more values, separated by commas"))
+        if (items.size > MaxListSize) throw FilterValueException(tr("At most {0} values", MaxListSize))
         val values = items.filterNotNull()
         val parts = mutableListOf<Sql>()
         val days = mutableListOf<LocalDate>()
@@ -270,7 +271,7 @@ class FilterCompiler(private val dialect: SqlDialect, columns: List<FilterColumn
             FilterOperator.ThisYear -> today.withDayOfYear(1).let { it to it.plusYears(1) }
             else -> {
                 val days = FilterValues.number(input).toBigIntegerExactOrNull()?.toLong()?.takeIf { it in 1..36_500 }
-                    ?: throw FilterValueException("Enter a whole number of days")
+                    ?: throw FilterValueException(tr("Enter a whole number of days"))
                 // "The last 7 days" counts today as one of them.
                 today.minusDays(days - 1) to today.plusDays(1)
             }
@@ -280,8 +281,8 @@ class FilterCompiler(private val dialect: SqlDialect, columns: List<FilterColumn
 
     private fun temporal(input: String, kind: ValueKind): TemporalValue {
         val value = FilterValues.temporal(required(input), now, clock.zone)
-        if (kind == ValueKind.Time && value is TemporalValue.Day) throw FilterValueException("Enter a time of day, e.g. 13:45")
-        if (kind != ValueKind.Time && value is TemporalValue.TimeOfDay) throw FilterValueException("Enter a date, e.g. ${today}")
+        if (kind == ValueKind.Time && value is TemporalValue.Day) throw FilterValueException(tr("Enter a time of day, e.g. 13:45"))
+        if (kind != ValueKind.Time && value is TemporalValue.TimeOfDay) throw FilterValueException(tr("Enter a date, e.g. {0}", today))
         return value
     }
 
@@ -319,8 +320,8 @@ class FilterCompiler(private val dialect: SqlDialect, columns: List<FilterColumn
                 SqlParam(integral ?: number, kind)
             }
             ValueKind.Uuid -> SqlParam(FilterValues.uuid(input), kind)
-            ValueKind.Boolean -> SqlParam(FilterValues.boolean(input) ?: throw FilterValueException("Enter true or false"), kind)
-            ValueKind.Binary -> throw FilterValueException("Binary values can only be tested for NULL")
+            ValueKind.Boolean -> SqlParam(FilterValues.boolean(input) ?: throw FilterValueException(tr("Enter true or false")), kind)
+            ValueKind.Binary -> throw FilterValueException(tr("Binary values can only be tested for NULL"))
             else -> SqlParam(required(input), kind)
         }
 

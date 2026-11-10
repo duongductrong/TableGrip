@@ -1,5 +1,6 @@
 package dev.tablegrip.core.imports
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.connection.ConnectionConfig
 import dev.tablegrip.core.connection.DatabaseType
 import java.nio.file.Path
@@ -74,7 +75,7 @@ internal object PgPassImporter {
         for (entry in entries(path.readText())) {
             // A wildcard host or user is a password for many servers, not a server to connect to.
             if (entry.host == "*" || entry.user == "*") {
-                skipped += ".pgpass: “${entry.host}:${entry.port}:${entry.database}:${entry.user}” uses a wildcard host or user."
+                skipped += tr(".pgpass: “{0}:{1}:{2}:{3}” uses a wildcard host or user.", entry.host, entry.port, entry.database, entry.user)
                 continue
             }
             val port = entry.port.takeIf { it != "*" }?.toIntOrNull()

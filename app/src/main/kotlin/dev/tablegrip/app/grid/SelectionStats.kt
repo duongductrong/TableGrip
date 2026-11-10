@@ -1,5 +1,6 @@
 package dev.tablegrip.app.grid
 
+import dev.tablegrip.core.i18n.tr
 import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
@@ -23,12 +24,12 @@ data class SelectionStats(
     val summary: String
         get() =
             buildList {
-                add("Count: $count")
+                add(tr("Count: {0}", count))
                 if (numbers > 0) {
-                    add("Sum: ${sum.format()}")
-                    add("Avg: ${average.format()}")
-                    add("Min: ${min.format()}")
-                    add("Max: ${max.format()}")
+                    add(tr("Sum: {0}", sum.format()))
+                    add(tr("Avg: {0}", average.format()))
+                    add(tr("Min: {0}", min.format()))
+                    add(tr("Max: {0}", max.format()))
                 }
             }.joinToString(" · ")
 

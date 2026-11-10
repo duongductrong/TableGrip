@@ -1,5 +1,6 @@
 package dev.tablegrip.app.backup
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -48,13 +49,13 @@ internal fun BackupsPanel(app: AppState) {
     val info = JewelTheme.globalColors.text.info
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         CheckboxRow(
-            "Run scheduled backups while TableGrip is open",
+            tr("Run scheduled backups while TableGrip is open"),
             settings.scheduledBackups,
             onCheckedChange = { on -> app.updateSettings { it.copy(scheduledBackups = on) } },
         )
         Text(
-            "Off by default. Backups only run while the app is open; one missed while it was closed runs soon after it opens. " +
-                "Each schedule keeps its newest backups and deletes its own older ones, never other files.",
+            tr("Off by default. Backups only run while the app is open; one missed while it was closed runs soon after it opens. ") +
+                tr("Each schedule keeps its newest backups and deletes its own older ones, never other files."),
             color = info,
             fontSize = 12.sp,
         )
@@ -77,26 +78,26 @@ private fun ScheduleCard(app: AppState, schedule: BackupSchedule) {
         verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(config?.name ?: "Deleted connection", fontWeight = FontWeight.SemiBold)
+            Text(config?.name ?: tr("Deleted connection"), fontWeight = FontWeight.SemiBold)
             Text("  ${schedule.database.ifBlank { config?.database ?: "" }}", color = info)
             Spacer(Modifier.weight(1f))
-            CheckboxRow("Enabled", schedule.enabled, onCheckedChange = { on -> update { it.copy(enabled = on) } })
+            CheckboxRow(tr("Enabled"), schedule.enabled, onCheckedChange = { on -> update { it.copy(enabled = on) } })
         }
         Text(
             listOfNotNull(
                 schedule.frequency.label,
-                if (schedule.keep > 0) "keeps the newest ${schedule.keep}" else "keeps all",
+                if (schedule.keep > 0) tr("keeps the newest {0}", schedule.keep) else tr("keeps all"),
                 app.scheduledBackups.folderOf(schedule).toString(),
-                schedule.lastRun?.let { "last run ${Formatter.format(Instant.ofEpochMilli(it))}" } ?: "not run yet",
+                schedule.lastRun?.let { tr("last run {0}", Formatter.format(Instant.ofEpochMilli(it))) } ?: tr("not run yet"),
             ).joinToString("  ·  "),
             color = info,
             fontSize = 12.sp,
         )
-        schedule.lastError?.let { Text("Last run failed: $it", color = JewelTheme.globalColors.text.error, fontSize = 12.sp, maxLines = 3) }
+        schedule.lastError?.let { Text(tr("Last run failed: {0}", it), color = JewelTheme.globalColors.text.error, fontSize = 12.sp, maxLines = 3) }
         problems.forEach { Text("⚠ $it", color = JewelTheme.globalColors.text.warning, fontSize = 12.sp) }
-        if (config?.environment == Environment.Production) Text("Production: each run reads the whole database and adds load to the server.", color = JewelTheme.globalColors.text.warning, fontSize = 12.sp)
+        if (config?.environment == Environment.Production) Text(tr("Production: each run reads the whole database and adds load to the server."), color = JewelTheme.globalColors.text.warning, fontSize = 12.sp)
         Row(Modifier.padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            Link(if (running) "Running…" else "Run now", enabled = !running, onClick = {
+            Link(if (running) tr("Running…") else tr("Run now"), enabled = !running, onClick = {
                 running = true
                 scope.launch {
                     val error = app.scheduledBackups.runOnce(schedule)
@@ -104,11 +105,11 @@ private fun ScheduleCard(app: AppState, schedule: BackupSchedule) {
                     running = false
                 }
             })
-            Link("Show backups", onClick = {
+            Link(tr("Show backups"), onClick = {
                 val folder = app.scheduledBackups.folderOf(schedule)
                 runCatching { java.nio.file.Files.createDirectories(folder); java.awt.Desktop.getDesktop().open(folder.toFile()) }
             })
-            Link("Remove", onClick = { app.updateSettings { s -> s.copy(backupSchedules = s.backupSchedules.filter { it.id != schedule.id }) } })
+            Link(tr("Remove"), onClick = { app.updateSettings { s -> s.copy(backupSchedules = s.backupSchedules.filter { it.id != schedule.id }) } })
         }
     }
 }
@@ -117,12 +118,12 @@ private fun ScheduleCard(app: AppState, schedule: BackupSchedule) {
 private fun NewSchedule(app: AppState) {
     var open by remember { mutableStateOf(false) }
     if (!open) {
-        Link("Add schedule…", onClick = { open = true })
+        Link(tr("Add schedule…"), onClick = { open = true })
         return
     }
     val connections = app.connections.profiles.filter { BackupSupport.of(it.type).let { s -> s is BackupSupport.WithTools || s is BackupSupport.Native } }
     if (connections.isEmpty()) {
-        Text("No connection can be backed up yet.", color = JewelTheme.globalColors.text.info)
+        Text(tr("No connection can be backed up yet."), color = JewelTheme.globalColors.text.info)
         return
     }
     var connection by remember { mutableStateOf(connections.first()) }
@@ -134,21 +135,21 @@ private fun NewSchedule(app: AppState) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Connection", Modifier.width(90.dp))
+            Text(tr("Connection"), Modifier.width(90.dp))
             ListComboBox(connections.map { it.name }, connections.indexOf(connection), onSelectedItemChange = { connection = connections[it] }, modifier = Modifier.width(240.dp))
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Database", Modifier.width(90.dp))
-            TextField(database, Modifier.width(240.dp), placeholder = { Text(connection.database.ifBlank { "the connection's database" }) })
+            Text(tr("Database"), Modifier.width(90.dp))
+            TextField(database, Modifier.width(240.dp), placeholder = { Text(connection.database.ifBlank { tr("the connection's database") }) })
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Frequency", Modifier.width(90.dp))
+            Text(tr("Frequency"), Modifier.width(90.dp))
             ListComboBox(BackupFrequency.entries.map { it.label }, BackupFrequency.entries.indexOf(frequency), onSelectedItemChange = { frequency = BackupFrequency.entries[it] }, modifier = Modifier.width(160.dp))
-            Text("Keep", Modifier.padding(start = 12.dp))
+            Text(tr("Keep"), Modifier.padding(start = 12.dp))
             TextField(keep, Modifier.width(60.dp))
         }
         if (connection.environment == Environment.Production) {
-            Text("${connection.name} is Production: scheduled backups add load to that server.", color = JewelTheme.globalColors.text.warning, fontSize = 12.sp)
+            Text(tr("{0} is Production: scheduled backups add load to that server.", connection.name), color = JewelTheme.globalColors.text.warning, fontSize = 12.sp)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             DefaultButton(onClick = {
@@ -162,8 +163,8 @@ private fun NewSchedule(app: AppState) {
                     )
                 app.updateSettings { it.copy(backupSchedules = it.backupSchedules + schedule) }
                 open = false
-            }) { Text("Add") }
-            OutlinedButton(onClick = { open = false }) { Text("Cancel") }
+            }) { Text(tr("Add")) }
+            OutlinedButton(onClick = { open = false }) { Text(tr("Cancel")) }
         }
     }
 }

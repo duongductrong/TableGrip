@@ -1,5 +1,6 @@
 package dev.tablegrip.app.settings
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -73,12 +74,12 @@ internal fun KeymapPanel(app: AppState) {
 
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            TextField(query, Modifier.width(280.dp), placeholder = { Text("Search actions or keys") }, leadingIcon = { Icon(AllIconsKeys.Actions.Search, null, Modifier.padding(end = 6.dp)) })
-            if (customized.isNotEmpty()) Text("${customized.size} changed", color = JewelTheme.globalColors.text.info, fontSize = 12.sp)
+            TextField(query, Modifier.width(280.dp), placeholder = { Text(tr("Search actions or keys")) }, leadingIcon = { Icon(AllIconsKeys.Actions.Search, null, Modifier.padding(end = 6.dp)) })
+            if (customized.isNotEmpty()) Text(tr("{0} changed", customized.size), color = JewelTheme.globalColors.text.info, fontSize = 12.sp)
         }
         Spacer(Modifier.height(4.dp))
-        if (actions.isEmpty()) Text("No actions match \"$needle\"", color = JewelTheme.globalColors.text.info)
-        actions.groupBy { it.group }.forEach { (group, groupActions) ->
+        if (actions.isEmpty()) Text(tr("No actions match \"{0}\"", needle), color = JewelTheme.globalColors.text.info)
+        actions.groupBy { it.groupLabel }.forEach { (group, groupActions) ->
             Text(group, Modifier.padding(top = 10.dp, bottom = 2.dp), fontWeight = FontWeight.SemiBold)
             groupActions.forEach { action ->
                 ActionRow(
@@ -114,18 +115,18 @@ private fun ActionRow(
     Column(Modifier.fillMaxWidth().padding(start = 4.dp, top = 1.dp, bottom = 1.dp)) {
         Row(Modifier.fillMaxWidth().height(30.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(action.description, Modifier.weight(1f), maxLines = 1)
-            if (customized) Text("changed", Modifier.padding(end = 8.dp), color = info, fontSize = 11.sp)
+            if (customized) Text(tr("changed"), Modifier.padding(end = 8.dp), color = info, fontSize = 11.sp)
             if (recording) KeyRecorder(onRecorded) else KeyChip(shortcut.label, conflict = clashes.sameContext.isNotEmpty(), onClick = onRecord)
             Box(Modifier.width(32.dp), contentAlignment = Alignment.Center) {
                 if (customized) {
-                    Tooltip({ Text("Back to the preset's shortcut") }) { IconButton(onClick = onReset) { Icon(AllIconsKeys.General.Reset, "Reset") } }
+                    Tooltip({ Text(tr("Back to the preset's shortcut")) }) { IconButton(onClick = onReset) { Icon(AllIconsKeys.General.Reset, tr("Reset")) } }
                 }
             }
         }
         if (clashes.sameContext.isNotEmpty()) {
-            Text("Also bound to: ${clashes.sameContext.joinToString { it.description }}", color = JewelTheme.globalColors.text.error, fontSize = 12.sp)
+            Text(tr("Also bound to: {0}", clashes.sameContext.joinToString { it.description }), color = JewelTheme.globalColors.text.error, fontSize = 12.sp)
         } else if (clashes.global.isNotEmpty()) {
-            Text("Shared with ${clashes.global.joinToString { "${it.description} (${it.group})" }}; the focused place takes it first.", color = info, fontSize = 12.sp)
+            Text(tr("Shared with {0}; the focused place takes it first.", clashes.global.joinToString { "${it.description} (${it.groupLabel})" }), color = info, fontSize = 12.sp)
         }
     }
 }
@@ -134,7 +135,7 @@ private fun ActionRow(
 private fun KeyChip(label: String, conflict: Boolean, onClick: () -> Unit) {
     val islands = LocalIslands.current
     val border = if (conflict) JewelTheme.globalColors.text.error else JewelTheme.globalColors.borders.normal
-    Tooltip({ Text("Click, then press the new shortcut") }) {
+    Tooltip({ Text(tr("Click, then press the new shortcut")) }) {
         Box(
             Modifier.widthIn(min = 90.dp)
                 .clip(RoundedCornerShape(5.dp))
@@ -184,7 +185,7 @@ private fun KeyRecorder(onRecorded: (Shortcut?) -> Unit) {
             .padding(horizontal = 10.dp, vertical = 3.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text("Press keys… (Esc cancels)", fontSize = 12.sp)
+        Text(tr("Press keys… (Esc cancels)"), fontSize = 12.sp)
     }
 }
 

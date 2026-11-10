@@ -1,5 +1,7 @@
 package dev.tablegrip.core.edit
 
+import dev.tablegrip.core.i18n.I18n
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.dialect.SqlDialect
 import dev.tablegrip.core.driver.ResultColumn
 import dev.tablegrip.core.filter.FilterValueException
@@ -92,10 +94,10 @@ data class ColumnEdit(
     val placeholder: String
         get() =
             when {
-                generated -> "<auto>"
-                defaultValue != null -> "<default: ${defaultValue.take(40)}${if (defaultValue.length > 40) "…" else ""}>"
-                !nullable -> "<required>"
-                else -> "<default>"
+                generated -> tr("<auto>")
+                defaultValue != null -> tr("<default: {0}{1}>", defaultValue.take(40), if (defaultValue.length > 40) "…" else "")
+                !nullable -> tr("<required>")
+                else -> tr("<default>")
             }
 
     /** Checks [text] typed into a cell; relative dates like `today-7d` resolve against [now]. */
@@ -110,7 +112,7 @@ data class ColumnEdit(
                 EditKind.Float -> float(input)
                 EditKind.Boolean ->
                     FilterValues.boolean(input)?.let { EditCheck.Ok(if (it) booleanStyle.yes else booleanStyle.no) }
-                        ?: EditCheck.Invalid("“$input” isn't true or false")
+                        ?: EditCheck.Invalid(tr("“{0}” isn't true or false", input))
                 EditKind.Date, EditKind.Time, EditKind.DateTime -> temporal(input, now, zone)
                 EditKind.Uuid -> EditCheck.Ok(FilterValues.uuid(input).toString())
                 EditKind.Json -> json(text)
@@ -142,8 +144,8 @@ data class ColumnEdit(
         val limit = maxLength ?: return EditCheck.Ok(text)
         val length = text.length
         return when {
-            length > limit && strictTypes -> EditCheck.Invalid("$length characters; the column takes at most $limit")
-            length > limit -> EditCheck.Ok(text, "$length/$limit characters: longer than declared", warning = true)
+            length > limit && strictTypes -> EditCheck.Invalid(tr("{0} characters; the column takes at most {1}", length, limit))
+            length > limit -> EditCheck.Ok(text, tr("{0}/{1} characters: longer than declared", length, limit), warning = true)
             length >= limit * 0.8 -> EditCheck.Ok(text, "$length/$limit")
             else -> EditCheck.Ok(text)
         }
@@ -156,12 +158,12 @@ data class ColumnEdit(
         val value =
             cleaned.toBigIntegerOrNull()
                 ?: cleaned.toBigDecimalOrNull()?.let { decimal ->
-                    runCatching { decimal.toBigIntegerExact() }.getOrNull() ?: return EditCheck.Invalid("“$input” isn't a whole number")
+                    runCatching { decimal.toBigIntegerExact() }.getOrNull() ?: return EditCheck.Invalid(tr("“{0}” isn't a whole number", input))
                 }
-                ?: return EditCheck.Invalid("“$input” isn't a number")
+                ?: return EditCheck.Invalid(tr("“{0}” isn't a number", input))
         val range = integerRange()
         if (range != null && (value < range.first || value > range.second)) {
-            return EditCheck.Invalid("Out of range for ${typeName.lowercase()}: ${range.first} to ${range.second}")
+            return EditCheck.Invalid(tr("Out of range for {0}: {1} to {2}", typeName.lowercase(), range.first, range.second))
         }
         return EditCheck.Ok(value.toString())
     }
@@ -183,17 +185,17 @@ data class ColumnEdit(
 
     private fun decimal(input: String): EditCheck {
         val value = FilterValues.number(cleanNumber(input))
-        if (unsigned && value.signum() < 0) return EditCheck.Invalid("The column is unsigned")
+        if (unsigned && value.signum() < 0) return EditCheck.Invalid(tr("The column is unsigned"))
         val scale = scale
         val precision = precision
         if (precision != null && scale != null && precision in 1..1000) {
             val wholeDigits = (value.precision() - value.scale()).coerceAtLeast(0)
             if (value.signum() != 0 && wholeDigits > precision - scale) {
-                return EditCheck.Invalid("Too large for ${typeName.lowercase()}($precision,$scale): at most ${precision - scale} digits before the point")
+                return EditCheck.Invalid(tr("Too large for {0}({1},{2}): at most {3} digits before the point", typeName.lowercase(), precision, scale, precision - scale))
             }
         }
         if (scale != null && value.scale() > scale) {
-            return EditCheck.Ok(value.toPlainString(), "Rounds to $scale decimal place${if (scale == 1) "" else "s"}", warning = true)
+            return EditCheck.Ok(value.toPlainString(), if (scale == 1) tr("Rounds to 1 decimal place") else tr("Rounds to {0} decimal places", scale), warning = true)
         }
         return EditCheck.Ok(value.toPlainString())
     }
@@ -205,7 +207,7 @@ data class ColumnEdit(
             "inf", "infinity", "+inf", "+infinity" -> return EditCheck.Ok("Infinity")
             "-inf", "-infinity" -> return EditCheck.Ok("-Infinity")
         }
-        cleaned.toBigDecimalOrNull() ?: return EditCheck.Invalid("“$input” isn't a number")
+        cleaned.toBigDecimalOrNull() ?: return EditCheck.Invalid(tr("“{0}” isn't a number", input))
         return EditCheck.Ok(cleaned)
     }
 
@@ -217,13 +219,13 @@ data class ColumnEdit(
                 when (parsed) {
                     is TemporalValue.Day -> parsed.date
                     is TemporalValue.Moment -> parsed.dateTime.toLocalDate()
-                    is TemporalValue.TimeOfDay -> return EditCheck.Invalid("Enter a date, e.g. 2026-10-31 or today")
+                    is TemporalValue.TimeOfDay -> return EditCheck.Invalid(tr("Enter a date, e.g. 2026-10-31 or today"))
                 }.let { EditCheck.Ok(FilterValues.format(it), DayFormat.format(it).takeIf { relative }) }
             EditKind.Time ->
                 when (parsed) {
                     is TemporalValue.TimeOfDay -> parsed.time
                     is TemporalValue.Moment -> parsed.dateTime.toLocalTime()
-                    is TemporalValue.Day -> return EditCheck.Invalid("Enter a time, e.g. 13:45")
+                    is TemporalValue.Day -> return EditCheck.Invalid(tr("Enter a time, e.g. 13:45"))
                 }.let { time ->
                     val (kept, cut) = truncateNanos(time.nano)
                     EditCheck.Ok(FilterValues.format(time.withNano(kept)), cut)
@@ -248,7 +250,7 @@ data class ColumnEdit(
         val digits = scale?.takeIf { it in 0..9 } ?: return nanos to null
         val unit = Math.pow(10.0, (9 - digits).toDouble()).toInt()
         val kept = nanos / unit * unit
-        return kept to (if (kept != nanos) "Seconds keep $digits decimal place${if (digits == 1) "" else "s"}" else null)
+        return kept to (if (kept != nanos) if (digits == 1) tr("Seconds keep 1 decimal place") else tr("Seconds keep {0} decimal places", digits) else null)
     }
 
     private fun json(text: String): EditCheck =
@@ -256,12 +258,12 @@ data class ColumnEdit(
             Json.parseToJsonElement(text)
             EditCheck.Ok(text)
         } catch (e: SerializationException) {
-            EditCheck.Invalid("Invalid JSON: " + e.message.orEmpty().lineSequence().first().removePrefix("Unexpected JSON token at offset "))
+            EditCheck.Invalid(tr("Invalid JSON: ") + e.message.orEmpty().lineSequence().first().removePrefix("Unexpected JSON token at offset "))
         }
 
     companion object {
-        private val DayFormat = DateTimeFormatter.ofPattern("EEE d MMM yyyy")
-        private val MomentFormat = DateTimeFormatter.ofPattern("EEE d MMM yyyy, HH:mm:ss")
+        private val DayFormat = I18n.dates("EEE d MMM yyyy")
+        private val MomentFormat = I18n.dates("EEE d MMM yyyy, HH:mm:ss")
 
         /** Describes [column] for editing; [info] adds what only table metadata knows (nullability, defaults, limits). */
         fun of(column: ResultColumn, info: ColumnInfo? = null, dialect: SqlDialect? = null): ColumnEdit {

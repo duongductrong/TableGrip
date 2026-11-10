@@ -1,5 +1,6 @@
 package dev.tablegrip.app.table
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
@@ -130,7 +131,7 @@ class TableEditModel(
     override fun placeholder(row: Int, column: Int): String? =
         when {
             row >= baseRows && column !in inserted[row - baseRows] -> columnEdits[column].placeholder
-            row < baseRows && (row to column) in defaults -> "<default>"
+            row < baseRows && (row to column) in defaults -> tr("<default>")
             else -> null
         }
 
@@ -138,12 +139,12 @@ class TableEditModel(
         if (row < baseRows && (row in deleted || (row to column) !in updates)) return null
         val edit = columnEdits[column]
         val newRow = row >= baseRows
-        if (newRow && column !in inserted[row - baseRows]) return if (edit.hasDefault) null else "${columns[column].name} is required: it is NOT NULL and has no default"
-        val value = value(row, column) ?: return if (edit.nullable) null else "${columns[column].name} can't be NULL"
+        if (newRow && column !in inserted[row - baseRows]) return if (edit.hasDefault) null else tr("{0} is required: it is NOT NULL and has no default", columns[column].name)
+        val value = value(row, column) ?: return if (edit.nullable) null else tr("{0} can't be NULL", columns[column].name)
         return when (val check = edit.check(value)) {
             is EditCheck.Invalid -> check.message
             // Blank text kept as typed in a column that isn't text: the server can't read it.
-            EditCheck.Empty -> "Empty isn't a ${edit.typeName.lowercase()}; enter a value or set NULL"
+            EditCheck.Empty -> tr("Empty isn't a {0}; enter a value or set NULL", edit.typeName.lowercase())
             is EditCheck.Ok -> null
         }
     }
@@ -153,7 +154,7 @@ class TableEditModel(
         val rows = (updates.keys.map { it.first }.filter { it !in deleted } + (baseRows until rowCount)).distinct().sorted()
         for (row in rows) {
             for (column in columns.indices) {
-                problem(row, column)?.let { return "Row ${row + 1}, ${columns[column].name}: $it" }
+                problem(row, column)?.let { return tr("Row {0}, {1}: {2}", row + 1, columns[column].name, it) }
             }
         }
         return null
@@ -171,7 +172,7 @@ class TableEditModel(
         else edit.supportsDefault && (edit.defaultValue != null || edit.generated) && (row to column) !in defaults
     }
 
-    override fun setValue(row: Int, column: Int, value: String?) = undoable("edit of ${columns[column].name}", row, column) {
+    override fun setValue(row: Int, column: Int, value: String?) = undoable(tr("edit of {0}", columns[column].name), row, column) {
         if (!canEdit(row, column)) return@undoable
         if (row >= baseRows) {
             inserted[row - baseRows][column] = value
@@ -181,7 +182,7 @@ class TableEditModel(
         if (columnEdits[column].sameValue(value, result.rows[row][column])) updates.remove(row to column) else updates[row to column] = value
     }
 
-    override fun setDefault(row: Int, column: Int) = undoable("DEFAULT for ${columns[column].name}", row, column) {
+    override fun setDefault(row: Int, column: Int) = undoable(tr("DEFAULT for {0}", columns[column].name), row, column) {
         if (!canSetDefault(row, column)) return@undoable
         if (row >= baseRows) {
             inserted[row - baseRows].remove(column)
@@ -191,7 +192,7 @@ class TableEditModel(
         defaults[row to column] = Unit
     }
 
-    override fun revertCell(row: Int, column: Int) = undoable("revert of ${columns[column].name}", row, column) {
+    override fun revertCell(row: Int, column: Int) = undoable(tr("revert of {0}", columns[column].name), row, column) {
         if (row >= baseRows) {
             inserted[row - baseRows].remove(column)
             return@undoable
@@ -201,17 +202,17 @@ class TableEditModel(
     }
 
     override fun addRow(): Int =
-        undoable("new row", baseRows + inserted.size) {
+        undoable(tr("new row"), baseRows + inserted.size) {
             inserted += mutableStateMapOf()
             rowCount - 1
         }
 
-    override fun deleteRows(rows: Collection<Int>) = undoable(if (rows.size == 1) "row deletion" else "deletion of ${rows.size} rows", rows.minOrNull()) {
+    override fun deleteRows(rows: Collection<Int>) = undoable(if (rows.size == 1) tr("row deletion") else tr("deletion of {0} rows", rows.size), rows.minOrNull()) {
         rows.filter { it >= baseRows }.sortedDescending().forEach { inserted.removeAt(it - baseRows) }
         if (hasKey) rows.filter { it < baseRows }.forEach { deleted[it] = Unit }
     }
 
-    override fun revertRows(rows: Collection<Int>) = undoable(if (rows.size == 1) "row revert" else "revert of ${rows.size} rows", rows.minOrNull()) {
+    override fun revertRows(rows: Collection<Int>) = undoable(if (rows.size == 1) tr("row revert") else tr("revert of {0} rows", rows.size), rows.minOrNull()) {
         rows.filter { it >= baseRows }.sortedDescending().forEach { inserted.removeAt(it - baseRows) }
         rows.filter { it < baseRows }.forEach { row ->
             deleted.remove(row)
@@ -221,7 +222,7 @@ class TableEditModel(
     }
 
     /** Drops every pending edit; one undo step, so a Revert All clicked by mistake can be taken back. */
-    fun revertAll() = undoable("revert of all changes") {
+    fun revertAll() = undoable(tr("revert of all changes")) {
         updates.clear()
         defaults.clear()
         deleted.clear()
@@ -231,20 +232,20 @@ class TableEditModel(
     // region Records as JSON
 
     override val recordNoun: String
-        get() = "row"
+        get() = tr("row")
 
     override fun whyNotEditable(row: Int): String? =
         when {
-            readOnly -> "The connection is read-only"
-            row !in 0 until rowCount -> "This row is no longer on the page"
-            row in deleted -> "This row is marked for deletion; revert it first"
-            row < baseRows && !hasKey -> "The table has no primary key, so existing rows can't be changed"
+            readOnly -> tr("The connection is read-only")
+            row !in 0 until rowCount -> tr("This row is no longer on the page")
+            row in deleted -> tr("This row is marked for deletion; revert it first")
+            row < baseRows && !hasKey -> tr("The table has no primary key, so existing rows can't be changed")
             else -> null
         }
 
     override fun describeRecord(row: Int): String {
-        if (row >= baseRows) return "New row"
-        val key = keyColumns ?: return "Row ${row + 1} on this page"
+        if (row >= baseRows) return tr("New row")
+        val key = keyColumns ?: return tr("Row {0} on this page", row + 1)
         return key.joinToString(", ") { "${columns[it].name} = ${result.rows[row][it] ?: "NULL"}" }
     }
 
@@ -261,14 +262,14 @@ class TableEditModel(
         val (defaulted, asked) = columns.indices.filter { !columns[it].isBinary }.partition { columnEdits[it].let { edit -> edit.generated || edit.defaultValue != null } }
         val hint =
             defaulted.takeIf { it.isNotEmpty() }?.let { list ->
-                "Left out, so they take their defaults: " + list.joinToString(", ") { columns[it].name } + ". Add one to set it."
+                tr("Left out, so they take their defaults: ") + list.joinToString(", ") { columns[it].name } + tr(". Add one to set it.")
             }
         return RecordTemplate(JsonObject(asked.associate { columns[it].name to JsonNull }), hint)
     }
 
     override fun plan(row: Int?, base: JsonObject, edited: JsonObject): RecordPlan = planned(row, base, edited).first
 
-    override fun apply(row: Int?, base: JsonObject, edited: JsonObject): Int? = undoable(if (row == null) "new row from JSON" else "row edit as JSON", row ?: rowCount) {
+    override fun apply(row: Int?, base: JsonObject, edited: JsonObject): Int? = undoable(if (row == null) tr("new row from JSON") else tr("row edit as JSON"), row ?: rowCount) {
         val (plan, steps) = planned(row, base, edited)
         if (!plan.canApply) return@undoable null
         val target = row ?: addRow()
@@ -304,7 +305,7 @@ class TableEditModel(
             val name = diff.name
             val column = columns.indexOfFirst { it.name == name }
             if (column < 0) {
-                problems += "There's no column “$name” in this table"
+                problems += tr("There's no column “{0}” in this table", name)
                 continue
             }
             val edit = columnEdits[column]
@@ -316,7 +317,7 @@ class TableEditModel(
                     } else kept += name
                 is FieldDiff.Set -> {
                     if (columns[column].isBinary) {
-                        problems += "“$name” holds binary data, which can't be edited as JSON"
+                        problems += tr("“{0}” holds binary data, which can't be edited as JSON", name)
                         continue
                     }
                     val text =
@@ -331,12 +332,12 @@ class TableEditModel(
                         if (edit.nullable) {
                             steps += Step.Value(column, null)
                             changes += diff.change()
-                        } else problems += "“$name” can't be NULL" + if (isNew && edit.hasDefault) "; leave it out to use its default" else ""
+                        } else problems += tr("“{0}” can't be NULL", name) + if (isNew && edit.hasDefault) tr("; leave it out to use its default") else ""
                         continue
                     }
                     when (val check = edit.check(text)) {
                         is EditCheck.Invalid -> problems += "“$name”: ${check.message}"
-                        EditCheck.Empty -> problems += "“$name” is empty, which isn't ${article(edit.typeName)}; use null for NULL"
+                        EditCheck.Empty -> problems += tr("“{0}” is empty, which isn't {1}; use null for NULL", name, article(edit.typeName))
                         is EditCheck.Ok -> {
                             if (check.warning) check.note?.let { notes += "“$name”: $it" }
                             steps += Step.Value(column, check.value)
@@ -349,13 +350,13 @@ class TableEditModel(
         if (!isNew) {
             val keyNames = keyColumns.orEmpty().map { columns[it].name }.toSet()
             changes.map { it.name }.filter { it in keyNames }.takeIf { it.isNotEmpty() }?.let { keys ->
-                notes += "Changes the primary key (${keys.joinToString(", ")}); rows that reference it aren't updated"
+                notes += tr("Changes the primary key ({0}); rows that reference it aren't updated", keys.joinToString(", "))
             }
             val current = recordJson(row!!)
             val both = changes.map { it.name }.filter { current[it] != base[it] }
-            if (both.isNotEmpty()) notes += "Also edited in the grid since this was opened: ${both.joinToString(", ")}. The JSON's values replace those edits."
+            if (both.isNotEmpty()) notes += tr("Also edited in the grid since this was opened: {0}. The JSON's values replace those edits.", both.joinToString(", "))
         }
-        if (kept.isNotEmpty()) notes += "Left out, so they keep their values: ${kept.joinToString(", ")}"
+        if (kept.isNotEmpty()) notes += tr("Left out, so they keep their values: {0}", kept.joinToString(", "))
         return RecordPlan(changes, problems, notes, isNew = row == null) to steps
     }
 
@@ -381,11 +382,11 @@ class TableEditModel(
                 }
             is JsonObject, is JsonArray ->
                 if (isJson) CellText.Ok(value.toString())
-                else CellText.Invalid("“$name” takes ${article(edit.typeName)}, not ${if (value is JsonObject) "an object" else "an array"}")
+                else CellText.Invalid(tr("“{0}” takes {1}, not {2}", name, article(edit.typeName), if (value is JsonObject) tr("an object") else tr("an array")))
         }
     }
 
-    private fun article(type: String): String = type.lowercase().let { (if (it.isNotEmpty() && it[0] in "aeiou") "an " else "a ") + it }
+    private fun article(type: String): String = type.lowercase().let { if (it.isNotEmpty() && it[0] in "aeiou") tr("an {0}", it) else tr("a {0}", it) }
 
     // endregion
 

@@ -1,5 +1,6 @@
 package dev.tablegrip.app.connections
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -117,8 +118,8 @@ class ConnectionImportState internal constructor(private val connections: Connec
     fun add(path: Path) {
         val source = ConnectionImport.detect(path)
         when {
-            source == null -> message = "TableGrip doesn't recognise ${path.fileName} as a connection list."
-            groups.any { it.source.path == source.path } -> message = "${path.fileName} is already in the list."
+            source == null -> message = tr("TableGrip doesn't recognise {0} as a connection list.", path.fileName)
+            groups.any { it.source.path == source.path } -> message = tr("{0} is already in the list.", path.fileName)
             else -> scan { listOf(source) }
         }
     }
@@ -136,7 +137,7 @@ class ConnectionImportState internal constructor(private val connections: Connec
                     }
                 }
             append(read)
-            if (read.isNotEmpty() && read.all { it.second.candidates.isEmpty() }) message = "No connections found in ${read.joinToString { it.first.path.fileName.toString() }}."
+            if (read.isNotEmpty() && read.all { it.second.candidates.isEmpty() }) message = tr("No connections found in {0}.", read.joinToString { it.first.path.fileName.toString() })
             scanning = false
         }
     }
@@ -167,7 +168,7 @@ class ConnectionImportState internal constructor(private val connections: Connec
             }
             connections.saveImported(items)
                 .onSuccess { onDone() }
-                .onFailure { message = "Import failed: ${it.message}" }
+                .onFailure { message = tr("Import failed: {0}", it.message) }
             saving = false
         }
     }
@@ -175,7 +176,7 @@ class ConnectionImportState internal constructor(private val connections: Connec
 
 @Composable
 internal fun ImportConnectionsDialog(state: ConnectionsViewModel, import: ConnectionImportState) {
-    AppDialog(onCloseRequest = state::closeImport, size = DpSize(780.dp, 580.dp), title = "Import Connections") {
+    AppDialog(onCloseRequest = state::closeImport, size = DpSize(780.dp, 580.dp), title = tr("Import Connections")) {
         ImportConnectionsContent(state, import)
     }
 }
@@ -186,27 +187,27 @@ internal fun ImportConnectionsContent(state: ConnectionsViewModel, import: Conne
     Column(Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
-                "From DBeaver, Connections.plist, IDE data sources (.idea/dataSources.xml), .pgpass, pg_service.conf and .env files. Nothing changes in those tools.",
+                tr("From DBeaver, Connections.plist, IDE data sources (.idea/dataSources.xml), .pgpass, pg_service.conf and .env files. Nothing changes in those tools."),
                 Modifier.weight(1f),
                 color = JewelTheme.globalColors.text.info,
             )
             Spacer(Modifier.padding(start = 12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = { chooseImportFile()?.let(import::add) }, enabled = !import.scanning) { Text("Add File…") }
-                OutlinedButton(onClick = { chooseFolder("Choose a project to look for .env files in")?.let(import::add) }, enabled = !import.scanning) {
-                    Text("Scan Project…")
+                OutlinedButton(onClick = { chooseImportFile()?.let(import::add) }, enabled = !import.scanning) { Text(tr("Add File…")) }
+                OutlinedButton(onClick = { chooseFolder(tr("Choose a project to look for .env files in"))?.let(import::add) }, enabled = !import.scanning) {
+                    Text(tr("Scan Project…"))
                 }
             }
         }
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
         Box(Modifier.weight(1f).fillMaxWidth()) {
             when {
-                import.groups.isEmpty() && import.scanning -> Centered("Looking for connections…")
+                import.groups.isEmpty() && import.scanning -> Centered(tr("Looking for connections…"))
                 import.groups.isEmpty() ->
                     Centered(
-                        "No other database tools found on this computer.\n" +
-                            "Add a file — a Connections.plist, DBeaver's data-sources.json, a .idea/dataSources.xml, .pgpass — " +
-                            "or scan a project for .env files.",
+                        tr("No other database tools found on this computer.\n") +
+                            tr("Add a file — a Connections.plist, DBeaver's data-sources.json, a .idea/dataSources.xml, .pgpass — ") +
+                            tr("or scan a project for .env files."),
                     )
                 else -> ImportList(import)
             }
@@ -215,18 +216,18 @@ internal fun ImportConnectionsContent(state: ConnectionsViewModel, import: Conne
         Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             import.message?.let { Text(it, color = JewelTheme.globalColors.text.warning, maxLines = 2) }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                CheckboxRow("Keep folders as groups", import.keepGroups, onCheckedChange = { import.keepGroups = it })
+                CheckboxRow(tr("Keep folders as groups"), import.keepGroups, onCheckedChange = { import.keepGroups = it })
                 Spacer(Modifier.weight(1f))
                 val count = import.selected.size
                 val missing = import.selected.count { it.needsPassword }
                 if (missing > 0) {
-                    Tooltip({ Text("Their tools keep passwords where TableGrip can't read them. Add one with Edit Connection, or connect without.") }) {
-                        Text("$missing without a password", color = JewelTheme.globalColors.text.info)
+                    Tooltip({ Text(tr("Their tools keep passwords where TableGrip can't read them. Add one with Edit Connection, or connect without.")) }) {
+                        Text(tr("{0} without a password", missing), color = JewelTheme.globalColors.text.info)
                     }
                 }
-                OutlinedButton(onClick = state::closeImport) { Text("Cancel") }
+                OutlinedButton(onClick = state::closeImport) { Text(tr("Cancel")) }
                 DefaultButton(onClick = { import.import(state::closeImport) }, enabled = count > 0 && !import.saving && !import.scanning) {
-                    Text(if (count == 1) "Import 1 Connection" else "Import $count Connections")
+                    Text(if (count == 1) tr("Import 1 Connection") else tr("Import {0} Connections", count))
                 }
             }
         }
@@ -241,7 +242,7 @@ private fun ImportList(import: ConnectionImportState) {
             items(group.rows, key = { it.config.id }) { row -> ImportRowView(row) }
             if (group.skipped.isNotEmpty()) item(key = "skipped:${group.source.path}") { SkippedNote(group.skipped) }
         }
-        if (import.scanning) item(key = "scanning") { Text("Looking for connections…", Modifier.padding(16.dp), color = JewelTheme.globalColors.text.info) }
+        if (import.scanning) item(key = "scanning") { Text(tr("Looking for connections…"), Modifier.padding(16.dp), color = JewelTheme.globalColors.text.info) }
     }
 }
 
@@ -257,9 +258,9 @@ private fun GroupHeader(group: ImportGroup) {
         Text(shortPath(group.source.path), Modifier.weight(1f), color = JewelTheme.globalColors.text.info, maxLines = 1, overflow = TextOverflow.MiddleEllipsis)
         Text(
             when (group.rows.size) {
-                0 -> "nothing to import"
-                1 -> "1 connection"
-                else -> "${group.rows.size} connections"
+                0 -> tr("nothing to import")
+                1 -> tr("1 connection")
+                else -> tr("{0} connections", group.rows.size)
             },
             color = JewelTheme.globalColors.text.info,
         )
@@ -272,9 +273,9 @@ private fun ImportRowView(row: ImportRow) {
     val details = buildList {
         add(row.candidate.origin.let(::shortOrigin))
         addAll(row.candidate.notes)
-        row.alreadySaved?.let { add("Already in TableGrip as “${it.name}”") }
-        row.duplicateOf?.let { add("Also found as “${it.config.name}” above") }
-        if (row.password != null && row.candidate.password == null) add("Password from another tool")
+        row.alreadySaved?.let { add(tr("Already in TableGrip as “{0}”", it.name)) }
+        row.duplicateOf?.let { add(tr("Also found as “{0}” above", it.config.name)) }
+        if (row.password != null && row.candidate.password == null) add(tr("Password from another tool"))
     }
     Tooltip({ Text(details.joinToString("\n")) }) {
         Row(
@@ -288,12 +289,12 @@ private fun ImportRowView(row: ImportRow) {
             EnvironmentChip(config)
             Text("${config.type.displayName} · ${address(config)}", Modifier.weight(1f), color = JewelTheme.globalColors.text.info, maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (config.group.isNotEmpty()) Tag(config.group)
-            if (config.ssh != null) Tag("SSH")
-            if (config.readOnly) Tag("read-only")
+            if (config.ssh != null) Tag(tr("SSH"))
+            if (config.readOnly) Tag(tr("read-only"))
             when {
-                row.alreadySaved != null -> Tag("already added")
-                row.duplicateOf != null -> Tag("duplicate")
-                row.needsPassword -> Tag("no password")
+                row.alreadySaved != null -> Tag(tr("already added"))
+                row.duplicateOf != null -> Tag(tr("duplicate"))
+                row.needsPassword -> Tag(tr("no password"))
             }
         }
     }
@@ -303,7 +304,7 @@ private fun ImportRowView(row: ImportRow) {
 private fun SkippedNote(skipped: List<String>) {
     var open by androidx.compose.runtime.remember { mutableStateOf(false) }
     Column(Modifier.fillMaxWidth().padding(start = 36.dp, end = 16.dp, top = 2.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Link(if (open) "Hide what was left out" else "${skipped.size} left out — why?", onClick = { open = !open })
+        Link(if (open) tr("Hide what was left out") else tr("{0} left out — why?", skipped.size), onClick = { open = !open })
         if (open) skipped.forEach { Text(it, color = JewelTheme.globalColors.text.info) }
     }
 }
@@ -340,7 +341,7 @@ private fun shortOrigin(origin: String): String = if (origin.startsWith(home)) "
 
 /** Native file picker; on macOS ⇧⌘. shows hidden files such as `.pgpass` and `.env`. */
 private fun chooseImportFile(): Path? {
-    val dialog = java.awt.FileDialog(null as java.awt.Frame?, "Choose a file to import connections from", java.awt.FileDialog.LOAD)
+    val dialog = java.awt.FileDialog(null as java.awt.Frame?, tr("Choose a file to import connections from"), java.awt.FileDialog.LOAD)
     dialog.directory = home
     dialog.isVisible = true
     return dialog.file?.let { Path.of(dialog.directory, it) }

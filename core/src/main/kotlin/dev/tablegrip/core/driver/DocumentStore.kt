@@ -1,5 +1,6 @@
 package dev.tablegrip.core.driver
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.connection.ConnectionConfig
 import dev.tablegrip.core.connection.Paradigm
 import dev.tablegrip.core.connection.SshTunnel
@@ -12,10 +13,10 @@ import kotlinx.coroutines.withContext
 object DocumentStore {
     suspend fun connect(config: ConnectionConfig, password: String?, sshSecret: String? = null, drivers: DriverLibrary = DriverLibrary.shared): DocumentConnection =
         withContext(Dispatchers.IO) {
-            require(config.type.paradigm == Paradigm.Document) { "${config.type.displayName} isn't a document store" }
+            require(config.type.paradigm == Paradigm.Document) { tr("{0} isn't a document store", config.type.displayName) }
             val client = drivers.loadClient(config.effectiveDriver) as DocumentClient
-            if (config.ssh != null && config.url != null) throw SQLException("SSH tunnels need host and port, not a connection string.")
-            val port = config.port ?: config.type.defaultPort ?: throw SQLException("${config.type.displayName} needs a port.")
+            if (config.ssh != null && config.url != null) throw SQLException(tr("SSH tunnels need host and port, not a connection string."))
+            val port = config.port ?: config.type.defaultPort ?: throw SQLException(tr("{0} needs a port.", config.type.displayName))
             val tunnel = config.ssh?.let { ssh -> SshTunnel.open(ssh, sshSecret, config.host.trim(), port) }
             try {
                 val host = if (tunnel != null) "127.0.0.1" else config.host.trim().ifEmpty { "localhost" }
@@ -68,19 +69,19 @@ object DocumentStore {
         private fun refuse(what: String): Nothing = throw ReadOnlyViolationException(what)
 
         override suspend fun insert(database: String, collection: String, document: String): String =
-            if (readOnly) refuse("inserting documents") else inner.insert(database, collection, document)
+            if (readOnly) refuse(tr("inserting documents")) else inner.insert(database, collection, document)
 
         override suspend fun replace(database: String, collection: String, id: String, document: String, original: String?) =
-            if (readOnly) refuse("changing documents") else inner.replace(database, collection, id, document, original)
+            if (readOnly) refuse(tr("changing documents")) else inner.replace(database, collection, id, document, original)
 
         override suspend fun update(database: String, collection: String, id: String, set: Map<String, String>, unset: Set<String>, expected: Map<String, String?>): Boolean =
-            if (readOnly) refuse("changing documents") else inner.update(database, collection, id, set, unset, expected)
+            if (readOnly) refuse(tr("changing documents")) else inner.update(database, collection, id, set, unset, expected)
 
         override suspend fun delete(database: String, collection: String, ids: List<String>): Long =
-            if (readOnly) refuse("deleting documents") else inner.delete(database, collection, ids)
+            if (readOnly) refuse(tr("deleting documents")) else inner.delete(database, collection, ids)
 
         override suspend fun command(database: String, line: String): String =
-            if (readOnly && !isRead(line)) refuse("this command") else inner.command(database, line)
+            if (readOnly && !isRead(line)) refuse(tr("this command")) else inner.command(database, line)
 
         override fun close() {
             try {

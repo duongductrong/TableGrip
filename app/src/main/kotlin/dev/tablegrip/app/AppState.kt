@@ -1,5 +1,6 @@
 package dev.tablegrip.app
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.runtime.getValue
 import dev.tablegrip.app.settings.ConfigFileWatcher
 import dev.tablegrip.app.settings.openInSystem
@@ -95,7 +96,7 @@ class AppState(
     val theme: AppTheme
         get() = AppTheme.of(settings.theme.mode)
 
-    var status by mutableStateOf("Ready")
+    var status by mutableStateOf(tr("Ready"))
 
     /** Tool window shown in the left island; null hides it. */
     var leftTool by mutableStateOf<LeftTool?>(LeftTool.Explorer)
@@ -151,6 +152,8 @@ class AppState(
     var quitApp: () -> Unit = {}
     /** Quits like [quitApp], then installs the downloaded update and starts the new version; [Main] sets it. */
     var restartToUpdate: () -> Unit = {}
+    /** Quits like [quitApp], then starts TableGrip again, e.g. to show it in another language; [Main] sets it. */
+    var restartApp: () -> Unit = {}
     /** Keeps the installed app up to date; [Main] starts it, tests and `:app:run` get one that does nothing. */
     val updater: Updater = Updater.create(canQuit = { !quitWouldAsk }, requestQuit = { quitApp() })
 
@@ -177,7 +180,7 @@ class AppState(
         explorer.refresh(dev.tablegrip.app.explorer.ConnectionKey(config.id))
         workspace.tabs.filterIsInstance<TableDataTab>().filter { it.connectionId == config.id && !it.hasChanges }.forEach { it.refresh() }
         files.reloaded(config.id)
-        status = "Reloaded ${config.name}: it changed on disk"
+        status = tr("Reloaded {0}: it changed on disk", config.name)
     }
 
     /** Drops cached completion metadata, e.g. after DDL or when the connection's settings change. */
@@ -220,7 +223,7 @@ class AppState(
         settingsError = settingsStore.loadError
         if (settingsError == null && loaded != settings) {
             apply(loaded)
-            status = "Applied settings.json"
+            status = tr("Applied settings.json")
         }
     }
 

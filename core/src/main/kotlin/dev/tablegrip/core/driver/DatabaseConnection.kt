@@ -1,5 +1,6 @@
 package dev.tablegrip.core.driver
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.activity.ActivityMonitor
 import dev.tablegrip.core.connection.ConnectionConfig
 import dev.tablegrip.core.dialect.SortColumn
@@ -91,10 +92,10 @@ interface RelationalConnection : DatabaseConnection {
      * folder. Only for engines where [dev.tablegrip.core.backup.BackupSupport.of] is `Native`. Reads, never writes.
      */
     suspend fun backupInto(target: java.nio.file.Path): Unit =
-        throw UnsupportedOperationException("${config.type.displayName} can't back itself up")
+        throw UnsupportedOperationException(tr("{0} can't back itself up", config.type.displayName))
 
     suspend fun openActivityMonitor(): ActivityMonitor =
-        throw UnsupportedOperationException("${config.type.displayName} has no activity monitor")
+        throw UnsupportedOperationException(tr("{0} has no activity monitor", config.type.displayName))
 
     /**
      * Every table of [namespace] with columns, keys and indexes, for schema compare and the ER diagram. [onProgress] gets
@@ -118,7 +119,7 @@ interface RelationalConnection : DatabaseConnection {
         columns: List<ColumnInfo>,
         rows: Sequence<T>,
         values: (T) -> List<String?>,
-        describe: (index: Long, row: T) -> String = { index, _ -> "row ${index + 1}" },
+        describe: (index: Long, row: T) -> String = { index, _ -> tr("row {0}", index + 1) },
         onProgress: (Long) -> Unit = {},
     ): Long
 }

@@ -1,5 +1,6 @@
 package dev.tablegrip.core.theme
 
+import dev.tablegrip.core.i18n.tr
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.extension
@@ -101,7 +102,7 @@ object ThemeJson {
         val errors = mutableListOf<ThemeFileError>()
         for (file in dir.listDirectoryEntries().filter { it.extension.equals("json", ignoreCase = true) }.sortedBy { it.fileName.toString() }) {
             runCatching { parse(file.readText()) }
-                .onSuccess { family -> if (family.themes.isEmpty()) errors += ThemeFileError(file, "No themes in \"themes\"") else families += family }
+                .onSuccess { family -> if (family.themes.isEmpty()) errors += ThemeFileError(file, tr("No themes in \"themes\"")) else families += family }
                 .onFailure { errors += ThemeFileError(file, it.message?.lineSequence()?.firstOrNull() ?: it.toString()) }
         }
         return ThemeFiles(families, errors)

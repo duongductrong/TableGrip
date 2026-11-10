@@ -281,12 +281,16 @@ compose.desktop {
                 dmgPackageBuildVersion = appBuild
                 entitlementsFile = macEntitlements
                 runtimeEntitlementsFile = macEntitlements
+                // The languages TableGrip is translated into (see core's i18n), so system dialogs, the About panel and
+                // Sparkle's windows follow the system's language among them.
                 // Sparkle: every update and the feed itself must carry a signature from this key; checks need no
                 // first-run prompt (Settings → Updates turns them off); nothing about the Mac is sent.
                 infoPlist {
                     extraKeysRawXml =
                         """
                         <key>CFBundleIconName</key><string>TableGrip</string>
+                        <key>CFBundleDevelopmentRegion</key><string>en</string>
+                        <key>CFBundleLocalizations</key><array><string>en</string><string>vi</string><string>zh-Hans</string><string>zh-Hant</string></array>
                         <key>SUPublicEDKey</key><string>$sparklePublicKey</string>
                         <key>SURequireSignedFeed</key><true/>
                         <key>SUVerifyUpdateBeforeExtraction</key><true/>
@@ -522,6 +526,7 @@ tasks {
         useJUnitPlatform()
         providers.gradleProperty("snapshot.dir").orNull?.let { systemProperty("snapshot.dir", it) }
         providers.gradleProperty("snapshot.db").orNull?.let { systemProperty("snapshot.db", it) }
+        providers.gradleProperty("snapshot.lang").orNull?.let { systemProperty("snapshot.lang", it) }
         listOf("it.network", "it.postgres", "it.redis", "it.mongo", "it.etcd").forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
     }
 

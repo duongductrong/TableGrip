@@ -1,5 +1,6 @@
 package dev.tablegrip.app.search
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
@@ -70,13 +71,13 @@ import org.jetbrains.jewel.ui.theme.treeStyle
 
 /** Groups of results, in the order they rank when scores tie. */
 enum class GoToKind(val heading: String) {
-    Tab("Open tabs"),
-    Table("Tables"),
-    View("Views"),
-    Query("Saved queries"),
-    Connection("Connections"),
-    Action("Actions"),
-    History("Recent queries"),
+    Tab(tr("Open tabs")),
+    Table(tr("Tables")),
+    View(tr("Views")),
+    Query(tr("Saved queries")),
+    Connection(tr("Connections")),
+    Action(tr("Actions")),
+    History(tr("Recent queries")),
 }
 
 /**
@@ -149,7 +150,7 @@ fun goToItems(app: AppState): List<GoToItem> = buildList {
                         detail = listOf(config.name, namespace).filter { it.isNotEmpty() }.joinToString(" · "),
                         icon = AllIconsKeys.Nodes.DataTables,
                         connection = config,
-                        altLabel = "structure",
+                        altLabel = tr("structure"),
                         openAlt = { workspace.openTable(config, ref, StructureSection.Columns) },
                     ) { workspace.openTable(config, ref) }
                 )
@@ -178,23 +179,23 @@ private fun actions(app: AppState): List<GoToItem> {
     fun action(label: String, shortcut: Shortcut? = null, icon: IconKey? = null, run: () -> Unit) =
         GoToItem(GoToKind.Action, label, icon = icon ?: AllIconsKeys.Actions.Lightning, shortcut = shortcut, open = run)
     return listOfNotNull(
-        app.currentConnection?.let { config -> action("New Console", Shortcuts.NewConsole, AllIconsKeys.Nodes.Console) { workspace.openConsole(config) } },
-        action("New Connection…", icon = AllIconsKeys.General.Add) { app.connections.openNew() },
-        action("Import Connections…", icon = AllIconsKeys.ToolbarDecorator.Import) { app.connections.openImport() },
-        (workspace.selected as? ConsoleTab)?.let { tab -> action("Save Query…", Shortcuts.Save, AllIconsKeys.Actions.MenuSaveall) { tab.save() } },
-        action("Saved Queries", Shortcuts.Queries) { app.toggleTool(LeftTool.Queries) },
+        app.currentConnection?.let { config -> action(tr("New Console"), Shortcuts.NewConsole, AllIconsKeys.Nodes.Console) { workspace.openConsole(config) } },
+        action(tr("New Connection…"), icon = AllIconsKeys.General.Add) { app.connections.openNew() },
+        action(tr("Import Connections…"), icon = AllIconsKeys.ToolbarDecorator.Import) { app.connections.openImport() },
+        (workspace.selected as? ConsoleTab)?.let { tab -> action(tr("Save Query…"), Shortcuts.Save, AllIconsKeys.Actions.MenuSaveall) { tab.save() } },
+        action(tr("Saved Queries"), Shortcuts.Queries) { app.toggleTool(LeftTool.Queries) },
         app.currentConnection?.takeUnless { ActivitySupport.of(it.type) == ActivitySupport.NotApplicable }?.let { config ->
-            action("Activity: ${config.name}", Shortcuts.Activity) { workspace.openActivity(config) }
+            action(tr("Activity: {0}", config.name), Shortcuts.Activity) { workspace.openActivity(config) }
         },
-        action("Connections", Shortcuts.Explorer) { app.toggleTool(LeftTool.Explorer) },
-        action("Query History", Shortcuts.History) { app.toggleTool(LeftTool.History) },
-        action("Show / Hide Sidebar", Shortcuts.ToggleSidebar) { app.toggleSidebar() },
-        action("Agent", Shortcuts.Agent) { app.agentOpen = !app.agentOpen },
-        action("Settings", Shortcuts.Settings, AllIconsKeys.General.Settings) { app.settingsOpen = true },
-        action("Keyboard Shortcuts", Shortcuts.ShowShortcuts, AllIconsKeys.General.Keyboard) { app.shortcutsOpen = true },
-        app.updater.takeIf { it.unavailableReason == null }?.let { updater -> action("Check for Updates…", icon = AllIconsKeys.Actions.CheckOut) { updater.checkNow() } },
-        (workspace.selected as? TableDataTab)?.let { tab -> action("Reload Table", Shortcuts.Reload, AllIconsKeys.Actions.Refresh) { tab.refresh() } },
-        workspace.selected?.let { tab -> action("Close Tab", Shortcuts.CloseTab) { workspace.requestClose(tab) } },
+        action(tr("Connections"), Shortcuts.Explorer) { app.toggleTool(LeftTool.Explorer) },
+        action(tr("Query History"), Shortcuts.History) { app.toggleTool(LeftTool.History) },
+        action(tr("Show / Hide Sidebar"), Shortcuts.ToggleSidebar) { app.toggleSidebar() },
+        action(tr("Agent"), Shortcuts.Agent) { app.agentOpen = !app.agentOpen },
+        action(tr("Settings"), Shortcuts.Settings, AllIconsKeys.General.Settings) { app.settingsOpen = true },
+        action(tr("Keyboard Shortcuts"), Shortcuts.ShowShortcuts, AllIconsKeys.General.Keyboard) { app.shortcutsOpen = true },
+        app.updater.takeIf { it.unavailableReason == null }?.let { updater -> action(tr("Check for Updates…"), icon = AllIconsKeys.Actions.CheckOut) { updater.checkNow() } },
+        (workspace.selected as? TableDataTab)?.let { tab -> action(tr("Reload Table"), Shortcuts.Reload, AllIconsKeys.Actions.Refresh) { tab.refresh() } },
+        workspace.selected?.let { tab -> action(tr("Close Tab"), Shortcuts.CloseTab) { workspace.requestClose(tab) } },
     )
 }
 
@@ -250,7 +251,7 @@ internal fun GoToAnythingPopup(app: AppState) {
                                 }
                                 true
                             },
-                            placeholder = { Text("Search tables, tabs, queries, connections and actions") },
+                            placeholder = { Text(tr("Search tables, tabs, queries, connections and actions")) },
                             leadingIcon = { Icon(AllIconsKeys.Actions.Search, null, Modifier.padding(end = 6.dp)) },
                         )
                         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
@@ -262,7 +263,7 @@ internal fun GoToAnythingPopup(app: AppState) {
                             }
                         }
                         if (results.isEmpty()) {
-                            Text("Nothing found", Modifier.padding(16.dp), color = JewelTheme.globalColors.text.info)
+                            Text(tr("Nothing found"), Modifier.padding(16.dp), color = JewelTheme.globalColors.text.info)
                         } else {
                             LazyColumn(Modifier.heightIn(max = 420.dp).padding(4.dp), state = listState) {
                                 itemsIndexed(results) { index, item ->
@@ -285,7 +286,7 @@ internal fun GoToAnythingPopup(app: AppState) {
                             horizontalArrangement = Arrangement.spacedBy(14.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            listOf("↑↓" to "choose", "⏎" to "open", "⇧⏎" to "open structure", "Esc" to "close").forEach { (keys, label) ->
+                            listOf("↑↓" to tr("choose"), "⏎" to tr("open"), "⇧⏎" to tr("open structure"), "Esc" to tr("close")).forEach { (keys, label) ->
                                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                                     KeyCap(keys)
                                     Text(label, color = JewelTheme.globalColors.text.info)

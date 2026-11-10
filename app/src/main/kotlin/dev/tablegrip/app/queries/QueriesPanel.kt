@@ -1,5 +1,6 @@
 package dev.tablegrip.app.queries
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.ContextMenuArea
 import androidx.compose.foundation.ContextMenuItem
 import androidx.compose.foundation.background
@@ -67,11 +68,11 @@ internal fun QueriesPanel(app: AppState) {
     val search = rememberTextFieldState()
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().height(36.dp).padding(start = 12.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Saved Queries", Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
-            Tooltip({ Text("Open the queries folder") }) { IconButton(onClick = { saved.reveal() }) { Icon(AllIconsKeys.Actions.MenuOpen, "Open folder") } }
-            Tooltip({ Text("Refresh") }) { IconButton(onClick = saved::reload) { Icon(AllIconsKeys.Actions.Refresh, "Refresh") } }
+            Text(tr("Saved Queries"), Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
+            Tooltip({ Text(tr("Open the queries folder")) }) { IconButton(onClick = { saved.reveal() }) { Icon(AllIconsKeys.Actions.MenuOpen, tr("Open folder")) } }
+            Tooltip({ Text(tr("Refresh")) }) { IconButton(onClick = saved::reload) { Icon(AllIconsKeys.Actions.Refresh, tr("Refresh")) } }
         }
-        TextField(search, Modifier.fillMaxWidth().padding(horizontal = 8.dp), placeholder = { Text("Search saved queries") })
+        TextField(search, Modifier.fillMaxWidth().padding(horizontal = 8.dp), placeholder = { Text(tr("Search saved queries")) })
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth().padding(top = 6.dp))
 
         val needle = search.text.toString().trim()
@@ -81,7 +82,7 @@ internal fun QueriesPanel(app: AppState) {
         if (shown.isEmpty()) {
             Box(Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
                 Text(
-                    if (saved.queries.isEmpty()) "Press ${Shortcuts.Save} in a console to save its query here" else "No matches",
+                    if (saved.queries.isEmpty()) tr("Press {0} in a console to save its query here", Shortcuts.Save) else tr("No matches"),
                     color = JewelTheme.globalColors.text.info,
                 )
             }
@@ -110,11 +111,11 @@ private fun QueryRow(app: AppState, query: SavedQuery, indent: Boolean) {
     ContextMenuArea(
         items = {
             listOf(
-                ContextMenuItem("Open") { saved.open(query) },
-                ContextMenuItem("Rename / Move…") { saved.renaming = query },
-                ContextMenuItem("Copy SQL") { copyToClipboard(query.sql) },
-                ContextMenuItem("Reveal in File Manager") { saved.reveal(query) },
-                ContextMenuItem("Delete…") { saved.pendingDelete = query },
+                ContextMenuItem(tr("Open")) { saved.open(query) },
+                ContextMenuItem(tr("Rename / Move…")) { saved.renaming = query },
+                ContextMenuItem(tr("Copy SQL")) { copyToClipboard(query.sql) },
+                ContextMenuItem(tr("Reveal in File Manager")) { saved.reveal(query) },
+                ContextMenuItem(tr("Delete…")) { saved.pendingDelete = query },
             )
         }
     ) {
@@ -150,16 +151,16 @@ internal fun SaveQueryDialog(app: AppState, request: SaveQueryRequest) {
     fun submit() {
         if (valid) saved.save(name.text.toString(), folder.text.toString(), link)
     }
-    AppDialog(onCloseRequest = saved::cancelSave, size = DpSize(480.dp, 300.dp), title = "Save Query", resizable = false) {
+    AppDialog(onCloseRequest = saved::cancelSave, size = DpSize(480.dp, 300.dp), title = tr("Save Query"), resizable = false) {
         Column(
             Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp).onPreviewKeyEvent {
                 if (it.type == KeyEventType.KeyDown && (it.key == Key.Enter || it.key == Key.NumPadEnter)) true.also { submit() } else false
             },
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            LabeledField("Name") { TextField(name, Modifier.fillMaxWidth().focusRequester(focus)) }
-            LabeledField("Folder") {
-                TextField(folder, Modifier.fillMaxWidth(), placeholder = { Text(saved.folders.firstOrNull()?.let { "e.g. $it (optional)" } ?: "optional, e.g. reports/monthly") })
+            LabeledField(tr("Name")) { TextField(name, Modifier.fillMaxWidth().focusRequester(focus)) }
+            LabeledField(tr("Folder")) {
+                TextField(folder, Modifier.fillMaxWidth(), placeholder = { Text(saved.folders.firstOrNull()?.let { tr("e.g. {0} (optional)", it) } ?: tr("optional, e.g. reports/monthly")) })
             }
             if (saved.folders.isNotEmpty()) {
                 Row(Modifier.padding(start = 76.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -170,15 +171,15 @@ internal fun SaveQueryDialog(app: AppState, request: SaveQueryRequest) {
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Checkbox(link, { link = it })
-                Text("Always run on ${tab.config.name}")
+                Text(tr("Always run on {0}", tab.config.name))
             }
-            if (replaces) Text("A query with this name exists and will be replaced.", color = JewelTheme.globalColors.text.warning)
+            if (replaces) Text(tr("A query with this name exists and will be replaced."), color = JewelTheme.globalColors.text.warning)
             Spacer(Modifier.weight(1f))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                OutlinedButton(onClick = saved::saveToFile) { Text("Save to File…") }
+                OutlinedButton(onClick = saved::saveToFile) { Text(tr("Save to File…")) }
                 Spacer(Modifier.weight(1f))
-                OutlinedButton(onClick = saved::cancelSave) { Text("Cancel") }
-                DefaultButton(onClick = ::submit, enabled = valid) { Text("Save") }
+                OutlinedButton(onClick = saved::cancelSave) { Text(tr("Cancel")) }
+                DefaultButton(onClick = ::submit, enabled = valid) { Text(tr("Save")) }
             }
         }
     }
@@ -194,19 +195,19 @@ internal fun RenameQueryDialog(app: AppState, query: SavedQuery) {
     fun submit() {
         if (name.text.isNotBlank()) saved.rename(query, name.text.toString(), folder.text.toString())
     }
-    AppDialog(onCloseRequest = { saved.renaming = null }, size = DpSize(460.dp, 200.dp), title = "Rename Query", resizable = false) {
+    AppDialog(onCloseRequest = { saved.renaming = null }, size = DpSize(460.dp, 200.dp), title = tr("Rename Query"), resizable = false) {
         Column(
             Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp).onPreviewKeyEvent {
                 if (it.type == KeyEventType.KeyDown && (it.key == Key.Enter || it.key == Key.NumPadEnter)) true.also { submit() } else false
             },
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            LabeledField("Name") { TextField(name, Modifier.fillMaxWidth().focusRequester(focus)) }
-            LabeledField("Folder") { TextField(folder, Modifier.fillMaxWidth()) }
+            LabeledField(tr("Name")) { TextField(name, Modifier.fillMaxWidth().focusRequester(focus)) }
+            LabeledField(tr("Folder")) { TextField(folder, Modifier.fillMaxWidth()) }
             Spacer(Modifier.weight(1f))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                OutlinedButton(onClick = { saved.renaming = null }) { Text("Cancel") }
-                DefaultButton(onClick = ::submit, enabled = name.text.isNotBlank()) { Text("Rename") }
+                OutlinedButton(onClick = { saved.renaming = null }) { Text(tr("Cancel")) }
+                DefaultButton(onClick = ::submit, enabled = name.text.isNotBlank()) { Text(tr("Rename")) }
             }
         }
     }
@@ -215,16 +216,16 @@ internal fun RenameQueryDialog(app: AppState, query: SavedQuery) {
 @Composable
 internal fun DeleteQueryDialog(app: AppState, query: SavedQuery) {
     val saved = app.savedQueries
-    AppDialog(onCloseRequest = { saved.pendingDelete = null }, size = DpSize(420.dp, 160.dp), title = "Delete Query", resizable = false) {
+    AppDialog(onCloseRequest = { saved.pendingDelete = null }, size = DpSize(420.dp, 160.dp), title = tr("Delete Query"), resizable = false) {
         Column(
             Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("Delete “${query.name}”? Its file ${query.file.fileName} is removed from disk.")
+            Text(tr("Delete “{0}”? Its file {1} is removed from disk.", query.name, query.file.fileName))
             Spacer(Modifier.weight(1f))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                OutlinedButton(onClick = { saved.pendingDelete = null }) { Text("Cancel") }
-                DefaultButton(onClick = { saved.delete(query) }) { Text("Delete") }
+                OutlinedButton(onClick = { saved.pendingDelete = null }) { Text(tr("Cancel")) }
+                DefaultButton(onClick = { saved.delete(query) }) { Text(tr("Delete")) }
             }
         }
     }
@@ -244,14 +245,14 @@ internal fun ParametersDialog(app: AppState, tab: ConsoleTab, request: Parameter
         request.run(fields.mapValues { it.value.text.toString() }.filterValues { it.isNotEmpty() })
     }
     val height = (190 + request.names.size.coerceAtMost(8) * 40).dp
-    AppDialog(onCloseRequest = { tab.pendingParameters = null }, size = DpSize(480.dp, height), title = "Query Parameters") {
+    AppDialog(onCloseRequest = { tab.pendingParameters = null }, size = DpSize(480.dp, height), title = tr("Query Parameters")) {
         Column(
             Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp).onPreviewKeyEvent {
                 if (it.type == KeyEventType.KeyDown && (it.key == Key.Enter || it.key == Key.NumPadEnter)) true.also { run() } else false
             },
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text("Values are inserted as written: quote text ('paid'), leave numbers bare (42).", color = JewelTheme.globalColors.text.info)
+            Text(tr("Values are inserted as written: quote text ('paid'), leave numbers bare (42)."), color = JewelTheme.globalColors.text.info)
             LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(request.names) { name ->
                     LabeledField(name, labelWidth = 140) {
@@ -261,8 +262,8 @@ internal fun ParametersDialog(app: AppState, tab: ConsoleTab, request: Parameter
                 }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                OutlinedButton(onClick = { tab.pendingParameters = null }) { Text("Cancel") }
-                DefaultButton(onClick = ::run) { Text("Run") }
+                OutlinedButton(onClick = { tab.pendingParameters = null }) { Text(tr("Cancel")) }
+                DefaultButton(onClick = ::run) { Text(tr("Run")) }
             }
         }
     }
@@ -280,5 +281,5 @@ private fun LabeledField(label: String, labelWidth: Int = 68, field: @Composable
 private fun suggestedName(tab: ConsoleTab): String {
     val sql = tab.editor.text.toString()
     val table = Regex("""\b(?:from|into|update|table)\s+[`"\[]?([\w.]+)""", RegexOption.IGNORE_CASE).find(sql)?.groupValues?.get(1)?.substringAfterLast('.')
-    return table?.let { "$it query" } ?: tab.title.removeSuffix(".sql")
+    return table?.let { tr("{0} query", it) } ?: tab.title.removeSuffix(".sql")
 }

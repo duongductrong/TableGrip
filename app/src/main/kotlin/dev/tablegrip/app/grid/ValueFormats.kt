@@ -1,5 +1,6 @@
 package dev.tablegrip.app.grid
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.driver.ResultColumn
 import java.sql.Types
 import java.time.Instant
@@ -129,7 +130,7 @@ fun rowsJson(model: GridModel, columns: List<Int>): JsonArray = rowsJson(rowsSna
  * of pretty JSON, and laying it out in full is what makes a text view crawl.
  */
 fun displayLines(text: String, maxChars: Int = 1000): List<String> =
-    text.lineSequence().map { if (it.length > maxChars) it.take(maxChars) + "… (+${it.length - maxChars} chars)" else it }.toList()
+    text.lineSequence().map { if (it.length > maxChars) it.take(maxChars) + tr("… (+{0} chars)", it.length - maxChars) else it }.toList()
 
 internal fun cellJson(value: String?, column: ResultColumn): JsonElement =
     when {
@@ -168,13 +169,13 @@ fun hexDump(bytes: ByteArray, limit: Int = 4096): String = buildString {
 fun binaryKind(bytes: ByteArray): String? {
     fun starts(vararg signature: Int) = bytes.size >= signature.size && signature.indices.all { (bytes[it].toInt() and 0xFF) == signature[it] }
     return when {
-        starts(0x89, 0x50, 0x4E, 0x47) -> "PNG image"
-        starts(0xFF, 0xD8, 0xFF) -> "JPEG image"
-        starts(0x47, 0x49, 0x46, 0x38) -> "GIF image"
-        starts(0x42, 0x4D) -> "BMP image"
-        starts(0x25, 0x50, 0x44, 0x46) -> "PDF document"
-        starts(0x50, 0x4B, 0x03, 0x04) -> "ZIP archive"
-        starts(0x1F, 0x8B) -> "gzip data"
+        starts(0x89, 0x50, 0x4E, 0x47) -> tr("PNG image")
+        starts(0xFF, 0xD8, 0xFF) -> tr("JPEG image")
+        starts(0x47, 0x49, 0x46, 0x38) -> tr("GIF image")
+        starts(0x42, 0x4D) -> tr("BMP image")
+        starts(0x25, 0x50, 0x44, 0x46) -> tr("PDF document")
+        starts(0x50, 0x4B, 0x03, 0x04) -> tr("ZIP archive")
+        starts(0x1F, 0x8B) -> tr("gzip data")
         else -> null
     }
 }
@@ -214,7 +215,7 @@ private val Readable = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
 fun timestampConversions(value: TimestampValue, zone: ZoneId = ZoneId.systemDefault()): List<Pair<String, String>> =
     listOf(
         "UTC" to Readable.format(value.instant.atZone(ZoneOffset.UTC)),
-        "Local (${zone.id})" to Readable.format(value.instant.atZone(zone)),
+        tr("Local ({0})", zone.id) to Readable.format(value.instant.atZone(zone)),
         "Unix" to "${value.instant.epochSecond}",
     )
 

@@ -1,5 +1,6 @@
 package dev.tablegrip.app.tools
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -68,11 +69,11 @@ class ToolsViewModel(private val app: AppState, root: Path? = null) {
                             app.scope.launch { if (pkg.id in progress) progress[pkg.id] = done to total }
                         }
                     }
-                    app.status = "Installed ${pkg.family.displayName} tools ${pkg.version}"
+                    app.status = tr("Installed {0} tools {1}", pkg.family.displayName, pkg.version)
                     revision++
                     then()
                 } catch (e: CancellationException) {
-                    app.status = "Download of ${pkg.family.displayName} tools cancelled"
+                    app.status = tr("Download of {0} tools cancelled", pkg.family.displayName)
                 } catch (e: Exception) {
                     failures[pkg.id] = e.message ?: e.toString()
                 } finally {

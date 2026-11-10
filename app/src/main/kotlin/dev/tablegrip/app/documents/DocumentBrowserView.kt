@@ -1,5 +1,6 @@
 package dev.tablegrip.app.documents
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -117,9 +118,9 @@ private fun Content(tab: DocumentBrowserTab) {
             val model = tab.model
             when {
                 tab.loading && tab.documents.isEmpty() ->
-                    ConnectionLoadingPlaceholder(tab.config, tab.connectionStatus, "Loading ${tab.collection}…", Modifier.align(Alignment.Center))
+                    ConnectionLoadingPlaceholder(tab.config, tab.connectionStatus, tr("Loading {0}…", tab.collection), Modifier.align(Alignment.Center))
                 tab.showJson -> ResultJsonView(model, tab.grid)
-                model.rowCount == 0 -> Text("No documents match.", Modifier.padding(10.dp), color = JewelTheme.globalColors.text.info)
+                model.rowCount == 0 -> Text(tr("No documents match."), Modifier.padding(10.dp), color = JewelTheme.globalColors.text.info)
                 else -> {
                     val grid =
                         @Composable {
@@ -160,38 +161,38 @@ private fun FilterBar(tab: DocumentBrowserTab) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Icon(AllIconsKeys.General.Filter, null)
-            Text("Filter", label, color = info, style = JewelTheme.editorTextStyle)
-            QueryField(tab, tab.filter, DocumentQuery.Filter, "{status: 'A', total: {\$gt: 10}}   ${Shortcuts.Completion} for suggestions, ⏎ to apply", Modifier.weight(1f))
-            Text("Sort", label, color = info, style = JewelTheme.editorTextStyle)
+            Text(tr("Filter"), label, color = info, style = JewelTheme.editorTextStyle)
+            QueryField(tab, tab.filter, DocumentQuery.Filter, tr("{status: 'A', total: {\$gt: 10}}   {0} for suggestions, ⏎ to apply", Shortcuts.Completion), Modifier.weight(1f))
+            Text(tr("Sort"), label, color = info, style = JewelTheme.editorTextStyle)
             QueryField(tab, tab.sort, DocumentQuery.Sort, "{total: -1}", Modifier.width(220.dp))
             Spacer(Modifier.width(6.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                if (tab.isFilterDirty) Text("Not applied", color = info)
-                if (tab.hasAppliedFilter || tab.isFilterDirty) Link("Clear", onClick = tab::clearFilter)
-                Tooltip({ Text((if (tab.showBuilder) "Hide the query builder" else "Build the query by dragging fields; drag a column header up to add it") + " (${Shortcuts.ToggleFilterMode})") }) {
-                    ViewChipGroup { ViewChip("Builder", tab.showBuilder) { tab.toggleBuilder() } }
+                if (tab.isFilterDirty) Text(tr("Not applied"), color = info)
+                if (tab.hasAppliedFilter || tab.isFilterDirty) Link(tr("Clear"), onClick = tab::clearFilter)
+                Tooltip({ Text((if (tab.showBuilder) tr("Hide the query builder") else tr("Build the query by dragging fields; drag a column header up to add it")) + " (${Shortcuts.ToggleFilterMode})") }) {
+                    ViewChipGroup { ViewChip(tr("Builder"), tab.showBuilder) { tab.toggleBuilder() } }
                 }
                 ToolButton(
                     if (expanded) AllIconsKeys.General.ChevronUp else AllIconsKeys.General.ChevronDown,
-                    if (expanded) "Hide projection, skip and limit" else "Projection, skip and limit",
+                    if (expanded) tr("Hide projection, skip and limit") else tr("Projection, skip and limit"),
                     enabled = !tab.hasAppliedOptions,
                 ) {
                     tab.showOptions = !tab.showOptions
                 }
-                Tooltip({ Text("Apply the query (⏎ in a field, ${Shortcuts.ApplyFilter})") }) {
-                    DefaultButton(onClick = tab::reload, enabled = tab.isFilterDirty) { Text("Apply") }
+                Tooltip({ Text(tr("Apply the query (⏎ in a field, {0})", Shortcuts.ApplyFilter)) }) {
+                    DefaultButton(onClick = tab::reload, enabled = tab.isFilterDirty) { Text(tr("Apply")) }
                 }
             }
         }
         if (expanded) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Icon(AllIconsKeys.General.Filter, null, Modifier.alpha(0f))
-                Text("Project", label, color = info, style = JewelTheme.editorTextStyle)
-                QueryField(tab, tab.projection, DocumentQuery.Projection, "{customer: 1, total: 1}  or  {items: 0}", Modifier.weight(1f))
-                Text("Skip", label, color = info, style = JewelTheme.editorTextStyle)
+                Text(tr("Project"), label, color = info, style = JewelTheme.editorTextStyle)
+                QueryField(tab, tab.projection, DocumentQuery.Projection, tr("{customer: 1, total: 1}  or  {items: 0}"), Modifier.weight(1f))
+                Text(tr("Skip"), label, color = info, style = JewelTheme.editorTextStyle)
                 CountField(tab, tab.skipField, "0")
-                Text("Limit", label, color = info, style = JewelTheme.editorTextStyle)
-                CountField(tab, tab.limitField, "none")
+                Text(tr("Limit"), label, color = info, style = JewelTheme.editorTextStyle)
+                CountField(tab, tab.limitField, tr("none"))
             }
         }
     }
@@ -310,44 +311,44 @@ private fun Toolbar(tab: DocumentBrowserTab) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val idle = !tab.loading
-        ToolButton(AllIconsKeys.Actions.Play_first, "First page", enabled = idle && tab.skip > 0) { tab.firstPage() }
-        ToolButton(AllIconsKeys.Actions.Play_back, "Previous page", enabled = idle && tab.skip > 0) { tab.previousPage() }
-        Text(if (tab.documents.isEmpty()) "0 docs" else "${tab.skip + 1}–${tab.skip + tab.documents.size}", Modifier.padding(horizontal = 4.dp))
-        Text("of", color = JewelTheme.globalColors.text.info)
+        ToolButton(AllIconsKeys.Actions.Play_first, tr("First page"), enabled = idle && tab.skip > 0) { tab.firstPage() }
+        ToolButton(AllIconsKeys.Actions.Play_back, tr("Previous page"), enabled = idle && tab.skip > 0) { tab.previousPage() }
+        Text(if (tab.documents.isEmpty()) tr("0 docs") else "${tab.skip + 1}–${tab.skip + tab.documents.size}", Modifier.padding(horizontal = 4.dp))
+        Text(tr("of"), color = JewelTheme.globalColors.text.info)
         if (tab.total == null) Link("?", onClick = { tab.count() }) else Text(tab.total.toString())
-        ToolButton(AllIconsKeys.Actions.Play_forward, "Next page", enabled = idle && tab.hasMore) { tab.nextPage() }
+        ToolButton(AllIconsKeys.Actions.Play_forward, tr("Next page"), enabled = idle && tab.hasMore) { tab.nextPage() }
         ListComboBox(
-            items = PageSizes.map { "$it docs" },
+            items = PageSizes.map { tr("{0} docs", it) },
             selectedIndex = PageSizes.indexOf(tab.pageSize).coerceAtLeast(0),
             onSelectedItemChange = { tab.setPageSize(PageSizes[it]) },
             modifier = Modifier.width(110.dp).padding(horizontal = 4.dp),
         )
-        ToolButton(AllIconsKeys.Actions.Refresh, "Reload (${Shortcuts.Reload})") { tab.refresh() }
+        ToolButton(AllIconsKeys.Actions.Refresh, tr("Reload ({0})", Shortcuts.Reload)) { tab.refresh() }
         Separator()
 
         val editable = model.editor != null && !tab.showJson
-        ToolButton(AllIconsKeys.General.Add, "Add document (${Shortcuts.AddRow})", enabled = editable) { tab.grid.revealEditable(model, model.addRow()) }
-        ToolButton(AllIconsKeys.General.Remove, "Delete selected documents (${Shortcuts.DeleteRows})", enabled = editable && tab.grid.selection != null) {
+        ToolButton(AllIconsKeys.General.Add, tr("Add document ({0})", Shortcuts.AddRow), enabled = editable) { tab.grid.revealEditable(model, model.addRow()) }
+        ToolButton(AllIconsKeys.General.Remove, tr("Delete selected documents ({0})", Shortcuts.DeleteRows), enabled = editable && tab.grid.selection != null) {
             tab.grid.selection?.rows?.let { model.deleteRows(it.toList()) }
             tab.grid.clamp(model.rowCount)
         }
         AddField(tab, enabled = editable)
         UndoRedoButtons(tab.grid, model)
-        ToolButton(AllIconsKeys.Actions.Rollback, "Revert all changes", enabled = tab.hasChanges) { tab.revert() }
-        ToolButton(AllIconsKeys.Actions.Preview, "Preview pending writes", enabled = tab.hasChanges) { tab.openPreview() }
-        ToolButton(AllIconsKeys.Actions.Commit, "Submit changes (${Shortcuts.Submit})", enabled = tab.hasChanges && !tab.submitting) { tab.submit() }
-        if (tab.hasChanges) Text("${model.changeCount} pending", Modifier.padding(start = 4.dp), color = JewelTheme.globalColors.text.info)
+        ToolButton(AllIconsKeys.Actions.Rollback, tr("Revert all changes"), enabled = tab.hasChanges) { tab.revert() }
+        ToolButton(AllIconsKeys.Actions.Preview, tr("Preview pending writes"), enabled = tab.hasChanges) { tab.openPreview() }
+        ToolButton(AllIconsKeys.Actions.Commit, tr("Submit changes ({0})", Shortcuts.Submit), enabled = tab.hasChanges && !tab.submitting) { tab.submit() }
+        if (tab.hasChanges) Text(tr("{0} pending", model.changeCount), Modifier.padding(start = 4.dp), color = JewelTheme.globalColors.text.info)
 
         Box(Modifier.weight(1f))
-        if (tab.loading || tab.submitting) Text(if (tab.submitting) "Saving…" else "Loading…", Modifier.padding(end = 8.dp), color = JewelTheme.globalColors.text.info)
+        if (tab.loading || tab.submitting) Text(if (tab.submitting) tr("Saving…") else tr("Loading…"), Modifier.padding(end = 8.dp), color = JewelTheme.globalColors.text.info)
         ViewChipGroup {
-            ViewChip("Grid", !tab.showJson) { tab.showJson = false }
-            ViewChip("JSON", tab.showJson) { tab.showJson = true }
+            ViewChip(tr("Grid"), !tab.showJson) { tab.showJson = false }
+            ViewChip(tr("JSON"), tab.showJson) { tab.showJson = true }
         }
         Separator()
         ToolButton(
             AllIconsKeys.Actions.PreviewDetails,
-            if (tab.showValuePanel) "Hide value panel" else "Show value panel",
+            if (tab.showValuePanel) tr("Hide value panel") else tr("Show value panel"),
             enabled = !tab.showJson,
         ) {
             tab.showValuePanel = !tab.showValuePanel
@@ -363,9 +364,9 @@ private fun StatusLine(tab: DocumentBrowserTab) {
         val selection = tab.grid.selection
         if (selection != null && !tab.showJson) {
             val columns = selection.columns(tab.grid.visibleColumns.size)
-            Text("${selection.rows.count()} × ${columns.count()} selected", color = info)
+            Text(tr("{0} × {1} selected", selection.rows.count(), columns.count()), color = info)
         }
-        if (tab.readOnly) Text("Read-only connection", color = info)
+        if (tab.readOnly) Text(tr("Read-only connection"), color = info)
         Box(Modifier.weight(1f))
         Text("${tab.database}.${tab.collection}", color = info)
     }
@@ -377,7 +378,7 @@ private fun AddField(tab: DocumentBrowserTab, enabled: Boolean) {
     var open by remember { mutableStateOf(false) }
     val name = remember { TextFieldState() }
     if (!open) {
-        ToolButton(AllIconsKeys.General.InlineAdd, "Add field", enabled = enabled) { open = true }
+        ToolButton(AllIconsKeys.General.InlineAdd, tr("Add field"), enabled = enabled) { open = true }
         return
     }
     // The box opens focused, so typing and ⌘V go into it rather than to the grid that had focus when its button was pressed.
@@ -391,7 +392,7 @@ private fun AddField(tab: DocumentBrowserTab, enabled: Boolean) {
                 true
             } else false
         },
-        placeholder = { Text("New field name") },
+        placeholder = { Text(tr("New field name")) },
         onKeyboardAction = KeyboardActionHandler {
             val problem = tab.model.addField(name.text.toString())
             if (problem == null) {
@@ -407,16 +408,16 @@ private fun DiscardDialog(tab: DocumentBrowserTab) {
     AppDialog(
         onCloseRequest = { tab.pendingDiscard = null },
         size = DpSize(440.dp, 170.dp),
-        title = "Unsaved Changes",
+        title = tr("Unsaved Changes"),
         resizable = false,
     ) {
         Column(Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("${tab.model.changeCount} document change(s) in ${tab.collection} haven't been submitted. Submit them before continuing?")
+            Text(tr("{0} document change(s) in {1} haven't been submitted. Submit them before continuing?", tab.model.changeCount, tab.collection))
             Spacer(Modifier.weight(1f))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                OutlinedButton(onClick = { tab.pendingDiscard = null }) { Text("Keep Editing") }
-                OutlinedButton(onClick = tab::confirmDiscard) { Text("Discard") }
-                DefaultButton(onClick = tab::submitAndContinue) { Text("Submit") }
+                OutlinedButton(onClick = { tab.pendingDiscard = null }) { Text(tr("Keep Editing")) }
+                OutlinedButton(onClick = tab::confirmDiscard) { Text(tr("Discard")) }
+                DefaultButton(onClick = tab::submitAndContinue) { Text(tr("Submit")) }
             }
         }
     }
@@ -427,19 +428,19 @@ private fun PreviewDialog(tab: DocumentBrowserTab, commands: String) {
     AppDialog(
         onCloseRequest = tab::closePreview,
         size = DpSize(760.dp, 420.dp),
-        title = "Pending Changes",
+        title = tr("Pending Changes"),
     ) {
         Column(Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             val text = remember(commands) { TextFieldState(commands) }
             TextArea(text, Modifier.weight(1f).fillMaxWidth(), readOnly = true, textStyle = JewelTheme.editorTextStyle)
             Text(
-                "Each document is written on its own. An update only applies while the fields still hold the values they had when loaded; " +
-                    "one that doesn't stays pending.",
+                tr("Each document is written on its own. An update only applies while the fields still hold the values they had when loaded; ") +
+                    tr("one that doesn't stays pending."),
                 color = JewelTheme.globalColors.text.info,
             )
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                OutlinedButton(onClick = tab::closePreview) { Text("Close") }
-                DefaultButton(onClick = tab::submitNow) { Text("Submit") }
+                OutlinedButton(onClick = tab::closePreview) { Text(tr("Close")) }
+                DefaultButton(onClick = tab::submitNow) { Text(tr("Submit")) }
             }
         }
     }

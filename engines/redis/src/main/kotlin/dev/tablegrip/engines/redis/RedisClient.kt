@@ -1,5 +1,6 @@
 package dev.tablegrip.engines.redis
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.connection.ConnectionConfig
 import dev.tablegrip.core.driver.KeyEdit
 import dev.tablegrip.core.driver.KeyInfo
@@ -73,7 +74,7 @@ class RedisClient : KeyValueClient {
                 val master = properties["sentinelMaster"]
                 val target =
                     if (properties["mode"]?.lowercase() == "sentinel") {
-                        requireNotNull(master) { "Sentinel mode needs the sentinelMaster property (the monitored master's name)." }
+                        requireNotNull(master) { tr("Sentinel mode needs the sentinelMaster property (the monitored master's name).") }
                         val builder = RedisURI.Builder.sentinel(seeds.first().first, seeds.first().second, master)
                         seeds.drop(1).forEach { (h, p) -> builder.withSentinel(h, p) }
                         uri(builder)
@@ -119,7 +120,7 @@ class RedisClient : KeyValueClient {
             lock.withLock {
                 withContext(Dispatchers.IO) {
                     withContextClassLoader(RedisClient::class.java.classLoader) {
-                        if (cluster) require(keyspace == 0) { "A Redis cluster has database 0 only." }
+                        if (cluster) require(keyspace == 0) { tr("A Redis cluster has database 0 only.") }
                         else if (keyspace != selected) {
                             (connection as StatefulRedisConnection<String, String>).sync().select(keyspace)
                             selected = keyspace
@@ -240,7 +241,7 @@ class RedisClient : KeyValueClient {
         override suspend fun delete(keyspace: Int, keys: List<String>): Long = if (keys.isEmpty()) 0 else on(keyspace) { del(*keys.toTypedArray()) }
 
         override suspend fun rename(keyspace: Int, from: String, to: String) =
-            on(keyspace) { if (!renamenx(from, to)) throw IllegalStateException("A key named \"$to\" already exists.") }
+            on(keyspace) { if (!renamenx(from, to)) throw IllegalStateException(tr("A key named \"{0}\" already exists.", to)) }
 
         override suspend fun expire(keyspace: Int, key: String, ttlMillis: Long?) =
             on(keyspace) {

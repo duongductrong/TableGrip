@@ -1,5 +1,6 @@
 package dev.tablegrip.core.datafile
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.connection.DataFileOptions
 import dev.tablegrip.core.connection.DatabaseType
 import dev.tablegrip.core.importer.ImportException
@@ -46,9 +47,9 @@ object XlsxFormat : DataFileFormat {
             try {
                 ZipFile(path.toFile()).use { zip -> Workbook.read(zip) }
             } catch (e: ZipException) {
-                throw DataFileException("${path.fileName} isn't an .xlsx workbook (legacy .xls and password-protected workbooks aren't supported)", e)
+                throw DataFileException(tr("{0} isn't an .xlsx workbook (legacy .xls and password-protected workbooks aren't supported)", path.fileName), e)
             } catch (e: ImportException) {
-                throw DataFileException(e.message ?: "Couldn't read ${path.fileName}", e)
+                throw DataFileException(e.message ?: tr("Couldn't read {0}", path.fileName), e)
             }
         return Document(path, options.hasHeader, workbook)
     }
@@ -86,7 +87,7 @@ object XlsxFormat : DataFileFormat {
                                 }
                                 if (first) layouts[sheet.name.lowercase()] = RowLayout((source as? XlsxSource)?.headerLine, null)
                             } catch (e: ImportException) {
-                                throw DataFileException(e.message ?: "Couldn't read sheet \"${sheet.name}\"", e)
+                                throw DataFileException(e.message ?: tr("Couldn't read sheet \"{0}\"", sheet.name), e)
                             } finally {
                                 source.close()
                             }
@@ -96,21 +97,21 @@ object XlsxFormat : DataFileFormat {
 
         override val notes: List<String> =
             workbook.sheets.filter { it.hasFormulas && it.isWorksheet && it.hasValues }.map {
-                "Sheet \"${it.name}\" has formulas: saving a change to it writes their current values instead."
+                tr("Sheet \"{0}\" has formulas: saving a change to it writes their current values instead.", it.name)
             }
 
         override fun confirmBeforeWriting(tables: Set<String>): String? {
             val sheets = workbook.sheets.filter { it.hasFormulas && tables.any { name -> name.equals(it.name, ignoreCase = true) } }.map { it.name }
             if (sheets.isEmpty()) return null
             val list = sheets.joinToString { "\"$it\"" }
-            return "${if (sheets.size == 1) "Sheet $list has" else "Sheets $list have"} formulas. Saving your changes writes their current values in place of the formulas."
+            return if (sheets.size == 1) tr("Sheet {0} has formulas. Saving your changes writes their current values in place of the formulas.", list) else tr("Sheets {0} have formulas. Saving your changes writes their current values in place of the formulas.", list)
         }
 
         private fun openSheet(name: String): ImportSource =
             try {
                 ImportReader.open(path.toFile(), ImportOptions(ImportFormat.Xlsx, hasHeader = hasHeader, sheet = name)).also { open += it }
             } catch (e: ImportException) {
-                throw DataFileException(e.message ?: "Couldn't read sheet \"$name\"", e)
+                throw DataFileException(e.message ?: tr("Couldn't read sheet \"{0}\"", name), e)
             }
 
         override fun close() {
@@ -119,7 +120,7 @@ object XlsxFormat : DataFileFormat {
         }
 
         override fun write(target: Path, tables: List<OutputTable>, removed: Set<String>) {
-            if (tables.isEmpty()) throw DataFileException("A workbook needs at least one sheet; it can't be saved without tables.")
+            if (tables.isEmpty()) throw DataFileException(tr("A workbook needs at least one sheet; it can't be saved without tables."))
             tables.forEach { validateSheetName(it.name) }
             ZipFile(path.toFile()).use { zip -> Patch(zip, Workbook.read(zip), hasHeader, tables, removed, layouts).writeTo(target) }
             // What was written is laid out from the header row down, with no gaps.
@@ -344,7 +345,7 @@ object XlsxFormat : DataFileFormat {
                     }
                 }
             if (added.isNotEmpty()) {
-                val close = SheetsClose.find(result) ?: throw DataFileException("The workbook's sheet list is malformed; it can't take a new sheet.")
+                val close = SheetsClose.find(result) ?: throw DataFileException(tr("The workbook's sheet list is malformed; it can't take a new sheet."))
                 val prefix = close.groupValues[1]
                 val relationPrefix = Regex("""\s(\w+):id\s*=""").find(SheetElement.find(text)?.value.orEmpty())?.groupValues?.get(1) ?: "r"
                 val elements =
@@ -382,7 +383,7 @@ object XlsxFormat : DataFileFormat {
                 result = RelationshipElement.replace(result) { match -> if (attribute(match.value, "Id") in removeIds) "" else match.value }
             }
             if (added.isNotEmpty()) {
-                val close = RelationshipsClose.find(result) ?: throw DataFileException("The workbook's relationships are malformed; it can't take a new sheet.")
+                val close = RelationshipsClose.find(result) ?: throw DataFileException(tr("The workbook's relationships are malformed; it can't take a new sheet."))
                 val prefix = close.groupValues[1]
                 val base = workbook.directory.let { if (it.isEmpty()) "" else "$it/" }
                 val elements =
@@ -402,7 +403,7 @@ object XlsxFormat : DataFileFormat {
                 result = OverrideElement.replace(result) { match -> if (attribute(match.value, "PartName")?.lowercase() in removeParts) "" else match.value }
             }
             if (added.isNotEmpty()) {
-                val close = TypesClose.find(result) ?: throw DataFileException("The workbook's content types are malformed; it can't take a new sheet.")
+                val close = TypesClose.find(result) ?: throw DataFileException(tr("The workbook's content types are malformed; it can't take a new sheet."))
                 val prefix = close.groupValues[1]
                 val elements = added.joinToString("") { """<${prefix}Override PartName="/${it.path}" ContentType="$WorksheetContentType"/>""" }
                 result = result.substring(0, close.range.first) + elements + result.substring(close.range.first)
@@ -475,13 +476,13 @@ object XlsxFormat : DataFileFormat {
 
         /** Writes the rows after [above]'s; returns the last row number written. */
         private fun writeSheetData(writer: Writer, prefix: String, template: Template, table: OutputTable, above: () -> Unit = {}): Long {
-            if (table.columns.size > MaxColumns) throw DataFileException("\"${table.name}\" has ${table.columns.size} columns; a sheet holds at most $MaxColumns.")
+            if (table.columns.size > MaxColumns) throw DataFileException(tr("\"{0}\" has {1} columns; a sheet holds at most {2}.", table.name, table.columns.size, MaxColumns))
             val letters = table.columns.indices.map(::columnLetters)
             var rowNumber = template.firstRow
             writer.write("<${prefix}sheetData>")
             above()
             fun row(cells: () -> Unit) {
-                if (rowNumber > MaxRows) throw DataFileException("\"${table.name}\" has more rows than a sheet holds ($MaxRows).")
+                if (rowNumber > MaxRows) throw DataFileException(tr("\"{0}\" has more rows than a sheet holds ({1}).", table.name, MaxRows))
                 writer.write("<${prefix}row r=\"$rowNumber\">")
                 cells()
                 writer.write("</${prefix}row>")
@@ -531,7 +532,7 @@ object XlsxFormat : DataFileFormat {
         }
 
         private fun inlineString(writer: Writer, prefix: String, reference: String, style: Int?, text: String, table: OutputTable) {
-            if (text.length > MaxCellText) throw DataFileException("A value in \"${table.name}\" (cell $reference) is ${text.length} characters long; a cell holds at most $MaxCellText.")
+            if (text.length > MaxCellText) throw DataFileException(tr("A value in \"{0}\" (cell {1}) is {2} characters long; a cell holds at most {3}.", table.name, reference, text.length, MaxCellText))
             val styleAttribute = style?.takeIf { it != 0 }?.let { " s=\"$it\"" }.orEmpty()
             val space = if (text.isNotEmpty() && (text.first().isWhitespace() || text.last().isWhitespace())) " xml:space=\"preserve\"" else ""
             writer.write("<${prefix}c r=\"$reference\"$styleAttribute t=\"inlineStr\"><${prefix}is><${prefix}t$space>${escapeText(text)}</${prefix}t></${prefix}is></${prefix}c>")
@@ -577,7 +578,7 @@ object XlsxFormat : DataFileFormat {
                         }
                     }
                 } catch (e: XMLStreamException) {
-                    throw DataFileException("Sheet part $path is malformed: ${e.message}", e)
+                    throw DataFileException(tr("Sheet part {0} is malformed: {1}", path, e.message), e)
                 }
                 fun <T> dense(map: Map<Int, T>): List<T?> = (0..(map.keys.maxOrNull() ?: -1)).map { map[it] }
                 val header = layout.header?.takeIf { hasHeader }?.let { rows[it] }.orEmpty()
@@ -712,14 +713,14 @@ object XlsxFormat : DataFileFormat {
     internal fun validateSheetName(name: String) {
         val problem =
             when {
-                name.isBlank() -> "is blank"
-                name.length > 31 -> "is longer than 31 characters"
-                name.any { it in "[]:*?/\\" } -> "contains one of [ ] : * ? / \\"
-                name.startsWith("'") || name.endsWith("'") -> "starts or ends with an apostrophe"
-                name.equals("History", ignoreCase = true) -> "is reserved by Excel"
+                name.isBlank() -> tr("is blank")
+                name.length > 31 -> tr("is longer than 31 characters")
+                name.any { it in "[]:*?/\\" } -> tr("contains one of [ ] : * ? / \\")
+                name.startsWith("'") || name.endsWith("'") -> tr("starts or ends with an apostrophe")
+                name.equals("History", ignoreCase = true) -> tr("is reserved by Excel")
                 else -> null
             }
-        if (problem != null) throw DataFileException("Table \"$name\" can't be a sheet: its name $problem. Rename the table to save the workbook.")
+        if (problem != null) throw DataFileException(tr("Table \"{0}\" can't be a sheet: its name {1}. Rename the table to save the workbook.", name, problem))
     }
 
     /**

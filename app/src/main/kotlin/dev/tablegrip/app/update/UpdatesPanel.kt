@@ -1,5 +1,7 @@
 package dev.tablegrip.app.update
 
+import dev.tablegrip.core.i18n.I18n
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -45,29 +47,29 @@ internal fun UpdatesContent(updater: Updater, onRestartToUpdate: () -> Unit) {
     }
     val (status, lastCheck) = state
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("TableGrip ${AppVersion.current}")
+        Text(tr("TableGrip {0}", AppVersion.current))
         val reason = updater.unavailableReason
         if (reason != null) {
             Text(reason, color = info, fontSize = 12.sp)
-            Link("Releases page", onClick = { browse(ReleasesPage) })
+            Link(tr("Releases page"), onClick = { browse(ReleasesPage) })
             return@Column
         }
         StatusLine(status, lastCheck, info)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             when (status) {
-                is UpdateStatus.Ready -> DefaultButton(onClick = onRestartToUpdate) { Text("Restart to Update") }
-                is UpdateStatus.Available -> DefaultButton(onClick = updater::install) { Text("Download and Install…") }
+                is UpdateStatus.Ready -> DefaultButton(onClick = onRestartToUpdate) { Text(tr("Restart to Update")) }
+                is UpdateStatus.Available -> DefaultButton(onClick = updater::install) { Text(tr("Download and Install…")) }
                 else -> {}
             }
             OutlinedButton(onClick = updater::check, enabled = status != UpdateStatus.Checking) {
-                Text(if (status == UpdateStatus.Checking) "Checking…" else "Check for Updates")
+                Text(if (status == UpdateStatus.Checking) tr("Checking…") else tr("Check for Updates"))
             }
             val version = (status as? UpdateStatus.Available)?.version ?: (status as? UpdateStatus.Ready)?.version
-            if (version != null) Link("What's new", onClick = { browse("$ReleasesPage/tag/v$version") })
+            if (version != null) Link(tr("What's new"), onClick = { browse("$ReleasesPage/tag/v$version") })
         }
         Text(
-            "A check only asks GitHub for the list of releases; nothing about you or your databases is sent. Every update is verified against " +
-                "TableGrip's signing key before it's installed.",
+            tr("A check only asks GitHub for the list of releases; nothing about you or your databases is sent. Every update is verified against ") +
+                tr("TableGrip's signing key before it's installed."),
             color = info,
             fontSize = 12.sp,
         )
@@ -76,18 +78,18 @@ internal fun UpdatesContent(updater: Updater, onRestartToUpdate: () -> Unit) {
 
 @Composable
 private fun StatusLine(status: UpdateStatus, lastCheck: Instant?, info: Color) {
-    val checked = lastCheck?.let { "Last checked ${CheckTime.format(it)}." } ?: "Not checked yet."
+    val checked = lastCheck?.let { tr("Last checked {0}.", CheckTime.format(it)) } ?: tr("Not checked yet.")
     val message =
         when (status) {
             UpdateStatus.Idle -> checked
-            UpdateStatus.Checking -> "Checking for updates…"
-            UpdateStatus.UpToDate -> "TableGrip is up to date. $checked"
-            is UpdateStatus.Available -> "${status.version?.let { "TableGrip $it" } ?: "A new version"} is available."
-            is UpdateStatus.Ready -> "${status.version?.let { "TableGrip $it" } ?: "The update"} is downloaded and installs when you quit, or restart now."
-            is UpdateStatus.Failed -> "Couldn't check for updates: ${status.reason}"
+            UpdateStatus.Checking -> tr("Checking for updates…")
+            UpdateStatus.UpToDate -> tr("TableGrip is up to date. {0}", checked)
+            is UpdateStatus.Available -> tr("{0} is available.", status.version?.let { tr("TableGrip {0}", it) } ?: tr("A new version"))
+            is UpdateStatus.Ready -> tr("{0} is downloaded and installs when you quit, or restart now.", status.version?.let { tr("TableGrip {0}", it) } ?: tr("The update"))
+            is UpdateStatus.Failed -> tr("Couldn't check for updates: {0}", status.reason)
         }
     val color = if (status is UpdateStatus.Failed) JewelTheme.globalColors.text.error else if (status is UpdateStatus.Idle) info else Color.Unspecified
     Text(message, color = color, fontSize = 13.sp)
 }
 
-private val CheckTime = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT).withZone(ZoneId.systemDefault())
+private val CheckTime = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT).withLocale(I18n.locale).withZone(ZoneId.systemDefault())

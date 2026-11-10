@@ -1,5 +1,6 @@
 package dev.tablegrip.app.agent
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -61,7 +62,7 @@ internal fun MentionSuggestions(query: String, candidates: List<MentionCandidate
         ) {
             if (candidates.isEmpty()) {
                 Text(
-                    if (query.isEmpty()) "Nothing to mention yet" else "Nothing matches “$query”",
+                    if (query.isEmpty()) tr("Nothing to mention yet") else tr("Nothing matches “{0}”", query),
                     Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
                     color = JewelTheme.globalColors.text.info,
                 )

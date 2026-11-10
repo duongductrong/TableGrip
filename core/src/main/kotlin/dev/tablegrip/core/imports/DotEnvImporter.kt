@@ -1,5 +1,6 @@
 package dev.tablegrip.core.imports
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.connection.DatabaseType
 import dev.tablegrip.core.connection.ParsedConnection
 import java.nio.file.Files
@@ -47,7 +48,7 @@ internal object DotEnvImporter {
         val label = listOf(project, file.name).filter { it.isNotEmpty() }.joinToString(" · ")
         val candidates = mutableListOf<ImportCandidate>()
         val skipped = mutableListOf<String>()
-        val notes = if (template) listOf("From a template file: the values may be placeholders") else emptyList()
+        val notes = if (template) listOf(tr("From a template file: the values may be placeholders")) else emptyList()
 
         fun add(parsed: ParsedConnection, variable: String) {
             val config = ConnectionImport.fromParsed(parsed, name = "$project · $variable".removePrefix(" · "), group = project)
@@ -58,7 +59,7 @@ internal object DotEnvImporter {
             if (!looksLikeUrl(value)) continue
             val parsed = ConnectionImport.parseOrNull(value)
             if (parsed == null) {
-                if (looksLikeDatabaseKey(key)) skipped += "$label: $key isn't a connection string TableGrip understands."
+                if (looksLikeDatabaseKey(key)) skipped += tr("{0}: {1} isn't a connection string TableGrip understands.", label, key)
                 continue
             }
             add(parsed, key)

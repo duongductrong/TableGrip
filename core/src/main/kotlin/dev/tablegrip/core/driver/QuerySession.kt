@@ -1,5 +1,6 @@
 package dev.tablegrip.core.driver
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.sql.SqlClassifier
 import dev.tablegrip.core.sql.StatementKind
 import java.sql.Connection
@@ -8,7 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /** Thrown before a statement reaches the server when the connection is read-only. */
-class ReadOnlyViolationException(verb: String) : SQLException("This connection is read-only: $verb is not allowed.")
+class ReadOnlyViolationException(verb: String) : SQLException(tr("This connection is read-only: {0} is not allowed.", verb))
 
 /**
  * A dedicated connection for one SQL console, so session state (transactions, `SET` variables, temp tables) stays with

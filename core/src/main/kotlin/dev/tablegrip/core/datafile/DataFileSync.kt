@@ -1,5 +1,6 @@
 package dev.tablegrip.core.datafile
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.connection.DataFileOptions
 import java.io.IOException
 import java.nio.file.AtomicMoveNotSupportedException
@@ -139,12 +140,12 @@ class DataFileSync internal constructor(
             val current = FileStamp.of(file)
             if (current != stamp) {
                 when {
-                    current == null -> if (_state.value !is DataFileState.Held) hold(DataFileState.Held.Reason.ChangedOnDisk, "${file.name} was moved or deleted. Save to write it again, or close the connection.")
+                    current == null -> if (_state.value !is DataFileState.Held) hold(DataFileState.Held.Reason.ChangedOnDisk, tr("{0} was moved or deleted. Save to write it again, or close the connection.", file.name))
                     current == heldStamp -> Unit
                     !hasUnsavedChanges() -> reloadLocked()
                     else -> {
                         heldStamp = current
-                        hold(DataFileState.Held.Reason.ChangedOnDisk, "${file.name} changed on disk while you had unsaved changes.")
+                        hold(DataFileState.Held.Reason.ChangedOnDisk, tr("{0} changed on disk while you had unsaved changes.", file.name))
                     }
                 }
                 return
@@ -185,7 +186,7 @@ class DataFileSync internal constructor(
                 if (!force && onDisk != stamp) {
                     seenVersion = version
                     heldStamp = onDisk
-                    hold(DataFileState.Held.Reason.ChangedOnDisk, if (onDisk == null) "${file.name} was moved or deleted." else "${file.name} changed on disk while you had unsaved changes.")
+                    hold(DataFileState.Held.Reason.ChangedOnDisk, if (onDisk == null) tr("{0} was moved or deleted.", file.name) else tr("{0} changed on disk while you had unsaved changes.", file.name))
                     return@read null
                 }
                 val sources = plan.tables.filter { it.changed && it.source != null }.mapNotNull { it.source }.filter { it.lowercase() !in confirmed }.toSet()
@@ -208,7 +209,7 @@ class DataFileSync internal constructor(
             }?.let { reloadLocked() }
         } catch (e: Throwable) {
             // Left unseen, so the next tick tries again: closing the program that locks the file is enough to save.
-            val failed = DataFileState.Failed("Couldn't save ${file.name}: ${describe(e)}")
+            val failed = DataFileState.Failed(tr("Couldn't save {0}: {1}", file.name, describe(e)))
             if (_state.value != failed) log.warn("Saving {} failed", file, e)
             _state.value = failed
             retryAt = System.currentTimeMillis() + retryDelay
@@ -241,7 +242,7 @@ class DataFileSync internal constructor(
         } catch (e: Throwable) {
             log.warn("Reading {} again failed", file, e)
             heldStamp = before
-            _state.value = DataFileState.Failed("Couldn't read ${file.name} again: ${describe(e)}")
+            _state.value = DataFileState.Failed(tr("Couldn't read {0} again: {1}", file.name, describe(e)))
         }
     }
 
@@ -273,8 +274,8 @@ class DataFileSync internal constructor(
                 matched.entries.firstOrNull { it.value != null }?.key
                     ?: states.singleOrNull()
                     ?: throw DataFileException(
-                        if (states.isEmpty()) "The table is gone; a ${format.type.displayName} holds exactly one table."
-                        else "The file's table is gone and there are several others; a ${format.type.displayName} holds exactly one. Rename the one to save to ${known.values.firstOrNull()?.name ?: "the original name"}.",
+                        if (states.isEmpty()) tr("The table is gone; a {0} holds exactly one table.", format.type.displayName)
+                        else tr("The file's table is gone and there are several others; a {0} holds exactly one. Rename the one to save to {1}.", format.type.displayName, known.values.firstOrNull()?.name ?: tr("the original name")),
                     )
             val source = matched[primary] ?: known.values.firstOrNull()
             val table = output(primary, source)
@@ -294,7 +295,7 @@ class DataFileSync internal constructor(
         )
 
     private fun write(plan: Plan) {
-        val directory = file.toAbsolutePath().parent ?: throw IOException("${file.name} has no folder")
+        val directory = file.toAbsolutePath().parent ?: throw IOException(tr("{0} has no folder", file.name))
         val temporary = directory.resolve(".${file.name}.tablegrip-${UUID.randomUUID().toString().take(8)}.tmp")
         try {
             document.write(temporary, plan.tables, plan.removed)
@@ -313,8 +314,8 @@ class DataFileSync internal constructor(
     private fun describe(e: Throwable): String =
         when (e) {
             is DataFileException -> e.message.orEmpty()
-            is NoSuchFileException -> "${e.file} doesn't exist"
-            is java.nio.file.AccessDeniedException -> "access denied to ${e.file} (is it open in another program, or read-only?)"
+            is NoSuchFileException -> tr("{0} doesn't exist", e.file)
+            is java.nio.file.AccessDeniedException -> tr("access denied to {0} (is it open in another program, or read-only?)", e.file)
             is java.nio.file.FileSystemException -> "${e.reason ?: e.javaClass.simpleName} (${e.file})"
             else -> e.message ?: e.javaClass.simpleName
         }

@@ -1,5 +1,6 @@
 package dev.tablegrip.app.activity
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,9 +25,9 @@ import kotlinx.coroutines.sync.withLock
 
 /** Which sessions the monitor lists. */
 enum class ActivityFilter(val label: String) {
-    Running("Running"),
-    Blocked("Blocked"),
-    All("All"),
+    Running(tr("Running")),
+    Blocked(tr("Blocked")),
+    All(tr("All")),
 }
 
 /** A session in the list, indented under the session whose locks it waits for. */
@@ -41,7 +42,7 @@ data class PendingSignal(val session: SessionActivity, val terminate: Boolean, v
  */
 class ActivityTab(private val app: AppState, val config: ConnectionConfig) : WorkspaceTab {
     override val connectionId: String = config.id
-    override val title: String = "Activity: ${config.name}"
+    override val title: String = tr("Activity: {0}", config.name)
     val support: ActivitySupport = ActivitySupport.of(config.type)
 
     var snapshot by mutableStateOf<ActivitySnapshot?>(null)
@@ -122,7 +123,7 @@ class ActivityTab(private val app: AppState, val config: ConnectionConfig) : Wor
         } catch (e: Exception) {
             // The monitor's own connection may be what broke (network, or someone terminated it): reopen next time.
             closeMonitor()
-            error = "Couldn't read sessions: ${e.message ?: e}"
+            error = tr("Couldn't read sessions: {0}", e.message ?: e)
         } finally {
             loading = false
         }
@@ -150,15 +151,15 @@ class ActivityTab(private val app: AppState, val config: ConnectionConfig) : Wor
         if (!signalsAllowed || session.own) return
         val reasons =
             buildList {
-                if (config.environment == Environment.Production) add("${config.name} is a Production connection.")
-                else if (config.confirmWrites) add("${config.name} asks before changes.")
+                if (config.environment == Environment.Production) add(tr("{0} is a Production connection.", config.name))
+                else if (config.confirmWrites) add(tr("{0} asks before changes.", config.name))
                 if (terminate) {
-                    add("Terminating ends the session: its client loses the connection.")
-                    if (session.transactionStart != null) add("It has an open transaction, which will be rolled back.")
+                    add(tr("Terminating ends the session: its client loses the connection."))
+                    if (session.transactionStart != null) add(tr("It has an open transaction, which will be rolled back."))
                 } else {
-                    add("Cancelling stops the running query; its client gets an error.")
+                    add(tr("Cancelling stops the running query; its client gets an error."))
                 }
-                if (session.application == TableGripApplication) add("This is one of TableGrip's own sessions (a console or the explorer).")
+                if (session.application == TableGripApplication) add(tr("This is one of TableGrip's own sessions (a console or the explorer)."))
             }
         val guarded = config.environment == Environment.Production || config.confirmWrites
         if (terminate || guarded) pending = PendingSignal(session, terminate, reasons) else send(session, terminate = false)
@@ -172,16 +173,16 @@ class ActivityTab(private val app: AppState, val config: ConnectionConfig) : Wor
 
     private fun send(session: SessionActivity, terminate: Boolean) {
         app.scope.launch {
-            val verb = if (terminate) "terminate" else "cancel"
+            val verb = if (terminate) tr("terminate") else tr("cancel")
             try {
                 val monitor = monitor()
                 val done = if (terminate) monitor.terminate(session.id) else monitor.cancel(session.id)
-                if (done) app.status = "${if (terminate) "Terminated" else "Cancelled"} session ${session.id}"
-                else error = "Couldn't $verb session ${session.id}: it may have finished already, or your user may not be allowed to signal it."
+                if (done) app.status = tr("{0} session {1}", if (terminate) tr("Terminated") else tr("Cancelled"), session.id)
+                else error = tr("Couldn't {0} session {1}: it may have finished already, or your user may not be allowed to signal it.", verb, session.id)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                error = "Couldn't $verb session ${session.id}: ${e.message ?: e}"
+                error = tr("Couldn't {0} session {1}: {2}", verb, session.id, e.message ?: e)
             }
             refresh()
         }
@@ -250,9 +251,9 @@ internal fun formatDuration(duration: Duration): String {
     val ms = duration.toMillis()
     val s = duration.seconds
     return when {
-        ms < 1_000 -> "$ms ms"
+        ms < 1_000 -> tr("{0} ms", ms)
         s < 60 -> "$s s"
-        s < 3_600 -> "${s / 60} min %02d s".format(s % 60)
-        else -> "${s / 3_600} h ${s % 3_600 / 60} min"
+        s < 3_600 -> tr("{0} min {1} s", s / 60, "%02d".format(s % 60))
+        else -> tr("{0} h {1} min", s / 3_600, s % 3_600 / 60)
     }
 }

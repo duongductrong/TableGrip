@@ -1,5 +1,6 @@
 package dev.tablegrip.app.grid
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.app.console.SyntaxToken
 import dev.tablegrip.app.ui.theme.LocalColorTheme
 import androidx.compose.foundation.background
@@ -126,27 +127,27 @@ fun ResultJsonView(model: GridModel, state: DataGridState, modifier: Modifier = 
             verticalAlignment = Alignment.CenterVertically,
         ) {
             ViewChipGroup {
-                ViewChip("Text", !tree) { tree = false }
-                ViewChip("Tree", tree) { tree = true }
+                ViewChip(tr("Text"), !tree) { tree = false }
+                ViewChip(tr("Tree"), tree) { tree = true }
             }
             Box(Modifier.weight(1f))
             content?.let { current ->
-                if (current.shortened) Text("Long values are cut here; Copy gets them in full", Modifier.padding(end = 8.dp), color = info)
-                Text("${current.json.size} object(s)", Modifier.padding(end = 8.dp), color = info)
+                if (current.shortened) Text(tr("Long values are cut here; Copy gets them in full"), Modifier.padding(end = 8.dp), color = info)
+                Text(tr("{0} object(s)", current.json.size), Modifier.padding(end = 8.dp), color = info)
             }
             if (records != null && records.canAddRecord) {
                 val noun = records.recordNoun.replaceFirstChar(Char::uppercase)
-                Tooltip({ Text("Write a new ${records.recordNoun} as JSON") }) {
-                    OutlinedButton(onClick = { state.newRecord(model) }) { Text("Add $noun…") }
+                Tooltip({ Text(tr("Write a new {0} as JSON", records.recordNoun)) }) {
+                    OutlinedButton(onClick = { state.newRecord(model) }) { Text(tr("Add {0}…", noun)) }
                 }
             }
-            OutlinedButton(onClick = { content?.let { copyToClipboard(it.text) } }, enabled = content != null) { Text("Copy") }
+            OutlinedButton(onClick = { content?.let { copyToClipboard(it.text) } }, enabled = content != null) { Text(tr("Copy")) }
         }
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
         Box(Modifier.weight(1f).fillMaxWidth().padding(8.dp)) {
             val current = content
             when {
-                current == null -> Text("Building JSON…", Modifier.align(Alignment.Center), color = info)
+                current == null -> Text(tr("Building JSON…"), Modifier.align(Alignment.Center), color = info)
                 tree -> JsonTree(current.json, recordAction = edit)
                 else -> JsonLines(current, edit)
             }
@@ -187,7 +188,7 @@ internal fun RecordEditButton(records: RecordEditor, row: Int, onClick: () -> Un
     val reason = records.whyNotEditable(row)
     val interaction = remember { MutableInteractionSource() }
     val hovered by interaction.collectIsHoveredAsState()
-    Tooltip({ Text(reason ?: "Edit this ${records.recordNoun} as JSON") }) {
+    Tooltip({ Text(reason ?: tr("Edit this {0} as JSON", records.recordNoun)) }) {
         Box(
             Modifier.size(18.dp)
                 .testTag(RecordEditTag)

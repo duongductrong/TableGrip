@@ -1,5 +1,6 @@
 package dev.tablegrip.core.schema
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.ddl.ColumnTypes
 import dev.tablegrip.core.ddl.DdlGenerator
 import dev.tablegrip.core.ddl.DdlScript
@@ -22,57 +23,57 @@ sealed interface DiffItem {
 
     data class ColumnAdded(val column: DesignColumn) : DiffItem {
         override val id = "column:${column.name}"
-        override val label = "Add column ${column.name} ${column.type}"
+        override val label = tr("Add column {0} {1}", column.name, column.type)
     }
 
     data class ColumnRemoved(val column: DesignColumn) : DiffItem {
         override val id = "column:${column.name}"
-        override val label = "Drop column ${column.name}"
+        override val label = tr("Drop column {0}", column.name)
     }
 
     /** [changes] say what differs, e.g. `type varchar(50) → varchar(100)`. */
     data class ColumnChanged(val from: DesignColumn, val to: DesignColumn, val changes: List<String>) : DiffItem {
         override val id = "column:${from.name}"
-        override val label = "Change column ${from.name}: ${changes.joinToString(", ")}"
+        override val label = tr("Change column {0}: {1}", from.name, changes.joinToString(", "))
     }
 
     data class IndexAdded(val index: IndexInfo) : DiffItem {
         override val id = "index:${index.name}"
-        override val label = "Create ${if (index.unique) "unique " else ""}index ${index.name} (${index.columns.joinToString(", ")})"
+        override val label = tr("Create {0}index {1} ({2})", if (index.unique) tr("unique ") else "", index.name, index.columns.joinToString(", "))
     }
 
     data class IndexRemoved(val index: IndexInfo) : DiffItem {
         override val id = "index:${index.name}"
-        override val label = "Drop index ${index.name}"
+        override val label = tr("Drop index {0}", index.name)
     }
 
     data class IndexChanged(val from: IndexInfo, val to: IndexInfo) : DiffItem {
         override val id = "index:${from.name}"
-        override val label = "Recreate index ${to.name} (${to.columns.joinToString(", ")})${if (to.unique) " unique" else ""}"
+        override val label = tr("Recreate index {0} ({1}){2}", to.name, to.columns.joinToString(", "), if (to.unique) tr(" unique") else "")
     }
 
     data class ForeignKeyAdded(val foreignKey: ForeignKeyInfo) : DiffItem {
         override val id = "fk:${foreignKey.identity}"
-        override val label = "Add foreign key ${foreignKey.name.ifBlank { foreignKey.columns.joinToString(", ") }} → ${foreignKey.referencedTable.name}(${foreignKey.referencedColumns.joinToString(", ")})"
+        override val label = tr("Add foreign key {0} → {1}({2})", foreignKey.name.ifBlank { foreignKey.columns.joinToString(", ") }, foreignKey.referencedTable.name, foreignKey.referencedColumns.joinToString(", "))
     }
 
     data class ForeignKeyRemoved(val foreignKey: ForeignKeyInfo) : DiffItem {
         override val id = "fk:${foreignKey.identity}"
-        override val label = "Drop foreign key ${foreignKey.name.ifBlank { foreignKey.columns.joinToString(", ") + " → " + foreignKey.referencedTable.name }}"
+        override val label = tr("Drop foreign key {0}", foreignKey.name.ifBlank { foreignKey.columns.joinToString(", ") + " → " + foreignKey.referencedTable.name })
     }
 
     data class ForeignKeyChanged(val from: ForeignKeyInfo, val to: ForeignKeyInfo) : DiffItem {
         override val id = "fk:${from.identity}"
-        override val label = "Recreate foreign key ${to.name.ifBlank { to.columns.joinToString(", ") }} → ${to.referencedTable.name}(${to.referencedColumns.joinToString(", ")})"
+        override val label = tr("Recreate foreign key {0} → {1}({2})", to.name.ifBlank { to.columns.joinToString(", ") }, to.referencedTable.name, to.referencedColumns.joinToString(", "))
     }
 
     data class PrimaryKeyChanged(val from: List<String>, val to: List<String>) : DiffItem {
         override val id = "pk"
         override val label =
             when {
-                to.isEmpty() -> "Drop primary key (${from.joinToString(", ")})"
-                from.isEmpty() -> "Add primary key (${to.joinToString(", ")})"
-                else -> "Change primary key (${from.joinToString(", ")}) → (${to.joinToString(", ")})"
+                to.isEmpty() -> tr("Drop primary key ({0})", from.joinToString(", "))
+                from.isEmpty() -> tr("Add primary key ({0})", to.joinToString(", "))
+                else -> tr("Change primary key ({0}) → ({1})", from.joinToString(", "), to.joinToString(", "))
             }
     }
 
@@ -181,13 +182,13 @@ object SchemaDiff {
 
     private fun columnChanges(source: DesignColumn, target: DesignColumn): List<String> =
         buildList {
-            if (ColumnTypes.normalize(source.type) != ColumnTypes.normalize(target.type)) add("type ${target.type} → ${source.type}")
-            if (source.nullable != target.nullable) add(if (source.nullable) "allow NULL" else "NOT NULL")
+            if (ColumnTypes.normalize(source.type) != ColumnTypes.normalize(target.type)) add(tr("type {0} → {1}", target.type, source.type))
+            if (source.nullable != target.nullable) add(if (source.nullable) tr("allow NULL") else "NOT NULL")
             val sourceDefault = ColumnTypes.normalizeDefault(source.defaultValue)
             val targetDefault = ColumnTypes.normalizeDefault(target.defaultValue)
             // Sequence defaults name each database's own sequence; they're the auto-increment, not a real difference.
             val sequences = sourceDefault?.startsWith("nextval(") == true && targetDefault?.startsWith("nextval(") == true
-            if (sourceDefault != targetDefault && !sequences) add("default ${target.defaultValue ?: "none"} → ${source.defaultValue ?: "none"}")
+            if (sourceDefault != targetDefault && !sequences) add(tr("default {0} → {1}", target.defaultValue ?: "none", source.defaultValue ?: "none"))
         }
 
     private fun sameForeignKey(a: ForeignKeyInfo, b: ForeignKeyInfo): Boolean =

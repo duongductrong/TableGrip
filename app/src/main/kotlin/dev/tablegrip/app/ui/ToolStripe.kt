@@ -1,5 +1,6 @@
 package dev.tablegrip.app.ui
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.ContextMenuArea
 import androidx.compose.foundation.ContextMenuItem
 import androidx.compose.foundation.background
@@ -41,13 +42,13 @@ import org.jetbrains.jewel.ui.icons.AllIconsKeys
  * Settings itself is always there, so the way back is never hidden.
  */
 enum class StripeItem(val label: String, val group: StripeGroup) {
-    Explorer("Connections", StripeGroup.Tools),
-    History("Query History", StripeGroup.Tools),
-    Queries("Saved Queries", StripeGroup.Tools),
-    GoTo("Go to Anything", StripeGroup.Actions),
-    NewConnection("New Connection", StripeGroup.Actions),
-    Shortcuts("Keyboard Shortcuts", StripeGroup.Bottom),
-    Agent("Agent", StripeGroup.Right);
+    Explorer(tr("Connections"), StripeGroup.Tools),
+    History(tr("Query History"), StripeGroup.Tools),
+    Queries(tr("Saved Queries"), StripeGroup.Tools),
+    GoTo(tr("Go to Anything"), StripeGroup.Actions),
+    NewConnection(tr("New Connection"), StripeGroup.Actions),
+    Shortcuts(tr("Keyboard Shortcuts"), StripeGroup.Bottom),
+    Agent(tr("Agent"), StripeGroup.Right);
 
     companion object {
         /** [group]'s items in the user's order (unlisted ones keep their place after), hidden ones included. */
@@ -75,7 +76,7 @@ internal fun ToolStripe(app: AppState, modifier: Modifier = Modifier) {
         actions.forEach { StripeItemButton(app, it) }
         Spacer(Modifier.weight(1f))
         StripeItem.visible(StripeGroup.Bottom, app.settings).forEach { StripeItemButton(app, it) }
-        StripeButton(AllIconsKeys.General.Settings, "Settings (${Shortcuts.Settings})", selected = app.settingsOpen) { app.settingsOpen = !app.settingsOpen }
+        StripeButton(AllIconsKeys.General.Settings, tr("Settings ({0})", Shortcuts.Settings), selected = app.settingsOpen) { app.settingsOpen = !app.settingsOpen }
     }
 }
 
@@ -98,15 +99,15 @@ internal fun RightToolStripe(app: AppState, modifier: Modifier = Modifier) {
 private fun StripeItemButton(app: AppState, item: StripeItem) {
     val (icon, tooltip, selected) =
         when (item) {
-            StripeItem.Explorer -> Triple(AllIconsKeys.Nodes.DataSchema, "Connections (${Shortcuts.Explorer})", !app.settingsOpen && app.leftTool == LeftTool.Explorer)
-            StripeItem.History -> Triple(AllIconsKeys.Vcs.History, "Query History (${Shortcuts.History})", !app.settingsOpen && app.leftTool == LeftTool.History)
-            StripeItem.Queries -> Triple(AllIconsKeys.Nodes.Bookmark, "Saved Queries (${Shortcuts.Queries})", !app.settingsOpen && app.leftTool == LeftTool.Queries)
-            StripeItem.GoTo -> Triple(AllIconsKeys.Actions.Search, "Go to Anything (${Shortcuts.GoToAnything})", app.goToOpen)
-            StripeItem.NewConnection -> Triple(AllIconsKeys.General.Add, "New Connection", false)
-            StripeItem.Shortcuts -> Triple(AllIconsKeys.General.Keyboard, "Keyboard Shortcuts (${Shortcuts.ShowShortcuts})", app.shortcutsOpen)
-            StripeItem.Agent -> Triple(AppIcons.Agent, "Agent (${Shortcuts.Agent})", app.agentOpen)
+            StripeItem.Explorer -> Triple(AllIconsKeys.Nodes.DataSchema, tr("Connections ({0})", Shortcuts.Explorer), !app.settingsOpen && app.leftTool == LeftTool.Explorer)
+            StripeItem.History -> Triple(AllIconsKeys.Vcs.History, tr("Query History ({0})", Shortcuts.History), !app.settingsOpen && app.leftTool == LeftTool.History)
+            StripeItem.Queries -> Triple(AllIconsKeys.Nodes.Bookmark, tr("Saved Queries ({0})", Shortcuts.Queries), !app.settingsOpen && app.leftTool == LeftTool.Queries)
+            StripeItem.GoTo -> Triple(AllIconsKeys.Actions.Search, tr("Go to Anything ({0})", Shortcuts.GoToAnything), app.goToOpen)
+            StripeItem.NewConnection -> Triple(AllIconsKeys.General.Add, tr("New Connection"), false)
+            StripeItem.Shortcuts -> Triple(AllIconsKeys.General.Keyboard, tr("Keyboard Shortcuts ({0})", Shortcuts.ShowShortcuts), app.shortcutsOpen)
+            StripeItem.Agent -> Triple(AppIcons.Agent, tr("Agent ({0})", Shortcuts.Agent), app.agentOpen)
         }
-    ContextMenuArea(items = { listOf(ContextMenuItem("Hide ${item.label}") { app.updateSettings { it.copy(stripeHidden = it.stripeHidden + item.name) } }) }) {
+    ContextMenuArea(items = { listOf(ContextMenuItem(tr("Hide {0}", item.label)) { app.updateSettings { it.copy(stripeHidden = it.stripeHidden + item.name) } }) }) {
         StripeButton(icon, tooltip, selected) {
             when (item) {
                 StripeItem.Explorer -> app.toggleTool(LeftTool.Explorer)

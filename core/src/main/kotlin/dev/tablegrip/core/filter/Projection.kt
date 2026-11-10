@@ -1,19 +1,20 @@
 package dev.tablegrip.core.filter
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.chart.TimeBucket
 import dev.tablegrip.core.dialect.SqlDialect
 
 /** What a [SelectFunction] needs besides its column. [label] reads before the field: "decimals 2". */
 enum class FunctionArgument(val label: String, val placeholder: String) {
-    Digits("decimals", "0"),
-    Range("from, length", "1, 10"),
-    Fallback("if NULL", "value"),
-    Bucket("to", "day"),
+    Digits(tr("decimals"), "0"),
+    Range(tr("from, length"), "1, 10"),
+    Fallback(tr("if NULL"), tr("value")),
+    Bucket(tr("to"), "day"),
 }
 
 /** A function applied to a column in the select list; [label] is what the picker shows. */
 enum class SelectFunction(val label: String, val argument: FunctionArgument? = null) {
-    None("value"),
+    None(tr("value")),
     Upper("UPPER"),
     Lower("LOWER"),
     Trim("TRIM"),
@@ -23,9 +24,9 @@ enum class SelectFunction(val label: String, val argument: FunctionArgument? = n
     Abs("ABS"),
     Floor("FLOOR"),
     Ceil("CEIL"),
-    Truncate("truncate", FunctionArgument.Bucket),
-    Coalesce("if NULL…", FunctionArgument.Fallback),
-    AsText("as text");
+    Truncate(tr("truncate"), FunctionArgument.Bucket),
+    Coalesce(tr("if NULL…"), FunctionArgument.Fallback),
+    AsText(tr("as text"));
 
     /** A short name for the column the result shows under, e.g. `upper(name)`. */
     fun outputName(column: String): String = if (this == None) column else "${name.lowercase()}($column)"
@@ -101,7 +102,7 @@ class ProjectionCompiler(private val dialect: SqlDialect, private val columns: L
         val issues = mutableMapOf<Long, String>()
         val enabled = projection.items.filter { it.enabled }
         if (enabled.isEmpty()) {
-            if (projection.items.isNotEmpty()) issues[0] = "Choose at least one column to show"
+            if (projection.items.isNotEmpty()) issues[0] = tr("Choose at least one column to show")
             return CompiledProjection(null, issues, editable = !projection.distinct && issues.isEmpty())
         }
         val parts = mutableListOf<String>()
@@ -116,7 +117,7 @@ class ProjectionCompiler(private val dialect: SqlDialect, private val columns: L
                 }
             val name = outputName(item)
             val clash = names.put(name.lowercase(), item.id)
-            if (clash != null) issues[item.id] = "Another column already shows as “$name”; give this one a different name"
+            if (clash != null) issues[item.id] = tr("Another column already shows as “{0}”; give this one a different name", name)
             parts += part
         }
         val plain = enabled.all { it is SelectField && it.function == SelectFunction.None && it.alias.isBlank() }
@@ -138,7 +139,7 @@ class ProjectionCompiler(private val dialect: SqlDialect, private val columns: L
     private fun item(item: SelectItem): String =
         when (item) {
             is SelectExpression -> {
-                val sql = item.sql.trim().removeSuffix(";").trim().ifEmpty { throw FilterValueException("Enter a SQL expression") }
+                val sql = item.sql.trim().removeSuffix(";").trim().ifEmpty { throw FilterValueException(tr("Enter a SQL expression")) }
                 "$sql AS ${dialect.quoteIdentifier(outputName(item))}"
             }
             is SelectField -> field(item)
@@ -147,15 +148,15 @@ class ProjectionCompiler(private val dialect: SqlDialect, private val columns: L
     private fun field(field: SelectField): String {
         val column =
             byName[field.column]
-                ?: throw FilterValueException(if (field.column.isEmpty()) "Choose a column" else "No column “${field.column}” in this table")
+                ?: throw FilterValueException(if (field.column.isEmpty()) tr("Choose a column") else tr("No column “{0}” in this table", field.column))
         val function = field.function
         if (SelectFunction.forKind(column.kind, dialect).none { function in it }) {
-            throw FilterValueException("“${function.label}” doesn't apply to ${column.kind.label} columns")
+            throw FilterValueException(tr("“{0}” doesn't apply to {1} columns", function.label, column.kind.label))
         }
         val c = dialect.quoteIdentifier(column.name)
         val sql =
             dialect.selectFunction(function, c, arguments(function, column, field.argument))
-                ?: throw FilterValueException("This database has no ${function.label}")
+                ?: throw FilterValueException(tr("This database has no {0}", function.label))
         val alias = field.alias.trim()
         return when {
             function == SelectFunction.None && alias.isEmpty() -> c
@@ -168,22 +169,22 @@ class ProjectionCompiler(private val dialect: SqlDialect, private val columns: L
         val text = input.trim()
         return when (function.argument) {
             null -> emptyList()
-            FunctionArgument.Digits -> listOf(integer(text.ifEmpty { "0" }, 0..10, "Enter how many decimals to keep, 0 to 10"))
+            FunctionArgument.Digits -> listOf(integer(text.ifEmpty { "0" }, 0..10, tr("Enter how many decimals to keep, 0 to 10")))
             FunctionArgument.Range -> {
                 val parts = text.split(',').map { it.trim() }
-                if (parts.size != 2 || parts.any { it.isEmpty() }) throw FilterValueException("Enter where to start and how many characters, e.g. 1, 10")
-                listOf(integer(parts[0], 1..Int.MAX_VALUE, "Start at character 1 or later"), integer(parts[1], 0..Int.MAX_VALUE, "Enter a length of 0 or more"))
+                if (parts.size != 2 || parts.any { it.isEmpty() }) throw FilterValueException(tr("Enter where to start and how many characters, e.g. 1, 10"))
+                listOf(integer(parts[0], 1..Int.MAX_VALUE, tr("Start at character 1 or later")), integer(parts[1], 0..Int.MAX_VALUE, tr("Enter a length of 0 or more")))
             }
             FunctionArgument.Bucket -> {
-                val bucket = if (text.isEmpty()) TimeBucket.Day else TimeBucket.of(text) ?: throw FilterValueException("Truncate to hour, day, week, month, quarter or year")
+                val bucket = if (text.isEmpty()) TimeBucket.Day else TimeBucket.of(text) ?: throw FilterValueException(tr("Truncate to hour, day, week, month, quarter or year"))
                 listOf(bucket.name)
             }
             FunctionArgument.Fallback ->
                 listOf(
                     when (column.kind) {
-                        ValueKind.Number -> FilterValues.format(FilterValues.number(text.ifEmpty { throw FilterValueException("Enter the number to show instead of NULL") }))
+                        ValueKind.Number -> FilterValues.format(FilterValues.number(text.ifEmpty { throw FilterValueException(tr("Enter the number to show instead of NULL")) }))
                         ValueKind.Text -> dialect.literal(input, numeric = false)
-                        else -> dialect.literal(text.ifEmpty { throw FilterValueException("Enter the value to show instead of NULL") }, numeric = false)
+                        else -> dialect.literal(text.ifEmpty { throw FilterValueException(tr("Enter the value to show instead of NULL")) }, numeric = false)
                     }
                 )
         }

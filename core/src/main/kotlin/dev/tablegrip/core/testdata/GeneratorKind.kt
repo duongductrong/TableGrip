@@ -1,5 +1,6 @@
 package dev.tablegrip.core.testdata
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.filter.ValueKind
 import dev.tablegrip.core.metadata.ColumnInfo
 import java.sql.Types
@@ -7,65 +8,65 @@ import java.sql.Types
 /** What kind of value a column is filled with when generating test data. [label] is what the column's dropdown shows. */
 enum class GeneratorKind(val label: String) {
     // Numbers and identity
-    Sequence("Sequence (1, 2, 3…)"),
-    Integer("Random integer"),
-    Decimal("Random decimal"),
-    Price("Price"),
-    Boolean("Boolean"),
+    Sequence(tr("Sequence (1, 2, 3…)")),
+    Integer(tr("Random integer")),
+    Decimal(tr("Random decimal")),
+    Price(tr("Price")),
+    Boolean(tr("Boolean")),
     Uuid("UUID"),
 
     // Text
-    FirstName("First name"),
-    LastName("Last name"),
-    FullName("Full name"),
-    Username("Username"),
-    Email("Email address"),
-    Phone("Phone number"),
-    Company("Company name"),
-    JobTitle("Job title"),
-    Street("Street address"),
-    City("City"),
-    Region("State / province"),
-    PostalCode("Postal code"),
-    Country("Country"),
-    CountryCode("Country code (VN, US…)"),
+    FirstName(tr("First name")),
+    LastName(tr("Last name")),
+    FullName(tr("Full name")),
+    Username(tr("Username")),
+    Email(tr("Email address")),
+    Phone(tr("Phone number")),
+    Company(tr("Company name")),
+    JobTitle(tr("Job title")),
+    Street(tr("Street address")),
+    City(tr("City")),
+    Region(tr("State / province")),
+    PostalCode(tr("Postal code")),
+    Country(tr("Country")),
+    CountryCode(tr("Country code (VN, US…)")),
     Url("URL"),
-    ImageUrl("Image URL"),
-    Domain("Domain name"),
-    IpAddress("IPv4 address"),
-    Word("Word"),
-    Title("Title (a few words)"),
-    Sentence("Sentence"),
-    Paragraph("Paragraph"),
-    Slug("Slug (some-words-here)"),
-    Code("Code (ABC-1234)"),
-    Hash("Hex hash"),
-    FileName("File name"),
-    ProductName("Product name"),
-    Color("Color name"),
-    HexColor("Hex color (#1a2b3c)"),
-    CurrencyCode("Currency code (USD, VND…)"),
-    LanguageCode("Language code (en, vi…)"),
-    Status("Status (active, pending…)"),
+    ImageUrl(tr("Image URL")),
+    Domain(tr("Domain name")),
+    IpAddress(tr("IPv4 address")),
+    Word(tr("Word")),
+    Title(tr("Title (a few words)")),
+    Sentence(tr("Sentence")),
+    Paragraph(tr("Paragraph")),
+    Slug(tr("Slug (some-words-here)")),
+    Code(tr("Code (ABC-1234)")),
+    Hash(tr("Hex hash")),
+    FileName(tr("File name")),
+    ProductName(tr("Product name")),
+    Color(tr("Color name")),
+    HexColor(tr("Hex color (#1a2b3c)")),
+    CurrencyCode(tr("Currency code (USD, VND…)")),
+    LanguageCode(tr("Language code (en, vi…)")),
+    Status(tr("Status (active, pending…)")),
 
     // Time
-    Date("Date"),
-    PastDate("Date in the past year"),
-    FutureDate("Date in the next year"),
-    BirthDate("Date of birth (18–80 years ago)"),
-    Timestamp("Timestamp"),
-    PastTimestamp("Timestamp in the past year"),
-    FutureTimestamp("Timestamp in the next year"),
-    Time("Time of day"),
+    Date(tr("Date")),
+    PastDate(tr("Date in the past year")),
+    FutureDate(tr("Date in the next year")),
+    BirthDate(tr("Date of birth (18–80 years ago)")),
+    Timestamp(tr("Timestamp")),
+    PastTimestamp(tr("Timestamp in the past year")),
+    FutureTimestamp(tr("Timestamp in the next year")),
+    Time(tr("Time of day")),
 
     // Structured
-    Json("JSON object"),
+    Json(tr("JSON object")),
 
     // Special
-    ForeignKey("Existing value from referenced table"),
-    Constant("Fixed value"),
-    Null("Always NULL"),
-    Skip("Leave to the database default");
+    ForeignKey(tr("Existing value from referenced table")),
+    Constant(tr("Fixed value")),
+    Null(tr("Always NULL")),
+    Skip(tr("Leave to the database default"));
 
     /** Produces words rather than numbers, times or identifiers. */
     val isText: kotlin.Boolean

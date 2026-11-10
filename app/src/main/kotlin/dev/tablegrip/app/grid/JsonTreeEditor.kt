@@ -1,5 +1,6 @@
 package dev.tablegrip.app.grid
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
@@ -134,12 +135,12 @@ internal fun JsonTreeEditor(root: JsonElement, onChange: (JsonElement) -> Unit, 
         ) {
             val path = selected?.let(::jsonPathText) ?: "$"
             Text(path, Modifier.weight(1f, fill = false), style = JewelTheme.editorTextStyle, color = colors.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            TreeIconButton(AllIconsKeys.Actions.Copy, "Copy path") { copyToClipboard(path) }
+            TreeIconButton(AllIconsKeys.Actions.Copy, tr("Copy path")) { copyToClipboard(path) }
             Box(Modifier.weight(1f))
             problem?.let { Text(it, color = ErrorColor, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis) }
-            TreeIconButton(AllIconsKeys.General.Add, if (root is JsonArray) "Add item" else "Add key") { addTo(emptyList()) }
-            TreeIconButton(AllIconsKeys.Actions.Expandall, "Expand all") { collapsed = emptySet() }
-            TreeIconButton(AllIconsKeys.Actions.Collapseall, "Collapse all") { collapsed = jsonContainersFrom(root, 1) }
+            TreeIconButton(AllIconsKeys.General.Add, if (root is JsonArray) tr("Add item") else tr("Add key")) { addTo(emptyList()) }
+            TreeIconButton(AllIconsKeys.Actions.Expandall, tr("Expand all")) { collapsed = emptySet() }
+            TreeIconButton(AllIconsKeys.Actions.Collapseall, tr("Collapse all")) { collapsed = jsonContainersFrom(root, 1) }
         }
         Box(Modifier.weight(1f).fillMaxWidth().topLine(colors.grid)) {
             LazyColumn(Modifier.fillMaxSize().padding(end = 10.dp), state = list) {
@@ -165,7 +166,7 @@ internal fun JsonTreeEditor(root: JsonElement, onChange: (JsonElement) -> Unit, 
                         },
                         onRename = { name ->
                             val renamed = root.withKeyRenamed(row.path, name)
-                            if (renamed == null) "\"$name\" is already a key here"
+                            if (renamed == null) tr("\"{0}\" is already a key here", name)
                             else {
                                 val newPath = row.path.dropLast(1) + JsonStep.Key(name)
                                 collapsed = collapsed.mapTo(mutableSetOf()) { p -> if (p.take(row.path.size) == row.path) newPath + p.drop(row.path.size) else p }
@@ -258,7 +259,7 @@ private fun TreeRow(
                         multiLine = type == JsonValueType.String,
                         onCommit = { input ->
                             val value = leafValue(type, input)
-                            if (value == null) "Not a JSON number: use digits, an optional . and exponent"
+                            if (value == null) tr("Not a JSON number: use digits, an optional . and exponent")
                             else {
                                 onValue(value)
                                 null
@@ -273,7 +274,7 @@ private fun TreeRow(
                 }
                 type == JsonValueType.Boolean -> {
                     val value = (element as JsonPrimitive).content == "true"
-                    Tooltip({ Text("Click to switch") }) {
+                    Tooltip({ Text(tr("Click to switch")) }) {
                         Text(
                             value.toString(),
                             Modifier.pointerHoverIcon(PointerIcon.Hand).combinedClickable(onClick = { onSelect(); onValue(JsonPrimitive(!value)) }),
@@ -299,8 +300,8 @@ private fun TreeRow(
         }
         if (selected || hovered) {
             TypeMenu(type, onType)
-            if (row.isContainer) TreeIconButton(AllIconsKeys.General.Add, if (element is JsonArray) "Add item" else "Add key", onClick = onAdd)
-            TreeIconButton(AllIconsKeys.General.Delete, "Remove", onClick = onRemove)
+            if (row.isContainer) TreeIconButton(AllIconsKeys.General.Add, if (element is JsonArray) tr("Add item") else tr("Add key"), onClick = onAdd)
+            TreeIconButton(AllIconsKeys.General.Delete, tr("Remove"), onClick = onRemove)
         } else {
             Text(type.label.lowercase(), color = colors.muted, fontSize = 11.sp)
         }

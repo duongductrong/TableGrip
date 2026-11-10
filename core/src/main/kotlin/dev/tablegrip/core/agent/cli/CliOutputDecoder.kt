@@ -1,5 +1,6 @@
 package dev.tablegrip.core.agent.cli
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.agent.AgentEvent
 import dev.tablegrip.core.agent.AgentException
 import kotlinx.serialization.json.Json
@@ -111,7 +112,7 @@ private abstract class NdjsonDecoder(protected val title: String) : CliOutputDec
         val partial = streamed.toString().trim()
         if (partial.isNotEmpty()) return partial
         if (!parsedAnything) throw CliFailure(stderr)
-        throw AgentException("$title returned nothing.")
+        throw AgentException(tr("{0} returned nothing.", title))
     }
 }
 
@@ -219,7 +220,7 @@ private class GeminiStreamDecoder(title: String) : NdjsonDecoder(title) {
             "tool_result" -> activity(json.string("tool_id").orEmpty(), null, if (json.string("status") == "error") AgentEvent.Activity.State.Failed else AgentEvent.Activity.State.Done)
             "error" -> emptyList<AgentEvent>().also { error = json.string("message") ?: error }
             "result" -> {
-                if (json.string("status") == "error") error = json.obj("error")?.string("message") ?: json.string("error") ?: "$title failed."
+                if (json.string("status") == "error") error = json.obj("error")?.string("message") ?: json.string("error") ?: tr("{0} failed.", title)
                 emptyList()
             }
             else -> emptyList()
@@ -258,7 +259,7 @@ private class CodexJsonDecoder(title: String) : NdjsonDecoder(title) {
                 }
             }
             "item.started", "item.updated" -> work(json.obj("item"), done = false)
-            "turn.failed" -> emptyList<AgentEvent>().also { error = json.obj("error")?.string("message") ?: "$title failed." }
+            "turn.failed" -> emptyList<AgentEvent>().also { error = json.obj("error")?.string("message") ?: tr("{0} failed.", title) }
             "error" -> emptyList<AgentEvent>().also { error = error ?: json.string("message") }
             else -> emptyList()
         }
@@ -273,10 +274,10 @@ private class CodexJsonDecoder(title: String) : NdjsonDecoder(title) {
     private fun work(item: JsonObject?, done: Boolean): List<AgentEvent> {
         item ?: return emptyList()
         val label = when (item.string("type")) {
-            "command_execution" -> item.string("command")?.let { "Ran $it" }
+            "command_execution" -> item.string("command")?.let { tr("Ran {0}", it) }
             "mcp_tool_call" -> listOfNotNull(item.string("server"), item.string("tool")).joinToString(".").ifEmpty { null }
-            "web_search" -> item.string("query")?.let { "Searched $it" }
-            "file_change" -> item.array("changes").mapNotNull { it.string("path") }.joinToString().ifEmpty { null }?.let { "Edited $it" }
+            "web_search" -> item.string("query")?.let { tr("Searched {0}", it) }
+            "file_change" -> item.array("changes").mapNotNull { it.string("path") }.joinToString().ifEmpty { null }?.let { tr("Edited {0}", it) }
             else -> return emptyList()
         }
         val status = item.string("status")
@@ -337,7 +338,7 @@ private class AntigravityStreamDecoder(title: String) : NdjsonDecoder(title) {
             status == null -> noOutcome(stderr)
             status == "SUCCESS" && answer.isNotEmpty() -> answer
             answer.isNotEmpty() && error == null -> answer
-            else -> throw AgentException(error ?: "$title ended in state $status.")
+            else -> throw AgentException(error ?: tr("{0} ended in state {1}.", title, status))
         }
     }
 }
@@ -373,7 +374,7 @@ private class OpenCodeJsonDecoder(title: String) : NdjsonDecoder(title) {
             }
             "error" -> emptyList<AgentEvent>().also {
                 val body = json.obj("error")
-                error = body?.string("message") ?: body?.obj("data")?.string("message") ?: "$title failed."
+                error = body?.string("message") ?: body?.obj("data")?.string("message") ?: tr("{0} failed.", title)
             }
             else -> emptyList()
         }

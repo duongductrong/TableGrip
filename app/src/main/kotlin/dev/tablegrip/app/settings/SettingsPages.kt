@@ -16,6 +16,9 @@ import dev.tablegrip.core.connection.AiAccess
 import dev.tablegrip.core.connection.DriverId
 import dev.tablegrip.core.drivers.DriverLibrary
 import dev.tablegrip.core.settings.Settings
+import dev.tablegrip.core.i18n.Language
+import dev.tablegrip.core.i18n.tr
+import java.util.Locale
 import dev.tablegrip.app.LeftTool
 import dev.tablegrip.app.console.SyntaxPreview
 import dev.tablegrip.app.console.SyntaxScheme
@@ -62,7 +65,7 @@ class IntField(
 ) : SettingField {
     /** Why [text] isn't acceptable, or null if it is. */
     fun error(text: String): String? =
-        if (text.trim().toIntOrNull()?.takeIf { it in range } == null) "Must be a number from ${range.first} to ${range.last}" else null
+        if (text.trim().toIntOrNull()?.takeIf { it in range } == null) tr("Must be a number from {0} to {1}", range.first, range.last) else null
 }
 
 /** Free text, applied as typed; [placeholder] shows when it's empty. */
@@ -96,7 +99,7 @@ class ColorField(
     val swatches: List<Color> = emptyList(),
     override val hint: String? = null,
 ) : SettingField {
-    fun error(text: String): String? = if (text.isBlank() || parseHexColor(text) != null) null else "A colour like #3574F0"
+    fun error(text: String): String? = if (text.isBlank() || parseHexColor(text) != null) null else tr("A colour like #3574F0")
 }
 
 /** A list computed the first time it is read, e.g. the fonts installed here, so building the pages stays cheap. */
@@ -146,59 +149,74 @@ object SettingsPages {
         listOf(
             SettingsPage(
                 id = "appearance",
-                group = "Appearance & Behavior",
-                title = "Appearance",
-                description = "How TableGrip looks.",
+                group = tr("Appearance & Behavior"),
+                title = tr("Appearance"),
+                description = tr("How TableGrip looks."),
                 sections =
                     listOf(
                         SettingsSection(
-                            "Theme",
+                            tr("Language"),
                             listOf(
                                 ChoiceField(
-                                    "Mode",
+                                    tr("Language"),
+                                    listOf(Language.System) + Language.entries.map { it.tag },
+                                    { tag -> Language.ofTag(tag)?.nativeName ?: tr("System ({0})", Language.ofLocale(Locale.getDefault()).nativeName) },
+                                    Settings::language,
+                                    { s, v -> s.copy(language = v) },
+                                    hint = tr("The language of menus, dialogs and messages. Data, SQL and logs stay as they are."),
+                                ),
+                            ),
+                            panel = { app -> LanguagePanel(app) },
+                            keywords = listOf("language", "locale", "translation", "English", "Tiếng Việt", "中文", "简体中文", "繁體中文"),
+                        ),
+                        SettingsSection(
+                            tr("Theme"),
+                            listOf(
+                                ChoiceField(
+                                    tr("Mode"),
                                     AppTheme.entries,
                                     AppTheme::label,
                                     get = { s -> AppTheme.of(s.theme.mode) },
                                     set = { s, mode -> s.copy(theme = s.theme.copy(mode = mode.name)) },
-                                    hint = "\"Sync with OS\" follows the system's light or dark mode.",
+                                    hint = tr("\"Sync with OS\" follows the system's light or dark mode."),
                                 ),
                                 themeField(dark = true),
                                 themeField(dark = false),
                                 ColorField(
-                                    "Accent colour",
+                                    tr("Accent colour"),
                                     Settings::accentColor,
                                     { s, v -> s.copy(accentColor = v) },
                                     fallback = { s -> s.copy(accentColor = "").colorTheme(s.isDarkMode()).islands.accent },
                                     swatches = AccentSwatches,
-                                    hint = "Over every theme: selected tool buttons, primary buttons, the statement marker in consoles and other highlights.",
+                                    hint = tr("Over every theme: selected tool buttons, primary buttons, the statement marker in consoles and other highlights."),
                                 ),
                             ),
                             panel = { app -> ThemeFilesPanel(app) },
                             keywords = listOf("dark", "light", "colour theme", "color theme", "settings.json", "json", "VS Code", "Dracula", "One Dark", "Catppuccin", "Contrast"),
                         ),
                         SettingsSection(
-                            "Layout",
+                            tr("Layout"),
                             listOf(
                                 ChoiceField(
-                                    "Zoom",
+                                    tr("Zoom"),
                                     UiZoom.Levels,
-                                    { if (it == UiZoom.Default) "$it% (default)" else "$it%" },
+                                    { if (it == UiZoom.Default) tr("{0}% (default)", it) else "$it%" },
                                     get = { s -> UiZoom.snap(s.zoom) },
                                     set = { s, v -> s.copy(zoom = v) },
-                                    hint = "Scales everything in the window. ${Shortcuts.ZoomIn.label} / ${Shortcuts.ZoomOut.label} zoom in and out, ${Shortcuts.ResetZoom.label} resets.",
+                                    hint = tr("Scales everything in the window. {0} / {1} zoom in and out, {2} resets.", Shortcuts.ZoomIn.label, Shortcuts.ZoomOut.label, Shortcuts.ResetZoom.label),
                                 ),
                                 ChoiceField(
-                                    "Font size",
+                                    tr("Font size"),
                                     listOf(0, 11, 12, 13, 14, 15, 16),
-                                    { if (it == 0) "Default" else "$it pt" },
+                                    { if (it == 0) tr("Default") else tr("{0} pt", it) },
                                     Settings::uiFontSize,
                                     { s, v -> s.copy(uiFontSize = v) },
-                                    hint = "Labels, menus and controls. The SQL editor has its own size.",
+                                    hint = tr("Labels, menus and controls. The SQL editor has its own size."),
                                 ),
                                 ChoiceField(
-                                    "Panel corners",
+                                    tr("Panel corners"),
                                     listOf(0, 6, 10, 14),
-                                    { when (it) { 0 -> "Square"; 6 -> "Slightly rounded"; 10 -> "Rounded (default)"; else -> "Very rounded" } },
+                                    { when (it) { 0 -> tr("Square"); 6 -> tr("Slightly rounded"); 10 -> tr("Rounded (default)"); else -> tr("Very rounded") } },
                                     Settings::islandCornerRadius,
                                     { s, v -> s.copy(islandCornerRadius = v) },
                                 ),
@@ -208,29 +226,29 @@ object SettingsPages {
             ),
             SettingsPage(
                 id = "color-scheme",
-                group = "Appearance & Behavior",
-                title = "Color Scheme",
-                description = "Colours of SQL in consoles and of connection environments. Empty fields use the scheme's colour.",
+                group = tr("Appearance & Behavior"),
+                title = tr("Color Scheme"),
+                description = tr("Colours of SQL in consoles and of connection environments. Empty fields use the scheme's colour."),
                 sections =
                     listOf(
                         SettingsSection(
-                            "Syntax",
+                            tr("Syntax"),
                             listOf(
                                 ChoiceField(
-                                    "Scheme",
+                                    tr("Scheme"),
                                     SyntaxScheme.entries,
                                     SyntaxScheme::label,
                                     get = { s -> SyntaxScheme.of(s.syntaxScheme) },
                                     set = { s, scheme -> s.copy(syntaxScheme = scheme.name) },
-                                    hint = "\"Theme's own\" uses the colour theme's tokens. Other schemes have a dark and a light variant, picked by the mode. The preview shows the current one.",
+                                    hint = tr("\"Theme's own\" uses the colour theme's tokens. Other schemes have a dark and a light variant, picked by the mode. The preview shows the current one."),
                                 ),
                             ),
                             panel = { SyntaxPreview() },
                         ),
-                        SettingsSection("Dark theme colours", SyntaxToken.entries.map { syntaxColorField(it, dark = true) }, reset = { s, _ -> s.copy(syntaxColors = emptyMap()) }),
-                        SettingsSection("Light theme colours", SyntaxToken.entries.map { syntaxColorField(it, dark = false) }),
+                        SettingsSection(tr("Dark theme colours"), SyntaxToken.entries.map { syntaxColorField(it, dark = true) }, reset = { s, _ -> s.copy(syntaxColors = emptyMap()) }),
+                        SettingsSection(tr("Light theme colours"), SyntaxToken.entries.map { syntaxColorField(it, dark = false) }),
                         SettingsSection(
-                            "Environments",
+                            tr("Environments"),
                             Environment.entries.filter { it != Environment.None }.map { environment ->
                                 ColorField(
                                     environment.name,
@@ -245,42 +263,42 @@ object SettingsPages {
             ),
             SettingsPage(
                 id = "behavior",
-                group = "Appearance & Behavior",
-                title = "Startup & Layout",
-                description = "What TableGrip opens with, what it remembers, and what the tool stripe and status bar show.",
+                group = tr("Appearance & Behavior"),
+                title = tr("Startup & Layout"),
+                description = tr("What TableGrip opens with, what it remembers, and what the tool stripe and status bar show."),
                 sections =
                     listOf(
                         SettingsSection(
-                            "On start",
+                            tr("On start"),
                             listOf(
-                                BooleanField("Reopen tabs", Settings::restoreTabs, { s, v -> s.copy(restoreTabs = v) }, hint = "Consoles (with unsaved text) and tables from the last session."),
+                                BooleanField(tr("Reopen tabs"), Settings::restoreTabs, { s, v -> s.copy(restoreTabs = v) }, hint = tr("Consoles (with unsaved text) and tables from the last session.")),
                                 ChoiceField(
-                                    "Tool window",
+                                    tr("Tool window"),
                                     listOf("LastUsed", "None") + LeftTool.entries.map { it.name },
                                     ::startupToolLabel,
                                     Settings::startupTool,
                                     { s, v -> s.copy(startupTool = v) },
                                 ),
                                 ChoiceField(
-                                    "Agent chat",
+                                    tr("Agent chat"),
                                     listOf("Closed", "Open", "LastUsed"),
-                                    { when (it) { "Open" -> "Open"; "LastUsed" -> "As last time"; else -> "Closed" } },
+                                    { when (it) { "Open" -> "Open"; "LastUsed" -> tr("As last time"); else -> tr("Closed") } },
                                     Settings::startupAgent,
                                     { s, v -> s.copy(startupAgent = v) },
                                 ),
-                                BooleanField("Remember window size", Settings::rememberWindowBounds, { s, v -> s.copy(rememberWindowBounds = v) }),
-                                BooleanField("Remember panel widths", Settings::rememberPanelSizes, { s, v -> s.copy(rememberPanelSizes = v) }, hint = "The tool window's and the agent chat's."),
+                                BooleanField(tr("Remember window size"), Settings::rememberWindowBounds, { s, v -> s.copy(rememberWindowBounds = v) }),
+                                BooleanField(tr("Remember panel widths"), Settings::rememberPanelSizes, { s, v -> s.copy(rememberPanelSizes = v) }, hint = tr("The tool window's and the agent chat's.")),
                             ),
                         ),
                         SettingsSection(
-                            "Status bar",
+                            tr("Status bar"),
                             listOf(
-                                BooleanField("Breadcrumbs", Settings::statusBreadcrumbs, { s, v -> s.copy(statusBreadcrumbs = v) }, hint = "Connection, schema and table of the tab in front."),
-                                BooleanField("Selection summary", Settings::statusSelectionStats, { s, v -> s.copy(statusSelectionStats = v) }, hint = "Count, sum and average of the selected cells."),
+                                BooleanField(tr("Breadcrumbs"), Settings::statusBreadcrumbs, { s, v -> s.copy(statusBreadcrumbs = v) }, hint = tr("Connection, schema and table of the tab in front.")),
+                                BooleanField(tr("Selection summary"), Settings::statusSelectionStats, { s, v -> s.copy(statusSelectionStats = v) }, hint = tr("Count, sum and average of the selected cells.")),
                             ),
                         ),
                         SettingsSection(
-                            "Tool stripe",
+                            tr("Tool stripe"),
                             emptyList(),
                             panel = { app -> StripePanel(app) },
                             keywords = listOf("sidebar", "buttons", "hide", "order"),
@@ -290,21 +308,21 @@ object SettingsPages {
             ),
             SettingsPage(
                 id = "keymap",
-                group = "Appearance & Behavior",
-                title = "Keymap",
-                description = "Keyboard shortcuts. Start from a preset, then click a shortcut to record another one.",
+                group = tr("Appearance & Behavior"),
+                title = tr("Keymap"),
+                description = tr("Keyboard shortcuts. Start from a preset, then click a shortcut to record another one."),
                 sections =
                     listOf(
                         SettingsSection(
                             null,
                             listOf(
                                 ChoiceField(
-                                    "Preset",
+                                    tr("Preset"),
                                     KeymapPreset.entries,
                                     KeymapPreset::label,
                                     get = { s -> KeymapPreset.of(s.keymap) },
                                     set = { s, preset -> s.copy(keymap = preset.name) },
-                                    hint = "Your own changes stay on top of whichever preset is chosen.",
+                                    hint = tr("Your own changes stay on top of whichever preset is chosen."),
                                 ),
                             ),
                             panel = { app -> KeymapPanel(app) },
@@ -315,28 +333,28 @@ object SettingsPages {
             ),
             SettingsPage(
                 id = "updates",
-                group = "Appearance & Behavior",
-                title = "Updates",
-                description = "New versions of TableGrip, from its GitHub releases.",
+                group = tr("Appearance & Behavior"),
+                title = tr("Updates"),
+                description = tr("New versions of TableGrip, from its GitHub releases."),
                 sections =
                     listOf(
                         SettingsSection(
                             null,
                             listOf(
-                                BooleanField("Check for updates automatically", Settings::checkForUpdates, { s, v -> s.copy(checkForUpdates = v) }, hint = "Once a day."),
+                                BooleanField(tr("Check for updates automatically"), Settings::checkForUpdates, { s, v -> s.copy(checkForUpdates = v) }, hint = tr("Once a day.")),
                                 BooleanField(
-                                    "Download and install updates automatically",
+                                    tr("Download and install updates automatically"),
                                     Settings::installUpdatesAutomatically,
                                     { s, v -> s.copy(installUpdatesAutomatically = v) },
-                                    hint = "Downloads in the background and installs the next time you quit. Off: asks first, with the release notes. On Windows, TableGrip always asks before installing.",
+                                    hint = tr("Downloads in the background and installs the next time you quit. Off: asks first, with the release notes. On Windows, TableGrip always asks before installing."),
                                 ),
                                 ChoiceField(
-                                    "Channel",
+                                    tr("Channel"),
                                     UpdateChannel.entries,
                                     UpdateChannel::label,
                                     get = { s -> UpdateChannel.of(s.updateChannel) },
                                     set = { s, channel -> s.copy(updateChannel = channel.name) },
-                                    hint = "Beta also offers pre-releases, which get new features first and may have rough edges.",
+                                    hint = tr("Beta also offers pre-releases, which get new features first and may have rough edges."),
                                 ),
                             ),
                             panel = { app -> UpdatesPanel(app) },
@@ -346,62 +364,62 @@ object SettingsPages {
             ),
             SettingsPage(
                 id = "editor",
-                group = "Editor",
-                title = "SQL Editor",
-                description = "Typing and reading SQL in consoles.",
+                group = tr("Editor"),
+                title = tr("SQL Editor"),
+                description = tr("Typing and reading SQL in consoles."),
                 sections =
                     listOf(
                         SettingsSection(
-                            "Font",
+                            tr("Font"),
                             listOf(
                                 ChoiceField(
-                                    "Font",
+                                    tr("Font"),
                                     lazyList { listOf("") + monospaceFonts() },
-                                    { it.ifEmpty { "JetBrains Mono (built in)" } },
+                                    { it.ifEmpty { tr("JetBrains Mono (built in)") } },
                                     Settings::editorFontFamily,
                                     { s, v -> s.copy(editorFontFamily = v) },
-                                    hint = "Monospaced fonts installed on this machine. Also used by result grids.",
+                                    hint = tr("Monospaced fonts installed on this machine. Also used by result grids."),
                                 ),
-                                IntField("Font size", 9..32, Settings::editorFontSize, { s, v -> s.copy(editorFontSize = v) }, unit = "pt"),
-                                IntField("Line height", 100..300, Settings::editorLineHeight, { s, v -> s.copy(editorLineHeight = v) }, unit = "%", hint = "Of the font size."),
+                                IntField(tr("Font size"), 9..32, Settings::editorFontSize, { s, v -> s.copy(editorFontSize = v) }, unit = tr("pt")),
+                                IntField(tr("Line height"), 100..300, Settings::editorLineHeight, { s, v -> s.copy(editorLineHeight = v) }, unit = "%", hint = tr("Of the font size.")),
                             ),
                         ),
                         SettingsSection(
-                            "Indentation",
+                            tr("Indentation"),
                             listOf(
-                                ChoiceField("Tab size", listOf(2, 4, 8), { "$it" }, Settings::tabSize, { s, v -> s.copy(tabSize = v) }),
-                                ChoiceField("Indent with", listOf(false, true), { if (it) "Tabs" else "Spaces" }, Settings::indentWithTabs, { s, v -> s.copy(indentWithTabs = v) }),
+                                ChoiceField(tr("Tab size"), listOf(2, 4, 8), { "$it" }, Settings::tabSize, { s, v -> s.copy(tabSize = v) }),
+                                ChoiceField(tr("Indent with"), listOf(false, true), { if (it) tr("Tabs") else tr("Spaces") }, Settings::indentWithTabs, { s, v -> s.copy(indentWithTabs = v) }),
                             ),
                         ),
                         SettingsSection(
-                            "Typing",
+                            tr("Typing"),
                             listOf(
-                                BooleanField("Close brackets and quotes", Settings::autoCloseBrackets, { s, v -> s.copy(autoCloseBrackets = v) }),
+                                BooleanField(tr("Close brackets and quotes"), Settings::autoCloseBrackets, { s, v -> s.copy(autoCloseBrackets = v) }),
                                 BooleanField(
-                                    "Complete as you type",
+                                    tr("Complete as you type"),
                                     Settings::completionWhileTyping,
                                     { s, v -> s.copy(completionWhileTyping = v) },
-                                    hint = "Off: suggestions only open with ${Shortcuts.Completion}.",
+                                    hint = tr("Off: suggestions only open with {0}.", Shortcuts.Completion),
                                 ),
                             ),
                         ),
                         SettingsSection(
-                            "Display",
+                            tr("Display"),
                             listOf(
-                                BooleanField("Line numbers", Settings::showLineNumbers, { s, v -> s.copy(showLineNumbers = v) }),
-                                BooleanField("Highlight the current line", Settings::highlightCurrentLine, { s, v -> s.copy(highlightCurrentLine = v) }),
+                                BooleanField(tr("Line numbers"), Settings::showLineNumbers, { s, v -> s.copy(showLineNumbers = v) }),
+                                BooleanField(tr("Highlight the current line"), Settings::highlightCurrentLine, { s, v -> s.copy(highlightCurrentLine = v) }),
                             ),
                         ),
                         SettingsSection(
-                            "Reformat SQL",
+                            tr("Reformat SQL"),
                             listOf(
                                 ChoiceField(
-                                    "Keywords",
+                                    tr("Keywords"),
                                     KeywordCase.entries,
-                                    { when (it) { KeywordCase.Upper -> "UPPER CASE"; KeywordCase.Lower -> "lower case"; KeywordCase.Preserve -> "As typed" } },
+                                    { when (it) { KeywordCase.Upper -> tr("UPPER CASE"); KeywordCase.Lower -> tr("lower case"); KeywordCase.Preserve -> tr("As typed") } },
                                     get = { s -> KeywordCase.of(s.formatKeywordCase) },
                                     set = { s, case -> s.copy(formatKeywordCase = case.name) },
-                                    hint = "Indents follow the settings above.",
+                                    hint = tr("Indents follow the settings above."),
                                 ),
                             ),
                             keywords = listOf("format", "style"),
@@ -410,34 +428,34 @@ object SettingsPages {
             ),
             SettingsPage(
                 id = "queries",
-                group = "Database",
-                title = "Query Execution",
-                description = "Limits applied when running statements from a console.",
+                group = tr("Database"),
+                title = tr("Query Execution"),
+                description = tr("Limits applied when running statements from a console."),
                 sections =
                     listOf(
                         SettingsSection(
-                            "Results",
+                            tr("Results"),
                             listOf(
                                 IntField(
-                                    "Max result rows",
+                                    tr("Max result rows"),
                                     10..1_000_000,
                                     Settings::maxResultRows,
                                     { s, v -> s.copy(maxResultRows = v) },
-                                    unit = "rows",
-                                    hint = "Rows beyond this are not fetched; the result says it was cut short.",
+                                    unit = tr("rows"),
+                                    hint = tr("Rows beyond this are not fetched; the result says it was cut short."),
                                 ),
                             ),
                         ),
                         SettingsSection(
-                            "Timeouts",
+                            tr("Timeouts"),
                             listOf(
                                 IntField(
-                                    "Query timeout",
+                                    tr("Query timeout"),
                                     0..86_400,
                                     Settings::queryTimeoutSeconds,
                                     { s, v -> s.copy(queryTimeoutSeconds = v) },
-                                    unit = "seconds",
-                                    hint = "0 waits as long as the query takes.",
+                                    unit = tr("seconds"),
+                                    hint = tr("0 waits as long as the query takes."),
                                 ),
                             ),
                         ),
@@ -445,179 +463,179 @@ object SettingsPages {
             ),
             SettingsPage(
                 id = "drivers",
-                group = "Database",
-                title = "Drivers",
-                description = "Where JDBC drivers come from, and the ones on this machine. None ships with TableGrip; each is downloaded the first time it's needed.",
+                group = tr("Database"),
+                title = tr("Drivers"),
+                description = tr("Where JDBC drivers come from, and the ones on this machine. None ships with TableGrip; each is downloaded the first time it's needed."),
                 sections =
                     listOf(
                         SettingsSection(
-                            "Downloads",
+                            tr("Downloads"),
                             listOf(
                                 ChoiceField(
-                                    "Downloading drivers",
+                                    tr("Downloading drivers"),
                                     listOf(false, true),
-                                    { if (it) "Automatic for permissive licenses" else "Ask every time" },
+                                    { if (it) tr("Automatic for permissive licenses") else tr("Ask every time") },
                                     Settings::autoDownloadDrivers,
                                     { s, v -> s.copy(autoDownloadDrivers = v) },
-                                    hint = "LGPL drivers (MariaDB) always ask. GPL and vendor drivers (MySQL Connector/J, Oracle) are never downloaded: you choose their jars.",
+                                    hint = tr("LGPL drivers (MariaDB) always ask. GPL and vendor drivers (MySQL Connector/J, Oracle) are never downloaded: you choose their jars."),
                                 ),
                                 StringField(
-                                    "Maven repository",
+                                    tr("Maven repository"),
                                     Settings::driverRepository,
                                     { s, v -> s.copy(driverRepository = v.trim()) },
                                     placeholder = DriverLibrary.MavenCentral,
-                                    hint = "Leave empty for Maven Central, or use your company's mirror. Downloads are checked against TableGrip's checksums either way.",
+                                    hint = tr("Leave empty for Maven Central, or use your company's mirror. Downloads are checked against TableGrip's checksums either way."),
                                 ),
                             ),
                         ),
                         SettingsSection(
-                            "Installed",
+                            tr("Installed"),
                             emptyList(),
                             panel = { app -> DriversPanel(app, installed = true) },
                             keywords = DriverId.entries.map { it.displayName },
                         ),
-                        SettingsSection("Available", emptyList(), panel = { app -> DriversPanel(app, installed = false) }),
+                        SettingsSection(tr("Available"), emptyList(), panel = { app -> DriversPanel(app, installed = false) }),
                     ),
             ),
             SettingsPage(
                 id = "tools",
-                group = "Database",
-                title = "Tools",
+                group = tr("Database"),
+                title = tr("Tools"),
                 description =
-                    "Command-line clients TableGrip runs for backups and restores. They're never bundled: TableGrip uses the ones on this machine, " +
-                        "or downloads official builds when you agree to it.",
+                    tr("Command-line clients TableGrip runs for backups and restores. They're never bundled: TableGrip uses the ones on this machine, ") +
+                        tr("or downloads official builds when you agree to it."),
                 sections =
                     listOf(
                         SettingsSection("PostgreSQL", emptyList(), panel = { app -> ToolsPanel(app, ToolFamily.PostgreSQL) }, keywords = listOf("pg_dump", "pg_restore", "psql", "backup")),
-                        SettingsSection("MySQL and MariaDB", emptyList(), panel = { app -> ToolsPanel(app, ToolFamily.MySQL) }, keywords = listOf("mysqldump", "mariadb-dump", "mysql", "backup")),
+                        SettingsSection(tr("MySQL and MariaDB"), emptyList(), panel = { app -> ToolsPanel(app, ToolFamily.MySQL) }, keywords = listOf("mysqldump", "mariadb-dump", "mysql", "backup")),
                     ),
             ),
             SettingsPage(
                 id = "backups",
-                group = "Database",
-                title = "Backups",
-                description = "Backups TableGrip makes on a schedule. Nothing runs unless you turn it on.",
+                group = tr("Database"),
+                title = tr("Backups"),
+                description = tr("Backups TableGrip makes on a schedule. Nothing runs unless you turn it on."),
                 sections = listOf(SettingsSection(null, emptyList(), panel = { app -> BackupsPanel(app) }, keywords = listOf("schedule", "backup", "pg_dump", "mysqldump"))),
             ),
             SettingsPage(
                 id = "data-editor",
-                group = "Database",
-                title = "Data Editor",
-                description = "Browsing and editing table data, and how result grids show values.",
+                group = tr("Database"),
+                title = tr("Data Editor"),
+                description = tr("Browsing and editing table data, and how result grids show values."),
                 sections =
                     listOf(
                         SettingsSection(
-                            "Paging",
+                            tr("Paging"),
                             listOf(
                                 IntField(
-                                    "Page size",
+                                    tr("Page size"),
                                     10..10_000,
                                     Settings::pageSize,
                                     { s, v -> s.copy(pageSize = v) },
-                                    unit = "rows",
-                                    hint = "Rows loaded per page when opening a table.",
+                                    unit = tr("rows"),
+                                    hint = tr("Rows loaded per page when opening a table."),
                                 ),
                             ),
                         ),
                         SettingsSection(
-                            "Grid",
+                            tr("Grid"),
                             listOf(
-                                ChoiceField("Row density", listOf("Compact", "Comfortable", "Spacious"), { it }, Settings::gridDensity, { s, v -> s.copy(gridDensity = v) }),
-                                BooleanField("Stripe alternate rows", Settings::zebraRows, { s, v -> s.copy(zebraRows = v) }),
+                                ChoiceField(tr("Row density"), listOf("Compact", "Comfortable", "Spacious"), { when (it) { "Compact" -> tr("Compact"); "Spacious" -> tr("Spacious"); else -> tr("Comfortable") } }, Settings::gridDensity, { s, v -> s.copy(gridDensity = v) }),
+                                BooleanField(tr("Stripe alternate rows"), Settings::zebraRows, { s, v -> s.copy(zebraRows = v) }),
                             ),
                         ),
                         SettingsSection(
-                            "Values",
+                            tr("Values"),
                             listOf(
                                 StringField(
-                                    "NULL shows as",
+                                    tr("NULL shows as"),
                                     Settings::nullText,
                                     { s, v -> s.copy(nullText = v) },
-                                    placeholder = "(empty)",
-                                    hint = "Only how cells read; copying and editing still see NULL.",
+                                    placeholder = tr("(empty)"),
+                                    hint = tr("Only how cells read; copying and editing still see NULL."),
                                 ),
                                 StringField(
-                                    "Date-time format",
+                                    tr("Date-time format"),
                                     Settings::dateTimeFormat,
                                     { s, v -> s.copy(dateTimeFormat = v.trim()) },
-                                    placeholder = "As the database returns it",
-                                    hint = "A java.time pattern, e.g. yyyy-MM-dd HH:mm:ss or dd/MM/yyyy HH:mm. Copying keeps the original value.",
-                                    error = { if (CellFormat.isValidPattern(it.trim())) null else "Not a date-time pattern" },
+                                    placeholder = tr("As the database returns it"),
+                                    hint = tr("A java.time pattern, e.g. yyyy-MM-dd HH:mm:ss or dd/MM/yyyy HH:mm. Copying keeps the original value."),
+                                    error = { if (CellFormat.isValidPattern(it.trim())) null else tr("Not a date-time pattern") },
                                 ),
                                 ChoiceField(
-                                    "Date-time zone",
+                                    tr("Date-time zone"),
                                     listOf("Local", "Utc"),
-                                    { if (it == "Utc") "UTC" else "This computer's (${java.time.ZoneId.systemDefault().id})" },
+                                    { if (it == "Utc") tr("UTC") else tr("This computer's ({0})", java.time.ZoneId.systemDefault().id) },
                                     Settings::dateTimeZone,
                                     { s, v -> s.copy(dateTimeZone = v) },
-                                    hint = "For values that carry an offset, when a format is set. Values without one are shown as stored.",
+                                    hint = tr("For values that carry an offset, when a format is set. Values without one are shown as stored."),
                                 ),
-                                BooleanField("Group thousands", Settings::numberGrouping, { s, v -> s.copy(numberGrouping = v) }, hint = "1234567.5 reads 1,234,567.5."),
+                                BooleanField(tr("Group thousands"), Settings::numberGrouping, { s, v -> s.copy(numberGrouping = v) }, hint = tr("1234567.5 reads 1,234,567.5.")),
                             ),
                         ),
                     ),
             ),
             SettingsPage(
                 id = "agent",
-                group = "Tools",
-                title = "Agent",
-                description = "Where the agent chat gets its answers. Changing these sends nothing: the agent is only asked when you send a message.",
+                group = tr("Tools"),
+                title = tr("Agent"),
+                description = tr("Where the agent chat gets its answers. Changing these sends nothing: the agent is only asked when you send a message."),
                 sections =
                     listOf(
                         SettingsSection(
-                            "Source",
+                            tr("Source"),
                             listOf(
                                 ChoiceField(
-                                    "Agents from",
+                                    tr("Agents from"),
                                     AgentMode.entries,
                                     AgentMode::label,
                                     get = { s -> AgentMode.of(s.agentMode) },
                                     set = { s, mode -> s.copy(agentMode = mode.name) },
-                                    hint = "Command-line agents run the CLIs installed here (Claude Code, Codex, Gemini CLI…) on their own accounts. An API provider is called directly with your key.",
+                                    hint = tr("Command-line agents run the CLIs installed here (Claude Code, Codex, Gemini CLI…) on their own accounts. An API provider is called directly with your key."),
                                 ),
                             ),
                         ),
                         SettingsSection(
-                            "API provider",
+                            tr("API provider"),
                             listOf(
                                 ChoiceField(
-                                    "Protocol",
+                                    tr("Protocol"),
                                     ProviderProtocol.entries,
                                     ProviderProtocol::title,
                                     get = { s -> ProviderProtocol.of(s.agentProvider) },
                                     set = { s, protocol -> s.copy(agentProvider = protocol.name) },
-                                    hint = "OpenAI-compatible also covers OpenRouter, LiteLLM, Ollama, LM Studio and vLLM. Used when agents come from an API provider.",
+                                    hint = tr("OpenAI-compatible also covers OpenRouter, LiteLLM, Ollama, LM Studio and vLLM. Used when agents come from an API provider."),
                                 ),
                                 StringField(
-                                    "Base URL",
+                                    tr("Base URL"),
                                     Settings::agentBaseUrl,
                                     { s, v -> s.copy(agentBaseUrl = v.trim()) },
-                                    placeholder = "Protocol default",
-                                    hint = "Empty uses ${ProviderProtocol.entries.joinToString(" or ") { it.defaultBaseUrl }}. For a local server, e.g. http://localhost:11434/v1.",
+                                    placeholder = tr("Protocol default"),
+                                    hint = tr("Empty uses {0}. For a local server, e.g. http://localhost:11434/v1.", ProviderProtocol.entries.joinToString(tr(" or ")) { it.defaultBaseUrl }),
                                 ),
                                 StringField(
-                                    "Model",
+                                    tr("Model"),
                                     Settings::agentModel,
                                     { s, v -> s.copy(agentModel = v.trim()) },
-                                    placeholder = "Protocol default",
-                                    hint = "Empty uses ${ProviderProtocol.entries.joinToString(" or ") { it.defaultModel }}.",
+                                    placeholder = tr("Protocol default"),
+                                    hint = tr("Empty uses {0}.", ProviderProtocol.entries.joinToString(tr(" or ")) { it.defaultModel }),
                                 ),
                             ),
                             panel = { app -> ApiKeyPanel(app) },
                             keywords = listOf("API key", "token", "Anthropic", "OpenAI", "Ollama"),
                         ),
                         SettingsSection(
-                            "Data shared with agents",
+                            tr("Data shared with agents"),
                             listOf(
                                 ChoiceField(
-                                    "Connections share",
+                                    tr("Connections share"),
                                     AiAccess.entries,
                                     AiAccess::label,
                                     get = { s -> AiAccess.of(s.aiAccess) },
                                     set = { s, access -> s.copy(aiAccess = access.name) },
                                     hint =
-                                        "What a connection may send to the agent, unless its own Options say otherwise. Schema only sends names, types and your SQL, " +
-                                            "never values from the data. Production connections never share data unless their own Options allow it.",
+                                        tr("What a connection may send to the agent, unless its own Options say otherwise. Schema only sends names, types and your SQL, ") +
+                                            tr("never values from the data. Production connections never share data unless their own Options allow it."),
                                 ),
                             ),
                             keywords = listOf("privacy", "AI", "sample data", "sensitive"),
@@ -632,12 +650,12 @@ object SettingsPages {
 /** Picks the theme used in [dark] or light mode from the built-in and the user's themes; an unknown name shows as Graphite. */
 private fun themeField(dark: Boolean): ChoiceField<String> =
     ChoiceField(
-        if (dark) "Dark theme" else "Light theme",
+        if (dark) tr("Dark theme") else tr("Light theme"),
         liveList { ThemeRegistry.names(dark) },
         { it },
         get = { s -> ThemeRegistry.resolve(if (dark) s.theme.dark else s.theme.light, dark).name },
         set = { s, name -> s.copy(theme = if (dark) s.theme.copy(dark = name) else s.theme.copy(light = name)) },
-        hint = if (dark) "Used in dark mode. Your own themes go in ~/.tablegrip/themes." else "Used in light mode.",
+        hint = if (dark) tr("Used in dark mode. Your own themes go in ~/.tablegrip/themes.") else tr("Used in light mode."),
     )
 
 /** A list read afresh on every access, e.g. themes that can change while the dialog is open. */
@@ -675,11 +693,11 @@ private fun syntaxColorField(token: SyntaxToken, dark: Boolean): ColorField =
 
 private fun startupToolLabel(value: String): String =
     when (value) {
-        "LastUsed" -> "As last time"
-        "None" -> "None"
-        LeftTool.Explorer.name -> "Connections"
-        LeftTool.History.name -> "Query History"
-        LeftTool.Queries.name -> "Saved Queries"
+        "LastUsed" -> tr("As last time")
+        "None" -> tr("None")
+        LeftTool.Explorer.name -> tr("Connections")
+        LeftTool.History.name -> tr("Query History")
+        LeftTool.Queries.name -> tr("Saved Queries")
         else -> value
     }
 

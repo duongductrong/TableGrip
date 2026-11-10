@@ -1,5 +1,6 @@
 package dev.tablegrip.app.grid
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.app.ui.theme.LocalColorTheme
 import androidx.compose.foundation.ContextMenuArea
 import androidx.compose.foundation.ContextMenuItem
@@ -266,7 +267,7 @@ fun DataGrid(
                     Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(start = rowNumberWidth).claimPointer(),
                 )
                 if (model.rowCount == 0) {
-                    Text("No rows", Modifier.align(Alignment.Center), color = JewelTheme.globalColors.text.info)
+                    Text(tr("No rows"), Modifier.align(Alignment.Center), color = JewelTheme.globalColors.text.info)
                 }
                 state.notice?.let { notice ->
                     LaunchedEffect(notice) {
@@ -537,7 +538,7 @@ private fun LinkArrow(onClick: () -> Unit, modifier: Modifier) {
     Box(modifier, contentAlignment = Alignment.CenterEnd) {
         val interaction = remember { MutableInteractionSource() }
         val hovered by interaction.collectIsHoveredAsState()
-        Tooltip({ Text("Go to referenced row (${Shortcuts.GoToReferenced})") }) {
+        Tooltip({ Text(tr("Go to referenced row ({0})", Shortcuts.GoToReferenced)) }) {
             Box(
                 Modifier.size(16.dp)
                     .clip(RoundedCornerShape(3.dp))
@@ -547,7 +548,7 @@ private fun LinkArrow(onClick: () -> Unit, modifier: Modifier) {
                     .pointerInput(onClick) { detectTapGestures { onClick() } },
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(AllIconsKeys.General.ArrowRight, "Go to referenced row", Modifier.alpha(if (hovered) 1f else 0.6f))
+                Icon(AllIconsKeys.General.ArrowRight, tr("Go to referenced row"), Modifier.alpha(if (hovered) 1f else 0.6f))
             }
         }
     }
@@ -600,7 +601,7 @@ private fun CellEditor(controller: GridController, modifier: Modifier, colors: G
         if (hasPicker) {
             EditorIconButton(
                 icon = AllIconsKeys.General.ChevronDown,
-                tooltip = "Pick (⌥↓)",
+                tooltip = tr("Pick (⌥↓)"),
                 modifier = Modifier.align(Alignment.CenterEnd).padding(end = 2.dp),
             ) {
                 state.editPopup = EditPopup.Picker
@@ -608,7 +609,7 @@ private fun CellEditor(controller: GridController, modifier: Modifier, colors: G
         } else {
             EditorIconButton(
                 icon = AllIconsKeys.General.ExpandComponent,
-                tooltip = "Expand (${Shortcuts.ExpandEditor.label})",
+                tooltip = tr("Expand ({0})", Shortcuts.ExpandEditor.label),
                 modifier = Modifier.align(Alignment.CenterEnd).padding(end = 2.dp),
             ) {
                 state.editPopup = EditPopup.Expanded
@@ -759,21 +760,21 @@ private fun ExpandedCellEditor(controller: GridController, colors: GridColors, k
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (json) {
-                    ViewChip("Tree", showTree) {
+                    ViewChip(tr("Tree"), showTree) {
                         when (val opened = sources.of(text.text.toString())) {
                             is JsonTreeSource.Ok -> tree = true
                             is JsonTreeSource.Unavailable -> refusal = opened.reason
                         }
                     }
-                    ViewChip("Text", !showTree) {
+                    ViewChip(tr("Text"), !showTree) {
                         draft.flushNow()
                         tree = false
                     }
                 }
                 val hint = check?.hint()
                 Text(
-                    hint?.first ?: refusal?.let { "$it, so it opens as text" }
-                        ?: "${if (jsonText) "Saved as text · " else ""}${Shortcuts.Submit.label} to apply · Esc to collapse",
+                    hint?.first ?: refusal?.let { tr("{0}, so it opens as text", it) }
+                        ?: tr("{0}{1} to apply · Esc to collapse", if (jsonText) tr("Saved as text · ") else "", Shortcuts.Submit.label),
                     Modifier.weight(1f).padding(start = 6.dp),
                     color = hint?.second ?: colors.muted,
                     fontSize = 11.sp,
@@ -781,14 +782,14 @@ private fun ExpandedCellEditor(controller: GridController, colors: GridColors, k
                     overflow = TextOverflow.Ellipsis,
                 )
                 if (json && !showTree) {
-                    EditorIconButton(AllIconsKeys.Actions.ReformatCode, "Format JSON") {
+                    EditorIconButton(AllIconsKeys.Actions.ReformatCode, tr("Format JSON")) {
                         reformatJson(text.text.toString(), pretty = true)?.let(text::setTextAndPlaceCursorAtEnd)
                     }
-                    EditorIconButton(AllIconsKeys.Actions.Collapseall, "Minify JSON") {
+                    EditorIconButton(AllIconsKeys.Actions.Collapseall, tr("Minify JSON")) {
                         reformatJson(text.text.toString(), pretty = false)?.let(text::setTextAndPlaceCursorAtEnd)
                     }
                 }
-                EditorIconButton(AllIconsKeys.General.CollapseComponent, "Collapse (Esc)", onClick = onCollapse)
+                EditorIconButton(AllIconsKeys.General.CollapseComponent, tr("Collapse (Esc)"), onClick = onCollapse)
             }
         }
     }
@@ -817,14 +818,14 @@ private fun headerMenu(controller: GridController, column: Int): List<ContextMen
     val name = controller.columnName(column)
     val onSort = controller.actions.onSort
     return listOfNotNull(
-        onSort?.let { ContextMenuItem("Sort Ascending") { it(name, SortDirection.Asc, false) } },
-        onSort?.let { ContextMenuItem("Sort Descending") { it(name, SortDirection.Desc, false) } },
-        onSort?.takeIf { controller.sortDirection(column) != null }?.let { ContextMenuItem("Remove Sort") { it(name, null, true) } },
-        ContextMenuItem("Fit Column Width") { controller.autoFit(column) },
-        ContextMenuItem("Reset Column Widths") { state.userWidths.clear() },
-        ContextMenuItem("Hide Column") { state.hide(state.modelColumn(column)) }.takeIf { state.visibleColumns.size > 1 },
-        ContextMenuItem("Show All Columns") { state.showAll() }.takeIf { state.hidden.isNotEmpty() },
-        ContextMenuItem("Copy Column Name") { copyToClipboard(name) },
+        onSort?.let { ContextMenuItem(tr("Sort Ascending")) { it(name, SortDirection.Asc, false) } },
+        onSort?.let { ContextMenuItem(tr("Sort Descending")) { it(name, SortDirection.Desc, false) } },
+        onSort?.takeIf { controller.sortDirection(column) != null }?.let { ContextMenuItem(tr("Remove Sort")) { it(name, null, true) } },
+        ContextMenuItem(tr("Fit Column Width")) { controller.autoFit(column) },
+        ContextMenuItem(tr("Reset Column Widths")) { state.userWidths.clear() },
+        ContextMenuItem(tr("Hide Column")) { state.hide(state.modelColumn(column)) }.takeIf { state.visibleColumns.size > 1 },
+        ContextMenuItem(tr("Show All Columns")) { state.showAll() }.takeIf { state.hidden.isNotEmpty() },
+        ContextMenuItem(tr("Copy Column Name")) { copyToClipboard(name) },
     )
 }
 
@@ -838,43 +839,43 @@ private fun cellMenu(controller: GridController): List<ContextMenuItem> {
     val filter = controller.actions.onFilterByValue
     val history = editor?.history
     return listOfNotNull(
-        history?.nextUndo?.let { ContextMenuItem("Undo ${it.label.replaceFirstChar(Char::uppercase)} (${Shortcuts.Undo})") { state.undo(controller.model) } },
-        history?.nextRedo?.let { ContextMenuItem("Redo ${it.label.replaceFirstChar(Char::uppercase)} (${Shortcuts.Redo})") { state.redo(controller.model) } },
-        ContextMenuItem("Edit Cell") { controller.startEditing(focus) }.takeIf { single && controller.canEdit(focus) },
-        ContextMenuItem("Copy (${Shortcuts.Copy})") { controller.copy(CopyFormat.Tsv) },
-        ContextMenuItem("Copy with Header (${Shortcuts.CopyWithHeader})") { controller.copy(CopyFormat.Tsv, includeHeader = true) },
-        ContextMenuItem("Paste (${if (isMac) "⌘V" else "Ctrl+V"})") { controller.paste() }.takeIf { editor != null },
-        ContextMenuItem("Copy as CSV") { controller.copy(CopyFormat.Csv, includeHeader = true) },
-        ContextMenuItem("Copy as JSON") { controller.copy(CopyFormat.Json) },
-        ContextMenuItem("Copy as Markdown") { controller.copy(CopyFormat.Markdown) },
-        ContextMenuItem("Copy as SQL INSERT") { controller.copy(CopyFormat.SqlInsert) },
-        ContextMenuItem("Copy as SQL IN (…)") { controller.copy(CopyFormat.SqlInList) },
-        ContextMenuItem("Add to Chat (${Shortcuts.AddToChat})") { controller.mentionSelection() }.takeIf { controller.actions.onMention != null },
+        history?.nextUndo?.let { ContextMenuItem(tr("Undo {0} ({1})", it.label.replaceFirstChar(Char::uppercase), Shortcuts.Undo)) { state.undo(controller.model) } },
+        history?.nextRedo?.let { ContextMenuItem(tr("Redo {0} ({1})", it.label.replaceFirstChar(Char::uppercase), Shortcuts.Redo)) { state.redo(controller.model) } },
+        ContextMenuItem(tr("Edit Cell")) { controller.startEditing(focus) }.takeIf { single && controller.canEdit(focus) },
+        ContextMenuItem(tr("Copy ({0})", Shortcuts.Copy)) { controller.copy(CopyFormat.Tsv) },
+        ContextMenuItem(tr("Copy with Header ({0})", Shortcuts.CopyWithHeader)) { controller.copy(CopyFormat.Tsv, includeHeader = true) },
+        ContextMenuItem(tr("Paste ({0})", if (isMac) "⌘V" else "Ctrl+V")) { controller.paste() }.takeIf { editor != null },
+        ContextMenuItem(tr("Copy as CSV")) { controller.copy(CopyFormat.Csv, includeHeader = true) },
+        ContextMenuItem(tr("Copy as JSON")) { controller.copy(CopyFormat.Json) },
+        ContextMenuItem(tr("Copy as Markdown")) { controller.copy(CopyFormat.Markdown) },
+        ContextMenuItem(tr("Copy as SQL INSERT")) { controller.copy(CopyFormat.SqlInsert) },
+        ContextMenuItem(tr("Copy as SQL IN (…)")) { controller.copy(CopyFormat.SqlInList) },
+        ContextMenuItem(tr("Add to Chat ({0})", Shortcuts.AddToChat)) { controller.mentionSelection() }.takeIf { controller.actions.onMention != null },
         filter?.takeIf { single }?.let {
             val column = controller.columnName(focus.column)
             val value = controller.model.value(focus.row, state.modelColumn(focus.column))
-            ContextMenuItem("Filter by This Value (${Shortcuts.FilterByValue})") { it(column, value, false) }
+            ContextMenuItem(tr("Filter by This Value ({0})", Shortcuts.FilterByValue)) { it(column, value, false) }
         },
         filter?.takeIf { single }?.let {
             val column = controller.columnName(focus.column)
             val value = controller.model.value(focus.row, state.modelColumn(focus.column))
-            ContextMenuItem("Exclude This Value (${Shortcuts.ExcludeValue})") { it(column, value, true) }
+            ContextMenuItem(tr("Exclude This Value ({0})", Shortcuts.ExcludeValue)) { it(column, value, true) }
         },
-        ContextMenuItem("Go to Referenced Row (${Shortcuts.GoToReferenced})") { controller.followFocusedLink() }
+        ContextMenuItem(tr("Go to Referenced Row ({0})", Shortcuts.GoToReferenced)) { controller.followFocusedLink() }
             .takeIf { single && controller.columnName(focus.column) in controller.actions.linkedColumns && controller.model.value(focus.row, state.modelColumn(focus.column)) != null },
     ) + controller.actions.relatedRows?.takeIf { single }?.invoke(focus.row).orEmpty().map { (label, open) -> ContextMenuItem(label, open) } + listOfNotNull(
-        ContextMenuItem("Toggle (Space)") { controller.toggleBoolean() }.takeIf { single && controller.isBooleanCell(focus) && controller.canEdit(focus) },
-        ContextMenuItem("Set NULL (${Shortcuts.SetNull})") { controller.setNull() }.takeIf { editor != null },
-        ContextMenuItem(editor?.setDefaultLabel ?: "Set DEFAULT") { controller.setDefault() }.takeIf { controller.canSetDefault() },
-        ContextMenuItem("Generate UUID") { controller.generateUuids(timeOrdered = false) }.takeIf { controller.hasUuidSelection() },
-        ContextMenuItem("Generate UUID v7 (time-ordered)") { controller.generateUuids(timeOrdered = true) }.takeIf { controller.hasUuidSelection() },
+        ContextMenuItem(tr("Toggle (Space)")) { controller.toggleBoolean() }.takeIf { single && controller.isBooleanCell(focus) && controller.canEdit(focus) },
+        ContextMenuItem(tr("Set NULL ({0})", Shortcuts.SetNull)) { controller.setNull() }.takeIf { editor != null },
+        ContextMenuItem(editor?.setDefaultLabel ?: tr("Set DEFAULT")) { controller.setDefault() }.takeIf { controller.canSetDefault() },
+        ContextMenuItem(tr("Generate UUID")) { controller.generateUuids(timeOrdered = false) }.takeIf { controller.hasUuidSelection() },
+        ContextMenuItem(tr("Generate UUID v7 (time-ordered)")) { controller.generateUuids(timeOrdered = true) }.takeIf { controller.hasUuidSelection() },
         records?.takeIf { selection.rows.first == selection.rows.last && it.canEditRecord(focus.row) }?.let {
-            ContextMenuItem("Edit ${it.recordNoun.replaceFirstChar(Char::uppercase)} as JSON…") { state.editRecord(controller.model, focus.row) }
+            ContextMenuItem(tr("Edit {0} as JSON…", it.recordNoun.replaceFirstChar(Char::uppercase))) { state.editRecord(controller.model, focus.row) }
         },
-        ContextMenuItem("Add Row (${Shortcuts.AddRow})") { controller.addRow() }.takeIf { editor != null },
-        records?.takeIf { it.canAddRecord }?.let { ContextMenuItem("Add ${it.recordNoun.replaceFirstChar(Char::uppercase)} from JSON…") { state.newRecord(controller.model) } },
-        ContextMenuItem("Delete Row(s) (${Shortcuts.DeleteRows})") { controller.deleteSelectedRows() }.takeIf { editor != null },
-        ContextMenuItem("Revert Row(s) (${Shortcuts.RevertRows})") { controller.revertSelectedRows() }.takeIf { editor != null },
+        ContextMenuItem(tr("Add Row ({0})", Shortcuts.AddRow)) { controller.addRow() }.takeIf { editor != null },
+        records?.takeIf { it.canAddRecord }?.let { ContextMenuItem(tr("Add {0} from JSON…", it.recordNoun.replaceFirstChar(Char::uppercase))) { state.newRecord(controller.model) } },
+        ContextMenuItem(tr("Delete Row(s) ({0})", Shortcuts.DeleteRows)) { controller.deleteSelectedRows() }.takeIf { editor != null },
+        ContextMenuItem(tr("Revert Row(s) ({0})", Shortcuts.RevertRows)) { controller.revertSelectedRows() }.takeIf { editor != null },
     )
 }
 

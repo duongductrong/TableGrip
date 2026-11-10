@@ -1,5 +1,6 @@
 package dev.tablegrip.core.assist
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.agent.AgentAdapter
 import dev.tablegrip.core.agent.AgentEvent
 import dev.tablegrip.core.agent.AgentException
@@ -64,8 +65,8 @@ class AssistRunner(private val timeout: Duration = 3.minutes, private val workin
                 try {
                     withTimeoutOrNull(timeout) { answer(agent, request) }
                 } catch (e: AgentException) {
-                    return failed(task, agent, started, e.message ?: "${agent.descriptor.name} failed.")
-                } ?: return failed(task, agent, started, "${agent.descriptor.name} didn't answer within ${timeout.inWholeSeconds} s.")
+                    return failed(task, agent, started, e.message ?: tr("{0} failed.", agent.descriptor.name))
+                } ?: return failed(task, agent, started, tr("{0} didn't answer within {1} s.", agent.descriptor.name, timeout.inWholeSeconds))
             reasons =
                 try {
                     val json = AssistJson.extract(answer) ?: throw AssistInvalid("The answer contained no JSON object.")

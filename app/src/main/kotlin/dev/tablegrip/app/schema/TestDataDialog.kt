@@ -1,5 +1,6 @@
 package dev.tablegrip.app.schema
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -123,7 +124,7 @@ class TestDataState(private val app: AppState, val config: ConnectionConfig, val
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                error = "Couldn't read ${table.name}: ${e.message ?: e}"
+                error = tr("Couldn't read {0}: {1}", table.name, e.message ?: e)
             } finally {
                 loading = false
             }
@@ -142,8 +143,8 @@ class TestDataState(private val app: AppState, val config: ConnectionConfig, val
 
     /** What would make the insert fail, before running it. */
     fun problems(): List<String> {
-        val count = rowCount ?: return listOf("Enter a row count between 1 and %,d.".format(MaxRows))
-        if (plans().all { it.kind == GeneratorKind.Skip }) return listOf("Every column is left to the database: pick a generator for at least one.")
+        val count = rowCount ?: return listOf(tr("Enter a row count between 1 and {0}.", "%,d".format(MaxRows)))
+        if (plans().all { it.kind == GeneratorKind.Skip }) return listOf(tr("Every column is left to the database: pick a generator for at least one."))
         return runCatching { generator().problems(count) }.getOrElse { listOf(it.message ?: it.toString()) }
     }
 
@@ -172,11 +173,11 @@ class TestDataState(private val app: AppState, val config: ConnectionConfig, val
             app.scope.launch {
                 try {
                     val total = app.databases.database(config).insertRows(table, generator.columns, generator.rows(count), values = { it }, onProgress = { inserted = it })
-                    app.status = "Inserted %,d test rows into ${table.name}".format(total)
+                    app.status = tr("Inserted {0} test rows into {1}", "%,d".format(total), table.name)
                     app.workspace.tabs.filterIsInstance<TableDataTab>().filter { it.connectionId == config.id && it.table == table && !it.hasUnsavedWork }.forEach { it.reload() }
                     close()
                 } catch (e: CancellationException) {
-                    app.status = "Cancelled; no rows were inserted"
+                    app.status = tr("Cancelled; no rows were inserted")
                     throw e
                 } catch (e: Exception) {
                     error = e.message ?: e.toString()
@@ -201,7 +202,7 @@ internal fun TestDataDialog(app: AppState, state: TestDataState) {
     AppDialog(
         onCloseRequest = { if (!state.running) app.testData = null },
         size = DpSize(940.dp, 680.dp),
-        title = "Generate Test Data for ${state.table.name}",
+        title = tr("Generate Test Data for {0}", state.table.name),
         closeOnEscape = !state.running,
     ) {
         TestDataContent(app, state)
@@ -215,11 +216,11 @@ internal fun TestDataContent(app: AppState, state: TestDataState) {
     val preview by remember(state) { derivedStateOf { state.preview() } }
     Column(Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground)) {
         Row(Modifier.fillMaxWidth().height(48.dp).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Rows", color = JewelTheme.globalColors.text.info)
+            Text(tr("Rows"), color = JewelTheme.globalColors.text.info)
             TextField(state.count, Modifier.width(100.dp), outline = if (state.rowCount == null) Outline.Error else Outline.None)
-            Text("Seed", color = JewelTheme.globalColors.text.info)
+            Text(tr("Seed"), color = JewelTheme.globalColors.text.info)
             TextField(state.seed, Modifier.width(90.dp))
-            Tooltip({ Text("The same seed gives the same rows; shuffle for new ones") }) { Link("Shuffle", onClick = state::shuffle) }
+            Tooltip({ Text(tr("The same seed gives the same rows; shuffle for new ones")) }) { Link(tr("Shuffle"), onClick = state::shuffle) }
             Box(Modifier.weight(1f))
             EnvironmentChip(state.config)
             Text(state.config.name, color = JewelTheme.globalColors.text.info)
@@ -231,13 +232,13 @@ internal fun TestDataContent(app: AppState, state: TestDataState) {
             Column(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 state.error?.let { Notice(it, NoticeKind.Error) }
                 ColumnPlans(state, Modifier.weight(1.1f))
-                Text("Preview", fontWeight = FontWeight.SemiBold)
+                Text(tr("Preview"), fontWeight = FontWeight.SemiBold)
                 Box(Modifier.weight(1f).fillMaxWidth().border(1.dp, JewelTheme.globalColors.borders.normal, RoundedCornerShape(4.dp))) {
                     val rows = preview
                     if (rows != null && rows.columns.isNotEmpty()) {
                         DataGrid(model = remember(rows) { ResultGridModel(rows) }, state = remember { DataGridState() }, actions = GridActions(dialect = state.dialect, tableName = state.table.name))
                     } else {
-                        Text("Nothing to preview", Modifier.align(Alignment.Center), color = JewelTheme.globalColors.text.info)
+                        Text(tr("Nothing to preview"), Modifier.align(Alignment.Center), color = JewelTheme.globalColors.text.info)
                     }
                 }
                 problems.forEach { Notice(it, NoticeKind.Warning) }
@@ -247,21 +248,21 @@ internal fun TestDataContent(app: AppState, state: TestDataState) {
         Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             val production = state.config.environment == Environment.Production
             when {
-                state.config.readOnly -> Text("This connection is read-only.", color = JewelTheme.globalColors.text.error)
-                production -> CheckboxRow("Write test rows to this Production database", state.productionConfirmed, onCheckedChange = { state.productionConfirmed = it })
-                else -> Text("Inserted in one transaction: if any row fails, none are kept.", color = JewelTheme.globalColors.text.info)
+                state.config.readOnly -> Text(tr("This connection is read-only."), color = JewelTheme.globalColors.text.error)
+                production -> CheckboxRow(tr("Write test rows to this Production database"), state.productionConfirmed, onCheckedChange = { state.productionConfirmed = it })
+                else -> Text(tr("Inserted in one transaction: if any row fails, none are kept."), color = JewelTheme.globalColors.text.info)
             }
             Box(Modifier.weight(1f))
             if (state.running) {
                 CircularProgressIndicator()
-                Text("Inserted %,d…".format(state.inserted), color = JewelTheme.globalColors.text.info)
-                OutlinedButton(onClick = state::cancel) { Text("Cancel") }
+                Text(tr("Inserted {0}…", "%,d".format(state.inserted)), color = JewelTheme.globalColors.text.info)
+                OutlinedButton(onClick = state::cancel) { Text(tr("Cancel")) }
             } else {
-                OutlinedButton(onClick = { app.testData = null }) { Text("Close") }
+                OutlinedButton(onClick = { app.testData = null }) { Text(tr("Close")) }
                 DefaultButton(
                     onClick = { state.insert { app.testData = null } },
                     enabled = problems.isEmpty() && !state.loading && !state.config.readOnly && (!production || state.productionConfirmed),
-                ) { Text("Insert ${state.rowCount?.let { "%,d".format(it) } ?: ""} Rows") }
+                ) { Text(tr("Insert {0} Rows", state.rowCount?.let { "%,d".format(it) } ?: "")) }
             }
         }
     }
@@ -271,11 +272,11 @@ internal fun TestDataContent(app: AppState, state: TestDataState) {
 private fun ColumnPlans(state: TestDataState, modifier: Modifier) {
     Column(modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().height(26.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            HeaderCell("Column", Modifier.weight(1f))
-            HeaderCell("Type", Modifier.weight(0.6f))
-            HeaderCell("Fill with", Modifier.weight(1.4f))
-            HeaderCell("NULLs", Modifier.width(70.dp))
-            HeaderCell("Unique", Modifier.width(56.dp))
+            HeaderCell(tr("Column"), Modifier.weight(1f))
+            HeaderCell(tr("Type"), Modifier.weight(0.6f))
+            HeaderCell(tr("Fill with"), Modifier.weight(1.4f))
+            HeaderCell(tr("NULLs"), Modifier.width(70.dp))
+            HeaderCell(tr("Unique"), Modifier.width(56.dp))
         }
         LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
             items(state.columns, key = { it.plan.column.name }) { column ->
@@ -283,13 +284,13 @@ private fun ColumnPlans(state: TestDataState, modifier: Modifier) {
                 Row(Modifier.fillMaxWidth().height(34.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(plan.column.name, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = if (plan.column.primaryKey) FontWeight.SemiBold else FontWeight.Normal)
-                        if (plan.column.primaryKey) Tag("PK", ChangedColor)
-                        if (column.foreignKey) Tag("FK", AddedColor)
+                        if (plan.column.primaryKey) Tag(tr("PK"), ChangedColor)
+                        if (column.foreignKey) Tag(tr("FK"), AddedColor)
                     }
                     Text(plan.column.typeName.lowercase(), Modifier.weight(0.6f), color = JewelTheme.globalColors.text.info, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Row(Modifier.weight(1.4f), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                         Picker(plan.kind.label, placeholder = plan.kind == GeneratorKind.Skip, options = column.choices.map { it.label to it }, onPick = { column.plan = plan.copy(kind = it) }, modifier = Modifier.weight(1f))
-                        if (plan.kind == GeneratorKind.Constant) TextField(column.constant, Modifier.width(120.dp), placeholder = { Text("value") })
+                        if (plan.kind == GeneratorKind.Constant) TextField(column.constant, Modifier.width(120.dp), placeholder = { Text(tr("value")) })
                     }
                     Box(Modifier.width(70.dp)) {
                         if (plan.column.nullable && plan.kind != GeneratorKind.Skip && plan.kind != GeneratorKind.Null) {

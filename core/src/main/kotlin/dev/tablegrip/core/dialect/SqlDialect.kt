@@ -1,5 +1,6 @@
 package dev.tablegrip.core.dialect
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.chart.TimeBucket
 import dev.tablegrip.core.connection.DatabaseType
 import dev.tablegrip.core.connection.EngineFamily
@@ -693,7 +694,7 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
             }
 
         /** Plans come from Jaybird's statement API, not from SQL. */
-        override fun explain(sql: String): List<String> = throw UnsupportedOperationException("Firebird has no EXPLAIN statement")
+        override fun explain(sql: String): List<String> = throw UnsupportedOperationException(tr("Firebird has no EXPLAIN statement"))
 
         override val functions = listOf("current_timestamp", "dateadd", "datediff", "list", "coalesce", "iif", "gen_uuid", "uuid_to_char", "gen_id")
 
@@ -776,6 +777,6 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
                 EngineFamily.Etcd -> null
             }
 
-        fun of(type: DatabaseType): SqlDialect = type.dialect ?: throw IllegalArgumentException("${type.displayName} has no SQL dialect")
+        fun of(type: DatabaseType): SqlDialect = type.dialect ?: throw IllegalArgumentException(tr("{0} has no SQL dialect", type.displayName))
     }
 }

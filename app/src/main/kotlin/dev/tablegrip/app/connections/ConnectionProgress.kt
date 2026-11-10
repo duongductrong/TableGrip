@@ -1,5 +1,6 @@
 package dev.tablegrip.app.connections
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -34,11 +35,11 @@ private const val SlowAfter = 8L
 /** What a connection attempt is doing right now, in words, e.g. "Connecting to db.example.com:5432…". */
 fun connectingText(config: ConnectionConfig, status: ConnectionStatus.Connecting): String =
     when {
-        status.step == ConnectionStatus.Connecting.Step.Driver -> "Preparing the ${config.type.displayName} driver…"
-        config.type.isFile -> "Opening ${config.database.substringAfterLast('/').ifEmpty { config.name }}…"
-        config.ssh != null -> "Connecting through ${config.ssh!!.host}…"
-        config.url != null -> "Connecting to ${config.name}…"
-        else -> "Connecting to ${config.host}${(config.port ?: config.type.defaultPort)?.let { ":$it" }.orEmpty()}…"
+        status.step == ConnectionStatus.Connecting.Step.Driver -> tr("Preparing the {0} driver…", config.type.displayName)
+        config.type.isFile -> tr("Opening {0}…", config.database.substringAfterLast('/').ifEmpty { config.name })
+        config.ssh != null -> tr("Connecting through {0}…", config.ssh!!.host)
+        config.url != null -> tr("Connecting to {0}…", config.name)
+        else -> tr("Connecting to {0}{1}…", config.host, (config.port ?: config.type.defaultPort)?.let { ":$it" }.orEmpty())
     }
 
 /** Whole seconds since [since] (epoch millis), ticking once a second; null while there is nothing to time. */
@@ -66,7 +67,7 @@ fun ProgressLine(text: String, modifier: Modifier = Modifier, since: Long? = nul
             if (since != null && elapsed >= ShowElapsedAfter) Text("${elapsed}s", color = info, maxLines = 1, softWrap = false)
         }
         AnimatedVisibility(since != null && elapsed >= SlowAfter, enter = fadeIn(), exit = fadeOut()) {
-            Text("Taking longer than usual…", color = info, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(tr("Taking longer than usual…"), color = info, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -81,7 +82,7 @@ fun LoadingPlaceholder(text: String, modifier: Modifier = Modifier, since: Long?
         Text(text, textAlign = TextAlign.Center)
         val slow = since != null && elapsed >= SlowAfter
         when {
-            slow -> Text("Still trying after ${elapsed}s. The server may be busy, or a VPN or firewall may be in the way.", color = info, textAlign = TextAlign.Center)
+            slow -> Text(tr("Still trying after {0}s. The server may be busy, or a VPN or firewall may be in the way.", elapsed), color = info, textAlign = TextAlign.Center)
             since != null && elapsed >= ShowElapsedAfter -> Text("${elapsed}s", color = info)
         }
     }
@@ -104,16 +105,16 @@ fun friendlyError(message: String): FriendlyError {
     fun has(vararg needles: String) = needles.any { it in text }
     val (headline, hint) =
         when {
-            has("ssh") ->"Couldn't open the SSH tunnel" to "Check the SSH host, user and key or password."
+            has("ssh") ->tr("Couldn't open the SSH tunnel") to tr("Check the SSH host, user and key or password.")
             has("password authentication failed", "access denied", "authentication failed", "login failed", "invalid password", "wrongpass", "noauth", "not authorized", "invalid username") ->
-                "Sign-in was rejected" to "Check the user name and password."
+                tr("Sign-in was rejected") to tr("Check the user name and password.")
             has("unknownhost", "unknown host", "nodename nor servname", "name or service not known", "no such host") ->
-                "Unknown host" to "Check the host name, or your network and VPN."
-            has("connection refused", "connect refused") -> "The server refused the connection" to "Make sure it's running and the host and port are right."
-            has("timed out", "timeout", "time out") -> "The server didn't answer in time" to "It may be offline, or a VPN or firewall may be blocking it."
-            has("does not exist", "unknown database", "cannot open database") && has("database") -> "Database not found" to "Check the database name."
-            has("ssl", "tls", "certificate", "handshake") -> "Secure connection failed" to "Check the SSL settings in the connection's properties."
-            else -> message.lineSequence().firstOrNull { it.isNotBlank() }?.trim().orEmpty().ifEmpty { "Couldn't connect" } to null
+                tr("Unknown host") to tr("Check the host name, or your network and VPN.")
+            has("connection refused", "connect refused") -> tr("The server refused the connection") to tr("Make sure it's running and the host and port are right.")
+            has("timed out", "timeout", "time out") -> tr("The server didn't answer in time") to tr("It may be offline, or a VPN or firewall may be blocking it.")
+            has("does not exist", "unknown database", "cannot open database") && has("database") -> tr("Database not found") to tr("Check the database name.")
+            has("ssl", "tls", "certificate", "handshake") -> tr("Secure connection failed") to tr("Check the SSL settings in the connection's properties.")
+            else -> message.lineSequence().firstOrNull { it.isNotBlank() }?.trim().orEmpty().ifEmpty { tr("Couldn't connect") } to null
         }
     return FriendlyError(headline, hint, message.trim())
 }

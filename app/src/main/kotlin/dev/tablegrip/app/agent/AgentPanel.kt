@@ -1,5 +1,6 @@
 package dev.tablegrip.app.agent
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.app.ui.AppIcons
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -111,18 +112,18 @@ internal fun AgentPanel(app: AppState) {
     LaunchedEffect(Unit) { agent.discover() }
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().height(36.dp).padding(start = 12.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(agent.chatTitle ?: "New chat", Modifier.weight(1f), fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(agent.chatTitle ?: tr("New chat"), Modifier.weight(1f), fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (app.chatStore != null) {
                 var history by remember { mutableStateOf(false) }
                 Box {
-                    Tooltip({ Text("Chat history") }) { IconButton(onClick = { history = !history }) { Icon(AllIconsKeys.Vcs.History, "Chat history") } }
+                    Tooltip({ Text(tr("Chat history")) }) { IconButton(onClick = { history = !history }) { Icon(AllIconsKeys.Vcs.History, tr("Chat history")) } }
                     if (history) ChatHistoryPopup(agent, onDismiss = { history = false })
                 }
             }
-            Tooltip({ Text("New chat") }) {
-                IconButton(onClick = agent::newChat, enabled = agent.messages.isNotEmpty()) { Icon(AllIconsKeys.General.Add, "New chat") }
+            Tooltip({ Text(tr("New chat")) }) {
+                IconButton(onClick = agent::newChat, enabled = agent.messages.isNotEmpty()) { Icon(AllIconsKeys.General.Add, tr("New chat")) }
             }
-            Tooltip({ Text("Hide") }) { IconButton(onClick = { app.agentOpen = false }) { Icon(AllIconsKeys.General.HideToolWindow, "Hide") } }
+            Tooltip({ Text(tr("Hide")) }) { IconButton(onClick = { app.agentOpen = false }) { Icon(AllIconsKeys.General.HideToolWindow, tr("Hide")) } }
         }
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
         Box(Modifier.weight(1f).fillMaxWidth()) {
@@ -142,7 +143,7 @@ private fun RiskNotice(risks: List<String>, modifier: Modifier = Modifier) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(AllIconsKeys.General.Warning, null, Modifier.size(14.dp))
-            Text("Can change or delete data", color = DangerColor, fontWeight = FontWeight.SemiBold)
+            Text(tr("Can change or delete data"), color = DangerColor, fontWeight = FontWeight.SemiBold)
         }
         risks.forEach { Text("• $it", color = DangerColor) }
     }
@@ -151,19 +152,19 @@ private fun RiskNotice(risks: List<String>, modifier: Modifier = Modifier) {
 @Composable
 private fun ConfirmRunDialog(app: AppState, run: RunConfirmation) {
     val agent = app.agent
-    AppDialog(onCloseRequest = { agent.pendingRun = null }, size = DpSize(620.dp, 400.dp), title = "Run Query from Agent?") {
+    AppDialog(onCloseRequest = { agent.pendingRun = null }, size = DpSize(620.dp, 400.dp), title = tr("Run Query from Agent?")) {
         Column(
             Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             RiskNotice(run.reasons)
-            Text("The agent wrote this query. Check it before running: changes may not be undoable.", color = JewelTheme.globalColors.text.info)
+            Text(tr("The agent wrote this query. Check it before running: changes may not be undoable."), color = JewelTheme.globalColors.text.info)
             val text = remember(run) { TextFieldState(run.sql.trim()) }
             TextArea(text, Modifier.weight(1f).fillMaxWidth().border(1.dp, DangerColor, RoundedCornerShape(4.dp)), readOnly = true, textStyle = JewelTheme.editorTextStyle)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
                 // Cancel is the default and Esc closes: running takes a deliberate click.
-                DefaultButton(onClick = { agent.pendingRun = null }) { Text("Cancel") }
-                OutlinedButton(onClick = agent::confirmRun) { Text("Run anyway", color = DangerColor) }
+                DefaultButton(onClick = { agent.pendingRun = null }) { Text(tr("Cancel")) }
+                OutlinedButton(onClick = agent::confirmRun) { Text(tr("Run anyway"), color = DangerColor) }
             }
         }
     }
@@ -179,21 +180,21 @@ private fun EmptyState(agent: AgentViewModel) {
     ) {
         Icon(AppIcons.Agent, null, Modifier.size(28.dp))
         when {
-            agent.discovering -> Text("Looking for agents on this machine…", color = info)
+            agent.discovering -> Text(tr("Looking for agents on this machine…"), color = info)
             agent.agents.isEmpty() -> {
-                Text("No agent found", fontWeight = FontWeight.SemiBold)
+                Text(tr("No agent found"), fontWeight = FontWeight.SemiBold)
                 Text(
-                    "Install Claude Code, Codex, Gemini CLI, Cursor Agent, OpenCode or another supported CLI, then rescan.",
+                    tr("Install Claude Code, Codex, Gemini CLI, Cursor Agent, OpenCode or another supported CLI, then rescan."),
                     color = info,
                     textAlign = TextAlign.Center,
                 )
-                Text("Rescan", Modifier.clickable { agent.discover(rescan = true) }, color = LocalIslands.current.accent)
-                Text("Or use an API provider…", Modifier.clickable { agent.openSettings() }, color = LocalIslands.current.accent)
+                Text(tr("Rescan"), Modifier.clickable { agent.discover(rescan = true) }, color = LocalIslands.current.accent)
+                Text(tr("Or use an API provider…"), Modifier.clickable { agent.openSettings() }, color = LocalIslands.current.accent)
             }
             else -> {
-                Text("Ask about your data", fontWeight = FontWeight.SemiBold)
+                Text(tr("Ask about your data"), fontWeight = FontWeight.SemiBold)
                 Text(
-                    "Write queries, explain a schema or fix an error. The agent sees the current connection and the open console.",
+                    tr("Write queries, explain a schema or fix an error. The agent sees the current connection and the open console."),
                     color = info,
                     textAlign = TextAlign.Center,
                 )
@@ -232,7 +233,7 @@ private fun Conversation(app: AppState, agent: AgentViewModel) {
 private fun JumpToLatest(modifier: Modifier, onClick: () -> Unit) {
     val islands = LocalIslands.current
     Text(
-        "↓  Latest",
+        tr("↓  Latest"),
         modifier
             .clip(CircleShape)
             .background(islands.island)
@@ -259,9 +260,9 @@ private fun ReasoningBlock(message: ChatMessage) {
                 Icon(if (open) AllIconsKeys.General.ChevronDown else AllIconsKeys.General.ChevronRight, null, Modifier.size(14.dp))
                 val label =
                     when {
-                        thinking -> elapsedSeconds(message.startedAt).let { if (it > 0) "Thinking… ${it}s" else "Thinking…" }
-                        message.thoughtSeconds != null -> "Thought for ${maxOf(1, message.thoughtSeconds ?: 1)}s"
-                        else -> "Thought"
+                        thinking -> elapsedSeconds(message.startedAt).let { if (it > 0) tr("Thinking… {0}s", it) else tr("Thinking…") }
+                        message.thoughtSeconds != null -> tr("Thought for {0}s", maxOf(1, message.thoughtSeconds ?: 1))
+                        else -> tr("Thought")
                     }
                 Text(label, color = info)
             }
@@ -341,7 +342,7 @@ private fun MessageView(app: AppState, message: ChatMessage) {
             Icon(AllIconsKeys.General.Information, null, Modifier.size(14.dp))
             Text(message.label ?: message.text, color = JewelTheme.globalColors.text.info, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Box(Modifier.size(24.dp)) {
-                if (hovered && agent.canRewind) MessageAction(AllIconsKeys.Actions.Rollback, "Rewind to here: the run request is asked again") { agent.rewind(message) }
+                if (hovered && agent.canRewind) MessageAction(AllIconsKeys.Actions.Rollback, tr("Rewind to here: the run request is asked again")) { agent.rewind(message) }
             }
         }
         return
@@ -357,8 +358,8 @@ private fun MessageView(app: AppState, message: ChatMessage) {
             // Reserved even when hidden, so hovering doesn't shift the conversation.
             Row(Modifier.height(26.dp).padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (hovered) {
-                    MessageAction(AllIconsKeys.Actions.Copy, "Copy") { copyToClipboard(message.mentionText.plain) }
-                    if (agent.canRewind) MessageAction(AllIconsKeys.Actions.Rollback, "Rewind to here: removes this message and everything after, to edit and resend") { agent.rewind(message) }
+                    MessageAction(AllIconsKeys.Actions.Copy, tr("Copy")) { copyToClipboard(message.mentionText.plain) }
+                    if (agent.canRewind) MessageAction(AllIconsKeys.Actions.Rollback, tr("Rewind to here: removes this message and everything after, to edit and resend")) { agent.rewind(message) }
                 }
             }
         }
@@ -383,7 +384,7 @@ private fun MessageView(app: AppState, message: ChatMessage) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 CircularProgressIndicator()
                 val seconds = elapsedSeconds(message.startedAt)
-                Text(if (seconds > 0) "Thinking… ${seconds}s" else "Thinking…", color = JewelTheme.globalColors.text.info)
+                Text(if (seconds > 0) tr("Thinking… {0}s", seconds) else tr("Thinking…"), color = JewelTheme.globalColors.text.info)
             }
         }
         message.error?.let { error ->
@@ -396,9 +397,9 @@ private fun MessageView(app: AppState, message: ChatMessage) {
         if (!message.streaming) {
             Row(Modifier.height(24.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (hovered || message.error != null) {
-                    if (message.text.isNotBlank()) MessageAction(AllIconsKeys.Actions.Copy, "Copy") { copyToClipboard(message.text) }
-                    if (agent.canRewind && agent.selected != null) MessageAction(AllIconsKeys.Actions.Refresh, "Retry: asks again for this answer") { agent.retry(message) }
-                    if (agent.canRewind) MessageAction(AllIconsKeys.Actions.Rollback, "Remove this answer and everything after") { agent.rewind(message) }
+                    if (message.text.isNotBlank()) MessageAction(AllIconsKeys.Actions.Copy, tr("Copy")) { copyToClipboard(message.text) }
+                    if (agent.canRewind && agent.selected != null) MessageAction(AllIconsKeys.Actions.Refresh, tr("Retry: asks again for this answer")) { agent.retry(message) }
+                    if (agent.canRewind) MessageAction(AllIconsKeys.Actions.Rollback, tr("Remove this answer and everything after")) { agent.rewind(message) }
                 }
             }
         }
@@ -427,7 +428,7 @@ private fun RunRequestCard(app: AppState, message: ChatMessage, index: Int, bloc
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(AppIcons.Agent, null, Modifier.size(14.dp))
-            Text("${app.agent.selected?.descriptor?.name ?: "The agent"} wants to run a query", Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
+            Text(tr("{0} wants to run a query", app.agent.selected?.descriptor?.name ?: tr("The agent")), Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
         }
         if (risks.isNotEmpty()) RiskNotice(risks, Modifier.padding(horizontal = 12.dp, vertical = 4.dp))
         Text(
@@ -440,9 +441,9 @@ private fun RunRequestCard(app: AppState, message: ChatMessage, index: Int, bloc
         if (state == null) {
             Text(
                 when {
-                    risks.isNotEmpty() -> "Not run from here: it opens in a console for you to review and run yourself."
-                    !app.agent.sharesCurrentConnection -> "This connection isn't shared with agents: it opens in a console, and no result goes back."
-                    else -> "Runs in a console, then the result (up to ${AgentContext.ResultRows} rows) is sent to the agent."
+                    risks.isNotEmpty() -> tr("Not run from here: it opens in a console for you to review and run yourself.")
+                    !app.agent.sharesCurrentConnection -> tr("This connection isn't shared with agents: it opens in a console, and no result goes back.")
+                    else -> tr("Runs in a console, then the result (up to {0} rows) is sent to the agent.", AgentContext.ResultRows)
                 },
                 Modifier.padding(horizontal = 12.dp).padding(top = 6.dp),
                 color = info,
@@ -457,19 +458,19 @@ private fun RunRequestCard(app: AppState, message: ChatMessage, index: Int, bloc
                 null -> {
                     Spacer(Modifier.weight(1f))
                     val ready = !message.streaming && !app.agent.busy && !app.agent.consoleRunning
-                    OutlinedButton(onClick = { app.agent.declineRun(message, index) }, enabled = ready) { Text("Decline") }
+                    OutlinedButton(onClick = { app.agent.declineRun(message, index) }, enabled = ready) { Text(tr("Decline")) }
                     DefaultButton(onClick = { app.agent.allowRun(message, index, block.code) }, enabled = ready) {
-                        Text(if (risks.isEmpty() && app.agent.sharesCurrentConnection) "Run" else "Open in console")
+                        Text(if (risks.isEmpty() && app.agent.sharesCurrentConnection) tr("Run") else tr("Open in console"))
                     }
                 }
                 RunRequestState.Running -> {
                     CircularProgressIndicator()
-                    Text("Running…", color = info)
+                    Text(tr("Running…"), color = info)
                 }
                 is RunRequestState.Done -> Text(state.summary, color = info)
-                RunRequestState.Declined -> Text("Declined", color = info)
-                RunRequestState.Refused -> Text("This query changes data, so it was only opened in the console for you to review and run.", color = DangerColor)
-                RunRequestState.NotShared -> Text("Opened in the console. This connection isn't shared with agents, so no result was sent.", color = info)
+                RunRequestState.Declined -> Text(tr("Declined"), color = info)
+                RunRequestState.Refused -> Text(tr("This query changes data, so it was only opened in the console for you to review and run."), color = DangerColor)
+                RunRequestState.NotShared -> Text(tr("Opened in the console. This connection isn't shared with agents, so no result was sent."), color = info)
             }
         }
     }
@@ -492,17 +493,17 @@ private fun CodeBlock(app: AppState, block: MarkdownBlock.Code) {
             horizontalArrangement = Arrangement.spacedBy(2.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(block.language.ifEmpty { "code" }, Modifier.weight(1f), color = info)
-            Tooltip({ DisableSelection { Text("Copy") } }) { IconButton(onClick = { copyToClipboard(block.code) }) { Icon(AllIconsKeys.Actions.Copy, "Copy") } }
+            Text(block.language.ifEmpty { tr("code") }, Modifier.weight(1f), color = info)
+            Tooltip({ DisableSelection { Text(tr("Copy")) } }) { IconButton(onClick = { copyToClipboard(block.code) }) { Icon(AllIconsKeys.Actions.Copy, tr("Copy")) } }
             if (block.isSql && app.agent.canRunSql) {
-                Tooltip({ DisableSelection { Text("Open in console") } }) {
-                    IconButton(onClick = { app.agent.openSql(block.code) }) { Icon(AllIconsKeys.Nodes.Console, "Open in console") }
+                Tooltip({ DisableSelection { Text(tr("Open in console")) } }) {
+                    IconButton(onClick = { app.agent.openSql(block.code) }) { Icon(AllIconsKeys.Nodes.Console, tr("Open in console")) }
                 }
                 val running = app.agent.consoleRunning
-                val tooltip = if (running) "The console is running a query" else if (danger) "Run in console (asks first)" else "Run in console"
+                val tooltip = if (running) tr("The console is running a query") else if (danger) tr("Run in console (asks first)") else tr("Run in console")
                 Tooltip({ DisableSelection { Text(tooltip) } }) {
                     IconButton(onClick = { app.agent.runSql(block.code) }, enabled = !running) {
-                        Icon(AllIconsKeys.Actions.Execute, "Run in console")
+                        Icon(AllIconsKeys.Actions.Execute, tr("Run in console"))
                     }
                 }
             }
@@ -576,7 +577,7 @@ private fun Composer(agent: AgentViewModel, modifier: Modifier = Modifier) {
                 onTextLayout = { getResult -> layout = getResult() },
                 decorator = { inner ->
                     if (state.text.isEmpty()) {
-                        Text("Ask anything: @ mentions tables, tabs and saved queries, ${Shortcuts.AddToChat} what's selected", color = JewelTheme.globalColors.text.info)
+                        Text(tr("Ask anything: @ mentions tables, tabs and saved queries, {0} what's selected", Shortcuts.AddToChat), color = JewelTheme.globalColors.text.info)
                     }
                     inner()
                 },
@@ -593,9 +594,9 @@ private fun Composer(agent: AgentViewModel, modifier: Modifier = Modifier) {
             ModelPicker(agent)
             Spacer(Modifier.weight(1f))
             if (agent.busy) {
-                ComposerButton("Stop", enabled = true, onClick = agent::stop) { Icon(AllIconsKeys.Actions.Suspend, "Stop", Modifier.size(16.dp), tint = it) }
+                ComposerButton(tr("Stop"), enabled = true, onClick = agent::stop) { Icon(AllIconsKeys.Actions.Suspend, tr("Stop"), Modifier.size(16.dp), tint = it) }
             } else {
-                ComposerButton("Send (Enter)", enabled = canSend, onClick = ::submit) { ArrowUpGlyph(it) }
+                ComposerButton(tr("Send (Enter)"), enabled = canSend, onClick = ::submit) { ArrowUpGlyph(it) }
             }
         }
     }
@@ -648,7 +649,7 @@ private fun AgentPicker(agent: AgentViewModel) {
         ) {
             Icon(AppIcons.Agent, null, Modifier.size(14.dp))
             Text(
-                selected?.descriptor?.name ?: if (agent.discovering) "Detecting…" else "No agent",
+                selected?.descriptor?.name ?: if (agent.discovering) tr("Detecting…") else tr("No agent"),
                 Modifier.widthIn(max = 180.dp),
                 color = JewelTheme.globalColors.text.info,
                 maxLines = 1,
@@ -674,12 +675,12 @@ private fun AgentPicker(agent: AgentViewModel) {
                     selectableItem(selected = false, iconKey = AllIconsKeys.Actions.Refresh, onClick = {
                         agent.discover(rescan = true)
                         open = false
-                    }) { Text("Rescan installed agents") }
+                    }) { Text(tr("Rescan installed agents")) }
                 }
                 selectableItem(selected = false, iconKey = AllIconsKeys.General.Settings, onClick = {
                     agent.openSettings()
                     open = false
-                }) { Text("Agent settings…") }
+                }) { Text(tr("Agent settings…")) }
             }
         }
     }

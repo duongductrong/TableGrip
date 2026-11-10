@@ -1,5 +1,6 @@
 package dev.tablegrip.app.update
 
+import dev.tablegrip.core.i18n.tr
 import com.sun.jna.Library
 import com.sun.jna.Native
 import dev.tablegrip.core.settings.Settings
@@ -11,8 +12,8 @@ import org.slf4j.LoggerFactory
 
 /** Which releases the app is offered. */
 enum class UpdateChannel(val label: String) {
-    Stable("Stable"),
-    Beta("Beta (pre-releases too)"),
+    Stable(tr("Stable")),
+    Beta(tr("Beta (pre-releases too)")),
     ;
 
     companion object {
@@ -45,7 +46,7 @@ sealed interface UpdateStatus {
                 2 -> UpToDate
                 3 -> Available(version)
                 4 -> Ready(version)
-                5 -> Failed(detail.ifBlank { "The check failed." })
+                5 -> Failed(detail.ifBlank { tr("The check failed.") })
                 else -> Idle
             }
         }
@@ -115,7 +116,7 @@ interface Updater {
                     val dll = System.getProperty("compose.application.resources.dir")?.let { Path.of(it, "WinSparkle.dll") } ?: return Unavailable(WithoutUpdater)
                     load(dll) { WinSparkleUpdater(Native.load(dll.toString(), WinSparkleLibrary::class.java), canQuit, requestQuit) }
                 }
-                else -> Unavailable("Updates for ${os.ifBlank { "this system" }} are downloaded from the TableGrip releases page.")
+                else -> Unavailable(tr("Updates for {0} are downloaded from the TableGrip releases page.", os.ifBlank { tr("this system") }))
             }
         }
 
@@ -123,12 +124,12 @@ interface Updater {
             if (!library.isRegularFile()) return Unavailable(WithoutUpdater)
             return runCatching(create).getOrElse {
                 log.warn("Couldn't load the updater from $library", it)
-                Unavailable("The updater couldn't be loaded.")
+                Unavailable(tr("The updater couldn't be loaded."))
             }
         }
 
-        private const val FromSource = "This copy runs from source, not an installed app."
-        private const val WithoutUpdater = "This build was made without the updater."
+        private val FromSource = tr("This copy runs from source, not an installed app.")
+        private val WithoutUpdater = tr("This build was made without the updater.")
 
         /**
          * The appcast for this OS and architecture. Windows has one with pre-releases and one without ([beta]), since
@@ -209,7 +210,7 @@ private class SparkleUpdater(private val native: SparkleLibrary) : Updater {
         private set
 
     override val unavailableReason: String?
-        get() = if (failed) "The updater didn't start. See the log for why." else null
+        get() = if (failed) tr("The updater didn't start. See the log for why.") else null
 
     override val lastCheck: Instant?
         get() = native.dg_updater_last_check().takeIf { it > 0 }?.let { Instant.ofEpochMilli((it * 1000).toLong()) }

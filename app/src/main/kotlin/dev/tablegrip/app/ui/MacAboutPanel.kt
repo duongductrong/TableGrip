@@ -1,5 +1,6 @@
 package dev.tablegrip.app.ui
 
+import dev.tablegrip.core.i18n.tr
 import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer
@@ -27,7 +28,7 @@ internal data class AboutInfo(
 ) {
     companion object {
         const val Copyright = "© 2026 The TableGrip Authors"
-        const val Description = "A modern database client"
+        val Description = tr("A modern database client")
         const val Link = "https://github.com/duongductrong/TableGrip"
         const val SponsorLink = "https://github.com/sponsors/duongductrong"
         const val IconResource = "/icon/TableGrip-macOS.png"
@@ -43,7 +44,7 @@ internal data class AboutInfo(
         ) = AboutInfo(
             name = name?.takeIf { it.isNotBlank() } ?: "TableGrip",
             version = version.version,
-            build = if (packaged) version.build.toString() else "Development",
+            build = if (packaged) version.build.toString() else tr("Development"),
             copyright = Copyright,
             description = Description,
             link = Link,
@@ -131,7 +132,7 @@ internal object MacAboutPanel {
             val credits = attributed("NSMutableAttributedString", "$description\n", textAttributes)
             appendLink(credits, link.removePrefix("https://"), link, linkAttributes)
             objc.objc_msgSend(credits, sel("appendAttributedString:"), attributed("NSAttributedString", "\n", textAttributes))
-            appendLink(credits, "\u2665 Sponsor TableGrip", sponsorLink, linkAttributes)
+            appendLink(credits, tr("\u2665 Sponsor TableGrip"), sponsorLink, linkAttributes)
             return credits
         }
 

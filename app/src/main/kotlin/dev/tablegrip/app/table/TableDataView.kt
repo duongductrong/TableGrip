@@ -1,5 +1,6 @@
 package dev.tablegrip.app.table
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -136,7 +137,7 @@ private fun DataContent(tab: TableDataTab) {
         val model = tab.model
         Box(Modifier.weight(1f).fillMaxWidth()) {
             if (model == null) {
-                if (tab.error == null) ConnectionLoadingPlaceholder(tab.config, tab.connectionStatus, "Loading ${tab.table.name}…", Modifier.align(Alignment.Center))
+                if (tab.error == null) ConnectionLoadingPlaceholder(tab.config, tab.connectionStatus, tr("Loading {0}…", tab.table.name), Modifier.align(Alignment.Center))
                 return@Box
             }
             val grid =
@@ -184,8 +185,8 @@ private fun DataContent(tab: TableDataTab) {
 @Composable
 private fun ViewSwitch(tab: TableDataTab) {
     Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
-        ViewChip("Data", tab.view == TableView.Data, onClick = tab::showData)
-        ViewChip("Structure", tab.view == TableView.Structure, onClick = { tab.showStructure() })
+        ViewChip(tr("Data"), tab.view == TableView.Data, onClick = tab::showData)
+        ViewChip(tr("Structure"), tab.view == TableView.Structure, onClick = { tab.showStructure() })
     }
     Separator()
 }
@@ -201,6 +202,8 @@ internal fun ViewChip(label: String, selected: Boolean, onClick: () -> Unit) {
             .clickable(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 2.dp),
         color = if (selected) JewelTheme.globalColors.text.normal else JewelTheme.globalColors.text.info,
+        maxLines = 1,
+        softWrap = false,
     )
 }
 
@@ -224,14 +227,14 @@ private fun StructureToolbar(tab: TableDataTab) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         ViewSwitch(tab)
-        ToolButton(AllIconsKeys.Actions.Refresh, "Reload structure (${Shortcuts.Reload})") { tab.loadStructure() }
+        ToolButton(AllIconsKeys.Actions.Refresh, tr("Reload structure ({0})", Shortcuts.Reload)) { tab.loadStructure() }
         val ddl = tab.structure?.ddl
-        ToolButton(AllIconsKeys.Actions.Copy, "Copy DDL", enabled = ddl != null) { ddl?.let(::copyToClipboard) }
-        ToolButton(AllIconsKeys.Nodes.Console, "Open DDL in new console", enabled = ddl != null) { tab.openDdlInConsole() }
-        if (!tab.config.readOnly) ToolButton(AllIconsKeys.Actions.Edit, "Edit structure") { tab.editStructure() }
-        ToolButton(AllIconsKeys.FileTypes.Diagram, "Show in ER diagram") { tab.showInDiagram() }
+        ToolButton(AllIconsKeys.Actions.Copy, tr("Copy DDL"), enabled = ddl != null) { ddl?.let(::copyToClipboard) }
+        ToolButton(AllIconsKeys.Nodes.Console, tr("Open DDL in new console"), enabled = ddl != null) { tab.openDdlInConsole() }
+        if (!tab.config.readOnly) ToolButton(AllIconsKeys.Actions.Edit, tr("Edit structure")) { tab.editStructure() }
+        ToolButton(AllIconsKeys.FileTypes.Diagram, tr("Show in ER diagram")) { tab.showInDiagram() }
         Box(Modifier.weight(1f))
-        if (tab.structureLoading) Text("Loading…", Modifier.padding(end = 8.dp), color = JewelTheme.globalColors.text.info)
+        if (tab.structureLoading) Text(tr("Loading…"), Modifier.padding(end = 8.dp), color = JewelTheme.globalColors.text.info)
         Text(tab.dialect.qualifiedName(tab.table), Modifier.padding(end = 8.dp), color = JewelTheme.globalColors.text.info)
     }
 }
@@ -245,49 +248,49 @@ private fun Toolbar(tab: TableDataTab) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         ViewSwitch(tab)
-        ToolButton(AllIconsKeys.Actions.Play_first, "First page", enabled = tab.page > 0) { tab.goToPage(0) }
-        ToolButton(AllIconsKeys.Actions.Play_back, "Previous page", enabled = tab.page > 0) { tab.goToPage(tab.page - 1) }
+        ToolButton(AllIconsKeys.Actions.Play_first, tr("First page"), enabled = tab.page > 0) { tab.goToPage(0) }
+        ToolButton(AllIconsKeys.Actions.Play_back, tr("Previous page"), enabled = tab.page > 0) { tab.goToPage(tab.page - 1) }
         val shown = (model?.rowCount ?: 0)
-        Text(if (shown == 0) "0 rows" else "${tab.firstRowNumber}–${tab.firstRowNumber + shown - 1}", Modifier.padding(horizontal = 4.dp))
-        Text("of", color = JewelTheme.globalColors.text.info)
+        Text(if (shown == 0) tr("0 rows") else "${tab.firstRowNumber}–${tab.firstRowNumber + shown - 1}", Modifier.padding(horizontal = 4.dp))
+        Text(tr("of"), color = JewelTheme.globalColors.text.info)
         val total = tab.totalRows
         if (total == null) Link("?", onClick = tab::countRows) else Text(total.toString())
-        ToolButton(AllIconsKeys.Actions.Play_forward, "Next page", enabled = tab.hasNextPage) { tab.goToPage(tab.page + 1) }
+        ToolButton(AllIconsKeys.Actions.Play_forward, tr("Next page"), enabled = tab.hasNextPage) { tab.goToPage(tab.page + 1) }
         ListComboBox(
-            items = PageSizes.map { "$it rows" },
+            items = PageSizes.map { tr("{0} rows", it) },
             selectedIndex = PageSizes.indexOf(tab.pageSize).coerceAtLeast(0),
             onSelectedItemChange = { tab.setPageSize(PageSizes[it]) },
             modifier = Modifier.width(110.dp).padding(horizontal = 4.dp),
         )
-        ToolButton(AllIconsKeys.Actions.Refresh, "Reload (${Shortcuts.Reload})") { tab.reload() }
+        ToolButton(AllIconsKeys.Actions.Refresh, tr("Reload ({0})", Shortcuts.Reload)) { tab.reload() }
         Separator()
 
         val editable = model?.editor != null
-        ToolButton(AllIconsKeys.General.Add, "Add row (${Shortcuts.AddRow})", enabled = editable) {
+        ToolButton(AllIconsKeys.General.Add, tr("Add row ({0})", Shortcuts.AddRow), enabled = editable) {
             model?.let { tab.grid.revealEditable(it, it.addRow()) }
         }
-        ToolButton(AllIconsKeys.General.Remove, "Delete selected rows (${Shortcuts.DeleteRows})", enabled = editable && tab.grid.selection != null) {
+        ToolButton(AllIconsKeys.General.Remove, tr("Delete selected rows ({0})", Shortcuts.DeleteRows), enabled = editable && tab.grid.selection != null) {
             tab.grid.selection?.rows?.let { model?.deleteRows(it.toList()) }
             model?.let { tab.grid.clamp(it.rowCount) }
         }
         UndoRedoButtons(tab.grid, model)
-        ToolButton(AllIconsKeys.Actions.Rollback, "Revert all changes", enabled = tab.hasChanges) { tab.revert() }
-        ToolButton(AllIconsKeys.Actions.Preview, "Preview pending SQL", enabled = tab.hasChanges) { tab.openPreview() }
-        ToolButton(AllIconsKeys.Actions.Commit, "Submit changes (${Shortcuts.Submit})", enabled = tab.hasChanges && !tab.submitting) { tab.submit() }
-        if (tab.hasChanges) Text("${model?.changeCount} pending", Modifier.padding(start = 4.dp), color = JewelTheme.globalColors.text.info)
+        ToolButton(AllIconsKeys.Actions.Rollback, tr("Revert all changes"), enabled = tab.hasChanges) { tab.revert() }
+        ToolButton(AllIconsKeys.Actions.Preview, tr("Preview pending SQL"), enabled = tab.hasChanges) { tab.openPreview() }
+        ToolButton(AllIconsKeys.Actions.Commit, tr("Submit changes ({0})", Shortcuts.Submit), enabled = tab.hasChanges && !tab.submitting) { tab.submit() }
+        if (tab.hasChanges) Text(tr("{0} pending", model?.changeCount), Modifier.padding(start = 4.dp), color = JewelTheme.globalColors.text.info)
 
         Box(Modifier.weight(1f))
-        if (tab.loading || tab.submitting) Text(if (tab.submitting) "Saving…" else "Loading…", Modifier.padding(end = 8.dp), color = JewelTheme.globalColors.text.info)
+        if (tab.loading || tab.submitting) Text(if (tab.submitting) tr("Saving…") else tr("Loading…"), Modifier.padding(end = 8.dp), color = JewelTheme.globalColors.text.info)
         ViewChipGroup {
-            ViewChip("Grid", !tab.showJson) { tab.showJson = false }
-            ViewChip("JSON", tab.showJson) { tab.showJson = true }
+            ViewChip(tr("Grid"), !tab.showJson) { tab.showJson = false }
+            ViewChip(tr("JSON"), tab.showJson) { tab.showJson = true }
         }
         Separator()
-        ToolButton(AllIconsKeys.Nodes.DataColumn, if (tab.showSelect) "Hide column editor" else "Choose columns and functions (SELECT)") { tab.toggleSelect() }
-        ToolButton(AllIconsKeys.Actions.Download, "Export…", enabled = model != null) { tab.export() }
+        ToolButton(AllIconsKeys.Nodes.DataColumn, if (tab.showSelect) tr("Hide column editor") else tr("Choose columns and functions (SELECT)")) { tab.toggleSelect() }
+        ToolButton(AllIconsKeys.Actions.Download, tr("Export…"), enabled = model != null) { tab.export() }
         ToolButton(
             AllIconsKeys.Actions.PreviewDetails,
-            if (tab.showValuePanel) "Hide value panel" else "Show value panel",
+            if (tab.showValuePanel) tr("Hide value panel") else tr("Show value panel"),
             enabled = !tab.showJson,
         ) {
             tab.showValuePanel = !tab.showValuePanel
@@ -306,10 +309,10 @@ internal fun UndoRedoButtons(grid: DataGridState, model: GridModel?) {
     val history = model?.editor?.history
     val undo = history?.nextUndo
     val redo = history?.nextRedo
-    ToolButton(AllIconsKeys.Actions.Undo, undo?.let { "Undo ${it.label} (${Shortcuts.Undo})" } ?: "Undo (${Shortcuts.Undo})", enabled = undo != null) {
+    ToolButton(AllIconsKeys.Actions.Undo, undo?.let { tr("Undo {0} ({1})", it.label, Shortcuts.Undo) } ?: tr("Undo ({0})", Shortcuts.Undo), enabled = undo != null) {
         model?.let(grid::undo)
     }
-    ToolButton(AllIconsKeys.Actions.Redo, redo?.let { "Redo ${it.label} (${Shortcuts.Redo})" } ?: "Redo (${Shortcuts.Redo})", enabled = redo != null) {
+    ToolButton(AllIconsKeys.Actions.Redo, redo?.let { tr("Redo {0} ({1})", it.label, Shortcuts.Redo) } ?: tr("Redo ({0})", Shortcuts.Redo), enabled = redo != null) {
         model?.let(grid::redo)
     }
 }
@@ -389,7 +392,7 @@ private fun SqlFilterBar(tab: TableDataTab) {
                     false
                 },
                 textStyle = JewelTheme.editorTextStyle,
-                placeholder = { Text("status = 'active' AND created_at > '2026-01-01'   ${Shortcuts.Completion} for suggestions, ⏎ to apply") },
+                placeholder = { Text(tr("status = 'active' AND created_at > '2026-01-01'   {0} for suggestions, ⏎ to apply", Shortcuts.Completion)) },
                 onKeyboardAction = KeyboardActionHandler {
                     controller.close()
                     tab.applyFilter()
@@ -415,7 +418,7 @@ internal fun ErrorBanner(message: String, onDismiss: () -> Unit) {
     ) {
         Icon(AllIconsKeys.General.Error, null)
         Text(message, Modifier.weight(1f), color = JewelTheme.globalColors.text.error, maxLines = 4)
-        Link("Dismiss", onClick = onDismiss)
+        Link(tr("Dismiss"), onClick = onDismiss)
     }
 }
 
@@ -428,13 +431,13 @@ private fun StatusLine(tab: TableDataTab) {
         val selection = tab.grid.selection
         if (selection != null) {
             val columns = selection.columns(tab.grid.visibleColumns.size)
-            Text("${selection.rows.count()} × ${columns.count()} selected", color = info)
+            Text(tr("{0} × {1} selected", selection.rows.count(), columns.count()), color = info)
         }
         when {
-            tab.config.readOnly -> Text("Read-only connection", color = info)
-            !tab.selectEditable -> Text("Computed columns: rows are read-only", color = info)
-            !model.hasKey && tab.details?.primaryKey?.isNotEmpty() == true -> Text("Primary key not selected: existing rows are read-only", color = info)
-            !model.hasKey -> Text("No primary key: existing rows are read-only", color = info)
+            tab.config.readOnly -> Text(tr("Read-only connection"), color = info)
+            !tab.selectEditable -> Text(tr("Computed columns: rows are read-only"), color = info)
+            !model.hasKey && tab.details?.primaryKey?.isNotEmpty() == true -> Text(tr("Primary key not selected: existing rows are read-only"), color = info)
+            !model.hasKey -> Text(tr("No primary key: existing rows are read-only"), color = info)
         }
         Box(Modifier.weight(1f))
         Text(tab.dialect.qualifiedName(tab.table), color = info)
@@ -446,16 +449,16 @@ private fun DiscardDialog(tab: TableDataTab) {
     AppDialog(
         onCloseRequest = { tab.pendingDiscard = null },
         size = DpSize(420.dp, 170.dp),
-        title = "Unsaved Changes",
+        title = tr("Unsaved Changes"),
         resizable = false,
     ) {
         Column(Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("${tab.model?.changeCount ?: 0} change(s) to ${tab.table.name} haven't been submitted. Submit them before continuing?")
+            Text(tr("{0} change(s) to {1} haven't been submitted. Submit them before continuing?", tab.model?.changeCount ?: 0, tab.table.name))
             Spacer(Modifier.weight(1f))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                OutlinedButton(onClick = { tab.pendingDiscard = null }) { Text("Keep Editing") }
-                OutlinedButton(onClick = tab::confirmDiscard) { Text("Discard") }
-                DefaultButton(onClick = tab::submitAndContinue) { Text("Submit") }
+                OutlinedButton(onClick = { tab.pendingDiscard = null }) { Text(tr("Keep Editing")) }
+                OutlinedButton(onClick = tab::confirmDiscard) { Text(tr("Discard")) }
+                DefaultButton(onClick = tab::submitAndContinue) { Text(tr("Submit")) }
             }
         }
     }
@@ -466,15 +469,15 @@ private fun PreviewDialog(tab: TableDataTab, sql: String) {
     AppDialog(
         onCloseRequest = tab::closePreview,
         size = DpSize(720.dp, 420.dp),
-        title = "Pending Changes",
+        title = tr("Pending Changes"),
     ) {
         Column(Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             val text = remember(sql) { TextFieldState(sql) }
             TextArea(text, Modifier.weight(1f).fillMaxWidth(), readOnly = true, textStyle = JewelTheme.editorTextStyle)
-            Text("Runs in one transaction; nothing is saved if any statement fails or hits an unexpected number of rows.", color = JewelTheme.globalColors.text.info)
+            Text(tr("Runs in one transaction; nothing is saved if any statement fails or hits an unexpected number of rows."), color = JewelTheme.globalColors.text.info)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                OutlinedButton(onClick = tab::closePreview) { Text("Close") }
-                DefaultButton(onClick = tab::submitNow) { Text("Submit") }
+                OutlinedButton(onClick = tab::closePreview) { Text(tr("Close")) }
+                DefaultButton(onClick = tab::submitNow) { Text(tr("Submit")) }
             }
         }
     }

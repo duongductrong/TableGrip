@@ -1,5 +1,6 @@
 package dev.tablegrip.core.importer
 
+import dev.tablegrip.core.i18n.tr
 import java.io.File
 import java.io.InputStream
 import java.io.InputStreamReader
@@ -44,7 +45,7 @@ internal class CsvParser(
                 try {
                     reader.read(buffer)
                 } catch (e: CharacterCodingException) {
-                    throw ImportException("The file isn't valid $encoding text near line $line; choose its encoding (e.g. windows-1252) and try again", line, e)
+                    throw ImportException(tr("The file isn't valid {0} text near line {1}; choose its encoding (e.g. windows-1252) and try again", encoding, line), line, e)
                 }
             if (n <= 0) return -1
             pos = 0
@@ -101,8 +102,8 @@ internal class CsvParser(
             fun append(c: Int) {
                 if (field.length >= MAX_FIELD_CHARS) {
                     throw ImportException(
-                        "A field in the record starting on line $recordLine is longer than ${MAX_FIELD_CHARS / 1_000_000}M characters; " +
-                            "the file probably has an unclosed quote or a wrong delimiter",
+                        tr("A field in the record starting on line {0} is longer than {1}M characters; ", recordLine, MAX_FIELD_CHARS / 1_000_000) +
+                            tr("the file probably has an unclosed quote or a wrong delimiter"),
                         recordLine,
                     )
                 }
@@ -133,7 +134,7 @@ internal class CsvParser(
                         }
                     QUOTED ->
                         when (c) {
-                            -1 -> throw ImportException("Unclosed quote in the record starting on line $recordLine", recordLine)
+                            -1 -> throw ImportException(tr("Unclosed quote in the record starting on line {0}", recordLine), recordLine)
                             q -> state = AFTER_QUOTE
                             LF -> { append(c); line++ }
                             CR -> {
@@ -217,10 +218,10 @@ internal class CsvSource(file: File, requested: ImportOptions) : ImportSource {
         check(!consumed) { "rows() can only be read once" }
         consumed = true
         return sequence {
-            while (pending.isNotEmpty()) pending.removeFirst().let { yield(fitRow(it.line, it.values, columns.size, "Line")) }
+            while (pending.isNotEmpty()) pending.removeFirst().let { yield(fitRow(it.line, it.values, columns.size, tr("Line"))) }
             while (true) {
                 val values = parser.next() ?: break
-                yield(fitRow(parser.recordLine, values, columns.size, "Line"))
+                yield(fitRow(parser.recordLine, values, columns.size, tr("Line")))
             }
         }
     }

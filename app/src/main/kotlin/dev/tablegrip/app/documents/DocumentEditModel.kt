@@ -1,5 +1,6 @@
 package dev.tablegrip.app.documents
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
@@ -154,7 +155,7 @@ internal class DocumentEditModel(
         get() = if (readOnly) null else this
 
     override val setDefaultLabel: String
-        get() = "Remove Field"
+        get() = tr("Remove Field")
 
     val changeCount: Int
         get() = edits.keys.map { it.first }.filter { it !in deleted }.distinct().size + deleted.size + inserted.size
@@ -199,8 +200,8 @@ internal class DocumentEditModel(
 
     override fun placeholder(row: Int, column: Int): String? =
         when {
-            row >= baseRows && column !in inserted[row - baseRows] -> if (field(column) == "_id") "<auto>" else ""
-            row < baseRows && edits[row to column] == Edit.Removed -> "<removed>"
+            row >= baseRows && column !in inserted[row - baseRows] -> if (field(column) == "_id") tr("<auto>") else ""
+            row < baseRows && edits[row to column] == Edit.Removed -> tr("<removed>")
             else -> null
         }
 
@@ -310,7 +311,7 @@ internal class DocumentEditModel(
     }
 
     /** Removes the field from the document; a new document just leaves it out. */
-    override fun setDefault(row: Int, column: Int) = undoable("removal of ${field(column)}", row, column) {
+    override fun setDefault(row: Int, column: Int) = undoable(tr("removal of {0}", field(column)), row, column) {
         if (!canSetDefault(row, column)) return@undoable
         if (row >= baseRows) {
             inserted[row - baseRows].remove(column)
@@ -319,7 +320,7 @@ internal class DocumentEditModel(
         if (original(row, column) == null) edits.remove(row to column) else edits[row to column] = Edit.Removed
     }
 
-    override fun setValue(row: Int, column: Int, value: String?) = undoable("edit of ${field(column)}", row, column) {
+    override fun setValue(row: Int, column: Int, value: String?) = undoable(tr("edit of {0}", field(column)), row, column) {
         if (!canEdit(row, column)) return@undoable
         if (row >= baseRows) {
             inserted[row - baseRows][column] = Edit.Value(value)
@@ -335,23 +336,23 @@ internal class DocumentEditModel(
         if (unchanged) edits.remove(row to column) else edits[row to column] = Edit.Value(value)
     }
 
-    override fun revertCell(row: Int, column: Int) = undoable("revert of ${field(column)}", row, column) {
+    override fun revertCell(row: Int, column: Int) = undoable(tr("revert of {0}", field(column)), row, column) {
         if (row >= baseRows) inserted[row - baseRows].remove(column) else edits.remove(row to column)
         Unit
     }
 
     override fun addRow(): Int =
-        undoable("new document", rowCount) {
+        undoable(tr("new document"), rowCount) {
             inserted += mutableStateMapOf()
             rowCount - 1
         }
 
-    override fun deleteRows(rows: Collection<Int>) = undoable(if (rows.size == 1) "document deletion" else "deletion of ${rows.size} documents", rows.minOrNull()) {
+    override fun deleteRows(rows: Collection<Int>) = undoable(if (rows.size == 1) tr("document deletion") else tr("deletion of {0} documents", rows.size), rows.minOrNull()) {
         rows.filter { it >= baseRows }.sortedDescending().forEach { inserted.removeAt(it - baseRows) }
         rows.filter { it < baseRows && hasId(it) && !readOnly }.forEach { deleted[it] = Unit }
     }
 
-    override fun revertRows(rows: Collection<Int>) = undoable(if (rows.size == 1) "document revert" else "revert of ${rows.size} documents", rows.minOrNull()) {
+    override fun revertRows(rows: Collection<Int>) = undoable(if (rows.size == 1) tr("document revert") else tr("revert of {0} documents", rows.size), rows.minOrNull()) {
         rows.filter { it >= baseRows }.sortedDescending().forEach { inserted.removeAt(it - baseRows) }
         rows.filter { it < baseRows }.forEach { row ->
             deleted.remove(row)
@@ -360,7 +361,7 @@ internal class DocumentEditModel(
     }
 
     /** Drops every pending edit; one undo step, so a Revert All clicked by mistake can be taken back. */
-    fun revertAll() = undoable("revert of all changes") {
+    fun revertAll() = undoable(tr("revert of all changes")) {
         edits.clear()
         deleted.clear()
         inserted.clear()
@@ -370,9 +371,9 @@ internal class DocumentEditModel(
     fun addField(name: String): String? {
         val trimmed = name.trim()
         return when {
-            trimmed.isEmpty() -> "Enter a field name"
-            !editableName(trimmed) -> "Field names can't contain dots or start with \$"
-            trimmed in fields -> "“$trimmed” is already a column"
+            trimmed.isEmpty() -> tr("Enter a field name")
+            !editableName(trimmed) -> tr("Field names can't contain dots or start with \$")
+            trimmed in fields -> tr("“{0}” is already a column", trimmed)
             else -> {
                 added += trimmed
                 null
@@ -394,7 +395,7 @@ internal class DocumentEditModel(
     fun firstProblem(): String? {
         val rows = (edits.keys.map { it.first }.filter { it !in deleted } + (baseRows until rowCount)).distinct().sorted()
         for (row in rows) {
-            for (column in columns.indices) problem(row, column)?.let { return "Row ${row + 1}, ${field(column)}: $it" }
+            for (column in columns.indices) problem(row, column)?.let { return tr("Row {0}, {1}: {2}", row + 1, field(column), it) }
         }
         return null
     }
@@ -440,7 +441,7 @@ internal class DocumentEditModel(
                             when (edit) {
                                 is Edit.Literal -> edit.literal
                                 is Edit.Value -> literal(row, column, edit.text)
-                                Edit.Removed -> error("A new document has no fields to remove")
+                                Edit.Removed -> error(tr("A new document has no fields to remove"))
                             }
                     }
                 Change.Insert(row, "{$body}")
@@ -452,7 +453,7 @@ internal class DocumentEditModel(
         if (text == null) return "null"
         return when (val value = convert(kind(row, column), text, zone)) {
             is Converted.Ok -> value.literal
-            is Converted.Invalid -> throw IllegalStateException("Row ${row + 1}, ${field(column)}: ${value.message}")
+            is Converted.Invalid -> throw IllegalStateException(tr("Row {0}, {1}: {2}", row + 1, field(column), value.message))
         }
     }
 
@@ -524,15 +525,15 @@ internal class DocumentEditModel(
 
     override fun whyNotEditable(row: Int): String? =
         when {
-            readOnly -> "The connection is read-only"
-            row !in 0 until rowCount -> "This document is no longer on the page"
-            row in deleted -> "This document is marked for deletion; revert it first"
-            row < baseRows && !hasId(row) -> "This document has no _id, so it can't be found again to save changes"
+            readOnly -> tr("The connection is read-only")
+            row !in 0 until rowCount -> tr("This document is no longer on the page")
+            row in deleted -> tr("This document is marked for deletion; revert it first")
+            row < baseRows && !hasId(row) -> tr("This document has no _id, so it can't be found again to save changes")
             else -> null
         }
 
     override fun describeRecord(row: Int): String =
-        if (row >= baseRows) "New document" else documents[row]["_id"]?.let { "_id: ${DocumentBrowserTab.cell(it)}" } ?: "Document ${row + 1} on this page"
+        if (row >= baseRows) tr("New document") else documents[row]["_id"]?.let { "_id: ${DocumentBrowserTab.cell(it)}" } ?: tr("Document {0} on this page", row + 1)
 
     /** The whole document, every field, with pending edits applied: not just the columns on show. */
     override fun recordJson(row: Int): JsonObject = JsonObject(documentFields(row))
@@ -541,15 +542,15 @@ internal class DocumentEditModel(
         val known = fields.filter { it != "_id" }
         val hint =
             buildString {
-                append("Leave out _id to have one generated.")
-                if (known.isNotEmpty()) append(" Fields on this page: ${known.take(12).joinToString(", ")}${if (known.size > 12) ", …" else ""}.")
+                append(tr("Leave out _id to have one generated."))
+                if (known.isNotEmpty()) append(tr(" Fields on this page: {0}{1}.", known.take(12).joinToString(", "), if (known.size > 12) ", …" else ""))
             }
         return RecordTemplate(JsonObject(emptyMap()), hint)
     }
 
     override fun plan(row: Int?, base: JsonObject, edited: JsonObject): RecordPlan = planned(row, base, edited).first
 
-    override fun apply(row: Int?, base: JsonObject, edited: JsonObject): Int? = undoable(if (row == null) "new document from JSON" else "document edit as JSON", row ?: rowCount) {
+    override fun apply(row: Int?, base: JsonObject, edited: JsonObject): Int? = undoable(if (row == null) tr("new document from JSON") else tr("document edit as JSON"), row ?: rowCount) {
         val (plan, steps) = planned(row, base, edited)
         if (!plan.canApply) return@undoable null
         val target = row ?: addRow()
@@ -590,11 +591,11 @@ internal class DocumentEditModel(
         for (diff in diffRecord(if (row == null) JsonObject(emptyMap()) else base, edited) { a, b -> a == b }) {
             val name = diff.name
             if (name == "_id" && !isNew) {
-                problems += if (diff is FieldDiff.Removed) "Keep _id: it's how the document is found" else "_id can't be changed: it's how the document is found. Copy the document to a new one instead."
+                problems += if (diff is FieldDiff.Removed) tr("Keep _id: it's how the document is found") else tr("_id can't be changed: it's how the document is found. Copy the document to a new one instead.")
                 continue
             }
             if (!editableName(name)) {
-                problems += "“$name”: field names with dots or a leading \$ can't be edited here"
+                problems += tr("“{0}”: field names with dots or a leading \$ can't be edited here", name)
                 continue
             }
             when (diff) {
@@ -612,14 +613,14 @@ internal class DocumentEditModel(
             }
             changes += diff.change()
         }
-        if (kept.isNotEmpty()) notes += "Numbers keep their field's type: ${kept.joinToString(", ")}"
-        if (retyped.isNotEmpty()) notes += "Changes type: ${retyped.joinToString(", ")}"
+        if (kept.isNotEmpty()) notes += tr("Numbers keep their field's type: {0}", kept.joinToString(", "))
+        if (retyped.isNotEmpty()) notes += tr("Changes type: {0}", retyped.joinToString(", "))
         if (row != null && !isNew) {
             val current = recordJson(row)
             val both = changes.map { it.name }.filter { current[it] != base[it] }
-            if (both.isNotEmpty()) notes += "Also edited in the grid since this was opened: ${both.joinToString(", ")}. The JSON's values replace those edits."
+            if (both.isNotEmpty()) notes += tr("Also edited in the grid since this was opened: {0}. The JSON's values replace those edits.", both.joinToString(", "))
         }
-        if (!isNew && changes.isNotEmpty()) notes += "Only the fields you changed are written, and only while they still hold the values they had when loaded."
+        if (!isNew && changes.isNotEmpty()) notes += tr("Only the fields you changed are written, and only while they still hold the values they had when loaded.")
         return RecordPlan(changes, problems, notes, isNew = row == null) to steps
     }
 
@@ -682,12 +683,12 @@ internal fun convert(kind: BsonKind?, text: String, zone: ZoneId = ZoneId.system
     return when (kind) {
         BsonKind.String -> Converted.Ok(text, JsonPrimitive(text).toString())
         BsonKind.Int32, BsonKind.Int64 -> {
-            val number = wholeNumber(input) ?: return invalid("“$input” isn't a whole number; the field holds ${kind.label}s")
+            val number = wholeNumber(input) ?: return invalid(tr("“{0}” isn't a whole number; the field holds {1}s", input, kind.label))
             when {
                 kind == BsonKind.Int32 && number in IntRange32 -> Converted.Ok(number.toString(), number.toString())
                 number in IntRange64 ->
-                    Converted.Ok(number.toString(), wrapped("\$numberLong", number.toString()), "Stored as a 64-bit integer".takeIf { kind == BsonKind.Int32 })
-                else -> invalid("Too large for a 64-bit integer")
+                    Converted.Ok(number.toString(), wrapped("\$numberLong", number.toString()), tr("Stored as a 64-bit integer").takeIf { kind == BsonKind.Int32 })
+                else -> invalid(tr("Too large for a 64-bit integer"))
             }
         }
         BsonKind.Double ->
@@ -696,37 +697,37 @@ internal fun convert(kind: BsonKind?, text: String, zone: ZoneId = ZoneId.system
                 "infinity", "inf", "+infinity" -> Converted.Ok("Infinity", wrapped("\$numberDouble", "Infinity"))
                 "-infinity", "-inf" -> Converted.Ok("-Infinity", wrapped("\$numberDouble", "-Infinity"))
                 else -> {
-                    val number = input.replace("_", "").toBigDecimalOrNull() ?: return invalid("“$input” isn't a number")
+                    val number = input.replace("_", "").toBigDecimalOrNull() ?: return invalid(tr("“{0}” isn't a number", input))
                     val double = number.toDouble()
-                    if (double.isInfinite()) return invalid("Too large for a double")
+                    if (double.isInfinite()) return invalid(tr("Too large for a double"))
                     Converted.Ok(input, double.toString())
                 }
             }
         BsonKind.Decimal -> {
-            val number = input.replace("_", "").toBigDecimalOrNull() ?: return invalid("“$input” isn't a number")
+            val number = input.replace("_", "").toBigDecimalOrNull() ?: return invalid(tr("“{0}” isn't a number", input))
             Converted.Ok(number.toPlainString(), wrapped("\$numberDecimal", number.toPlainString()))
         }
         BsonKind.Bool ->
             when (input.lowercase()) {
                 "true", "1", "yes", "t" -> Converted.Ok("true", "true")
                 "false", "0", "no", "f" -> Converted.Ok("false", "false")
-                else -> invalid("“$input” isn't true or false")
+                else -> invalid(tr("“{0}” isn't true or false", input))
             }
         BsonKind.Date -> {
-            val instant = instant(input, zone) ?: return invalid("“$input” isn't a date; e.g. 2026-10-31T09:30:00Z or 2026-10-31 09:30")
+            val instant = instant(input, zone) ?: return invalid(tr("“{0}” isn't a date; e.g. 2026-10-31T09:30:00Z or 2026-10-31 09:30", input))
             val iso = instant.toString()
-            Converted.Ok(iso, wrapped("\$date", iso), "Local time, stored as $iso".takeIf { !HasZone.containsMatchIn(input) })
+            Converted.Ok(iso, wrapped("\$date", iso), tr("Local time, stored as {0}", iso).takeIf { !HasZone.containsMatchIn(input) })
         }
         BsonKind.ObjectId -> {
-            val hex = ObjectIdText.matchEntire(input)?.groupValues?.get(1)?.lowercase() ?: return invalid("An ObjectId is 24 hex digits")
+            val hex = ObjectIdText.matchEntire(input)?.groupValues?.get(1)?.lowercase() ?: return invalid(tr("An ObjectId is 24 hex digits"))
             Converted.Ok("ObjectId($hex)", wrapped("\$oid", hex))
         }
         BsonKind.Object, BsonKind.Array -> {
-            val (open, name) = if (kind == BsonKind.Object) '{' to "a document: {…}" else '[' to "an array: […]"
-            if (!input.startsWith(open)) return invalid("Enter $name")
-            if (!balanced(input)) return invalid("Unbalanced brackets or quotes")
+            val (open, name) = if (kind == BsonKind.Object) '{' to tr("a document: {…}") else '[' to tr("an array: […]")
+            if (!input.startsWith(open)) return invalid(tr("Enter {0}", name))
+            if (!balanced(input)) return invalid(tr("Unbalanced brackets or quotes"))
             // Strict or lenient JSON is checked here; shell syntax like ObjectId('…') is the server's to read.
-            val note = if (runCatching { Lenient.parseToJsonElement(input) }.isFailure) "Shell syntax: checked by the server on save" else null
+            val note = if (runCatching { Lenient.parseToJsonElement(input) }.isFailure) tr("Shell syntax: checked by the server on save") else null
             Converted.Ok(input, input, note)
         }
         else -> infer(input, text, zone)
@@ -738,7 +739,7 @@ private fun infer(input: String, text: String, zone: ZoneId): Converted {
     if (input.length >= 2 && (input.first() == '\'' || input.first() == '"') && input.last() == input.first()) {
         return Converted.Ok(input, JsonPrimitive(input.substring(1, input.length - 1)).toString(), "String")
     }
-    val note: (BsonKind) -> String = { "Stored as ${if (it == BsonKind.Int32) "an int" else "a" + (if (it.label.first() in "aeiou") "n " else " ") + it.label}; quote it for a string" }
+    val note: (BsonKind) -> String = { tr("Stored as {0}; quote it for a string", if (it.label.first() in "aeiou") tr("an {0}", it.label) else tr("a {0}", it.label)) }
     wholeNumber(input)?.takeIf { input.none { c -> c == '.' || c == 'e' || c == 'E' } }?.let { number ->
         val kind = if (number in IntRange32) BsonKind.Int32 else BsonKind.Int64
         return (convert(kind, input) as? Converted.Ok)?.copy(text = input, note = note(kind)) ?: convert(kind, input)

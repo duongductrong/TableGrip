@@ -1,5 +1,6 @@
 package dev.tablegrip.app.grid
 
+import dev.tablegrip.core.i18n.tr
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -32,7 +33,7 @@ interface RecordEditor {
         get() = true
 
     /** Which record [row] is, for the editor's title: its key where it has one. */
-    fun describeRecord(row: Int): String = "${recordNoun.replaceFirstChar(Char::uppercase)} ${row + 1} on this page"
+    fun describeRecord(row: Int): String = tr("{0} {1} on this page", recordNoun.replaceFirstChar(Char::uppercase), row + 1)
 
     /** The whole record as the editor opens it: every column or field, hidden or not, with pending edits applied. */
     fun recordJson(row: Int): JsonObject
@@ -123,7 +124,7 @@ sealed interface ParsedRecord {
     /** [line] and [column] are 1-based; null when the parser didn't say where. */
     data class Invalid(val message: String, val line: Int? = null, val column: Int? = null, val offset: Int? = null) : ParsedRecord {
         val text: String
-            get() = if (line != null && column != null) "Line $line, column $column: $message" else message
+            get() = if (line != null && column != null) tr("Line {0}, column {1}: {2}", line, column, message) else message
     }
 }
 
@@ -137,8 +138,8 @@ private val RecordJson = Json {
 private val ErrorOffset = Regex("""offset (\d+)""")
 
 /** Parses the editor's text as one JSON object, with errors pointed at a line and column. */
-fun parseRecord(text: String, noun: String = "row"): ParsedRecord {
-    if (text.isBlank()) return ParsedRecord.Invalid("Enter the $noun as a JSON object: { \"name\": value, … }")
+fun parseRecord(text: String, noun: String = tr("row")): ParsedRecord {
+    if (text.isBlank()) return ParsedRecord.Invalid(tr("Enter the {0} as a JSON object: { \"name\": value, … }", noun))
     val element =
         try {
             RecordJson.parseToJsonElement(text)
@@ -149,7 +150,7 @@ fun parseRecord(text: String, noun: String = "row"): ParsedRecord {
         }
     return when (element) {
         is JsonObject -> ParsedRecord.Ok(element)
-        else -> ParsedRecord.Invalid("A $noun is one JSON object, in { }")
+        else -> ParsedRecord.Invalid(tr("A {0} is one JSON object, in { }", noun))
     }
 }
 
@@ -173,11 +174,11 @@ private fun friendlyParseError(raw: String): String {
             .trim()
             .trimEnd('.')
     return when {
-        reason.isEmpty() -> "Not valid JSON"
-        "EOF" in reason -> "The JSON ends too early; check for a missing } or ]"
-        reason.startsWith("Expected quotation mark") || "unquoted" in reason.lowercase() -> "Names and text values need double quotes"
-        reason.startsWith("Expected end of the object or comma") -> "Expected a comma or }"
-        reason.startsWith("Expected end of the array or comma") -> "Expected a comma or ]"
+        reason.isEmpty() -> tr("Not valid JSON")
+        "EOF" in reason -> tr("The JSON ends too early; check for a missing } or ]")
+        reason.startsWith("Expected quotation mark") || "unquoted" in reason.lowercase() -> tr("Names and text values need double quotes")
+        reason.startsWith("Expected end of the object or comma") -> tr("Expected a comma or }")
+        reason.startsWith("Expected end of the array or comma") -> tr("Expected a comma or ]")
         else -> reason.replaceFirstChar { it.uppercase() }
     }
 }

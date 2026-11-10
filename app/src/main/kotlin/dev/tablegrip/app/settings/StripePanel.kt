@@ -1,5 +1,6 @@
 package dev.tablegrip.app.settings
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,7 +28,7 @@ import org.jetbrains.jewel.ui.icons.AllIconsKeys
 internal fun StripePanel(app: AppState) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(
-            "Settings stays on the stripe. A button can also be hidden by right-clicking it.",
+            tr("Settings stays on the stripe. A button can also be hidden by right-clicking it."),
             color = JewelTheme.globalColors.text.info,
             fontSize = 12.sp,
             modifier = Modifier.padding(bottom = 4.dp),
@@ -41,11 +42,11 @@ internal fun StripePanel(app: AppState) {
                     })
                     Text(item.label, Modifier.width(180.dp))
                     Text(groupLabel(group), Modifier.width(90.dp), color = JewelTheme.globalColors.text.info, fontSize = 12.sp)
-                    Tooltip({ Text("Move up") }) {
-                        IconButton(onClick = { move(app, items, index, -1) }, enabled = index > 0) { Icon(AllIconsKeys.General.ArrowUp, "Move up") }
+                    Tooltip({ Text(tr("Move up")) }) {
+                        IconButton(onClick = { move(app, items, index, -1) }, enabled = index > 0) { Icon(AllIconsKeys.General.ArrowUp, tr("Move up")) }
                     }
-                    Tooltip({ Text("Move down") }) {
-                        IconButton(onClick = { move(app, items, index, 1) }, enabled = index < items.lastIndex) { Icon(AllIconsKeys.General.ArrowDown, "Move down") }
+                    Tooltip({ Text(tr("Move down")) }) {
+                        IconButton(onClick = { move(app, items, index, 1) }, enabled = index < items.lastIndex) { Icon(AllIconsKeys.General.ArrowDown, tr("Move down")) }
                     }
                 }
             }
@@ -55,10 +56,10 @@ internal fun StripePanel(app: AppState) {
 
 private fun groupLabel(group: StripeGroup): String =
     when (group) {
-        StripeGroup.Tools -> "Tool windows"
-        StripeGroup.Actions -> "Actions"
-        StripeGroup.Bottom -> "Bottom left"
-        StripeGroup.Right -> "Right edge"
+        StripeGroup.Tools -> tr("Tool windows")
+        StripeGroup.Actions -> tr("Actions")
+        StripeGroup.Bottom -> tr("Bottom left")
+        StripeGroup.Right -> tr("Right edge")
     }
 
 /** Swaps [items]`[index]` with its neighbour [delta] away, writing the whole order so it no longer depends on defaults. */

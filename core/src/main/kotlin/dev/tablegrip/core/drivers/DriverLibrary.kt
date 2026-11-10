@@ -1,5 +1,6 @@
 package dev.tablegrip.core.drivers
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.TableGripPaths
 import dev.tablegrip.core.connection.ConnectionConfig
 import dev.tablegrip.core.connection.DriverId
@@ -66,7 +67,7 @@ sealed interface DriverResolution {
 }
 
 class DriverNotInstalledException(val driver: DriverId) :
-    SQLException("${driver.displayName} isn't installed. Edit the connection to download it or choose its jar.")
+    SQLException(tr("{0} isn't installed. Edit the connection to download it or choose its jar.", driver.displayName))
 
 class DriverDownloadException(message: String, cause: Throwable? = null) : IOException(message, cause)
 
@@ -134,7 +135,7 @@ class DriverLibrary(
     /** Checks that [jars] hold a JDBC driver, returning its class name. */
     suspend fun inspectJars(jars: List<Path>): String =
         withContext(Dispatchers.IO) {
-            jars.firstOrNull { !it.isRegularFile() }?.let { throw IOException("$it doesn't exist.") }
+            jars.firstOrNull { !it.isRegularFile() }?.let { throw IOException(tr("{0} doesn't exist.", it)) }
             instantiate(DriverId.Generic, jars, discover = true).javaClass.name
         }
 
@@ -156,7 +157,7 @@ class DriverLibrary(
         for (artifact in manifest.artifacts) {
             val jar = dir.resolve(artifact.fileName)
             if (!jar.isRegularFile() || sha256(jar) != artifact.sha256) {
-                throw SQLException("${driver.displayName} ${manifest.version} is damaged: ${artifact.fileName} doesn't match its checksum. Download it again.")
+                throw SQLException(tr("{0} {1} is damaged: {2} doesn't match its checksum. Download it again.", driver.displayName, manifest.version, artifact.fileName))
             }
         }
         return manifest to manifest.artifacts.map { dir.resolve(it.fileName) }
@@ -174,7 +175,7 @@ class DriverLibrary(
 
     private fun openClient(driver: DriverId): Any {
         if (driver.builtIn) return Class.forName(driver.className).getDeclaredConstructor().newInstance()
-        val adapter = driver.adapter ?: throw IllegalArgumentException("${driver.displayName} is a JDBC driver")
+        val adapter = driver.adapter ?: throw IllegalArgumentException(tr("{0} is a JDBC driver", driver.displayName))
         // Tests and the adapter's own module have it, and its client, on the classpath.
         if (useClasspath) runCatching { Class.forName(driver.className, true, DriverLibrary::class.java.classLoader) }.getOrNull()?.let {
             return it.getDeclaredConstructor().newInstance()
@@ -188,7 +189,7 @@ class DriverLibrary(
     private fun adapterJar(name: String): Path {
         val bytes =
             DriverLibrary::class.java.classLoader.getResourceAsStream("engines/$name.jar")?.use { it.readBytes() }
-                ?: throw SQLException("This build of TableGrip has no $name adapter.")
+                ?: throw SQLException(tr("This build of TableGrip has no {0} adapter.", name))
         val digest = MessageDigest.getInstance("SHA-256").digest(bytes).toHex().take(16)
         val jar = root.resolve("adapters").createDirectories().resolve("$name-$digest.jar")
         if (!jar.isRegularFile()) {
@@ -210,7 +211,7 @@ class DriverLibrary(
             if (type.classLoader === loader && Driver::class.java.isAssignableFrom(type)) return type.getDeclaredConstructor().newInstance() as Driver
         }
         loader.close()
-        throw SQLException("No JDBC driver found in ${jars.joinToString { it.fileName.toString() }}" + (if (className.isBlank()) "." else " (looked for $className)."))
+        throw SQLException(tr("No JDBC driver found in {0}", jars.joinToString { it.fileName.toString() }) + (if (className.isBlank()) "." else tr(" (looked for {0}).", className)))
     }
 
     private fun classpathDriverClass(driver: DriverId): Class<*>? =
@@ -223,7 +224,7 @@ class DriverLibrary(
      * [onProgress] gets bytes done and the total. Concurrent calls for the same driver share one download.
      */
     suspend fun install(driver: DriverId, onProgress: (done: Long, total: Long) -> Unit = { _, _ -> }) {
-        val locked = locked(driver) ?: throw DriverDownloadException("${driver.displayName} isn't in TableGrip's driver catalog; choose its jar instead.")
+        val locked = locked(driver) ?: throw DriverDownloadException(tr("{0} isn't in TableGrip's driver catalog; choose its jar instead.", driver.displayName))
         installs.computeIfAbsent(locked.id) { Mutex() }.withLock {
             if (installed(locked.id).any { it.version == locked.version }) return
             withContext(Dispatchers.IO) {
@@ -253,10 +254,10 @@ class DriverLibrary(
                 try {
                     http.send(HttpRequest.newBuilder(URI(url)).timeout(Duration.ofMinutes(5)).GET().build(), HttpResponse.BodyHandlers.ofInputStream())
                 } catch (e: IOException) {
-                    throw DriverDownloadException("Couldn't reach $repository: ${e.message ?: e.javaClass.simpleName}", e)
+                    throw DriverDownloadException(tr("Couldn't reach {0}: {1}", repository, e.message ?: e.javaClass.simpleName), e)
                 }
             response.body().use { body ->
-                if (response.statusCode() != 200) throw DriverDownloadException("$url returned HTTP ${response.statusCode()}.")
+                if (response.statusCode() != 200) throw DriverDownloadException(tr("{0} returned HTTP {1}.", url, response.statusCode()))
                 val digest = MessageDigest.getInstance("SHA-256")
                 var read = 0L
                 temp.outputStream().use { out ->
@@ -266,7 +267,7 @@ class DriverLibrary(
                         val n = body.read(buffer)
                         if (n < 0) break
                         read += n
-                        if (read > artifact.size) throw DriverDownloadException("${artifact.fileName} is larger than expected; refusing it.")
+                        if (read > artifact.size) throw DriverDownloadException(tr("{0} is larger than expected; refusing it.", artifact.fileName))
                         digest.update(buffer, 0, n)
                         out.write(buffer, 0, n)
                         onProgress(read)
@@ -274,7 +275,7 @@ class DriverLibrary(
                 }
                 val sha = digest.digest().toHex()
                 if (read != artifact.size || sha != artifact.sha256) {
-                    throw DriverDownloadException("${artifact.fileName} from $repository doesn't match the expected checksum; refusing it.")
+                    throw DriverDownloadException(tr("{0} from {1} doesn't match the expected checksum; refusing it.", artifact.fileName, repository))
                 }
             }
             Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
@@ -369,8 +370,8 @@ class DriverLibrary(
      */
     suspend fun useJars(driver: DriverId, jars: List<Path>) =
         withContext(Dispatchers.IO) {
-            require(jars.isNotEmpty()) { "Choose at least one jar." }
-            jars.firstOrNull { !it.isRegularFile() }?.let { throw IOException("$it doesn't exist.") }
+            require(jars.isNotEmpty()) { tr("Choose at least one jar.") }
+            jars.firstOrNull { !it.isRegularFile() }?.let { throw IOException(tr("{0} doesn't exist.", it)) }
             instantiate(driver, jars, discover = true)
             writeUserJars(readUserJars() + (driver.name to jars.map { it.toAbsolutePath().toString() }))
             loaded.remove(driver)

@@ -1,5 +1,7 @@
 package dev.tablegrip.core.sql
 
+import dev.tablegrip.core.i18n.tr
+
 enum class StatementKind {
     /** Only reads data: SELECT, SHOW, EXPLAIN without ANALYZE... */
     Read,
@@ -44,9 +46,9 @@ class SqlClassifier(syntax: SqlSyntax) {
         val hasWhere = topLevelIndexOf(words, setOf("WHERE"), from = verbIndex) != null
         val danger =
             when {
-                (verb == "DELETE" || verb == "UPDATE") && !hasWhere -> "$verb without WHERE affects every row"
-                verb == "DROP" -> "DROP permanently removes ${words.getOrNull(verbIndex + 1)?.lowercase() ?: "an object"}"
-                verb == "TRUNCATE" -> "TRUNCATE removes every row"
+                (verb == "DELETE" || verb == "UPDATE") && !hasWhere -> tr("{0} without WHERE affects every row", verb)
+                verb == "DROP" -> "DROP permanently removes ${words.getOrNull(verbIndex + 1)?.lowercase() ?: tr("an object")}"
+                verb == "TRUNCATE" -> tr("TRUNCATE removes every row")
                 verb == "ALTER" && "DROP" in words.drop(verbIndex) -> "ALTER … DROP removes part of a schema object"
                 else -> null
             }

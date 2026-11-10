@@ -1,5 +1,6 @@
 package dev.tablegrip.core.datafile
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.TableGripPaths
 import java.nio.file.Files
 import java.nio.file.Path
@@ -70,7 +71,7 @@ internal class WorkingCopy(val path: Path, private val connection: Connection) :
      */
     private fun loadTable(table: SourceTable, onRow: () -> Unit): String {
         val columns = table.columns
-        if (columns.isEmpty()) throw DataFileException("\"${table.name}\" has no columns")
+        if (columns.isEmpty()) throw DataFileException(tr("\"{0}\" has no columns", table.name))
         val staging = "_tablegrip_load_${UUID.randomUUID().toString().replace("-", "")}"
         val stagingColumns = columns.indices.map { "c$it" }
         connection.createStatement().use { it.execute("CREATE TEMP TABLE ${quote(staging)} (${stagingColumns.joinToString { quote(it) }})") }

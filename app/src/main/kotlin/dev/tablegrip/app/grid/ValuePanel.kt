@@ -1,5 +1,6 @@
 package dev.tablegrip.app.grid
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -55,7 +56,7 @@ import org.jetbrains.jewel.ui.icons.AllIconsKeys
 private val PrettyJson = Json { prettyPrint = true }
 
 /** How the value panel shows a value; only the ones that fit the value are offered. */
-private enum class ValueView(val label: String) { Text("Text"), Tree("Tree"), Hex("Hex"), Image("Image") }
+private enum class ValueView(val label: String) { Text(tr("Text")), Tree(tr("Tree")), Hex(tr("Hex")), Image(tr("Image")) }
 
 /** Shows (and, for editable cells, edits) the full value of the grid's focused cell. */
 @Composable
@@ -64,7 +65,7 @@ fun ValuePanel(model: GridModel, state: DataGridState, modifier: Modifier = Modi
     Column(modifier.fillMaxSize()) {
         if (focus == null) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Select a cell to see its value", color = JewelTheme.globalColors.text.info)
+                Text(tr("Select a cell to see its value"), color = JewelTheme.globalColors.text.info)
             }
             return@Column
         }
@@ -107,8 +108,8 @@ fun ValuePanel(model: GridModel, state: DataGridState, modifier: Modifier = Modi
             val size =
                 when {
                     value == null -> "NULL"
-                    binary != null -> listOfNotNull(binaryKind(binary.bytes), "${binary.totalSize} bytes").joinToString(" · ")
-                    else -> "${value.length} chars"
+                    binary != null -> listOfNotNull(binaryKind(binary.bytes), tr("{0} bytes", binary.totalSize)).joinToString(" · ")
+                    else -> tr("{0} chars", value.length)
                 }
             Text(size, color = JewelTheme.globalColors.text.info)
         }
@@ -149,28 +150,28 @@ fun ValuePanel(model: GridModel, state: DataGridState, modifier: Modifier = Modi
         Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             if ((json != null || kind == EditKind.Json) && view == ValueView.Text) {
                 OutlinedButton(onClick = { reformatJson(text.text.toString(), pretty = true)?.let(text::setTextAndPlaceCursorAtEnd) }) {
-                    Text("Format JSON")
+                    Text(tr("Format JSON"))
                 }
                 if (editor != null) {
                     OutlinedButton(onClick = { reformatJson(text.text.toString(), pretty = false)?.let(text::setTextAndPlaceCursorAtEnd) }) {
-                        Text("Minify")
+                        Text(tr("Minify"))
                     }
                 }
             }
             if (editor != null && kind == EditKind.Uuid) {
-                OutlinedButton(onClick = { text.setTextAndPlaceCursorAtEnd(Uuids.v4().toString()) }) { Text("New UUID") }
-                OutlinedButton(onClick = { text.setTextAndPlaceCursorAtEnd(Uuids.v7().toString()) }) { Text("New v7") }
+                OutlinedButton(onClick = { text.setTextAndPlaceCursorAtEnd(Uuids.v4().toString()) }) { Text(tr("New UUID")) }
+                OutlinedButton(onClick = { text.setTextAndPlaceCursorAtEnd(Uuids.v7().toString()) }) { Text(tr("New v7")) }
             }
-            OutlinedButton(onClick = { copyToClipboard(text.text.toString()) }) { Text("Copy") }
+            OutlinedButton(onClick = { copyToClipboard(text.text.toString()) }) { Text(tr("Copy")) }
             Box(Modifier.weight(1f))
             if (editor != null) {
-                if (editor.canSetDefault(focus.row, column)) OutlinedButton(onClick = { editor.setDefault(focus.row, column) }) { Text("Set DEFAULT") }
+                if (editor.canSetDefault(focus.row, column)) OutlinedButton(onClick = { editor.setDefault(focus.row, column) }) { Text(tr("Set DEFAULT")) }
                 // In a text column, empty and NULL are different values; the text area alone can't say which.
-                if (kind == EditKind.Text && value != "") OutlinedButton(onClick = { editor.setValue(focus.row, column, "") }) { Text("Empty") }
-                if (editor.canSetNull(focus.row, column)) OutlinedButton(onClick = { editor.setValue(focus.row, column, null) }) { Text("Set NULL") }
+                if (kind == EditKind.Text && value != "") OutlinedButton(onClick = { editor.setValue(focus.row, column, "") }) { Text(tr("Empty")) }
+                if (editor.canSetNull(focus.row, column)) OutlinedButton(onClick = { editor.setValue(focus.row, column, null) }) { Text(tr("Set NULL")) }
                 if (kind != EditKind.Boolean || view != ValueView.Text) {
                     DefaultButton(onClick = { apply(editor, focus.row, column, check) }, enabled = typed != value.orEmpty() && check !is EditCheck.Invalid) {
-                        Text("Apply")
+                        Text(tr("Apply"))
                     }
                 }
             }
@@ -192,10 +193,10 @@ private fun apply(editor: GridEditor, row: Int, column: Int, check: EditCheck?) 
 private fun BooleanChoice(edit: ColumnEdit, value: String?, onChange: (String?) -> Unit) {
     val current = edit.booleanOf(value)
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        RadioButtonRow("True", selected = value != null && current == true, onClick = { onChange(edit.booleanText(true)) })
-        RadioButtonRow("False", selected = value != null && current == false, onClick = { onChange(edit.booleanText(false)) })
+        RadioButtonRow(tr("True"), selected = value != null && current == true, onClick = { onChange(edit.booleanText(true)) })
+        RadioButtonRow(tr("False"), selected = value != null && current == false, onClick = { onChange(edit.booleanText(false)) })
         if (edit.nullable) RadioButtonRow("NULL", selected = value == null, onClick = { onChange(null) })
-        if (value != null && current == null) Text("“$value” isn't a boolean", color = ErrorColor)
+        if (value != null && current == null) Text(tr("“{0}” isn't a boolean", value), color = ErrorColor)
     }
 }
 
@@ -208,7 +209,7 @@ private fun TimestampInfo(value: TimestampValue) {
                 Text(text, style = JewelTheme.editorTextStyle)
             }
         }
-        if (!value.hadOffset) Text("No time zone in the value: read as UTC", color = JewelTheme.globalColors.text.info)
+        if (!value.hadOffset) Text(tr("No time zone in the value: read as UTC"), color = JewelTheme.globalColors.text.info)
     }
 }
 
@@ -232,8 +233,8 @@ internal fun JsonTree(root: JsonElement, recordAction: (@Composable (Int) -> Uni
     }
     Column(Modifier.fillMaxSize()) {
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            OutlinedButton(onClick = { expanded = jsonContainerPaths(root) }) { Text("Expand All") }
-            OutlinedButton(onClick = { expanded = emptySet() }) { Text("Collapse All") }
+            OutlinedButton(onClick = { expanded = jsonContainerPaths(root) }) { Text(tr("Expand All")) }
+            OutlinedButton(onClick = { expanded = emptySet() }) { Text(tr("Collapse All")) }
         }
         ScrollableLines(width, Modifier.padding(top = 6.dp)) {
             items(lines, key = { it.path }) { line ->
@@ -282,7 +283,7 @@ private fun HexView(binary: BinaryText.Preview) {
     Column(Modifier.fillMaxSize()) {
         TextArea(state = state, modifier = Modifier.weight(1f).fillMaxWidth(), readOnly = true, textStyle = JewelTheme.editorTextStyle)
         if (binary.totalSize > minOf(binary.bytes.size, 4096)) {
-            Text("Showing the first ${minOf(binary.bytes.size, 4096)} of ${binary.totalSize} bytes", color = JewelTheme.globalColors.text.info)
+            Text(tr("Showing the first {0} of {1} bytes", minOf(binary.bytes.size, 4096), binary.totalSize), color = JewelTheme.globalColors.text.info)
         }
     }
 }

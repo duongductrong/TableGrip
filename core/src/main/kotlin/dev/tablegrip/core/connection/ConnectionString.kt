@@ -1,5 +1,6 @@
 package dev.tablegrip.core.connection
 
+import dev.tablegrip.core.i18n.tr
 import java.nio.file.Path
 
 /**
@@ -35,7 +36,7 @@ object ConnectionString {
 
     fun parse(input: String): ParsedConnection {
         val text = input.trim()
-        if (text.isEmpty()) throw ConnectionStringException("The connection string is empty.")
+        if (text.isEmpty()) throw ConnectionStringException(tr("The connection string is empty."))
         val lower = text.lowercase()
         return when {
             lower.startsWith("postgresql://") || lower.startsWith("postgres://") -> libpqUri(text)
@@ -43,7 +44,7 @@ object ConnectionString {
             // MariaDB Connector/J takes jdbc:mysql: URLs too, and unlike Connector/J TableGrip can download it.
             lower.startsWith("jdbc:mysql") -> mysqlFamily(text, DatabaseType.MySQL, driver = null, prefix = "jdbc:mysql")
             lower.startsWith("jdbc:mariadb") -> mysqlFamily(text, DatabaseType.MariaDB, DriverId.MariaDB, prefix = "jdbc:mariadb")
-            lower.startsWith("mysqlx") -> throw ConnectionStringException("X Protocol (mysqlx://) isn't supported; use a mysql:// URL.")
+            lower.startsWith("mysqlx") -> throw ConnectionStringException(tr("X Protocol (mysqlx://) isn't supported; use a mysql:// URL."))
             lower.startsWith("mysql://") -> mysqlFamily(text, DatabaseType.MySQL, driver = null, prefix = "mysql")
             lower.startsWith("mariadb://") -> mysqlFamily(text, DatabaseType.MariaDB, driver = null, prefix = "mariadb")
             lower.startsWith("jdbc:sqlite:") -> sqlite(text.substring("jdbc:sqlite:".length))
@@ -70,7 +71,7 @@ object ConnectionString {
             lower.startsWith("jdbc:trino:") -> rawJdbc(text, DatabaseType.Trino, DriverId.Trino)
             // Any other driver works too, from the user's own jar.
             lower.startsWith("jdbc:") -> rawJdbc(text, DatabaseType.OtherJdbc, DriverId.Generic)
-            else -> throw ConnectionStringException("Unrecognized connection string. Try postgres://, mysql://, jdbc:… or a file path.")
+            else -> throw ConnectionStringException(tr("Unrecognized connection string. Try postgres://, mysql://, jdbc:… or a file path."))
         }
     }
 
@@ -116,7 +117,7 @@ object ConnectionString {
         val uri = splitUri(text.substringAfter("://"))
         val host = parseHosts(uri.hosts).singleOrNull()
         val warnings = mutableListOf<String>()
-        uri.path?.takeIf { it != "0" }?.let { warnings += "Database $it: pick it in the key browser; connections start on database 0." }
+        uri.path?.takeIf { it != "0" }?.let { warnings += tr("Database {0}: pick it in the key browser; connections start on database 0.", it) }
         return ParsedConnection(
             type = if (scheme.startsWith("valkey")) DatabaseType.Valkey else DatabaseType.Redis,
             driver = DriverId.Lettuce,
@@ -154,7 +155,7 @@ object ConnectionString {
             while (i < text.length && text[i] != '=' && !text[i].isWhitespace()) i++
             val key = text.substring(keyStart, i)
             while (i < text.length && text[i].isWhitespace()) i++
-            if (i >= text.length || text[i] != '=') throw ConnectionStringException("Missing \"=\" after \"$key\".")
+            if (i >= text.length || text[i] != '=') throw ConnectionStringException(tr("Missing \"=\" after \"{0}\".", key))
             i++
             while (i < text.length && text[i].isWhitespace()) i++
             val value = StringBuilder()
@@ -164,7 +165,7 @@ object ConnectionString {
                     if (text[i] == '\\' && i + 1 < text.length) i++
                     value.append(text[i++])
                 }
-                if (i >= text.length) throw ConnectionStringException("Unterminated quoted value for \"$key\".")
+                if (i >= text.length) throw ConnectionStringException(tr("Unterminated quoted value for \"{0}\".", key))
                 i++
             } else {
                 while (i < text.length && !text[i].isWhitespace()) {
@@ -220,7 +221,7 @@ object ConnectionString {
                 "hostaddr" ->
                     if (hosts.isEmpty()) {
                         hosts = value.split(',').map { it.trim() to null }
-                        warnings += "hostaddr is used as the host name."
+                        warnings += tr("hostaddr is used as the host name.")
                     }
                 "port" -> ports = value.split(',').mapNotNull { it.trim().toIntOrNull() }
                 "dbname" -> database = value
@@ -237,15 +238,15 @@ object ConnectionString {
                             "primary" -> "primary"
                             "standby" -> "secondary"
                             "prefer-standby" -> "preferSecondary"
-                            "read-write" -> "primary".also { warnings += "target_session_attrs=read-write is approximated by targetServerType=primary." }
-                            "read-only" -> "secondary".also { warnings += "target_session_attrs=read-only is approximated by targetServerType=secondary." }
-                            else -> null.also { warnings += "Unknown target_session_attrs \"$value\" ignored." }
+                            "read-write" -> "primary".also { warnings += tr("target_session_attrs=read-write is approximated by targetServerType=primary.") }
+                            "read-only" -> "secondary".also { warnings += tr("target_session_attrs=read-only is approximated by targetServerType=secondary.") }
+                            else -> null.also { warnings += tr("Unknown target_session_attrs \"{0}\" ignored.", value) }
                         }
                     mapped?.let { properties["targetServerType"] = it }
                 }
                 else -> {
                     properties[key] = value
-                    warnings += "\"$key\" isn't a pgjdbc property; it's passed to the driver as-is."
+                    warnings += tr("\"{0}\" isn't a pgjdbc property; it's passed to the driver as-is.", key)
                 }
             }
         }
@@ -254,7 +255,7 @@ object ConnectionString {
             // libpq: a single port applies to every host; otherwise ports pair up with hosts.
             var resolved = hosts.mapIndexed { i, (host, port) -> host to (port ?: ports.getOrNull(i) ?: ports.singleOrNull()) }
             if (resolved.any { it.first.startsWith("/") || it.first.startsWith("@") }) {
-                warnings += "Unix-domain sockets aren't supported by the JDBC driver; connecting to localhost instead."
+                warnings += tr("Unix-domain sockets aren't supported by the JDBC driver; connecting to localhost instead.")
                 resolved = resolved.map { (host, port) -> (if (host.startsWith("/") || host.startsWith("@")) "localhost" else host) to port }
             }
             if (resolved.isEmpty() && ports.isNotEmpty()) resolved = listOf("localhost" to ports.first())
@@ -291,7 +292,7 @@ object ConnectionString {
         val uriPart = text.substringAfter("//", "")
         val hostPart = uriPart.substringBefore('/').substringBefore('?').substringAfterLast('@')
         if (advanced || '(' in hostPart || hostPart.startsWith("address=") || hostPart.startsWith("[") && ',' in hostPart) {
-            if (!text.startsWith("jdbc:")) throw ConnectionStringException("This form needs a jdbc: URL.")
+            if (!text.startsWith("jdbc:")) throw ConnectionStringException(tr("This form needs a jdbc: URL."))
             val (url, password) = stripSecrets(text)
             val uri = splitUri(uriPart)
             return ParsedConnection(
@@ -301,7 +302,7 @@ object ConnectionString {
                 password = password,
                 database = uri.path,
                 url = url,
-                warnings = listOf("This URL form is kept as-is; edit it under Connect by → JDBC URL."),
+                warnings = listOf(tr("This URL form is kept as-is; edit it under Connect by → JDBC URL.")),
             )
         }
 
@@ -320,7 +321,7 @@ object ConnectionString {
                 "ssl" ->
                     if (!text.startsWith("jdbc:") && (value == "true" || value == "1")) {
                         properties["sslMode"] = "REQUIRED"
-                        warnings += "ssl=true is translated to sslMode=REQUIRED."
+                        warnings += tr("ssl=true is translated to sslMode=REQUIRED.")
                     } else properties[key] = value
                 else -> properties[key] = value
             }
@@ -424,7 +425,7 @@ object ConnectionString {
     private fun parseHosts(spec: String): List<Pair<String, Int?>> =
         spec.split(',').filter { it.isNotBlank() }.map { entry ->
             if (entry.startsWith("[")) {
-                val host = entry.substring(1, entry.indexOf(']').takeIf { it > 0 } ?: throw ConnectionStringException("Unclosed [ in host \"$entry\"."))
+                val host = entry.substring(1, entry.indexOf(']').takeIf { it > 0 } ?: throw ConnectionStringException(tr("Unclosed [ in host \"{0}\".", entry)))
                 host to entry.substringAfter("]:", "").toPortOrNull(entry)
             } else if (entry.count { it == ':' } == 1) {
                 decode(entry.substringBefore(':')) to entry.substringAfter(':').toPortOrNull(entry)
@@ -434,7 +435,7 @@ object ConnectionString {
         }
 
     private fun String.toPortOrNull(entry: String): Int? =
-        if (isEmpty()) null else toIntOrNull()?.takeIf { it in 1..65535 } ?: throw ConnectionStringException("Invalid port in \"$entry\".")
+        if (isEmpty()) null else toIntOrNull()?.takeIf { it in 1..65535 } ?: throw ConnectionStringException(tr("Invalid port in \"{0}\".", entry))
 
     /** Percent-decoding without URLDecoder's form semantics: '+' stays a plus. */
     private fun decode(value: String): String {

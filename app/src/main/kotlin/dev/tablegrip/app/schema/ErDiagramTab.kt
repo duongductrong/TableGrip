@@ -1,5 +1,6 @@
 package dev.tablegrip.app.schema
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -32,7 +33,7 @@ import kotlinx.coroutines.launch
  */
 class ErDiagramTab(private val app: AppState, val config: ConnectionConfig, val namespace: Namespace, val focus: TableRef?) : WorkspaceTab {
     override val connectionId: String = config.id
-    override val title: String = "ER: ${focus?.name ?: namespace.displayName}"
+    override val title: String = tr("ER: {0}", focus?.name ?: namespace.displayName)
     val dialect: SqlDialect = SqlDialect.of(config.type)
 
     var snapshot by mutableStateOf<SchemaSnapshot?>(null)
@@ -97,7 +98,7 @@ class ErDiagramTab(private val app: AppState, val config: ConnectionConfig, val 
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    error = "Couldn't read ${namespace.displayName}: ${e.message ?: e}"
+                    error = tr("Couldn't read {0}: {1}", namespace.displayName, e.message ?: e)
                 } finally {
                     loading = false
                     progress = null
@@ -182,7 +183,7 @@ class ErDiagramTab(private val app: AppState, val config: ConnectionConfig, val 
         if (query.isEmpty()) return
         val matches = tables.map { it.table }.filter { it.name.contains(query, ignoreCase = true) }
         if (matches.isEmpty()) {
-            app.status = "No table matching \"$query\""
+            app.status = tr("No table matching \"{0}\"", query)
             return
         }
         val next = matches.getOrNull(matches.indexOf(selected) + 1) ?: matches.first()
@@ -211,13 +212,13 @@ class ErDiagramTab(private val app: AppState, val config: ConnectionConfig, val 
 
     fun copyMermaid() {
         dev.tablegrip.app.ui.copyToClipboard(mermaid())
-        app.status = "Copied the Mermaid diagram of ${tables.size} table(s)"
+        app.status = tr("Copied the Mermaid diagram of {0} table(s)", tables.size)
     }
 
     fun saveMermaid(file: File) {
         runCatching { file.writeText(mermaid()) }
-            .onSuccess { app.status = "Saved ${file.path}" }
-            .onFailure { error = "Couldn't save ${file.name}: ${it.message}" }
+            .onSuccess { app.status = tr("Saved {0}", file.path) }
+            .onFailure { error = tr("Couldn't save {0}: {1}", file.name, it.message) }
     }
 
     fun savePng(file: File, dark: Boolean) {
@@ -225,8 +226,8 @@ class ErDiagramTab(private val app: AppState, val config: ConnectionConfig, val 
         val details = tables
         app.scope.launch(kotlinx.coroutines.Dispatchers.IO) {
             runCatching { ErImage.write(details, current, ErLayout.edges(details), dark, file) }
-                .onSuccess { app.status = "Saved ${file.path}" }
-                .onFailure { error = "Couldn't save ${file.name}: ${it.message}" }
+                .onSuccess { app.status = tr("Saved {0}", file.path) }
+                .onFailure { error = tr("Couldn't save {0}: {1}", file.name, it.message) }
         }
     }
 

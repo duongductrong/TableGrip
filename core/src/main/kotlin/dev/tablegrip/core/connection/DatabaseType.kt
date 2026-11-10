@@ -1,5 +1,6 @@
 package dev.tablegrip.core.connection
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.dialect.SqlDialect
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -162,11 +163,11 @@ class DatabaseType(
             )
         val ClickHouse =
             DatabaseType("ClickHouse", "ClickHouse", EngineFamily.ClickHouse, 8123, listOf(DriverId.ClickHouse), capabilities = setOf(Capability.Explain))
-        val DuckDB = DatabaseType("DuckDB", "DuckDB", EngineFamily.DuckDB, null, listOf(DriverId.DuckDB), databaseHint = "/path/to/file.duckdb or :memory:")
+        val DuckDB = DatabaseType("DuckDB", "DuckDB", EngineFamily.DuckDB, null, listOf(DriverId.DuckDB), databaseHint = tr("/path/to/file.duckdb or :memory:"))
 
         /** PostgreSQL-compatible distributed SQL (YSQL); its default port is 5433. */
         val YugabyteDB = DatabaseType("YugabyteDB", "YugabyteDB", EngineFamily.PostgreSQL, 5433, listOf(DriverId.PostgreSQL), databaseHint = "yugabyte")
-        val Oracle = DatabaseType("Oracle", "Oracle", EngineFamily.Oracle, 1521, listOf(DriverId.Oracle), databaseHint = "Service name, e.g. FREEPDB1 or ORCLPDB1")
+        val Oracle = DatabaseType("Oracle", "Oracle", EngineFamily.Oracle, 1521, listOf(DriverId.Oracle), databaseHint = tr("Service name, e.g. FREEPDB1 or ORCLPDB1"))
 
         /** No EXPLAIN statement: Firebird shows plans only through its own API. */
         val Firebird =
@@ -177,10 +178,10 @@ class DatabaseType(
                 3050,
                 listOf(DriverId.Firebird),
                 capabilities = setOf(Capability.Transactions, Capability.EditRows),
-                databaseHint = "/path/on/server/app.fdb or an alias",
+                databaseHint = tr("/path/on/server/app.fdb or an alias"),
             )
         val Trino =
-            DatabaseType("Trino", "Trino", EngineFamily.Trino, 8080, listOf(DriverId.Trino), capabilities = setOf(Capability.Explain), databaseHint = "catalog or catalog/schema")
+            DatabaseType("Trino", "Trino", EngineFamily.Trino, 8080, listOf(DriverId.Trino), capabilities = setOf(Capability.Explain), databaseHint = tr("catalog or catalog/schema"))
         val Redis = keyValue("Redis", "Redis")
         val Valkey = keyValue("Valkey", "Valkey")
         val KeyDB = keyValue("KeyDB", "KeyDB")
@@ -195,24 +196,24 @@ class DatabaseType(
 
         private fun keyValue(id: String, name: String) =
             DatabaseType(id, name, EngineFamily.Redis, 6379, listOf(DriverId.Lettuce), paradigm = Paradigm.KeyValue, capabilities = emptySet())
-        val H2 = DatabaseType("H2", "H2", EngineFamily.Generic, null, listOf(DriverId.H2), databaseHint = "/path/to/data (without .mv.db) or mem:test")
-        val HSQLDB = DatabaseType("HSQLDB", "HSQLDB", EngineFamily.Generic, null, listOf(DriverId.HSQLDB), databaseHint = "/path/to/data (without .script) or mem:test")
-        val Derby = DatabaseType("Derby", "Apache Derby", EngineFamily.Generic, null, listOf(DriverId.Derby), databaseHint = "/path/to/database directory")
+        val H2 = DatabaseType("H2", "H2", EngineFamily.Generic, null, listOf(DriverId.H2), databaseHint = tr("/path/to/data (without .mv.db) or mem:test"))
+        val HSQLDB = DatabaseType("HSQLDB", "HSQLDB", EngineFamily.Generic, null, listOf(DriverId.HSQLDB), databaseHint = tr("/path/to/data (without .script) or mem:test"))
+        val Derby = DatabaseType("Derby", "Apache Derby", EngineFamily.Generic, null, listOf(DriverId.Derby), databaseHint = tr("/path/to/database directory"))
 
         /**
          * Data files. They speak SQLite's SQL, because that's the engine their working copy runs on; the SQLite driver is
          * what a profile needs on this machine. Each one's reader and writer is a [dev.tablegrip.core.datafile.DataFileFormat].
          */
-        val CsvFile = dataFile("CsvFile", "CSV / TSV file", "/path/to/data.csv")
-        val ExcelFile = dataFile("ExcelFile", "Excel workbook", "/path/to/workbook.xlsx")
-        val JsonFile = dataFile("JsonFile", "JSON / NDJSON file", "/path/to/records.json")
+        val CsvFile = dataFile("CsvFile", tr("CSV / TSV file"), "/path/to/data.csv")
+        val ExcelFile = dataFile("ExcelFile", tr("Excel workbook"), "/path/to/workbook.xlsx")
+        val JsonFile = dataFile("JsonFile", tr("JSON / NDJSON file"), "/path/to/records.json")
 
         private fun dataFile(id: String, name: String, hint: String) =
             DatabaseType(id, name, EngineFamily.SQLite, null, listOf(DriverId.SQLite), connection = ConnectionKind.DataFile, databaseHint = hint)
 
         /** Any JDBC driver: the user brings its jar and the URL. */
         val OtherJdbc =
-            DatabaseType("OtherJdbc", "Other (JDBC driver)", EngineFamily.Generic, null, listOf(DriverId.Generic), connection = ConnectionKind.Url)
+            DatabaseType("OtherJdbc", tr("Other (JDBC driver)"), EngineFamily.Generic, null, listOf(DriverId.Generic), connection = ConnectionKind.Url)
 
         /** Every engine, in the order the connection dialog lists them. */
         val entries: List<DatabaseType> =
@@ -234,7 +235,7 @@ class DatabaseType(
 
         override fun deserialize(decoder: Decoder): DatabaseType {
             val id = decoder.decodeString()
-            return byId(id) ?: throw SerializationException("Unknown database type \"$id\". The profile may come from a newer version of TableGrip.")
+            return byId(id) ?: throw SerializationException(tr("Unknown database type \"{0}\". The profile may come from a newer version of TableGrip.", id))
         }
     }
 }

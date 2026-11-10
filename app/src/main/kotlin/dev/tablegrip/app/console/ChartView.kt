@@ -1,5 +1,6 @@
 package dev.tablegrip.app.console
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.app.ui.AppIcons
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -77,13 +78,13 @@ internal fun ResultChartView(tab: ConsoleTab, view: ResultSetView, modifier: Mod
                 val frame = chart.frame
                 when {
                     chart.profiles == null -> CircularProgressIndicator()
-                    chart.spec == null -> Text("No chart fits these columns: it takes a number, a date or a few categories.", color = info)
+                    chart.spec == null -> Text(tr("No chart fits these columns: it takes a number, a date or a few categories."), color = info)
                     chart.problems.isNotEmpty() ->
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             chart.problems.forEach { Text(it, color = JewelTheme.globalColors.text.error) }
                         }
                     frame == null -> CircularProgressIndicator()
-                    frame.points.isEmpty() -> Text("Nothing to draw: no row has values for both axes.", color = info)
+                    frame.points.isEmpty() -> Text(tr("Nothing to draw: no row has values for both axes."), color = info)
                     else -> CanvasChartRenderer.Chart(frame, ResultChartColors.current(), Modifier.fillMaxSize().padding(8.dp))
                 }
             }
@@ -103,20 +104,20 @@ private fun ChartNotices(tab: ConsoleTab, view: ResultSetView) {
     if (view.rows.truncated) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(AllIconsKeys.General.Warning, null, Modifier.size(14.dp))
-            Text("Drawn from the first ${view.rows.rows.size} rows fetched; the query returns more.", Modifier.weight(1f, fill = false))
+            Text(tr("Drawn from the first {0} rows fetched; the query returns more.", view.rows.rows.size), Modifier.weight(1f, fill = false))
             when {
-                canAggregate -> Link("Aggregate on server", onClick = { tab.aggregateChart(view) }, enabled = !tab.running)
-                view.chart.spec?.aggregates == false -> Text("Sum or count the measures to aggregate on the server.", color = info)
+                canAggregate -> Link(tr("Aggregate on server"), onClick = { tab.aggregateChart(view) }, enabled = !tab.running)
+                view.chart.spec?.aggregates == false -> Text(tr("Sum or count the measures to aggregate on the server."), color = info)
             }
         }
     }
     val notes =
         buildList {
             if (frame == null) return@buildList
-            if (frame.skippedRows > 0) add("${frame.skippedRows} rows without a value for x or y left out")
-            if (frame.omittedCategories > 0) add("${frame.omittedCategories} smaller categories not shown")
-            if (frame.mergedSeries > 0) add("${frame.mergedSeries} smaller series merged into Other")
-            if (frame.downsampled) add("thinned out to keep drawing fast, keeping the shape")
+            if (frame.skippedRows > 0) add(tr("{0} rows without a value for x or y left out", frame.skippedRows))
+            if (frame.omittedCategories > 0) add(tr("{0} smaller categories not shown", frame.omittedCategories))
+            if (frame.mergedSeries > 0) add(tr("{0} smaller series merged into Other", frame.mergedSeries))
+            if (frame.downsampled) add(tr("thinned out to keep drawing fast, keeping the shape"))
         }
     if (notes.isNotEmpty()) {
         Text(notes.joinToString(" · ").replaceFirstChar(Char::uppercase), Modifier.padding(horizontal = 10.dp, vertical = 4.dp), color = info)
@@ -132,25 +133,25 @@ private fun ChartEditor(tab: ConsoleTab, view: ResultSetView, modifier: Modifier
         if (tab.canAskAgent && profiles != null) ChartAsk(tab, view)
         val spec = chart.spec
         if (profiles == null || spec == null) {
-            if (profiles != null) Text("Pick a chart once the result has a number, a date or a few categories.", color = JewelTheme.globalColors.text.info)
+            if (profiles != null) Text(tr("Pick a chart once the result has a number, a date or a few categories."), color = JewelTheme.globalColors.text.info)
             return@Column
         }
         val plottable = profiles.filter { it.kind != ColumnKind.Other }
         val names = plottable.map { it.name }
 
-        Label("Chart")
+        Label(tr("Chart"))
         Combo(ChartType.entries.map { it.label }, ChartType.entries.indexOf(spec.type)) { index -> chart.edit { it.copy(type = ChartType.entries[index]) } }
 
-        Label("X axis")
+        Label(tr("X axis"))
         Combo(names, names.indexOf(spec.x)) { index -> chart.edit { it.copy(x = names[index]) } }
         val xKind = profiles.firstOrNull { it.name == spec.x }?.kind
         if (xKind == ColumnKind.Temporal && spec.type != ChartType.Scatter) {
-            Label("Group dates by")
+            Label(tr("Group dates by"))
             val buckets = listOf<TimeBucket?>(null) + TimeBucket.entries
-            Combo(buckets.map { it?.label ?: "None" }, buckets.indexOf(spec.bucket)) { index -> chart.edit { it.copy(bucket = buckets[index]) } }
+            Combo(buckets.map { it?.label ?: tr("None") }, buckets.indexOf(spec.bucket)) { index -> chart.edit { it.copy(bucket = buckets[index]) } }
         }
 
-        Label("Y axis")
+        Label(tr("Y axis"))
         spec.y.forEachIndexed { position, measure ->
             MeasureRow(measure, names, removable = spec.y.size > 1, onChange = { changed -> chart.edit { it.copy(y = it.y.toMutableList().also { list -> list[position] = changed }) } }) {
                 chart.edit { it.copy(y = it.y.filterIndexed { i, _ -> i != position }) }
@@ -158,22 +159,22 @@ private fun ChartEditor(tab: ConsoleTab, view: ResultSetView, modifier: Modifier
         }
         if (spec.type != ChartType.Pie && spec.series == null && spec.y.size < ChartSpec.MaxMeasures) {
             val next = profiles.firstOrNull { p -> p.kind == ColumnKind.Numeric && spec.y.none { it.column == p.name } } ?: profiles.firstOrNull { it.kind == ColumnKind.Numeric }
-            if (next != null) Link("Add measure", onClick = { chart.edit { it.copy(y = it.y + Measure(next.name, it.y.last().aggregate)) } })
+            if (next != null) Link(tr("Add measure"), onClick = { chart.edit { it.copy(y = it.y + Measure(next.name, it.y.last().aggregate)) } })
         }
 
         if (spec.type != ChartType.Pie) {
-            Label("Split by")
+            Label(tr("Split by"))
             val series = listOf<ColumnProfile?>(null) + plottable.filter { it.name != spec.x && it.kind != ColumnKind.Temporal }
-            Combo(series.map { it?.let(::seriesLabel) ?: "None" }, series.indexOfFirst { it?.name == spec.series }.coerceAtLeast(0)) { index ->
+            Combo(series.map { it?.let(::seriesLabel) ?: tr("None") }, series.indexOfFirst { it?.name == spec.series }.coerceAtLeast(0)) { index ->
                 chart.edit { it.copy(series = series[index]?.name) }
             }
-            if (spec.y.size > 1) Text("Splitting keeps the first measure.", color = JewelTheme.globalColors.text.info)
+            if (spec.y.size > 1) Text(tr("Splitting keeps the first measure."), color = JewelTheme.globalColors.text.info)
         }
-        if (spec.type == ChartType.Bar) CheckboxRow("Horizontal bars", spec.horizontal, onCheckedChange = { checked -> chart.edit { it.copy(horizontal = checked) } })
+        if (spec.type == ChartType.Bar) CheckboxRow(tr("Horizontal bars"), spec.horizontal, onCheckedChange = { checked -> chart.edit { it.copy(horizontal = checked) } })
 
         val others = chart.suggestions.filter { it != spec }
         if (others.isNotEmpty()) {
-            Label("Suggested")
+            Label(tr("Suggested"))
             others.forEach { suggestion -> Link(describe(suggestion), onClick = { chart.show(suggestion) }) }
         }
     }
@@ -184,7 +185,7 @@ private fun MeasureRow(measure: Measure, columns: List<String>, removable: Boole
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.weight(1f)) { Combo(columns, columns.indexOf(measure.column)) { onChange(measure.copy(column = columns[it])) } }
         Box(Modifier.width(92.dp)) { Combo(Aggregate.entries.map { it.label }, Aggregate.entries.indexOf(measure.aggregate)) { onChange(measure.copy(aggregate = Aggregate.entries[it])) } }
-        if (removable) IconButton(onClick = onRemove) { Icon(AllIconsKeys.General.Remove, "Remove measure") }
+        if (removable) IconButton(onClick = onRemove) { Icon(AllIconsKeys.General.Remove, tr("Remove measure")) }
     }
 }
 
@@ -201,7 +202,7 @@ private fun ChartAsk(tab: ConsoleTab, view: ResultSetView) {
             if (enter && !asking) tab.askForChart(view, chart.request.text.toString())
             enter
         },
-        placeholder = { Text("Describe a chart, e.g. revenue by month") },
+        placeholder = { Text(tr("Describe a chart, e.g. revenue by month")) },
         leadingIcon = { Icon(AppIcons.Agent, null, Modifier.size(14.dp).padding(end = 2.dp)) },
     )
     when (val assist = chart.assist) {
@@ -209,13 +210,13 @@ private fun ChartAsk(tab: ConsoleTab, view: ResultSetView) {
         is ChartAssistState.Asking ->
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                 CircularProgressIndicator(Modifier.size(12.dp))
-                Text("Asking ${assist.agent ?: "the agent"}…", Modifier.weight(1f), color = info)
-                Link("Cancel", onClick = { tab.dismissChartAssist(view) })
+                Text(tr("Asking {0}…", assist.agent ?: tr("the agent")), Modifier.weight(1f), color = info)
+                Link(tr("Cancel"), onClick = { tab.dismissChartAssist(view) })
             }
         is ChartAssistState.Failed ->
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(assist.message, color = JewelTheme.globalColors.text.error)
-                Link("Dismiss", onClick = { tab.dismissChartAssist(view) })
+                Link(tr("Dismiss"), onClick = { tab.dismissChartAssist(view) })
             }
         is ChartAssistState.Proposed -> {
             val islands = LocalIslands.current
@@ -227,10 +228,10 @@ private fun ChartAsk(tab: ConsoleTab, view: ResultSetView) {
                 Text(describe(assist.proposal.spec), fontWeight = FontWeight.SemiBold)
                 if (assist.proposal.explanation.isNotBlank()) Text(assist.proposal.explanation)
                 assist.proposal.assumptions.forEach { Text("• $it", color = info) }
-                Text("from ${assist.agent}", color = info)
+                Text(tr("from {0}", assist.agent), color = info)
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.End)) {
-                    OutlinedButton(onClick = { tab.dismissChartAssist(view) }) { Text("Discard") }
-                    DefaultButton(onClick = { tab.applyChartProposal(view) }) { Text("Apply") }
+                    OutlinedButton(onClick = { tab.dismissChartAssist(view) }) { Text(tr("Discard")) }
+                    DefaultButton(onClick = { tab.applyChartProposal(view) }) { Text(tr("Apply")) }
                 }
             }
         }
@@ -252,7 +253,7 @@ private fun seriesLabel(column: ColumnProfile): String = if (column.distinct >= 
 
 /** "Line of sum(total) by created_at per month, split by region". */
 internal fun describe(spec: ChartSpec): String = buildString {
-    append("${spec.type.label} of ${spec.y.joinToString { it.label }} by ${spec.x}")
-    spec.bucket?.let { append(" per ${it.label.lowercase()}") }
-    spec.series?.let { append(", split by $it") }
+    append(tr("{0} of {1} by {2}", spec.type.label, spec.y.joinToString { it.label }, spec.x))
+    spec.bucket?.let { append(tr(" per {0}", it.label.lowercase())) }
+    spec.series?.let { append(tr(", split by {0}", it)) }
 }

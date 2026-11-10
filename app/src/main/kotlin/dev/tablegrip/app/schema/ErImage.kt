@@ -1,5 +1,6 @@
 package dev.tablegrip.app.schema
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import dev.tablegrip.core.metadata.TableDetails
@@ -107,7 +108,7 @@ internal object ErImage {
         if (table.columns.size > ErLayout.MaxRows) {
             g.font = Font(Font.SANS_SERIF, Font.PLAIN, 11)
             g.color = colors.muted.awt()
-            text(g, "+ ${table.columns.size - ErLayout.MaxRows} more columns", box.x + 26f, box.y + ErLayout.HeaderHeight + ErLayout.RowPadding + ErLayout.MaxRows * ErLayout.RowHeight + ErLayout.RowHeight / 2 + 4.5f, box.width - 38f)
+            text(g, tr("+ {0} more columns", table.columns.size - ErLayout.MaxRows), box.x + 26f, box.y + ErLayout.HeaderHeight + ErLayout.RowPadding + ErLayout.MaxRows * ErLayout.RowHeight + ErLayout.RowHeight / 2 + 4.5f, box.width - 38f)
         }
     }
 

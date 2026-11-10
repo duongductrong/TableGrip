@@ -1,5 +1,6 @@
 package dev.tablegrip.core.ddl
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.dialect.SqlDialect
 import dev.tablegrip.core.metadata.ForeignKeyInfo
 import dev.tablegrip.core.metadata.IndexInfo
@@ -75,7 +76,7 @@ class DdlGenerator(private val dialect: SqlDialect) {
             }
         }
         if (engine == Engine.Generic && out.statements.isNotEmpty()) {
-            out.warn("Written in standard SQL for ${dialect}: check it against your database's syntax before running it.")
+            out.warn(tr("Written in standard SQL for {0}: check it against your database's syntax before running it.", dialect))
         }
         val ordered = out.statements.withIndex().sortedWith(compareBy({ it.value.phase }, { it.index })).map { it.value }
         // SQLite rebuilds turn foreign keys off around the transaction; once is enough.
@@ -100,7 +101,7 @@ class DdlGenerator(private val dialect: SqlDialect) {
     // region Create and drop
 
     private fun createTable(design: TableDesign, out: Output, name: TableRef = design.table) {
-        require(design.columns.isNotEmpty()) { "${design.table.name} has no columns" }
+        require(design.columns.isNotEmpty()) { tr("{0} has no columns", design.table.name) }
         val inlinePrimaryKey = engine == Engine.SQLite && design.primaryKey.size == 1 && design.column(design.primaryKey.single())?.autoIncrement == true
         val lines = mutableListOf<String>()
         design.columns.forEach { lines += columnDefinition(it, inlinePrimaryKey = inlinePrimaryKey && it.name == design.primaryKey.single()) }
@@ -126,11 +127,11 @@ class DdlGenerator(private val dialect: SqlDialect) {
         design.indexes.forEach { out.add(DdlPhase.CreateIndexes, createIndex(name, it)) }
         if (!inlineForeignKeys) design.foreignKeys.forEach { addForeignKey(name, it, out) }
         if (engine == Engine.ClickHouse) {
-            if (design.foreignKeys.isNotEmpty()) out.warn("ClickHouse has no foreign keys: those of ${name.name} are left out.")
-            if (design.indexes.isNotEmpty()) out.warn("ClickHouse indexes are data-skipping indexes: those of ${name.name} are left out.")
+            if (design.foreignKeys.isNotEmpty()) out.warn(tr("ClickHouse has no foreign keys: those of {0} are left out.", name.name))
+            if (design.indexes.isNotEmpty()) out.warn(tr("ClickHouse indexes are data-skipping indexes: those of {0} are left out.", name.name))
         }
         if (engine == Engine.DuckDB && design.columns.any { it.autoIncrement }) {
-            out.warn("DuckDB has no auto-increment columns: give ${name.name} a sequence default instead (DEFAULT nextval('seq')).")
+            out.warn(tr("DuckDB has no auto-increment columns: give {0} a sequence default instead (DEFAULT nextval('seq')).", name.name))
         }
     }
 
@@ -205,7 +206,7 @@ class DdlGenerator(private val dialect: SqlDialect) {
         val nullChanged = from.nullable != to.nullable
         val defaultChanged = ColumnTypes.normalizeDefault(from.defaultValue) != ColumnTypes.normalizeDefault(to.defaultValue)
         if (from.autoIncrement != to.autoIncrement && engine != Engine.MySQL) {
-            out.warn("${table.name}.${to.name}: auto-increment can't be switched on an existing column here; recreate the column instead.")
+            out.warn(tr("{0}.{1}: auto-increment can't be switched on an existing column here; recreate the column instead.", table.name, to.name))
         }
         when (engine) {
             Engine.MySQL -> {
@@ -225,7 +226,7 @@ class DdlGenerator(private val dialect: SqlDialect) {
                 if (typeChanged || nullChanged) out.add(DdlPhase.Tables, "ALTER TABLE $target ALTER COLUMN $name ${to.type} ${if (to.nullable) "NULL" else "NOT NULL"}")
                 if (defaultChanged) {
                     if (from.defaultValue != null) {
-                        out.warn("${table.name}.${to.name}: SQL Server keeps defaults as named constraints; drop the old default constraint before this runs.")
+                        out.warn(tr("{0}.{1}: SQL Server keeps defaults as named constraints; drop the old default constraint before this runs.", table.name, to.name))
                     }
                     to.defaultValue?.let { out.add(DdlPhase.Tables, "ALTER TABLE $target ADD DEFAULT $it FOR $name") }
                 }
@@ -251,7 +252,7 @@ class DdlGenerator(private val dialect: SqlDialect) {
             }
         }
         if (nullChanged && !to.nullable && to.defaultValue == null) {
-            out.warn("${table.name}.${to.name} becomes NOT NULL: this fails if any row has NULL there.")
+            out.warn(tr("{0}.{1} becomes NOT NULL: this fails if any row has NULL there.", table.name, to.name))
         }
     }
 
@@ -259,7 +260,7 @@ class DdlGenerator(private val dialect: SqlDialect) {
         val keyword = if (engine == Engine.SqlServer) "ADD" else "ADD COLUMN"
         out.add(DdlPhase.Tables, "ALTER TABLE ${qualified(table)} $keyword ${columnDefinition(column)}")
         if (!column.nullable && column.defaultValue == null && !column.autoIncrement) {
-            out.warn("New column ${table.name}.${column.name} is NOT NULL without a default: adding it fails if the table has rows.")
+            out.warn(tr("New column {0}.{1} is NOT NULL without a default: adding it fails if the table has rows.", table.name, column.name))
         }
     }
 
@@ -290,9 +291,9 @@ class DdlGenerator(private val dialect: SqlDialect) {
             Engine.PostgreSQL -> out.add(DdlPhase.DropIndexes, "ALTER TABLE $table DROP CONSTRAINT ${q(original.primaryKeyName ?: "${original.table.name}_pkey")}")
             Engine.SqlServer ->
                 original.primaryKeyName?.let { out.add(DdlPhase.DropIndexes, "ALTER TABLE $table DROP CONSTRAINT ${q(it)}") }
-                    ?: out.warn("${original.table.name}: the primary key's constraint name is unknown; drop it by name before this runs.")
+                    ?: out.warn(tr("{0}: the primary key's constraint name is unknown; drop it by name before this runs.", original.table.name))
             Engine.Generic -> out.add(DdlPhase.DropIndexes, "ALTER TABLE $table DROP PRIMARY KEY")
-            Engine.DuckDB, Engine.ClickHouse -> out.warn("$dialect can't change the primary key of ${original.table.name} in place; recreate the table instead.")
+            Engine.DuckDB, Engine.ClickHouse -> out.warn(tr("{0} can't change the primary key of {1} in place; recreate the table instead.", dialect, original.table.name))
             Engine.SQLite -> Unit
         }
     }
@@ -323,8 +324,8 @@ class DdlGenerator(private val dialect: SqlDialect) {
 
     private fun addForeignKey(table: TableRef, fk: ForeignKeyInfo, out: Output) {
         when (engine) {
-            Engine.ClickHouse -> out.warn("ClickHouse has no foreign keys: ${fk.name} is left out.")
-            Engine.DuckDB -> out.warn("DuckDB can't add a foreign key to an existing table: ${fk.name} is left out.")
+            Engine.ClickHouse -> out.warn(tr("ClickHouse has no foreign keys: {0} is left out.", fk.name))
+            Engine.DuckDB -> out.warn(tr("DuckDB can't add a foreign key to an existing table: {0} is left out.", fk.name))
             else -> out.add(DdlPhase.AddForeignKeys, "ALTER TABLE ${qualified(table)} ADD ${foreignKeyClause(table, fk, named = true)}")
         }
     }
@@ -333,7 +334,7 @@ class DdlGenerator(private val dialect: SqlDialect) {
         when (engine) {
             Engine.MySQL -> out.add(DdlPhase.DropForeignKeys, "ALTER TABLE ${qualified(table)} DROP FOREIGN KEY ${q(fk.name)}")
             Engine.ClickHouse -> Unit
-            Engine.DuckDB -> out.warn("DuckDB can't drop a foreign key from an existing table: ${fk.name} stays.")
+            Engine.DuckDB -> out.warn(tr("DuckDB can't drop a foreign key from an existing table: {0} stays.", fk.name))
             else -> out.add(DdlPhase.DropForeignKeys, "ALTER TABLE ${qualified(table)} DROP CONSTRAINT ${q(fk.name)}")
         }
     }
@@ -359,9 +360,9 @@ class DdlGenerator(private val dialect: SqlDialect) {
         target.indexes.forEach { out.add(DdlPhase.CreateIndexes, createIndex(target.table, it)) }
         target.triggers.forEach { out.add(DdlPhase.CreateIndexes, it) }
         out.add(DdlPhase.Epilogue, "PRAGMA foreign_keys = ON")
-        out.warn("SQLite can't make these changes to ${target.table.name} in place: the table is rebuilt and its rows copied. Views that use it may need recreating.")
+        out.warn(tr("SQLite can't make these changes to {0} in place: the table is rebuilt and its rows copied. Views that use it may need recreating.", target.table.name))
         target.columns.filter { it.originalName == null && !it.nullable && it.defaultValue == null && !it.autoIncrement }.forEach {
-            out.warn("New column ${target.table.name}.${it.name} is NOT NULL without a default: copying existing rows fails if there are any.")
+            out.warn(tr("New column {0}.{1} is NOT NULL without a default: copying existing rows fails if there are any.", target.table.name, it.name))
         }
     }
 

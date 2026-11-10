@@ -1,5 +1,7 @@
 package dev.tablegrip.app.grid
 
+import dev.tablegrip.core.i18n.I18n
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -174,7 +176,7 @@ private fun parseMoment(text: String): Pair<LocalDate?, LocalTime?> =
         null -> null to null
     }
 
-private val MonthTitle = DateTimeFormatter.ofPattern("MMMM yyyy")
+private val MonthTitle = I18n.dates("MMMM yyyy")
 
 /**
  * A calendar (dates), a time of day (times), or both, editing [text] in place: picking writes the canonical value so
@@ -249,10 +251,10 @@ internal fun TemporalPickerContent(kind: EditKind, text: TextFieldState, onApply
                 val now = LocalDateTime.now().withNano(0)
                 write(now.toLocalDate(), if (kind == EditKind.Date) time else now.toLocalTime())
             }) {
-                Text(if (kind == EditKind.Date) "Today" else "Now")
+                Text(if (kind == EditKind.Date) tr("Today") else tr("Now"))
             }
             Box(Modifier.weight(1f))
-            if (onClose != null) DefaultButton(onClick = onApply) { Text("Apply") }
+            if (onClose != null) DefaultButton(onClick = onApply) { Text(tr("Apply")) }
         }
     }
 }
@@ -263,9 +265,9 @@ private fun Calendar(month: YearMonth, selected: LocalDate?, today: LocalDate, o
     val selectedBackground = JewelTheme.treeStyle.colors.backgroundSelectedActive
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            PickerIcon("Previous month", left = true) { onMonth(month.minusMonths(1)) }
+            PickerIcon(tr("Previous month"), left = true) { onMonth(month.minusMonths(1)) }
             Text(MonthTitle.format(month), Modifier.weight(1f), textAlign = TextAlign.Center, fontWeight = FontWeight.SemiBold)
-            PickerIcon("Next month", left = false) { onMonth(month.plusMonths(1)) }
+            PickerIcon(tr("Next month"), left = false) { onMonth(month.plusMonths(1)) }
         }
         Row {
             DayOfWeek.entries.forEach { day ->
@@ -303,7 +305,7 @@ private fun PickerIcon(description: String, left: Boolean, onClick: () -> Unit) 
 @Composable
 private fun TimeFields(time: LocalTime, onChange: (LocalTime) -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text("Time", color = JewelTheme.globalColors.text.info, modifier = Modifier.padding(end = 4.dp))
+        Text(tr("Time"), color = JewelTheme.globalColors.text.info, modifier = Modifier.padding(end = 4.dp))
         Stepper("%02d".format(time.hour), { onChange(time.plusHours(1)) }, { onChange(time.minusHours(1)) })
         Text(":")
         Stepper("%02d".format(time.minute), { onChange(time.plusMinutes(1)) }, { onChange(time.minusMinutes(1)) })
@@ -322,10 +324,10 @@ private fun Stepper(value: String, onUp: () -> Unit, onDown: () -> Unit) {
         Text(value, style = JewelTheme.editorTextStyle)
         Column {
             Box(Modifier.size(16.dp, 11.dp).clickable(onClick = onUp), contentAlignment = Alignment.Center) {
-                Icon(AllIconsKeys.General.ChevronUp, "Up", Modifier.size(10.dp))
+                Icon(AllIconsKeys.General.ChevronUp, tr("Up"), Modifier.size(10.dp))
             }
             Box(Modifier.size(16.dp, 11.dp).clickable(onClick = onDown), contentAlignment = Alignment.Center) {
-                Icon(AllIconsKeys.General.ChevronDown, "Down", Modifier.size(10.dp))
+                Icon(AllIconsKeys.General.ChevronDown, tr("Down"), Modifier.size(10.dp))
             }
         }
     }

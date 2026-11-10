@@ -1,5 +1,6 @@
 package dev.tablegrip.core.importer
 
+import dev.tablegrip.core.i18n.tr
 import java.io.Closeable
 import java.io.File
 import java.io.InputStream
@@ -27,7 +28,7 @@ internal class XlsxSource(file: File, requested: ImportOptions, previewRows: Int
         try {
             ZipFile(file)
         } catch (e: ZipException) {
-            throw ImportException("${file.name} isn't an .xlsx workbook (legacy .xls and password-protected workbooks aren't supported)", cause = e)
+            throw ImportException(tr("{0} isn't an .xlsx workbook (legacy .xls and password-protected workbooks aren't supported)", file.name), cause = e)
         }
     private val workbook: Workbook
     private val sheetPath: String
@@ -47,11 +48,11 @@ internal class XlsxSource(file: File, requested: ImportOptions, previewRows: Int
         try {
             workbook = Workbook(zip)
             sheets = workbook.sheets.map { it.first }
-            if (sheets.isEmpty()) throw ImportException("The workbook has no worksheets")
+            if (sheets.isEmpty()) throw ImportException(tr("The workbook has no worksheets"))
             val sheet = requested.sheet ?: sheets.first()
             sheetPath =
                 workbook.sheets.firstOrNull { it.first == sheet }?.second
-                    ?: throw ImportException("There's no sheet named \"$sheet\"; the workbook has ${sheets.joinToString { "\"$it\"" }}")
+                    ?: throw ImportException(tr("There's no sheet named \"{0}\"; the workbook has {1}", sheet, sheets.joinToString { "\"$it\"" }))
             options = requested.copy(sheet = sheet)
 
             val header: List<String?>?
@@ -94,7 +95,7 @@ internal class XlsxSource(file: File, requested: ImportOptions, previewRows: Int
     override fun rows(): Sequence<ImportRow> {
         check(!consumed) { "rows() can only be read once" }
         consumed = true
-        buffered?.let { rows -> return rows.asSequence().map { fitRow(it.line, it.values, columns.size, "Row") } }
+        buffered?.let { rows -> return rows.asSequence().map { fitRow(it.line, it.values, columns.size, tr("Row")) } }
         val sheetReader = SheetReader(sheetPath).also { reader = it }
         return sequence {
             if (options.hasHeader) sheetReader.nextDataRow()
@@ -129,7 +130,7 @@ internal class XlsxSource(file: File, requested: ImportOptions, previewRows: Int
         }
 
         private fun nextRow(): ImportRow? =
-            xmlGuard({ "Couldn't read row ${lastRow + 1} of sheet \"${options.sheet}\"" }, lastRow + 1) {
+            xmlGuard({ tr("Couldn't read row {0} of sheet \"{1}\"", lastRow + 1, options.sheet) }, lastRow + 1) {
                 while (xml.hasNext()) {
                     if (xml.next() == START_ELEMENT && xml.localName == "row") return@xmlGuard readRow()
                 }
@@ -181,7 +182,7 @@ internal class XlsxSource(file: File, requested: ImportOptions, previewRows: Int
             if (raw == null && inline == null) return null
             val text =
                 when (type) {
-                    "s" -> raw?.trim()?.toIntOrNull()?.let { workbook.sharedStrings.getOrNull(it) ?: throw ImportException("Row $row refers to a missing shared string", row) }
+                    "s" -> raw?.trim()?.toIntOrNull()?.let { workbook.sharedStrings.getOrNull(it) ?: throw ImportException(tr("Row {0} refers to a missing shared string", row), row) }
                     "inlineStr" -> inline ?: raw
                     "str" -> raw
                     "b" -> raw?.trim()?.let { if (it == "1" || it.equals("true", ignoreCase = true)) "true" else "false" }
@@ -257,14 +258,14 @@ internal class XlsxSource(file: File, requested: ImportOptions, previewRows: Int
             try {
                 Factory.createXMLStreamReader(stream)
             } catch (e: XMLStreamException) {
-                throw ImportException("The workbook part $path isn't valid XML", cause = e)
+                throw ImportException(tr("The workbook part {0} isn't valid XML", path), cause = e)
             }
 
         inline fun <T> xmlGuard(message: () -> String, line: Long?, block: () -> T): T =
             try {
                 block()
             } catch (e: XMLStreamException) {
-                throw ImportException("${message()}: the workbook XML is malformed (${e.message})", line, e)
+                throw ImportException(tr("{0}: the workbook XML is malformed ({1})", message(), e.message), line, e)
             }
 
         fun String.withSlash() = if (isEmpty()) "" else "$this/"
@@ -274,16 +275,16 @@ internal class XlsxSource(file: File, requested: ImportOptions, previewRows: Int
             zip.getEntry(path) ?: zip.entries().asSequence().firstOrNull { it.name.equals(path, ignoreCase = true) }
 
         fun ZipFile.open(path: String): InputStream {
-            val entry = findEntry(this, path) ?: throw ImportException("The workbook is missing $path")
+            val entry = findEntry(this, path) ?: throw ImportException(tr("The workbook is missing {0}", path))
             return getInputStream(entry)
         }
 
         fun parse(zip: ZipFile, path: String, required: Boolean, block: (XMLStreamReader) -> Unit) {
-            val entry = findEntry(zip, path) ?: if (required) throw ImportException("The workbook is missing $path; is it really an .xlsx file?") else return
+            val entry = findEntry(zip, path) ?: if (required) throw ImportException(tr("The workbook is missing {0}; is it really an .xlsx file?", path)) else return
             zip.getInputStream(entry).use { stream ->
                 val xml = xmlReader(stream, path)
                 try {
-                    xmlGuard({ "Couldn't read $path" }, null) { block(xml) }
+                    xmlGuard({ tr("Couldn't read {0}", path) }, null) { block(xml) }
                 } finally {
                     xml.close()
                 }

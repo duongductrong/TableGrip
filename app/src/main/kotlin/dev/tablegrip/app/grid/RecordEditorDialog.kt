@@ -1,5 +1,6 @@
 package dev.tablegrip.app.grid
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
@@ -102,18 +103,18 @@ fun RecordEditorHost(model: GridModel, state: DataGridState, subject: String) {
         onApplied = { row, isNew ->
             state.recordEdit = null
             state.revealEditable(model, row)
-            val noun = model.records?.recordNoun ?: "row"
-            state.notice = GridNotice(if (isNew) "Added a $noun from JSON; submit to save it" else "Updated the $noun from JSON; submit to save it")
+            val noun = model.records?.recordNoun ?: tr("row")
+            state.notice = GridNotice(if (isNew) tr("Added a {0} from JSON; submit to save it", noun) else tr("Updated the {0} from JSON; submit to save it", noun))
         },
     )
 }
 
 @Composable
 private fun RecordEditorDialog(request: RecordEditRequest, current: GridModel, subject: String, onClose: () -> Unit, onApplied: (row: Int, isNew: Boolean) -> Unit) {
-    val noun = (request.model.records?.recordNoun ?: "row").replaceFirstChar(Char::uppercase)
+    val noun = (request.model.records?.recordNoun ?: tr("row")).replaceFirstChar(Char::uppercase)
     AppDialog(
         onCloseRequest = onClose,
-        title = if (request.row == null) "New $noun" else "Edit $noun",
+        title = if (request.row == null) tr("New {0}", noun) else tr("Edit {0}", noun),
         size = DpSize(720.dp, 640.dp),
         // The pane decides: a first Esc with unapplied edits only warns.
         closeOnEscape = false,
@@ -126,7 +127,7 @@ private fun RecordEditorDialog(request: RecordEditRequest, current: GridModel, s
 @Composable
 internal fun RecordEditorPane(request: RecordEditRequest, current: GridModel, subject: String, onClose: () -> Unit, onApplied: (row: Int, isNew: Boolean) -> Unit) {
     val records = request.model.records
-    val noun = records?.recordNoun ?: "row"
+    val noun = records?.recordNoun ?: tr("row")
     val nounTitle = noun.replaceFirstChar(Char::uppercase)
     val isNew = request.row == null
     // The page was reloaded (or the connection went read-only) under the open record: its row means nothing any more.
@@ -180,7 +181,7 @@ internal fun RecordEditorPane(request: RecordEditRequest, current: GridModel, su
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(subject, color = info)
             Text("·", color = info)
-            Text(request.row?.let { row -> records?.takeIf { !stale && row < current.rowCount }?.describeRecord(row) } ?: "New $noun", maxLines = 1)
+            Text(request.row?.let { row -> records?.takeIf { !stale && row < current.rowCount }?.describeRecord(row) } ?: tr("New {0}", noun), maxLines = 1)
         }
         request.hint?.let { Text(it, color = info, maxLines = 3) }
 
@@ -195,20 +196,20 @@ internal fun RecordEditorPane(request: RecordEditRequest, current: GridModel, su
         Status(stale, noun, error, plan, onGoTo = ::goTo, onCopy = { copyToClipboard(text) })
 
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Tooltip({ Text("Indent the JSON neatly") }) {
+            Tooltip({ Text(tr("Indent the JSON neatly")) }) {
                 OutlinedButton(
                     onClick = { (parseRecord(text, noun) as? ParsedRecord.Ok)?.let { value = TextFieldValue(prettyRecord(it.json) + "\n", TextRange(0)) } },
                     enabled = parsedNow is ParsedRecord.Ok,
-                ) { Text("Format") }
+                ) { Text(tr("Format")) }
             }
-            Tooltip({ Text("Back to the $noun as it was opened") }) {
-                OutlinedButton(onClick = { value = TextFieldValue(initial, TextRange(initialCaret(initial, isNew))) }, enabled = dirty) { Text("Reset") }
+            Tooltip({ Text(tr("Back to the {0} as it was opened", noun)) }) {
+                OutlinedButton(onClick = { value = TextFieldValue(initial, TextRange(initialCaret(initial, isNew))) }, enabled = dirty) { Text(tr("Reset")) }
             }
             Spacer(Modifier.weight(1f))
-            if (escapeArmed) Text("Press Esc again to discard your edits", color = info)
-            OutlinedButton(onClick = onClose) { Text("Cancel") }
-            Tooltip({ Text("Stage the changes (${Shortcuts.Submit.label}); Submit in the toolbar saves them") }) {
-                DefaultButton(onClick = ::apply, enabled = plan?.canApply == true) { Text(if (isNew) "Add $nounTitle" else "Apply") }
+            if (escapeArmed) Text(tr("Press Esc again to discard your edits"), color = info)
+            OutlinedButton(onClick = onClose) { Text(tr("Cancel")) }
+            Tooltip({ Text(tr("Stage the changes ({0}); Submit in the toolbar saves them", Shortcuts.Submit.label)) }) {
+                DefaultButton(onClick = ::apply, enabled = plan?.canApply == true) { Text(if (isNew) tr("Add {0}", nounTitle) else tr("Apply")) }
             }
         }
     }
@@ -235,23 +236,23 @@ private fun Status(stale: Boolean, noun: String, error: ParsedRecord.Invalid?, p
         when {
             stale ->
                 StatusLine(AllIconsKeys.General.Warning) {
-                    Text("The page reloaded while this $noun was open, so it can't be applied here. ", color = errorColor)
-                    Link("Copy the JSON", onClick = onCopy)
+                    Text(tr("The page reloaded while this {0} was open, so it can't be applied here. ", noun), color = errorColor)
+                    Link(tr("Copy the JSON"), onClick = onCopy)
                 }
             error != null ->
                 StatusLine(AllIconsKeys.General.Error) {
                     Text(error.text, color = errorColor, maxLines = 2)
                     error.offset?.let { offset ->
                         Spacer(Modifier.size(8.dp))
-                        Link("Show", onClick = { onGoTo(offset) })
+                        Link(tr("Show"), onClick = { onGoTo(offset) })
                     }
                 }
-            plan == null -> Text("Checking…", color = info)
+            plan == null -> Text(tr("Checking…"), color = info)
             plan.problems.isNotEmpty() -> {
                 plan.problems.take(4).forEach { problem -> StatusLine(AllIconsKeys.General.Error) { Text(problem, color = errorColor, maxLines = 2) } }
-                if (plan.problems.size > 4) Text("…and ${plan.problems.size - 4} more", color = errorColor)
+                if (plan.problems.size > 4) Text(tr("…and {0} more", plan.problems.size - 4), color = errorColor)
             }
-            plan.changes.isEmpty() && !plan.isNew -> Text("No changes yet. Edit the values above; only the fields you change are staged.", color = info)
+            plan.changes.isEmpty() && !plan.isNew -> Text(tr("No changes yet. Edit the values above; only the fields you change are staged."), color = info)
             else -> StatusLine(AllIconsKeys.General.InspectionsOK) { Text(changeSummary(plan, noun), maxLines = 2) }
         }
         if (!stale && error == null) plan?.notes?.forEach { Text(it, color = info, maxLines = 2) }
@@ -270,14 +271,14 @@ private fun StatusLine(icon: IconKey, content: @Composable () -> Unit) {
 internal fun changeSummary(plan: RecordPlan, noun: String): String {
     if (plan.isNew) {
         val names = plan.changes.map { it.name }
-        if (names.isEmpty()) return if (noun == "document") "Adds an empty document; MongoDB gives it an _id" else "Adds a $noun with every column at its default"
-        return "Adds a $noun with ${names.size} field(s): ${names.joinToString(", ", limit = 8)}"
+        if (names.isEmpty()) return if (noun == tr("document")) tr("Adds an empty document; MongoDB gives it an _id") else tr("Adds a {0} with every column at its default", noun)
+        return tr("Adds a {0} with {1} field(s): {2}", noun, names.size, names.joinToString(", ", limit = 8))
     }
     val byKind = plan.changes.groupBy { it.kind }
     return listOfNotNull(
-        byKind[FieldChange.Kind.Changed]?.let { "Changes " + it.joinToString(", ", limit = 8) { c -> c.name } },
-        byKind[FieldChange.Kind.Added]?.let { "adds " + it.joinToString(", ", limit = 8) { c -> c.name } },
-        byKind[FieldChange.Kind.Removed]?.let { "removes " + it.joinToString(", ", limit = 8) { c -> c.name } },
+        byKind[FieldChange.Kind.Changed]?.let { tr("Changes {0}", it.joinToString(", ", limit = 8) { c -> c.name }) },
+        byKind[FieldChange.Kind.Added]?.let { tr("adds {0}", it.joinToString(", ", limit = 8) { c -> c.name }) },
+        byKind[FieldChange.Kind.Removed]?.let { tr("removes {0}", it.joinToString(", ", limit = 8) { c -> c.name }) },
     ).joinToString(" · ").replaceFirstChar(Char::uppercase)
 }
 

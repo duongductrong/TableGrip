@@ -1,5 +1,7 @@
 package dev.tablegrip.app.agent
 
+import dev.tablegrip.core.i18n.I18n
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.agent.AgentEvent
 import dev.tablegrip.core.agent.AgentMessage
 import dev.tablegrip.core.agent.Mention
@@ -93,11 +95,11 @@ internal fun List<SavedChatMessage>.toChat(): List<ChatMessage> {
 
 /** The headings the chat list groups by, newest first, as most chat apps do. */
 internal enum class ChatAge(val label: String) {
-    Today("Today"),
-    Yesterday("Yesterday"),
-    Week("Previous 7 days"),
-    Month("Previous 30 days"),
-    Older("Older");
+    Today(tr("Today")),
+    Yesterday(tr("Yesterday")),
+    Week(tr("Previous 7 days")),
+    Month(tr("Previous 30 days")),
+    Older(tr("Older"));
 
     companion object {
         fun of(updatedAt: Long, today: LocalDate, zone: ZoneId): ChatAge {
@@ -124,5 +126,5 @@ internal fun chatTime(updatedAt: Long, today: LocalDate, zone: ZoneId): String {
             time.year == today.year -> "MMM d"
             else -> "MMM d, yyyy"
         }
-    return time.format(DateTimeFormatter.ofPattern(pattern))
+    return time.format(I18n.dates(pattern))
 }

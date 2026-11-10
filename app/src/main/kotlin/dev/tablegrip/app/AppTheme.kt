@@ -1,12 +1,13 @@
 package dev.tablegrip.app
 
+import dev.tablegrip.core.i18n.tr
 import org.jetbrains.skiko.SystemTheme
 import org.jetbrains.skiko.currentSystemTheme
 
 enum class AppTheme(val label: String) {
-    System("Sync with OS"),
-    Light("Light"),
-    Dark("Dark");
+    System(tr("Sync with OS")),
+    Light(tr("Light")),
+    Dark(tr("Dark"));
 
     fun isDark(): Boolean = (if (this == System) fromSystemTheme(currentSystemTheme) else this) == Dark
 

@@ -1,5 +1,6 @@
 package dev.tablegrip.app.console
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,12 +25,12 @@ import dev.tablegrip.core.settings.Settings
 
 /** The SQL tokens the editor colours, with the key Settings stores a custom colour under. */
 enum class SyntaxToken(val key: String, val label: String) {
-    Keyword("keyword", "Keyword"),
-    String("string", "String"),
-    Number("number", "Number"),
-    Comment("comment", "Comment"),
-    QuotedIdentifier("quotedIdentifier", "Quoted identifier"),
-    Parameter("parameter", "Parameter");
+    Keyword("keyword", tr("Keyword")),
+    String("string", tr("String")),
+    Number("number", tr("Number")),
+    Comment("comment", tr("Comment")),
+    QuotedIdentifier("quotedIdentifier", tr("Quoted identifier")),
+    Parameter("parameter", tr("Parameter"));
 
     /** The key in [Settings.syntaxColors] for this token in a dark or light theme. */
     fun settingKey(dark: Boolean): kotlin.String = (if (dark) "dark." else "light.") + key
@@ -42,7 +43,7 @@ class SchemeVariant(val tokens: Map<SyntaxToken, Long>, val background: Long? = 
 enum class SyntaxScheme(val label: String, private val dark: SchemeVariant, private val light: SchemeVariant) {
     // The colour theme's own tokens (Graphite's are the ones below), on the islands' colours like the rest of the window.
     Theme(
-        "Theme's own",
+        tr("Theme's own"),
         dark = SchemeVariant(tokens(0xFFCF8E6D, 0xFF6AAB73, 0xFF2AACB8, 0xFF7A7E85, 0xFFC77DBB, 0xFF56A8F5)),
         light = SchemeVariant(tokens(0xFF0033B3, 0xFF067D17, 0xFF1750EB, 0xFF8C8C8C, 0xFF871094, 0xFF00627A)),
     ),

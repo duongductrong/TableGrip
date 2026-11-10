@@ -1,5 +1,6 @@
 package dev.tablegrip.core.datafile
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.connection.DataFileOptions
 import dev.tablegrip.core.connection.DatabaseType
 import dev.tablegrip.core.importer.ImportException
@@ -40,15 +41,15 @@ object JsonFormat : DataFileFormat {
     override fun open(path: Path, options: DataFileOptions): DataFileDocument {
         val head = path.inputStream().use { it.readNBytes(HEAD_BYTES) }
         val bom = bomCharset(head)
-        if (bom != null && bom.first != Charsets.UTF_8) return readOnly(path, "Only UTF-8 JSON files can be saved; this one is ${bom.first.displayName()}.")
+        if (bom != null && bom.first != Charsets.UTF_8) return readOnly(path, tr("Only UTF-8 JSON files can be saved; this one is {0}.", bom.first.displayName()))
         val bomLength = bom?.second ?: 0
         val text = String(head, bomLength, head.size - bomLength, Charsets.UTF_8)
         val shape =
             when (text.trimStart().firstOrNull()) {
                 '[' -> Shape.Array
-                '{' -> if (isLines(text)) Shape.Lines else return readOnly(path, "Only a top-level array of objects or NDJSON (one object per line) can be saved.")
+                '{' -> if (isLines(text)) Shape.Lines else return readOnly(path, tr("Only a top-level array of objects or NDJSON (one object per line) can be saved."))
                 null -> Shape.Lines
-                else -> throw DataFileException("${path.fileName} doesn't start with [ or {; expected a JSON array of objects or NDJSON")
+                else -> throw DataFileException(tr("{0} doesn't start with [ or {; expected a JSON array of objects or NDJSON", path.fileName))
             }
         val document = Document(path, path.nameWithoutExtension.ifBlank { "data" }, shape, bomLength, layout(text, shape))
         document.scanKeys()
@@ -83,7 +84,7 @@ object JsonFormat : DataFileFormat {
         override val multiTable = false
 
         override val notes: List<String>
-            get() = columns.values.filter { it.kind == Kind.Mixed }.map { "Column \"${it.name}\" mixes JSON types; saving writes its values as strings." }
+            get() = columns.values.filter { it.kind == Kind.Mixed }.map { tr("Column \"{0}\" mixes JSON types; saving writes its values as strings.", it.name) }
 
         fun scanKeys() = records().forEach { (_, record) -> record.keys.forEach { columns.getOrPut(it) { ColumnState(it) } } }
 
@@ -124,7 +125,7 @@ object JsonFormat : DataFileFormat {
                 Shape.Array -> arrayRecords()
                 Shape.Lines -> lineRecords()
             }.map { (index, element) ->
-                index to (element as? JsonObject ?: throw DataFileException("Record $index isn't a JSON object; only arrays of objects open as a table."))
+                index to (element as? JsonObject ?: throw DataFileException(tr("Record {0} isn't a JSON object; only arrays of objects open as a table.", index)))
             }
 
         private fun stream(): InputStream = path.inputStream().buffered().apply { skipNBytes(bomLength.toLong()) }
@@ -140,9 +141,9 @@ object JsonFormat : DataFileFormat {
                                 if (!iterator.hasNext()) break
                                 iterator.next()
                             } catch (e: SerializationException) {
-                                throw DataFileException("Invalid JSON in record ${index + 1}: ${e.message?.lineSequence()?.first()}", e)
+                                throw DataFileException(tr("Invalid JSON in record {0}: {1}", index + 1, e.message?.lineSequence()?.first()), e)
                             } catch (e: IllegalArgumentException) {
-                                throw DataFileException("Invalid JSON in record ${index + 1}: ${e.message?.lineSequence()?.first()}", e)
+                                throw DataFileException(tr("Invalid JSON in record {0}: {1}", index + 1, e.message?.lineSequence()?.first()), e)
                             }
                         yield(++index to next)
                     }
@@ -162,7 +163,7 @@ object JsonFormat : DataFileFormat {
                             try {
                                 Json.parseToJsonElement(text)
                             } catch (e: SerializationException) {
-                                throw DataFileException("Line $line isn't valid JSON: ${e.message?.lineSequence()?.first()}", e)
+                                throw DataFileException(tr("Line {0} isn't valid JSON: {1}", line, e.message?.lineSequence()?.first()), e)
                             }
                         yield(++index to element)
                     }
@@ -223,7 +224,7 @@ object JsonFormat : DataFileFormat {
             try {
                 ImportReader.open(path.toFile(), ImportOptions(ImportFormat.Json))
             } catch (e: ImportException) {
-                throw DataFileException(e.message ?: "Couldn't read ${path.fileName}", e)
+                throw DataFileException(e.message ?: tr("Couldn't read {0}", path.fileName), e)
             }
         return object : DataFileDocument {
             override val multiTable = false
@@ -239,7 +240,7 @@ object JsonFormat : DataFileFormat {
                                 try {
                                     for (row in source.rows()) yield(row.values)
                                 } catch (e: ImportException) {
-                                    throw DataFileException(e.message ?: "Couldn't read ${path.fileName}", e)
+                                    throw DataFileException(e.message ?: tr("Couldn't read {0}", path.fileName), e)
                                 }
                             }
                     },

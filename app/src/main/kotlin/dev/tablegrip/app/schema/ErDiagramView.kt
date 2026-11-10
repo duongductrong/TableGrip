@@ -1,5 +1,6 @@
 package dev.tablegrip.app.schema
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.app.ui.theme.ColorTheme
 import dev.tablegrip.app.ui.theme.LocalColorTheme
 import androidx.compose.foundation.ContextMenuArea
@@ -97,12 +98,12 @@ internal fun ErDiagramView(app: AppState, tab: ErDiagramTab) {
             when {
                 tab.snapshot == null && tab.loading -> {
                     val progress = tab.progress
-                    val message = progress?.let { (done, total) -> "Reading tables… $done of $total" } ?: "Reading ${tab.namespace.displayName}…"
+                    val message = progress?.let { (done, total) -> tr("Reading tables… {0} of {1}", done, total) } ?: tr("Reading {0}…", tab.namespace.displayName)
                     ConnectionLoadingPlaceholder(tab.config, app.databases.status(tab.config.id), message, Modifier.align(Alignment.Center))
                 }
                 tab.snapshot != null && tab.tables.isEmpty() ->
-                    EmptyState("No tables", "${tab.namespace.displayName} has no tables to draw yet.", Modifier.align(Alignment.Center)) {
-                        OutlinedButton(onClick = { app.workspace.openTableDesigner(tab.config, tab.namespace) }) { Text("New Table…") }
+                    EmptyState(tr("No tables"), tr("{0} has no tables to draw yet.", tab.namespace.displayName), Modifier.align(Alignment.Center)) {
+                        OutlinedButton(onClick = { app.workspace.openTableDesigner(tab.config, tab.namespace) }) { Text(tr("New Table…")) }
                     }
                 tab.snapshot != null -> DiagramCanvas(tab)
             }
@@ -121,23 +122,23 @@ private fun ErToolbar(tab: ErDiagramTab) {
         TextField(
             tab.search,
             Modifier.width(200.dp),
-            placeholder = { Text("Find table") },
+            placeholder = { Text(tr("Find table")) },
             leadingIcon = { Icon(AllIconsKeys.Actions.Search, null, Modifier.padding(end = 4.dp)) },
             onKeyboardAction = KeyboardActionHandler { tab.findNext() },
         )
         Separator()
-        ToolButton(AllIconsKeys.General.ZoomOut, "Zoom out (pinch or ⌘ scroll)") { tab.zoomBy(1 / 1.25f) }
+        ToolButton(AllIconsKeys.General.ZoomOut, tr("Zoom out (pinch or ⌘ scroll)")) { tab.zoomBy(1 / 1.25f) }
         Text("${(tab.zoom * 100).toInt()}%", Modifier.width(42.dp), color = JewelTheme.globalColors.text.info)
-        ToolButton(AllIconsKeys.General.ZoomIn, "Zoom in (pinch or ⌘ scroll)") { tab.zoomBy(1.25f) }
-        ToolButton(AllIconsKeys.General.FitContent, "Fit to window") { tab.fit() }
-        ToolButton(AllIconsKeys.General.ActualZoom, "Actual size") { tab.resetZoom() }
+        ToolButton(AllIconsKeys.General.ZoomIn, tr("Zoom in (pinch or ⌘ scroll)")) { tab.zoomBy(1.25f) }
+        ToolButton(AllIconsKeys.General.FitContent, tr("Fit to window")) { tab.fit() }
+        ToolButton(AllIconsKeys.General.ActualZoom, tr("Actual size")) { tab.resetZoom() }
         Separator()
-        ToolButton(AllIconsKeys.Graph.Layout, "Auto-arrange") { tab.arrange() }
-        ToolButton(AllIconsKeys.Actions.Refresh, "Reload the schema") { tab.load() }
+        ToolButton(AllIconsKeys.Graph.Layout, tr("Auto-arrange")) { tab.arrange() }
+        ToolButton(AllIconsKeys.Actions.Refresh, tr("Reload the schema")) { tab.load() }
         if (tab.focus != null) {
             Separator()
-            ViewChip("Around ${tab.focus.name}", !tab.showAll) { tab.showAll(false) }
-            ViewChip("Whole schema", tab.showAll) { tab.showAll(true) }
+            ViewChip(tr("Around {0}", tab.focus.name), !tab.showAll) { tab.showAll(false) }
+            ViewChip(tr("Whole schema"), tab.showAll) { tab.showAll(true) }
         }
         Box(Modifier.weight(1f))
         ExportMenu(tab)
@@ -150,7 +151,7 @@ private fun ExportMenu(tab: ErDiagramTab) {
     Box {
         OutlinedButton(onClick = { open = true }, enabled = tab.tables.isNotEmpty()) {
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("Export")
+                Text(tr("Export"))
                 Icon(AllIconsKeys.General.ChevronDown, null)
             }
         }
@@ -159,21 +160,21 @@ private fun ExportMenu(tab: ErDiagramTab) {
                 val name = tab.focus?.name ?: tab.namespace.displayName
                 selectableItem(selected = false, onClick = {
                     open = false
-                    chooseSaveFile("$name-er.png", "Save Diagram")?.let { tab.savePng(it, dark = false) }
-                }) { Text("Save as PNG…") }
+                    chooseSaveFile("$name-er.png", tr("Save Diagram"))?.let { tab.savePng(it, dark = false) }
+                }) { Text(tr("Save as PNG…")) }
                 selectableItem(selected = false, onClick = {
                     open = false
-                    chooseSaveFile("$name-er-dark.png", "Save Diagram")?.let { tab.savePng(it, dark = true) }
-                }) { Text("Save as PNG (dark)…") }
+                    chooseSaveFile("$name-er-dark.png", tr("Save Diagram"))?.let { tab.savePng(it, dark = true) }
+                }) { Text(tr("Save as PNG (dark)…")) }
                 separator()
                 selectableItem(selected = false, onClick = {
                     open = false
                     tab.copyMermaid()
-                }) { Text("Copy as Mermaid") }
+                }) { Text(tr("Copy as Mermaid")) }
                 selectableItem(selected = false, onClick = {
                     open = false
-                    chooseSaveFile("$name-er.mmd", "Save Mermaid")?.let(tab::saveMermaid)
-                }) { Text("Save as Mermaid…") }
+                    chooseSaveFile("$name-er.mmd", tr("Save Mermaid"))?.let(tab::saveMermaid)
+                }) { Text(tr("Save as Mermaid…")) }
             }
         }
     }
@@ -184,15 +185,15 @@ private fun StatusLine(tab: ErDiagramTab) {
     Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
     Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
         val info = JewelTheme.globalColors.text.info
-        Text("${tab.tables.size} table(s) · ${tab.edges.size} relationship(s)", color = info, maxLines = 1, softWrap = false)
+        Text(tr("{0} table(s) · {1} relationship(s)", tab.tables.size, tab.edges.size), color = info, maxLines = 1, softWrap = false)
         tab.selected?.let { table ->
             Text(table.name, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
-            OutlinedLink("Open Data") { tab.openData(table) }
-            if (!tab.config.readOnly) OutlinedLink("Edit Structure") { tab.editStructure(table) }
+            OutlinedLink(tr("Open Data")) { tab.openData(table) }
+            if (!tab.config.readOnly) OutlinedLink(tr("Edit Structure")) { tab.editStructure(table) }
         }
         Legend()
         Text(
-            "Drag to arrange · scroll to pan · ⌘ scroll to zoom · double-click opens data",
+            tr("Drag to arrange · scroll to pan · ⌘ scroll to zoom · double-click opens data"),
             Modifier.weight(1f),
             color = info,
             maxLines = 1,
@@ -209,10 +210,10 @@ private fun Legend() {
     val info = JewelTheme.globalColors.text.info
     Row(horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) {
         Canvas(Modifier.size(8.dp)) { drawCircle(colors.primaryKey, size.minDimension / 2) }
-        Text("primary key", color = info, maxLines = 1, softWrap = false)
+        Text(tr("primary key"), color = info, maxLines = 1, softWrap = false)
         Box(Modifier.width(4.dp))
         Canvas(Modifier.size(8.dp)) { drawCircle(colors.foreignKey, size.minDimension / 2 - 0.75.dp.toPx(), style = Stroke(1.5.dp.toPx())) }
-        Text("foreign key", color = info, maxLines = 1, softWrap = false)
+        Text(tr("foreign key"), color = info, maxLines = 1, softWrap = false)
     }
 }
 
@@ -286,9 +287,9 @@ private fun DiagramCanvas(tab: ErDiagramTab) {
         items = {
             val table = menuTable ?: return@ContextMenuArea emptyList()
             listOfNotNull(
-                ContextMenuItem("Open Data") { tab.openData(table) },
-                ContextMenuItem("Edit Structure…") { tab.editStructure(table) }.takeUnless { tab.config.readOnly },
-                ContextMenuItem("Show Around ${table.name}") { tab.showAround(table) },
+                ContextMenuItem(tr("Open Data")) { tab.openData(table) },
+                ContextMenuItem(tr("Edit Structure…")) { tab.editStructure(table) }.takeUnless { tab.config.readOnly },
+                ContextMenuItem(tr("Show Around {0}", table.name)) { tab.showAround(table) },
             )
         },
     ) {
@@ -482,7 +483,7 @@ private fun DrawScope.drawTable(
     }
     if (table.columns.size > ErLayout.MaxRows) {
         val mid = box.y + ErLayout.HeaderHeight + ErLayout.RowPadding + ErLayout.MaxRows * ErLayout.RowHeight + ErLayout.RowHeight / 2
-        drawLabel(measurer, "+ ${table.columns.size - ErLayout.MaxRows} more columns", TypeStyle.copy(color = colors.muted.copy(alpha = alpha)), box.x + MarkerSpace, mid, box.width - MarkerSpace - SidePadding)
+        drawLabel(measurer, tr("+ {0} more columns", table.columns.size - ErLayout.MaxRows), TypeStyle.copy(color = colors.muted.copy(alpha = alpha)), box.x + MarkerSpace, mid, box.width - MarkerSpace - SidePadding)
     }
 }
 

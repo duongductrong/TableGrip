@@ -1,5 +1,6 @@
 package dev.tablegrip.core.connection
 
+import dev.tablegrip.core.i18n.tr
 import kotlinx.serialization.Serializable
 
 /**
@@ -8,9 +9,9 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 enum class AiAccess(val label: String, val description: String) {
-    Off("Off", "Nothing about this connection is sent to an agent; AI actions are hidden."),
-    SchemaOnly("Schema only", "Table and column names, types, DDL, your SQL and error messages. No values from the data."),
-    SchemaAndSamples("Schema and sample data", "Also sample values and query results, e.g. a column's distinct values.");
+    Off(tr("Off"), tr("Nothing about this connection is sent to an agent; AI actions are hidden.")),
+    SchemaOnly(tr("Schema only"), tr("Table and column names, types, DDL, your SQL and error messages. No values from the data.")),
+    SchemaAndSamples(tr("Schema and sample data"), tr("Also sample values and query results, e.g. a column's distinct values."));
 
     val sharesSchema: Boolean
         get() = this != Off

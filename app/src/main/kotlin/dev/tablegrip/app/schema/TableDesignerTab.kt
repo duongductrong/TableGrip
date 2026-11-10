@@ -1,5 +1,6 @@
 package dev.tablegrip.app.schema
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.getValue
@@ -25,7 +26,7 @@ import dev.tablegrip.core.metadata.TableRef
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
-enum class DesignerSection(val label: String) { Columns("Columns"), Indexes("Indexes"), ForeignKeys("Foreign Keys") }
+enum class DesignerSection(val label: String) { Columns(tr("Columns")), Indexes(tr("Indexes")), ForeignKeys(tr("Foreign Keys")) }
 
 /** Referential actions offered for foreign keys; `NO ACTION` is stored as null, like the metadata reports it. */
 internal val ReferentialActions = listOf("NO ACTION", "CASCADE", "SET NULL", "SET DEFAULT", "RESTRICT")
@@ -84,7 +85,10 @@ class DesignerForeignKey(val id: Long, val original: ForeignKeyInfo?, columns: L
 }
 
 /** A problem that blocks applying, shown on its [section]'s row [rowId] (null: the table as a whole). */
-data class DesignIssue(val section: DesignerSection?, val rowId: Long?, val message: String)
+/** [field] says which of the row's fields to mark, since the message is in the interface's language. */
+data class DesignIssue(val section: DesignerSection?, val rowId: Long?, val message: String, val field: IssueField = IssueField.Other)
+
+enum class IssueField { Name, Type, Other }
 
 /**
  * Designs a new table in [namespace], or changes [existing]. Edits stay in the tab until applied; the DDL they amount to
@@ -103,7 +107,7 @@ class TableDesignerTab(private val app: AppState, val config: ConnectionConfig, 
         private set
 
     override val title: String
-        get() = tableRef?.let { "Design: ${it.name}" } ?: "New Table"
+        get() = tableRef?.let { tr("Design: {0}", it.name) } ?: tr("New Table")
 
     val tableName = TextFieldState(existing?.name ?: "")
     val columns = mutableStateListOf<DesignerColumn>()
@@ -175,7 +179,7 @@ class TableDesignerTab(private val app: AppState, val config: ConnectionConfig, 
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                error = "Couldn't read ${ref.name}: ${e.message ?: e}"
+                error = tr("Couldn't read {0}: {1}", ref.name, e.message ?: e)
             } finally {
                 loading = false
             }
@@ -331,40 +335,40 @@ class TableDesignerTab(private val app: AppState, val config: ConnectionConfig, 
 
     /** What would stop the design from applying, row by row. */
     fun issues(): List<DesignIssue> = buildList {
-        if (tableName.text.isBlank()) add(DesignIssue(null, null, "The table needs a name."))
+        if (tableName.text.isBlank()) add(DesignIssue(null, null, tr("The table needs a name.")))
         else if (original == null || tableName.text.toString().trim() != original?.table?.name) {
-            if (tables.any { it.name.equals(tableName.text.toString().trim(), ignoreCase = true) && it != tableRef }) add(DesignIssue(null, null, "A table named ${tableName.text.trim()} already exists."))
+            if (tables.any { it.name.equals(tableName.text.toString().trim(), ignoreCase = true) && it != tableRef }) add(DesignIssue(null, null, tr("A table named {0} already exists.", tableName.text.trim())))
         }
         val live = columns.filterNot { it.dropped }
-        if (live.isEmpty()) add(DesignIssue(DesignerSection.Columns, null, "The table needs at least one column."))
+        if (live.isEmpty()) add(DesignIssue(DesignerSection.Columns, null, tr("The table needs at least one column.")))
         val seen = mutableSetOf<String>()
         for (column in live) {
             val name = column.name.text.toString().trim()
             when {
-                name.isEmpty() -> add(DesignIssue(DesignerSection.Columns, column.id, "Column needs a name."))
-                !seen.add(name.lowercase()) -> add(DesignIssue(DesignerSection.Columns, column.id, "Another column is already named $name."))
+                name.isEmpty() -> add(DesignIssue(DesignerSection.Columns, column.id, tr("Column needs a name."), IssueField.Name))
+                !seen.add(name.lowercase()) -> add(DesignIssue(DesignerSection.Columns, column.id, tr("Another column is already named {0}.", name), IssueField.Name))
             }
-            if (column.type.text.isBlank()) add(DesignIssue(DesignerSection.Columns, column.id, "${name.ifEmpty { "Column" }} needs a type."))
+            if (column.type.text.isBlank()) add(DesignIssue(DesignerSection.Columns, column.id, tr("{0} needs a type.", name.ifEmpty { tr("Column") }), IssueField.Type))
             if (column.autoIncrement && dialect is SqlDialect.SQLiteDialect && (!column.primaryKey || live.count { it.primaryKey } > 1)) {
-                add(DesignIssue(DesignerSection.Columns, column.id, "SQLite only auto-increments a single-column INTEGER primary key."))
+                add(DesignIssue(DesignerSection.Columns, column.id, tr("SQLite only auto-increments a single-column INTEGER primary key.")))
             }
         }
         val indexNames = mutableSetOf<String>()
         for (index in indexes.filterNot { it.dropped }) {
             val name = index.name.text.toString().trim()
             when {
-                name.isEmpty() -> add(DesignIssue(DesignerSection.Indexes, index.id, "Index needs a name."))
-                !indexNames.add(name.lowercase()) -> add(DesignIssue(DesignerSection.Indexes, index.id, "Another index is already named $name."))
+                name.isEmpty() -> add(DesignIssue(DesignerSection.Indexes, index.id, tr("Index needs a name."), IssueField.Name))
+                !indexNames.add(name.lowercase()) -> add(DesignIssue(DesignerSection.Indexes, index.id, tr("Another index is already named {0}.", name), IssueField.Name))
             }
-            if (index.columns.none { id -> live.any { it.id == id } }) add(DesignIssue(DesignerSection.Indexes, index.id, "${name.ifEmpty { "Index" }} needs at least one column."))
+            if (index.columns.none { id -> live.any { it.id == id } }) add(DesignIssue(DesignerSection.Indexes, index.id, tr("{0} needs at least one column.", name.ifEmpty { tr("Index") })))
         }
         for (fk in foreignKeys.filterNot { it.dropped }) {
-            val name = fk.name.text.toString().trim().ifEmpty { "Foreign key" }
+            val name = fk.name.text.toString().trim().ifEmpty { tr("Foreign key") }
             // SQLite's foreign keys have no names; everyone else needs one to drop it later.
-            if (fk.name.text.isBlank() && dialect !is SqlDialect.SQLiteDialect) add(DesignIssue(DesignerSection.ForeignKeys, fk.id, "Foreign key needs a name."))
-            if (fk.columns.none { id -> live.any { it.id == id } }) add(DesignIssue(DesignerSection.ForeignKeys, fk.id, "$name needs at least one column."))
-            if (fk.referencedTable == null) add(DesignIssue(DesignerSection.ForeignKeys, fk.id, "$name needs a table to reference."))
-            else if (fk.referencedColumns.size != fk.columns.size) add(DesignIssue(DesignerSection.ForeignKeys, fk.id, "$name: pick as many referenced columns as columns."))
+            if (fk.name.text.isBlank() && dialect !is SqlDialect.SQLiteDialect) add(DesignIssue(DesignerSection.ForeignKeys, fk.id, tr("Foreign key needs a name."), IssueField.Name))
+            if (fk.columns.none { id -> live.any { it.id == id } }) add(DesignIssue(DesignerSection.ForeignKeys, fk.id, tr("{0} needs at least one column.", name)))
+            if (fk.referencedTable == null) add(DesignIssue(DesignerSection.ForeignKeys, fk.id, tr("{0} needs a table to reference.", name)))
+            else if (fk.referencedColumns.size != fk.columns.size) add(DesignIssue(DesignerSection.ForeignKeys, fk.id, tr("{0}: pick as many referenced columns as columns.", name)))
         }
     }
 
@@ -394,14 +398,14 @@ class TableDesignerTab(private val app: AppState, val config: ConnectionConfig, 
         val creating = original == null
         pendingRun =
             ScriptRun(
-                title = if (creating) "Create Table ${design.table.name}" else "Apply Changes to ${original!!.table.name}",
+                title = if (creating) tr("Create Table {0}", design.table.name) else tr("Apply Changes to {0}", original!!.table.name),
                 config = config,
                 script = script,
-                runLabel = if (creating) "Create" else "Apply",
+                runLabel = if (creating) tr("Create") else tr("Apply"),
             ) {
                 val before = original?.table
                 tableRef = design.table
-                app.status = if (creating) "Created ${design.table.name}" else "Applied ${script.statements.size} change(s) to ${design.table.name}"
+                app.status = if (creating) tr("Created {0}", design.table.name) else tr("Applied {0} change(s) to {1}", script.statements.size, design.table.name)
                 app.schemaChanged(config, namespace, listOfNotNull(before, design.table))
                 load()
                 loadTables()

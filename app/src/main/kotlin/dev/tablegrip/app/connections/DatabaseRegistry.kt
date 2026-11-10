@@ -1,5 +1,6 @@
 package dev.tablegrip.app.connections
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.runtime.mutableStateMapOf
 import dev.tablegrip.core.connection.ConnectionConfig
 import dev.tablegrip.core.datafile.DataFileConnection
@@ -63,15 +64,15 @@ class DatabaseRegistry(
      */
     /** The live relational connection; fails for profiles of other kinds. */
     suspend fun database(config: ConnectionConfig): RelationalConnection =
-        connection(config) as? RelationalConnection ?: throw IllegalStateException("${config.type.displayName} has no tables")
+        connection(config) as? RelationalConnection ?: throw IllegalStateException(tr("{0} has no tables", config.type.displayName))
 
     /** The live key-value connection; fails for profiles of other kinds. */
     suspend fun keyValue(config: ConnectionConfig): KeyValueConnection =
-        connection(config) as? KeyValueConnection ?: throw IllegalStateException("${config.type.displayName} isn't a key-value store")
+        connection(config) as? KeyValueConnection ?: throw IllegalStateException(tr("{0} isn't a key-value store", config.type.displayName))
 
     /** The live document-store connection; fails for profiles of other kinds. */
     suspend fun documents(config: ConnectionConfig): DocumentConnection =
-        connection(config) as? DocumentConnection ?: throw IllegalStateException("${config.type.displayName} isn't a document store")
+        connection(config) as? DocumentConnection ?: throw IllegalStateException(tr("{0} isn't a document store", config.type.displayName))
 
     suspend fun connection(config: ConnectionConfig): DatabaseConnection {
         (statuses[config.id] as? ConnectionStatus.Connected)?.let { return it.database }

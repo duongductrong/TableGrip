@@ -1,5 +1,6 @@
 package dev.tablegrip.app.console
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.app.grid.GridMention
 import dev.tablegrip.core.agent.Mention
 import dev.tablegrip.core.connection.Capability
@@ -91,9 +92,9 @@ sealed interface FixState {
 
 /** How a result is shown in its tab. */
 enum class ResultView(val label: String) {
-    Grid("Grid"),
-    Json("JSON"),
-    Chart("Chart"),
+    Grid(tr("Grid")),
+    Json(tr("JSON")),
+    Chart(tr("Chart")),
 }
 
 /**
@@ -258,7 +259,7 @@ class ConsoleTab(
     fun proposeQuickFix(failure: StatementFailure, quick: SqlFix) {
         val sql = quick.sql ?: return
         cancelFix()
-        fix = FixState.Proposed(failure, sql, quick.explanation, "Quick fix", reviewFix(failure.sql, sql, syntax))
+        fix = FixState.Proposed(failure, sql, quick.explanation, tr("Quick fix"), reviewFix(failure.sql, sql, syntax))
     }
 
     /** Whether this connection may be described to an agent, which a fix needs. */
@@ -277,7 +278,7 @@ class ConsoleTab(
             app.scope.launch {
                 val agent = app.agent.assistAgent()
                 if (agent == null) {
-                    fix = FixState.NoFix(failure, "No agent is available. Install a command-line agent or set up an API provider in Settings › Agent.")
+                    fix = FixState.NoFix(failure, tr("No agent is available. Install a command-line agent or set up an API provider in Settings › Agent."))
                     return@launch
                 }
                 fix = FixState.Asking(failure, agent.descriptor.name)
@@ -295,7 +296,7 @@ class ConsoleTab(
                             if (sql == null) FixState.NoFix(failure, result.value.explanation)
                             else FixState.Proposed(failure, sql, result.value.explanation, result.agent, reviewFix(failure.sql, sql, syntax))
                         }
-                        is AssistResult.Invalid -> FixState.NoFix(failure, "${agent.descriptor.name} didn't return a usable fix: ${result.reasons.first()}")
+                        is AssistResult.Invalid -> FixState.NoFix(failure, tr("{0} didn't return a usable fix: {1}", agent.descriptor.name, result.reasons.first()))
                         is AssistResult.Failed -> FixState.NoFix(failure, result.message)
                     }
             }
@@ -332,7 +333,7 @@ class ConsoleTab(
         val wasBlank = composer.isBlank
         app.agent.mention(Mention.Error(title, config.type.displayName, failure.sql, failure.error.message))
         // An empty composer gets the obvious question; one with something typed keeps it.
-        if (wasBlank) composer.text.edit { append("How do I fix it?") }
+        if (wasBlank) composer.text.edit { append(tr("How do I fix it?")) }
     }
 
     /** Where [sql] is in the editor, as start until end: the occurrence nearest the caret, ignoring whitespace changes. */
@@ -404,7 +405,7 @@ class ConsoleTab(
             app.scope.launch {
                 val agent = app.agent.assistAgent()
                 if (agent == null) {
-                    chart.assist = ChartAssistState.Failed("No agent is available. Install a command-line agent or set up an API provider in Settings › Agent.")
+                    chart.assist = ChartAssistState.Failed(tr("No agent is available. Install a command-line agent or set up an API provider in Settings › Agent."))
                     return@launch
                 }
                 chart.assist = ChartAssistState.Asking(agent.descriptor.name)
@@ -417,7 +418,7 @@ class ConsoleTab(
                 chart.assist =
                     when (val result = app.agent.assist.run(agent, task)) {
                         is AssistResult.Ok -> ChartAssistState.Proposed(result.value, result.agent)
-                        is AssistResult.Invalid -> ChartAssistState.Failed("${agent.descriptor.name} didn't return a usable chart: ${result.reasons.first()}")
+                        is AssistResult.Invalid -> ChartAssistState.Failed(tr("{0} didn't return a usable chart: {1}", agent.descriptor.name, result.reasons.first()))
                         is AssistResult.Failed -> ChartAssistState.Failed(result.message)
                     }
             }
@@ -485,8 +486,8 @@ class ConsoleTab(
         val infos = statements.map(classifier::classify)
 
         if (config.readOnly && infos.any { it.changesData }) {
-            val verbs = infos.filter { it.changesData }.joinToString { it.verb }.ifEmpty { "writes" }
-            log("This connection is read-only: $verbs not run.", isError = true)
+            val verbs = infos.filter { it.changesData }.joinToString { it.verb }.ifEmpty { tr("writes") }
+            log(tr("This connection is read-only: {0} not run.", verbs), isError = true)
             selectedResultTab = 0
             onFinished?.invoke(RunOutcome(emptyList(), output.takeLast(1)))
             return
@@ -494,7 +495,7 @@ class ConsoleTab(
         val reasons = buildList {
             infos.mapNotNullTo(this) { it.danger }
             if (config.confirmWrites && infos.any { it.changesData } && isEmpty()) {
-                add("${config.name} asks before changing data (${config.environment.label.lowercase()} connection)")
+                add(tr("{0} asks before changing data ({1} connection)", config.name, config.environment.label.lowercase()))
             }
         }
         if (reasons.isNotEmpty() && !confirmed) {
@@ -556,9 +557,9 @@ class ConsoleTab(
                 .onSuccess {
                     autoCommit = enabled
                     uncommitted = 0
-                    log(if (enabled) "Auto-commit on" + (if (pending > 0) ": committed $pending pending statement(s)" else "") else "Manual commit: changes stay pending until Commit")
+                    log(if (enabled) tr("Auto-commit on") + (if (pending > 0) tr(": committed {0} pending statement(s)", pending) else "") else tr("Manual commit: changes stay pending until Commit"))
                 }
-                .onFailure { log("Could not change commit mode: ${it.message}", isError = true) }
+                .onFailure { log(tr("Could not change commit mode: {0}", it.message), isError = true) }
         }
     }
 
@@ -571,11 +572,11 @@ class ConsoleTab(
         app.scope.launch {
             runCatching { if (commit) session.commit() else session.rollback() }
                 .onSuccess {
-                    log(if (commit) "Committed" else "Rolled back")
+                    log(if (commit) tr("Committed") else tr("Rolled back"))
                     uncommitted = 0
                     then()
                 }
-                .onFailure { log("${if (commit) "Commit" else "Rollback"} failed: ${it.message}", isError = true) }
+                .onFailure { log(tr("{0} failed: {1}", if (commit) tr("Commit") else tr("Rollback"), it.message), isError = true) }
         }
     }
 
@@ -615,12 +616,12 @@ class ConsoleTab(
                 .onSuccess {
                     file = target
                     savedText = text
-                    app.status = "Saved ${target.path}"
+                    app.status = tr("Saved {0}", target.path)
                     if (app.savedQueries.contains(target)) app.savedQueries.reload()
                     then()
                 }
                 .onFailure {
-                    log("Could not save ${target.path}: ${it.message}", isError = true)
+                    log(tr("Could not save {0}: {1}", target.path, it.message), isError = true)
                     selectedResultTab = 0
                 }
         }
@@ -646,7 +647,7 @@ class ConsoleTab(
             try {
                 session()
             } catch (e: Exception) {
-                log("Could not connect: ${e.message}", isError = true)
+                log(tr("Could not connect: {0}", e.message), isError = true)
                 selectedResultTab = 0
                 return
             }
@@ -661,22 +662,22 @@ class ConsoleTab(
                 record(sql, startedAt, result.elapsedMillis, error = null)
                 when (result) {
                     is QueryResult.Rows -> {
-                        val suffix = if (result.truncated) " (first ${result.rows.size} shown)" else ""
-                        log("${result.rows.size} row(s) retrieved in ${result.elapsedMillis} ms$suffix: ${sql.preview()}")
-                        val view = ResultSetView("Result ${++resultCount}", sql, result, app.settings.pageSize)
+                        val suffix = if (result.truncated) tr(" (first {0} shown)", result.rows.size) else ""
+                        log(tr("{0} row(s) retrieved in {1} ms{2}: {3}", result.rows.size, result.elapsedMillis, suffix, sql.preview()))
+                        val view = ResultSetView(tr("Result {0}", ++resultCount), sql, result, app.settings.pageSize)
                         replaced.getOrNull(results.count { !it.pinned })?.let(view::continueFrom)
                         results += view
                     }
-                    is QueryResult.Update -> log("${result.affectedRows} row(s) affected in ${result.elapsedMillis} ms: ${sql.preview()}")
+                    is QueryResult.Update -> log(tr("{0} row(s) affected in {1} ms: {2}", result.affectedRows, result.elapsedMillis, sql.preview()))
                 }
             } catch (e: CancellationException) {
-                log("Cancelled: ${sql.preview()}", isError = true)
+                log(tr("Cancelled: {0}", sql.preview()), isError = true)
                 throw e
             } catch (e: Exception) {
                 val message = e.message ?: e.toString()
                 record(sql, startedAt, System.currentTimeMillis() - startedAt, error = message)
                 val failure = if (e is ReadOnlyViolationException) null else StatementFailure(sql, QueryError.of(e))
-                log("$message\n  in: ${sql.preview()}", isError = true, failure = failure)
+                log(tr("{0}\n  in: {1}", message, sql.preview()), isError = true, failure = failure)
                 if (!session.isValid()) dropSession()
                 selectedResultTab = 0
                 return

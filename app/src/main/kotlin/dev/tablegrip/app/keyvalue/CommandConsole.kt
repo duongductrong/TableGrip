@@ -1,5 +1,6 @@
 package dev.tablegrip.app.keyvalue
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -159,12 +160,12 @@ class CommandConsoleTab(
 
     val help: String
         get() =
-            if (etcd) "etcdctl-style commands: get KEY [--prefix] [--keys-only] [--limit=N], put KEY VALUE [--lease=ID], " +
-                "del KEY [--prefix], lease grant|revoke|timetolive|list, member list, endpoint status. ↑/↓ recall earlier commands."
-            else if (document) "Mongo shell commands without JavaScript, e.g. db.orders.find({status: 'A'}).sort({total: -1}).limit(10), " +
-                "db.orders.aggregate([...]), db.runCommand({...}), show collections, use <db>. ↑/↓ recall earlier commands."
-            else "Commands run as in redis-cli, e.g. HGETALL user:1 or SCAN 0 MATCH session:* COUNT 100. " +
-                "↑/↓ recall earlier commands; \"clear\" empties this view."
+            if (etcd) tr("etcdctl-style commands: get KEY [--prefix] [--keys-only] [--limit=N], put KEY VALUE [--lease=ID], ") +
+                tr("del KEY [--prefix], lease grant|revoke|timetolive|list, member list, endpoint status. ↑/↓ recall earlier commands.")
+            else if (document) tr("Mongo shell commands without JavaScript, e.g. db.orders.find({status: 'A'}).sort({total: -1}).limit(10), ") +
+                tr("db.orders.aggregate([...]), db.runCommand({...}), show collections, use <db>. ↑/↓ recall earlier commands.")
+            else tr("Commands run as in redis-cli, e.g. HGETALL user:1 or SCAN 0 MATCH session:* COUNT 100. ") +
+                tr("↑/↓ recall earlier commands; \"clear\" empties this view.")
 
     /** Steps through earlier commands: -1 for older, +1 for newer. */
     fun recall(step: Int) {
@@ -219,7 +220,7 @@ internal fun CommandConsoleView(tab: CommandConsoleTab) {
                 },
                 textStyle = JewelTheme.editorTextStyle,
                 enabled = !tab.running,
-                placeholder = { Text(if (tab.config.readOnly) "Read-only: only commands that read run" else "Command") },
+                placeholder = { Text(if (tab.config.readOnly) tr("Read-only: only commands that read run") else tr("Command")) },
                 onKeyboardAction = KeyboardActionHandler { tab.run() },
             )
         }

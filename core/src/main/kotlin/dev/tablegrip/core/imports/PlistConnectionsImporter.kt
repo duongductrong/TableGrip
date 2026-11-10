@@ -1,5 +1,6 @@
 package dev.tablegrip.core.imports
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.connection.DatabaseType
 import dev.tablegrip.core.connection.EngineFamily
 import dev.tablegrip.core.connection.ParsedConnection
@@ -26,7 +27,7 @@ internal object PlistConnectionsImporter {
         }
 
     fun read(file: Path): ImportScan {
-        val connections = readPlist(file) as? List<*> ?: return ImportScan(skipped = listOf("$file isn't a connection list."))
+        val connections = readPlist(file) as? List<*> ?: return ImportScan(skipped = listOf(tr("{0} isn't a connection list.", file)))
         val groups =
             (file.resolveSibling("ConnectionGroups.plist").takeIf { it.isRegularFile() }?.let { runCatching { readPlist(it) }.getOrNull() } as? List<*>)
                 .orEmpty()
@@ -40,7 +41,7 @@ internal object PlistConnectionsImporter {
             val driver = entry.string("Driver").orEmpty()
             val type = typeOf(driver)
             if (type == null) {
-                skipped += "Connections.plist: “$name” uses $driver, which TableGrip doesn't support yet."
+                skipped += tr("Connections.plist: “{0}” uses {1}, which TableGrip doesn't support yet.", name, driver)
                 continue
             }
             val tls = (entry.string("tLSMode")?.toIntOrNull() ?: 0) > 0
@@ -68,8 +69,8 @@ internal object PlistConnectionsImporter {
                     ssh = ssh(entry),
                 )
             val notes = buildList {
-                if (driver.equals("Redshift", ignoreCase = true)) add("Redshift is imported as PostgreSQL")
-                if (tls && parsed.properties.isEmpty()) add("TLS was on in the source: turn it on under Options › Driver properties")
+                if (driver.equals("Redshift", ignoreCase = true)) add(tr("Redshift is imported as PostgreSQL"))
+                if (tls && parsed.properties.isEmpty()) add(tr("TLS was on in the source: turn it on under Options › Driver properties"))
             }
             candidates += ImportCandidate(config, origin = file.toString(), notes = notes)
         }
@@ -118,7 +119,7 @@ internal object PlistConnectionsImporter {
         if (String(head, Charsets.US_ASCII).startsWith("bplist")) {
             val process = ProcessBuilder("plutil", "-convert", "xml1", "-o", "-", file.toString()).redirectErrorStream(false).start()
             val xml = process.inputStream.use { it.readBytes() }
-            check(process.waitFor(10, TimeUnit.SECONDS) && process.exitValue() == 0) { "plutil couldn't read $file" }
+            check(process.waitFor(10, TimeUnit.SECONDS) && process.exitValue() == 0) { tr("plutil couldn't read {0}", file) }
             return parseXmlPlist(xml.inputStream())
         }
         return file.inputStream().use(::parseXmlPlist)

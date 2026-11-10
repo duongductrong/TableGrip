@@ -26,6 +26,9 @@ import dev.tablegrip.app.ui.MacAboutPanel
 import dev.tablegrip.app.ui.Shortcuts
 import dev.tablegrip.core.activity.ActivitySupport
 import dev.tablegrip.core.agent.ChatStore
+import dev.tablegrip.core.i18n.I18n
+import dev.tablegrip.core.i18n.Language
+import dev.tablegrip.core.settings.SettingsStore
 import dev.tablegrip.app.ui.MainScreen
 import dev.tablegrip.app.ui.PinchZoom
 import dev.tablegrip.app.ui.TitleBarView
@@ -42,6 +45,8 @@ import org.jetbrains.jewel.window.DecoratedWindow
 private const val LaunchFileGrace = 400L
 
 fun main(args: Array<String>) {
+    // First, so every text the app builds from here on is in the chosen language.
+    I18n.install(Language.resolve(SettingsStore().load().language))
     // Before the UI, so the file the app was launched to open (from Finder or a file association) isn't missed.
     FileOpenRequests.install(args)
     MacAboutPanel.install()
@@ -63,6 +68,7 @@ private fun runApp() = application {
         if (!appState.updater.quit()) exitApplication()
     }
     appState.quitApp = { appState.requestExit(::exit) }
+    appState.restartApp = { appState.requestExit { Relaunch.afterExit(); exit() } }
     appState.restartToUpdate = { appState.requestExit { if (!appState.updater.quit(relaunch = true)) exitApplication() } }
     val doubleShift = remember { DoubleShiftDetector() }
     // ⌘Q bypasses the window's close request on macOS; route it through the same unsaved-work check.

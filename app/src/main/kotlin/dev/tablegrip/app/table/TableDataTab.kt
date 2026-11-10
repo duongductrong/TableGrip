@@ -1,5 +1,6 @@
 package dev.tablegrip.app.table
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.app.grid.GridMention
 import dev.tablegrip.app.grid.RowStatus
 import dev.tablegrip.core.agent.Mention
@@ -48,12 +49,12 @@ enum class TableView { Data, Structure }
 enum class FilterPicker { Column, Operator }
 
 enum class StructureSection(val label: String) {
-    Columns("Columns"),
-    Indexes("Indexes"),
-    ForeignKeys("Foreign Keys"),
-    Constraints("Constraints"),
-    Triggers("Triggers"),
-    Ddl("DDL"),
+    Columns(tr("Columns")),
+    Indexes(tr("Indexes")),
+    ForeignKeys(tr("Foreign Keys")),
+    Constraints(tr("Constraints")),
+    Triggers(tr("Triggers")),
+    Ddl(tr("DDL")),
 }
 
 /** Paged, sortable, filterable and editable view of one table's rows, and its structure. */
@@ -174,7 +175,7 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
     /** The applied select list as SQL; fails with its first problem if the table changed under it. */
     private fun resolveProjection(): SqlProjection? {
         val compiled = compiledProjection() ?: return null
-        return compiled.projection ?: compiled.issues.values.firstOrNull()?.let { throw IllegalStateException("Columns: $it") }
+        return compiled.projection ?: compiled.issues.values.firstOrNull()?.let { throw IllegalStateException(tr("Columns: {0}", it)) }
     }
 
     /** Columns the builder offers, typed from the table's metadata (or the loaded rows when that's unavailable). */
@@ -285,9 +286,9 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
 
     private fun unsavedNote(model: TableEditModel, row: Int): String? =
         when {
-            model.rowStatus(row) == RowStatus.Inserted -> "new row"
-            model.rowStatus(row) == RowStatus.Deleted -> "marked for deletion"
-            model.columns.indices.any { model.isModified(row, it) } -> "edited"
+            model.rowStatus(row) == RowStatus.Inserted -> tr("new row")
+            model.rowStatus(row) == RowStatus.Deleted -> tr("marked for deletion")
+            model.columns.indices.any { model.isModified(row, it) } -> tr("edited")
             else -> null
         }
 
@@ -367,7 +368,7 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
     fun referencingRows(row: Int): List<Pair<String, () -> Unit>> =
         relations.filter { isThisTable(it.toTable) }.mapNotNull { relation ->
             val values = rowValues(row, relation.toColumns)?.takeIf { list -> list.none { it.second == null } } ?: return@mapNotNull null
-            val label = "Show Referencing Rows: ${relation.fromTable.name} (${relation.fromColumns.joinToString()})"
+            val label = tr("Show Referencing Rows: {0} ({1})", relation.fromTable.name, relation.fromColumns.joinToString())
             label to { showRows(relation.fromTable, relation.fromColumns.zip(values) { source, (_, value, numeric) -> Triple(source, value, numeric) }) }
         }
 
@@ -486,7 +487,7 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
         appliedSql?.let { return SqlFilter.raw(it) }
         val tree = appliedTree ?: return null
         val compiled = FilterCompiler(dialect, filterColumns).compile(tree)
-        return compiled.filter ?: compiled.issues.values.firstOrNull()?.let { throw IllegalStateException("Filter: $it") }
+        return compiled.filter ?: compiled.issues.values.firstOrNull()?.let { throw IllegalStateException(tr("Filter: {0}", it)) }
     }
 
     /** Applies the bar's content, unless the builder has conditions it can't run; those get flagged instead. */
@@ -684,7 +685,7 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
     /** A value the server would reject stops the whole batch; says which one before anything is sent. */
     private fun readyToSave(): Boolean {
         val problem = model?.firstProblem() ?: return true
-        error = "Can't save yet. $problem"
+        error = tr("Can't save yet. {0}", problem)
         return false
     }
 
@@ -697,7 +698,7 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
             try {
                 val statements = ChangeSql.statements(dialect, table, model.toChanges())
                 val affected = app.databases.database(config).applyChanges(statements)
-                app.status = "Saved ${statements.size} change(s) to ${table.name} ($affected row(s))"
+                app.status = tr("Saved {0} change(s) to {1} ({2} row(s))", statements.size, table.name, affected)
                 error = null
                 totalRows = null
                 // The pending navigation reloads (or closes the tab) itself.

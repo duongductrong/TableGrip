@@ -1,5 +1,6 @@
 package dev.tablegrip.app.ui
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -95,7 +96,7 @@ fun ZoomControl(app: AppState) {
     var open by remember { mutableStateOf(false) }
     if (zoom == UiZoom.Default && !open) return
     Box {
-        Tooltip({ Text("Zoom: ${Shortcuts.ZoomIn.label} / ${Shortcuts.ZoomOut.label}, ${Shortcuts.ResetZoom.label} resets") }) {
+        Tooltip({ Text(tr("Zoom: {0} / {1}, {2} resets", Shortcuts.ZoomIn.label, Shortcuts.ZoomOut.label, Shortcuts.ResetZoom.label)) }) {
             Row(
                 Modifier.clip(RoundedCornerShape(4.dp)).clickable { open = true }.padding(horizontal = 4.dp, vertical = 1.dp),
                 horizontalArrangement = Arrangement.spacedBy(3.dp),
@@ -112,13 +113,13 @@ fun ZoomControl(app: AppState) {
                     selectableItem(selected = level == zoom, onClick = {
                         open = false
                         setZoom(app, level)
-                    }) { Text(if (level == UiZoom.Default) "$level% (default)" else "$level%") }
+                    }) { Text(if (level == UiZoom.Default) tr("{0}% (default)", level) else "$level%") }
                 }
                 separator()
                 selectableItem(selected = false, enabled = zoom != UiZoom.Default, onClick = {
                     open = false
                     setZoom(app, UiZoom.Default)
-                }) { Text("Reset zoom (${Shortcuts.ResetZoom.label})") }
+                }) { Text(tr("Reset zoom ({0})", Shortcuts.ResetZoom.label)) }
             }
         }
     }

@@ -1,12 +1,14 @@
 package dev.tablegrip.core.agent.provider
 
+import dev.tablegrip.core.i18n.tr
+
 /**
  * Where the chat panel's agents come from. [Cli] runs the agent CLIs installed on this machine and is the default, so
  * a settings file written before this choice existed keeps working as it did; [Provider] calls an HTTP API directly.
  */
 enum class AgentMode(val label: String) {
-    Cli("Command-line agents"),
-    Provider("API provider");
+    Cli(tr("Command-line agents")),
+    Provider(tr("API provider"));
 
     companion object {
         /** Unknown or blank names fall back to [Cli]: a bad edit must not leave the panel with no agent. */
@@ -26,7 +28,7 @@ enum class ProviderProtocol(
     val keyVariable: String,
 ) {
     Anthropic("Anthropic", "https://api.anthropic.com", "claude-opus-5-5", "ANTHROPIC_API_KEY"),
-    OpenAi("OpenAI-compatible", "https://api.openai.com/v1", "gpt-5", "OPENAI_API_KEY");
+    OpenAi(tr("OpenAI-compatible"), "https://api.openai.com/v1", "gpt-5", "OPENAI_API_KEY");
 
     /** The keychain entry holding this protocol's API key; one per protocol, so switching back and forth keeps both. */
     val secretKey: String

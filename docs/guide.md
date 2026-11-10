@@ -3,6 +3,7 @@
 Everything TableGrip does, feature by feature. For installing and building, see the [README](../README.md).
 Shortcuts are written for macOS; on Windows and Linux use Ctrl instead of ⌘.
 
+- [Language](#language)
 - [SQL editor](#sql-editor)
 - [Getting around](#getting-around)
 - [Saved queries](#saved-queries)
@@ -18,6 +19,17 @@ Shortcuts are written for macOS; on Windows and Linux use Ctrl instead of ⌘.
 - [Importing connections](#importing-connections)
 - [Connecting](#connecting)
 - [Safety](#safety)
+
+## Language
+
+TableGrip is available in English, Vietnamese (Tiếng Việt), Simplified Chinese (简体中文) and Traditional Chinese
+(繁體中文). Settings → Appearance → Language picks one; the default follows the system's language, and Chinese written
+in traditional characters (Taiwan, Hong Kong, Macau) gets Traditional Chinese. The new language shows after a restart,
+which the setting offers with **Restart Now**. In `settings.json` it is `"language"`: `system`, `en`, `vi`, `zh-CN` or
+`zh-TW`.
+
+Menus, dialogs, messages and dates follow the language. Your data, SQL, SQL keywords, database error messages, logs
+and what is sent to AI agents stay as they are.
 
 ## SQL editor
 

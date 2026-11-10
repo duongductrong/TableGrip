@@ -1,5 +1,6 @@
 package dev.tablegrip.app.workspace
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.app.documents.DocumentBrowserTab
 import dev.tablegrip.app.documents.DocumentBrowserView
 import dev.tablegrip.app.keyvalue.CommandConsoleTab
@@ -203,7 +204,7 @@ private fun PillTab(
             Modifier.size(18.dp).clip(RoundedCornerShape(4.dp)).clickable(onClick = onClose),
             contentAlignment = Alignment.Center,
         ) {
-            if (selected || hovered) Icon(AllIconsKeys.General.CloseSmall, "Close")
+            if (selected || hovered) Icon(AllIconsKeys.General.CloseSmall, tr("Close"))
         }
     }
 }
@@ -216,17 +217,17 @@ private fun EmptyWorkspace(app: AppState) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         val info = JewelTheme.globalColors.text.info
-        Text("Double-click a table to browse its data", color = info)
-        Text("Right-click a connection → New Console to write SQL", color = info)
+        Text(tr("Double-click a table to browse its data"), color = info)
+        Text(tr("Right-click a connection → New Console to write SQL"), color = info)
         app.currentConnection?.let { config ->
-            OutlinedButton(onClick = { app.workspace.openConsole(config) }, Modifier.padding(top = 8.dp)) { Text("New Console for ${config.name}") }
+            OutlinedButton(onClick = { app.workspace.openConsole(config) }, Modifier.padding(top = 8.dp)) { Text(tr("New Console for {0}", config.name)) }
         }
         Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
             KeyCap(Shortcuts.NewConsole.label)
-            Text("new console", color = info)
+            Text(tr("new console"), color = info)
             Box(Modifier.size(12.dp))
             KeyCap(Shortcuts.ShowShortcuts.label)
-            Text("all shortcuts", color = info)
+            Text(tr("all shortcuts"), color = info)
         }
     }
 }

@@ -1,5 +1,6 @@
 package dev.tablegrip.core.datafile
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.connection.DataFileOptions
 import dev.tablegrip.core.connection.DatabaseType
 import java.math.BigDecimal
@@ -101,7 +102,7 @@ class DataFileException(message: String, cause: Throwable? = null) : Exception(m
 object DataFileFormats {
     val all: List<DataFileFormat> = listOf(CsvFormat, XlsxFormat, JsonFormat)
 
-    fun of(type: DatabaseType): DataFileFormat = all.firstOrNull { it.type == type } ?: throw IllegalArgumentException("${type.displayName} isn't a data file")
+    fun of(type: DatabaseType): DataFileFormat = all.firstOrNull { it.type == type } ?: throw IllegalArgumentException(tr("{0} isn't a data file", type.displayName))
 
     /** The format [path]'s extension names, or null. */
     fun detect(path: Path): DataFileFormat? {

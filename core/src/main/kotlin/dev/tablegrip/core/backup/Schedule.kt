@@ -1,5 +1,6 @@
 package dev.tablegrip.core.backup
 
+import dev.tablegrip.core.i18n.tr
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
@@ -9,9 +10,9 @@ import kotlin.io.path.name
 import kotlinx.serialization.Serializable
 
 enum class BackupFrequency(val label: String, val interval: Duration) {
-    Hourly("Every hour", Duration.ofHours(1)),
-    Daily("Every day", Duration.ofDays(1)),
-    Weekly("Every week", Duration.ofDays(7)),
+    Hourly(tr("Every hour"), Duration.ofHours(1)),
+    Daily(tr("Every day"), Duration.ofDays(1)),
+    Weekly(tr("Every week"), Duration.ofDays(7)),
 }
 
 /**

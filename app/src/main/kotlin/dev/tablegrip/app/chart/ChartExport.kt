@@ -1,5 +1,6 @@
 package dev.tablegrip.app.chart
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.chart.ChartFrame
 import java.awt.FileDialog
 import java.awt.Frame
@@ -26,7 +27,7 @@ object ChartExport {
 
     /** Asks where to save, as PNG unless the name given ends in `.svg`; null when cancelled. Call on the UI thread. */
     fun chooseFile(suggested: String): File? {
-        val dialog = FileDialog(null as Frame?, "Save Chart", FileDialog.SAVE)
+        val dialog = FileDialog(null as Frame?, tr("Save Chart"), FileDialog.SAVE)
         dialog.file = "$suggested.png"
         dialog.isVisible = true
         val name = dialog.file ?: return null

@@ -2,6 +2,7 @@
 
 package dev.tablegrip.core.tools
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.TableGripPaths
 import dev.tablegrip.core.drivers.DriverDownloadException
 import java.io.IOException
@@ -38,13 +39,13 @@ enum class ToolFamily(val displayName: String) {
 
 /** A command-line client TableGrip runs for backups and restores; never bundled, found on the machine or downloaded. */
 enum class Tool(val command: String, val family: ToolFamily, val purpose: String) {
-    PgDump("pg_dump", ToolFamily.PostgreSQL, "backs up a PostgreSQL database"),
-    PgRestore("pg_restore", ToolFamily.PostgreSQL, "restores custom and directory backups"),
-    Psql("psql", ToolFamily.PostgreSQL, "restores plain SQL backups"),
-    MySqlDump("mysqldump", ToolFamily.MySQL, "backs up a MySQL or MariaDB database"),
-    MySql("mysql", ToolFamily.MySQL, "restores SQL backups"),
-    MariaDbDump("mariadb-dump", ToolFamily.MySQL, "MariaDB's name for mysqldump"),
-    MariaDb("mariadb", ToolFamily.MySQL, "MariaDB's name for the mysql client");
+    PgDump("pg_dump", ToolFamily.PostgreSQL, tr("backs up a PostgreSQL database")),
+    PgRestore("pg_restore", ToolFamily.PostgreSQL, tr("restores custom and directory backups")),
+    Psql("psql", ToolFamily.PostgreSQL, tr("restores plain SQL backups")),
+    MySqlDump("mysqldump", ToolFamily.MySQL, tr("backs up a MySQL or MariaDB database")),
+    MySql("mysql", ToolFamily.MySQL, tr("restores SQL backups")),
+    MariaDbDump("mariadb-dump", ToolFamily.MySQL, tr("MariaDB's name for mysqldump")),
+    MariaDb("mariadb", ToolFamily.MySQL, tr("MariaDB's name for the mysql client"));
 
     /** The file name on this OS. */
     val executable: String
@@ -53,11 +54,11 @@ enum class Tool(val command: String, val family: ToolFamily, val purpose: String
 
 enum class ToolSource(val label: String) {
     /** Chosen by the user in Settings → Tools. */
-    Custom("Chosen by you"),
+    Custom(tr("Chosen by you")),
     /** Downloaded by TableGrip into `~/.tablegrip/tools`. */
-    Downloaded("Downloaded"),
+    Downloaded(tr("Downloaded")),
     /** Already installed: on PATH or in a well-known install folder. */
-    System("Installed on this machine"),
+    System(tr("Installed on this machine")),
 }
 
 /** A tool found on this machine. [version] is what `--version` printed, e.g. "18.6"; null if it couldn't run. */
@@ -110,8 +111,8 @@ object Platform {
  * them (see [installHint]). Linux distributions package PostgreSQL's clients, which is how Linux users get them.
  */
 object ToolCatalog {
-    private const val EdbPublisher = "EnterpriseDB, the PostgreSQL project's official binaries for macOS and Windows"
-    private const val PgLicense = "PostgreSQL License (permissive); bundled libraries under their own licenses"
+    private val EdbPublisher = tr("EnterpriseDB, the PostgreSQL project's official binaries for macOS and Windows")
+    private val PgLicense = tr("PostgreSQL License (permissive); bundled libraries under their own licenses")
 
     val packages: List<ToolPackage> =
         listOf(
@@ -165,13 +166,13 @@ object ToolCatalog {
                 when {
                     Platform.isMac -> "Or install them yourself: brew install libpq (or Postgres.app)."
                     Platform.isWindows -> "Or install them yourself with the PostgreSQL installer from postgresql.org."
-                    else -> "Install your distribution's PostgreSQL client package, e.g. sudo apt install postgresql-client (apt.postgresql.org has the newest)."
+                    else -> tr("Install your distribution's PostgreSQL client package, e.g. sudo apt install postgresql-client (apt.postgresql.org has the newest).")
                 }
             ToolFamily.MySQL ->
                 when {
-                    Platform.isMac -> "Install them with brew install mysql-client (or mariadb), then choose them here if they aren't found."
-                    Platform.isWindows -> "Install MySQL Shell & Utilities or MariaDB from their installers, then choose mysqldump here if it isn't found."
-                    else -> "Install your distribution's mysql-client or mariadb-client package."
+                    Platform.isMac -> tr("Install them with brew install mysql-client (or mariadb), then choose them here if they aren't found.")
+                    Platform.isWindows -> tr("Install MySQL Shell & Utilities or MariaDB from their installers, then choose mysqldump here if it isn't found.")
+                    else -> tr("Install your distribution's mysql-client or mariadb-client package.")
                 }
         }
 }
@@ -264,7 +265,7 @@ class ToolLibrary(
     private suspend fun download(pkg: ToolPackage, target: Path, onProgress: (Long, Long) -> Unit) {
         val client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).connectTimeout(Duration.ofSeconds(20)).build()
         val response = client.send(HttpRequest.newBuilder(URI(pkg.url)).GET().build(), HttpResponse.BodyHandlers.ofInputStream())
-        if (response.statusCode() != 200) throw DriverDownloadException("Download of ${pkg.url} failed: HTTP ${response.statusCode()}")
+        if (response.statusCode() != 200) throw DriverDownloadException(tr("Download of {0} failed: HTTP {1}", pkg.url, response.statusCode()))
         val digest = MessageDigest.getInstance("SHA-256")
         var done = 0L
         response.body().use { input ->
@@ -283,7 +284,7 @@ class ToolLibrary(
         }
         val actual = digest.digest().joinToString("") { "%02x".format(it) }
         if (!actual.equals(pkg.sha256, ignoreCase = true)) {
-            throw DriverDownloadException("${pkg.url} doesn't match its pinned SHA-256 (got $actual). Nothing was installed.")
+            throw DriverDownloadException(tr("{0} doesn't match its pinned SHA-256 (got {1}). Nothing was installed.", pkg.url, actual))
         }
     }
 
@@ -295,14 +296,14 @@ class ToolLibrary(
                 if (entry.isDirectory || entry.name !in wanted) continue
                 val relative = entry.name.removePrefix(pkg.stripPrefix)
                 val out = target.resolve(relative).normalize()
-                if (!out.startsWith(target)) throw IOException("Archive entry escapes the install folder: ${entry.name}")
+                if (!out.startsWith(target)) throw IOException(tr("Archive entry escapes the install folder: {0}", entry.name))
                 Files.createDirectories(out.parent)
                 zip.getInputStream(entry).use { Files.copy(it, out, StandardCopyOption.REPLACE_EXISTING) }
                 if (relative.startsWith("bin/")) out.toFile().setExecutable(true)
                 kept++
             }
             val missing = wanted.size - kept
-            if (missing > 0) throw IOException("${pkg.url} doesn't contain $missing of the expected files. Nothing was installed.")
+            if (missing > 0) throw IOException(tr("{0} doesn't contain {1} of the expected files. Nothing was installed.", pkg.url, missing))
         }
     }
 

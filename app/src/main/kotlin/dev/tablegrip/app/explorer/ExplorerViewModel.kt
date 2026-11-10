@@ -1,5 +1,6 @@
 package dev.tablegrip.app.explorer
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.mutableStateMapOf
@@ -118,7 +119,7 @@ class ExplorerViewModel(private val app: AppState) {
     /** Favorites first, then each group in name order, then connections without a group, keeping their saved order. */
     private fun topLevel(profiles: List<ConnectionConfig>): List<ExplorerNode> = buildList {
         val favorites = profiles.filter { it.favorite }
-        if (favorites.isNotEmpty()) add(ExplorerNode.Group("Favorites", favorites = true, favorites.map(ExplorerNode::Connection)))
+        if (favorites.isNotEmpty()) add(ExplorerNode.Group(tr("Favorites"), favorites = true, favorites.map(ExplorerNode::Connection)))
         profiles.filter { !it.favorite && it.group.isNotBlank() }
             .groupBy { it.group.trim() }
             .toSortedMap(String.CASE_INSENSITIVE_ORDER)
@@ -243,17 +244,17 @@ class ExplorerViewModel(private val app: AppState) {
             is ExplorerNode.Schema -> {
                 val (views, tables) = database.tables(key.namespace).partition { it.isView }
                 listOfNotNull(
-                    ExplorerNode.Folder(key, "tables", tables.map { ExplorerNode.Table(config.id, it) }).takeIf { tables.isNotEmpty() },
-                    ExplorerNode.Folder(key, "views", views.map { ExplorerNode.Table(config.id, it) }).takeIf { views.isNotEmpty() },
+                    ExplorerNode.Folder(key, tr("tables"), tables.map { ExplorerNode.Table(config.id, it) }).takeIf { tables.isNotEmpty() },
+                    ExplorerNode.Folder(key, tr("views"), views.map { ExplorerNode.Table(config.id, it) }).takeIf { views.isNotEmpty() },
                 )
             }
             is TableKey -> {
                 val details = database.tableDetails(key.ref)
                 listOfNotNull(
-                    ExplorerNode.Folder(key, "columns", details.columns.map { ExplorerNode.Column(key, it) }),
-                    ExplorerNode.Folder(key, "indexes", details.indexes.map { ExplorerNode.Index(key, it) })
+                    ExplorerNode.Folder(key, tr("columns"), details.columns.map { ExplorerNode.Column(key, it) }),
+                    ExplorerNode.Folder(key, tr("indexes"), details.indexes.map { ExplorerNode.Index(key, it) })
                         .takeIf { details.indexes.isNotEmpty() },
-                    ExplorerNode.Folder(key, "foreign keys", details.foreignKeys.map { ExplorerNode.ForeignKey(key, it) })
+                    ExplorerNode.Folder(key, tr("foreign keys"), details.foreignKeys.map { ExplorerNode.ForeignKey(key, it) })
                         .takeIf { details.foreignKeys.isNotEmpty() },
                 )
             }
@@ -266,9 +267,9 @@ class ExplorerViewModel(private val app: AppState) {
             runCatching { app.databases.database(config).tableStructure(table).ddl }
                 .onSuccess {
                     copyToClipboard(it)
-                    app.status = "Copied DDL of ${table.name}"
+                    app.status = tr("Copied DDL of {0}", table.name)
                 }
-                .onFailure { app.status = "Couldn't read DDL of ${table.name}: ${it.message}" }
+                .onFailure { app.status = tr("Couldn't read DDL of {0}: {1}", table.name, it.message) }
         }
     }
 

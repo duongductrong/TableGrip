@@ -1,5 +1,6 @@
 package dev.tablegrip.app.documents
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.getValue
@@ -173,7 +174,7 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
         val skipValue = parseCount(skipField.text.toString())
         val limitValue = parseCount(limitField.text.toString())
         if (skipValue == null || limitValue == null) {
-            message = Message("Skip and limit take a whole number of documents, or nothing.", isError = true)
+            message = Message(tr("Skip and limit take a whole number of documents, or nothing."), isError = true)
             return@guard
         }
         appliedFilter = normalize(filter.text.toString())
@@ -251,7 +252,7 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
                 schema.add(parsed)
                 grid.selection = null
                 grid.verticalScroll.requestScrollToItem(0)
-                if (lost > 0) message = Message("$lost unsaved ${if (lost == 1) "document isn't" else "documents aren't"} on this page any more; their edits were dropped.", isError = true)
+                if (lost > 0) message = Message(tr("{0} unsaved {1} on this page any more; their edits were dropped.", lost, if (lost == 1) tr("document isn't") else tr("documents aren't")), isError = true)
                 if (!sampled) {
                     sampled = true
                     launch { schema.add(connection().sample(database, collection, SampleSize).map { Json.parseToJsonElement(it).jsonObject }) }
@@ -294,7 +295,7 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
     /** A value that can't be converted to its field's type stops the save before anything is written. */
     private fun readyToSave(): Boolean {
         val problem = model.firstProblem() ?: return true
-        message = Message("Can't save yet. $problem", isError = true)
+        message = Message(tr("Can't save yet. {0}", problem), isError = true)
         return false
     }
 
@@ -318,10 +319,10 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
                 for (change in changes) {
                     try {
                         when (change) {
-                            is DocumentEditModel.Change.Delete -> if (mongo.delete(database, collection, listOf(change.id)) == 0L) failed[change.row] = "already deleted"
+                            is DocumentEditModel.Change.Delete -> if (mongo.delete(database, collection, listOf(change.id)) == 0L) failed[change.row] = tr("already deleted")
                             is DocumentEditModel.Change.Update ->
                                 if (!mongo.update(database, collection, change.id, change.set, change.unset, change.expected)) {
-                                    failed[change.row] = "changed or deleted by someone else since it was loaded"
+                                    failed[change.row] = tr("changed or deleted by someone else since it was loaded")
                                 }
                             is DocumentEditModel.Change.Insert -> mongo.insert(database, collection, change.document)
                         }
@@ -333,17 +334,17 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
                 }
                 val saved = changes.size - failed.size
                 // A deletion that found nothing has nothing left to retry.
-                val retry = failed.filterValues { it != "already deleted" }.keys
+                val retry = failed.filterValues { it != tr("already deleted") }.keys
                 carry = current.pending(retry).takeIf { !it.isEmpty }
                 total = null
                 message =
-                    if (failed.isEmpty()) Message("Saved $saved ${if (saved == 1) "change" else "changes"}.", isError = false)
+                    if (failed.isEmpty()) Message(tr("Saved {0} {1}.", saved, if (saved == 1) tr("change") else tr("changes")), isError = false)
                     else Message(
-                        "Saved $saved of ${changes.size}. " + failed.entries.take(3).joinToString("; ") { (row, why) -> "Row ${skip + row + 1}: $why" } +
-                            (if (failed.size > 3) "; …" else "") + if (retry.isNotEmpty()) ". Those edits are still pending, over the current values." else "",
+                        tr("Saved {0} of {1}. ", saved, changes.size) + failed.entries.take(3).joinToString("; ") { (row, why) -> tr("Row {0}: {1}", skip + row + 1, why) } +
+                            (if (failed.size > 3) "; …" else "") + if (retry.isNotEmpty()) tr(". Those edits are still pending, over the current values.") else "",
                         isError = true,
                     )
-                app.status = "Saved $saved change(s) to $database.$collection"
+                app.status = tr("Saved {0} change(s) to {1}.{2}", saved, database, collection)
                 val next = afterSubmit.takeIf { failed.isEmpty() }
                 afterSubmit = null
                 if (next != null) {

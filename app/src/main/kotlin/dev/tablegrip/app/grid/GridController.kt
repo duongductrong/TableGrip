@@ -1,5 +1,6 @@
 package dev.tablegrip.app.grid
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -462,7 +463,7 @@ internal class GridController(val state: DataGridState, private val scope: Corou
         var pasted = 0
         var invalid = 0
         var skipped = 0
-        val label = "paste" + if (plan.newRows > 0) " with ${count(plan.newRows, "new row")}" else ""
+        val label = if (plan.newRows > 0) tr("paste with {0}", newRows(plan.newRows)) else tr("paste")
         Snapshot.withMutableSnapshot {
             editor.undoable(label, plan.range.anchor.row, state.modelColumn(plan.range.anchor.column)) {
                 repeat(plan.newRows) { editor.addRow() }
@@ -498,12 +499,12 @@ internal class GridController(val state: DataGridState, private val scope: Corou
         state.notice =
             GridNotice(
                 listOfNotNull(
-                    if (pasted == 0) "Nothing pasted" else "Pasted ${count(pasted, "cell")}",
-                    count(plan.newRows, "new row").takeIf { plan.newRows > 0 },
-                    "$invalid to fix".takeIf { invalid > 0 },
-                    "${count(skipped, "read-only cell")} skipped".takeIf { skipped > 0 },
-                    "${count(plan.cutColumns, "column")} cut off".takeIf { plan.cutColumns > 0 },
-                    "${Shortcuts.Undo} undoes".takeIf { pasted > 0 || plan.newRows > 0 },
+                    if (pasted == 0) tr("Nothing pasted") else if (pasted == 1) tr("Pasted 1 cell") else tr("Pasted {0} cells", pasted),
+                    newRows(plan.newRows).takeIf { plan.newRows > 0 },
+                    tr("{0} to fix", invalid).takeIf { invalid > 0 },
+                    (if (skipped == 1) tr("1 read-only cell skipped") else tr("{0} read-only cells skipped", skipped)).takeIf { skipped > 0 },
+                    (if (plan.cutColumns == 1) tr("1 column cut off") else tr("{0} columns cut off", plan.cutColumns)).takeIf { plan.cutColumns > 0 },
+                    tr("{0} undoes", Shortcuts.Undo).takeIf { pasted > 0 || plan.newRows > 0 },
                 ).joinToString(" · ")
             )
         return true
@@ -517,11 +518,11 @@ internal class GridController(val state: DataGridState, private val scope: Corou
         val column = state.modelColumn(cell.column)
         val check = editor.check(row, column, text)
         if (check !is EditCheck.Ok || check.warning) return startEditing(cell, replaceWith = text)
-        editor.undoable("paste into ${columnName(cell.column)}", row, column) { editor.setValue(row, column, check.value) }
+        editor.undoable(tr("paste into {0}", columnName(cell.column)), row, column) { editor.setValue(row, column, check.value) }
         return true
     }
 
-    private fun count(n: Int, noun: String) = "$n $noun${if (n == 1) "" else "s"}"
+    private fun newRows(n: Int) = if (n == 1) tr("1 new row") else tr("{0} new rows", n)
 
     // endregion
 
@@ -532,7 +533,7 @@ internal class GridController(val state: DataGridState, private val scope: Corou
         val edit = cellEdit(cell) ?: return null
         val check = editor.check(cell.row, state.modelColumn(cell.column), state.editText.text.toString())
         if (check == EditCheck.Empty && !edit.nullable && model.rowStatus(cell.row) != RowStatus.Inserted) {
-            return EditCheck.Invalid("${columnName(cell.column)} is NOT NULL: enter a value")
+            return EditCheck.Invalid(tr("{0} is NOT NULL: enter a value", columnName(cell.column)))
         }
         return check
     }
@@ -553,7 +554,7 @@ internal class GridController(val state: DataGridState, private val scope: Corou
                 state.editRejections++
                 return
             }
-            editor.undoable("edit of ${columnName(cell.column)}", row, column) {
+            editor.undoable(tr("edit of {0}", columnName(cell.column)), row, column) {
                 when (check) {
                     is EditCheck.Invalid -> editor.setValue(row, column, text)
                     EditCheck.Empty ->
@@ -577,7 +578,7 @@ internal class GridController(val state: DataGridState, private val scope: Corou
 
     fun setNull() {
         val editor = editor ?: return
-        selectionStep(editor, "Set NULL") { forEachSelectedCell { row, column -> if (editor.canSetNull(row, column)) editor.setValue(row, column, null) } }
+        selectionStep(editor, tr("Set NULL")) { forEachSelectedCell { row, column -> if (editor.canSetNull(row, column)) editor.setValue(row, column, null) } }
     }
 
     fun canSetDefault(): Boolean {
@@ -611,7 +612,7 @@ internal class GridController(val state: DataGridState, private val scope: Corou
                 false -> if (edit.nullable) null else true
                 null -> true
             }
-        selectionStep(editor, "switch to ${next?.toString() ?: "NULL"}") {
+        selectionStep(editor, tr("switch to {0}", next?.toString() ?: "NULL")) {
             forEachSelectedCell { row, column ->
                 val cellEdit = editor.cellEdit(row, column)
                 if (cellEdit.kind == EditKind.Boolean && editor.canEdit(row, column)) {
@@ -634,7 +635,7 @@ internal class GridController(val state: DataGridState, private val scope: Corou
     /** Fills the selected UUID cells with new, distinct UUIDs. */
     fun generateUuids(timeOrdered: Boolean) {
         val editor = editor ?: return
-        selectionStep(editor, "new UUIDs") {
+        selectionStep(editor, tr("new UUIDs")) {
             forEachSelectedCell { row, column ->
                 if (editor.columnEdit(column).kind == EditKind.Uuid && editor.canEdit(row, column)) {
                     editor.setValue(row, column, (if (timeOrdered) Uuids.v7() else Uuids.v4()).toString())

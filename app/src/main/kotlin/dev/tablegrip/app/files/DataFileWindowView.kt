@@ -1,5 +1,6 @@
 package dev.tablegrip.app.files
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -116,18 +117,18 @@ private fun org.jetbrains.jewel.window.DecoratedWindowScope.FileTitleBar(app: Ap
         }
         Text(file.title, color = JewelTheme.globalColors.text.info)
         Row(Modifier.align(Alignment.End).padding(end = 6.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-            HeaderButton("open_file", AllIconsKeys.General.Add, "Open another data file…") { app.connections.chooseDataFiles(app.files::open) }
-            HeaderButton("reload_file", AllIconsKeys.Actions.Refresh, "Reload from file", enabled = connection != null) {
+            HeaderButton("open_file", AllIconsKeys.General.Add, tr("Open another data file…")) { app.connections.chooseDataFiles(app.files::open) }
+            HeaderButton("reload_file", AllIconsKeys.Actions.Refresh, tr("Reload from file"), enabled = connection != null) {
                 connection?.let { app.scope.launch { it.sync.reload() } }
             }
             if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE_FILE_DIR)) {
-                HeaderButton("reveal_file", AllIconsKeys.Nodes.Folder, "Reveal in file manager") { runCatching { Desktop.getDesktop().browseFileDirectory(file.file) } }
+                HeaderButton("reveal_file", AllIconsKeys.Nodes.Folder, tr("Reveal in file manager")) { runCatching { Desktop.getDesktop().browseFileDirectory(file.file) } }
             }
             val config = file.config
-            HeaderButton("file_console", AllIconsKeys.Nodes.Console, "Query with SQL in the main window", enabled = config != null) {
+            HeaderButton("file_console", AllIconsKeys.Nodes.Console, tr("Query with SQL in the main window"), enabled = config != null) {
                 config?.let(app.workspace::openConsole)
             }
-            HeaderButton("open_in_main", AllIconsKeys.Nodes.DataSchema, "Show the main window: connections and the explorer") { app.mainWindowVisible = true }
+            HeaderButton("open_in_main", AllIconsKeys.Nodes.DataSchema, tr("Show the main window: connections and the explorer")) { app.mainWindowVisible = true }
         }
     }
 }
@@ -144,12 +145,12 @@ private fun FileContent(app: AppState, file: DataFileWindow) {
                 error != null ->
                     Column(Modifier.align(Alignment.Center).padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(error, color = JewelTheme.globalColors.text.error)
-                        DefaultButton(onClick = file::load) { Text("Try Again") }
+                        DefaultButton(onClick = file::load) { Text(tr("Try Again")) }
                     }
                 selected != null -> key(selected) { TableDataView(selected) }
-                config != null && !file.loading && file.tables.isEmpty() -> Text("${file.title} has no tables.", Modifier.align(Alignment.Center), color = JewelTheme.globalColors.text.info)
-                config != null -> ConnectionLoadingPlaceholder(config, app.databases.status(config.id), "Opening ${file.title}…", Modifier.align(Alignment.Center))
-                else -> Text("Opening ${file.title}…", Modifier.align(Alignment.Center), color = JewelTheme.globalColors.text.info)
+                config != null && !file.loading && file.tables.isEmpty() -> Text(tr("{0} has no tables.", file.title), Modifier.align(Alignment.Center), color = JewelTheme.globalColors.text.info)
+                config != null -> ConnectionLoadingPlaceholder(config, app.databases.status(config.id), tr("Opening {0}…", file.title), Modifier.align(Alignment.Center))
+                else -> Text(tr("Opening {0}…", file.title), Modifier.align(Alignment.Center), color = JewelTheme.globalColors.text.info)
             }
         }
     }

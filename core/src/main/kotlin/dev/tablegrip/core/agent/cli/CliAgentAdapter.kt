@@ -1,5 +1,6 @@
 package dev.tablegrip.core.agent.cli
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.agent.AgentAdapter
 import dev.tablegrip.core.agent.AgentDescriptor
 import dev.tablegrip.core.agent.AgentEvent
@@ -109,10 +110,10 @@ class CliAgentAdapter(private val preset: CliAgentPreset, private val executable
                 withContext(Dispatchers.IO + NonCancellable) { terminate(process) }
             }
 
-            if (timedOut) throw AgentException("No answer from ${preset.title} in ${preset.timeoutSeconds}s.")
+            if (timedOut) throw AgentException(tr("No answer from {0} in {1}s.", preset.title, preset.timeoutSeconds))
             val status = process.exitValue()
             val errors = stderr.await()
-            fun failed(): Nothing = throw AgentException(diagnostic(errors).ifEmpty { "${preset.title} exited with code $status." })
+            fun failed(): Nothing = throw AgentException(diagnostic(errors).ifEmpty { tr("{0} exited with code {1}.", preset.title, status) })
             val text =
                 try {
                     decoder.finish(status, errors)
@@ -122,7 +123,7 @@ class CliAgentAdapter(private val preset: CliAgentPreset, private val executable
             when {
                 // Several of these agents exit non-zero on a warning they also print: only an empty run is a failure.
                 text.isEmpty() && status != 0 -> failed()
-                text.isEmpty() -> throw AgentException("${preset.title} returned nothing.")
+                text.isEmpty() -> throw AgentException(tr("{0} returned nothing.", preset.title))
             }
             send(AgentEvent.Completed(text))
         }
@@ -133,7 +134,7 @@ class CliAgentAdapter(private val preset: CliAgentPreset, private val executable
         return try {
             builder.start()
         } catch (e: Exception) {
-            throw AgentException("Couldn't start ${preset.title} (${preset.binary}).", e)
+            throw AgentException(tr("Couldn't start {0} ({1}).", preset.title, preset.binary), e)
         }
     }
 
@@ -196,7 +197,7 @@ class CliAgentAdapter(private val preset: CliAgentPreset, private val executable
             val lines = text.replace(Ansi, "").lines().map { it.trim() }.filter { line -> line.isNotEmpty() && line.count { it.isLetterOrDigit() } * 2 >= line.length }
             if (lines.isEmpty()) return ""
             if (lines.any { it.startsWith("Usage:", ignoreCase = true) || it == "Commands:" || it == "Options:" }) {
-                return "The agent rejected its command line — its CLI may be out of date."
+                return tr("The agent rejected its command line — its CLI may be out of date.")
             }
             val markers = listOf("error", "unknown", "invalid", "not found", "no such", "failed", "missing", "denied", "unauthorized", "forbidden", "expired", "login")
             val named = lines.lastOrNull { line -> markers.any { line.contains(it, ignoreCase = true) } }

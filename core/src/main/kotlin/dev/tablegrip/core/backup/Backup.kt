@@ -2,6 +2,7 @@
 
 package dev.tablegrip.core.backup
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.connection.ConnectionConfig
 import dev.tablegrip.core.connection.ConnectionString
 import dev.tablegrip.core.connection.DatabaseType
@@ -50,25 +51,25 @@ sealed interface BackupSupport {
                 // pg_dump can't read CockroachDB's catalog; TiDB and PlanetScale have their own dump tools.
                 type.family == EngineFamily.PostgreSQL && type.dialect !is SqlDialect.CockroachDBDialect -> WithTools(ToolFamily.PostgreSQL)
                 type == DatabaseType.MySQL || type == DatabaseType.MariaDB -> WithTools(ToolFamily.MySQL)
-                else -> NotYet("Backups don't support ${type.displayName} yet. They support PostgreSQL, MySQL, MariaDB, SQLite and DuckDB.")
+                else -> NotYet(tr("Backups don't support {0} yet. They support PostgreSQL, MySQL, MariaDB, SQLite and DuckDB.", type.displayName))
             }
 
         /** Restoring needs the tools; a SQLite or DuckDB backup is opened as a database of its own instead. */
         fun restoreOf(type: DatabaseType): BackupSupport =
             when (val backup = of(type)) {
-                is Native -> NotYet("A ${type.displayName} backup is a database of its own: add it as a new connection to open it.")
+                is Native -> NotYet(tr("A {0} backup is a database of its own: add it as a new connection to open it.", type.displayName))
                 else -> backup
             }
     }
 }
 
 enum class BackupFormat(val label: String, val extension: String?, val isFolder: Boolean = false) {
-    PgCustom("Custom (compressed, restore selectively)", "dump"),
-    PgPlain("Plain SQL", "sql"),
-    PgDirectory("Directory (parallel)", null, isFolder = true),
+    PgCustom(tr("Custom (compressed, restore selectively)"), "dump"),
+    PgPlain(tr("Plain SQL"), "sql"),
+    PgDirectory(tr("Directory (parallel)"), null, isFolder = true),
     MySqlSql("SQL", "sql"),
-    SqliteCopy("Database file", "db"),
-    DuckDbExport("Export folder (schema + Parquet)", null, isFolder = true);
+    SqliteCopy(tr("Database file"), "db"),
+    DuckDbExport(tr("Export folder (schema + Parquet)"), null, isFolder = true);
 
     companion object {
         fun forFamily(family: ToolFamily): List<BackupFormat> =
@@ -88,9 +89,9 @@ enum class BackupFormat(val label: String, val extension: String?, val isFolder:
 }
 
 enum class BackupContent(val label: String) {
-    All("Schema and data"),
-    SchemaOnly("Schema only"),
-    DataOnly("Data only"),
+    All(tr("Schema and data")),
+    SchemaOnly(tr("Schema only")),
+    DataOnly(tr("Data only")),
 }
 
 data class BackupOptions(
@@ -160,9 +161,9 @@ data class ServerEndpoint(val host: String, val port: Int, val user: String, val
     companion object {
         /** The server [config] points at, by host fields or by its URL. Doesn't open the tunnel. */
         fun of(config: ConnectionConfig, password: String?): ServerEndpoint {
-            val defaultPort = config.type.defaultPort ?: throw IOException("${config.type.displayName} doesn't use a network connection.")
+            val defaultPort = config.type.defaultPort ?: throw IOException(tr("{0} doesn't use a network connection.", config.type.displayName))
             val url = config.url?.let(ConnectionString::parse)
-            val host = (url?.host ?: config.host).takeIf { ',' !in it } ?: throw IOException("Backups need a single host, not a list.")
+            val host = (url?.host ?: config.host).takeIf { ',' !in it } ?: throw IOException(tr("Backups need a single host, not a list."))
             return ServerEndpoint(host.trim('[', ']'), url?.port ?: config.port ?: defaultPort, config.user, password, config.properties)
         }
     }
@@ -370,7 +371,7 @@ object ToolRunner {
         val run = run(command, logFile, onLine)
         if (run.exitCode != 0) {
             val tail = run.log.lines().filter { it.isNotBlank() }.takeLast(6).joinToString("\n")
-            throw ToolFailedException("$what failed (exit code ${run.exitCode}).\n$tail", run.log)
+            throw ToolFailedException(tr("{0} failed (exit code {1}).\n{2}", what, run.exitCode, tail), run.log)
         }
         return run
     }

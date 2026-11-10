@@ -1,5 +1,6 @@
 package dev.tablegrip.app.agent
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -288,10 +289,10 @@ class AgentViewModel(private val app: AppState, private val registry: AgentRegis
                     answered = true
                 } catch (e: CancellationException) {
                     reply.text = reveal.flush()
-                    if (reply.text.isBlank()) reply.error = "Stopped."
+                    if (reply.text.isBlank()) reply.error = tr("Stopped.")
                     throw e
                 } catch (e: Exception) {
-                    reply.error = e.message ?: "The agent failed."
+                    reply.error = e.message ?: tr("The agent failed.")
                 } finally {
                     pacing.cancel()
                     endThinking()
@@ -364,9 +365,9 @@ class AgentViewModel(private val app: AppState, private val registry: AgentRegis
         if (changes.isEmpty()) return emptyList()
         return buildList {
             infos.mapNotNullTo(this) { it.danger }
-            add("Changes data or schema: ${changes.map { it.verb }.distinct().joinToString()}")
+            add(tr("Changes data or schema: {0}", changes.map { it.verb }.distinct().joinToString()))
             val environment = connection.environment.takeIf { it != Environment.None }?.let { " (${it.label.lowercase()})" }.orEmpty()
-            add("Runs on ${connection.name}$environment")
+            add(tr("Runs on {0}{1}", connection.name, environment))
         }.distinct()
     }
 
@@ -412,15 +413,15 @@ class AgentViewModel(private val app: AppState, private val registry: AgentRegis
         console.run(sql) { outcome ->
             val rows = outcome.results.sumOf { it.rows.rows.size }
             val failed = outcome.log.any { it.isError }
-            message.runs[block] = RunRequestState.Done(if (failed) "Failed — the error was sent to the agent" else "$rows row(s) sent to the agent")
-            startTurn(note(AgentContext.describe(sql, outcome), if (failed) "Query error shared with the agent" else "Result shared · $rows row(s)").also { it.origin = message to block })
+            message.runs[block] = RunRequestState.Done(if (failed) tr("Failed — the error was sent to the agent") else tr("{0} row(s) sent to the agent", rows))
+            startTurn(note(AgentContext.describe(sql, outcome), if (failed) tr("Query error shared with the agent") else tr("Result shared · {0} row(s)", rows)).also { it.origin = message to block })
         }
     }
 
     fun declineRun(message: ChatMessage, block: Int) {
         if (message.runs[block] != null) return
         message.runs[block] = RunRequestState.Declined
-        startTurn(note("The user declined to run that query. Continue without its result, or suggest it for them to run.", "Run declined").also { it.origin = message to block })
+        startTurn(note("The user declined to run that query. Continue without its result, or suggest it for them to run.", tr("Run declined")).also { it.origin = message to block })
     }
 
     private fun note(text: String, label: String) = ChatMessage(AgentMessage.Role.User, text, ChatMessage.Kind.Note).also { it.label = label }

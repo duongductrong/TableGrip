@@ -1,5 +1,6 @@
 package dev.tablegrip.app.ui
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
@@ -75,7 +76,20 @@ data class Shortcut(
 }
 
 /** A rebindable command: [id] is stable across versions and is what settings store. */
-class ShortcutAction(val id: String, val group: String, val description: String, val default: Shortcut)
+class ShortcutAction(val id: String, val group: String, val description: String, val default: Shortcut) {
+    /** [group] as the interface shows it; [group] itself stays English, since keymap contexts are matched by it. */
+    val groupLabel: String
+        get() =
+            when (group) {
+                "General" -> tr("General")
+                "Console" -> tr("Console")
+                "SQL Editor" -> tr("SQL Editor")
+                "Data Grid" -> tr("Data Grid")
+                "Table Filter" -> tr("Table Filter")
+                "Filter Builder" -> tr("Filter Builder")
+                else -> group
+            }
+}
 
 fun KeyBinding.toShortcut(): Shortcut = Shortcut(Key(key), label, primary, shift, alt, ctrl)
 
@@ -184,90 +198,90 @@ object Shortcuts {
         }
 
     // Window
-    val NewConsole by action("General", "New console for the current connection", Shortcut(Key.T, "T", primary = true))
-    val CloseTab by action("General", "Close tab", Shortcut(Key.W, "W", primary = true))
-    val NextTab by action("General", "Next tab", if (isMac) Shortcut(Key.RightBracket, "]", primary = true, shift = true) else Shortcut(Key.PageDown, "PgDn", primary = true))
-    val PreviousTab by action("General", "Previous tab", if (isMac) Shortcut(Key.LeftBracket, "[", primary = true, shift = true) else Shortcut(Key.PageUp, "PgUp", primary = true))
-    val NextTabAlt by action("General", "Next tab (alternative)", Shortcut(Key.Tab, "Tab", ctrl = true))
-    val PreviousTabAlt by action("General", "Previous tab (alternative)", Shortcut(Key.Tab, "Tab", ctrl = true, shift = true))
-    val Explorer by action("General", "Connections", if (isMac) Shortcut(Key.One, "1", primary = true) else Shortcut(Key.One, "1", alt = true))
-    val History by action("General", "Query History", if (isMac) Shortcut(Key.Two, "2", primary = true) else Shortcut(Key.Two, "2", alt = true))
-    val Agent by action("General", "Agent", if (isMac) Shortcut(Key.Three, "3", primary = true) else Shortcut(Key.Three, "3", alt = true))
-    val Queries by action("General", "Saved Queries", if (isMac) Shortcut(Key.Four, "4", primary = true) else Shortcut(Key.Four, "4", alt = true))
+    val NewConsole by action("General", tr("New console for the current connection"), Shortcut(Key.T, "T", primary = true))
+    val CloseTab by action("General", tr("Close tab"), Shortcut(Key.W, "W", primary = true))
+    val NextTab by action("General", tr("Next tab"), if (isMac) Shortcut(Key.RightBracket, "]", primary = true, shift = true) else Shortcut(Key.PageDown, "PgDn", primary = true))
+    val PreviousTab by action("General", tr("Previous tab"), if (isMac) Shortcut(Key.LeftBracket, "[", primary = true, shift = true) else Shortcut(Key.PageUp, "PgUp", primary = true))
+    val NextTabAlt by action("General", tr("Next tab (alternative)"), Shortcut(Key.Tab, "Tab", ctrl = true))
+    val PreviousTabAlt by action("General", tr("Previous tab (alternative)"), Shortcut(Key.Tab, "Tab", ctrl = true, shift = true))
+    val Explorer by action("General", tr("Connections"), if (isMac) Shortcut(Key.One, "1", primary = true) else Shortcut(Key.One, "1", alt = true))
+    val History by action("General", tr("Query History"), if (isMac) Shortcut(Key.Two, "2", primary = true) else Shortcut(Key.Two, "2", alt = true))
+    val Agent by action("General", tr("Agent"), if (isMac) Shortcut(Key.Three, "3", primary = true) else Shortcut(Key.Three, "3", alt = true))
+    val Queries by action("General", tr("Saved Queries"), if (isMac) Shortcut(Key.Four, "4", primary = true) else Shortcut(Key.Four, "4", alt = true))
     /** One field for everything; a double ⇧ opens it too. */
-    val GoToAnything by action("General", "Go to anything", Shortcut(Key.P, "P", primary = true))
-    val Activity by action("General", "Activity: sessions and locks", Shortcut(Key.A, "A", primary = true, alt = true))
-    val Settings by action("General", "Settings", if (isMac) Shortcut(Key.Comma, ",", primary = true) else Shortcut(Key.S, "S", primary = true, alt = true))
-    val ShowShortcuts by action("General", "Keyboard shortcuts", Shortcut(Key.Slash, "/", primary = true, shift = true))
+    val GoToAnything by action("General", tr("Go to anything"), Shortcut(Key.P, "P", primary = true))
+    val Activity by action("General", tr("Activity: sessions and locks"), Shortcut(Key.A, "A", primary = true, alt = true))
+    val Settings by action("General", tr("Settings"), if (isMac) Shortcut(Key.Comma, ",", primary = true) else Shortcut(Key.S, "S", primary = true, alt = true))
+    val ShowShortcuts by action("General", tr("Keyboard shortcuts"), Shortcut(Key.Slash, "/", primary = true, shift = true))
     /** Cursor's key: mentions what is selected in the agent chat, or just opens it when nothing is. */
-    val AddToChat by action("General", "Mention the selection in the agent chat", Shortcut(Key.L, "L", primary = true))
+    val AddToChat by action("General", tr("Mention the selection in the agent chat"), Shortcut(Key.L, "L", primary = true))
     /** VS Code's key; a focused grid takes it first on a foreign-key cell (Go to Referenced Row). */
-    val ToggleSidebar by action("General", "Show / hide the sidebar", Shortcut(Key.B, "B", primary = true))
+    val ToggleSidebar by action("General", tr("Show / hide the sidebar"), Shortcut(Key.B, "B", primary = true))
     /** VS Code's and the browsers' keys; ⌘= is ⌘+ without ⇧, and both zoom in. */
-    val ZoomIn by action("General", "Zoom in", Shortcut(Key.Equals, "=", primary = true))
-    val ZoomInAlt by action("General", "Zoom in (alternative)", Shortcut(Key.Equals, "+", primary = true, shift = true))
-    val ZoomOut by action("General", "Zoom out", Shortcut(Key.Minus, "-", primary = true))
-    val ResetZoom by action("General", "Reset zoom", Shortcut(Key.Zero, "0", primary = true))
+    val ZoomIn by action("General", tr("Zoom in"), Shortcut(Key.Equals, "=", primary = true))
+    val ZoomInAlt by action("General", tr("Zoom in (alternative)"), Shortcut(Key.Equals, "+", primary = true, shift = true))
+    val ZoomOut by action("General", tr("Zoom out"), Shortcut(Key.Minus, "-", primary = true))
+    val ResetZoom by action("General", tr("Reset zoom"), Shortcut(Key.Zero, "0", primary = true))
 
     // Console
-    val RunStatement by action("Console", "Execute statement at caret or selection", Shortcut(Key.Enter, EnterLabel, primary = true))
-    val RunScript by action("Console", "Execute script", Shortcut(Key.Enter, EnterLabel, primary = true, shift = true))
-    val Cancel by action("Console", "Cancel running query", if (isMac) Shortcut(Key.Period, ".", primary = true) else Shortcut(Key.F2, "F2", primary = true))
-    val Explain by action("Console", "Explain plan", Shortcut(Key.E, "E", primary = true, shift = true))
-    val Save by action("Console", "Save query / submit table changes", Shortcut(Key.S, "S", primary = true))
-    val SaveAs by action("Console", "Save script to a file", Shortcut(Key.S, "S", primary = true, shift = true))
+    val RunStatement by action("Console", tr("Execute statement at caret or selection"), Shortcut(Key.Enter, EnterLabel, primary = true))
+    val RunScript by action("Console", tr("Execute script"), Shortcut(Key.Enter, EnterLabel, primary = true, shift = true))
+    val Cancel by action("Console", tr("Cancel running query"), if (isMac) Shortcut(Key.Period, ".", primary = true) else Shortcut(Key.F2, "F2", primary = true))
+    val Explain by action("Console", tr("Explain plan"), Shortcut(Key.E, "E", primary = true, shift = true))
+    val Save by action("Console", tr("Save query / submit table changes"), Shortcut(Key.S, "S", primary = true))
+    val SaveAs by action("Console", tr("Save script to a file"), Shortcut(Key.S, "S", primary = true, shift = true))
 
     // SQL editor
-    val Completion by action("SQL Editor", "Code completion", Shortcut(Key.Spacebar, "Space", ctrl = true))
-    val Comment by action("SQL Editor", "Comment / uncomment lines", Shortcut(Key.Slash, "/", primary = true))
-    val Duplicate by action("SQL Editor", "Duplicate line or selection", Shortcut(Key.D, "D", primary = true))
-    val DeleteLine by action("SQL Editor", "Delete line", if (isMac) Shortcut(Key.Backspace, BackspaceLabel, primary = true) else Shortcut(Key.Y, "Y", primary = true))
-    val MoveLineUp by action("SQL Editor", "Move line up", Shortcut(Key.DirectionUp, "↑", alt = true, shift = true))
-    val MoveLineDown by action("SQL Editor", "Move line down", Shortcut(Key.DirectionDown, "↓", alt = true, shift = true))
-    val Format by action("SQL Editor", "Reformat SQL", Shortcut(Key.L, "L", primary = true, alt = true))
-    val Find by action("SQL Editor", "Find", Shortcut(Key.F, "F", primary = true))
-    val Replace by action("SQL Editor", "Replace", Shortcut(Key.R, "R", primary = true))
-    val Indent by action("SQL Editor", "Indent lines", Shortcut(Key.Tab, "Tab"))
-    val Outdent by action("SQL Editor", "Outdent lines", Shortcut(Key.Tab, "Tab", shift = true))
+    val Completion by action("SQL Editor", tr("Code completion"), Shortcut(Key.Spacebar, "Space", ctrl = true))
+    val Comment by action("SQL Editor", tr("Comment / uncomment lines"), Shortcut(Key.Slash, "/", primary = true))
+    val Duplicate by action("SQL Editor", tr("Duplicate line or selection"), Shortcut(Key.D, "D", primary = true))
+    val DeleteLine by action("SQL Editor", tr("Delete line"), if (isMac) Shortcut(Key.Backspace, BackspaceLabel, primary = true) else Shortcut(Key.Y, "Y", primary = true))
+    val MoveLineUp by action("SQL Editor", tr("Move line up"), Shortcut(Key.DirectionUp, "↑", alt = true, shift = true))
+    val MoveLineDown by action("SQL Editor", tr("Move line down"), Shortcut(Key.DirectionDown, "↓", alt = true, shift = true))
+    val Format by action("SQL Editor", tr("Reformat SQL"), Shortcut(Key.L, "L", primary = true, alt = true))
+    val Find by action("SQL Editor", tr("Find"), Shortcut(Key.F, "F", primary = true))
+    val Replace by action("SQL Editor", tr("Replace"), Shortcut(Key.R, "R", primary = true))
+    val Indent by action("SQL Editor", tr("Indent lines"), Shortcut(Key.Tab, "Tab"))
+    val Outdent by action("SQL Editor", tr("Outdent lines"), Shortcut(Key.Tab, "Tab", shift = true))
 
     // Data grid
-    val Copy by action("Data Grid", "Copy cells", Shortcut(Key.C, "C", primary = true))
-    val CopyWithHeader by action("Data Grid", "Copy cells with header", Shortcut(Key.C, "C", primary = true, shift = true))
-    val SelectAll by action("Data Grid", "Select all", Shortcut(Key.A, "A", primary = true))
-    val EditCell by action("Data Grid", "Edit cell", Shortcut(Key.F2, "F2"))
-    val ExpandEditor by action("Data Grid", "Expand the cell editor", Shortcut(Key.Enter, EnterLabel, shift = true))
-    val SetNull by action("Data Grid", "Set cell to NULL", Shortcut(Key.N, "N", primary = true, alt = true))
-    val AddRow by action("Data Grid", "Add row", Shortcut(Key.N, "N", primary = true))
-    val DeleteRows by action("Data Grid", "Delete rows", Shortcut(Key.Backspace, BackspaceLabel, primary = true))
+    val Copy by action("Data Grid", tr("Copy cells"), Shortcut(Key.C, "C", primary = true))
+    val CopyWithHeader by action("Data Grid", tr("Copy cells with header"), Shortcut(Key.C, "C", primary = true, shift = true))
+    val SelectAll by action("Data Grid", tr("Select all"), Shortcut(Key.A, "A", primary = true))
+    val EditCell by action("Data Grid", tr("Edit cell"), Shortcut(Key.F2, "F2"))
+    val ExpandEditor by action("Data Grid", tr("Expand the cell editor"), Shortcut(Key.Enter, EnterLabel, shift = true))
+    val SetNull by action("Data Grid", tr("Set cell to NULL"), Shortcut(Key.N, "N", primary = true, alt = true))
+    val AddRow by action("Data Grid", tr("Add row"), Shortcut(Key.N, "N", primary = true))
+    val DeleteRows by action("Data Grid", tr("Delete rows"), Shortcut(Key.Backspace, BackspaceLabel, primary = true))
     /** Undo and redo step through the pending edits, like a spreadsheet; they're never sent until submitted. */
-    val Undo by action("Data Grid", "Undo the last change to the data", Shortcut(Key.Z, "Z", primary = true))
-    val Redo by action("Data Grid", "Redo", Shortcut(Key.Z, "Z", primary = true, shift = true))
-    val RedoAlt by action("Data Grid", "Redo (alternative)", Shortcut(Key.Y, "Y", primary = true))
+    val Undo by action("Data Grid", tr("Undo the last change to the data"), Shortcut(Key.Z, "Z", primary = true))
+    val Redo by action("Data Grid", tr("Redo"), Shortcut(Key.Z, "Z", primary = true, shift = true))
+    val RedoAlt by action("Data Grid", tr("Redo (alternative)"), Shortcut(Key.Y, "Y", primary = true))
     /** Drops every pending edit of the selected rows at once. */
-    val RevertRows by action("Data Grid", "Revert rows", Shortcut(Key.Z, "Z", primary = true, alt = true))
-    val Submit by action("Data Grid", "Submit changes / apply in the cell editor", Shortcut(Key.Enter, EnterLabel, primary = true))
-    val Reload by action("Data Grid", "Reload table", Shortcut(Key.R, "R", primary = true))
+    val RevertRows by action("Data Grid", tr("Revert rows"), Shortcut(Key.Z, "Z", primary = true, alt = true))
+    val Submit by action("Data Grid", tr("Submit changes / apply in the cell editor"), Shortcut(Key.Enter, EnterLabel, primary = true))
+    val Reload by action("Data Grid", tr("Reload table"), Shortcut(Key.R, "R", primary = true))
     /** The usual Go to Declaration key, which on a foreign-key cell goes to the referenced row. */
-    val GoToReferenced by action("Data Grid", "Go to the row a foreign key points at", Shortcut(Key.B, "B", primary = true))
+    val GoToReferenced by action("Data Grid", tr("Go to the row a foreign key points at"), Shortcut(Key.B, "B", primary = true))
 
     // Table filter: anywhere in a table viewer
-    val FocusFilter by action("Table Filter", "Focus filter", Shortcut(Key.F, "F", primary = true))
-    val FilterByValue by action("Table Filter", "Filter by the selected cell's value", Shortcut(Key.F, "F", primary = true, alt = true))
-    val ExcludeValue by action("Table Filter", "Exclude the selected cell's value", Shortcut(Key.F, "F", primary = true, alt = true, shift = true))
-    val ToggleFilterMode by action("Table Filter", "Switch between builder and SQL; show or hide a collection's query builder", Shortcut(Key.F, "F", primary = true, shift = true))
-    val ClearFilter by action("Table Filter", "Clear filter", Shortcut(Key.Backspace, BackspaceLabel, primary = true, shift = true))
+    val FocusFilter by action("Table Filter", tr("Focus filter"), Shortcut(Key.F, "F", primary = true))
+    val FilterByValue by action("Table Filter", tr("Filter by the selected cell's value"), Shortcut(Key.F, "F", primary = true, alt = true))
+    val ExcludeValue by action("Table Filter", tr("Exclude the selected cell's value"), Shortcut(Key.F, "F", primary = true, alt = true, shift = true))
+    val ToggleFilterMode by action("Table Filter", tr("Switch between builder and SQL; show or hide a collection's query builder"), Shortcut(Key.F, "F", primary = true, shift = true))
+    val ClearFilter by action("Table Filter", tr("Clear filter"), Shortcut(Key.Backspace, BackspaceLabel, primary = true, shift = true))
 
     // Filter builder: in a condition row. Row editing mirrors line editing in the SQL editor.
-    val ApplyFilter by action("Filter Builder", "Apply filter", Shortcut(Key.Enter, EnterLabel, primary = true))
-    val AddCondition by action("Filter Builder", "Add condition below", Shortcut(Key.N, "N", primary = true))
-    val AddConditionGroup by action("Filter Builder", "Add group below", Shortcut(Key.N, "N", primary = true, shift = true))
-    val AddSqlCondition by action("Filter Builder", "Add SQL condition below", Shortcut(Key.N, "N", primary = true, alt = true))
-    val ChooseColumn by action("Filter Builder", "Choose column", Shortcut(Key.C, "C", primary = true, alt = true))
-    val ChooseOperator by action("Filter Builder", "Choose operator", Shortcut(Key.O, "O", primary = true, alt = true))
-    val ToggleCombinator by action("Filter Builder", "Switch the group between all / any", Shortcut(Key.A, "A", primary = true, shift = true))
-    val MatchCase by action("Filter Builder", "Match case", Shortcut(Key.C, "C", alt = true))
-    val PreviousCondition by action("Filter Builder", "Previous condition", Shortcut(Key.DirectionUp, "↑"))
-    val NextCondition by action("Filter Builder", "Next condition", Shortcut(Key.DirectionDown, "↓"))
+    val ApplyFilter by action("Filter Builder", tr("Apply filter"), Shortcut(Key.Enter, EnterLabel, primary = true))
+    val AddCondition by action("Filter Builder", tr("Add condition below"), Shortcut(Key.N, "N", primary = true))
+    val AddConditionGroup by action("Filter Builder", tr("Add group below"), Shortcut(Key.N, "N", primary = true, shift = true))
+    val AddSqlCondition by action("Filter Builder", tr("Add SQL condition below"), Shortcut(Key.N, "N", primary = true, alt = true))
+    val ChooseColumn by action("Filter Builder", tr("Choose column"), Shortcut(Key.C, "C", primary = true, alt = true))
+    val ChooseOperator by action("Filter Builder", tr("Choose operator"), Shortcut(Key.O, "O", primary = true, alt = true))
+    val ToggleCombinator by action("Filter Builder", tr("Switch the group between all / any"), Shortcut(Key.A, "A", primary = true, shift = true))
+    val MatchCase by action("Filter Builder", tr("Match case"), Shortcut(Key.C, "C", alt = true))
+    val PreviousCondition by action("Filter Builder", tr("Previous condition"), Shortcut(Key.DirectionUp, "↑"))
+    val NextCondition by action("Filter Builder", tr("Next condition"), Shortcut(Key.DirectionDown, "↓"))
 
     class Entry(val description: String, val keys: String)
 
@@ -279,97 +293,97 @@ object Shortcuts {
     val groups: List<Group>
         get() = listOf(
             Group(
-                "General",
+                tr("General"),
                 listOf(
-                    Entry("Go to anything: tables, tabs, queries, actions", "${GoToAnything.label}  /  ${if (isMac) "⇧⇧" else "Shift Shift"}"),
-                    entry("New console for the current connection", NewConsole),
-                    entry("Close tab", CloseTab),
-                    entry("Next tab", NextTab, NextTabAlt),
-                    entry("Previous tab", PreviousTab, PreviousTabAlt),
-                    entry("Connections", Explorer),
-                    entry("Query History", History),
-                    entry("Agent", Agent),
-                    entry("Mention the selection or statement in the agent chat, or open it", AddToChat),
-                    entry("Show / hide the sidebar", ToggleSidebar),
-                    entry("Zoom in / out", ZoomIn, ZoomOut),
-                    entry("Reset zoom", ResetZoom),
-                    entry("Saved Queries", Queries),
-                    entry("Activity: sessions and locks of the current connection", Activity),
-                    entry("Settings", Settings),
-                    entry("Keyboard shortcuts", ShowShortcuts),
+                    Entry(tr("Go to anything: tables, tabs, queries, actions"), "${GoToAnything.label}  /  ${if (isMac) "⇧⇧" else "Shift Shift"}"),
+                    entry(tr("New console for the current connection"), NewConsole),
+                    entry(tr("Close tab"), CloseTab),
+                    entry(tr("Next tab"), NextTab, NextTabAlt),
+                    entry(tr("Previous tab"), PreviousTab, PreviousTabAlt),
+                    entry(tr("Connections"), Explorer),
+                    entry(tr("Query History"), History),
+                    entry(tr("Agent"), Agent),
+                    entry(tr("Mention the selection or statement in the agent chat, or open it"), AddToChat),
+                    entry(tr("Show / hide the sidebar"), ToggleSidebar),
+                    entry(tr("Zoom in / out"), ZoomIn, ZoomOut),
+                    entry(tr("Reset zoom"), ResetZoom),
+                    entry(tr("Saved Queries"), Queries),
+                    entry(tr("Activity: sessions and locks of the current connection"), Activity),
+                    entry(tr("Settings"), Settings),
+                    entry(tr("Keyboard shortcuts"), ShowShortcuts),
                 ),
             ),
             Group(
-                "Console",
+                tr("Console"),
                 listOf(
-                    entry("Execute statement at caret or selection", RunStatement),
-                    entry("Execute script", RunScript),
-                    entry("Cancel running query", Cancel),
-                    entry("Explain plan", Explain),
-                    entry("Save query (the first time: name it in Saved Queries)", Save),
-                    entry("Save script to a file…", SaveAs),
+                    entry(tr("Execute statement at caret or selection"), RunStatement),
+                    entry(tr("Execute script"), RunScript),
+                    entry(tr("Cancel running query"), Cancel),
+                    entry(tr("Explain plan"), Explain),
+                    entry(tr("Save query (the first time: name it in Saved Queries)"), Save),
+                    entry(tr("Save script to a file…"), SaveAs),
                 ),
             ),
             Group(
-                "SQL Editor",
+                tr("SQL Editor"),
                 listOf(
-                    entry("Code completion", Completion),
-                    entry("Comment / uncomment lines", Comment),
-                    entry("Duplicate line or selection", Duplicate),
-                    entry("Delete line", DeleteLine),
-                    entry("Move line up / down", MoveLineUp, MoveLineDown),
-                    entry("Indent / outdent lines", Indent, Outdent),
-                    entry("Reformat SQL", Format),
-                    entry("Find", Find),
-                    entry("Replace", Replace),
+                    entry(tr("Code completion"), Completion),
+                    entry(tr("Comment / uncomment lines"), Comment),
+                    entry(tr("Duplicate line or selection"), Duplicate),
+                    entry(tr("Delete line"), DeleteLine),
+                    entry(tr("Move line up / down"), MoveLineUp, MoveLineDown),
+                    entry(tr("Indent / outdent lines"), Indent, Outdent),
+                    entry(tr("Reformat SQL"), Format),
+                    entry(tr("Find"), Find),
+                    entry(tr("Replace"), Replace),
                 ),
             ),
             Group(
-                "Data Grid",
+                tr("Data Grid"),
                 listOf(
-                    entry("Copy cells", Copy),
-                    entry("Copy cells with header", CopyWithHeader),
-                    entry("Select all", SelectAll),
-                    Entry("Edit cell", "$EnterLabel  /  ${EditCell.label}"),
-                    entry("Expand the cell editor (${Submit.label} applies)", ExpandEditor),
-                    entry("Set cell to NULL", SetNull),
-                    entry("Add row", AddRow),
-                    entry("Delete rows", DeleteRows),
-                    entry("Undo the last change to the data", Undo),
-                    entry("Redo", Redo, RedoAlt),
-                    entry("Revert rows: drop all their pending changes", RevertRows),
-                    entry("Submit changes", Submit, Save),
-                    entry("Reload table", Reload),
-                    entry("Go to the row a foreign key points at", GoToReferenced),
+                    entry(tr("Copy cells"), Copy),
+                    entry(tr("Copy cells with header"), CopyWithHeader),
+                    entry(tr("Select all"), SelectAll),
+                    Entry(tr("Edit cell"), "$EnterLabel  /  ${EditCell.label}"),
+                    entry(tr("Expand the cell editor ({0} applies)", Submit.label), ExpandEditor),
+                    entry(tr("Set cell to NULL"), SetNull),
+                    entry(tr("Add row"), AddRow),
+                    entry(tr("Delete rows"), DeleteRows),
+                    entry(tr("Undo the last change to the data"), Undo),
+                    entry(tr("Redo"), Redo, RedoAlt),
+                    entry(tr("Revert rows: drop all their pending changes"), RevertRows),
+                    entry(tr("Submit changes"), Submit, Save),
+                    entry(tr("Reload table"), Reload),
+                    entry(tr("Go to the row a foreign key points at"), GoToReferenced),
                 ),
             ),
             Group(
-                "Table Filter",
+                tr("Table Filter"),
                 listOf(
-                    entry("Focus filter (adds a condition on the current column)", FocusFilter),
-                    entry("Filter by the selected cell's value", FilterByValue),
-                    entry("Exclude the selected cell's value", ExcludeValue),
-                    entry("Switch between builder and SQL; show or hide a collection's query builder", ToggleFilterMode),
-                    entry("Clear filter", ClearFilter),
-                    Entry("Apply filter", "$EnterLabel  /  ${ApplyFilter.label}"),
-                    Entry("Back to the grid", "Esc"),
+                    entry(tr("Focus filter (adds a condition on the current column)"), FocusFilter),
+                    entry(tr("Filter by the selected cell's value"), FilterByValue),
+                    entry(tr("Exclude the selected cell's value"), ExcludeValue),
+                    entry(tr("Switch between builder and SQL; show or hide a collection's query builder"), ToggleFilterMode),
+                    entry(tr("Clear filter"), ClearFilter),
+                    Entry(tr("Apply filter"), "$EnterLabel  /  ${ApplyFilter.label}"),
+                    Entry(tr("Back to the grid"), "Esc"),
                 ),
             ),
             Group(
-                "Filter Builder",
+                tr("Filter Builder"),
                 listOf(
-                    entry("Add condition below", AddCondition),
-                    entry("Add group below", AddConditionGroup),
-                    entry("Add SQL condition below", AddSqlCondition),
-                    entry("Duplicate condition", Duplicate),
-                    entry("Remove condition", DeleteLine),
-                    entry("Enable / disable condition", Comment),
-                    entry("Move condition up / down", MoveLineUp, MoveLineDown),
-                    entry("Previous / next condition", PreviousCondition, NextCondition),
-                    entry("Choose column", ChooseColumn),
-                    entry("Choose operator", ChooseOperator),
-                    entry("Switch the group between all / any", ToggleCombinator),
-                    entry("Match case", MatchCase),
+                    entry(tr("Add condition below"), AddCondition),
+                    entry(tr("Add group below"), AddConditionGroup),
+                    entry(tr("Add SQL condition below"), AddSqlCondition),
+                    entry(tr("Duplicate condition"), Duplicate),
+                    entry(tr("Remove condition"), DeleteLine),
+                    entry(tr("Enable / disable condition"), Comment),
+                    entry(tr("Move condition up / down"), MoveLineUp, MoveLineDown),
+                    entry(tr("Previous / next condition"), PreviousCondition, NextCondition),
+                    entry(tr("Choose column"), ChooseColumn),
+                    entry(tr("Choose operator"), ChooseOperator),
+                    entry(tr("Switch the group between all / any"), ToggleCombinator),
+                    entry(tr("Match case"), MatchCase),
                 ),
             ),
         )

@@ -1,5 +1,6 @@
 package dev.tablegrip.app.agent
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -108,7 +109,7 @@ internal fun ModelPicker(agent: AgentViewModel) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                model ?: "Default model",
+                model ?: tr("Default model"),
                 Modifier.widthIn(max = 160.dp),
                 color = JewelTheme.globalColors.text.info,
                 maxLines = 1,
@@ -162,17 +163,17 @@ private fun ModelList(agent: AgentViewModel, selected: AgentAdapter, current: St
                         else -> false
                     }
                 },
-                placeholder = { Text(if (models.isNullOrEmpty()) "Type a model id" else "Search or type a model id") },
+                placeholder = { Text(if (models.isNullOrEmpty()) tr("Type a model id") else tr("Search or type a model id")) },
             )
             when {
                 models == null ->
                     Row(Modifier.padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         CircularProgressIndicator(Modifier.size(12.dp))
-                        Text("Asking ${selected.descriptor.name} for its models…", color = JewelTheme.globalColors.text.info, fontSize = 11.sp)
+                        Text(tr("Asking {0} for its models…", selected.descriptor.name), color = JewelTheme.globalColors.text.info, fontSize = 11.sp)
                     }
                 models.isNullOrEmpty() ->
                     Text(
-                        "${selected.descriptor.name} didn't list its models. Type one and press Enter.",
+                        tr("{0} didn't list its models. Type one and press Enter.", selected.descriptor.name),
                         Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                         color = JewelTheme.globalColors.text.info,
                         fontSize = 11.sp,
@@ -204,9 +205,9 @@ private fun ModelRow(choice: ModelChoice, active: Boolean, highlighted: Boolean,
         }
         val (title, detail) =
             when (choice) {
-                ModelChoice.Default -> "Default" to "the agent's own setting"
+                ModelChoice.Default -> tr("Default") to tr("the agent's own setting")
                 is ModelChoice.Offered -> choice.offered.id to choice.offered.label?.takeIf { it != choice.offered.id }
-                is ModelChoice.Typed -> "Use “${choice.model}”" to null
+                is ModelChoice.Typed -> tr("Use “{0}”", choice.model) to null
             }
         Text(title, Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
         detail?.let { Text(it, color = JewelTheme.globalColors.text.info, maxLines = 1, overflow = TextOverflow.Ellipsis, fontSize = 11.sp) }

@@ -1,5 +1,6 @@
 package dev.tablegrip.app.explorer
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -173,8 +174,8 @@ internal fun Modifier.dropHighlight(active: Boolean): Modifier =
 @Composable
 internal fun DropZones(drag: ConnectionDragState, modifier: Modifier = Modifier) {
     Row(modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        DropZone(drag, "zone:top", DropTarget.TopLevel, "No group", Modifier.weight(1f))
-        DropZone(drag, "zone:new", DropTarget.NewGroup, "＋ New group", Modifier.weight(1f))
+        DropZone(drag, "zone:top", DropTarget.TopLevel, tr("No group"), Modifier.weight(1f))
+        DropZone(drag, "zone:new", DropTarget.NewGroup, tr("＋ New group"), Modifier.weight(1f))
     }
 }
 
@@ -223,12 +224,12 @@ internal fun DragGhost(drag: ConnectionDragState, origin: Offset) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Badge(first, size = 16)
-        Text(if (drag.dragged.size == 1) first.name else "${drag.dragged.size} connections")
+        Text(if (drag.dragged.size == 1) first.name else tr("{0} connections", drag.dragged.size))
         when (val target = drag.hovered) {
             is DropTarget.Group -> Arrow(target.name)
-            DropTarget.Favorites -> Arrow("Favorites")
-            DropTarget.TopLevel -> Arrow("no group")
-            DropTarget.NewGroup -> Arrow("new group")
+            DropTarget.Favorites -> Arrow(tr("Favorites"))
+            DropTarget.TopLevel -> Arrow(tr("no group"))
+            DropTarget.NewGroup -> Arrow(tr("new group"))
             null -> Unit
         }
     }

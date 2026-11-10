@@ -1,5 +1,6 @@
 package dev.tablegrip.app.keyvalue
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.driver.KeyInfo
 import dev.tablegrip.core.driver.KeyType
 import dev.tablegrip.core.driver.KeyValue
@@ -49,10 +50,10 @@ internal fun formatBytes(bytes: Long): String =
 
 /** The units the TTL editor offers, largest last. */
 internal enum class TtlUnit(val label: String, val seconds: Long) {
-    Seconds("seconds", 1),
-    Minutes("minutes", 60),
-    Hours("hours", 3_600),
-    Days("days", 86_400),
+    Seconds(tr("seconds"), 1),
+    Minutes(tr("minutes"), 60),
+    Hours(tr("hours"), 3_600),
+    Days(tr("days"), 86_400),
     ;
 
     companion object {
@@ -65,17 +66,17 @@ internal enum class TtlUnit(val label: String, val seconds: Long) {
 internal fun ttlSeconds(amount: String, unit: TtlUnit): Long? = amount.trim().toLongOrNull()?.takeIf { it > 0 }?.let { it * unit.seconds }
 
 /** One-click expiries in the TTL editor. */
-internal val TtlPresets = listOf("1 min" to 60L, "1 hour" to 3_600L, "1 day" to 86_400L, "1 week" to 604_800L)
+internal val TtlPresets = listOf(tr("1 min") to 60L, tr("1 hour") to 3_600L, tr("1 day") to 86_400L, tr("1 week") to 604_800L)
 
 /** What one element of each type is called, for counts and the add row: "2 fields", "Add member". */
 internal fun elementNoun(type: KeyType, count: Long): String {
     val (one, many) =
         when (type) {
-            KeyType.Hash -> "field" to "fields"
-            KeyType.List -> "item" to "items"
-            KeyType.Set, KeyType.SortedSet -> "member" to "members"
-            KeyType.Stream -> "entry" to "entries"
-            else -> "element" to "elements"
+            KeyType.Hash -> tr("field") to tr("fields")
+            KeyType.List -> tr("item") to tr("items")
+            KeyType.Set, KeyType.SortedSet -> tr("member") to tr("members")
+            KeyType.Stream -> tr("entry") to tr("entries")
+            else -> tr("element") to tr("elements")
         }
     return "%,d %s".format(count, if (count == 1L) one else many)
 }
@@ -83,12 +84,12 @@ internal fun elementNoun(type: KeyType, count: Long): String {
 /** One line on what each type is for, under the type picker of the new-key form. */
 internal fun typeDescription(type: KeyType): String =
     when (type) {
-        KeyType.Text -> "A single value: text, a number, or serialized JSON."
-        KeyType.Hash -> "Fields mapped to values, like an object or a row."
-        KeyType.List -> "An ordered sequence; good for queues and recent items."
-        KeyType.Set -> "Unique members in no particular order."
-        KeyType.SortedSet -> "Unique members ordered by a score; good for leaderboards."
-        KeyType.Stream -> "An append-only log of entries, each a set of fields."
+        KeyType.Text -> tr("A single value: text, a number, or serialized JSON.")
+        KeyType.Hash -> tr("Fields mapped to values, like an object or a row.")
+        KeyType.List -> tr("An ordered sequence; good for queues and recent items.")
+        KeyType.Set -> tr("Unique members in no particular order.")
+        KeyType.SortedSet -> tr("Unique members ordered by a score; good for leaderboards.")
+        KeyType.Stream -> tr("An append-only log of entries, each a set of fields.")
         else -> ""
     }
 
@@ -158,10 +159,10 @@ internal fun keyTree(keys: List<KeyInfo>, delimiter: String, collapsed: Set<Stri
         for (segment in segments.dropLast(1)) {
             path += segment + delimiter
             val parentPath = path
-            node = node.groups.getOrPut(segment) { Node(parentPath, segment.ifEmpty { "(empty)" }) }
+            node = node.groups.getOrPut(segment) { Node(parentPath, segment.ifEmpty { tr("(empty)") }) }
             node.count++
         }
-        node.keys += segments.last().ifEmpty { "(empty)" } to key
+        node.keys += segments.last().ifEmpty { tr("(empty)") } to key
     }
     return buildList {
         fun visit(node: Node, depth: Int) {

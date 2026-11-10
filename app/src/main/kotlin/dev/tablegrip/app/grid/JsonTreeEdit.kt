@@ -1,5 +1,6 @@
 package dev.tablegrip.app.grid
 
+import dev.tablegrip.core.i18n.tr
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.decodeFromString
@@ -22,12 +23,12 @@ typealias JsonPath = List<JsonStep>
 
 /** The kinds of value a tree node can be switched to. */
 enum class JsonValueType(val label: String) {
-    String("String"),
-    Number("Number"),
-    Boolean("Boolean"),
-    Null("Null"),
-    Object("Object"),
-    Array("Array");
+    String(tr("String")),
+    Number(tr("Number")),
+    Boolean(tr("Boolean")),
+    Null(tr("Null")),
+    Object(tr("Object")),
+    Array(tr("Array"));
 
     companion object {
         fun of(element: JsonElement): JsonValueType =
@@ -59,12 +60,12 @@ sealed interface JsonTreeSource {
  * one, so the tree would silently drop the others).
  */
 fun jsonTreeSource(text: String): JsonTreeSource {
-    if (text.isBlank()) return JsonTreeSource.Unavailable("The value is empty")
-    val root = runCatching { Json.parseToJsonElement(text) }.getOrNull() ?: return JsonTreeSource.Unavailable("The text isn't valid JSON")
-    if (root !is JsonObject && root !is JsonArray) return JsonTreeSource.Unavailable("Only objects and arrays open as a tree")
-    if (!strictLiterals(root)) return JsonTreeSource.Unavailable("The text isn't valid JSON")
-    if (hasLoneSurrogate(root)) return JsonTreeSource.Unavailable("The text has an incomplete Unicode escape; edit it as text")
-    firstRepeatedKey(text)?.let { return JsonTreeSource.Unavailable("The key \"$it\" appears twice in one object; edit it as text") }
+    if (text.isBlank()) return JsonTreeSource.Unavailable(tr("The value is empty"))
+    val root = runCatching { Json.parseToJsonElement(text) }.getOrNull() ?: return JsonTreeSource.Unavailable(tr("The text isn't valid JSON"))
+    if (root !is JsonObject && root !is JsonArray) return JsonTreeSource.Unavailable(tr("Only objects and arrays open as a tree"))
+    if (!strictLiterals(root)) return JsonTreeSource.Unavailable(tr("The text isn't valid JSON"))
+    if (hasLoneSurrogate(root)) return JsonTreeSource.Unavailable(tr("The text has an incomplete Unicode escape; edit it as text"))
+    firstRepeatedKey(text)?.let { return JsonTreeSource.Unavailable(tr("The key \"{0}\" appears twice in one object; edit it as text", it)) }
     return JsonTreeSource.Ok(root, jsonLayout(text))
 }
 
@@ -207,14 +208,14 @@ private fun JsonElement.updated(path: JsonPath, change: (JsonElement) -> JsonEle
     val rest = path.drop(1)
     return when {
         step is JsonStep.Key && this is JsonObject -> {
-            require(step.name in this) { "No key ${step.name}" }
+            require(step.name in this) { tr("No key {0}", step.name) }
             JsonObject(mapValues { (key, value) -> if (key == step.name) value.updated(rest, change) else value })
         }
         step is JsonStep.Index && this is JsonArray -> {
-            require(step.index in indices) { "No index ${step.index}" }
+            require(step.index in indices) { tr("No index {0}", step.index) }
             JsonArray(mapIndexed { index, value -> if (index == step.index) value.updated(rest, change) else value })
         }
-        else -> throw IllegalArgumentException("No such node")
+        else -> throw IllegalArgumentException(tr("No such node"))
     }
 }
 
@@ -240,7 +241,7 @@ fun JsonElement.without(path: JsonPath): JsonElement {
         when {
             step is JsonStep.Key && parent is JsonObject -> JsonObject(parent - step.name)
             step is JsonStep.Index && parent is JsonArray -> JsonArray(parent.filterIndexed { index, _ -> index != step.index })
-            else -> throw IllegalArgumentException("No such node")
+            else -> throw IllegalArgumentException(tr("No such node"))
         }
     }
 }
@@ -263,7 +264,7 @@ fun JsonElement.withChildAdded(path: JsonPath): Pair<JsonElement, JsonPath> {
                     added = JsonStep.Index(container.size)
                     JsonArray(container + JsonPrimitive(""))
                 }
-                else -> throw IllegalArgumentException("Not a container")
+                else -> throw IllegalArgumentException(tr("Not a container"))
             }
         }
     return result to path + added!!

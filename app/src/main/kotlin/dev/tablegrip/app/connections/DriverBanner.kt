@@ -1,5 +1,6 @@
 package dev.tablegrip.app.connections
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.runtime.rememberCoroutineScope
@@ -59,31 +60,31 @@ private fun DriverBannerContent(
         scope.launch { runCatching { action() }.onFailure { onMessage(it.message ?: it.toString()) } }
     }
     fun chooseJars() {
-        val jars = chooseJarFiles("Choose the ${driver.displayName} jar") ?: return
+        val jars = chooseJarFiles(tr("Choose the {0} jar", driver.displayName)) ?: return
         run { downloads.useJars(driver, jars) }
     }
     fun importFolder() {
-        val folder = chooseFolder("Folder with driver jars") ?: return
+        val folder = chooseFolder(tr("Folder with driver jars")) ?: return
         run {
             val imported = downloads.importFrom(folder)
-            onMessage(if (driver in imported) "Imported ${driver.displayName}." else "No jar in that folder matches ${driver.displayName}'s checksums.")
+            onMessage(if (driver in imported) tr("Imported {0}.", driver.displayName) else tr("No jar in that folder matches {0}'s checksums.", driver.displayName))
         }
     }
 
     when (val state = downloads.state(driver)) {
         is DownloadState.Running -> {
             val percent = if (state.total == 0L) 0 else state.done * 100 / state.total
-            InlineInformationBanner("Downloading ${driver.displayName}… $percent% of ${byteSize(state.total)}", modifier)
+            InlineInformationBanner(tr("Downloading {0}… {1}% of {2}", driver.displayName, percent, byteSize(state.total)), modifier)
             return
         }
         is DownloadState.Failed ->
             if (downloads.resolve(driver) !is DriverResolution.Ready) {
                 InlineErrorBanner(
-                    "Couldn't download ${driver.displayName}: ${state.message}",
+                    tr("Couldn't download {0}: {1}", driver.displayName, state.message),
                     modifier,
                     linkActions = {
-                        action("Retry") { downloads.download(driver) }
-                        action("Import from folder…") { importFolder() }
+                        action(tr("Retry")) { downloads.download(driver) }
+                        action(tr("Import from folder…")) { importFolder() }
                     },
                 )
                 return
@@ -96,61 +97,61 @@ private fun DriverBannerContent(
             when {
                 resolution.update != null ->
                     InlineInformationBanner(
-                        "${driver.displayName} ${resolution.version} is installed; ${resolution.update!!.version} is available.",
+                        tr("{0} {1} is installed; {2} is available.", driver.displayName, resolution.version, resolution.update!!.version),
                         modifier,
-                        linkActions = { action("Update") { downloads.download(driver) } },
+                        linkActions = { action(tr("Update")) { downloads.download(driver) } },
                     )
-                resolution.source == DriverSource.BuiltIn -> InlineSuccessBanner("Built into TableGrip: nothing to download.", modifier)
+                resolution.source == DriverSource.BuiltIn -> InlineSuccessBanner(tr("Built into TableGrip: nothing to download."), modifier)
                 resolution.source == DriverSource.UserJars ->
                     InlineSuccessBanner(
-                        "Using your ${driver.displayName} jar.",
+                        tr("Using your {0} jar.", driver.displayName),
                         modifier,
                         linkActions = {
-                            action("Choose another…") { chooseJars() }
-                            if (driver.catalogId != null) action("Use the download instead") { run { downloads.forgetJars(driver) } }
+                            action(tr("Choose another…")) { chooseJars() }
+                            if (driver.catalogId != null) action(tr("Use the download instead")) { run { downloads.forgetJars(driver) } }
                         },
                     )
-                else -> InlineSuccessBanner("${driver.displayName}${resolution.version?.let { " $it" }.orEmpty()} is ready.", modifier)
+                else -> InlineSuccessBanner(tr("{0}{1} is ready.", driver.displayName, resolution.version?.let { " $it" }.orEmpty()), modifier)
             }
         is DriverResolution.Download -> {
             val locked = resolution.locked
             InlineInformationBanner(
-                "${locked.name} ${locked.version} needs to be downloaded from ${repositoryName(downloads)} (${byteSize(locked.size)}). ${licenseNote(locked)}",
+                tr("{0} {1} needs to be downloaded from {2} ({3}). {4}", locked.name, locked.version, repositoryName(downloads), byteSize(locked.size), licenseNote(locked)),
                 modifier,
                 // A banner shows at most three links. An LGPL driver's license and source must stay in view, so
                 // importing from a folder moves to the error banner a failed download shows.
                 linkActions = {
-                    action("Download") { downloads.download(driver) }
+                    action(tr("Download")) { downloads.download(driver) }
                     if (locked.tier == LicenseTier.WeakCopyleft) {
-                        action("License") { browse(locked.licenseUrl) }
-                        action("Source") { browse(locked.sourceUrl) }
+                        action(tr("License")) { browse(locked.licenseUrl) }
+                        action(tr("Source")) { browse(locked.sourceUrl) }
                     } else {
-                        action("Import from folder…") { importFolder() }
+                        action(tr("Import from folder…")) { importFolder() }
                     }
                 },
             )
         }
         is DriverResolution.BringYourOwn ->
             InlineWarningBanner(
-                "TableGrip doesn't distribute ${driver.displayName}" + (driver.license?.let { " ($it)" } ?: "") +
-                    ". Download it from its vendor under their terms, then choose the jar.",
+                tr("TableGrip doesn't distribute {0}", driver.displayName) + (driver.license?.let { " ($it)" } ?: "") +
+                    tr(". Download it from its vendor under their terms, then choose the jar."),
                 modifier,
                 linkActions = {
-                    action("Choose jar…") { chooseJars() }
-                    driver.vendorUrl?.let { url -> action("Vendor download page") { browse(url) } }
-                    if (driver == DriverId.MySQL && onSwitch != null) action("Use MariaDB Connector/J") { onSwitch(DriverId.MariaDB) }
+                    action(tr("Choose jar…")) { chooseJars() }
+                    driver.vendorUrl?.let { url -> action(tr("Vendor download page")) { browse(url) } }
+                    if (driver == DriverId.MySQL && onSwitch != null) action(tr("Use MariaDB Connector/J")) { onSwitch(DriverId.MariaDB) }
                 },
             )
     }
 }
 
 private fun repositoryName(downloads: DriverDownloads): String =
-    if (downloads.library.repository == DriverLibrary.MavenCentral) "Maven Central" else "your Maven repository"
+    if (downloads.library.repository == DriverLibrary.MavenCentral) tr("Maven Central") else tr("your Maven repository")
 
 private fun licenseNote(driver: LockedDriver): String =
     when (driver.tier) {
-        LicenseTier.Permissive -> "License: ${driver.license}."
-        LicenseTier.WeakCopyleft -> "License: ${driver.license}; it's used unmodified and you can replace it with your own build."
+        LicenseTier.Permissive -> tr("License: {0}.", driver.license)
+        LicenseTier.WeakCopyleft -> tr("License: {0}; it's used unmodified and you can replace it with your own build.", driver.license)
     }
 
 internal fun byteSize(bytes: Long): String =
@@ -184,7 +185,7 @@ internal fun chooseFolder(title: String): Path? {
 private fun ProfileJarsBanner(jars: List<String>, downloads: DriverDownloads, modifier: Modifier, onJars: (List<String>) -> Unit, onMessage: (String) -> Unit) {
     val scope = rememberCoroutineScope()
     fun choose() {
-        val chosen = chooseJarFiles("Choose the JDBC driver jars") ?: return
+        val chosen = chooseJarFiles(tr("Choose the JDBC driver jars")) ?: return
         scope.launch {
             runCatching { downloads.library.inspectJars(chosen) }
                 .onSuccess { onJars(chosen.map { it.toAbsolutePath().toString() }) }
@@ -194,16 +195,16 @@ private fun ProfileJarsBanner(jars: List<String>, downloads: DriverDownloads, mo
     val present = jars.isNotEmpty() && jars.all { java.io.File(it).isFile }
     if (present) {
         InlineSuccessBanner(
-            "Using the driver in ${jars.joinToString { java.io.File(it).name }}.",
+            tr("Using the driver in {0}.", jars.joinToString { java.io.File(it).name }),
             modifier,
-            linkActions = { action("Choose other jars…") { choose() } },
+            linkActions = { action(tr("Choose other jars…")) { choose() } },
         )
     } else {
         InlineWarningBanner(
-            (if (jars.isEmpty()) "" else "${jars.joinToString { java.io.File(it).name }} can't be found. ") +
-                "Choose the JDBC driver's jar (and any jars it needs). TableGrip loads the driver from them; it doesn't copy or download anything.",
+            (if (jars.isEmpty()) "" else tr("{0} can't be found. ", jars.joinToString { java.io.File(it).name })) +
+                tr("Choose the JDBC driver's jar (and any jars it needs). TableGrip loads the driver from them; it doesn't copy or download anything."),
             modifier,
-            linkActions = { action("Choose jars…") { choose() } },
+            linkActions = { action(tr("Choose jars…")) { choose() } },
         )
     }
 }

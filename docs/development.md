@@ -68,6 +68,30 @@ The integration tests against real servers seed them from `core/src/test/resourc
 | `assets/branding` | App icon sources and export scripts ([details](../assets/branding/README.md)). |
 | `docs` | [User guide](guide.md), this page, and design notes in `plans/`. |
 
+## Translations
+
+The interface's English text is written in the code and is also the key for its translations: wrap each text the user
+sees in `tr` from `dev.tablegrip.core.i18n`, with `{0}`, `{1}`… for the values it shows, never a `$` template:
+
+```kotlin
+app.status = tr("Deleted {0} rows from {1}", count, table.name)
+```
+
+The translations live in `core/src/main/resources/i18n/<tag>.json` (`vi`, `zh-CN`, `zh-TW`), keyed by that English
+text. `I18nTest` in `core` fails when a text has no translation in a language, when a translation drops or adds a
+placeholder, when a catalog keeps a text the code no longer uses, and when `tr` gets anything but a plain string
+literal, so add the three translations in the same change. Leave SQL, identifiers, settings values, log lines and
+prompts sent to AI agents untranslated. Dates with month or day names go through `I18n.dates(pattern)`.
+
+To see a language in the real UI, render the main window and settings with it:
+
+```bash
+./gradlew :app:test --tests '*LanguageSnapshotTest*' -Psnapshot.dir=/tmp -Psnapshot.db=/path/to/shop.db -Psnapshot.lang=vi
+```
+
+A new language needs a `Language` entry, its catalog file, and its tag in `CFBundleLocalizations` in
+`app/build.gradle.kts`.
+
 ## Dependencies
 
 Versions live in `gradle/libs.versions.toml`. Jewel (`0.41.0-262.10968.63`) is pinned to Compose `1.12.x` and

@@ -1,5 +1,6 @@
 package dev.tablegrip.app.console
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.ContextMenuDataProvider
 import dev.tablegrip.core.connection.Capability
 import androidx.compose.foundation.background
@@ -83,7 +84,7 @@ internal fun ConsoleView(app: AppState, tab: ConsoleTab) {
             first = {
                 // Added to the editor's own Cut / Copy / Paste menu.
                 ContextMenuDataProvider(
-                    items = { if (tab.canAskAgent) listOf(ContextMenuItem("Add to Chat (${Shortcuts.AddToChat})") { tab.mentionInChat() }) else emptyList() }
+                    items = { if (tab.canAskAgent) listOf(ContextMenuItem(tr("Add to Chat ({0})", Shortcuts.AddToChat)) { tab.mentionInChat() }) else emptyList() }
                 ) {
                     SqlEditor(
                         state = tab.editor,
@@ -134,51 +135,51 @@ private fun Toolbar(tab: ConsoleTab, editor: SqlEditorActions) {
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Tooltip({ Text("Execute statement at caret or selection (${Shortcuts.RunStatement})") }) {
-            IconButton(onClick = { tab.run(RunMode.Current) }, enabled = !tab.running) { Icon(AllIconsKeys.Actions.Execute, "Execute") }
+        Tooltip({ Text(tr("Execute statement at caret or selection ({0})", Shortcuts.RunStatement)) }) {
+            IconButton(onClick = { tab.run(RunMode.Current) }, enabled = !tab.running) { Icon(AllIconsKeys.Actions.Execute, tr("Execute")) }
         }
-        Tooltip({ Text("Execute script (${Shortcuts.RunScript})") }) {
-            IconButton(onClick = { tab.run(RunMode.All) }, enabled = !tab.running) { Icon(AllIconsKeys.Actions.RunAll, "Execute script") }
+        Tooltip({ Text(tr("Execute script ({0})", Shortcuts.RunScript)) }) {
+            IconButton(onClick = { tab.run(RunMode.All) }, enabled = !tab.running) { Icon(AllIconsKeys.Actions.RunAll, tr("Execute script")) }
         }
-        Tooltip({ Text("Cancel running query (${Shortcuts.Cancel})") }) {
-            IconButton(onClick = tab::cancel, enabled = tab.running) { Icon(AllIconsKeys.Actions.Suspend, "Cancel") }
+        Tooltip({ Text(tr("Cancel running query ({0})", Shortcuts.Cancel)) }) {
+            IconButton(onClick = tab::cancel, enabled = tab.running) { Icon(AllIconsKeys.Actions.Suspend, tr("Cancel")) }
         }
         if (Capability.Explain in tab.config.type.capabilities) {
-            Tooltip({ Text("Explain plan for the statement at caret (${Shortcuts.Explain})") }) {
-                IconButton(onClick = tab::explain, enabled = !tab.running) { Icon(AllIconsKeys.Actions.Preview, "Explain") }
+            Tooltip({ Text(tr("Explain plan for the statement at caret ({0})", Shortcuts.Explain)) }) {
+                IconButton(onClick = tab::explain, enabled = !tab.running) { Icon(AllIconsKeys.Actions.Preview, tr("Explain")) }
             }
         }
-        Tooltip({ Text("Reformat SQL (${Shortcuts.Format})") }) {
-            IconButton(onClick = { editor.format() }) { Icon(AllIconsKeys.Actions.ShowCode, "Format") }
+        Tooltip({ Text(tr("Reformat SQL ({0})", Shortcuts.Format)) }) {
+            IconButton(onClick = { editor.format() }) { Icon(AllIconsKeys.Actions.ShowCode, tr("Format")) }
         }
-        Tooltip({ Text("Find (${Shortcuts.Find}) · Replace (${Shortcuts.Replace})") }) {
-            IconButton(onClick = { editor.openFind() }) { Icon(AllIconsKeys.Actions.Search, "Find") }
+        Tooltip({ Text(tr("Find ({0}) · Replace ({1})", Shortcuts.Find, Shortcuts.Replace)) }) {
+            IconButton(onClick = { editor.openFind() }) { Icon(AllIconsKeys.Actions.Search, tr("Find")) }
         }
-        Tooltip({ Text("Save query (${Shortcuts.Save}) · Save to file (${Shortcuts.SaveAs})") }) {
-            IconButton(onClick = { tab.save() }) { Icon(AllIconsKeys.Actions.MenuSaveall, "Save") }
+        Tooltip({ Text(tr("Save query ({0}) · Save to file ({1})", Shortcuts.Save, Shortcuts.SaveAs)) }) {
+            IconButton(onClick = { tab.save() }) { Icon(AllIconsKeys.Actions.MenuSaveall, tr("Save")) }
         }
         if (Capability.Transactions in tab.config.type.capabilities) {
             Divider(Orientation.Vertical, Modifier.height(18.dp).padding(horizontal = 6.dp))
             ListComboBox(
-                items = listOf("Auto-commit", "Manual commit"),
+                items = listOf(tr("Auto-commit"), tr("Manual commit")),
                 selectedIndex = if (tab.autoCommit) 0 else 1,
                 onSelectedItemChange = { tab.changeAutoCommit(it == 0) },
                 modifier = Modifier.width(140.dp),
                 enabled = !tab.running && !tab.config.readOnly,
             )
             if (!tab.autoCommit) {
-                Tooltip({ Text("Commit transaction") }) {
-                    IconButton(onClick = tab::commit, enabled = tab.uncommitted > 0 && !tab.running) { Icon(AllIconsKeys.Actions.Commit, "Commit") }
+                Tooltip({ Text(tr("Commit transaction")) }) {
+                    IconButton(onClick = tab::commit, enabled = tab.uncommitted > 0 && !tab.running) { Icon(AllIconsKeys.Actions.Commit, tr("Commit")) }
                 }
-                Tooltip({ Text("Roll back transaction") }) {
-                    IconButton(onClick = tab::rollback, enabled = tab.uncommitted > 0 && !tab.running) { Icon(AllIconsKeys.Actions.Rollback, "Rollback") }
+                Tooltip({ Text(tr("Roll back transaction")) }) {
+                    IconButton(onClick = tab::rollback, enabled = tab.uncommitted > 0 && !tab.running) { Icon(AllIconsKeys.Actions.Rollback, tr("Rollback")) }
                 }
-                if (tab.uncommitted > 0) Text("${tab.uncommitted} uncommitted", Modifier.padding(start = 4.dp), color = PendingColor)
+                if (tab.uncommitted > 0) Text(tr("{0} uncommitted", tab.uncommitted), Modifier.padding(start = 4.dp), color = PendingColor)
             }
         }
-        Text(if (tab.running) "Executing…" else "", Modifier.padding(start = 8.dp), color = JewelTheme.globalColors.text.info)
+        Text(if (tab.running) tr("Executing…") else "", Modifier.padding(start = 8.dp), color = JewelTheme.globalColors.text.info)
         Box(Modifier.weight(1f))
-        if (tab.config.readOnly) Text("read-only", Modifier.padding(end = 6.dp), color = JewelTheme.globalColors.text.info)
+        if (tab.config.readOnly) Text(tr("read-only"), Modifier.padding(end = 6.dp), color = JewelTheme.globalColors.text.info)
         EnvironmentChip(tab.config)
         Text("${tab.config.name} · ${tab.config.type.displayName}", Modifier.padding(horizontal = 8.dp), color = JewelTheme.globalColors.text.info)
     }
@@ -191,7 +192,7 @@ private fun ConfirmWriteDialog(tab: ConsoleTab, confirmation: WriteConfirmation)
     AppDialog(
         onCloseRequest = { tab.pendingConfirmation = null },
         size = DpSize(620.dp, 380.dp),
-        title = "Run Statements?",
+        title = tr("Run Statements?"),
     ) {
         Column(
             Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp),
@@ -199,15 +200,15 @@ private fun ConfirmWriteDialog(tab: ConsoleTab, confirmation: WriteConfirmation)
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(AllIconsKeys.General.Warning, null)
-                Text("Please confirm", fontWeight = FontWeight.SemiBold)
+                Text(tr("Please confirm"), fontWeight = FontWeight.SemiBold)
                 EnvironmentChip(tab.config)
             }
             confirmation.reasons.forEach { Text("• $it") }
             val text = remember(confirmation) { TextFieldState(confirmation.statements.joinToString(";\n", postfix = ";")) }
             TextArea(text, Modifier.weight(1f).fillMaxWidth(), readOnly = true, textStyle = JewelTheme.editorTextStyle)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                OutlinedButton(onClick = { tab.pendingConfirmation = null }) { Text("Cancel") }
-                DefaultButton(onClick = tab::confirmPending) { Text("Run") }
+                OutlinedButton(onClick = { tab.pendingConfirmation = null }) { Text(tr("Cancel")) }
+                DefaultButton(onClick = tab::confirmPending) { Text(tr("Run")) }
             }
         }
     }
@@ -218,19 +219,19 @@ private fun OpenTransactionDialog(tab: ConsoleTab) {
     AppDialog(
         onCloseRequest = { tab.pendingClose = null },
         size = DpSize(460.dp, 180.dp),
-        title = "Uncommitted Transaction",
+        title = tr("Uncommitted Transaction"),
         resizable = false,
     ) {
         Column(
             Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("${tab.title} has ${tab.uncommitted} uncommitted statement(s). What should happen to them?")
+            Text(tr("{0} has {1} uncommitted statement(s). What should happen to them?", tab.title, tab.uncommitted))
             Box(Modifier.weight(1f))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                OutlinedButton(onClick = { tab.pendingClose = null }) { Text("Keep Open") }
-                OutlinedButton(onClick = { tab.closeAfter(commit = false) }) { Text("Roll Back & Close") }
-                DefaultButton(onClick = { tab.closeAfter(commit = true) }) { Text("Commit & Close") }
+                OutlinedButton(onClick = { tab.pendingClose = null }) { Text(tr("Keep Open")) }
+                OutlinedButton(onClick = { tab.closeAfter(commit = false) }) { Text(tr("Roll Back & Close")) }
+                DefaultButton(onClick = { tab.closeAfter(commit = true) }) { Text(tr("Commit & Close")) }
             }
         }
     }
@@ -241,19 +242,19 @@ private fun UnsavedScriptDialog(tab: ConsoleTab) {
     AppDialog(
         onCloseRequest = { tab.pendingScriptClose = null },
         size = DpSize(460.dp, 170.dp),
-        title = "Unsaved Script",
+        title = tr("Unsaved Script"),
         resizable = false,
     ) {
         Column(
             Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("${tab.title} has unsaved changes. Save the script before closing?")
+            Text(tr("{0} has unsaved changes. Save the script before closing?", tab.title))
             Box(Modifier.weight(1f))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                OutlinedButton(onClick = { tab.pendingScriptClose = null }) { Text("Cancel") }
-                OutlinedButton(onClick = { tab.closeAfterScript(save = false) }) { Text("Don't Save") }
-                DefaultButton(onClick = { tab.closeAfterScript(save = true) }) { Text(if (tab.file == null) "Save…" else "Save") }
+                OutlinedButton(onClick = { tab.pendingScriptClose = null }) { Text(tr("Cancel")) }
+                OutlinedButton(onClick = { tab.closeAfterScript(save = false) }) { Text(tr("Don't Save")) }
+                DefaultButton(onClick = { tab.closeAfterScript(save = true) }) { Text(if (tab.file == null) tr("Save…") else tr("Save")) }
             }
         }
     }
@@ -263,7 +264,7 @@ private fun UnsavedScriptDialog(tab: ConsoleTab) {
 private fun ResultPanel(app: AppState, tab: ConsoleTab) {
     val historyIndex = tab.results.size + 1
     Column(Modifier.fillMaxSize()) {
-        val titles = listOf("Output") + tab.results.map { it.title } + "History"
+        val titles = listOf(tr("Output")) + tab.results.map { it.title } + tr("History")
         TabStrip(
             tabs =
                 titles.mapIndexed { index, title ->
@@ -277,8 +278,8 @@ private fun ResultPanel(app: AppState, tab: ConsoleTab) {
                                 ContextMenuArea(
                                     items = {
                                         listOf(
-                                            ContextMenuItem(if (view.pinned) "Unpin Tab" else "Pin Tab") { view.pinned = !view.pinned },
-                                            ContextMenuItem("Close Other Unpinned Tabs") { tab.results.filter { it !== view && !it.pinned }.forEach(tab::closeResult) },
+                                            ContextMenuItem(if (view.pinned) tr("Unpin Tab") else tr("Pin Tab")) { view.pinned = !view.pinned },
+                                            ContextMenuItem(tr("Close Other Unpinned Tabs")) { tab.results.filter { it !== view && !it.pinned }.forEach(tab::closeResult) },
                                         )
                                     }
                                 ) {
@@ -338,13 +339,13 @@ private fun ResultFooter(app: AppState, tab: ConsoleTab, view: ResultSetView) {
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (view.view == ResultView.Chart) Text(if (view.rows.truncated) "$total+ rows" else "$total rows", Modifier.padding(horizontal = 4.dp))
+        if (view.view == ResultView.Chart) Text(if (view.rows.truncated) tr("{0}+ rows", total) else tr("{0} rows", total), Modifier.padding(horizontal = 4.dp))
         else Pager(app, view)
         Separator()
         val limited =
-            if (view.rows.truncated) " · first $total fetched (Settings → Max result rows)" else ""
+            if (view.rows.truncated) tr(" · first {0} fetched (Settings → Max result rows)", total) else ""
         Text(
-            "${view.rows.elapsedMillis} ms$limited",
+            tr("{0} ms{1}", view.rows.elapsedMillis, limited),
             Modifier.weight(1f).padding(horizontal = 4.dp),
             color = info,
             maxLines = 1,
@@ -356,34 +357,34 @@ private fun ResultFooter(app: AppState, tab: ConsoleTab, view: ResultSetView) {
         Separator()
         ToolButton(
             if (view.pinned) AllIconsKeys.General.PinSelected else AllIconsKeys.General.Pin,
-            if (view.pinned) "Unpin tab" else "Pin tab: keep this result when the console runs again",
+            if (view.pinned) tr("Unpin tab") else tr("Pin tab: keep this result when the console runs again"),
         ) { view.pinned = !view.pinned }
         if (view.view == ResultView.Chart) {
             val frame = view.chart.frame
             val colors = ResultChartColors.current()
-            ToolButton(AllIconsKeys.Actions.Copy, "Copy chart as image", enabled = frame != null) {
+            ToolButton(AllIconsKeys.Actions.Copy, tr("Copy chart as image"), enabled = frame != null) {
                 frame ?: return@ToolButton
                 val size = view.chart.drawnSize
-                app.status = "Copying chart…"
+                app.status = tr("Copying chart…")
                 app.scope.launch {
                     runCatching { ChartExport.copy(CanvasChartRenderer, frame, colors, size.width, size.height) }
-                        .onSuccess { app.status = "Chart copied as an image" }
-                        .onFailure { app.status = "Could not copy the chart: ${it.message}" }
+                        .onSuccess { app.status = tr("Chart copied as an image") }
+                        .onFailure { app.status = tr("Could not copy the chart: {0}", it.message) }
                 }
             }
-            ToolButton(AllIconsKeys.Actions.MenuSaveall, "Save chart as PNG or SVG…", enabled = frame != null) {
+            ToolButton(AllIconsKeys.Actions.MenuSaveall, tr("Save chart as PNG or SVG…"), enabled = frame != null) {
                 frame ?: return@ToolButton
                 val size = view.chart.drawnSize
                 val file = ChartExport.chooseFile(view.title) ?: return@ToolButton
-                app.status = "Saving chart…"
+                app.status = tr("Saving chart…")
                 app.scope.launch {
                     runCatching { ChartExport.save(CanvasChartRenderer, frame, colors, size.width, size.height, file) }
-                        .onSuccess { app.status = "Saved ${file.path}" }
-                        .onFailure { app.status = "Could not save the chart: ${it.message}" }
+                        .onSuccess { app.status = tr("Saved {0}", file.path) }
+                        .onFailure { app.status = tr("Could not save the chart: {0}", it.message) }
                 }
             }
         }
-        ToolButton(AllIconsKeys.Actions.Download, "Export result…") {
+        ToolButton(AllIconsKeys.Actions.Download, tr("Export result…")) {
             val dialect = SqlDialect.of(tab.config.type)
             app.exportRequest = ExportRequest(view.title, "result", view.rows.columns, view.rows.rows, dialect, "table_name")
         }
@@ -394,17 +395,17 @@ private fun ResultFooter(app: AppState, tab: ConsoleTab, view: ResultSetView) {
 @Composable
 private fun Pager(app: AppState, view: ResultSetView) {
     val total = view.rows.rows.size
-    ToolButton(AllIconsKeys.Actions.Play_first, "First page", enabled = view.page > 0) { view.goToPage(0) }
-    ToolButton(AllIconsKeys.Actions.Play_back, "Previous page", enabled = view.page > 0) { view.goToPage(view.page - 1) }
+    ToolButton(AllIconsKeys.Actions.Play_first, tr("First page"), enabled = view.page > 0) { view.goToPage(0) }
+    ToolButton(AllIconsKeys.Actions.Play_back, tr("Previous page"), enabled = view.page > 0) { view.goToPage(view.page - 1) }
     val shown = view.model.rowCount
-    Text(if (shown == 0) "0 rows" else "${view.firstRow + 1}–${view.firstRow + shown}", Modifier.padding(horizontal = 4.dp))
-    Text("of", color = JewelTheme.globalColors.text.info)
+    Text(if (shown == 0) tr("0 rows") else "${view.firstRow + 1}–${view.firstRow + shown}", Modifier.padding(horizontal = 4.dp))
+    Text(tr("of"), color = JewelTheme.globalColors.text.info)
     Text(if (view.rows.truncated) "$total+" else "$total", Modifier.padding(start = 4.dp))
     val last = view.pageCount - 1
-    ToolButton(AllIconsKeys.Actions.Play_forward, "Next page", enabled = view.page < last) { view.goToPage(view.page + 1) }
-    ToolButton(AllIconsKeys.Actions.Play_last, "Last page", enabled = view.page < last) { view.goToPage(last) }
+    ToolButton(AllIconsKeys.Actions.Play_forward, tr("Next page"), enabled = view.page < last) { view.goToPage(view.page + 1) }
+    ToolButton(AllIconsKeys.Actions.Play_last, tr("Last page"), enabled = view.page < last) { view.goToPage(last) }
     ListComboBox(
-        items = PageSizes.map { "$it rows" },
+        items = PageSizes.map { tr("{0} rows", it) },
         selectedIndex = PageSizes.indexOf(view.pageSize).coerceAtLeast(0),
         onSelectedItemChange = { index ->
             view.changePageSize(PageSizes[index])
@@ -419,10 +420,10 @@ private fun OutputLog(app: AppState, tab: ConsoleTab) {
     if (tab.output.isEmpty()) {
         ShortcutHints(
             listOf(
-                "Execute statement" to Shortcuts.RunStatement,
-                "Execute script" to Shortcuts.RunScript,
-                "Code completion" to Shortcuts.Completion,
-                "All shortcuts" to Shortcuts.ShowShortcuts,
+                tr("Execute statement") to Shortcuts.RunStatement,
+                tr("Execute script") to Shortcuts.RunScript,
+                tr("Code completion") to Shortcuts.Completion,
+                tr("All shortcuts") to Shortcuts.ShowShortcuts,
             )
         )
         return
@@ -453,7 +454,7 @@ private fun HistoryList(tab: ConsoleTab) {
     // Re-read whenever a run finishes, so new entries show up.
     val entries = remember(tab.running, tab.output.size) { tab.recentHistory() }
     if (entries.isEmpty()) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("No history yet", color = JewelTheme.globalColors.text.info) }
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(tr("No history yet"), color = JewelTheme.globalColors.text.info) }
         return
     }
     LazyColumn(Modifier.fillMaxSize()) {
@@ -471,7 +472,7 @@ private fun HistoryList(tab: ConsoleTab) {
                     color = if (entry.error != null) JewelTheme.globalColors.text.error else JewelTheme.globalColors.text.normal,
                     style = JewelTheme.editorTextStyle,
                 )
-                Text("${entry.elapsedMillis} ms", color = JewelTheme.globalColors.text.info)
+                Text(tr("{0} ms", entry.elapsedMillis), color = JewelTheme.globalColors.text.info)
             }
         }
     }

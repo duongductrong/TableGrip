@@ -1,5 +1,6 @@
 package dev.tablegrip.app.queries
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -57,7 +58,7 @@ class SavedQueries(private val app: AppState, val library: QueryLibrary = QueryL
         }
         val config = query.connection?.let { name -> app.connections.profiles.firstOrNull { it.name.equals(name, ignoreCase = true) } } ?: app.currentConnection
         if (config == null) {
-            app.status = "Add a connection to run ${query.name}"
+            app.status = tr("Add a connection to run {0}", query.name)
             return
         }
         app.workspace.openConsole(config, query.sql, file = query.file.toFile())
@@ -98,9 +99,9 @@ class SavedQueries(private val app: AppState, val library: QueryLibrary = QueryL
             runCatching { withContext(Dispatchers.IO) { library.rename(query, name, folder) } }
                 .onSuccess { renamed ->
                     app.workspace.tabs.filterIsInstance<ConsoleTab>().filter { it.file?.toPath() == query.file }.forEach { it.moveTo(renamed.file.toFile()) }
-                    app.status = "Renamed ${query.name} to ${renamed.name}"
+                    app.status = tr("Renamed {0} to {1}", query.name, renamed.name)
                 }
-                .onFailure { app.status = "Couldn't rename ${query.name}: ${it.message}" }
+                .onFailure { app.status = tr("Couldn't rename {0}: {1}", query.name, it.message) }
             reload()
         }
     }
@@ -109,8 +110,8 @@ class SavedQueries(private val app: AppState, val library: QueryLibrary = QueryL
         pendingDelete = null
         app.scope.launch {
             runCatching { withContext(Dispatchers.IO) { library.delete(query) } }
-                .onSuccess { app.status = "Deleted ${query.name}" }
-                .onFailure { app.status = "Couldn't delete ${query.name}: ${it.message}" }
+                .onSuccess { app.status = tr("Deleted {0}", query.name) }
+                .onFailure { app.status = tr("Couldn't delete {0}: {1}", query.name, it.message) }
             reload()
         }
     }
@@ -121,6 +122,6 @@ class SavedQueries(private val app: AppState, val library: QueryLibrary = QueryL
         val desktop = Desktop.getDesktop().takeIf { Desktop.isDesktopSupported() } ?: return
         runCatching {
             if (query != null && desktop.isSupported(Desktop.Action.BROWSE_FILE_DIR)) desktop.browseFileDirectory(target) else desktop.open(target.parentFile.takeIf { query != null } ?: target)
-        }.onFailure { app.status = "Couldn't open ${target.path}: ${it.message}" }
+        }.onFailure { app.status = tr("Couldn't open {0}: {1}", target.path, it.message) }
     }
 }

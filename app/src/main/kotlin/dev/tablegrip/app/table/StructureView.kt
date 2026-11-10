@@ -1,5 +1,6 @@
 package dev.tablegrip.app.table
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -48,7 +49,7 @@ internal fun StructureView(tab: TableDataTab, modifier: Modifier = Modifier) {
         Box(Modifier.weight(1f).fillMaxWidth()) {
             when {
                 structure == null ->
-                    if (tab.structureError == null) ConnectionLoadingPlaceholder(tab.config, tab.connectionStatus, "Loading the structure of ${tab.table.name}…", Modifier.align(Alignment.Center))
+                    if (tab.structureError == null) ConnectionLoadingPlaceholder(tab.config, tab.connectionStatus, tr("Loading the structure of {0}…", tab.table.name), Modifier.align(Alignment.Center))
                 tab.section == StructureSection.Ddl -> {
                     // Keyed on the DDL so a refresh replaces the text.
                     val text = remember(structure.ddl) { TextFieldState(structure.ddl) }
@@ -57,7 +58,7 @@ internal fun StructureView(tab: TableDataTab, modifier: Modifier = Modifier) {
                 else -> {
                     val model = remember(structure, tab.section) { ResultGridModel(StructureTables.rows(structure, tab.section)) }
                     if (model.rowCount == 0) {
-                        Text("No ${tab.section.label.lowercase()}", Modifier.align(Alignment.Center), color = JewelTheme.globalColors.text.info)
+                        Text(tr("No {0}", tab.section.label.lowercase()), Modifier.align(Alignment.Center), color = JewelTheme.globalColors.text.info)
                     } else {
                         DataGrid(model = model, state = tab.structureGrids.getValue(tab.section), actions = GridActions(dialect = tab.dialect))
                     }
@@ -86,7 +87,7 @@ internal object StructureTables {
                 val foreignKeyColumns = details.foreignKeys.flatMap { it.columns }.toSet()
                 val uniqueColumns = details.indexes.filter { it.unique && it.columns.size == 1 }.map { it.columns.single() }.toSet()
                 result(
-                    listOf("name", "type", "nullable", "default", "key", "auto increment"),
+                    listOf(tr("name"), tr("type"), tr("nullable"), tr("default"), tr("key"), tr("auto increment")),
                     details.columns.map { column ->
                         val type = column.typeName + (column.size?.takeIf { column.typeName.lowercase() in SizedTypes }?.let { "($it)" } ?: "")
                         val key =
@@ -101,7 +102,7 @@ internal object StructureTables {
             }
             StructureSection.Indexes ->
                 result(
-                    listOf("name", "columns", "unique", "primary"),
+                    listOf(tr("name"), tr("columns"), tr("unique"), tr("primary")),
                     details.indexes.map { index ->
                         val primary = index.unique && index.columns == details.primaryKey
                         listOf(index.name, index.columns.joinToString(", "), yesNo(index.unique), yesNo(primary))
@@ -109,7 +110,7 @@ internal object StructureTables {
                 )
             StructureSection.ForeignKeys ->
                 result(
-                    listOf("name", "columns", "references", "on update", "on delete"),
+                    listOf(tr("name"), tr("columns"), tr("references"), tr("on update"), tr("on delete")),
                     details.foreignKeys.map { fk ->
                         listOf(
                             fk.name,
@@ -122,12 +123,12 @@ internal object StructureTables {
                 )
             StructureSection.Constraints ->
                 result(
-                    listOf("name", "type", "columns", "definition"),
+                    listOf(tr("name"), tr("type"), tr("columns"), tr("definition")),
                     structure.constraints.map { listOf(it.name, it.kind.label, it.columns.joinToString(", "), it.definition) },
                 )
             StructureSection.Triggers ->
                 result(
-                    listOf("name", "timing", "event", "enabled", "definition"),
+                    listOf(tr("name"), tr("timing"), tr("event"), tr("enabled"), tr("definition")),
                     structure.triggers.map { listOf(it.name, it.timing, it.events, yesNo(it.enabled), it.definition.replace(Whitespace, " ")) },
                 )
             StructureSection.Ddl -> result(listOf("ddl"), listOf(listOf(structure.ddl)))
@@ -138,7 +139,7 @@ internal object StructureTables {
     private val SizedTypes = setOf("varchar", "char", "character", "character varying", "nvarchar", "nchar", "varbinary", "binary", "bit", "varbit")
     private val Whitespace = Regex("\\s+")
 
-    private fun yesNo(value: Boolean) = if (value) "yes" else "no"
+    private fun yesNo(value: Boolean) = if (value) tr("yes") else tr("no")
 
     private fun result(columns: List<String>, rows: List<List<String?>>) =
         QueryResult.Rows(

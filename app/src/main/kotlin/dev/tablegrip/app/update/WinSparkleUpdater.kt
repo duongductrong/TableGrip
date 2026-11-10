@@ -1,5 +1,6 @@
 package dev.tablegrip.app.update
 
+import dev.tablegrip.core.i18n.tr
 import com.sun.jna.Callback
 import com.sun.jna.Library
 import com.sun.jna.WString
@@ -83,7 +84,7 @@ internal class WinSparkleUpdater(
     private val shutdownRequest = WinSparkleLibrary.ShutdownRequest { EventQueue.invokeLater(requestQuit) }
     private val foundUpdate = WinSparkleLibrary.Event { status = UpdateStatus.Available(null) }
     private val noUpdate = WinSparkleLibrary.Event { status = UpdateStatus.UpToDate }
-    private val checkFailed = WinSparkleLibrary.Event { status = UpdateStatus.Failed("Couldn't check for updates. See the log for why.") }
+    private val checkFailed = WinSparkleLibrary.Event { status = UpdateStatus.Failed(tr("Couldn't check for updates. See the log for why.")) }
     private val cancelled = WinSparkleLibrary.Event { if (status == UpdateStatus.Checking) status = UpdateStatus.Idle }
 
     // WinSparkle doesn't say which version it found; the status only says there is one.
@@ -100,7 +101,7 @@ internal class WinSparkleUpdater(
 
     override fun start(settings: Settings) {
         if (native.win_sparkle_set_eddsa_public_key(AppVersion.updatePublicKey) != 1) {
-            failed = "This build has no valid update signing key."
+            failed = tr("This build has no valid update signing key.")
             log.warn("Not starting WinSparkle: tablegrip.sparklePublicKey isn't a valid Ed25519 key")
             return
         }

@@ -1,5 +1,6 @@
 package dev.tablegrip.core.datafile
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.connection.ConnectionConfig
 import dev.tablegrip.core.connection.DataFileOptions
 import dev.tablegrip.core.connection.DatabaseType
@@ -52,7 +53,7 @@ class DataFileConnection internal constructor(
             (result as? QueryResult.Rows)?.rows?.mapNotNull { it.firstOrNull() }.orEmpty()
         }
 
-    override suspend fun backupInto(target: Path): Unit = throw UnsupportedOperationException("${config.type.displayName} is a file of its own; copy it to back it up")
+    override suspend fun backupInto(target: Path): Unit = throw UnsupportedOperationException(tr("{0} is a file of its own; copy it to back it up", config.type.displayName))
 
     override fun close() {
         try {
@@ -85,11 +86,11 @@ object DataFileStore {
             var copy: WorkingCopy? = null
             var database: Database? = null
             try {
-                val readOnlyReason = document.readOnlyReason ?: if (config.readOnly) "The connection is read-only." else null
+                val readOnlyReason = document.readOnlyReason ?: if (config.readOnly) tr("The connection is read-only.") else null
                 val inner = workingCopyConfig(config, path, readOnly = readOnlyReason != null)
                 val connection =
                     driver.connect("jdbc:sqlite:$path", Properties().apply { putAll(WorkingCopyProperties) })
-                        ?: throw DataFileException("The SQLite driver didn't open the working copy")
+                        ?: throw DataFileException(tr("The SQLite driver didn't open the working copy"))
                 copy = WorkingCopy(path, connection)
                 copy.load(document.tables)
                 val sync = DataFileSync(file, format, options, copy, document, readOnlyReason, stamp)
@@ -114,20 +115,20 @@ object DataFileStore {
                 val tables = document.tables
                 val summary =
                     when (tables.size) {
-                        0 -> "no tables yet"
-                        1 -> "${tables[0].columns.size} columns"
-                        else -> "${tables.size} tables: ${tables.joinToString { it.name }}"
+                        0 -> tr("no tables yet")
+                        1 -> tr("{0} columns", tables[0].columns.size)
+                        else -> tr("{0} tables: {1}", tables.size, tables.joinToString { it.name })
                     }
-                val readOnly = document.readOnlyReason?.let { " Opens read-only: $it" }.orEmpty()
+                val readOnly = document.readOnlyReason?.let { tr(" Opens read-only: {0}", it) }.orEmpty()
                 "${file.name} (${config.type.displayName}), $summary.$readOnly"
             }
         }
 
     /** The profile's file; it must exist. */
     fun fileOf(config: ConnectionConfig): Path {
-        if (config.database.isBlank()) throw DataFileException("Choose the ${config.type.displayName} to open.")
+        if (config.database.isBlank()) throw DataFileException(tr("Choose the {0} to open.", config.type.displayName))
         val file = pathOf(config.database)
-        if (!file.isRegularFile()) throw DataFileException("$file doesn't exist or isn't a file.")
+        if (!file.isRegularFile()) throw DataFileException(tr("{0} doesn't exist or isn't a file.", file))
         return file
     }
 

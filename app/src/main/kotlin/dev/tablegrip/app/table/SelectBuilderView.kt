@@ -1,5 +1,6 @@
 package dev.tablegrip.app.table
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -91,8 +92,8 @@ internal fun SelectBar(tab: TableDataTab) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(AllIconsKeys.Nodes.DataColumn, null)
-            Tooltip({ Text(if (tab.showSelect) "Hide the column editor" else "Choose columns and functions") }) {
-                ViewChip("Columns", tab.showSelect, onClick = tab::toggleSelect)
+            Tooltip({ Text(if (tab.showSelect) tr("Hide the column editor") else tr("Choose columns and functions")) }) {
+                ViewChip(tr("Columns"), tab.showSelect, onClick = tab::toggleSelect)
             }
             Separator()
             SelectPreview(draft, Modifier.weight(1f))
@@ -117,7 +118,7 @@ private fun SelectPreview(draft: CompiledProjection, modifier: Modifier) {
             Text(text, color = info, maxLines = 1, overflow = TextOverflow.Ellipsis, style = JewelTheme.editorTextStyle, fontSize = 11.sp)
         }
         if (clause != null) {
-            Tooltip({ Text("Copy select list") }) { IconButton(onClick = { copyToClipboard(clause) }) { Icon(AllIconsKeys.Actions.Copy, "Copy") } }
+            Tooltip({ Text(tr("Copy select list")) }) { IconButton(onClick = { copyToClipboard(clause) }) { Icon(AllIconsKeys.Actions.Copy, tr("Copy")) } }
         }
     }
 }
@@ -129,19 +130,19 @@ private fun SelectActions(tab: TableDataTab, draft: CompiledProjection) {
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
         if (invalid) {
             val count = draft.issues.size
-            FilterStatus(if (count == 1) "1 column needs attention" else "$count columns need attention", JewelTheme.globalColors.text.error)
+            FilterStatus(if (count == 1) tr("1 column needs attention") else tr("{0} columns need attention", count), JewelTheme.globalColors.text.error)
         } else if (tab.isSelectDirty) {
-            FilterStatus("Not applied", LocalIslands.current.accent, JewelTheme.globalColors.text.info)
+            FilterStatus(tr("Not applied"), LocalIslands.current.accent, JewelTheme.globalColors.text.info)
         } else if (!tab.selectEditable) {
-            Tooltip({ Text("Functions, new names and DISTINCT show values that aren't the table's own, so rows can't be edited") }) {
-                FilterStatus("Read-only", JewelTheme.globalColors.text.info)
+            Tooltip({ Text(tr("Functions, new names and DISTINCT show values that aren't the table's own, so rows can't be edited")) }) {
+                FilterStatus(tr("Read-only"), JewelTheme.globalColors.text.info)
             }
         }
         if (tab.appliedProjection != null || tab.isSelectDirty) {
-            Tooltip({ Text("Show every column again (SELECT *)") }) { Link("Reset", onClick = tab::resetSelect) }
+            Tooltip({ Text(tr("Show every column again (SELECT *)")) }) { Link(tr("Reset"), onClick = tab::resetSelect) }
         }
-        Tooltip({ Text("Apply columns (⏎ in any field)") }) {
-            DefaultButton(onClick = tab::applySelect, enabled = tab.isSelectDirty || invalid) { Text("Apply") }
+        Tooltip({ Text(tr("Apply columns (⏎ in any field)")) }) {
+            DefaultButton(onClick = tab::applySelect, enabled = tab.isSelectDirty || invalid) { Text(tr("Apply")) }
         }
     }
 }
@@ -172,28 +173,28 @@ private fun SelectCard(context: SelectContext) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(AllIconsKeys.Nodes.DataColumn, null)
-            Text("Select", fontWeight = FontWeight.SemiBold)
+            Text(tr("Select"), fontWeight = FontWeight.SemiBold)
             CountBadge(select.items.count { it.enabled })
             Spacer(Modifier.width(4.dp))
-            Tooltip({ Text("Only unique rows (SELECT DISTINCT); rows become read-only") }) {
+            Tooltip({ Text(tr("Only unique rows (SELECT DISTINCT); rows become read-only")) }) {
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(select.distinct, { select.distinct = it })
-                    Text("Distinct rows", color = info)
+                    Text(tr("Distinct rows"), color = info)
                 }
             }
             Box(Modifier.weight(1f))
-            Link("Show all", onClick = { select.showAll(true) })
-            Link("Hide all", onClick = { select.showAll(false) })
-            Tooltip({ Text("Another column, e.g. to show one both as is and through a function") }) {
-                Link("+ Column", onClick = { select.addField(tab.defaultFilterColumn()) })
+            Link(tr("Show all"), onClick = { select.showAll(true) })
+            Link(tr("Hide all"), onClick = { select.showAll(false) })
+            Tooltip({ Text(tr("Another column, e.g. to show one both as is and through a function")) }) {
+                Link(tr("+ Column"), onClick = { select.addField(tab.defaultFilterColumn()) })
             }
-            Tooltip({ Text("A hand-written SQL expression, e.g. price * quantity or CASE WHEN … END") }) {
-                Link("+ SQL", onClick = { select.addExpression() })
+            Tooltip({ Text(tr("A hand-written SQL expression, e.g. price * quantity or CASE WHEN … END")) }) {
+                Link(tr("+ SQL"), onClick = { select.addExpression() })
             }
         }
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
         Column(Modifier.fillMaxWidth().padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            if (select.items.isEmpty()) Hint("No columns listed: every column is shown. Add one, or Reset to list them all.")
+            if (select.items.isEmpty()) Hint(tr("No columns listed: every column is shown. Add one, or Reset to list them all."))
             context.draft.issues[0L]?.takeIf { tab.showSelectIssues || select.items.isNotEmpty() }?.let { IssueText(it) }
             select.items.forEachIndexed { index, item ->
                 key(item.id) {
@@ -204,7 +205,7 @@ private fun SelectCard(context: SelectContext) {
                 }
             }
             if (select.items.isNotEmpty()) {
-                Hint("Hidden columns stay listed, so they can be shown again. Editing rows needs plain columns with their own names.")
+                Hint(tr("Hidden columns stay listed, so they can be shown again. Editing rows needs plain columns with their own names."))
             }
         }
     }
@@ -248,10 +249,10 @@ private fun FieldRow(context: SelectContext, field: SelectFieldState, index: Int
                     onKeyboardAction = KeyboardActionHandler { tab.applySelect() },
                 )
             }
-            Tooltip({ Text("Duplicate, e.g. to show this column through another function too") }) {
-                IconButton(onClick = { context.select.duplicate(field) }) { Icon(AllIconsKeys.Actions.Copy, "Duplicate") }
+            Tooltip({ Text(tr("Duplicate, e.g. to show this column through another function too")) }) {
+                IconButton(onClick = { context.select.duplicate(field) }) { Icon(AllIconsKeys.Actions.Copy, tr("Duplicate")) }
             }
-            RemoveButton("Remove from the list") { context.select.remove(field) }
+            RemoveButton(tr("Remove from the list")) { context.select.remove(field) }
         }
         issue?.let { IssueText(it, Modifier.padding(start = 28.dp)) }
     }
@@ -276,7 +277,7 @@ private fun ExpressionRow(context: SelectContext, expression: SelectExpressionSt
                     Modifier.weight(2f),
                     textStyle = JewelTheme.editorTextStyle,
                     outline = if (issue != null) Outline.Error else Outline.None,
-                    placeholder = { Text("any SQL expression, e.g. price * quantity") },
+                    placeholder = { Text(tr("any SQL expression, e.g. price * quantity")) },
                     onKeyboardAction = KeyboardActionHandler { tab.applySelect() },
                 )
                 Text("AS", color = JewelTheme.globalColors.text.info, style = JewelTheme.editorTextStyle)
@@ -288,7 +289,7 @@ private fun ExpressionRow(context: SelectContext, expression: SelectExpressionSt
                     onKeyboardAction = KeyboardActionHandler { tab.applySelect() },
                 )
             }
-            RemoveButton("Remove from the list") { context.select.remove(expression) }
+            RemoveButton(tr("Remove from the list")) { context.select.remove(expression) }
         }
         issue?.let { IssueText(it, Modifier.padding(start = 28.dp)) }
     }
@@ -298,11 +299,11 @@ private fun ExpressionRow(context: SelectContext, expression: SelectExpressionSt
 private fun MoveButtons(context: SelectContext, item: SelectItemState, index: Int) {
     val last = context.select.items.lastIndex
     Row {
-        Tooltip({ Text("Move left in the grid") }) {
-            IconButton(onClick = { context.select.move(item, -1) }, enabled = index > 0) { Icon(AllIconsKeys.General.ArrowUp, "Move up") }
+        Tooltip({ Text(tr("Move left in the grid")) }) {
+            IconButton(onClick = { context.select.move(item, -1) }, enabled = index > 0) { Icon(AllIconsKeys.General.ArrowUp, tr("Move up")) }
         }
-        Tooltip({ Text("Move right in the grid") }) {
-            IconButton(onClick = { context.select.move(item, 1) }, enabled = index < last) { Icon(AllIconsKeys.General.ArrowDown, "Move down") }
+        Tooltip({ Text(tr("Move right in the grid")) }) {
+            IconButton(onClick = { context.select.move(item, 1) }, enabled = index < last) { Icon(AllIconsKeys.General.ArrowDown, tr("Move down")) }
         }
     }
 }

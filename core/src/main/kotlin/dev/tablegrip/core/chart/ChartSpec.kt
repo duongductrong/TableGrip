@@ -1,11 +1,13 @@
 package dev.tablegrip.core.chart
 
+import dev.tablegrip.core.i18n.tr
+
 enum class ChartType(val label: String) {
-    Line("Line"),
-    Area("Area"),
-    Bar("Bar"),
-    Scatter("Scatter"),
-    Pie("Pie");
+    Line(tr("Line")),
+    Area(tr("Area")),
+    Bar(tr("Bar")),
+    Scatter(tr("Scatter")),
+    Pie(tr("Pie"));
 
     companion object {
         /** By [name] or [label], ignoring case; null for anything else. */
@@ -15,27 +17,27 @@ enum class ChartType(val label: String) {
 
 /** How a measure's values are combined per x (and series). [None] plots each row's value as it is. */
 enum class Aggregate(val label: String, val sql: String?) {
-    None("Value", null),
-    Sum("Sum", "SUM"),
-    Avg("Average", "AVG"),
-    Min("Min", "MIN"),
-    Max("Max", "MAX"),
-    Count("Count", "COUNT");
+    None(tr("Value"), null),
+    Sum(tr("Sum"), "SUM"),
+    Avg(tr("Average"), "AVG"),
+    Min(tr("Min"), "MIN"),
+    Max(tr("Max"), "MAX"),
+    Count(tr("Count"), "COUNT");
 
     companion object {
         fun of(text: String): Aggregate? =
-            entries.firstOrNull { it.name.equals(text, ignoreCase = true) || it.label.equals(text, ignoreCase = true) } ?: if (text.equals("mean", ignoreCase = true)) Avg else null
+            entries.firstOrNull { it.name.equals(text, ignoreCase = true) || it.label.equals(text, ignoreCase = true) } ?: if (text.equals("mean", ignoreCase = true) || text.equals("average", ignoreCase = true)) Avg else null
     }
 }
 
 /** Where dates on the x axis are rounded down to before they are grouped. Weeks start on Monday. */
 enum class TimeBucket(val label: String) {
-    Hour("Hour"),
-    Day("Day"),
-    Week("Week"),
-    Month("Month"),
-    Quarter("Quarter"),
-    Year("Year");
+    Hour(tr("Hour")),
+    Day(tr("Day")),
+    Week(tr("Week")),
+    Month(tr("Month")),
+    Quarter(tr("Quarter")),
+    Year(tr("Year"));
 
     companion object {
         fun of(text: String): TimeBucket? = entries.firstOrNull { it.name.equals(text, ignoreCase = true) }
@@ -80,34 +82,34 @@ data class ChartSpec(
     fun validate(profiles: List<ColumnProfile>): List<String> = buildList {
         val byName = profiles.associateBy { it.name }
         fun known(name: String, role: String): ColumnProfile? =
-            byName[name] ?: null.also { add("There is no column \"$name\" for $role; the columns are: ${profiles.joinToString { it.name }}.") }
+            byName[name] ?: null.also { add(tr("There is no column \"{0}\" for {1}; the columns are: {2}.", name, role, profiles.joinToString { it.name })) }
 
         val xColumn = known(x, "x")
-        if (y.isEmpty()) add("Choose at least one measure for y.")
-        if (y.size > MaxMeasures) add("At most $MaxMeasures measures; there are ${y.size}.")
+        if (y.isEmpty()) add(tr("Choose at least one measure for y."))
+        if (y.size > MaxMeasures) add(tr("At most {0} measures; there are {1}.", MaxMeasures, y.size))
         for (measure in y) {
             val column = known(measure.column, "y") ?: continue
             if (measure.aggregate != Aggregate.Count && column.kind != ColumnKind.Numeric) {
-                add("\"${measure.column}\" isn't numeric (${column.kind.name.lowercase()}); count it or pick a numeric column.")
+                add(tr("\"{0}\" isn't numeric ({1}); count it or pick a numeric column.", measure.column, column.kind.name.lowercase()))
             }
         }
         series?.let { name ->
             val column = known(name, "series") ?: return@let
-            if (name == x) add("The series column can't also be x.")
-            if (column.kind == ColumnKind.Other) add("\"$name\" can't split series: its values can't be compared.")
-            if (y.size > 1) add("Split by series with one measure only.")
+            if (name == x) add(tr("The series column can't also be x."))
+            if (column.kind == ColumnKind.Other) add(tr("\"{0}\" can't split series: its values can't be compared.", name))
+            if (y.size > 1) add(tr("Split by series with one measure only."))
         }
         if (xColumn != null) {
-            if (xColumn.kind == ColumnKind.Other) add("\"$x\" can't be plotted on x: its values are neither numbers, dates nor categories.")
-            if (bucket != null && xColumn.kind != ColumnKind.Temporal) add("Only dates can be grouped by ${bucket.label.lowercase()}; \"$x\" is ${xColumn.kind.name.lowercase()}.")
-            if (bucket != null && y.any { it.aggregate == Aggregate.None }) add("Grouping by ${bucket.label.lowercase()} needs an aggregate (sum, average, count…) for every measure.")
+            if (xColumn.kind == ColumnKind.Other) add(tr("\"{0}\" can't be plotted on x: its values are neither numbers, dates nor categories.", x))
+            if (bucket != null && xColumn.kind != ColumnKind.Temporal) add(tr("Only dates can be grouped by {0}; \"{1}\" is {2}.", bucket.label.lowercase(), x, xColumn.kind.name.lowercase()))
+            if (bucket != null && y.any { it.aggregate == Aggregate.None }) add(tr("Grouping by {0} needs an aggregate (sum, average, count…) for every measure.", bucket.label.lowercase()))
             when (type) {
                 ChartType.Scatter -> {
-                    if (xColumn.kind != ColumnKind.Numeric && xColumn.kind != ColumnKind.Temporal) add("A scatter plot needs numbers or dates on x.")
+                    if (xColumn.kind != ColumnKind.Numeric && xColumn.kind != ColumnKind.Temporal) add(tr("A scatter plot needs numbers or dates on x."))
                 }
                 ChartType.Pie -> {
-                    if (xColumn.kind != ColumnKind.Category) add("A pie needs categories for its slices; \"$x\" is ${xColumn.kind.name.lowercase()}.")
-                    if (y.size > 1 || series != null) add("A pie shows one measure, without series.")
+                    if (xColumn.kind != ColumnKind.Category) add(tr("A pie needs categories for its slices; \"{0}\" is {1}.", x, xColumn.kind.name.lowercase()))
+                    if (y.size > 1 || series != null) add(tr("A pie shows one measure, without series."))
                 }
                 ChartType.Line, ChartType.Area, ChartType.Bar -> Unit
             }

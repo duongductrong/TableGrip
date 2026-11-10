@@ -1,5 +1,6 @@
 package dev.tablegrip.core.assist
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.completion.SchemaProvider
 import dev.tablegrip.core.completion.SqlCompleter
 import dev.tablegrip.core.dialect.SqlDialect
@@ -81,7 +82,7 @@ class SqlNameFixer(private val dialect: SqlDialect) {
         if (ranked.getOrNull(1)?.second == best.second) return null
         val fixed = replaceName(statement, missing.name, best.first) ?: return null
         val what = if (missing.kind == MissingName.Kind.Column) "column" else "table"
-        return SqlFix(fixed, "There is no $what ${missing.name}; the closest is ${best.first}.")
+        return SqlFix(fixed, tr("There is no {0} {1}; the closest is {2}.", what, missing.name, best.first))
     }
 
     /** Columns of the statement's tables, or the tables of the namespace the unknown one was looked for in. */
@@ -155,8 +156,8 @@ fun reviewFix(original: String, fixed: String, syntax: SqlSyntax): List<String> 
     val after = classifier.classify(fixed)
     return buildList {
         after.danger?.let(::add)
-        if (!before.changesData && after.changesData) add("The fix changes data or schema (${after.verb}); the original only read.")
-        else if (after.kind != StatementKind.Read && before.verb != after.verb) add("The fix runs ${after.verb} instead of ${before.verb}.")
+        if (!before.changesData && after.changesData) add(tr("The fix changes data or schema ({0}); the original only read.", after.verb))
+        else if (after.kind != StatementKind.Read && before.verb != after.verb) add(tr("The fix runs {0} instead of {1}.", after.verb, before.verb))
     }
 }
 

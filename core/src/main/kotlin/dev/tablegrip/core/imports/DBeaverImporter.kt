@@ -1,5 +1,6 @@
 package dev.tablegrip.core.imports
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.connection.DatabaseType
 import dev.tablegrip.core.connection.ParsedConnection
 import dev.tablegrip.core.connection.SshAuth
@@ -71,7 +72,7 @@ internal object DBeaverImporter {
                     else -> fields(type, configuration)
                 }
             if (parsed == null) {
-                skipped += "DBeaver: “$name” (${connection.string("provider") ?: "unknown"}) isn't supported."
+                skipped += tr("DBeaver: “{0}” ({1}) isn't supported.", name, connection.string("provider") ?: "unknown")
                 continue
             }
             val login = credentials?.get(id)
@@ -89,8 +90,8 @@ internal object DBeaverImporter {
             val password = login?.connection?.second ?: configuration.string("password") ?: parsed.password
             val notes = buildList {
                 addAll(parsed.warnings)
-                if (password == null && connection.boolean("save-password") == true && credentials == null) add("DBeaver's saved password couldn't be read")
-                if (parsed.type == DatabaseType.OtherJdbc) add("Choose the driver's jar when connecting")
+                if (password == null && connection.boolean("save-password") == true && credentials == null) add(tr("DBeaver's saved password couldn't be read"))
+                if (parsed.type == DatabaseType.OtherJdbc) add(tr("Choose the driver's jar when connecting"))
             }
             candidates += ImportCandidate(config, password = password?.ifEmpty { null }, sshSecret = login?.ssh?.second, origin = file.toString(), notes = notes)
         }

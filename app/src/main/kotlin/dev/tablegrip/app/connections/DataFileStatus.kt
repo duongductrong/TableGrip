@@ -1,5 +1,6 @@
 package dev.tablegrip.app.connections
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.ContextMenuItem
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -59,23 +60,23 @@ internal fun DataFileBanner(app: AppState, connectionId: String) {
                     linkActions = {
                         when (current.reason) {
                             DataFileState.Held.Reason.ChangedOnDisk -> {
-                                action("Keep mine, overwrite $name") { act { connection.sync.save(force = true) } }
-                                action("Discard mine, reload $name") { act { connection.sync.reload() } }
+                                action(tr("Keep mine, overwrite {0}", name)) { act { connection.sync.save(force = true) } }
+                                action(tr("Discard mine, reload {0}", name)) { act { connection.sync.reload() } }
                             }
                             DataFileState.Held.Reason.LosesContent -> {
-                                action("Save anyway") { act { connection.sync.save(force = true) } }
-                                action("Discard changes") { act { connection.sync.reload() } }
+                                action(tr("Save anyway")) { act { connection.sync.save(force = true) } }
+                                action(tr("Discard changes")) { act { connection.sync.reload() } }
                             }
                         }
                     },
                 )
             is DataFileState.Failed ->
                 InlineErrorBanner(
-                    "${current.message}. Your changes are kept and saved as soon as writing works again.",
+                    tr("{0}. Your changes are kept and saved as soon as writing works again.", current.message),
                     modifier,
                     linkActions = {
-                        action("Try again") { act { connection.sync.save() } }
-                        action("Reload $name") { act { connection.sync.reload() } }
+                        action(tr("Try again")) { act { connection.sync.save() } }
+                        action(tr("Reload {0}", name)) { act { connection.sync.reload() } }
                     },
                 )
             else -> Unit
@@ -89,21 +90,21 @@ internal fun DataFileBadge(connection: DataFileConnection) {
     val state by connection.sync.state.collectAsState()
     val (label, tooltip, error) =
         when (val current = state) {
-            DataFileState.Saving -> Triple("saving…", "Writing ${connection.sync.file.fileName}", false)
-            is DataFileState.Held -> Triple("unsaved", current.message, false)
-            is DataFileState.Failed -> Triple("not saved", current.message, true)
+            DataFileState.Saving -> Triple(tr("saving…"), tr("Writing {0}", connection.sync.file.fileName), false)
+            is DataFileState.Held -> Triple(tr("unsaved"), current.message, false)
+            is DataFileState.Failed -> Triple(tr("not saved"), current.message, true)
             is DataFileState.InSync -> {
                 val notes = connection.sync.notes + listOfNotNull(
-                    connection.sync.readOnlyReason?.let { "Read-only: $it" },
-                    current.sessionOnly.takeIf { it.isNotEmpty() }?.let { "Only in this session (the file holds one table): ${it.joinToString()}" },
+                    connection.sync.readOnlyReason?.let { tr("Read-only: {0}", it) },
+                    current.sessionOnly.takeIf { it.isNotEmpty() }?.let { tr("Only in this session (the file holds one table): {0}", it.joinToString()) },
                 )
                 if (notes.isEmpty()) return
-                Triple("note", notes.joinToString("\n"), false)
+                Triple(tr("note"), notes.joinToString("\n"), false)
             }
         }
     val colors = JewelTheme.globalColors.text
     Tooltip({ Text(tooltip) }) {
-        Text(label, color = if (error) colors.error else if (label == "note") colors.info else colors.warning, maxLines = 1, softWrap = false)
+        Text(label, color = if (error) colors.error else if (state is DataFileState.InSync) colors.info else colors.warning, maxLines = 1, softWrap = false)
     }
 }
 
@@ -112,11 +113,11 @@ internal fun dataFileMenu(app: AppState, config: ConnectionConfig): List<Context
     val connection = app.databases.dataFile(config.id)
     val file = runCatching { dev.tablegrip.core.datafile.DataFileStore.pathOf(config.database).toFile() }.getOrNull()
     return listOfNotNull(
-        file?.let { ContextMenuItem("Open in Separate Window") { app.files.open(listOf(it)) } },
-        connection?.takeIf { it.sync.readOnlyReason == null }?.let { ContextMenuItem("Save to File Now") { app.scope.launch { it.sync.save() } } },
-        connection?.let { ContextMenuItem("Reload from File") { app.scope.launch { it.sync.reload() } } },
+        file?.let { ContextMenuItem(tr("Open in Separate Window")) { app.files.open(listOf(it)) } },
+        connection?.takeIf { it.sync.readOnlyReason == null }?.let { ContextMenuItem(tr("Save to File Now")) { app.scope.launch { it.sync.save() } } },
+        connection?.let { ContextMenuItem(tr("Reload from File")) { app.scope.launch { it.sync.reload() } } },
         file?.takeIf { Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE_FILE_DIR) }?.let {
-            ContextMenuItem("Reveal in File Manager") { runCatching { Desktop.getDesktop().browseFileDirectory(it) } }
+            ContextMenuItem(tr("Reveal in File Manager")) { runCatching { Desktop.getDesktop().browseFileDirectory(it) } }
         },
     )
 }
@@ -132,25 +133,25 @@ internal fun UnsavedDataFilesDialog(app: AppState, request: UnsavedDataFiles) {
     fun cancel() {
         app.unsavedDataFiles = null
     }
-    AppDialog(onCloseRequest = ::cancel, size = DpSize(520.dp, 260.dp), title = "Unsaved Data Files", resizable = false) {
+    AppDialog(onCloseRequest = ::cancel, size = DpSize(520.dp, 260.dp), title = tr("Unsaved Data Files"), resizable = false) {
         Column(
             Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Text("These files don't have your latest changes yet. Closing their connections discards those changes.")
+            Text(tr("These files don't have your latest changes yet. Closing their connections discards those changes."))
             request.connections.forEach { connection ->
                 val state by connection.sync.state.collectAsState()
-                val detail = (state as? DataFileState.Held)?.message ?: (state as? DataFileState.Failed)?.message ?: "Saved."
+                val detail = (state as? DataFileState.Held)?.message ?: (state as? DataFileState.Failed)?.message ?: tr("Saved.")
                 Text("${connection.sync.file.fileName}: $detail", color = JewelTheme.globalColors.text.info, maxLines = 2)
             }
             error?.let { Text(it, color = JewelTheme.globalColors.text.error, maxLines = 3) }
             Spacer(Modifier.weight(1f))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                OutlinedButton(onClick = ::cancel, enabled = !busy) { Text("Cancel") }
+                OutlinedButton(onClick = ::cancel, enabled = !busy) { Text(tr("Cancel")) }
                 OutlinedButton(onClick = {
                     app.unsavedDataFiles = null
                     request.then()
-                }, enabled = !busy) { Text("Discard Changes") }
+                }, enabled = !busy) { Text(tr("Discard Changes")) }
                 DefaultButton(onClick = {
                     busy = true
                     app.scope.launch {
@@ -164,7 +165,7 @@ internal fun UnsavedDataFilesDialog(app: AppState, request: UnsavedDataFiles) {
                             error = failed.joinToString("\n")
                         }
                     }
-                }, enabled = !busy) { Text("Save and Continue") }
+                }, enabled = !busy) { Text(tr("Save and Continue")) }
             }
         }
     }

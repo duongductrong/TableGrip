@@ -1,5 +1,6 @@
 package dev.tablegrip.app.grid
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.text.input.TextFieldState
@@ -118,7 +119,7 @@ class DataGridState {
             reveal(GridCell(row.coerceIn(0, model.rowCount - 1), column))
         } ?: clamp(model.rowCount)
         val next = if (back) Shortcuts.Redo else Shortcuts.Undo
-        notice = GridNotice("${if (back) "Undid" else "Redid"} ${step.label} · $next ${if (back) "redoes" else "undoes"}")
+        notice = GridNotice(if (back) tr("Undid {0} · {1} redoes", step.label, next) else tr("Redid {0} · {1} undoes", step.label, next))
         return true
     }
 

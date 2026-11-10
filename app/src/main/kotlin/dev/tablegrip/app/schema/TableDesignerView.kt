@@ -1,5 +1,6 @@
 package dev.tablegrip.app.schema
 
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -98,7 +99,7 @@ internal fun TableDesignerView(app: AppState, tab: TableDesignerTab) {
         tab.error?.let { ErrorBanner(it, onDismiss = { tab.error = null }) }
         if (tab.loading) {
             Box(Modifier.fillMaxSize()) {
-                ConnectionLoadingPlaceholder(tab.config, tab.connectionStatus, "Reading ${tab.tableRef?.name}…", Modifier.align(Alignment.Center))
+                ConnectionLoadingPlaceholder(tab.config, tab.connectionStatus, tr("Reading {0}…", tab.tableRef?.name), Modifier.align(Alignment.Center))
             }
             return@Column
         }
@@ -122,7 +123,7 @@ private fun DesignerToolbar(tab: TableDesignerTab, valid: Boolean, changed: Bool
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text("Table", color = JewelTheme.globalColors.text.info)
+        Text(tr("Table"), color = JewelTheme.globalColors.text.info)
         TextField(
             tab.tableName,
             Modifier.width(220.dp),
@@ -130,23 +131,23 @@ private fun DesignerToolbar(tab: TableDesignerTab, valid: Boolean, changed: Bool
             outline = if (tab.tableName.text.isBlank()) Outline.Error else Outline.None,
         )
         Separator()
-        ToolButton(AllIconsKeys.General.Add, "Add column") { tab.addColumn() }
+        ToolButton(AllIconsKeys.General.Add, tr("Add column")) { tab.addColumn() }
         Separator()
-        ToolButton(AllIconsKeys.Actions.Rollback, "Revert all changes", enabled = changed && tab.original != null) { tab.revert() }
-        ToolButton(AllIconsKeys.Actions.Refresh, "Reload from the database", enabled = tab.original != null) { tab.load() }
+        ToolButton(AllIconsKeys.Actions.Rollback, tr("Revert all changes"), enabled = changed && tab.original != null) { tab.revert() }
+        ToolButton(AllIconsKeys.Actions.Refresh, tr("Reload from the database"), enabled = tab.original != null) { tab.load() }
         Box(Modifier.weight(1f))
-        if (tab.config.readOnly) Text("read-only connection", color = JewelTheme.globalColors.text.info)
+        if (tab.config.readOnly) Text(tr("read-only connection"), color = JewelTheme.globalColors.text.info)
         EnvironmentChip(tab.config)
         Text(
             when {
-                !changed && tab.original != null -> "No changes"
-                !valid -> "Fix the marked problems to apply"
+                !changed && tab.original != null -> tr("No changes")
+                !valid -> tr("Fix the marked problems to apply")
                 else -> ""
             },
             color = JewelTheme.globalColors.text.info,
         )
         DefaultButton(onClick = tab::requestApply, enabled = valid && changed && !tab.config.readOnly) {
-            Text(if (tab.original == null) "Create Table" else "Apply…")
+            Text(if (tab.original == null) tr("Create Table") else tr("Apply…"))
         }
     }
 }
@@ -191,17 +192,17 @@ private fun ColumnsList(tab: TableDesignerTab, issues: Map<Long?, List<DesignIss
     Column(Modifier.fillMaxSize()) {
         ListHeader {
             Box(Modifier.width(MarkerWidth))
-            HeaderCell("Name", Modifier.weight(1.3f))
-            HeaderCell("Type", Modifier.weight(1.2f))
-            HeaderCell("Default", Modifier.weight(1f))
-            HeaderCell("Null", Modifier.width(CheckWidth))
-            HeaderCell("PK", Modifier.width(CheckWidth))
-            HeaderCell("Auto", Modifier.width(CheckWidth))
+            HeaderCell(tr("Name"), Modifier.weight(1.3f))
+            HeaderCell(tr("Type"), Modifier.weight(1.2f))
+            HeaderCell(tr("Default"), Modifier.weight(1f))
+            HeaderCell(tr("Null"), Modifier.width(CheckWidth))
+            HeaderCell(tr("PK"), Modifier.width(CheckWidth))
+            HeaderCell(tr("Auto"), Modifier.width(CheckWidth))
             Box(Modifier.width(ActionsWidth))
         }
         LazyColumn(Modifier.weight(1f).fillMaxWidth(), state = state) {
             items(tab.columns, key = { it.id }) { column -> ColumnRow(tab, column, issues[column.id].orEmpty()) }
-            item { AddRowLink("Add column", onClick = { tab.addColumn() }, Modifier.padding(start = 10.dp, top = 6.dp, bottom = 10.dp)) }
+            item { AddRowLink(tr("Add column"), onClick = { tab.addColumn() }, Modifier.padding(start = 10.dp, top = 6.dp, bottom = 10.dp)) }
         }
     }
     // Scroll to a column just added.
@@ -235,8 +236,8 @@ private fun ColumnRow(tab: TableDesignerTab, column: DesignerColumn, issues: Lis
                     color = JewelTheme.globalColors.text.info,
                 )
                 Text(column.original?.type.orEmpty(), Modifier.weight(2.2f), color = JewelTheme.globalColors.text.info, textDecoration = TextDecoration.LineThrough)
-                Text("will be dropped", color = RemovedColor)
-                Link("Restore", onClick = { tab.restoreColumn(column) })
+                Text(tr("will be dropped"), color = RemovedColor)
+                Link(tr("Restore"), onClick = { tab.restoreColumn(column) })
                 Box(Modifier.width(8.dp))
                 return@Row
             }
@@ -247,20 +248,20 @@ private fun ColumnRow(tab: TableDesignerTab, column: DesignerColumn, issues: Lis
                     tab.focusRow = null
                 }
             }
-            val nameProblem = issues.any { "name" in it.message || "named" in it.message }
-            TextField(column.name, Modifier.weight(1.3f).focusRequester(focus), outline = if (nameProblem) Outline.Error else Outline.None, placeholder = { Text("name") })
-            TypeField(column.type, tab.commonTypes, Modifier.weight(1.2f), error = issues.any { "type" in it.message })
-            TextField(column.defaultValue, Modifier.weight(1f), placeholder = { Text("none", color = JewelTheme.globalColors.text.info) })
-            CheckCell(column.nullable && !column.primaryKey, enabled = !column.primaryKey, tooltip = "Allows NULL") { column.nullable = it }
-            CheckCell(column.primaryKey, tooltip = "Part of the primary key") {
+            val nameProblem = issues.any { it.field == IssueField.Name }
+            TextField(column.name, Modifier.weight(1.3f).focusRequester(focus), outline = if (nameProblem) Outline.Error else Outline.None, placeholder = { Text(tr("name")) })
+            TypeField(column.type, tab.commonTypes, Modifier.weight(1.2f), error = issues.any { it.field == IssueField.Type })
+            TextField(column.defaultValue, Modifier.weight(1f), placeholder = { Text(tr("none"), color = JewelTheme.globalColors.text.info) })
+            CheckCell(column.nullable && !column.primaryKey, enabled = !column.primaryKey, tooltip = tr("Allows NULL")) { column.nullable = it }
+            CheckCell(column.primaryKey, tooltip = tr("Part of the primary key")) {
                 column.primaryKey = it
                 if (it) column.nullable = false
             }
-            CheckCell(column.autoIncrement, enabled = column.isNew || tab.original == null, tooltip = if (column.isNew) "Auto-increment" else "Auto-increment can only be set on new columns") { column.autoIncrement = it }
+            CheckCell(column.autoIncrement, enabled = column.isNew || tab.original == null, tooltip = if (column.isNew) tr("Auto-increment") else tr("Auto-increment can only be set on new columns")) { column.autoIncrement = it }
             Row(Modifier.width(ActionsWidth), horizontalArrangement = Arrangement.End) {
-                SmallIcon(AllIconsKeys.General.ArrowUp, "Move up") { tab.moveColumn(column, -1) }
-                SmallIcon(AllIconsKeys.General.ArrowDown, "Move down") { tab.moveColumn(column, 1) }
-                SmallIcon(AllIconsKeys.General.Delete, if (column.isNew) "Remove" else "Drop column") { tab.removeColumn(column) }
+                SmallIcon(AllIconsKeys.General.ArrowUp, tr("Move up")) { tab.moveColumn(column, -1) }
+                SmallIcon(AllIconsKeys.General.ArrowDown, tr("Move down")) { tab.moveColumn(column, 1) }
+                SmallIcon(AllIconsKeys.General.Delete, if (column.isNew) tr("Remove") else tr("Drop column")) { tab.removeColumn(column) }
             }
         }
         IssueLines(issues)
@@ -281,14 +282,14 @@ private fun TypeField(state: TextFieldState, types: List<String>, modifier: Modi
             state,
             Modifier.fillMaxWidth(),
             outline = if (error) Outline.Error else Outline.None,
-            placeholder = { Text("type") },
+            placeholder = { Text(tr("type")) },
             trailingIcon = {
-                Tooltip({ Text("Common types") }) {
+                Tooltip({ Text(tr("Common types")) }) {
                     Box(
                         Modifier.size(18.dp).clip(RoundedCornerShape(4.dp)).clickable { open = !open },
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(AllIconsKeys.General.ChevronDown, "Common types", Modifier.size(12.dp))
+                        Icon(AllIconsKeys.General.ChevronDown, tr("Common types"), Modifier.size(12.dp))
                     }
                 }
             },
@@ -319,17 +320,17 @@ private fun IndexesList(tab: TableDesignerTab, issues: Map<Long?, List<DesignIss
     Column(Modifier.fillMaxSize()) {
         if (tab.indexes.isEmpty()) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
-                EmptyState("No indexes", "Indexes speed up lookups and can enforce uniqueness.", Modifier.align(Alignment.Center)) {
-                    OutlinedButton(onClick = tab::addIndex) { Text("Add Index") }
+                EmptyState(tr("No indexes"), tr("Indexes speed up lookups and can enforce uniqueness."), Modifier.align(Alignment.Center)) {
+                    OutlinedButton(onClick = tab::addIndex) { Text(tr("Add Index")) }
                 }
             }
             return
         }
         ListHeader {
             Box(Modifier.width(MarkerWidth))
-            HeaderCell("Name", Modifier.weight(1f))
-            HeaderCell("Columns", Modifier.weight(1.6f))
-            HeaderCell("Unique", Modifier.width(56.dp))
+            HeaderCell(tr("Name"), Modifier.weight(1f))
+            HeaderCell(tr("Columns"), Modifier.weight(1.6f))
+            HeaderCell(tr("Unique"), Modifier.width(56.dp))
             Box(Modifier.width(ActionsWidth))
         }
         LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
@@ -340,11 +341,11 @@ private fun IndexesList(tab: TableDesignerTab, issues: Map<Long?, List<DesignIss
                         Box(Modifier.width(MarkerWidth).fillMaxHeight().padding(vertical = 4.dp).background(rowMarker(index.original == null, index.dropped, changed)))
                         if (index.dropped) {
                             Text(index.original?.name.orEmpty(), Modifier.weight(1f).padding(horizontal = 6.dp), textDecoration = TextDecoration.LineThrough, color = JewelTheme.globalColors.text.info)
-                            Text("will be dropped", Modifier.weight(1.6f), color = RemovedColor)
-                            Link("Restore", onClick = { index.dropped = false })
+                            Text(tr("will be dropped"), Modifier.weight(1.6f), color = RemovedColor)
+                            Link(tr("Restore"), onClick = { index.dropped = false })
                             return@Row
                         }
-                        TextField(index.name, Modifier.weight(1f), outline = if (issues[index.id]?.any { "name" in it.message } == true) Outline.Error else Outline.None)
+                        TextField(index.name, Modifier.weight(1f), outline = if (issues[index.id]?.any { it.field == IssueField.Name } == true) Outline.Error else Outline.None)
                         ColumnChips(
                             selected = index.columns.map(tab::columnName),
                             options = tab.columns.filter { !it.dropped && it.id !in index.columns }.map { it.name.text.toString() to it.id },
@@ -354,13 +355,13 @@ private fun IndexesList(tab: TableDesignerTab, issues: Map<Long?, List<DesignIss
                         )
                         Box(Modifier.width(56.dp), contentAlignment = Alignment.Center) { Checkbox(index.unique, { index.unique = it }) }
                         Row(Modifier.width(ActionsWidth), horizontalArrangement = Arrangement.End) {
-                            SmallIcon(AllIconsKeys.General.Delete, if (index.original == null) "Remove" else "Drop index") { tab.removeIndex(index) }
+                            SmallIcon(AllIconsKeys.General.Delete, if (index.original == null) tr("Remove") else tr("Drop index")) { tab.removeIndex(index) }
                         }
                     }
                     IssueLines(issues[index.id].orEmpty())
                 }
             }
-            item { AddRowLink("Add index", onClick = tab::addIndex, Modifier.padding(start = 10.dp, top = 6.dp, bottom = 10.dp)) }
+            item { AddRowLink(tr("Add index"), onClick = tab::addIndex, Modifier.padding(start = 10.dp, top = 6.dp, bottom = 10.dp)) }
         }
     }
 }
@@ -374,25 +375,25 @@ private fun ForeignKeysList(tab: TableDesignerTab, issues: Map<Long?, List<Desig
     Column(Modifier.fillMaxSize()) {
         if (tab.foreignKeys.isEmpty()) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
-                EmptyState("No foreign keys", "A foreign key makes sure a column only holds values that exist in another table.", Modifier.align(Alignment.Center)) {
-                    OutlinedButton(onClick = tab::addForeignKey) { Text("Add Foreign Key") }
+                EmptyState(tr("No foreign keys"), tr("A foreign key makes sure a column only holds values that exist in another table."), Modifier.align(Alignment.Center)) {
+                    OutlinedButton(onClick = tab::addForeignKey) { Text(tr("Add Foreign Key")) }
                 }
             }
             return
         }
         ListHeader {
             Box(Modifier.width(MarkerWidth))
-            HeaderCell("Name", Modifier.weight(1f))
-            HeaderCell("Columns", Modifier.weight(1f))
-            HeaderCell("References", Modifier.weight(0.9f))
-            HeaderCell("Referenced columns", Modifier.weight(1f))
-            HeaderCell("On update", Modifier.width(ActionWidth))
-            HeaderCell("On delete", Modifier.width(ActionWidth))
+            HeaderCell(tr("Name"), Modifier.weight(1f))
+            HeaderCell(tr("Columns"), Modifier.weight(1f))
+            HeaderCell(tr("References"), Modifier.weight(0.9f))
+            HeaderCell(tr("Referenced columns"), Modifier.weight(1f))
+            HeaderCell(tr("On update"), Modifier.width(ActionWidth))
+            HeaderCell(tr("On delete"), Modifier.width(ActionWidth))
             Box(Modifier.width(ActionsWidth))
         }
         LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
             items(tab.foreignKeys, key = { it.id }) { fk -> ForeignKeyRow(tab, fk, issues[fk.id].orEmpty()) }
-            item { AddRowLink("Add foreign key", onClick = tab::addForeignKey, Modifier.padding(start = 10.dp, top = 6.dp, bottom = 10.dp)) }
+            item { AddRowLink(tr("Add foreign key"), onClick = tab::addForeignKey, Modifier.padding(start = 10.dp, top = 6.dp, bottom = 10.dp)) }
         }
     }
 }
@@ -409,11 +410,11 @@ private fun ForeignKeyRow(tab: TableDesignerTab, fk: DesignerForeignKey, issues:
             Box(Modifier.width(MarkerWidth).fillMaxHeight().padding(vertical = 4.dp).background(rowMarker(original == null, fk.dropped, changed)))
             if (fk.dropped) {
                 Text(original?.name.orEmpty(), Modifier.weight(1f).padding(horizontal = 6.dp), textDecoration = TextDecoration.LineThrough, color = JewelTheme.globalColors.text.info)
-                Text("will be dropped", Modifier.weight(2.9f), color = RemovedColor)
-                Link("Restore", onClick = { fk.dropped = false })
+                Text(tr("will be dropped"), Modifier.weight(2.9f), color = RemovedColor)
+                Link(tr("Restore"), onClick = { fk.dropped = false })
                 return@Row
             }
-            TextField(fk.name, Modifier.weight(1f), outline = if (issues.any { "name" in it.message }) Outline.Error else Outline.None, placeholder = { Text("unnamed", color = JewelTheme.globalColors.text.info) })
+            TextField(fk.name, Modifier.weight(1f), outline = if (issues.any { it.field == IssueField.Name }) Outline.Error else Outline.None, placeholder = { Text(tr("unnamed"), color = JewelTheme.globalColors.text.info) })
             ColumnChips(
                 selected = fk.columns.map(tab::columnName),
                 options = tab.columns.filter { !it.dropped && it.id !in fk.columns }.map { it.name.text.toString() to it.id },
@@ -422,7 +423,7 @@ private fun ForeignKeyRow(tab: TableDesignerTab, fk: DesignerForeignKey, issues:
                 modifier = Modifier.weight(1f),
             )
             Picker(
-                label = fk.referencedTable?.name ?: "Choose table",
+                label = fk.referencedTable?.name ?: tr("Choose table"),
                 placeholder = fk.referencedTable == null,
                 options = tab.tables.map { it.name to it },
                 onPick = { tab.setReferencedTable(fk, it) },
@@ -439,7 +440,7 @@ private fun ForeignKeyRow(tab: TableDesignerTab, fk: DesignerForeignKey, issues:
             Picker(fk.onUpdate, placeholder = false, options = ReferentialActions.map { it to it }, onPick = { fk.onUpdate = it }, modifier = Modifier.width(ActionWidth))
             Picker(fk.onDelete, placeholder = false, options = ReferentialActions.map { it to it }, onPick = { fk.onDelete = it }, modifier = Modifier.width(ActionWidth))
             Row(Modifier.width(ActionsWidth), horizontalArrangement = Arrangement.End) {
-                SmallIcon(AllIconsKeys.General.Delete, if (original == null) "Remove" else "Drop foreign key") { tab.removeForeignKey(fk) }
+                SmallIcon(AllIconsKeys.General.Delete, if (original == null) tr("Remove") else tr("Drop foreign key")) { tab.removeForeignKey(fk) }
             }
         }
         IssueLines(issues)
@@ -453,9 +454,9 @@ private fun DdlPreview(app: AppState, tab: TableDesignerTab, ddl: String, warnin
     Column(Modifier.fillMaxSize()) {
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
         Row(Modifier.fillMaxWidth().height(30.dp).padding(horizontal = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("SQL preview", fontWeight = FontWeight.SemiBold)
+            Text(tr("SQL preview"), fontWeight = FontWeight.SemiBold)
             Text(transactionNote(tab.script(), tab.dialect), color = JewelTheme.globalColors.text.info, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-            Link("Open in Console", onClick = { app.workspace.openConsole(tab.config, ddl) }, enabled = ddl.isNotBlank())
+            Link(tr("Open in Console"), onClick = { app.workspace.openConsole(tab.config, ddl) }, enabled = ddl.isNotBlank())
         }
         // Table-wide problems; row problems show on their rows.
         issues.filter { it.rowId == null }.forEach { Notice(it.message, NoticeKind.Error, Modifier.padding(horizontal = 8.dp, vertical = 2.dp)) }
@@ -465,7 +466,7 @@ private fun DdlPreview(app: AppState, tab: TableDesignerTab, ddl: String, warnin
         Box(Modifier.weight(1f).fillMaxWidth()) {
             if (ddl.isBlank()) {
                 Text(
-                    if (tab.original == null) "Add columns to see the CREATE TABLE statement." else "No changes yet. Edit a column, index or foreign key to see the statements.",
+                    if (tab.original == null) tr("Add columns to see the CREATE TABLE statement.") else tr("No changes yet. Edit a column, index or foreign key to see the statements."),
                     Modifier.align(Alignment.Center),
                     color = JewelTheme.globalColors.text.info,
                 )
@@ -478,16 +479,16 @@ private fun DdlPreview(app: AppState, tab: TableDesignerTab, ddl: String, warnin
 
 @Composable
 private fun DiscardDesignDialog(tab: TableDesignerTab, close: () -> Unit) {
-    AppDialog(onCloseRequest = { tab.pendingClose = null }, size = DpSize(460.dp, 170.dp), title = "Unapplied Changes", resizable = false) {
+    AppDialog(onCloseRequest = { tab.pendingClose = null }, size = DpSize(460.dp, 170.dp), title = tr("Unapplied Changes"), resizable = false) {
         Column(Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("${tab.title} has changes that haven't been applied to the database. Discard them?")
+            Text(tr("{0} has changes that haven't been applied to the database. Discard them?", tab.title))
             Box(Modifier.weight(1f))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                OutlinedButton(onClick = { tab.pendingClose = null }) { Text("Keep Editing") }
+                OutlinedButton(onClick = { tab.pendingClose = null }) { Text(tr("Keep Editing")) }
                 DefaultButton(onClick = {
                     tab.pendingClose = null
                     close()
-                }) { Text("Discard") }
+                }) { Text(tr("Discard")) }
             }
         }
     }
@@ -537,7 +538,7 @@ private fun rowMarker(new: Boolean, dropped: Boolean, changed: Boolean): Color =
 private fun <T> ColumnChips(selected: List<String>, options: List<Pair<String, T>>, onAdd: (T) -> Unit, onRemove: (Int) -> Unit, modifier: Modifier) {
     var open by remember { mutableStateOf(false) }
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-        if (selected.isEmpty()) Text("none", color = JewelTheme.globalColors.text.info, modifier = Modifier.padding(start = 4.dp))
+        if (selected.isEmpty()) Text(tr("none"), color = JewelTheme.globalColors.text.info, modifier = Modifier.padding(start = 4.dp))
         selected.forEachIndexed { i, name ->
             Row(
                 Modifier.clip(RoundedCornerShape(10.dp)).background(JewelTheme.globalColors.borders.normal.copy(alpha = 0.35f)).padding(start = 8.dp, end = 2.dp),
@@ -545,14 +546,14 @@ private fun <T> ColumnChips(selected: List<String>, options: List<Pair<String, T
             ) {
                 Text(name.ifEmpty { "?" }, maxLines = 1)
                 Box(Modifier.size(18.dp).clip(RoundedCornerShape(9.dp)).clickable { onRemove(i) }, contentAlignment = Alignment.Center) {
-                    Icon(AllIconsKeys.Actions.Close, "Remove $name", Modifier.size(10.dp))
+                    Icon(AllIconsKeys.Actions.Close, tr("Remove {0}", name), Modifier.size(10.dp))
                 }
             }
         }
         if (options.isNotEmpty()) {
             Box {
-                Tooltip({ Text("Add column") }) {
-                    IconButton(onClick = { open = true }, modifier = Modifier.size(22.dp)) { Icon(AllIconsKeys.General.Add, "Add column", Modifier.size(12.dp)) }
+                Tooltip({ Text(tr("Add column")) }) {
+                    IconButton(onClick = { open = true }, modifier = Modifier.size(22.dp)) { Icon(AllIconsKeys.General.Add, tr("Add column"), Modifier.size(12.dp)) }
                 }
                 if (open) {
                     PopupMenu(onDismissRequest = { open = false; true }, horizontalAlignment = Alignment.Start) {
@@ -586,7 +587,7 @@ internal fun <T> Picker(label: String, placeholder: Boolean, options: List<Pair<
         }
         if (open) {
             PopupMenu(onDismissRequest = { open = false; true }, horizontalAlignment = Alignment.Start, modifier = Modifier.widthIn(min = 160.dp)) {
-                if (options.isEmpty()) passiveItem { Text("Nothing to choose", Modifier.padding(8.dp), color = JewelTheme.globalColors.text.info) }
+                if (options.isEmpty()) passiveItem { Text(tr("Nothing to choose"), Modifier.padding(8.dp), color = JewelTheme.globalColors.text.info) }
                 options.forEach { (text, value) ->
                     selectableItem(selected = text == label, onClick = {
                         open = false

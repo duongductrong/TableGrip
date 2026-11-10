@@ -1,5 +1,6 @@
 package dev.tablegrip.core.connection
 
+import dev.tablegrip.core.i18n.tr
 import java.net.URLEncoder
 import java.sql.SQLException
 import java.util.Properties
@@ -59,10 +60,10 @@ enum class DriverId(
     MongoDB("MongoDB Java Driver", "dev.tablegrip.engines.mongodb.MongoClient", "mongodb:", catalogId = "mongodb", adapter = "mongodb"),
 
     /** Built in: TableGrip talks to etcd's v3 HTTP/JSON API itself, so there's nothing to download. */
-    Etcd("etcd v3 API (built in)", "dev.tablegrip.core.driver.etcd.EtcdClient", "http:", builtIn = true),
+    Etcd(tr("etcd v3 API (built in)"), "dev.tablegrip.core.driver.etcd.EtcdClient", "http:", builtIn = true),
 
     /** Whatever driver the profile's own jars contain; its class is found in them. */
-    Generic("JDBC driver from your jars", "", "jdbc:");
+    Generic(tr("JDBC driver from your jars"), "", "jdbc:");
 
     /** A java.sql.Driver, as opposed to a non-JDBC client (adapter or built in). */
     val isJdbc: Boolean
@@ -84,7 +85,7 @@ object JdbcUrls {
     fun build(config: ConnectionConfig, via: Pair<String, Int>? = null): String {
         config.url?.let { raw -> return adaptToDriver(if (via == null) raw else redirect(raw, via.first, via.second), config.effectiveDriver) }
         val driver = config.effectiveDriver
-        if (config.type.connection == ConnectionKind.Url) throw SQLException("${config.type.displayName} connects by JDBC URL only.")
+        if (config.type.connection == ConnectionKind.Url) throw SQLException(tr("{0} connects by JDBC URL only.", config.type.displayName))
         if (config.type.isFile) return fileUrl(config, driver)
         val hosts =
             if (via != null) formatHost(via.first, via.second)
@@ -188,7 +189,7 @@ object JdbcUrls {
             DriverId.Derby -> if (memory) "jdbc:derby:memory:$memoryName;create=true" else "jdbc:derby:$path"
             // A named in-memory database is shared by every connection of the process, so the pool sees one database.
             DriverId.DuckDB -> if (memory) "jdbc:duckdb::memory:${memoryName.replace(Regex("[^A-Za-z0-9_]"), "_")}" else "jdbc:duckdb:$path"
-            else -> throw SQLException("${driver.displayName} has no file URL form; connect by JDBC URL.")
+            else -> throw SQLException(tr("{0} has no file URL form; connect by JDBC URL.", driver.displayName))
         }
     }
 
@@ -204,14 +205,14 @@ object JdbcUrls {
 
     /** Points a `scheme//host[:port]/...` URL at another host and port; rejects multi-host and key-value forms. */
     fun redirect(url: String, host: String, port: Int): String {
-        val start = url.indexOf("//").takeIf { it >= 0 } ?: throw SQLException("Can't tunnel this URL: no //host part.")
+        val start = url.indexOf("//").takeIf { it >= 0 } ?: throw SQLException(tr("Can't tunnel this URL: no //host part."))
         val authorityStart = start + 2
         val end = url.indexOfAny(charArrayOf('/', '?', ';'), authorityStart).let { if (it < 0) url.length else it }
         val authority = url.substring(authorityStart, end)
         val userInfo = authority.substringBeforeLast('@', "").let { if (it.isEmpty()) "" else "$it@" }
         val hostPart = authority.substringAfterLast('@')
         if (',' in hostPart || '(' in hostPart || hostPart.startsWith("address=")) {
-            throw SQLException("SSH tunnels need a single-host URL; this one lists several hosts.")
+            throw SQLException(tr("SSH tunnels need a single-host URL; this one lists several hosts."))
         }
         return url.substring(0, authorityStart) + userInfo + formatHost(host, port) + url.substring(end)
     }

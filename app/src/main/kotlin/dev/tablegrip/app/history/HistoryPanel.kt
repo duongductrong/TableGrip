@@ -1,5 +1,7 @@
 package dev.tablegrip.app.history
 
+import dev.tablegrip.core.i18n.I18n
+import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -43,7 +45,7 @@ import org.jetbrains.jewel.ui.component.TextField
 import org.jetbrains.jewel.ui.component.Tooltip
 import org.jetbrains.jewel.ui.icons.AllIconsKeys
 
-private val Time = DateTimeFormatter.ofPattern("MMM d, HH:mm").withZone(ZoneId.systemDefault())
+private val Time = I18n.dates("MMM d, HH:mm").withZone(ZoneId.systemDefault())
 
 /** Every executed statement across connections; clicking one sends it to a console of its connection. */
 @Composable
@@ -55,17 +57,17 @@ internal fun HistoryPanel(app: AppState) {
 
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().height(36.dp).padding(start = 12.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Query History", Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
-            Tooltip({ Text("Refresh") }) { IconButton(onClick = { refresh++ }) { Icon(AllIconsKeys.Actions.Refresh, "Refresh") } }
+            Text(tr("Query History"), Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
+            Tooltip({ Text(tr("Refresh")) }) { IconButton(onClick = { refresh++ }) { Icon(AllIconsKeys.Actions.Refresh, tr("Refresh")) } }
         }
-        TextField(search, Modifier.fillMaxWidth().padding(horizontal = 8.dp), placeholder = { Text("Search queries") })
+        TextField(search, Modifier.fillMaxWidth().padding(horizontal = 8.dp), placeholder = { Text(tr("Search queries")) })
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth().padding(top = 6.dp))
 
         val query = search.text.toString().trim()
         val shown = if (query.isEmpty()) entries else entries.filter { it.sql.contains(query, ignoreCase = true) }
         if (shown.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(if (entries.isEmpty()) "Queries you run show up here" else "No matches", color = JewelTheme.globalColors.text.info)
+                Text(if (entries.isEmpty()) tr("Queries you run show up here") else tr("No matches"), color = JewelTheme.globalColors.text.info)
             }
             return@Column
         }
@@ -102,7 +104,7 @@ private fun HistoryRow(app: AppState, entry: HistoryEntry) {
                 Text(config.name, Modifier.weight(1f, fill = false), color = info, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             Text(
-                "· ${Time.format(Instant.ofEpochMilli(entry.executedAt))} · ${entry.elapsedMillis} ms",
+                tr("· {0} · {1} ms", Time.format(Instant.ofEpochMilli(entry.executedAt)), entry.elapsedMillis),
                 color = info,
                 maxLines = 1,
                 softWrap = false,

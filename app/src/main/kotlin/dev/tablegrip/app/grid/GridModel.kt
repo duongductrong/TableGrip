@@ -1,5 +1,6 @@
 package dev.tablegrip.app.grid
 
+import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.driver.QueryResult
 import dev.tablegrip.core.driver.ResultColumn
 import dev.tablegrip.core.edit.ColumnEdit
@@ -57,7 +58,7 @@ interface GridEditor {
 
     /** The cell menu's name for [setDefault]. */
     val setDefaultLabel: String
-        get() = "Set DEFAULT"
+        get() = tr("Set DEFAULT")
 
     fun setValue(row: Int, column: Int, value: String?)
 

@@ -10,6 +10,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.tablegrip.app.AppState
 import dev.tablegrip.app.ui.theme.ThemeRegistry
+import dev.tablegrip.core.i18n.I18n
+import dev.tablegrip.core.i18n.Language
+import dev.tablegrip.core.i18n.tr
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.component.Link
 import org.jetbrains.jewel.ui.component.Text
@@ -23,12 +26,12 @@ internal fun ThemeFilesPanel(app: AppState) {
     val errors = ThemeRegistry.errors
     Column(Modifier.padding(start = 4.dp, top = 6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Link("Open settings.json", onClick = app::openSettingsFile)
-            Link("Open themes folder", onClick = app::openThemesFolder)
-            Link("Customize current theme", onClick = { app.customizeTheme(app.theme.isDark()) })
+            Link(tr("Open settings.json"), onClick = app::openSettingsFile)
+            Link(tr("Open themes folder"), onClick = app::openThemesFolder)
+            Link(tr("Customize current theme"), onClick = { app.customizeTheme(app.theme.isDark()) })
         }
         Text(
-            "\"Customize current theme\" copies its file into the themes folder; edits apply when you save. A theme file may also set just the keys it changes.",
+            tr("\"Customize current theme\" copies its file into the themes folder; edits apply when you save. A theme file may also set just the keys it changes."),
             color = JewelTheme.globalColors.text.info,
         )
         errors.forEach { error ->
@@ -42,8 +45,18 @@ internal fun ThemeFilesPanel(app: AppState) {
 internal fun SettingsFileError(app: AppState) {
     val error = app.settingsError ?: return
     Column(Modifier.padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text("settings.json has an error, so TableGrip is using defaults and won't save changes until it's fixed:", color = JewelTheme.globalColors.text.error)
+        Text(tr("settings.json has an error, so TableGrip is using defaults and won't save changes until it's fixed:"), color = JewelTheme.globalColors.text.error)
         Text(error, color = JewelTheme.globalColors.text.error)
-        Link("Open settings.json", onClick = app::openSettingsFile)
+        Link(tr("Open settings.json"), onClick = app::openSettingsFile)
+    }
+}
+
+/** Under the language picker: a new language shows after a restart, which this offers once one is chosen. */
+@Composable
+internal fun LanguagePanel(app: AppState) {
+    if (Language.resolve(app.settings.language) == I18n.current) return
+    Row(Modifier.padding(start = 4.dp, top = 6.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(tr("Restart TableGrip to show it in the new language."), color = JewelTheme.globalColors.text.info)
+        Link(tr("Restart Now"), onClick = app.restartApp)
     }
 }
