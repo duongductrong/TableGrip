@@ -1,5 +1,10 @@
 package dev.tablegrip.app.console
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +30,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -35,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -62,6 +69,7 @@ import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.tablegrip.app.completion.CompletionController
@@ -102,6 +110,9 @@ private val TextPaddingTop = 8.dp
 private val TextPaddingEnd = 24.dp
 /** Empty lines kept below the last one, so the end of a long script doesn't sit flush against the edge. */
 private const val OverscrollLines = 3
+private val CaretWidth = 2.dp
+/** Caret blink half-period, like IntelliJ's default; the caret stays solid for this long after every move or edit. */
+private const val CaretBlinkMillis = 500
 
 /** What the editor exposes to its host's toolbar. */
 class SqlEditorActions {
@@ -158,6 +169,9 @@ internal fun SqlEditor(
     // field's latest layout, which lags the text by a frame after every edit.
     val linePitch = remember(textStyle, density) { measurer.measure("0\n0", textStyle).let { it.getLineTop(1) - it.getLineTop(0) } }
     val lineHeight = with(density) { linePitch.toDp() }
+    // The caret spans the glyphs (ascent + descent), not the whole line pitch, so a roomy line height doesn't stretch it.
+    val caretHeight = remember(textStyle, density) { measurer.measure("Ag", textStyle.copy(lineHeight = TextUnit.Unspecified)).size.height.toFloat().coerceAtMost(linePitch) }
+    var focused by remember { mutableStateOf(false) }
     val editorFocus = remember { FocusRequester() }
     val controller = remember { CompletionController(scope) }
     var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
@@ -244,6 +258,7 @@ internal fun SqlEditor(
                         modifier =
                             Modifier.defaultMinSize(minWidth = viewportWidth - gutterWidth, minHeight = viewportHeight)
                                 .focusRequester(editorFocus)
+                                .onFocusChanged { focused = it.isFocused }
                                 .onPreviewKeyEvent { event ->
                                     if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
                                     if (handleCompletionKey(controller, event.key) { accept() }) return@onPreviewKeyEvent true
@@ -254,7 +269,8 @@ internal fun SqlEditor(
                                     handleEditorKey(event, state, syntax, ::current, ::apply, ::format, find, controller, completion, indentUnit)
                                 },
                         textStyle = textStyle,
-                        cursorBrush = SolidColor(editorText),
+                        // The field's own caret is as tall as the line pitch; [Caret] draws one sized to the text instead.
+                        cursorBrush = SolidColor(Color.Transparent),
                         outputTransformation = highlighter,
                         // Padding lives inside the decorator so the whole area — margins included — takes clicks, and the
                         // inner field stretches to the full width so line highlights run edge to edge.
@@ -299,6 +315,23 @@ internal fun SqlEditor(
                         },
                         onTextLayout = { getResult -> layout = getResult() },
                     )
+                    if (focused && !readOnly) {
+                        val caretOffset = state.selection.end.coerceIn(0, text.length)
+                        // Restarts the blink on every edit or caret move, so the caret stays solid while typing.
+                        key(text, state.selection) {
+                            Caret(
+                                state = state,
+                                layout = { layout },
+                                offset = caretOffset,
+                                line = lineIndexAt(text, caretOffset),
+                                linePitch = linePitch,
+                                caretHeight = caretHeight,
+                                textStyle = textStyle,
+                                color = editorText,
+                                modifier = Modifier.matchParentSize(),
+                            )
+                        }
+                    }
                     val cursor = layout?.takeIf { it.layoutInput.text.length == state.text.length }?.getCursorRect(state.selection.start.coerceAtMost(state.text.length))
                     if (cursor != null) {
                         val offset =
@@ -309,6 +342,59 @@ internal fun SqlEditor(
             }
         }
     }
+}
+
+/**
+ * The editor's caret: glyph-tall and centred in its line (the same geometry the text uses with
+ * [LineHeightStyle.Alignment.Center]), on the fixed line pitch so it lines up with the current-line band and the gutter.
+ */
+@Composable
+private fun Caret(
+    state: TextFieldState,
+    layout: () -> TextLayoutResult?,
+    offset: Int,
+    line: Int,
+    linePitch: Float,
+    caretHeight: Float,
+    textStyle: TextStyle,
+    color: Color,
+    modifier: Modifier,
+) {
+    val measurer = rememberTextMeasurer()
+    val blink by rememberInfiniteTransition(label = "caret").animateFloat(
+        initialValue = 1f,
+        targetValue = 0f,
+        animationSpec =
+            infiniteRepeatable(
+                keyframes {
+                    durationMillis = CaretBlinkMillis * 2
+                    1f at 0
+                    1f at CaretBlinkMillis - 1
+                    0f at CaretBlinkMillis
+                    0f at CaretBlinkMillis * 2 - 1
+                },
+                RepeatMode.Restart,
+            ),
+        label = "caret-blink",
+    )
+    Box(
+        modifier.drawBehind {
+            val alpha = blink
+            if (alpha <= 0f) return@drawBehind
+            val text = state.text
+            // The field's layout when it matches the text; on the frame right after an edit, the line measured on its own.
+            val x =
+                layout()?.takeIf { it.layoutInput.text.length == text.length }?.getHorizontalPosition(offset, usePrimaryDirection = true)
+                    ?: run {
+                        val lineStart = text.lastIndexOf('\n', offset - 1) + 1
+                        measurer.measure(text.substring(lineStart, offset), textStyle).getHorizontalPosition(offset - lineStart, true)
+                    }
+            val width = CaretWidth.toPx()
+            val left = (TextPaddingStart.toPx() + x - width / 2).roundToInt().toFloat()
+            val top = (TextPaddingTop.toPx() + line * linePitch + (linePitch - caretHeight) / 2).roundToInt().toFloat()
+            drawRect(color, Offset(left, top), Size(width, caretHeight.roundToInt().toFloat()), alpha = alpha)
+        }
+    )
 }
 
 /** Keys the editor handles itself; returns true when consumed. */

@@ -162,6 +162,39 @@ class SqlEditorTest {
     }
 
     @Test
+    fun `caret is glyph-tall, centred in its line and blinks`() = runComposeUiTest {
+        val state = TextFieldState("\n")
+        setContent { TableGripTheme(isDark = true) { Box(Modifier.size(600.dp, 300.dp)) { SqlEditor(state, SqlSyntax.PostgreSQL, 13) } } }
+        editor().performClick()
+        waitForIdle()
+        mainClock.autoAdvance = false
+
+        /** Caret pixels: what's on screen with the caret shown minus the same frame half a blink later. */
+        fun caretRows(line: Int): IntRange {
+            state.edit { selection = TextRange(line) }
+            mainClock.advanceTimeByFrame()
+            mainClock.advanceTimeByFrame()
+            val on = onAllNodes(isRoot())[0].captureToImage().toAwtImage()
+            System.getProperty("snapshot.dir")?.let { ImageIO.write(on, "png", File(it, "editor-caret-line$line.png")) }
+            mainClock.advanceTimeBy(600)
+            val off = onAllNodes(isRoot())[0].captureToImage().toAwtImage()
+            val rows = (0 until on.height).filter { y -> (0 until on.width).any { x -> on.getRGB(x, y) != off.getRGB(x, y) } }
+            assertTrue(rows.isNotEmpty(), "no caret drawn on line $line")
+            return rows.first()..rows.last()
+        }
+        val first = caretRows(0)
+        val second = caretRows(1)
+        val pitch = second.first - first.first
+        val height = first.last - first.first + 1
+        assertEquals(height, second.last - second.first + 1)
+        assertTrue(height < pitch, "caret ($height px) should be shorter than the line pitch ($pitch px)")
+        val lineCentre = 8 + pitch / 2f
+        val caretCentre = first.first + height / 2f
+        assertTrue(kotlin.math.abs(caretCentre - lineCentre) <= 1.5f, "caret centre $caretCentre vs line centre $lineCentre")
+        mainClock.autoAdvance = true
+    }
+
+    @Test
     fun `line index counts newlines before the offset`() {
         assertEquals(0, lineIndexAt("abc", 2))
         assertEquals(1, lineIndexAt("a\nb", 2))
