@@ -215,3 +215,98 @@ trong `conformance/core/inputs` (29 subject) khớp golden Kotlin trên Rust, kh
 Còn dở / lưu ý cho session sau:
 - Chưa làm: reader/writer CSV, JSON, XLSX, ImportReader, working copy của file dữ liệu (S5).
 - Số Unicode ngoài ASCII trong `BigDecimal` (chữ số Ả Rập...) Java nhận, `Decimal::parse` thì không. Không có trong golden.
+
+### S2 (10/11/2026)
+
+Nhánh `rust/storage` (cắt từ `rust/core-pure` ở `bc0e3b8`, nên dùng được `tg_sql::model`). SshTunnel làm song song ở
+nhánh `rust/storage-ssh` rồi đã merge vào `rust/storage`. ChatStore để S5. Đã thử merge thêm phần cuối của S1
+(`rust/core-pure`): chỉ xung đột ở nhật ký, toàn workspace vẫn xanh với `preserve_order`.
+
+Xong, trong `crates/tg-core`, mỗi mô-đun mirror một package Kotlin:
+- `paths`: `TableGripPaths` là struct giữ `home`. `from_env()` đọc `TABLEGRIP_HOME` (thay `tablegrip.home`), `new(path)` cho
+  test, nên test không chạm `~/.tablegrip` thật.
+- `settings`, `theme`, `backup` (chỉ `BackupSchedule`: lịch nằm trong settings.json, Kotlin không lưu gì thêm).
+- `connection::{config, store, string, files, ai_access, secret}`.
+- `history`, `queries`, `session`, `activity` (xem "Khác kế hoạch").
+- `json`: phần tương thích kotlinx. `omit_defaults!` ghi đúng thứ tự khai báo và bỏ field bằng mặc định (kotlinx
+  `encodeDefaults = false`, mặc định của `Json {}`); `strip_lenient` đọc comment và dấu phẩy thừa (settings và theme);
+  `to_pretty(indent)` (kotlinx mặc định thụt 4 dấu cách, settings/theme dùng 2). `serde_json` bật `preserve_order` để
+  profile mà bản này không hiểu (engine của bản mới hơn) được ghi lại nguyên thứ tự key, như `ConnectionStore.write`.
+- Dependency mới (đều MIT/Apache, ghim ở `[workspace.dependencies]`): `keyring` 3.6.3 (chỉ macOS/Windows), `indexmap`
+  2.14.2 (map giữ thứ tự như `LinkedHashMap`), `tempfile` 3.27.0 (dev). Không cần sửa `NOTICE`.
+
+**Fixture round-trip: JSON tương đương và byte giống hệt** trên cả 7 file (connections, settings, theme, history, session,
+3 file queries). `StorageFixtureTest` (Kotlin) sinh `conformance/core/fixtures/home/` bằng chính các store Kotlin
+(`-Pconformance.record=true`; không có cờ thì test so sánh và fail nếu format đổi): 33 profile (mọi DatabaseType, cộng SSH, URL thô, unicode), SSH
+dạng key, agent (key mặc định) và password, profile "từ tương lai" (type `QuantumDB`) để kiểm tra giữ nguyên profile lạ,
+settings không mặc định ở mọi field, theme file, history có unicode/xuống dòng, queries trong thư mục, session có
+window/split. `crates/tg-core/tests/fixture.rs` đọc fixture, ghi lại qua store Rust vào thư mục tạm rồi so.
+
+Test Rust đã port (đều pass; 57 test trong tg-core, 2 test keychain ignore):
+- `tests/connection.rs`: ConnectionStoreTest (3), AiAccessTest (2), DatabaseFilesTest (2 phần đầu), cộng kiểm tra giữ
+  profile lạ, thứ tự và field mặc định, `effective_driver`.
+- `tests/connection_string.rs`: ConnectionStringTest (12) và phần "pasted paths" của DatabaseFilesTest, cộng test redis TLS và
+  percent-decoding.
+- `tests/settings.rs`: SettingsStoreTest (6), phần settings của StorageTest, ThemeFilesTest (3), BackupScheduleTest (2).
+- `tests/storage.rs`: phần history của StorageTest, QueryLibraryTest (4), SessionStoreTest (2), ActivityTest.support, cộng
+  `running_for`.
+- `tests/fixture.rs`: round-trip fixture.
+
+Khác kế hoạch / khác Kotlin:
+- **Sửa một lỗi Kotlin (`core/src/main`, commit `fix(core): a plain redis:// URL no longer turns on TLS`)**:
+  `redisUri` kiểm tra `scheme.endsWith("s")` để nhận `rediss://`, nhưng "redis" cũng kết thúc bằng "s", nên mọi URL
+  `redis://` dán vào đều ra `ssl=true`. Đã sửa thành `rediss`/`valkeys` và thêm test; Rust làm theo hành vi đúng.
+- `Activity.kt` không có phần lưu trữ nào (chỉ monitor đọc từ DB). Đã port kiểu dữ liệu, `SessionActivity::running_for` và
+  `ActivitySupport::of` (pure, có test); phần query theo engine để S3. Thời điểm dùng `chrono::DateTime<Utc>` thay `Instant`.
+  `Backup.kt` chỉ có `BackupSchedule` là phần lưu trữ; lệnh `pg_dump`... thuộc M5.
+- Lỗi parse settings.json: thông điệp lấy từ serde, không trùng chữ với kotlinx (chỉ dùng để hiển thị). Lỗi đọc file (I/O)
+  cũng được coi là `load_error` để không ghi đè, trong khi Kotlin ném exception.
+- Số thực trong session (`window`, `sidebarSplit`...) dùng `f32` như Kotlin `Float`; serde_json in giống Java với dải giá trị
+  thường dùng (không có dạng mũ).
+- `ConnectionStore::load/save` trả `Result` (Kotlin ném exception khi file không phải mảng JSON hay JSON hỏng).
+
+Kiểu model tạm định nghĩa ở tg-core, **cần gộp về sau** (tg-sql do S1 sở hữu nên không đụng):
+- `connection::DriverId` (14 giá trị, serialize theo tên) và `DriverId::for_type(&DatabaseType)` (bảng `drivers` của từng
+  engine, suy từ family và id). Profile vẫn lưu field `driver`, nên cần giữ để đọc/ghi. Gợi ý: chuyển sang tg-driver (S3) khi
+  tg-driver có enum driver riêng; tg-core giữ một bản tối giản để serialize.
+- `connection::SshConfig` / `SshAuth` là kiểu lưu trong profile; `ssh::SshTunnelSpec` / `ssh::SshAuth` là đầu vào của
+  tunnel (có thêm secret và `Agent`). `SshTunnelSpec::from_config(&SshConfig, secret, paths.known_hosts())` nối hai bên.
+- `connection::ConnectionConfig`, `Environment`, `DataFileOptions`, `AiAccess` ở tg-core đúng chỗ (Kotlin cũng ở package
+  `connection`), nhưng S3 sẽ import từ `tg_core::connection`; không cần chuyển.
+
+Keychain (SecretStore):
+- Theo mã nguồn java-keyring 1.0.4: macOS = generic password (service `TableGrip`, account = connection id hoặc `<id>:ssh`,
+  UTF-8); Windows = credential generic có target `TableGrip|<key>`, UserName = key, blob UTF-16LE; Linux = Secret Service với
+  attribute `service`/`account`, label `service|account`. `keyring` đọc/ghi hai kiểu đầu đúng như vậy (Windows dùng
+  `Entry::new_with_target("TableGrip|<key>", ...)` vì mặc định của crate là `<user>.<service>`).
+- **Đã kiểm tay trên macOS (10/11/2026): đạt.** `KeychainProbeTest` (Kotlin, chỉ chạy khi có
+  `-Pkeychain.probe=set|delete`) ghi item `service=TableGrip account=tablegrip-s2-probe`; test Rust
+  `reads_the_item_java_keyring_wrote` đọc lại đúng giá trị, và `writes_an_item_java_keyring_can_read_and_removes_it`
+  ghi rồi xoá được một item. Cả hai là `#[ignore]` vì macOS hỏi quyền truy cập (lần đầu agent chạy thì treo chờ hộp
+  thoại). Cách chạy lại: `./gradlew :core:test --tests '*KeychainProbeTest*' -Pkeychain.probe=set`, rồi
+  `cargo test -p tg-core --test keychain -- --ignored` (bấm "Allow"), rồi `-Pkeychain.probe=delete`. Windows chưa kiểm được (chỉ theo mã nguồn).
+- **Quyết định còn mở: Linux.** `keyring` 3.x ghi Secret Service với attribute `service` + `username`, còn java-keyring ghi
+  `service` + `account`, nên item cũ sẽ không tìm thấy; ngoài ra backend sync cần libdbus (CI Linux sẽ vỡ). Hiện
+  `KeyringSecretStore` trên Linux là stub (get = None, set = lỗi). Phương án A: dùng trực tiếp crate `secret-service` (zbus,
+  thuần Rust) với đúng attribute của java-keyring. Phương án B: dùng `keyring` rồi migrate item cũ lần chạy đầu. Đề xuất A,
+  làm trong S6/S11 khi có máy Linux để thử.
+
+SshTunnel (`tg_core::ssh`, russh 0.65.1, backend crypto `ring` nên không cần OpenSSL/aws-lc/CMake):
+- API: `SshTunnel::open(&spec, host, port).await`, `open_blocking(&Handle, ...)` cho code sync, `local_port()`, `close()`
+  (drop cũng dừng). Tunnel bind `127.0.0.1:0`, keepalive 30 s, timeout kết nối 10 s như Kotlin.
+- Auth: password, key (OpenSSH, PKCS#1/SEC1 PEM, PKCS#8 mã hoá, có passphrase; `~/` được mở rộng; không có path thì thử
+  `~/.ssh/id_rsa`, `id_ed25519`, `id_ecdsa` như SSHJ), ssh-agent (`SSH_AUTH_SOCK`; Windows: named pipe rồi Pageant, chưa
+  build thử trên Windows). `pkcs5` với `sha1-insecure` chỉ để russh đọc được key PKCS#8 mã hoá kiểu cũ.
+- known_hosts: TOFU ở `~/.tablegrip/known_hosts` như Kotlin. Host lạ thì ghi thêm, key đổi thì lỗi `HostKeyChanged` và
+  không sửa file, đọc được dòng hash `|1|`, `[host]:port` khi port khác 22. Khác Kotlin: file chỉ được tạo khi pin lần
+  đầu. Có thêm chế độ `Strict` (không ghi).
+- Test: 2 test của SshTunnelTest port nguyên, cộng ~18 test (định dạng key, passphrase sai, agent thật qua
+  `ssh-agent -D` (bỏ qua nếu máy không có), đóng/drop giải phóng port, 8 kết nối đồng thời, đích từ chối). Server test là
+  russh chạy trong tiến trình, không cần docker. Fixture key chỉ dùng cho test ở `crates/tg-core/tests/fixtures/ssh/`.
+- `ring` theo giấy phép ISC/OpenSSL-style, đã ghi vào `NOTICE`.
+- Chưa làm: key PuTTY `.ppk`, chứng chỉ SSH (host và agent).
+
+Còn dở:
+- ChatStore (S5).
+- `KeyringSecretStore::get` nuốt mọi lỗi thành None như Kotlin; nếu UI muốn phân biệt "chưa lưu" với "keychain từ chối" thì
+  cần thêm `try_get`.

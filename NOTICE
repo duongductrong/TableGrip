@@ -10,3 +10,7 @@ under their own licenses.
 The Rust UI kit (ui-kit/) includes icons from IntelliJ IDEA (com.jetbrains.intellij.platform:icons), each under the
 Apache License, Version 2.0 as stated in the file itself; crates/tg-ui/assets/icons/intellij/manifest.json
 lists them. This software includes code from IntelliJ IDEA, Copyright (C) JetBrains s.r.o.
+
+The Rust SSH tunnel (crates/tg-core/src/ssh) uses russh (Apache License, Version 2.0) with the `ring` crypto backend,
+which carries ISC and OpenSSL-style licence terms (copyright Brian Smith and the OpenSSL/BoringSSL authors); its
+licence text ships in the third-party licence listing of the Rust build.

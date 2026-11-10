@@ -1,0 +1,130 @@
+{
+  "theme": {
+    "mode": "Dark",
+    "dark": "One Dark",
+    "light": "One Light"
+  },
+  "editorFontSize": 15,
+  "pageSize": 500,
+  "maxResultRows": 5000,
+  "queryTimeoutSeconds": 30,
+  "filterMode": "Sql",
+  "driverRepository": "https://repo.example.com/maven",
+  "autoDownloadDrivers": true,
+  "agent": "claude",
+  "agentModels": {
+    "claude": "sonnet",
+    "codex": "gpt-5"
+  },
+  "agentMode": "Provider",
+  "agentProvider": "OpenAi",
+  "agentBaseUrl": "https://llm.example.com/v1",
+  "agentModel": "gpt-5-mini",
+  "aiAccess": "Off",
+  "toolPaths": {
+    "PgDump": "/opt/pg/bin/pg_dump"
+  },
+  "scheduledBackups": true,
+  "backupSchedules": [
+    {
+      "id": "sched-1",
+      "connectionId": "conn-00",
+      "frequency": "Hourly",
+      "keep": 24
+    },
+    {
+      "id": "sched-2",
+      "connectionId": "ssh-key",
+      "database": "prod",
+      "frequency": "Weekly",
+      "folder": "/backups/prod",
+      "keep": 0,
+      "enabled": false,
+      "lastRun": 1790000000000,
+      "lastError": "pg_dump: connection refused"
+    },
+    {
+      "id": "sched-3",
+      "connectionId": "conn-03"
+    }
+  ],
+  "accentColor": "#D95C9A",
+  "themeOverrides": {
+    "One Dark": {
+      "colors": {
+        "accent": "#E5C07B"
+      },
+      "syntax": {
+        "keyword": "#FF79C6",
+        "comment": {
+          "color": "#5C6370",
+          "fontStyle": "italic"
+        }
+      },
+      "chart": [
+        "#E5C07B",
+        "#61AFEF"
+      ]
+    },
+    "Empty": {}
+  },
+  "uiFontSize": 14,
+  "islandCornerRadius": 6,
+  "zoom": 125,
+  "syntaxScheme": "Darcula",
+  "syntaxColors": {
+    "dark.keyword": "#FF0000",
+    "light.string": "#00AA00"
+  },
+  "environmentColors": {
+    "Production": "#CC0000"
+  },
+  "editorFontFamily": "Fira Code",
+  "editorLineHeight": 140,
+  "tabSize": 2,
+  "indentWithTabs": true,
+  "autoCloseBrackets": false,
+  "completionWhileTyping": false,
+  "highlightCurrentLine": false,
+  "showLineNumbers": false,
+  "formatKeywordCase": "Lower",
+  "gridDensity": "Compact",
+  "nullText": "∅",
+  "dateTimeFormat": "yyyy-MM-dd HH:mm",
+  "dateTimeZone": "Utc",
+  "numberGrouping": true,
+  "zebraRows": true,
+  "keymap": "VsCode",
+  "keyBindings": {
+    "Format": {
+      "key": 76,
+      "label": "L",
+      "primary": true,
+      "shift": true
+    },
+    "Run": {
+      "key": 10,
+      "label": "⏎",
+      "alt": true,
+      "ctrl": true
+    }
+  },
+  "rememberWindowBounds": false,
+  "rememberPanelSizes": false,
+  "restoreTabs": false,
+  "startupTool": "Explorer",
+  "startupAgent": "LastUsed",
+  "statusBreadcrumbs": false,
+  "statusSelectionStats": false,
+  "stripeHidden": [
+    "Queries",
+    "Activity"
+  ],
+  "stripeOrder": [
+    "Explorer",
+    "Search"
+  ],
+  "checkForUpdates": false,
+  "installUpdatesAutomatically": false,
+  "updateChannel": "Beta"
+}

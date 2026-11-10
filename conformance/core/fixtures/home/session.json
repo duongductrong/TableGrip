@@ -1,0 +1,44 @@
+{
+    "tabs": [
+        {
+            "type": "console",
+            "connectionId": "conn-00",
+            "text": "SELECT 1;\nSELECT 2;\n",
+            "file": "/q/a.sql",
+            "caret": 9,
+            "savedText": "SELECT 1;"
+        },
+        {
+            "type": "console",
+            "connectionId": "ssh-key",
+            "text": ""
+        },
+        {
+            "type": "table",
+            "connectionId": "conn-00",
+            "catalog": "app",
+            "schema": "public",
+            "name": "orders",
+            "structure": true,
+            "filter": "status = 'paid'"
+        },
+        {
+            "type": "table",
+            "connectionId": "conn-01",
+            "name": "users"
+        }
+    ],
+    "selected": 2,
+    "leftTool": null,
+    "connectionId": "conn-00",
+    "agentOpen": true,
+    "agentChat": "chat-1",
+    "window": {
+        "x": 120.5,
+        "y": 80.0,
+        "width": 1440.0,
+        "height": 900.25
+    },
+    "sidebarSplit": 0.25,
+    "agentSplit": 0.7
+}

@@ -7,3 +7,28 @@ publish.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+chrono.workspace = true
+indexmap.workspace = true
+pkcs5.workspace = true
+regex.workspace = true
+russh.workspace = true
+serde.workspace = true
+# preserve_order: connection profiles this version doesn't understand are written back with their keys in the order
+# they were read, as the Kotlin store does.
+serde_json = { workspace = true, features = ["preserve_order"] }
+tg-sql = { path = "../tg-sql" }
+thiserror.workspace = true
+tokio = { workspace = true, features = ["net", "io-util", "sync", "time", "rt"] }
+
+# java-keyring writes plain generic passwords through the system keychain; Linux's Secret Service is a separate
+# decision (see secret.rs).
+[target.'cfg(target_os = "macos")'.dependencies]
+keyring = { workspace = true, features = ["apple-native"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+keyring = { workspace = true, features = ["windows-native"] }
+
+[dev-dependencies]
+rand.workspace = true
+tempfile.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

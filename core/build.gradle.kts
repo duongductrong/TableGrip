@@ -40,7 +40,8 @@ tasks.test {
     useJUnitPlatform()
     // Opt-in server tests: -Pit.postgres=localhost:55432 -Pit.mysql=localhost:53306 (and it.cockroach, it.timescale, it.tidb,
     // it.mssql, it.clickhouse: see ServerEnginesIntegrationTest); -Pit.network=true downloads drivers.
-    listOf("it.postgres", "it.mysql", "it.network", "it.cockroach", "it.timescale", "it.tidb", "it.mssql", "it.clickhouse", "it.etcd", "it.etcdauth").forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
+    listOf("it.postgres", "it.mysql", "it.network", "it.cockroach", "it.timescale", "it.tidb", "it.mssql", "it.clickhouse", "it.etcd", "it.etcdauth", "keychain.probe").forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
+    // `-Pkeychain.probe=set|delete` writes or removes one dummy keychain item for the Rust port to read (KeychainProbeTest).
     // `-Pconformance.record=true` rewrites conformance/core/golden from the current core (CoreGoldenTest).
     providers.gradleProperty("conformance.record").orNull?.let { systemProperty("conformance.record", it) }
     testLogging { showStandardStreams = providers.gradleProperty("it.postgres").isPresent || providers.gradleProperty("it.mysql").isPresent }
