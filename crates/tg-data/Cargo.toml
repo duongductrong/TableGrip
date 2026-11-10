@@ -7,3 +7,8 @@ publish.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+chrono.workspace = true
+tg-sql = { path = "../tg-sql" }
+
+[dev-dependencies]
+serde_json.workspace = true

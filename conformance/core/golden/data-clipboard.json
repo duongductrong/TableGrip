@@ -1,0 +1,710 @@
+{
+    "subject": "data-clipboard",
+    "cases": [
+        {
+            "name": "spreadsheet text with CRLF",
+            "output": [
+                [
+                    "1",
+                    "2"
+                ],
+                [
+                    "3",
+                    "4"
+                ]
+            ]
+        },
+        {
+            "name": "single row with trailing newline",
+            "output": [
+                [
+                    "x"
+                ]
+            ]
+        },
+        {
+            "name": "empty cells and ragged rows",
+            "output": [
+                [
+                    "a",
+                    "",
+                    "c"
+                ],
+                [
+                    "d"
+                ]
+            ]
+        },
+        {
+            "name": "empty",
+            "output": []
+        },
+        {
+            "name": "a lone newline",
+            "output": []
+        },
+        {
+            "name": "a lone CRLF",
+            "output": []
+        },
+        {
+            "name": "two newlines",
+            "output": [
+                [
+                    ""
+                ],
+                [
+                    ""
+                ]
+            ]
+        },
+        {
+            "name": "trailing CR",
+            "output": [
+                [
+                    "x"
+                ]
+            ]
+        },
+        {
+            "name": "trailing LF CR",
+            "output": [
+                [
+                    "x"
+                ],
+                [
+                    ""
+                ]
+            ]
+        },
+        {
+            "name": "trailing CRLF CRLF",
+            "output": [
+                [
+                    "x"
+                ],
+                [
+                    ""
+                ]
+            ]
+        },
+        {
+            "name": "lone CR is a row break",
+            "output": [
+                [
+                    "a"
+                ],
+                [
+                    "b"
+                ]
+            ]
+        },
+        {
+            "name": "LF CR is two breaks",
+            "output": [
+                [
+                    "a"
+                ],
+                [
+                    ""
+                ],
+                [
+                    "b"
+                ]
+            ]
+        },
+        {
+            "name": "an unterminated quote stays text",
+            "output": [
+                [
+                    "\"open",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "name": "a quote that does not close the cell",
+            "output": [
+                [
+                    "\"a\"b"
+                ]
+            ]
+        },
+        {
+            "name": "a quote inside a cell",
+            "output": [
+                [
+                    "5\" pipe"
+                ]
+            ]
+        },
+        {
+            "name": "a quoted cell with a tab",
+            "output": [
+                [
+                    "a\tb",
+                    "c"
+                ]
+            ]
+        },
+        {
+            "name": "a quoted cell with a newline",
+            "output": [
+                [
+                    "a\nb",
+                    "c"
+                ],
+                [
+                    "d"
+                ]
+            ]
+        },
+        {
+            "name": "a quoted cell with CRLF",
+            "output": [
+                [
+                    "a\r\nb"
+                ],
+                [
+                    "c"
+                ]
+            ]
+        },
+        {
+            "name": "doubled quotes",
+            "output": [
+                [
+                    "say \"hi\"",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "name": "an empty quoted cell",
+            "output": [
+                [
+                    ""
+                ]
+            ]
+        },
+        {
+            "name": "an empty quoted cell then more",
+            "output": [
+                [
+                    "",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "name": "just a quote",
+            "output": [
+                [
+                    "\""
+                ]
+            ]
+        },
+        {
+            "name": "three quotes",
+            "output": [
+                [
+                    "\"\"\""
+                ]
+            ]
+        },
+        {
+            "name": "four quotes",
+            "output": [
+                [
+                    "\""
+                ]
+            ]
+        },
+        {
+            "name": "a quoted cell then a quote",
+            "output": [
+                [
+                    "\"a\"\""
+                ]
+            ]
+        },
+        {
+            "name": "a quote then text",
+            "output": [
+                [
+                    "\"a\"\"b"
+                ]
+            ]
+        },
+        {
+            "name": "a quoted cell followed by a quoted cell",
+            "output": [
+                [
+                    "a",
+                    "b"
+                ]
+            ]
+        },
+        {
+            "name": "quoted cells on two lines",
+            "output": [
+                [
+                    "a"
+                ],
+                [
+                    "b"
+                ]
+            ]
+        },
+        {
+            "name": "a quote after a tab",
+            "output": [
+                [
+                    "a",
+                    "b"
+                ]
+            ]
+        },
+        {
+            "name": "a quote after text in the cell",
+            "output": [
+                [
+                    "a\"b\""
+                ]
+            ]
+        },
+        {
+            "name": "leading tab",
+            "output": [
+                [
+                    "",
+                    "a"
+                ]
+            ]
+        },
+        {
+            "name": "trailing tab",
+            "output": [
+                [
+                    "a",
+                    ""
+                ]
+            ]
+        },
+        {
+            "name": "only a tab",
+            "output": [
+                [
+                    "",
+                    ""
+                ]
+            ]
+        },
+        {
+            "name": "only tabs",
+            "output": [
+                [
+                    "",
+                    "",
+                    ""
+                ]
+            ]
+        },
+        {
+            "name": "tab then newline",
+            "output": [
+                [
+                    "a",
+                    ""
+                ],
+                [
+                    "b"
+                ]
+            ]
+        },
+        {
+            "name": "unicode",
+            "output": [
+                [
+                    "ñ",
+                    "😀"
+                ],
+                [
+                    "日本語",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "name": "a long row",
+            "output": [
+                [
+                    "0",
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                    "6",
+                    "7",
+                    "8",
+                    "9",
+                    "10",
+                    "11",
+                    "12",
+                    "13",
+                    "14",
+                    "15",
+                    "16",
+                    "17",
+                    "18",
+                    "19",
+                    "20",
+                    "21",
+                    "22",
+                    "23",
+                    "24",
+                    "25",
+                    "26",
+                    "27",
+                    "28",
+                    "29",
+                    "30",
+                    "31",
+                    "32",
+                    "33",
+                    "34",
+                    "35",
+                    "36",
+                    "37",
+                    "38",
+                    "39",
+                    "40",
+                    "41",
+                    "42",
+                    "43",
+                    "44",
+                    "45",
+                    "46",
+                    "47",
+                    "48",
+                    "49",
+                    "50",
+                    "51",
+                    "52",
+                    "53",
+                    "54",
+                    "55",
+                    "56",
+                    "57",
+                    "58",
+                    "59",
+                    "60",
+                    "61",
+                    "62",
+                    "63",
+                    "64",
+                    "65",
+                    "66",
+                    "67",
+                    "68",
+                    "69",
+                    "70",
+                    "71",
+                    "72",
+                    "73",
+                    "74",
+                    "75",
+                    "76",
+                    "77",
+                    "78",
+                    "79",
+                    "80",
+                    "81",
+                    "82",
+                    "83",
+                    "84",
+                    "85",
+                    "86",
+                    "87",
+                    "88",
+                    "89",
+                    "90",
+                    "91",
+                    "92",
+                    "93",
+                    "94",
+                    "95",
+                    "96",
+                    "97",
+                    "98",
+                    "99",
+                    "100",
+                    "101",
+                    "102",
+                    "103",
+                    "104",
+                    "105",
+                    "106",
+                    "107",
+                    "108",
+                    "109",
+                    "110",
+                    "111",
+                    "112",
+                    "113",
+                    "114",
+                    "115",
+                    "116",
+                    "117",
+                    "118",
+                    "119",
+                    "120",
+                    "121",
+                    "122",
+                    "123",
+                    "124",
+                    "125",
+                    "126",
+                    "127",
+                    "128",
+                    "129",
+                    "130",
+                    "131",
+                    "132",
+                    "133",
+                    "134",
+                    "135",
+                    "136",
+                    "137",
+                    "138",
+                    "139",
+                    "140",
+                    "141",
+                    "142",
+                    "143",
+                    "144",
+                    "145",
+                    "146",
+                    "147",
+                    "148",
+                    "149",
+                    "150",
+                    "151",
+                    "152",
+                    "153",
+                    "154",
+                    "155",
+                    "156",
+                    "157",
+                    "158",
+                    "159",
+                    "160",
+                    "161",
+                    "162",
+                    "163",
+                    "164",
+                    "165",
+                    "166",
+                    "167",
+                    "168",
+                    "169",
+                    "170",
+                    "171",
+                    "172",
+                    "173",
+                    "174",
+                    "175",
+                    "176",
+                    "177",
+                    "178",
+                    "179",
+                    "180",
+                    "181",
+                    "182",
+                    "183",
+                    "184",
+                    "185",
+                    "186",
+                    "187",
+                    "188",
+                    "189",
+                    "190",
+                    "191",
+                    "192",
+                    "193",
+                    "194",
+                    "195",
+                    "196",
+                    "197",
+                    "198",
+                    "199"
+                ]
+            ]
+        },
+        {
+            "name": "quoted with a trailing newline cell",
+            "output": [
+                [
+                    "a\nb"
+                ]
+            ]
+        },
+        {
+            "name": "quote then newline in the middle",
+            "output": [
+                [
+                    "a"
+                ],
+                [
+                    "b\""
+                ]
+            ]
+        },
+        {
+            "name": "unclosed quote across lines",
+            "output": [
+                [
+                    "\"a"
+                ],
+                [
+                    "b",
+                    "c"
+                ]
+            ]
+        },
+        {
+            "name": "quote, quote then separator",
+            "output": [
+                [
+                    "\"",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "name": "spaces around quotes",
+            "output": [
+                [
+                    " \"a\" "
+                ]
+            ]
+        },
+        {
+            "name": "numbers and spaces",
+            "output": [
+                [
+                    " 1 ",
+                    " 2 "
+                ]
+            ]
+        },
+        {
+            "name": "html keeps rows, escapes text and leaves NULLs empty",
+            "output": "<table><tr><th>id</th><th>note</th></tr><tr><td>1</td><td>a &lt;b&gt; &amp; c<br>d</td></tr><tr><td>2</td><td></td></tr></table>"
+        },
+        {
+            "name": "html without a header",
+            "output": "<table><tr><td>1</td><td>2</td></tr></table>"
+        },
+        {
+            "name": "html with an empty header",
+            "output": "<table><tr></tr><tr><td>1</td></tr></table>"
+        },
+        {
+            "name": "html without rows",
+            "output": "<table><tr><th>a</th></tr></table>"
+        },
+        {
+            "name": "html empty",
+            "output": "<table></table>"
+        },
+        {
+            "name": "html escapes quotes and keeps carriage returns",
+            "output": "<table><tr><th>a&quot;b</th><th>&lt;th&gt;</th></tr><tr><td>say &quot;hi&quot;</td><td>x\r<br>y</td></tr><tr><td>&amp;amp;</td><td>'</td></tr></table>"
+        },
+        {
+            "name": "html ragged rows",
+            "output": "<table><tr><th>a</th><th>b</th></tr><tr><td>1</td></tr><tr><td>1</td><td>2</td><td>3</td></tr><tr></tr></table>"
+        },
+        {
+            "name": "html unicode",
+            "output": "<table><tr><th>ñ</th></tr><tr><td>😀 日本語</td></tr></table>"
+        },
+        {
+            "name": "html empty strings",
+            "output": "<table><tr><th></th></tr><tr><td></td></tr><tr><td></td></tr></table>"
+        },
+        {
+            "name": "reads back what tsv copy writes",
+            "output": {
+                "tsv": "1\tO'Brien\n\"tab\there\"\t\"say \"\"hi\"\"\"\n\"two\nlines\"\t",
+                "parsed": [
+                    [
+                        "1",
+                        "O'Brien"
+                    ],
+                    [
+                        "tab\there",
+                        "say \"hi\""
+                    ],
+                    [
+                        "two\nlines",
+                        ""
+                    ]
+                ]
+            }
+        },
+        {
+            "name": "roundtrip with carriage returns",
+            "output": {
+                "tsv": "\"a\r\nb\"\t\"c\rd\"\n\"\"\"\"\t\"\"\"\"\"\"",
+                "parsed": [
+                    [
+                        "a\r\nb",
+                        "c\rd"
+                    ],
+                    [
+                        "\"",
+                        "\"\""
+                    ]
+                ]
+            }
+        },
+        {
+            "name": "roundtrip of a single empty cell",
+            "output": {
+                "tsv": "",
+                "parsed": []
+            }
+        },
+        {
+            "name": "roundtrip with quotes at the start",
+            "output": {
+                "tsv": "\"\"\"start\"\t\"end\"\"\"\n\"\"\"both\"\"\"\tx",
+                "parsed": [
+                    [
+                        "\"start",
+                        "end\""
+                    ],
+                    [
+                        "\"both\"",
+                        "x"
+                    ]
+                ]
+            }
+        },
+        {
+            "name": "roundtrip unicode",
+            "output": {
+                "tsv": "ñ\t\"😀\t日本\"",
+                "parsed": [
+                    [
+                        "ñ",
+                        "😀\t日本"
+                    ]
+                ]
+            }
+        }
+    ]
+}

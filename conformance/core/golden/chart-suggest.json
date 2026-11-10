@@ -1,0 +1,1249 @@
+{
+    "subject": "chart-suggest",
+    "cases": [
+        {
+            "name": "dates and numbers suggest a line grouped when dates repeat",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Line",
+                        "x": "day",
+                        "y": [
+                            {
+                                "column": "total",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": "Day",
+                        "horizontal": false
+                    }
+                ],
+                "bucket": "Day"
+            }
+        },
+        {
+            "name": "a few categories and a number suggest sorted bars and a pie",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Bar",
+                        "x": "region",
+                        "y": [
+                            {
+                                "column": "sales",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": true
+                    },
+                    {
+                        "type": "Pie",
+                        "x": "region",
+                        "y": [
+                            {
+                                "column": "sales",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": false
+                    }
+                ]
+            }
+        },
+        {
+            "name": "nothing is suggested when no column fits an axis",
+            "output": {
+                "specs": []
+            }
+        },
+        {
+            "name": "no profiles",
+            "output": {
+                "specs": []
+            }
+        },
+        {
+            "name": "unique dates draw one point per row",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Line",
+                        "x": "day",
+                        "y": [
+                            {
+                                "column": "total",
+                                "aggregate": "None"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": false
+                    }
+                ],
+                "bucket": "Day"
+            }
+        },
+        {
+            "name": "unique dates with a category series group",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Line",
+                        "x": "day",
+                        "y": [
+                            {
+                                "column": "total",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": "region",
+                        "bucket": "Day",
+                        "horizontal": false
+                    },
+                    {
+                        "type": "Bar",
+                        "x": "region",
+                        "y": [
+                            {
+                                "column": "total",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": true
+                    },
+                    {
+                        "type": "Pie",
+                        "x": "region",
+                        "y": [
+                            {
+                                "column": "total",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": false
+                    }
+                ],
+                "bucket": "Day"
+            }
+        },
+        {
+            "name": "many dates are grouped even when unique",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Line",
+                        "x": "t",
+                        "y": [
+                            {
+                                "column": "v",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": "Week",
+                        "horizontal": false
+                    }
+                ],
+                "bucket": "Week"
+            }
+        },
+        {
+            "name": "999 unique dates stay as they are",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Line",
+                        "x": "t",
+                        "y": [
+                            {
+                                "column": "v",
+                                "aggregate": "None"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": false
+                    }
+                ],
+                "bucket": "Week"
+            }
+        },
+        {
+            "name": "date with repeats",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Line",
+                        "x": "t",
+                        "y": [
+                            {
+                                "column": "v",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": "Day",
+                        "horizontal": false
+                    }
+                ],
+                "bucket": "Day"
+            }
+        },
+        {
+            "name": "three measures at most",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Line",
+                        "x": "t",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "None"
+                            },
+                            {
+                                "column": "b",
+                                "aggregate": "None"
+                            },
+                            {
+                                "column": "c",
+                                "aggregate": "None"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": false
+                    },
+                    {
+                        "type": "Scatter",
+                        "x": "a",
+                        "y": [
+                            {
+                                "column": "b",
+                                "aggregate": "None"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": false
+                    }
+                ],
+                "bucket": "Day"
+            }
+        },
+        {
+            "name": "two measures take no series",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Line",
+                        "x": "t",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "None"
+                            },
+                            {
+                                "column": "b",
+                                "aggregate": "None"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": false
+                    },
+                    {
+                        "type": "Bar",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": true
+                    },
+                    {
+                        "type": "Scatter",
+                        "x": "a",
+                        "y": [
+                            {
+                                "column": "b",
+                                "aggregate": "None"
+                            }
+                        ],
+                        "series": "c",
+                        "bucket": null,
+                        "horizontal": false
+                    }
+                ],
+                "bucket": "Day"
+            }
+        },
+        {
+            "name": "a category of more than ten values is no series",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Line",
+                        "x": "t",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "None"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": false
+                    },
+                    {
+                        "type": "Bar",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": true
+                    }
+                ],
+                "bucket": "Day"
+            }
+        },
+        {
+            "name": "a category of exactly ten values is a series",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Line",
+                        "x": "t",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": "c",
+                        "bucket": "Day",
+                        "horizontal": false
+                    },
+                    {
+                        "type": "Bar",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": true
+                    }
+                ],
+                "bucket": "Day"
+            }
+        },
+        {
+            "name": "dates without numbers suggest no line",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Bar",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "c",
+                                "aggregate": "Count"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": true
+                    }
+                ],
+                "bucket": "Day"
+            }
+        },
+        {
+            "name": "dates with no value are skipped",
+            "output": {
+                "specs": [],
+                "bucket": "Hour"
+            }
+        },
+        {
+            "name": "bucket for a span of zero days",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Line",
+                        "x": "t",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": "Hour",
+                        "horizontal": false
+                    }
+                ],
+                "bucket": "Hour"
+            }
+        },
+        {
+            "name": "bucket for a span of three days",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Line",
+                        "x": "t",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": "Hour",
+                        "horizontal": false
+                    }
+                ],
+                "bucket": "Hour"
+            }
+        },
+        {
+            "name": "bucket for a span of just over three days",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Line",
+                        "x": "t",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": "Day",
+                        "horizontal": false
+                    }
+                ],
+                "bucket": "Day"
+            }
+        },
+        {
+            "name": "bucket for a span of 180 days",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Line",
+                        "x": "t",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": "Day",
+                        "horizontal": false
+                    }
+                ],
+                "bucket": "Day"
+            }
+        },
+        {
+            "name": "bucket for a span of just over 180 days",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Line",
+                        "x": "t",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": "Week",
+                        "horizontal": false
+                    }
+                ],
+                "bucket": "Week"
+            }
+        },
+        {
+            "name": "bucket for a span of 730 days",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Line",
+                        "x": "t",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": "Week",
+                        "horizontal": false
+                    }
+                ],
+                "bucket": "Week"
+            }
+        },
+        {
+            "name": "bucket for a span of 731 days",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Line",
+                        "x": "t",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": "Month",
+                        "horizontal": false
+                    }
+                ],
+                "bucket": "Month"
+            }
+        },
+        {
+            "name": "bucket for a span of 15 years days",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Line",
+                        "x": "t",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": "Month",
+                        "horizontal": false
+                    }
+                ],
+                "bucket": "Month"
+            }
+        },
+        {
+            "name": "bucket for a span of over 15 years days",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Line",
+                        "x": "t",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": "Year",
+                        "horizontal": false
+                    }
+                ],
+                "bucket": "Year"
+            }
+        },
+        {
+            "name": "bucket for a span of huge days",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Line",
+                        "x": "t",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": "Year",
+                        "horizontal": false
+                    }
+                ],
+                "bucket": "Year"
+            }
+        },
+        {
+            "name": "bucket with no min and max",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Line",
+                        "x": "t",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": "Hour",
+                        "horizontal": false
+                    }
+                ],
+                "bucket": "Hour"
+            }
+        },
+        {
+            "name": "bucket with min only",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Line",
+                        "x": "t",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": "Hour",
+                        "horizontal": false
+                    }
+                ],
+                "bucket": "Hour"
+            }
+        },
+        {
+            "name": "thirty categories make bars",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Bar",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "n",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": true
+                    }
+                ]
+            }
+        },
+        {
+            "name": "thirty one categories make none",
+            "output": {
+                "specs": []
+            }
+        },
+        {
+            "name": "thirty one categories then a smaller one",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Bar",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "n",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": true
+                    },
+                    {
+                        "type": "Pie",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "n",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": false
+                    }
+                ]
+            }
+        },
+        {
+            "name": "unique categories need no aggregate",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Bar",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "n",
+                                "aggregate": "None"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": true
+                    },
+                    {
+                        "type": "Pie",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "n",
+                                "aggregate": "None"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": false
+                    }
+                ]
+            }
+        },
+        {
+            "name": "unique categories with a series are summed",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Bar",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "n",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": "s",
+                        "bucket": null,
+                        "horizontal": true
+                    },
+                    {
+                        "type": "Pie",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "n",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": false
+                    }
+                ]
+            }
+        },
+        {
+            "name": "series must have at most ten values",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Bar",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "n",
+                                "aggregate": "None"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": true
+                    },
+                    {
+                        "type": "Pie",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "n",
+                                "aggregate": "None"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": false
+                    }
+                ]
+            }
+        },
+        {
+            "name": "series is the second suggested category only",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Bar",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "n",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": "t",
+                        "bucket": null,
+                        "horizontal": true
+                    },
+                    {
+                        "type": "Pie",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "n",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": false
+                    }
+                ]
+            }
+        },
+        {
+            "name": "pie with eight slices",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Bar",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "n",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": true
+                    },
+                    {
+                        "type": "Pie",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "n",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": false
+                    }
+                ]
+            }
+        },
+        {
+            "name": "no pie with nine slices",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Bar",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "n",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": true
+                    }
+                ]
+            }
+        },
+        {
+            "name": "no pie with a negative",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Bar",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "n",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": true
+                    }
+                ]
+            }
+        },
+        {
+            "name": "no pie without a minimum",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Bar",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "n",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": true
+                    }
+                ]
+            }
+        },
+        {
+            "name": "pie with a zero minimum",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Bar",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "n",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": true
+                    },
+                    {
+                        "type": "Pie",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "n",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": false
+                    }
+                ]
+            }
+        },
+        {
+            "name": "categories alone are counted",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Bar",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "c",
+                                "aggregate": "Count"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": true
+                    }
+                ]
+            }
+        },
+        {
+            "name": "categories alone with a series are counted by series",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Bar",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "c",
+                                "aggregate": "Count"
+                            }
+                        ],
+                        "series": "s",
+                        "bucket": null,
+                        "horizontal": true
+                    }
+                ]
+            }
+        },
+        {
+            "name": "two numbers suggest a scatter",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Scatter",
+                        "x": "a",
+                        "y": [
+                            {
+                                "column": "b",
+                                "aggregate": "None"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": false
+                    }
+                ]
+            }
+        },
+        {
+            "name": "a scatter is split by a category of ten values",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Bar",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": true
+                    },
+                    {
+                        "type": "Scatter",
+                        "x": "a",
+                        "y": [
+                            {
+                                "column": "b",
+                                "aggregate": "None"
+                            }
+                        ],
+                        "series": "c",
+                        "bucket": null,
+                        "horizontal": false
+                    }
+                ]
+            }
+        },
+        {
+            "name": "a scatter ignores a category of eleven",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Bar",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": true
+                    },
+                    {
+                        "type": "Scatter",
+                        "x": "a",
+                        "y": [
+                            {
+                                "column": "b",
+                                "aggregate": "None"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": false
+                    }
+                ]
+            }
+        },
+        {
+            "name": "a category of thirty five is too many for the series",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Scatter",
+                        "x": "a",
+                        "y": [
+                            {
+                                "column": "b",
+                                "aggregate": "None"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": false
+                    }
+                ]
+            }
+        },
+        {
+            "name": "everything at once",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Line",
+                        "x": "t",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "Sum"
+                            },
+                            {
+                                "column": "b",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": "Day",
+                        "horizontal": false
+                    },
+                    {
+                        "type": "Bar",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": true
+                    },
+                    {
+                        "type": "Pie",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": false
+                    },
+                    {
+                        "type": "Scatter",
+                        "x": "a",
+                        "y": [
+                            {
+                                "column": "b",
+                                "aggregate": "None"
+                            }
+                        ],
+                        "series": "c",
+                        "bucket": null,
+                        "horizontal": false
+                    }
+                ],
+                "bucket": "Day"
+            }
+        },
+        {
+            "name": "numeric columns without values are skipped",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Scatter",
+                        "x": "b",
+                        "y": [
+                            {
+                                "column": "c",
+                                "aggregate": "None"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": false
+                    }
+                ]
+            }
+        },
+        {
+            "name": "other kinds are ignored",
+            "output": {
+                "specs": []
+            }
+        },
+        {
+            "name": "a single number suggests nothing",
+            "output": {
+                "specs": []
+            }
+        },
+        {
+            "name": "a numeric column in the middle",
+            "output": {
+                "specs": [
+                    {
+                        "type": "Line",
+                        "x": "t",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": "c",
+                        "bucket": "Month",
+                        "horizontal": false
+                    },
+                    {
+                        "type": "Bar",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": true
+                    },
+                    {
+                        "type": "Pie",
+                        "x": "c",
+                        "y": [
+                            {
+                                "column": "a",
+                                "aggregate": "Sum"
+                            }
+                        ],
+                        "series": null,
+                        "bucket": null,
+                        "horizontal": false
+                    }
+                ],
+                "bucket": "Month"
+            }
+        }
+    ]
+}

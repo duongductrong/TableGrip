@@ -1,0 +1,525 @@
+{
+  "subject": "chart-values",
+  "cases": [
+    {
+      "name": "number '1.5'",
+      "text": "1.5"
+    },
+    {
+      "name": "number ' 2 '",
+      "text": " 2 "
+    },
+    {
+      "name": "number '1e3'",
+      "text": "1e3"
+    },
+    {
+      "name": "number '-0'",
+      "text": "-0"
+    },
+    {
+      "name": "number '0'",
+      "text": "0"
+    },
+    {
+      "name": "number '+7'",
+      "text": "+7"
+    },
+    {
+      "name": "number '.5'",
+      "text": ".5"
+    },
+    {
+      "name": "number '5.'",
+      "text": "5."
+    },
+    {
+      "name": "number '1,5'",
+      "text": "1,5"
+    },
+    {
+      "name": "number '1_000'",
+      "text": "1_000"
+    },
+    {
+      "name": "number ''",
+      "text": ""
+    },
+    {
+      "name": "number '  '",
+      "text": "  "
+    },
+    {
+      "name": "number 'abc'",
+      "text": "abc"
+    },
+    {
+      "name": "number 'NaN'",
+      "text": "NaN"
+    },
+    {
+      "name": "number 'Infinity'",
+      "text": "Infinity"
+    },
+    {
+      "name": "number '-Infinity'",
+      "text": "-Infinity"
+    },
+    {
+      "name": "number '1.5f'",
+      "text": "1.5f"
+    },
+    {
+      "name": "number '2d'",
+      "text": "2d"
+    },
+    {
+      "name": "number '0x10'",
+      "text": "0x10"
+    },
+    {
+      "name": "number '0x1p3'",
+      "text": "0x1p3"
+    },
+    {
+      "name": "number '1e400'",
+      "text": "1e400"
+    },
+    {
+      "name": "number '12abc'",
+      "text": "12abc"
+    },
+    {
+      "name": "number '9007199254740993'",
+      "text": "9007199254740993"
+    },
+    {
+      "name": "number '-12.75'",
+      "text": "-12.75"
+    },
+    {
+      "name": "number '1E-3'",
+      "text": "1E-3"
+    },
+    {
+      "name": "number null",
+      "text": null
+    },
+    {
+      "name": "date '2024-03-05'",
+      "text": "2024-03-05"
+    },
+    {
+      "name": "date '2024-03-05 12:00:00'",
+      "text": "2024-03-05 12:00:00"
+    },
+    {
+      "name": "date '2024-03-05T12:00'",
+      "text": "2024-03-05T12:00"
+    },
+    {
+      "name": "date '2024-03-05T12:00:00'",
+      "text": "2024-03-05T12:00:00"
+    },
+    {
+      "name": "date '2024-03-05 12:00'",
+      "text": "2024-03-05 12:00"
+    },
+    {
+      "name": "date '2024-03-05 12:00:00.25'",
+      "text": "2024-03-05 12:00:00.25"
+    },
+    {
+      "name": "date '2024-03-05 12:00:00.123456789'",
+      "text": "2024-03-05 12:00:00.123456789"
+    },
+    {
+      "name": "date '2024-03-05 12:00:00+07'",
+      "text": "2024-03-05 12:00:00+07"
+    },
+    {
+      "name": "date '2024-03-05 12:00:00-08'",
+      "text": "2024-03-05 12:00:00-08"
+    },
+    {
+      "name": "date '2024-03-05T12:00:00Z'",
+      "text": "2024-03-05T12:00:00Z"
+    },
+    {
+      "name": "date '2024-03-05T12:00:00+07:00'",
+      "text": "2024-03-05T12:00:00+07:00"
+    },
+    {
+      "name": "date '2024-03-05 12:00:00 +07:00'",
+      "text": "2024-03-05 12:00:00 +07:00"
+    },
+    {
+      "name": "date '2024-03-05 12:00:00+0700'",
+      "text": "2024-03-05 12:00:00+0700"
+    },
+    {
+      "name": "date '2024-03-05T12:00:00.5Z'",
+      "text": "2024-03-05T12:00:00.5Z"
+    },
+    {
+      "name": "date '2024-03-05T12:00:00-05:30'",
+      "text": "2024-03-05T12:00:00-05:30"
+    },
+    {
+      "name": "date '2024-03-05 12:00:00.250+07'",
+      "text": "2024-03-05 12:00:00.250+07"
+    },
+    {
+      "name": "date '12:00:00'",
+      "text": "12:00:00"
+    },
+    {
+      "name": "date 'hello world'",
+      "text": "hello world"
+    },
+    {
+      "name": "date '2024-3-05'",
+      "text": "2024-3-05"
+    },
+    {
+      "name": "date '2024-03-5'",
+      "text": "2024-03-5"
+    },
+    {
+      "name": "date '2024-02-29'",
+      "text": "2024-02-29"
+    },
+    {
+      "name": "date '2023-02-29'",
+      "text": "2023-02-29"
+    },
+    {
+      "name": "date '2024-02-30'",
+      "text": "2024-02-30"
+    },
+    {
+      "name": "date '2024-13-01'",
+      "text": "2024-13-01"
+    },
+    {
+      "name": "date '2024-03-05 24:00:00'",
+      "text": "2024-03-05 24:00:00"
+    },
+    {
+      "name": "date '2024-03-05 25:00:00'",
+      "text": "2024-03-05 25:00:00"
+    },
+    {
+      "name": "date '2024-03-05 12:60:00'",
+      "text": "2024-03-05 12:60:00"
+    },
+    {
+      "name": "date '2024-03-05T12:00:00[UTC]'",
+      "text": "2024-03-05T12:00:00[UTC]"
+    },
+    {
+      "name": "date '2024/03/05'",
+      "text": "2024/03/05"
+    },
+    {
+      "name": "date '20240305'",
+      "text": "20240305"
+    },
+    {
+      "name": "date '  2024-03-05  '",
+      "text": "  2024-03-05  "
+    },
+    {
+      "name": "date '0000-01-01'",
+      "text": "0000-01-01"
+    },
+    {
+      "name": "date '1969-12-31 23:59:59'",
+      "text": "1969-12-31 23:59:59"
+    },
+    {
+      "name": "date '1900-01-01 00:00:00'",
+      "text": "1900-01-01 00:00:00"
+    },
+    {
+      "name": "date '9999-12-31 23:59:59'",
+      "text": "9999-12-31 23:59:59"
+    },
+    {
+      "name": "date '2024-03-05 12'",
+      "text": "2024-03-05 12"
+    },
+    {
+      "name": "date '2024-03-05T'",
+      "text": "2024-03-05T"
+    },
+    {
+      "name": "date '2024-03-05x'",
+      "text": "2024-03-05x"
+    },
+    {
+      "name": "date '2024-03-05 12:00:00Z'",
+      "text": "2024-03-05 12:00:00Z"
+    },
+    {
+      "name": "date '2024-03-05 12:00:00 Z'",
+      "text": "2024-03-05 12:00:00 Z"
+    },
+    {
+      "name": "date '+2024-03-05'",
+      "text": "+2024-03-05"
+    },
+    {
+      "name": "date '2024-03-05 12:00:00.'",
+      "text": "2024-03-05 12:00:00."
+    },
+    {
+      "name": "date '2024-03-05 1:00:00'",
+      "text": "2024-03-05 1:00:00"
+    },
+    {
+      "name": "date null",
+      "text": null
+    },
+    {
+      "name": "truncate 2024-08-15 13:45:00 Hour",
+      "text": "2024-08-15 13:45:00",
+      "bucket": "Hour"
+    },
+    {
+      "name": "truncate 2024-08-15 13:45:00 Day",
+      "text": "2024-08-15 13:45:00",
+      "bucket": "Day"
+    },
+    {
+      "name": "truncate 2024-08-15 13:45:00 Week",
+      "text": "2024-08-15 13:45:00",
+      "bucket": "Week"
+    },
+    {
+      "name": "truncate 2024-08-15 13:45:00 Month",
+      "text": "2024-08-15 13:45:00",
+      "bucket": "Month"
+    },
+    {
+      "name": "truncate 2024-08-15 13:45:00 Quarter",
+      "text": "2024-08-15 13:45:00",
+      "bucket": "Quarter"
+    },
+    {
+      "name": "truncate 2024-08-15 13:45:00 Year",
+      "text": "2024-08-15 13:45:00",
+      "bucket": "Year"
+    },
+    {
+      "name": "truncate 2024-01-01 00:00:00 Hour",
+      "text": "2024-01-01 00:00:00",
+      "bucket": "Hour"
+    },
+    {
+      "name": "truncate 2024-01-01 00:00:00 Day",
+      "text": "2024-01-01 00:00:00",
+      "bucket": "Day"
+    },
+    {
+      "name": "truncate 2024-01-01 00:00:00 Week",
+      "text": "2024-01-01 00:00:00",
+      "bucket": "Week"
+    },
+    {
+      "name": "truncate 2024-01-01 00:00:00 Month",
+      "text": "2024-01-01 00:00:00",
+      "bucket": "Month"
+    },
+    {
+      "name": "truncate 2024-01-01 00:00:00 Quarter",
+      "text": "2024-01-01 00:00:00",
+      "bucket": "Quarter"
+    },
+    {
+      "name": "truncate 2024-01-01 00:00:00 Year",
+      "text": "2024-01-01 00:00:00",
+      "bucket": "Year"
+    },
+    {
+      "name": "truncate 2023-12-31 23:59:59 Hour",
+      "text": "2023-12-31 23:59:59",
+      "bucket": "Hour"
+    },
+    {
+      "name": "truncate 2023-12-31 23:59:59 Day",
+      "text": "2023-12-31 23:59:59",
+      "bucket": "Day"
+    },
+    {
+      "name": "truncate 2023-12-31 23:59:59 Week",
+      "text": "2023-12-31 23:59:59",
+      "bucket": "Week"
+    },
+    {
+      "name": "truncate 2023-12-31 23:59:59 Month",
+      "text": "2023-12-31 23:59:59",
+      "bucket": "Month"
+    },
+    {
+      "name": "truncate 2023-12-31 23:59:59 Quarter",
+      "text": "2023-12-31 23:59:59",
+      "bucket": "Quarter"
+    },
+    {
+      "name": "truncate 2023-12-31 23:59:59 Year",
+      "text": "2023-12-31 23:59:59",
+      "bucket": "Year"
+    },
+    {
+      "name": "truncate 2024-05-31 18:30:15 Hour",
+      "text": "2024-05-31 18:30:15",
+      "bucket": "Hour"
+    },
+    {
+      "name": "truncate 2024-05-31 18:30:15 Day",
+      "text": "2024-05-31 18:30:15",
+      "bucket": "Day"
+    },
+    {
+      "name": "truncate 2024-05-31 18:30:15 Week",
+      "text": "2024-05-31 18:30:15",
+      "bucket": "Week"
+    },
+    {
+      "name": "truncate 2024-05-31 18:30:15 Month",
+      "text": "2024-05-31 18:30:15",
+      "bucket": "Month"
+    },
+    {
+      "name": "truncate 2024-05-31 18:30:15 Quarter",
+      "text": "2024-05-31 18:30:15",
+      "bucket": "Quarter"
+    },
+    {
+      "name": "truncate 2024-05-31 18:30:15 Year",
+      "text": "2024-05-31 18:30:15",
+      "bucket": "Year"
+    },
+    {
+      "name": "truncate 2024-02-29 00:00:01 Hour",
+      "text": "2024-02-29 00:00:01",
+      "bucket": "Hour"
+    },
+    {
+      "name": "truncate 2024-02-29 00:00:01 Day",
+      "text": "2024-02-29 00:00:01",
+      "bucket": "Day"
+    },
+    {
+      "name": "truncate 2024-02-29 00:00:01 Week",
+      "text": "2024-02-29 00:00:01",
+      "bucket": "Week"
+    },
+    {
+      "name": "truncate 2024-02-29 00:00:01 Month",
+      "text": "2024-02-29 00:00:01",
+      "bucket": "Month"
+    },
+    {
+      "name": "truncate 2024-02-29 00:00:01 Quarter",
+      "text": "2024-02-29 00:00:01",
+      "bucket": "Quarter"
+    },
+    {
+      "name": "truncate 2024-02-29 00:00:01 Year",
+      "text": "2024-02-29 00:00:01",
+      "bucket": "Year"
+    },
+    {
+      "name": "truncate 2024-11-03 08:00:00 Hour",
+      "text": "2024-11-03 08:00:00",
+      "bucket": "Hour"
+    },
+    {
+      "name": "truncate 2024-11-03 08:00:00 Day",
+      "text": "2024-11-03 08:00:00",
+      "bucket": "Day"
+    },
+    {
+      "name": "truncate 2024-11-03 08:00:00 Week",
+      "text": "2024-11-03 08:00:00",
+      "bucket": "Week"
+    },
+    {
+      "name": "truncate 2024-11-03 08:00:00 Month",
+      "text": "2024-11-03 08:00:00",
+      "bucket": "Month"
+    },
+    {
+      "name": "truncate 2024-11-03 08:00:00 Quarter",
+      "text": "2024-11-03 08:00:00",
+      "bucket": "Quarter"
+    },
+    {
+      "name": "truncate 2024-11-03 08:00:00 Year",
+      "text": "2024-11-03 08:00:00",
+      "bucket": "Year"
+    },
+    {
+      "name": "truncate 2021-01-03 12:00:00 Hour",
+      "text": "2021-01-03 12:00:00",
+      "bucket": "Hour"
+    },
+    {
+      "name": "truncate 2021-01-03 12:00:00 Day",
+      "text": "2021-01-03 12:00:00",
+      "bucket": "Day"
+    },
+    {
+      "name": "truncate 2021-01-03 12:00:00 Week",
+      "text": "2021-01-03 12:00:00",
+      "bucket": "Week"
+    },
+    {
+      "name": "truncate 2021-01-03 12:00:00 Month",
+      "text": "2021-01-03 12:00:00",
+      "bucket": "Month"
+    },
+    {
+      "name": "truncate 2021-01-03 12:00:00 Quarter",
+      "text": "2021-01-03 12:00:00",
+      "bucket": "Quarter"
+    },
+    {
+      "name": "truncate 2021-01-03 12:00:00 Year",
+      "text": "2021-01-03 12:00:00",
+      "bucket": "Year"
+    },
+    {
+      "name": "truncate 2024-12-30 09:09:09 Hour",
+      "text": "2024-12-30 09:09:09",
+      "bucket": "Hour"
+    },
+    {
+      "name": "truncate 2024-12-30 09:09:09 Day",
+      "text": "2024-12-30 09:09:09",
+      "bucket": "Day"
+    },
+    {
+      "name": "truncate 2024-12-30 09:09:09 Week",
+      "text": "2024-12-30 09:09:09",
+      "bucket": "Week"
+    },
+    {
+      "name": "truncate 2024-12-30 09:09:09 Month",
+      "text": "2024-12-30 09:09:09",
+      "bucket": "Month"
+    },
+    {
+      "name": "truncate 2024-12-30 09:09:09 Quarter",
+      "text": "2024-12-30 09:09:09",
+      "bucket": "Quarter"
+    },
+    {
+      "name": "truncate 2024-12-30 09:09:09 Year",
+      "text": "2024-12-30 09:09:09",
+      "bucket": "Year"
+    }
+  ]
+}

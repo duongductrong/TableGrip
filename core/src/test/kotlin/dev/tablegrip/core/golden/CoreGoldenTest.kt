@@ -1,9 +1,5 @@
 package dev.tablegrip.core.golden
 
-import dev.tablegrip.core.sql.SqlClassifier
-import dev.tablegrip.core.sql.SqlLexer
-import dev.tablegrip.core.sql.SqlSplitter
-import dev.tablegrip.core.sql.SqlSyntax
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -11,14 +7,10 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonObject
-import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 
@@ -36,59 +28,7 @@ class CoreGoldenTest {
     private val record = System.getProperty("conformance.record") == "true"
     private val pretty = Json { prettyPrint = true }
 
-    private val subjects: Map<String, (JsonObject) -> JsonElement> =
-        mapOf(
-            "sql-lexer" to { case ->
-                val sql = case.string("sql")
-                buildJsonArray {
-                    for (t in SqlLexer(syntax(case)).tokenize(sql)) {
-                        addJsonObject {
-                            put("type", t.type.name)
-                            put("start", t.start)
-                            put("end", t.end)
-                            put("text", t.text(sql))
-                        }
-                    }
-                }
-            },
-            "sql-splitter" to { case ->
-                val sql = case.string("sql")
-                val splitter = SqlSplitter(syntax(case))
-                buildJsonObject {
-                    putJsonArray("statements") {
-                        for (s in splitter.split(sql)) {
-                            addJsonObject {
-                                put("text", s.text)
-                                put("start", s.start)
-                                put("end", s.end)
-                                put("delimiterEnd", s.delimiterEnd)
-                            }
-                        }
-                    }
-                    case["at"]?.let { offsets ->
-                        putJsonArray("statementAt") {
-                            for (offset in offsets.jsonArray) {
-                                val s = splitter.statementAt(sql, offset.jsonPrimitive.content.toInt())
-                                if (s == null) add(JsonNull)
-                                else addJsonObject {
-                                    put("start", s.start)
-                                    put("end", s.end)
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "sql-classifier" to { case ->
-                val info = SqlClassifier(syntax(case)).classify(case.string("sql"))
-                buildJsonObject {
-                    put("kind", info.kind.name)
-                    put("verb", info.verb)
-                    put("danger", info.danger)
-                    put("changesData", info.changesData)
-                }
-            },
-        )
+    private val subjects: Map<String, Subject> = sqlSubjects + dialectSubjects + filterSubjects + schemaSubjects + completionSubjects + chartSubjects + dataSubjects
 
     @Test
     fun golden() {
@@ -151,19 +91,6 @@ class CoreGoldenTest {
         }
         kotlin.test.assertNotEquals<JsonElement>(wrong, actual)
     }
-
-    private fun syntax(case: JsonObject): SqlSyntax =
-        when (val name = case["syntax"]?.jsonPrimitive?.content ?: "Standard") {
-            "PostgreSQL" -> SqlSyntax.PostgreSQL
-            "MySQL" -> SqlSyntax.MySQL
-            "SQLite" -> SqlSyntax.SQLite
-            "TSql" -> SqlSyntax.TSql
-            "ClickHouse" -> SqlSyntax.ClickHouse
-            "Standard" -> SqlSyntax.Standard
-            else -> error("unknown syntax $name")
-        }
-
-    private fun JsonObject.string(key: String): String = (getValue(key) as JsonPrimitive).content
 
     private companion object {
         /** `conformance/core`, found from Gradle's working directory (the module) or the repository root. */

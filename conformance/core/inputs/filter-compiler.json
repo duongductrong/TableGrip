@@ -1,0 +1,3512 @@
+{
+  "subject": "filter-compiler",
+  "cases": [
+    {
+      "name": "empty",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "all disabled",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 1,
+            "column": "name",
+            "op": "Equals",
+            "value": "x",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": false
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "typed values bound",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 2,
+            "column": "qty",
+            "op": "GreaterOrEqual",
+            "value": "10",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 3,
+            "column": "total",
+            "op": "Less",
+            "value": "99.5",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 4,
+            "column": "name",
+            "op": "Equals",
+            "value": "O'Brien",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "contains escapes wildcards",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 5,
+            "column": "name",
+            "op": "Contains",
+            "value": "50%_off!",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "not contains case sensitive",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 6,
+            "column": "name",
+            "op": "NotContains",
+            "value": "a",
+            "value2": "",
+            "caseSensitive": true,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "starts and ends",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 7,
+            "column": "name",
+            "op": "StartsWith",
+            "value": "ab",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 8,
+            "column": "name",
+            "op": "EndsWith",
+            "value": "ab",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "text matching MySQL",
+      "dialect": "MySQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 9,
+            "column": "name",
+            "op": "Contains",
+            "value": "a*b%",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 10,
+            "column": "name",
+            "op": "Contains",
+            "value": "a*b_",
+            "value2": "",
+            "caseSensitive": true,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 11,
+            "column": "name",
+            "op": "NotLike",
+            "value": "x!_%",
+            "value2": "",
+            "caseSensitive": true,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 12,
+            "column": "qty",
+            "op": "StartsWith",
+            "value": "12",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "regex MySQL",
+      "dialect": "MySQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 13,
+            "column": "name",
+            "op": "Regex",
+            "value": "^a",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 14,
+            "column": "name",
+            "op": "NotRegex",
+            "value": "^a",
+            "value2": "",
+            "caseSensitive": true,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "values MySQL",
+      "dialect": "MySQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 15,
+            "column": "active",
+            "op": "IsTrue",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 16,
+            "column": "active",
+            "op": "IsFalse",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 17,
+            "column": "total",
+            "op": "Between",
+            "value": "-1.5",
+            "value2": "2e1",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 18,
+            "column": "born",
+            "op": "Equals",
+            "value": "2026-01-05",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 19,
+            "column": "name",
+            "op": "In",
+            "value": "a, 'b', NULL",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 20,
+            "column": "token",
+            "op": "Equals",
+            "value": "6F1C2D3E-4A5B-4C6D-8E9F-A0B1C2D3E4F5",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "text matching SQLite",
+      "dialect": "SQLite",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 21,
+            "column": "name",
+            "op": "Contains",
+            "value": "a*b%",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 22,
+            "column": "name",
+            "op": "Contains",
+            "value": "a*b_",
+            "value2": "",
+            "caseSensitive": true,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 23,
+            "column": "name",
+            "op": "NotLike",
+            "value": "x!_%",
+            "value2": "",
+            "caseSensitive": true,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 24,
+            "column": "qty",
+            "op": "StartsWith",
+            "value": "12",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "regex SQLite",
+      "dialect": "SQLite",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 25,
+            "column": "name",
+            "op": "Regex",
+            "value": "^a",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 26,
+            "column": "name",
+            "op": "NotRegex",
+            "value": "^a",
+            "value2": "",
+            "caseSensitive": true,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "values SQLite",
+      "dialect": "SQLite",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 27,
+            "column": "active",
+            "op": "IsTrue",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 28,
+            "column": "active",
+            "op": "IsFalse",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 29,
+            "column": "total",
+            "op": "Between",
+            "value": "-1.5",
+            "value2": "2e1",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 30,
+            "column": "born",
+            "op": "Equals",
+            "value": "2026-01-05",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 31,
+            "column": "name",
+            "op": "In",
+            "value": "a, 'b', NULL",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 32,
+            "column": "token",
+            "op": "Equals",
+            "value": "6F1C2D3E-4A5B-4C6D-8E9F-A0B1C2D3E4F5",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "text matching SqlServer",
+      "dialect": "SqlServer",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 33,
+            "column": "name",
+            "op": "Contains",
+            "value": "a*b%",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 34,
+            "column": "name",
+            "op": "Contains",
+            "value": "a*b_",
+            "value2": "",
+            "caseSensitive": true,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 35,
+            "column": "name",
+            "op": "NotLike",
+            "value": "x!_%",
+            "value2": "",
+            "caseSensitive": true,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 36,
+            "column": "qty",
+            "op": "StartsWith",
+            "value": "12",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "regex SqlServer",
+      "dialect": "SqlServer",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 37,
+            "column": "name",
+            "op": "Regex",
+            "value": "^a",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 38,
+            "column": "name",
+            "op": "NotRegex",
+            "value": "^a",
+            "value2": "",
+            "caseSensitive": true,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "values SqlServer",
+      "dialect": "SqlServer",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 39,
+            "column": "active",
+            "op": "IsTrue",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 40,
+            "column": "active",
+            "op": "IsFalse",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 41,
+            "column": "total",
+            "op": "Between",
+            "value": "-1.5",
+            "value2": "2e1",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 42,
+            "column": "born",
+            "op": "Equals",
+            "value": "2026-01-05",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 43,
+            "column": "name",
+            "op": "In",
+            "value": "a, 'b', NULL",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 44,
+            "column": "token",
+            "op": "Equals",
+            "value": "6F1C2D3E-4A5B-4C6D-8E9F-A0B1C2D3E4F5",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "text matching ClickHouse",
+      "dialect": "ClickHouse",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 45,
+            "column": "name",
+            "op": "Contains",
+            "value": "a*b%",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 46,
+            "column": "name",
+            "op": "Contains",
+            "value": "a*b_",
+            "value2": "",
+            "caseSensitive": true,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 47,
+            "column": "name",
+            "op": "NotLike",
+            "value": "x!_%",
+            "value2": "",
+            "caseSensitive": true,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 48,
+            "column": "qty",
+            "op": "StartsWith",
+            "value": "12",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "regex ClickHouse",
+      "dialect": "ClickHouse",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 49,
+            "column": "name",
+            "op": "Regex",
+            "value": "^a",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 50,
+            "column": "name",
+            "op": "NotRegex",
+            "value": "^a",
+            "value2": "",
+            "caseSensitive": true,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "values ClickHouse",
+      "dialect": "ClickHouse",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 51,
+            "column": "active",
+            "op": "IsTrue",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 52,
+            "column": "active",
+            "op": "IsFalse",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 53,
+            "column": "total",
+            "op": "Between",
+            "value": "-1.5",
+            "value2": "2e1",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 54,
+            "column": "born",
+            "op": "Equals",
+            "value": "2026-01-05",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 55,
+            "column": "name",
+            "op": "In",
+            "value": "a, 'b', NULL",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 56,
+            "column": "token",
+            "op": "Equals",
+            "value": "6F1C2D3E-4A5B-4C6D-8E9F-A0B1C2D3E4F5",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "text matching DuckDB",
+      "dialect": "DuckDB",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 57,
+            "column": "name",
+            "op": "Contains",
+            "value": "a*b%",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 58,
+            "column": "name",
+            "op": "Contains",
+            "value": "a*b_",
+            "value2": "",
+            "caseSensitive": true,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 59,
+            "column": "name",
+            "op": "NotLike",
+            "value": "x!_%",
+            "value2": "",
+            "caseSensitive": true,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 60,
+            "column": "qty",
+            "op": "StartsWith",
+            "value": "12",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "regex DuckDB",
+      "dialect": "DuckDB",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 61,
+            "column": "name",
+            "op": "Regex",
+            "value": "^a",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 62,
+            "column": "name",
+            "op": "NotRegex",
+            "value": "^a",
+            "value2": "",
+            "caseSensitive": true,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "values DuckDB",
+      "dialect": "DuckDB",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 63,
+            "column": "active",
+            "op": "IsTrue",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 64,
+            "column": "active",
+            "op": "IsFalse",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 65,
+            "column": "total",
+            "op": "Between",
+            "value": "-1.5",
+            "value2": "2e1",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 66,
+            "column": "born",
+            "op": "Equals",
+            "value": "2026-01-05",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 67,
+            "column": "name",
+            "op": "In",
+            "value": "a, 'b', NULL",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 68,
+            "column": "token",
+            "op": "Equals",
+            "value": "6F1C2D3E-4A5B-4C6D-8E9F-A0B1C2D3E4F5",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "text matching H2",
+      "dialect": "H2",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 69,
+            "column": "name",
+            "op": "Contains",
+            "value": "a*b%",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 70,
+            "column": "name",
+            "op": "Contains",
+            "value": "a*b_",
+            "value2": "",
+            "caseSensitive": true,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 71,
+            "column": "name",
+            "op": "NotLike",
+            "value": "x!_%",
+            "value2": "",
+            "caseSensitive": true,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 72,
+            "column": "qty",
+            "op": "StartsWith",
+            "value": "12",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "regex H2",
+      "dialect": "H2",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 73,
+            "column": "name",
+            "op": "Regex",
+            "value": "^a",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 74,
+            "column": "name",
+            "op": "NotRegex",
+            "value": "^a",
+            "value2": "",
+            "caseSensitive": true,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "values H2",
+      "dialect": "H2",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 75,
+            "column": "active",
+            "op": "IsTrue",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 76,
+            "column": "active",
+            "op": "IsFalse",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 77,
+            "column": "total",
+            "op": "Between",
+            "value": "-1.5",
+            "value2": "2e1",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 78,
+            "column": "born",
+            "op": "Equals",
+            "value": "2026-01-05",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 79,
+            "column": "name",
+            "op": "In",
+            "value": "a, 'b', NULL",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 80,
+            "column": "token",
+            "op": "Equals",
+            "value": "6F1C2D3E-4A5B-4C6D-8E9F-A0B1C2D3E4F5",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "text matching CockroachDB",
+      "dialect": "CockroachDB",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 81,
+            "column": "name",
+            "op": "Contains",
+            "value": "a*b%",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 82,
+            "column": "name",
+            "op": "Contains",
+            "value": "a*b_",
+            "value2": "",
+            "caseSensitive": true,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 83,
+            "column": "name",
+            "op": "NotLike",
+            "value": "x!_%",
+            "value2": "",
+            "caseSensitive": true,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 84,
+            "column": "qty",
+            "op": "StartsWith",
+            "value": "12",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "regex CockroachDB",
+      "dialect": "CockroachDB",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 85,
+            "column": "name",
+            "op": "Regex",
+            "value": "^a",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 86,
+            "column": "name",
+            "op": "NotRegex",
+            "value": "^a",
+            "value2": "",
+            "caseSensitive": true,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "values CockroachDB",
+      "dialect": "CockroachDB",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 87,
+            "column": "active",
+            "op": "IsTrue",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 88,
+            "column": "active",
+            "op": "IsFalse",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 89,
+            "column": "total",
+            "op": "Between",
+            "value": "-1.5",
+            "value2": "2e1",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 90,
+            "column": "born",
+            "op": "Equals",
+            "value": "2026-01-05",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 91,
+            "column": "name",
+            "op": "In",
+            "value": "a, 'b', NULL",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 92,
+            "column": "token",
+            "op": "Equals",
+            "value": "6F1C2D3E-4A5B-4C6D-8E9F-A0B1C2D3E4F5",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "like keeps wildcards",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 93,
+            "column": "name",
+            "op": "Like",
+            "value": "a%b_!",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "non-text matched as text",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 94,
+            "column": "qty",
+            "op": "StartsWith",
+            "value": "12",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "regex postgres",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 95,
+            "column": "name",
+            "op": "Regex",
+            "value": "^a",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 96,
+            "column": "name",
+            "op": "NotRegex",
+            "value": "^a",
+            "value2": "",
+            "caseSensitive": true,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "date on datetime is whole day",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 97,
+            "column": "created_at",
+            "op": "Equals",
+            "value": "2026-01-15",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "date on datetime NotEquals",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 98,
+            "column": "created_at",
+            "op": "NotEquals",
+            "value": "2026-01-15",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "date on datetime Less",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 99,
+            "column": "created_at",
+            "op": "Less",
+            "value": "2026-01-15",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "date on datetime LessOrEqual",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 100,
+            "column": "created_at",
+            "op": "LessOrEqual",
+            "value": "2026-01-15",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "date on datetime Greater",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 101,
+            "column": "created_at",
+            "op": "Greater",
+            "value": "2026-01-15",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "date on datetime GreaterOrEqual",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 102,
+            "column": "created_at",
+            "op": "GreaterOrEqual",
+            "value": "2026-01-15",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "exact moment converted",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 103,
+            "column": "created_at",
+            "op": "Equals",
+            "value": "2026-01-15 10:00:00.25+02",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "exact moment in another zone",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 104,
+            "column": "created_at",
+            "op": "Equals",
+            "value": "2026-01-15 10:00:00.25+02",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      },
+      "zone": "+07:00"
+    },
+    {
+      "name": "relative dates",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 105,
+            "column": "born",
+            "op": "GreaterOrEqual",
+            "value": "today-7d",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 106,
+            "column": "created_at",
+            "op": "Greater",
+            "value": "now - 2h",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 107,
+            "column": "born",
+            "op": "Less",
+            "value": "3 months ago",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 108,
+            "column": "born",
+            "op": "Equals",
+            "value": "yesterday",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "moment on date column",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 109,
+            "column": "born",
+            "op": "Equals",
+            "value": "2026-01-15 23:59",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "time column",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 110,
+            "column": "opens",
+            "op": "Equals",
+            "value": "09:00",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 111,
+            "column": "opens",
+            "op": "Less",
+            "value": "2026-01-15 08:30",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "time column refuses a day",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 112,
+            "column": "opens",
+            "op": "Equals",
+            "value": "2026-01-15",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "date column refuses a time",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 113,
+            "column": "born",
+            "op": "Equals",
+            "value": "13:45",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "preset Today date",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 114,
+            "column": "born",
+            "op": "Today",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "preset Today datetime",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 115,
+            "column": "created_at",
+            "op": "Today",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "preset Yesterday date",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 116,
+            "column": "born",
+            "op": "Yesterday",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "preset Yesterday datetime",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 117,
+            "column": "created_at",
+            "op": "Yesterday",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "preset ThisWeek date",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 118,
+            "column": "born",
+            "op": "ThisWeek",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "preset ThisWeek datetime",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 119,
+            "column": "created_at",
+            "op": "ThisWeek",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "preset ThisMonth date",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 120,
+            "column": "born",
+            "op": "ThisMonth",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "preset ThisMonth datetime",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 121,
+            "column": "created_at",
+            "op": "ThisMonth",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "preset ThisYear date",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 122,
+            "column": "born",
+            "op": "ThisYear",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "preset ThisYear datetime",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 123,
+            "column": "created_at",
+            "op": "ThisYear",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "this week starting sunday",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 124,
+            "column": "born",
+            "op": "ThisWeek",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      },
+      "weekLocale": "en-US"
+    },
+    {
+      "name": "this week on a sunday, monday start",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 125,
+            "column": "born",
+            "op": "ThisWeek",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      },
+      "now": "2026-11-01T09:00:00"
+    },
+    {
+      "name": "this week on a sunday, sunday start",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 126,
+            "column": "born",
+            "op": "ThisWeek",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      },
+      "now": "2026-11-01T09:00:00",
+      "weekLocale": "en-US"
+    },
+    {
+      "name": "last days",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 127,
+            "column": "born",
+            "op": "LastDays",
+            "value": "7",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 128,
+            "column": "created_at",
+            "op": "LastDays",
+            "value": "1",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "last days '1.5'",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 129,
+            "column": "born",
+            "op": "LastDays",
+            "value": "1.5",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "last days '0'",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 130,
+            "column": "born",
+            "op": "LastDays",
+            "value": "0",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "last days '36501'",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 131,
+            "column": "born",
+            "op": "LastDays",
+            "value": "36501",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "last days 'x'",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 132,
+            "column": "born",
+            "op": "LastDays",
+            "value": "x",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "last days ''",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 133,
+            "column": "born",
+            "op": "LastDays",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "last days '7.0'",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 134,
+            "column": "born",
+            "op": "LastDays",
+            "value": "7.0",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "between numbers",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 135,
+            "column": "qty",
+            "op": "Between",
+            "value": "1",
+            "value2": "5",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 136,
+            "column": "qty",
+            "op": "NotBetween",
+            "value": "1",
+            "value2": "5",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "between reversed",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 137,
+            "column": "qty",
+            "op": "Between",
+            "value": "9",
+            "value2": "5",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "between missing bound",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 138,
+            "column": "qty",
+            "op": "Between",
+            "value": "9",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "between days on datetime",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 139,
+            "column": "created_at",
+            "op": "Between",
+            "value": "2026-01-01",
+            "value2": "2026-01-31",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 140,
+            "column": "created_at",
+            "op": "NotBetween",
+            "value": "2026-01-01",
+            "value2": "2026-01-31",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "between moments",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 141,
+            "column": "created_at",
+            "op": "Between",
+            "value": "2026-01-01 10:00",
+            "value2": "2026-01-31 12:00",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 142,
+            "column": "created_at",
+            "op": "NotBetween",
+            "value": "2026-01-01 10:00",
+            "value2": "2026-01-01 09:00",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "between times",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 143,
+            "column": "opens",
+            "op": "Between",
+            "value": "09:00",
+            "value2": "17:30",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "between dates on date",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 144,
+            "column": "born",
+            "op": "Between",
+            "value": "2026-01-31",
+            "value2": "2026-01-01",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "between text",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 145,
+            "column": "name",
+            "op": "Between",
+            "value": "b",
+            "value2": "a",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "between decimals",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 146,
+            "column": "total",
+            "op": "Between",
+            "value": "10.50",
+            "value2": "10.5",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 147,
+            "column": "total",
+            "op": "Between",
+            "value": "2",
+            "value2": "10",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "lists parse quotes and NULL",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 148,
+            "column": "name",
+            "op": "In",
+            "value": "alice, 'b, c', \"d\"\"e\", NULL",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "not in",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 149,
+            "column": "qty",
+            "op": "NotIn",
+            "value": "1\n2\n2",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "not in with null",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 150,
+            "column": "qty",
+            "op": "NotIn",
+            "value": "1, null",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "in bad number",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 151,
+            "column": "qty",
+            "op": "In",
+            "value": "1, x",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "in empty",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 152,
+            "column": "qty",
+            "op": "In",
+            "value": " , ,",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "in only null",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 153,
+            "column": "name",
+            "op": "In",
+            "value": "NULL",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 154,
+            "column": "name",
+            "op": "NotIn",
+            "value": "null",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "in dates on datetime",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 155,
+            "column": "created_at",
+            "op": "In",
+            "value": "2026-01-01, 2026-01-02 10:00, 2026-01-01, NULL",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 156,
+            "column": "created_at",
+            "op": "NotIn",
+            "value": "2026-01-01",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "in dates on date",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 157,
+            "column": "born",
+            "op": "In",
+            "value": "2026-01-01, today",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "in decimals distinct",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 158,
+            "column": "total",
+            "op": "In",
+            "value": "1.0, 1, 1.50, 1.5",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "in uuid",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 159,
+            "column": "token",
+            "op": "In",
+            "value": "6F1C2D3E-4A5B-4C6D-8E9F-A0B1C2D3E4F5, {6f1c2d3e4a5b4c6d8e9fa0b1c2d3e4f5}",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "in other with empty",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 160,
+            "column": "mood",
+            "op": "In",
+            "value": "happy, '', sad",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "too many values",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 161,
+            "column": "qty",
+            "op": "In",
+            "value": "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,278,279,280,281,282,283,284,285,286,287,288,289,290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,340,341,342,343,344,345,346,347,348,349,350,351,352,353,354,355,356,357,358,359,360,361,362,363,364,365,366,367,368,369,370,371,372,373,374,375,376,377,378,379,380,381,382,383,384,385,386,387,388,389,390,391,392,393,394,395,396,397,398,399,400,401,402,403,404,405,406,407,408,409,410,411,412,413,414,415,416,417,418,419,420,421,422,423,424,425,426,427,428,429,430,431,432,433,434,435,436,437,438,439,440,441,442,443,444,445,446,447,448,449,450,451,452,453,454,455,456,457,458,459,460,461,462,463,464,465,466,467,468,469,470,471,472,473,474,475,476,477,478,479,480,481,482,483,484,485,486,487,488,489,490,491,492,493,494,495,496,497,498,499,500,501,502,503,504,505,506,507,508,509,510,511,512,513,514,515,516,517,518,519,520,521,522,523,524,525,526,527,528,529,530,531,532,533,534,535,536,537,538,539,540,541,542,543,544,545,546,547,548,549,550,551,552,553,554,555,556,557,558,559,560,561,562,563,564,565,566,567,568,569,570,571,572,573,574,575,576,577,578,579,580,581,582,583,584,585,586,587,588,589,590,591,592,593,594,595,596,597,598,599,600,601,602,603,604,605,606,607,608,609,610,611,612,613,614,615,616,617,618,619,620,621,622,623,624,625,626,627,628,629,630,631,632,633,634,635,636,637,638,639,640,641,642,643,644,645,646,647,648,649,650,651,652,653,654,655,656,657,658,659,660,661,662,663,664,665,666,667,668,669,670,671,672,673,674,675,676,677,678,679,680,681,682,683,684,685,686,687,688,689,690,691,692,693,694,695,696,697,698,699,700,701,702,703,704,705,706,707,708,709,710,711,712,713,714,715,716,717,718,719,720,721,722,723,724,725,726,727,728,729,730,731,732,733,734,735,736,737,738,739,740,741,742,743,744,745,746,747,748,749,750,751,752,753,754,755,756,757,758,759,760,761,762,763,764,765,766,767,768,769,770,771,772,773,774,775,776,777,778,779,780,781,782,783,784,785,786,787,788,789,790,791,792,793,794,795,796,797,798,799,800,801,802,803,804,805,806,807,808,809,810,811,812,813,814,815,816,817,818,819,820,821,822,823,824,825,826,827,828,829,830,831,832,833,834,835,836,837,838,839,840,841,842,843,844,845,846,847,848,849,850,851,852,853,854,855,856,857,858,859,860,861,862,863,864,865,866,867,868,869,870,871,872,873,874,875,876,877,878,879,880,881,882,883,884,885,886,887,888,889,890,891,892,893,894,895,896,897,898,899,900,901,902,903,904,905,906,907,908,909,910,911,912,913,914,915,916,917,918,919,920,921,922,923,924,925,926,927,928,929,930,931,932,933,934,935,936,937,938,939,940,941,942,943,944,945,946,947,948,949,950,951,952,953,954,955,956,957,958,959,960,961,962,963,964,965,966,967,968,969,970,971,972,973,974,975,976,977,978,979,980,981,982,983,984,985,986,987,988,989,990,991,992,993,994,995,996,997,998,999,1000",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "booleans",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 162,
+            "column": "active",
+            "op": "IsTrue",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 163,
+            "column": "active",
+            "op": "IsFalse",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "uuid",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 164,
+            "column": "token",
+            "op": "Equals",
+            "value": "6F1C2D3E-4A5B-4C6D-8E9F-A0B1C2D3E4F5",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "bad uuid",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 165,
+            "column": "token",
+            "op": "Equals",
+            "value": "nope",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "json",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 166,
+            "column": "payload",
+            "op": "Equals",
+            "value": "{}",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 167,
+            "column": "payload",
+            "op": "Contains",
+            "value": "k",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 168,
+            "column": "payload",
+            "op": "Regex",
+            "value": "a+",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "other",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 169,
+            "column": "mood",
+            "op": "Equals",
+            "value": "happy",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 170,
+            "column": "mood",
+            "op": "Less",
+            "value": "b",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "empty and null tests",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 171,
+            "column": "name",
+            "op": "IsEmpty",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 172,
+            "column": "qty",
+            "op": "IsNotEmpty",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 173,
+            "column": "photo",
+            "op": "IsNotNull",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 174,
+            "column": "photo",
+            "op": "IsNull",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "binary refuses equality",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 175,
+            "column": "photo",
+            "op": "Equals",
+            "value": "x",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "bool scalar via in",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 176,
+            "column": "active",
+            "op": "In",
+            "value": "t, f",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "groups nest, negate and raw",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "group",
+            "id": 50,
+            "combinator": "Any",
+            "children": [
+              {
+                "type": "cond",
+                "id": 177,
+                "column": "qty",
+                "op": "Equals",
+                "value": "1",
+                "value2": "",
+                "caseSensitive": false,
+                "enabled": true
+              },
+              {
+                "type": "cond",
+                "id": 178,
+                "column": "qty",
+                "op": "Equals",
+                "value": "2",
+                "value2": "",
+                "caseSensitive": false,
+                "enabled": true
+              }
+            ],
+            "negated": false,
+            "enabled": true
+          },
+          {
+            "type": "group",
+            "id": 51,
+            "combinator": "All",
+            "children": [
+              {
+                "type": "cond",
+                "id": 179,
+                "column": "name",
+                "op": "Equals",
+                "value": "x",
+                "value2": "",
+                "caseSensitive": false,
+                "enabled": true
+              }
+            ],
+            "negated": true,
+            "enabled": true
+          },
+          {
+            "type": "raw",
+            "id": 52,
+            "sql": "length(name) > 3;",
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "any root",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "Any",
+        "children": [
+          {
+            "type": "cond",
+            "id": 180,
+            "column": "qty",
+            "op": "IsNull",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "group",
+            "id": 50,
+            "combinator": "Any",
+            "children": [
+              {
+                "type": "cond",
+                "id": 177,
+                "column": "qty",
+                "op": "Equals",
+                "value": "1",
+                "value2": "",
+                "caseSensitive": false,
+                "enabled": true
+              },
+              {
+                "type": "cond",
+                "id": 178,
+                "column": "qty",
+                "op": "Equals",
+                "value": "2",
+                "value2": "",
+                "caseSensitive": false,
+                "enabled": true
+              }
+            ],
+            "negated": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "negated root",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 181,
+            "column": "qty",
+            "op": "IsNull",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 182,
+            "column": "name",
+            "op": "IsNull",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": true,
+        "enabled": true
+      }
+    },
+    {
+      "name": "single child group",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "group",
+            "id": 184,
+            "combinator": "All",
+            "children": [
+              {
+                "type": "cond",
+                "id": 183,
+                "column": "qty",
+                "op": "IsNull",
+                "value": "",
+                "value2": "",
+                "caseSensitive": false,
+                "enabled": true
+              }
+            ],
+            "negated": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 185,
+            "column": "name",
+            "op": "IsNull",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "disabled group and raw",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "group",
+            "id": 187,
+            "combinator": "All",
+            "children": [
+              {
+                "type": "cond",
+                "id": 186,
+                "column": "qty",
+                "op": "IsNull",
+                "value": "",
+                "value2": "",
+                "caseSensitive": false,
+                "enabled": true
+              }
+            ],
+            "negated": false,
+            "enabled": false
+          },
+          {
+            "type": "raw",
+            "id": 188,
+            "sql": "x",
+            "enabled": false
+          },
+          {
+            "type": "cond",
+            "id": 189,
+            "column": "name",
+            "op": "IsNull",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "problems per node",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 190,
+            "column": "name",
+            "op": "Equals",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 191,
+            "column": "gone",
+            "op": "IsNull",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 192,
+            "column": "born",
+            "op": "Equals",
+            "value": "someday",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 193,
+            "column": "name",
+            "op": "IsNull",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "empty column name",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 194,
+            "column": "",
+            "op": "IsNull",
+            "value": "",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "operator not for kind",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 195,
+            "column": "active",
+            "op": "Contains",
+            "value": "x",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "blank raw",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "raw",
+            "id": 196,
+            "sql": "  ;  ",
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "raw question mark alone",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "raw",
+            "id": 9,
+            "sql": "payload ? 'key'",
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "raw question mark with values",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "raw",
+            "id": 9,
+            "sql": "payload ? 'key'",
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 197,
+            "column": "qty",
+            "op": "Equals",
+            "value": "1",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "raw question mark in string",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "raw",
+            "id": 10,
+            "sql": "name = 'why?'",
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 198,
+            "column": "qty",
+            "op": "Equals",
+            "value": "1",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "raw question mark nested",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "group",
+            "id": 199,
+            "combinator": "All",
+            "children": [
+              {
+                "type": "raw",
+                "id": 11,
+                "sql": "a ? b",
+                "enabled": true
+              }
+            ],
+            "negated": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 200,
+            "column": "qty",
+            "op": "Equals",
+            "value": "1",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "raw question mark mysql",
+      "dialect": "MySQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "raw",
+            "id": 12,
+            "sql": "x = ?",
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 201,
+            "column": "qty",
+            "op": "Equals",
+            "value": "1",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    },
+    {
+      "name": "number formats",
+      "dialect": "PostgreSQL",
+      "root": {
+        "type": "group",
+        "id": 0,
+        "combinator": "All",
+        "children": [
+          {
+            "type": "cond",
+            "id": 202,
+            "column": "qty",
+            "op": "Equals",
+            "value": "1_000",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 203,
+            "column": "total",
+            "op": "Equals",
+            "value": "1e-3",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          },
+          {
+            "type": "cond",
+            "id": 204,
+            "column": "total",
+            "op": "Equals",
+            "value": "-0.0",
+            "value2": "",
+            "caseSensitive": false,
+            "enabled": true
+          }
+        ],
+        "negated": false,
+        "enabled": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,1666 @@
+{
+    "subject": "chart-profile",
+    "cases": [
+        {
+            "name": "text columns holding numbers dates or categories",
+            "output": [
+                {
+                    "index": 0,
+                    "name": "n",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": 1.5,
+                    "max": 2.0,
+                    "unique": true
+                },
+                {
+                    "index": 1,
+                    "name": "d",
+                    "typeName": "",
+                    "kind": "Temporal",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": 1.7040672E12,
+                    "max": 1.7041536E12,
+                    "unique": false
+                },
+                {
+                    "index": 2,
+                    "name": "c",
+                    "typeName": "",
+                    "kind": "Category",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                }
+            ]
+        },
+        {
+            "name": "kind by JDBC type with numeric values",
+            "output": [
+                {
+                    "index": 0,
+                    "name": "tinyint",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": 1.0,
+                    "max": 3.0,
+                    "unique": true
+                },
+                {
+                    "index": 1,
+                    "name": "smallint",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": 1.0,
+                    "max": 3.0,
+                    "unique": true
+                },
+                {
+                    "index": 2,
+                    "name": "integer",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": 1.0,
+                    "max": 3.0,
+                    "unique": true
+                },
+                {
+                    "index": 3,
+                    "name": "bigint",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": 1.0,
+                    "max": 3.0,
+                    "unique": true
+                },
+                {
+                    "index": 4,
+                    "name": "real",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": 1.0,
+                    "max": 3.0,
+                    "unique": true
+                },
+                {
+                    "index": 5,
+                    "name": "float",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": 1.0,
+                    "max": 3.0,
+                    "unique": true
+                },
+                {
+                    "index": 6,
+                    "name": "double",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": 1.0,
+                    "max": 3.0,
+                    "unique": true
+                },
+                {
+                    "index": 7,
+                    "name": "numeric",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": 1.0,
+                    "max": 3.0,
+                    "unique": true
+                },
+                {
+                    "index": 8,
+                    "name": "decimal",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": 1.0,
+                    "max": 3.0,
+                    "unique": true
+                },
+                {
+                    "index": 9,
+                    "name": "date",
+                    "typeName": "",
+                    "kind": "Temporal",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 10,
+                    "name": "timestamp",
+                    "typeName": "",
+                    "kind": "Temporal",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 11,
+                    "name": "timestamp_with_timezone",
+                    "typeName": "",
+                    "kind": "Temporal",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 12,
+                    "name": "boolean",
+                    "typeName": "",
+                    "kind": "Category",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 13,
+                    "name": "bit",
+                    "typeName": "",
+                    "kind": "Category",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 14,
+                    "name": "time",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 15,
+                    "name": "time_with_timezone",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 16,
+                    "name": "array",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 17,
+                    "name": "struct",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 18,
+                    "name": "java_object",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 19,
+                    "name": "clob",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 20,
+                    "name": "nclob",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 21,
+                    "name": "sqlxml",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 22,
+                    "name": "blob",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 23,
+                    "name": "binary",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 24,
+                    "name": "varbinary",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 25,
+                    "name": "longvarbinary",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 26,
+                    "name": "char",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": 1.0,
+                    "max": 3.0,
+                    "unique": true
+                },
+                {
+                    "index": 27,
+                    "name": "varchar",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": 1.0,
+                    "max": 3.0,
+                    "unique": true
+                },
+                {
+                    "index": 28,
+                    "name": "longvarchar",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": 1.0,
+                    "max": 3.0,
+                    "unique": true
+                },
+                {
+                    "index": 29,
+                    "name": "other",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": 1.0,
+                    "max": 3.0,
+                    "unique": true
+                },
+                {
+                    "index": 30,
+                    "name": "nvarchar",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": 1.0,
+                    "max": 3.0,
+                    "unique": true
+                },
+                {
+                    "index": 31,
+                    "name": "null",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": 1.0,
+                    "max": 3.0,
+                    "unique": true
+                }
+            ]
+        },
+        {
+            "name": "kind by JDBC type with date values",
+            "output": [
+                {
+                    "index": 0,
+                    "name": "tinyint",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 1,
+                    "name": "smallint",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 2,
+                    "name": "integer",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 3,
+                    "name": "bigint",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 4,
+                    "name": "real",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 5,
+                    "name": "float",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 6,
+                    "name": "double",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 7,
+                    "name": "numeric",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 8,
+                    "name": "decimal",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 9,
+                    "name": "date",
+                    "typeName": "",
+                    "kind": "Temporal",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": 1.6725312E12,
+                    "max": 1.7145576E12,
+                    "unique": true
+                },
+                {
+                    "index": 10,
+                    "name": "timestamp",
+                    "typeName": "",
+                    "kind": "Temporal",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": 1.6725312E12,
+                    "max": 1.7145576E12,
+                    "unique": true
+                },
+                {
+                    "index": 11,
+                    "name": "timestamp_with_timezone",
+                    "typeName": "",
+                    "kind": "Temporal",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": 1.6725312E12,
+                    "max": 1.7145576E12,
+                    "unique": true
+                },
+                {
+                    "index": 12,
+                    "name": "boolean",
+                    "typeName": "",
+                    "kind": "Category",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 13,
+                    "name": "bit",
+                    "typeName": "",
+                    "kind": "Category",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 14,
+                    "name": "time",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 15,
+                    "name": "time_with_timezone",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 16,
+                    "name": "array",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 17,
+                    "name": "struct",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 18,
+                    "name": "java_object",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 19,
+                    "name": "clob",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 20,
+                    "name": "nclob",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 21,
+                    "name": "sqlxml",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 22,
+                    "name": "blob",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 23,
+                    "name": "binary",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 24,
+                    "name": "varbinary",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 25,
+                    "name": "longvarbinary",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 26,
+                    "name": "char",
+                    "typeName": "",
+                    "kind": "Temporal",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": 1.6725312E12,
+                    "max": 1.7145576E12,
+                    "unique": true
+                },
+                {
+                    "index": 27,
+                    "name": "varchar",
+                    "typeName": "",
+                    "kind": "Temporal",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": 1.6725312E12,
+                    "max": 1.7145576E12,
+                    "unique": true
+                },
+                {
+                    "index": 28,
+                    "name": "longvarchar",
+                    "typeName": "",
+                    "kind": "Temporal",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": 1.6725312E12,
+                    "max": 1.7145576E12,
+                    "unique": true
+                },
+                {
+                    "index": 29,
+                    "name": "other",
+                    "typeName": "",
+                    "kind": "Temporal",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": 1.6725312E12,
+                    "max": 1.7145576E12,
+                    "unique": true
+                },
+                {
+                    "index": 30,
+                    "name": "nvarchar",
+                    "typeName": "",
+                    "kind": "Temporal",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": 1.6725312E12,
+                    "max": 1.7145576E12,
+                    "unique": true
+                },
+                {
+                    "index": 31,
+                    "name": "null",
+                    "typeName": "",
+                    "kind": "Temporal",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 3,
+                    "min": 1.6725312E12,
+                    "max": 1.7145576E12,
+                    "unique": true
+                }
+            ]
+        },
+        {
+            "name": "kind by JDBC type with words",
+            "output": [
+                {
+                    "index": 0,
+                    "name": "tinyint",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 1,
+                    "name": "smallint",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 2,
+                    "name": "integer",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 3,
+                    "name": "bigint",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 4,
+                    "name": "real",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 5,
+                    "name": "float",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 6,
+                    "name": "double",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 7,
+                    "name": "numeric",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 8,
+                    "name": "decimal",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 9,
+                    "name": "date",
+                    "typeName": "",
+                    "kind": "Temporal",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 10,
+                    "name": "timestamp",
+                    "typeName": "",
+                    "kind": "Temporal",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 11,
+                    "name": "timestamp_with_timezone",
+                    "typeName": "",
+                    "kind": "Temporal",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 12,
+                    "name": "boolean",
+                    "typeName": "",
+                    "kind": "Category",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 13,
+                    "name": "bit",
+                    "typeName": "",
+                    "kind": "Category",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 14,
+                    "name": "time",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 15,
+                    "name": "time_with_timezone",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 16,
+                    "name": "array",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 17,
+                    "name": "struct",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 18,
+                    "name": "java_object",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 19,
+                    "name": "clob",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 20,
+                    "name": "nclob",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 21,
+                    "name": "sqlxml",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 22,
+                    "name": "blob",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 23,
+                    "name": "binary",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 24,
+                    "name": "varbinary",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 25,
+                    "name": "longvarbinary",
+                    "typeName": "",
+                    "kind": "Other",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 26,
+                    "name": "char",
+                    "typeName": "",
+                    "kind": "Category",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 27,
+                    "name": "varchar",
+                    "typeName": "",
+                    "kind": "Category",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 28,
+                    "name": "longvarchar",
+                    "typeName": "",
+                    "kind": "Category",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 29,
+                    "name": "other",
+                    "typeName": "",
+                    "kind": "Category",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 30,
+                    "name": "nvarchar",
+                    "typeName": "",
+                    "kind": "Category",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                },
+                {
+                    "index": 31,
+                    "name": "null",
+                    "typeName": "",
+                    "kind": "Category",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                }
+            ]
+        },
+        {
+            "name": "no rows",
+            "output": [
+                {
+                    "index": 0,
+                    "name": "a",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 0,
+                    "nulls": 0,
+                    "rows": 0,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 1,
+                    "name": "b",
+                    "typeName": "",
+                    "kind": "Category",
+                    "distinct": 0,
+                    "nulls": 0,
+                    "rows": 0,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 2,
+                    "name": "c",
+                    "typeName": "",
+                    "kind": "Temporal",
+                    "distinct": 0,
+                    "nulls": 0,
+                    "rows": 0,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                }
+            ]
+        },
+        {
+            "name": "only nulls",
+            "output": [
+                {
+                    "index": 0,
+                    "name": "a",
+                    "typeName": "",
+                    "kind": "Category",
+                    "distinct": 0,
+                    "nulls": 2,
+                    "rows": 2,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 1,
+                    "name": "b",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 0,
+                    "nulls": 2,
+                    "rows": 2,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                }
+            ]
+        },
+        {
+            "name": "numeric column with unparsable values",
+            "output": [
+                {
+                    "index": 0,
+                    "name": "n",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 5,
+                    "nulls": 1,
+                    "rows": 6,
+                    "min": 1.0,
+                    "max": 5.0,
+                    "unique": true
+                }
+            ]
+        },
+        {
+            "name": "numeric column with no value that parses",
+            "output": [
+                {
+                    "index": 0,
+                    "name": "n",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 2,
+                    "nulls": 0,
+                    "rows": 2,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                }
+            ]
+        },
+        {
+            "name": "temporal column with offsets and unparsable values",
+            "output": [
+                {
+                    "index": 0,
+                    "name": "t",
+                    "typeName": "",
+                    "kind": "Temporal",
+                    "distinct": 4,
+                    "nulls": 0,
+                    "rows": 4,
+                    "min": 1.709514E12,
+                    "max": 1.7096832E12,
+                    "unique": true
+                }
+            ]
+        },
+        {
+            "name": "temporal column with no value that parses",
+            "output": [
+                {
+                    "index": 0,
+                    "name": "t",
+                    "typeName": "",
+                    "kind": "Temporal",
+                    "distinct": 1,
+                    "nulls": 0,
+                    "rows": 1,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                }
+            ]
+        },
+        {
+            "name": "ninety five percent of 20 sampled values decide numbers",
+            "output": [
+                {
+                    "index": 0,
+                    "name": "n",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 20,
+                    "nulls": 0,
+                    "rows": 20,
+                    "min": 0.0,
+                    "max": 18.0,
+                    "unique": true
+                }
+            ]
+        },
+        {
+            "name": "fewer than ninety five percent is a category",
+            "output": [
+                {
+                    "index": 0,
+                    "name": "n",
+                    "typeName": "",
+                    "kind": "Category",
+                    "distinct": 20,
+                    "nulls": 0,
+                    "rows": 20,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                }
+            ]
+        },
+        {
+            "name": "one sampled value needs one",
+            "output": [
+                {
+                    "index": 0,
+                    "name": "n",
+                    "typeName": "",
+                    "kind": "Category",
+                    "distinct": 1,
+                    "nulls": 0,
+                    "rows": 1,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                }
+            ]
+        },
+        {
+            "name": "one number is numeric",
+            "output": [
+                {
+                    "index": 0,
+                    "name": "n",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 1,
+                    "nulls": 0,
+                    "rows": 1,
+                    "min": 7.0,
+                    "max": 7.0,
+                    "unique": true
+                }
+            ]
+        },
+        {
+            "name": "sample is the first 200 non null values",
+            "output": [
+                {
+                    "index": 0,
+                    "name": "n",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 201,
+                    "nulls": 0,
+                    "rows": 300,
+                    "min": 0.0,
+                    "max": 199.0,
+                    "unique": false
+                },
+                {
+                    "index": 1,
+                    "name": "m",
+                    "typeName": "",
+                    "kind": "Category",
+                    "distinct": 101,
+                    "nulls": 100,
+                    "rows": 300,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                }
+            ]
+        },
+        {
+            "name": "numbers then dates mixed is a category",
+            "output": [
+                {
+                    "index": 0,
+                    "name": "v",
+                    "typeName": "",
+                    "kind": "Category",
+                    "distinct": 4,
+                    "nulls": 0,
+                    "rows": 4,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                }
+            ]
+        },
+        {
+            "name": "dates need the guess too",
+            "output": [
+                {
+                    "index": 0,
+                    "name": "v",
+                    "typeName": "",
+                    "kind": "Temporal",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": 1.7040672E12,
+                    "max": 1.7042436E12,
+                    "unique": true
+                }
+            ]
+        },
+        {
+            "name": "whitespace and empty strings",
+            "output": [
+                {
+                    "index": 0,
+                    "name": "n",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 3,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": 5.0,
+                    "max": 7.0,
+                    "unique": true
+                },
+                {
+                    "index": 1,
+                    "name": "e",
+                    "typeName": "",
+                    "kind": "Category",
+                    "distinct": 1,
+                    "nulls": 0,
+                    "rows": 3,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                }
+            ]
+        },
+        {
+            "name": "distinct counts and unique",
+            "output": [
+                {
+                    "index": 0,
+                    "name": "u",
+                    "typeName": "",
+                    "kind": "Category",
+                    "distinct": 3,
+                    "nulls": 1,
+                    "rows": 4,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                },
+                {
+                    "index": 1,
+                    "name": "d",
+                    "typeName": "",
+                    "kind": "Category",
+                    "distinct": 2,
+                    "nulls": 1,
+                    "rows": 4,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                }
+            ]
+        },
+        {
+            "name": "distinct stops at the cap",
+            "output": [
+                {
+                    "index": 0,
+                    "name": "n",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 1000,
+                    "nulls": 0,
+                    "rows": 1500,
+                    "min": 0.0,
+                    "max": 1499.0,
+                    "unique": false
+                }
+            ]
+        },
+        {
+            "name": "unique at the cap is not unique",
+            "output": [
+                {
+                    "index": 0,
+                    "name": "n",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 1000,
+                    "nulls": 0,
+                    "rows": 1000,
+                    "min": 0.0,
+                    "max": 999.0,
+                    "unique": false
+                }
+            ]
+        },
+        {
+            "name": "unique just under the cap",
+            "output": [
+                {
+                    "index": 0,
+                    "name": "n",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 999,
+                    "nulls": 0,
+                    "rows": 999,
+                    "min": 0.0,
+                    "max": 998.0,
+                    "unique": true
+                }
+            ]
+        },
+        {
+            "name": "many repeated values",
+            "output": [
+                {
+                    "index": 0,
+                    "name": "n",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 7,
+                    "nulls": 0,
+                    "rows": 5000,
+                    "min": 0.0,
+                    "max": 6.0,
+                    "unique": false
+                },
+                {
+                    "index": 1,
+                    "name": "s",
+                    "typeName": "",
+                    "kind": "Category",
+                    "distinct": 13,
+                    "nulls": 0,
+                    "rows": 5000,
+                    "min": null,
+                    "max": null,
+                    "unique": false
+                }
+            ]
+        },
+        {
+            "name": "negative and decimal numbers",
+            "output": [
+                {
+                    "index": 0,
+                    "name": "n",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 4,
+                    "nulls": 0,
+                    "rows": 4,
+                    "min": -1000.0,
+                    "max": 200.0,
+                    "unique": true
+                }
+            ]
+        },
+        {
+            "name": "column names and type names are kept",
+            "output": [
+                {
+                    "index": 0,
+                    "name": "Total Sales",
+                    "typeName": "",
+                    "kind": "Numeric",
+                    "distinct": 1,
+                    "nulls": 0,
+                    "rows": 1,
+                    "min": 1.0,
+                    "max": 1.0,
+                    "unique": true
+                },
+                {
+                    "index": 1,
+                    "name": "ünï",
+                    "typeName": "",
+                    "kind": "Category",
+                    "distinct": 1,
+                    "nulls": 0,
+                    "rows": 1,
+                    "min": null,
+                    "max": null,
+                    "unique": true
+                }
+            ]
+        }
+    ]
+}

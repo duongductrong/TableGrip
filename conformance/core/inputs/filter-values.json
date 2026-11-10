@@ -1,0 +1,683 @@
+{
+  "subject": "filter-values",
+  "cases": [
+    {
+      "name": "kind 'int4'",
+      "op": "valueKind",
+      "typeName": "int4"
+    },
+    {
+      "name": "kind 'DECIMAL(10,2)'",
+      "op": "valueKind",
+      "typeName": "DECIMAL(10,2)"
+    },
+    {
+      "name": "kind 'INT UNSIGNED'",
+      "op": "valueKind",
+      "typeName": "INT UNSIGNED"
+    },
+    {
+      "name": "kind 'double precision'",
+      "op": "valueKind",
+      "typeName": "double precision"
+    },
+    {
+      "name": "kind 'bool'",
+      "op": "valueKind",
+      "typeName": "bool"
+    },
+    {
+      "name": "kind 'timestamptz'",
+      "op": "valueKind",
+      "typeName": "timestamptz"
+    },
+    {
+      "name": "kind 'timestamp without time zone'",
+      "op": "valueKind",
+      "typeName": "timestamp without time zone"
+    },
+    {
+      "name": "kind 'DATETIME'",
+      "op": "valueKind",
+      "typeName": "DATETIME"
+    },
+    {
+      "name": "kind 'date'",
+      "op": "valueKind",
+      "typeName": "date"
+    },
+    {
+      "name": "kind 'time with time zone'",
+      "op": "valueKind",
+      "typeName": "time with time zone"
+    },
+    {
+      "name": "kind 'character varying'",
+      "op": "valueKind",
+      "typeName": "character varying"
+    },
+    {
+      "name": "kind 'LONGTEXT'",
+      "op": "valueKind",
+      "typeName": "LONGTEXT"
+    },
+    {
+      "name": "kind ''",
+      "op": "valueKind",
+      "typeName": ""
+    },
+    {
+      "name": "kind 'uuid'",
+      "op": "valueKind",
+      "typeName": "uuid"
+    },
+    {
+      "name": "kind 'jsonb'",
+      "op": "valueKind",
+      "typeName": "jsonb"
+    },
+    {
+      "name": "kind 'bytea'",
+      "op": "valueKind",
+      "typeName": "bytea"
+    },
+    {
+      "name": "kind 'MEDIUMBLOB'",
+      "op": "valueKind",
+      "typeName": "MEDIUMBLOB"
+    },
+    {
+      "name": "kind 'inet'",
+      "op": "valueKind",
+      "typeName": "inet"
+    },
+    {
+      "name": "kind 'mood'",
+      "op": "valueKind",
+      "typeName": "mood"
+    },
+    {
+      "name": "kind 'int zerofill'",
+      "op": "valueKind",
+      "typeName": "int zerofill"
+    },
+    {
+      "name": "kind 'serial8'",
+      "op": "valueKind",
+      "typeName": "serial8"
+    },
+    {
+      "name": "kind 'float4'",
+      "op": "valueKind",
+      "typeName": "float4"
+    },
+    {
+      "name": "kind 'uniqueidentifier'",
+      "op": "valueKind",
+      "typeName": "uniqueidentifier"
+    },
+    {
+      "name": "kind 'timetz'",
+      "op": "valueKind",
+      "typeName": "timetz"
+    },
+    {
+      "name": "kind 'nvarchar(max)'",
+      "op": "valueKind",
+      "typeName": "nvarchar(max)"
+    },
+    {
+      "name": "kind 'clob'",
+      "op": "valueKind",
+      "typeName": "clob"
+    },
+    {
+      "name": "kind 'varbit'",
+      "op": "valueKind",
+      "typeName": "varbit"
+    },
+    {
+      "name": "kind 'integer[]'",
+      "op": "valueKind",
+      "typeName": "integer[]"
+    },
+    {
+      "name": "kind 'citext'",
+      "op": "valueKind",
+      "typeName": "citext"
+    },
+    {
+      "name": "kind 'set'",
+      "op": "valueKind",
+      "typeName": "set"
+    },
+    {
+      "name": "kind 'year'",
+      "op": "valueKind",
+      "typeName": "year"
+    },
+    {
+      "name": "kind 'time without time zone'",
+      "op": "valueKind",
+      "typeName": "time without time zone"
+    },
+    {
+      "name": "kind 'Bit varying'",
+      "op": "valueKind",
+      "typeName": "Bit varying"
+    },
+    {
+      "name": "kind tinyint bit size 1",
+      "op": "valueKind",
+      "typeName": "TINYINT",
+      "jdbcType": -7,
+      "size": 1
+    },
+    {
+      "name": "kind bit size 8",
+      "op": "valueKind",
+      "typeName": "bit",
+      "jdbcType": -7,
+      "size": 8
+    },
+    {
+      "name": "kind bit no size",
+      "op": "valueKind",
+      "typeName": "weird",
+      "jdbcType": -7
+    },
+    {
+      "name": "kind array",
+      "op": "valueKind",
+      "typeName": "_int4",
+      "jdbcType": 2003
+    },
+    {
+      "name": "kind unknown bigint",
+      "op": "valueKind",
+      "typeName": "whatever",
+      "jdbcType": -5
+    },
+    {
+      "name": "kind unknown boolean",
+      "op": "valueKind",
+      "typeName": "x",
+      "jdbcType": 16
+    },
+    {
+      "name": "kind unknown jdbc 12",
+      "op": "valueKind",
+      "typeName": "zzz",
+      "jdbcType": 12
+    },
+    {
+      "name": "kind unknown jdbc 91",
+      "op": "valueKind",
+      "typeName": "zzz",
+      "jdbcType": 91
+    },
+    {
+      "name": "kind unknown jdbc 92",
+      "op": "valueKind",
+      "typeName": "zzz",
+      "jdbcType": 92
+    },
+    {
+      "name": "kind unknown jdbc 93",
+      "op": "valueKind",
+      "typeName": "zzz",
+      "jdbcType": 93
+    },
+    {
+      "name": "kind unknown jdbc 2004",
+      "op": "valueKind",
+      "typeName": "zzz",
+      "jdbcType": 2004
+    },
+    {
+      "name": "kind unknown jdbc 2",
+      "op": "valueKind",
+      "typeName": "zzz",
+      "jdbcType": 2
+    },
+    {
+      "name": "kind unknown jdbc 2014",
+      "op": "valueKind",
+      "typeName": "zzz",
+      "jdbcType": 2014
+    },
+    {
+      "name": "kind unknown jdbc 1111",
+      "op": "valueKind",
+      "typeName": "zzz",
+      "jdbcType": 1111
+    },
+    {
+      "name": "temporal '2026-01-05'",
+      "op": "temporal",
+      "text": "2026-01-05"
+    },
+    {
+      "name": "temporal '2026/01/05'",
+      "op": "temporal",
+      "text": "2026/01/05"
+    },
+    {
+      "name": "temporal '2026-01-05 09:30'",
+      "op": "temporal",
+      "text": "2026-01-05 09:30"
+    },
+    {
+      "name": "temporal '2026-01-05T09:30:15'",
+      "op": "temporal",
+      "text": "2026-01-05T09:30:15"
+    },
+    {
+      "name": "temporal '2026-01-05 09:30:00+07'",
+      "op": "temporal",
+      "text": "2026-01-05 09:30:00+07"
+    },
+    {
+      "name": "temporal '2026-01-05T09:30:00Z'",
+      "op": "temporal",
+      "text": "2026-01-05T09:30:00Z"
+    },
+    {
+      "name": "temporal '17:05'",
+      "op": "temporal",
+      "text": "17:05"
+    },
+    {
+      "name": "temporal 'Today'",
+      "op": "temporal",
+      "text": "Today"
+    },
+    {
+      "name": "temporal 'tomorrow'",
+      "op": "temporal",
+      "text": "tomorrow"
+    },
+    {
+      "name": "temporal 'today - 2w'",
+      "op": "temporal",
+      "text": "today - 2w"
+    },
+    {
+      "name": "temporal '-1mo'",
+      "op": "temporal",
+      "text": "-1mo"
+    },
+    {
+      "name": "temporal '-30min'",
+      "op": "temporal",
+      "text": "-30min"
+    },
+    {
+      "name": "temporal 'now-1d'",
+      "op": "temporal",
+      "text": "now-1d"
+    },
+    {
+      "name": "temporal '3 hours ago'",
+      "op": "temporal",
+      "text": "3 hours ago"
+    },
+    {
+      "name": "temporal '1 year ago'",
+      "op": "temporal",
+      "text": "1 year ago"
+    },
+    {
+      "name": "temporal 'today+6h'",
+      "op": "temporal",
+      "text": "today+6h"
+    },
+    {
+      "name": "temporal '2 fortnights ago'",
+      "op": "temporal",
+      "text": "2 fortnights ago"
+    },
+    {
+      "name": "temporal 'next tuesday'",
+      "op": "temporal",
+      "text": "next tuesday"
+    },
+    {
+      "name": "temporal '2026-13-01'",
+      "op": "temporal",
+      "text": "2026-13-01"
+    },
+    {
+      "name": "temporal ''",
+      "op": "temporal",
+      "text": ""
+    },
+    {
+      "name": "temporal '  yesterday '",
+      "op": "temporal",
+      "text": "  yesterday "
+    },
+    {
+      "name": "temporal 'now'",
+      "op": "temporal",
+      "text": "now"
+    },
+    {
+      "name": "temporal '+1d -2h'",
+      "op": "temporal",
+      "text": "+1d -2h"
+    },
+    {
+      "name": "temporal '+90s'",
+      "op": "temporal",
+      "text": "+90s"
+    },
+    {
+      "name": "temporal '2026-01-31 + 1mo'",
+      "op": "temporal",
+      "text": "2026-01-31 + 1mo"
+    },
+    {
+      "name": "temporal '2024-02-29'",
+      "op": "temporal",
+      "text": "2024-02-29"
+    },
+    {
+      "name": "temporal '2023-02-29'",
+      "op": "temporal",
+      "text": "2023-02-29"
+    },
+    {
+      "name": "temporal '13:45:30.123456789'",
+      "op": "temporal",
+      "text": "13:45:30.123456789"
+    },
+    {
+      "name": "temporal '13:45:30.'",
+      "op": "temporal",
+      "text": "13:45:30."
+    },
+    {
+      "name": "temporal '25:00'",
+      "op": "temporal",
+      "text": "25:00"
+    },
+    {
+      "name": "temporal '2026-01-05 09:30:00.5-0330'",
+      "op": "temporal",
+      "text": "2026-01-05 09:30:00.5-0330"
+    },
+    {
+      "name": "temporal '2026-01-05 09:30+25'",
+      "op": "temporal",
+      "text": "2026-01-05 09:30+25"
+    },
+    {
+      "name": "temporal '2026-01-05 09:30:00 +07:00'",
+      "op": "temporal",
+      "text": "2026-01-05 09:30:00 +07:00"
+    },
+    {
+      "name": "temporal '5 days ago'",
+      "op": "temporal",
+      "text": "5 days ago"
+    },
+    {
+      "name": "temporal '10 min ago'",
+      "op": "temporal",
+      "text": "10 min ago"
+    },
+    {
+      "name": "temporal 'today -1y'",
+      "op": "temporal",
+      "text": "today -1y"
+    },
+    {
+      "name": "temporal 'nowhere'",
+      "op": "temporal",
+      "text": "nowhere"
+    },
+    {
+      "name": "temporal '2026-1-5'",
+      "op": "temporal",
+      "text": "2026-1-5"
+    },
+    {
+      "name": "temporal '12:5'",
+      "op": "temporal",
+      "text": "12:5"
+    },
+    {
+      "name": "temporal 'now - 2 h'",
+      "op": "temporal",
+      "text": "now - 2 h"
+    },
+    {
+      "name": "temporal offset into zone",
+      "op": "temporal",
+      "text": "2026-01-05 09:30:00+07",
+      "zone": "+02:00"
+    },
+    {
+      "name": "temporal relative ignores zone",
+      "op": "temporal",
+      "text": "now",
+      "now": "2026-03-01T00:00:59",
+      "zone": "+05:00"
+    },
+    {
+      "name": "temporal month end clamps",
+      "op": "temporal",
+      "text": "-1mo",
+      "now": "2026-03-31T10:00"
+    },
+    {
+      "name": "temporal leap year",
+      "op": "temporal",
+      "text": "1 year ago",
+      "now": "2024-02-29T10:00"
+    },
+    {
+      "name": "list ' a ,b c,\\nNULL, \\'\\', \"x,y\" ,'",
+      "op": "parseList",
+      "text": " a ,b c,\nNULL, '', \"x,y\" ,"
+    },
+    {
+      "name": "list ''",
+      "op": "parseList",
+      "text": ""
+    },
+    {
+      "name": "list '\\'it\\'\\'s\\', \"a\"\"b\"'",
+      "op": "parseList",
+      "text": "'it''s', \"a\"\"b\""
+    },
+    {
+      "name": "list \"x 'y' z, 'unterminated\"",
+      "op": "parseList",
+      "text": "x 'y' z, 'unterminated"
+    },
+    {
+      "name": "list \"null,NULL,Null,'null'\"",
+      "op": "parseList",
+      "text": "null,NULL,Null,'null'"
+    },
+    {
+      "name": "list ',,,'",
+      "op": "parseList",
+      "text": ",,,"
+    },
+    {
+      "name": "list 'a\\nb\\n\\nc'",
+      "op": "parseList",
+      "text": "a\nb\n\nc"
+    },
+    {
+      "name": "number ' 1_234.5 '",
+      "op": "number",
+      "text": " 1_234.5 "
+    },
+    {
+      "name": "number '1e3'",
+      "op": "number",
+      "text": "1e3"
+    },
+    {
+      "name": "number '-0.50'",
+      "op": "number",
+      "text": "-0.50"
+    },
+    {
+      "name": "number ''",
+      "op": "number",
+      "text": ""
+    },
+    {
+      "name": "number 'abc'",
+      "op": "number",
+      "text": "abc"
+    },
+    {
+      "name": "number '1 000'",
+      "op": "number",
+      "text": "1 000"
+    },
+    {
+      "name": "number '+7'",
+      "op": "number",
+      "text": "+7"
+    },
+    {
+      "name": "number '.5'",
+      "op": "number",
+      "text": ".5"
+    },
+    {
+      "name": "uuid '6F1C2D3E-4A5B-4C6D-8E9F-A0B1C2D3E4F5'",
+      "op": "uuid",
+      "text": "6F1C2D3E-4A5B-4C6D-8E9F-A0B1C2D3E4F5"
+    },
+    {
+      "name": "uuid '{6f1c2d3e4a5b4c6d8e9fa0b1c2d3e4f5}'",
+      "op": "uuid",
+      "text": "{6f1c2d3e4a5b4c6d8e9fa0b1c2d3e4f5}"
+    },
+    {
+      "name": "uuid 'nope'",
+      "op": "uuid",
+      "text": "nope"
+    },
+    {
+      "name": "uuid ' 6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5 '",
+      "op": "uuid",
+      "text": " 6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5 "
+    },
+    {
+      "name": "boolean 't'",
+      "op": "boolean",
+      "text": "t"
+    },
+    {
+      "name": "boolean 'No'",
+      "op": "boolean",
+      "text": "No"
+    },
+    {
+      "name": "boolean 'ON'",
+      "op": "boolean",
+      "text": "ON"
+    },
+    {
+      "name": "boolean 'y'",
+      "op": "boolean",
+      "text": "y"
+    },
+    {
+      "name": "boolean 'maybe'",
+      "op": "boolean",
+      "text": "maybe"
+    },
+    {
+      "name": "boolean ' 1 '",
+      "op": "boolean",
+      "text": " 1 "
+    },
+    {
+      "name": "boolean ''",
+      "op": "boolean",
+      "text": ""
+    },
+    {
+      "name": "format DateTime 2026-01-05T09:30:00.5",
+      "op": "format",
+      "param": {
+        "type": "DateTime",
+        "value": "2026-01-05T09:30:00.5"
+      }
+    },
+    {
+      "name": "format DateTime 2026-01-05T09:30",
+      "op": "format",
+      "param": {
+        "type": "DateTime",
+        "value": "2026-01-05T09:30"
+      }
+    },
+    {
+      "name": "format Time 13:45:00.000001",
+      "op": "format",
+      "param": {
+        "type": "Time",
+        "value": "13:45:00.000001"
+      }
+    },
+    {
+      "name": "format Date 2026-01-05",
+      "op": "format",
+      "param": {
+        "type": "Date",
+        "value": "2026-01-05"
+      }
+    },
+    {
+      "name": "format Decimal 1E+3",
+      "op": "format",
+      "param": {
+        "type": "Decimal",
+        "value": "1E+3"
+      }
+    },
+    {
+      "name": "format Long -5",
+      "op": "format",
+      "param": {
+        "type": "Long",
+        "value": "-5"
+      }
+    },
+    {
+      "name": "format Uuid 6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5",
+      "op": "format",
+      "param": {
+        "type": "Uuid",
+        "value": "6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5"
+      }
+    },
+    {
+      "name": "format Bool true",
+      "op": "format",
+      "param": {
+        "type": "Bool",
+        "value": "true"
+      }
+    },
+    {
+      "name": "format Text x",
+      "op": "format",
+      "param": {
+        "type": "Text",
+        "value": "x"
+      }
+    }
+  ]
+}

@@ -1,0 +1,849 @@
+{
+  "subject": "projection",
+  "cases": [
+    {
+      "name": "no items",
+      "dialect": "PostgreSQL",
+      "items": [],
+      "distinct": false
+    },
+    {
+      "name": "every column unchanged",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 205,
+          "column": "id",
+          "function": "None",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        },
+        {
+          "type": "field",
+          "id": 206,
+          "column": "name",
+          "function": "None",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        },
+        {
+          "type": "field",
+          "id": 207,
+          "column": "total",
+          "function": "None",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        },
+        {
+          "type": "field",
+          "id": 208,
+          "column": "created_at",
+          "function": "None",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        },
+        {
+          "type": "field",
+          "id": 209,
+          "column": "photo",
+          "function": "None",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "subset and order",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 210,
+          "column": "name",
+          "function": "None",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        },
+        {
+          "type": "field",
+          "id": 211,
+          "column": "id",
+          "function": "None",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        },
+        {
+          "type": "field",
+          "id": 212,
+          "column": "total",
+          "function": "None",
+          "argument": "",
+          "alias": "",
+          "enabled": false
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "function default name",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 213,
+          "column": "id",
+          "function": "None",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        },
+        {
+          "type": "field",
+          "id": 214,
+          "column": "name",
+          "function": "Upper",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "alias renames plain column",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 215,
+          "column": "name",
+          "function": "None",
+          "argument": "",
+          "alias": "customer",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "round with alias",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 216,
+          "column": "total",
+          "function": "Round",
+          "argument": "2",
+          "alias": "t",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "round mysql default",
+      "dialect": "MySQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 217,
+          "column": "total",
+          "function": "Round",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "substring",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 218,
+          "column": "name",
+          "function": "Substring",
+          "argument": "2, 3",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "coalesce text",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 219,
+          "column": "name",
+          "function": "Coalesce",
+          "argument": "it's",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "coalesce text keeps spaces",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 220,
+          "column": "name",
+          "function": "Coalesce",
+          "argument": "  x ",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "coalesce number",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 221,
+          "column": "total",
+          "function": "Coalesce",
+          "argument": "-1.5",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "coalesce number empty",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 222,
+          "column": "total",
+          "function": "Coalesce",
+          "argument": " ",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "coalesce date",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 223,
+          "column": "created_at",
+          "function": "Coalesce",
+          "argument": " 2026-01-01 ",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "coalesce date empty",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 224,
+          "column": "created_at",
+          "function": "Coalesce",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "truncate month",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 225,
+          "column": "created_at",
+          "function": "Truncate",
+          "argument": "Month",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "truncate default day",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 226,
+          "column": "created_at",
+          "function": "Truncate",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "bad round",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 227,
+          "column": "total",
+          "function": "Round",
+          "argument": "eleven",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "round out of range",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 228,
+          "column": "total",
+          "function": "Round",
+          "argument": "11",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "bad substring start",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 229,
+          "column": "name",
+          "function": "Substring",
+          "argument": "0, 3",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "substring one part",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 230,
+          "column": "name",
+          "function": "Substring",
+          "argument": "3",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "bad coalesce number",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 231,
+          "column": "total",
+          "function": "Coalesce",
+          "argument": "n/a",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "bad truncate",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 232,
+          "column": "created_at",
+          "function": "Truncate",
+          "argument": "decade",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "upper on number",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 233,
+          "column": "total",
+          "function": "Upper",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "as text on binary",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 234,
+          "column": "photo",
+          "function": "AsText",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "missing column",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 235,
+          "column": "missing",
+          "function": "None",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "empty column",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 236,
+          "column": "",
+          "function": "None",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "length mysql",
+      "dialect": "MySQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 237,
+          "column": "name",
+          "function": "Length",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "length sql server",
+      "dialect": "SqlServer",
+      "items": [
+        {
+          "type": "field",
+          "id": 238,
+          "column": "name",
+          "function": "Length",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "substring sqlite",
+      "dialect": "SQLite",
+      "items": [
+        {
+          "type": "field",
+          "id": 239,
+          "column": "name",
+          "function": "Substring",
+          "argument": "1,2",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "truncate on generic",
+      "dialect": "H2",
+      "items": [
+        {
+          "type": "field",
+          "id": 240,
+          "column": "created_at",
+          "function": "Truncate",
+          "argument": "day",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "clickhouse functions",
+      "dialect": "ClickHouse",
+      "items": [
+        {
+          "type": "field",
+          "id": 241,
+          "column": "name",
+          "function": "Upper",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        },
+        {
+          "type": "field",
+          "id": 242,
+          "column": "name",
+          "function": "Trim",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        },
+        {
+          "type": "field",
+          "id": 243,
+          "column": "total",
+          "function": "Ceil",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        },
+        {
+          "type": "field",
+          "id": 244,
+          "column": "created_at",
+          "function": "Truncate",
+          "argument": "week",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "expression default name",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "expr",
+          "id": 245,
+          "sql": "total  *\n2;",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "expression alias",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "expr",
+          "id": 246,
+          "sql": "total * 2",
+          "alias": "double",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "blank expression",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "expr",
+          "id": 247,
+          "sql": " ",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "long expression name",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "expr",
+          "id": 248,
+          "sql": "coalesce(name, '') || ' ' || coalesce(name, '') || ' ' || coalesce(name, '') || ' ' || name",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "name clash",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 249,
+          "column": "name",
+          "function": "None",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        },
+        {
+          "type": "field",
+          "id": 250,
+          "column": "id",
+          "function": "None",
+          "argument": "",
+          "alias": "NAME",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "clash after error",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 251,
+          "column": "total",
+          "function": "Upper",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        },
+        {
+          "type": "field",
+          "id": 252,
+          "column": "name",
+          "function": "None",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        },
+        {
+          "type": "field",
+          "id": 253,
+          "column": "name",
+          "function": "None",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "everything hidden",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 254,
+          "column": "id",
+          "function": "None",
+          "argument": "",
+          "alias": "",
+          "enabled": false
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "distinct",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 255,
+          "column": "id",
+          "function": "None",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        },
+        {
+          "type": "field",
+          "id": 256,
+          "column": "name",
+          "function": "None",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": true
+    },
+    {
+      "name": "distinct all columns",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 257,
+          "column": "id",
+          "function": "None",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        },
+        {
+          "type": "field",
+          "id": 258,
+          "column": "name",
+          "function": "None",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        },
+        {
+          "type": "field",
+          "id": 259,
+          "column": "total",
+          "function": "None",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        },
+        {
+          "type": "field",
+          "id": 260,
+          "column": "created_at",
+          "function": "None",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        },
+        {
+          "type": "field",
+          "id": 261,
+          "column": "photo",
+          "function": "None",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": true
+    },
+    {
+      "name": "as text and coalesce on datetime",
+      "dialect": "PostgreSQL",
+      "items": [
+        {
+          "type": "field",
+          "id": 262,
+          "column": "created_at",
+          "function": "AsText",
+          "argument": "",
+          "alias": "",
+          "enabled": true
+        },
+        {
+          "type": "field",
+          "id": 263,
+          "column": "created_at",
+          "function": "Coalesce",
+          "argument": "now()",
+          "alias": "",
+          "enabled": true
+        }
+      ],
+      "distinct": false
+    },
+    {
+      "name": "functions for kinds PostgreSQL",
+      "op": "forKind",
+      "dialect": "PostgreSQL"
+    },
+    {
+      "name": "functions for kinds MySQL",
+      "op": "forKind",
+      "dialect": "MySQL"
+    },
+    {
+      "name": "functions for kinds SQLite",
+      "op": "forKind",
+      "dialect": "SQLite"
+    },
+    {
+      "name": "functions for kinds SqlServer",
+      "op": "forKind",
+      "dialect": "SqlServer"
+    },
+    {
+      "name": "functions for kinds ClickHouse",
+      "op": "forKind",
+      "dialect": "ClickHouse"
+    },
+    {
+      "name": "functions for kinds DuckDB",
+      "op": "forKind",
+      "dialect": "DuckDB"
+    },
+    {
+      "name": "functions for kinds H2",
+      "op": "forKind",
+      "dialect": "H2"
+    }
+  ]
+}

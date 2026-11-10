@@ -48,6 +48,63 @@
     {
       "name": "empty",
       "sql": ""
+    },
+    {
+      "name": "kotlin: classifies tokens",
+      "syntax": "PostgreSQL",
+      "sql": "select id, \"Name\", 1.5e3 FROM t WHERE x = :name -- done"
+    },
+    {
+      "name": "kotlin: casts are not parameters",
+      "syntax": "PostgreSQL",
+      "sql": "::text"
+    },
+    {
+      "name": "kotlin: mysql double quotes are strings",
+      "syntax": "MySQL",
+      "sql": "\"x\""
+    },
+    {
+      "name": "tsql doubled closing bracket",
+      "syntax": "TSql",
+      "sql": "SELECT [a]]b], [c;d] FROM t"
+    },
+    {
+      "name": "mysql backslash escape",
+      "syntax": "MySQL",
+      "sql": "SELECT 'a\\'b', 'c\\ồd'"
+    },
+    {
+      "name": "clickhouse backtick and escape",
+      "syntax": "ClickHouse",
+      "sql": "SELECT `x`, 'a\\'b' FROM t"
+    },
+    {
+      "name": "exponent signs",
+      "sql": "SELECT 1e+5, 2E-3, 3e, 4.5.6"
+    },
+    {
+      "name": "dollar tag starting with a digit",
+      "syntax": "PostgreSQL",
+      "sql": "SELECT $1$ x"
+    },
+    {
+      "name": "unterminated block comment",
+      "sql": "SELECT /* never closed"
+    },
+    {
+      "name": "identifier with dollar and digits",
+      "sql": "SELECT a$b, _x1, ö FROM t"
+    },
+    {
+      "name": "sqlite backtick",
+      "syntax": "SQLite",
+      "sql": "SELECT `a``b` FROM t"
+    },
+    {
+      "name": "hash is an operator outside mysql",
+      "syntax": "PostgreSQL",
+      "sql": "SELECT a # b"
     }
   ]
 }

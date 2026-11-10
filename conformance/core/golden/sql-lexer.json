@@ -858,6 +858,678 @@
         {
             "name": "empty",
             "output": []
+        },
+        {
+            "name": "kotlin: classifies tokens",
+            "output": [
+                {
+                    "type": "Keyword",
+                    "start": 0,
+                    "end": 6,
+                    "text": "select"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 6,
+                    "end": 7,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 7,
+                    "end": 9,
+                    "text": "id"
+                },
+                {
+                    "type": "Operator",
+                    "start": 9,
+                    "end": 10,
+                    "text": ","
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 10,
+                    "end": 11,
+                    "text": " "
+                },
+                {
+                    "type": "QuotedIdentifier",
+                    "start": 11,
+                    "end": 17,
+                    "text": "\"Name\""
+                },
+                {
+                    "type": "Operator",
+                    "start": 17,
+                    "end": 18,
+                    "text": ","
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 18,
+                    "end": 19,
+                    "text": " "
+                },
+                {
+                    "type": "Number",
+                    "start": 19,
+                    "end": 24,
+                    "text": "1.5e3"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 24,
+                    "end": 25,
+                    "text": " "
+                },
+                {
+                    "type": "Keyword",
+                    "start": 25,
+                    "end": 29,
+                    "text": "FROM"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 29,
+                    "end": 30,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 30,
+                    "end": 31,
+                    "text": "t"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 31,
+                    "end": 32,
+                    "text": " "
+                },
+                {
+                    "type": "Keyword",
+                    "start": 32,
+                    "end": 37,
+                    "text": "WHERE"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 37,
+                    "end": 38,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 38,
+                    "end": 39,
+                    "text": "x"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 39,
+                    "end": 40,
+                    "text": " "
+                },
+                {
+                    "type": "Operator",
+                    "start": 40,
+                    "end": 41,
+                    "text": "="
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 41,
+                    "end": 42,
+                    "text": " "
+                },
+                {
+                    "type": "Parameter",
+                    "start": 42,
+                    "end": 47,
+                    "text": ":name"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 47,
+                    "end": 48,
+                    "text": " "
+                },
+                {
+                    "type": "Comment",
+                    "start": 48,
+                    "end": 55,
+                    "text": "-- done"
+                }
+            ]
+        },
+        {
+            "name": "kotlin: casts are not parameters",
+            "output": [
+                {
+                    "type": "Operator",
+                    "start": 0,
+                    "end": 1,
+                    "text": ":"
+                },
+                {
+                    "type": "Operator",
+                    "start": 1,
+                    "end": 2,
+                    "text": ":"
+                },
+                {
+                    "type": "Keyword",
+                    "start": 2,
+                    "end": 6,
+                    "text": "text"
+                }
+            ]
+        },
+        {
+            "name": "kotlin: mysql double quotes are strings",
+            "output": [
+                {
+                    "type": "String",
+                    "start": 0,
+                    "end": 3,
+                    "text": "\"x\""
+                }
+            ]
+        },
+        {
+            "name": "tsql doubled closing bracket",
+            "output": [
+                {
+                    "type": "Keyword",
+                    "start": 0,
+                    "end": 6,
+                    "text": "SELECT"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 6,
+                    "end": 7,
+                    "text": " "
+                },
+                {
+                    "type": "QuotedIdentifier",
+                    "start": 7,
+                    "end": 13,
+                    "text": "[a]]b]"
+                },
+                {
+                    "type": "Operator",
+                    "start": 13,
+                    "end": 14,
+                    "text": ","
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 14,
+                    "end": 15,
+                    "text": " "
+                },
+                {
+                    "type": "QuotedIdentifier",
+                    "start": 15,
+                    "end": 20,
+                    "text": "[c;d]"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 20,
+                    "end": 21,
+                    "text": " "
+                },
+                {
+                    "type": "Keyword",
+                    "start": 21,
+                    "end": 25,
+                    "text": "FROM"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 25,
+                    "end": 26,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 26,
+                    "end": 27,
+                    "text": "t"
+                }
+            ]
+        },
+        {
+            "name": "mysql backslash escape",
+            "output": [
+                {
+                    "type": "Keyword",
+                    "start": 0,
+                    "end": 6,
+                    "text": "SELECT"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 6,
+                    "end": 7,
+                    "text": " "
+                },
+                {
+                    "type": "String",
+                    "start": 7,
+                    "end": 13,
+                    "text": "'a\\'b'"
+                },
+                {
+                    "type": "Operator",
+                    "start": 13,
+                    "end": 14,
+                    "text": ","
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 14,
+                    "end": 15,
+                    "text": " "
+                },
+                {
+                    "type": "String",
+                    "start": 15,
+                    "end": 21,
+                    "text": "'c\\ồd'"
+                }
+            ]
+        },
+        {
+            "name": "clickhouse backtick and escape",
+            "output": [
+                {
+                    "type": "Keyword",
+                    "start": 0,
+                    "end": 6,
+                    "text": "SELECT"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 6,
+                    "end": 7,
+                    "text": " "
+                },
+                {
+                    "type": "QuotedIdentifier",
+                    "start": 7,
+                    "end": 10,
+                    "text": "`x`"
+                },
+                {
+                    "type": "Operator",
+                    "start": 10,
+                    "end": 11,
+                    "text": ","
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 11,
+                    "end": 12,
+                    "text": " "
+                },
+                {
+                    "type": "String",
+                    "start": 12,
+                    "end": 18,
+                    "text": "'a\\'b'"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 18,
+                    "end": 19,
+                    "text": " "
+                },
+                {
+                    "type": "Keyword",
+                    "start": 19,
+                    "end": 23,
+                    "text": "FROM"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 23,
+                    "end": 24,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 24,
+                    "end": 25,
+                    "text": "t"
+                }
+            ]
+        },
+        {
+            "name": "exponent signs",
+            "output": [
+                {
+                    "type": "Keyword",
+                    "start": 0,
+                    "end": 6,
+                    "text": "SELECT"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 6,
+                    "end": 7,
+                    "text": " "
+                },
+                {
+                    "type": "Number",
+                    "start": 7,
+                    "end": 11,
+                    "text": "1e+5"
+                },
+                {
+                    "type": "Operator",
+                    "start": 11,
+                    "end": 12,
+                    "text": ","
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 12,
+                    "end": 13,
+                    "text": " "
+                },
+                {
+                    "type": "Number",
+                    "start": 13,
+                    "end": 17,
+                    "text": "2E-3"
+                },
+                {
+                    "type": "Operator",
+                    "start": 17,
+                    "end": 18,
+                    "text": ","
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 18,
+                    "end": 19,
+                    "text": " "
+                },
+                {
+                    "type": "Number",
+                    "start": 19,
+                    "end": 20,
+                    "text": "3"
+                },
+                {
+                    "type": "Identifier",
+                    "start": 20,
+                    "end": 21,
+                    "text": "e"
+                },
+                {
+                    "type": "Operator",
+                    "start": 21,
+                    "end": 22,
+                    "text": ","
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 22,
+                    "end": 23,
+                    "text": " "
+                },
+                {
+                    "type": "Number",
+                    "start": 23,
+                    "end": 28,
+                    "text": "4.5.6"
+                }
+            ]
+        },
+        {
+            "name": "dollar tag starting with a digit",
+            "output": [
+                {
+                    "type": "Keyword",
+                    "start": 0,
+                    "end": 6,
+                    "text": "SELECT"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 6,
+                    "end": 7,
+                    "text": " "
+                },
+                {
+                    "type": "Parameter",
+                    "start": 7,
+                    "end": 9,
+                    "text": "$1"
+                },
+                {
+                    "type": "Operator",
+                    "start": 9,
+                    "end": 10,
+                    "text": "$"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 10,
+                    "end": 11,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 11,
+                    "end": 12,
+                    "text": "x"
+                }
+            ]
+        },
+        {
+            "name": "unterminated block comment",
+            "output": [
+                {
+                    "type": "Keyword",
+                    "start": 0,
+                    "end": 6,
+                    "text": "SELECT"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 6,
+                    "end": 7,
+                    "text": " "
+                },
+                {
+                    "type": "Comment",
+                    "start": 7,
+                    "end": 22,
+                    "text": "/* never closed"
+                }
+            ]
+        },
+        {
+            "name": "identifier with dollar and digits",
+            "output": [
+                {
+                    "type": "Keyword",
+                    "start": 0,
+                    "end": 6,
+                    "text": "SELECT"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 6,
+                    "end": 7,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 7,
+                    "end": 10,
+                    "text": "a$b"
+                },
+                {
+                    "type": "Operator",
+                    "start": 10,
+                    "end": 11,
+                    "text": ","
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 11,
+                    "end": 12,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 12,
+                    "end": 15,
+                    "text": "_x1"
+                },
+                {
+                    "type": "Operator",
+                    "start": 15,
+                    "end": 16,
+                    "text": ","
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 16,
+                    "end": 17,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 17,
+                    "end": 18,
+                    "text": "ö"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 18,
+                    "end": 19,
+                    "text": " "
+                },
+                {
+                    "type": "Keyword",
+                    "start": 19,
+                    "end": 23,
+                    "text": "FROM"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 23,
+                    "end": 24,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 24,
+                    "end": 25,
+                    "text": "t"
+                }
+            ]
+        },
+        {
+            "name": "sqlite backtick",
+            "output": [
+                {
+                    "type": "Keyword",
+                    "start": 0,
+                    "end": 6,
+                    "text": "SELECT"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 6,
+                    "end": 7,
+                    "text": " "
+                },
+                {
+                    "type": "QuotedIdentifier",
+                    "start": 7,
+                    "end": 13,
+                    "text": "`a``b`"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 13,
+                    "end": 14,
+                    "text": " "
+                },
+                {
+                    "type": "Keyword",
+                    "start": 14,
+                    "end": 18,
+                    "text": "FROM"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 18,
+                    "end": 19,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 19,
+                    "end": 20,
+                    "text": "t"
+                }
+            ]
+        },
+        {
+            "name": "hash is an operator outside mysql",
+            "output": [
+                {
+                    "type": "Keyword",
+                    "start": 0,
+                    "end": 6,
+                    "text": "SELECT"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 6,
+                    "end": 7,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 7,
+                    "end": 8,
+                    "text": "a"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 8,
+                    "end": 9,
+                    "text": " "
+                },
+                {
+                    "type": "Operator",
+                    "start": 9,
+                    "end": 10,
+                    "text": "#"
+                },
+                {
+                    "type": "Whitespace",
+                    "start": 10,
+                    "end": 11,
+                    "text": " "
+                },
+                {
+                    "type": "Identifier",
+                    "start": 11,
+                    "end": 12,
+                    "text": "b"
+                }
+            ]
         }
     ]
 }

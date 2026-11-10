@@ -1,0 +1,3463 @@
+{
+    "subject": "chart-data",
+    "cases": [
+        {
+            "name": "a few categories and a number make sorted bars",
+            "output": {
+                "xKind": "Category",
+                "points": [
+                    {
+                        "x": "south",
+                        "group": "sum(sales)",
+                        "y": 30.0
+                    },
+                    {
+                        "x": "east",
+                        "group": "sum(sales)",
+                        "y": 20.0
+                    },
+                    {
+                        "x": "north",
+                        "group": "sum(sales)",
+                        "y": 15.0
+                    }
+                ],
+                "groups": [
+                    "sum(sales)"
+                ],
+                "categories": [
+                    "south",
+                    "east",
+                    "north"
+                ],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "region",
+                "yLabel": "sum(sales)"
+            }
+        },
+        {
+            "name": "series split the points aggregates combine them unusable rows are counted",
+            "output": {
+                "xKind": "Temporal",
+                "points": [
+                    {
+                        "x": 1.7040672E12,
+                        "group": "north",
+                        "y": 1.5
+                    },
+                    {
+                        "x": 1.7040672E12,
+                        "group": "south",
+                        "y": 5.0
+                    },
+                    {
+                        "x": 1.7067456E12,
+                        "group": "south",
+                        "y": 7.0
+                    }
+                ],
+                "groups": [
+                    "north",
+                    "south"
+                ],
+                "categories": [],
+                "skippedRows": 2,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "at (month)",
+                "yLabel": "avg(amount)"
+            }
+        },
+        {
+            "name": "several measures become one group each and count needs no numbers",
+            "output": {
+                "xKind": "Category",
+                "points": [
+                    {
+                        "x": "a",
+                        "group": "sum(v)",
+                        "y": 3.0
+                    },
+                    {
+                        "x": "a",
+                        "group": "count(note)",
+                        "y": 1.0
+                    },
+                    {
+                        "x": "b",
+                        "group": "sum(v)",
+                        "y": 3.0
+                    },
+                    {
+                        "x": "b",
+                        "group": "count(note)",
+                        "y": 1.0
+                    }
+                ],
+                "groups": [
+                    "sum(v)",
+                    "count(note)"
+                ],
+                "categories": [
+                    "a",
+                    "b"
+                ],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "k",
+                "yLabel": "sum(v), count(note)"
+            }
+        },
+        {
+            "name": "series beyond the largest ones are merged into Other",
+            "output": {
+                "xKind": "Numeric",
+                "points": [
+                    {
+                        "x": 1.0,
+                        "group": "Other",
+                        "y": 1.0
+                    },
+                    {
+                        "x": 2.0,
+                        "group": "Other",
+                        "y": 2.0
+                    },
+                    {
+                        "x": 3.0,
+                        "group": "Other",
+                        "y": 3.0
+                    },
+                    {
+                        "x": 4.0,
+                        "group": "Other",
+                        "y": 4.0
+                    },
+                    {
+                        "x": 5.0,
+                        "group": "Other",
+                        "y": 5.0
+                    },
+                    {
+                        "x": 6.0,
+                        "group": "Other",
+                        "y": 6.0
+                    },
+                    {
+                        "x": 7.0,
+                        "group": "s7",
+                        "y": 7.0
+                    },
+                    {
+                        "x": 8.0,
+                        "group": "s8",
+                        "y": 8.0
+                    },
+                    {
+                        "x": 9.0,
+                        "group": "s9",
+                        "y": 9.0
+                    },
+                    {
+                        "x": 10.0,
+                        "group": "s10",
+                        "y": 10.0
+                    },
+                    {
+                        "x": 11.0,
+                        "group": "s11",
+                        "y": 11.0
+                    },
+                    {
+                        "x": 12.0,
+                        "group": "s12",
+                        "y": 12.0
+                    },
+                    {
+                        "x": 13.0,
+                        "group": "s13",
+                        "y": 13.0
+                    },
+                    {
+                        "x": 14.0,
+                        "group": "s14",
+                        "y": 14.0
+                    },
+                    {
+                        "x": 15.0,
+                        "group": "s15",
+                        "y": 15.0
+                    }
+                ],
+                "groups": [
+                    "s7",
+                    "s8",
+                    "s9",
+                    "s10",
+                    "s11",
+                    "s12",
+                    "s13",
+                    "s14",
+                    "s15",
+                    "Other"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 6,
+                "downsampled": false,
+                "xLabel": "x",
+                "yLabel": "y"
+            }
+        },
+        {
+            "name": "merged series of a bar",
+            "output": {
+                "xKind": "Category",
+                "points": [
+                    {
+                        "x": "x0",
+                        "group": "Other",
+                        "y": 9.0
+                    },
+                    {
+                        "x": "x0",
+                        "group": "s9",
+                        "y": 9.0
+                    },
+                    {
+                        "x": "x0",
+                        "group": "s12",
+                        "y": 12.0
+                    },
+                    {
+                        "x": "x0",
+                        "group": "s15",
+                        "y": 15.0
+                    },
+                    {
+                        "x": "x2",
+                        "group": "Other",
+                        "y": 7.0
+                    },
+                    {
+                        "x": "x2",
+                        "group": "s8",
+                        "y": 8.0
+                    },
+                    {
+                        "x": "x2",
+                        "group": "s11",
+                        "y": 11.0
+                    },
+                    {
+                        "x": "x2",
+                        "group": "s14",
+                        "y": 14.0
+                    },
+                    {
+                        "x": "x1",
+                        "group": "Other",
+                        "y": 5.0
+                    },
+                    {
+                        "x": "x1",
+                        "group": "s7",
+                        "y": 7.0
+                    },
+                    {
+                        "x": "x1",
+                        "group": "s10",
+                        "y": 10.0
+                    },
+                    {
+                        "x": "x1",
+                        "group": "s13",
+                        "y": 13.0
+                    }
+                ],
+                "groups": [
+                    "s9",
+                    "s12",
+                    "s15",
+                    "s8",
+                    "s11",
+                    "s14",
+                    "s7",
+                    "s10",
+                    "s13",
+                    "Other"
+                ],
+                "categories": [
+                    "x0",
+                    "x2",
+                    "x1"
+                ],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 6,
+                "downsampled": false,
+                "xLabel": "x",
+                "yLabel": "sum(y)"
+            }
+        },
+        {
+            "name": "exactly ten series are kept",
+            "output": {
+                "xKind": "Numeric",
+                "points": [
+                    {
+                        "x": 1.0,
+                        "group": "s1",
+                        "y": 1.0
+                    },
+                    {
+                        "x": 2.0,
+                        "group": "s2",
+                        "y": 2.0
+                    },
+                    {
+                        "x": 3.0,
+                        "group": "s3",
+                        "y": 3.0
+                    },
+                    {
+                        "x": 4.0,
+                        "group": "s4",
+                        "y": 4.0
+                    },
+                    {
+                        "x": 5.0,
+                        "group": "s5",
+                        "y": 5.0
+                    },
+                    {
+                        "x": 6.0,
+                        "group": "s6",
+                        "y": 6.0
+                    },
+                    {
+                        "x": 7.0,
+                        "group": "s7",
+                        "y": 7.0
+                    },
+                    {
+                        "x": 8.0,
+                        "group": "s8",
+                        "y": 8.0
+                    },
+                    {
+                        "x": 9.0,
+                        "group": "s9",
+                        "y": 9.0
+                    },
+                    {
+                        "x": 10.0,
+                        "group": "s10",
+                        "y": 10.0
+                    }
+                ],
+                "groups": [
+                    "s1",
+                    "s2",
+                    "s3",
+                    "s4",
+                    "s5",
+                    "s6",
+                    "s7",
+                    "s8",
+                    "s9",
+                    "s10"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "x",
+                "yLabel": "y"
+            }
+        },
+        {
+            "name": "eleven series merge two",
+            "output": {
+                "xKind": "Numeric",
+                "points": [
+                    {
+                        "x": 1.0,
+                        "group": "Other",
+                        "y": 1.0
+                    },
+                    {
+                        "x": 2.0,
+                        "group": "Other",
+                        "y": 2.0
+                    },
+                    {
+                        "x": 3.0,
+                        "group": "s3",
+                        "y": 3.0
+                    },
+                    {
+                        "x": 4.0,
+                        "group": "s4",
+                        "y": 4.0
+                    },
+                    {
+                        "x": 5.0,
+                        "group": "s5",
+                        "y": 5.0
+                    },
+                    {
+                        "x": 6.0,
+                        "group": "s6",
+                        "y": 6.0
+                    },
+                    {
+                        "x": 7.0,
+                        "group": "s7",
+                        "y": 7.0
+                    },
+                    {
+                        "x": 8.0,
+                        "group": "s8",
+                        "y": 8.0
+                    },
+                    {
+                        "x": 9.0,
+                        "group": "s9",
+                        "y": 9.0
+                    },
+                    {
+                        "x": 10.0,
+                        "group": "s10",
+                        "y": 10.0
+                    },
+                    {
+                        "x": 11.0,
+                        "group": "s11",
+                        "y": 11.0
+                    }
+                ],
+                "groups": [
+                    "s3",
+                    "s4",
+                    "s5",
+                    "s6",
+                    "s7",
+                    "s8",
+                    "s9",
+                    "s10",
+                    "s11",
+                    "Other"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 2,
+                "downsampled": false,
+                "xLabel": "x",
+                "yLabel": "y"
+            }
+        },
+        {
+            "name": "series are ranked by absolute totals",
+            "output": {
+                "xKind": "Numeric",
+                "points": [
+                    {
+                        "x": 1.0,
+                        "group": "Other",
+                        "y": -3.0
+                    },
+                    {
+                        "x": 2.0,
+                        "group": "Other",
+                        "y": 2.0
+                    },
+                    {
+                        "x": 3.0,
+                        "group": "s3",
+                        "y": -9.0
+                    },
+                    {
+                        "x": 4.0,
+                        "group": "Other",
+                        "y": 4.0
+                    },
+                    {
+                        "x": 5.0,
+                        "group": "s5",
+                        "y": -15.0
+                    },
+                    {
+                        "x": 6.0,
+                        "group": "Other",
+                        "y": 6.0
+                    },
+                    {
+                        "x": 7.0,
+                        "group": "s7",
+                        "y": -21.0
+                    },
+                    {
+                        "x": 8.0,
+                        "group": "s8",
+                        "y": 8.0
+                    },
+                    {
+                        "x": 9.0,
+                        "group": "s9",
+                        "y": -27.0
+                    },
+                    {
+                        "x": 10.0,
+                        "group": "s10",
+                        "y": 10.0
+                    },
+                    {
+                        "x": 11.0,
+                        "group": "s11",
+                        "y": -33.0
+                    },
+                    {
+                        "x": 12.0,
+                        "group": "s12",
+                        "y": 12.0
+                    },
+                    {
+                        "x": 13.0,
+                        "group": "s13",
+                        "y": -39.0
+                    }
+                ],
+                "groups": [
+                    "s3",
+                    "s5",
+                    "s7",
+                    "s8",
+                    "s9",
+                    "s10",
+                    "s11",
+                    "s12",
+                    "s13",
+                    "Other"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 4,
+                "downsampled": false,
+                "xLabel": "x",
+                "yLabel": "y"
+            }
+        },
+        {
+            "name": "series are ranked counting one for what isn't a number",
+            "output": {
+                "xKind": "Numeric",
+                "points": [
+                    {
+                        "x": 1.0,
+                        "group": "Other",
+                        "y": 1.0
+                    },
+                    {
+                        "x": 2.0,
+                        "group": "Other",
+                        "y": 2.0
+                    },
+                    {
+                        "x": 3.0,
+                        "group": "Other",
+                        "y": 3.0
+                    },
+                    {
+                        "x": 4.0,
+                        "group": "s4",
+                        "y": 4.0
+                    },
+                    {
+                        "x": 5.0,
+                        "group": "s5",
+                        "y": 5.0
+                    },
+                    {
+                        "x": 6.0,
+                        "group": "s6",
+                        "y": 6.0
+                    },
+                    {
+                        "x": 7.0,
+                        "group": "s7",
+                        "y": 7.0
+                    },
+                    {
+                        "x": 8.0,
+                        "group": "s8",
+                        "y": 8.0
+                    },
+                    {
+                        "x": 9.0,
+                        "group": "s9",
+                        "y": 9.0
+                    },
+                    {
+                        "x": 10.0,
+                        "group": "s10",
+                        "y": 10.0
+                    },
+                    {
+                        "x": 11.0,
+                        "group": "s11",
+                        "y": 11.0
+                    },
+                    {
+                        "x": 12.0,
+                        "group": "s12",
+                        "y": 12.0
+                    }
+                ],
+                "groups": [
+                    "s4",
+                    "s5",
+                    "s6",
+                    "s7",
+                    "s8",
+                    "s9",
+                    "s10",
+                    "s11",
+                    "s12",
+                    "Other"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 3,
+                "downsampled": false,
+                "xLabel": "x",
+                "yLabel": "count(note)"
+            }
+        },
+        {
+            "name": "a null series is its own group",
+            "output": {
+                "xKind": "Numeric",
+                "points": [
+                    {
+                        "x": 1.0,
+                        "group": "(null)",
+                        "y": 1.0
+                    },
+                    {
+                        "x": 2.0,
+                        "group": "a",
+                        "y": 2.0
+                    },
+                    {
+                        "x": 3.0,
+                        "group": "(null)",
+                        "y": 3.0
+                    }
+                ],
+                "groups": [
+                    "(null)",
+                    "a"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "x",
+                "yLabel": "y"
+            }
+        },
+        {
+            "name": "a null series among many is ranked as (null)",
+            "output": {
+                "xKind": "Numeric",
+                "points": [
+                    {
+                        "x": 1.0,
+                        "group": "Other",
+                        "y": 1.0
+                    },
+                    {
+                        "x": 2.0,
+                        "group": "Other",
+                        "y": 2.0
+                    },
+                    {
+                        "x": 3.0,
+                        "group": "Other",
+                        "y": 3.0
+                    },
+                    {
+                        "x": 4.0,
+                        "group": "Other",
+                        "y": 4.0
+                    },
+                    {
+                        "x": 5.0,
+                        "group": "Other",
+                        "y": 5.0
+                    },
+                    {
+                        "x": 6.0,
+                        "group": "Other",
+                        "y": 6.0
+                    },
+                    {
+                        "x": 7.0,
+                        "group": "Other",
+                        "y": 7.0
+                    },
+                    {
+                        "x": 8.0,
+                        "group": "Other",
+                        "y": 8.0
+                    },
+                    {
+                        "x": 9.0,
+                        "group": "Other",
+                        "y": 9.0
+                    },
+                    {
+                        "x": 10.0,
+                        "group": "Other",
+                        "y": 10.0
+                    },
+                    {
+                        "x": 11.0,
+                        "group": "Other",
+                        "y": 11.0
+                    },
+                    {
+                        "x": 12.0,
+                        "group": "s12",
+                        "y": 12.0
+                    },
+                    {
+                        "x": 13.0,
+                        "group": "s13",
+                        "y": 13.0
+                    },
+                    {
+                        "x": 14.0,
+                        "group": "s14",
+                        "y": 14.0
+                    },
+                    {
+                        "x": 15.0,
+                        "group": "s15",
+                        "y": 15.0
+                    },
+                    {
+                        "x": 16.0,
+                        "group": "s16",
+                        "y": 16.0
+                    },
+                    {
+                        "x": 17.0,
+                        "group": "s17",
+                        "y": 17.0
+                    },
+                    {
+                        "x": 18.0,
+                        "group": "s18",
+                        "y": 18.0
+                    },
+                    {
+                        "x": 19.0,
+                        "group": "s19",
+                        "y": 19.0
+                    },
+                    {
+                        "x": 20.0,
+                        "group": "(null)",
+                        "y": 20.0
+                    }
+                ],
+                "groups": [
+                    "s12",
+                    "s13",
+                    "s14",
+                    "s15",
+                    "s16",
+                    "s17",
+                    "s18",
+                    "s19",
+                    "(null)",
+                    "Other"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 11,
+                "downsampled": false,
+                "xLabel": "x",
+                "yLabel": "y"
+            }
+        },
+        {
+            "name": "merged series use the aggregate of the first measure",
+            "output": {
+                "xKind": "Category",
+                "points": [
+                    {
+                        "x": "a",
+                        "group": "s1",
+                        "y": 100.0
+                    },
+                    {
+                        "x": "a",
+                        "group": "Other",
+                        "y": 6.0
+                    },
+                    {
+                        "x": "a",
+                        "group": "s7",
+                        "y": 7.0
+                    },
+                    {
+                        "x": "a",
+                        "group": "s8",
+                        "y": 8.0
+                    },
+                    {
+                        "x": "a",
+                        "group": "s9",
+                        "y": 9.0
+                    },
+                    {
+                        "x": "a",
+                        "group": "s10",
+                        "y": 10.0
+                    },
+                    {
+                        "x": "a",
+                        "group": "s11",
+                        "y": 11.0
+                    },
+                    {
+                        "x": "a",
+                        "group": "s12",
+                        "y": 12.0
+                    },
+                    {
+                        "x": "a",
+                        "group": "s13",
+                        "y": 13.0
+                    },
+                    {
+                        "x": "a",
+                        "group": "s14",
+                        "y": 14.0
+                    }
+                ],
+                "groups": [
+                    "s1",
+                    "s7",
+                    "s8",
+                    "s9",
+                    "s10",
+                    "s11",
+                    "s12",
+                    "s13",
+                    "s14",
+                    "Other"
+                ],
+                "categories": [
+                    "a"
+                ],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 5,
+                "downsampled": false,
+                "xLabel": "x",
+                "yLabel": "max(y)"
+            }
+        },
+        {
+            "name": "sixty categories are cut to the largest fifty",
+            "output": {
+                "xKind": "Category",
+                "points": [
+                    {
+                        "x": "c60",
+                        "group": "v",
+                        "y": 60.0
+                    },
+                    {
+                        "x": "c59",
+                        "group": "v",
+                        "y": 59.0
+                    },
+                    {
+                        "x": "c58",
+                        "group": "v",
+                        "y": 58.0
+                    },
+                    {
+                        "x": "c57",
+                        "group": "v",
+                        "y": 57.0
+                    },
+                    {
+                        "x": "c56",
+                        "group": "v",
+                        "y": 56.0
+                    },
+                    {
+                        "x": "c55",
+                        "group": "v",
+                        "y": 55.0
+                    },
+                    {
+                        "x": "c54",
+                        "group": "v",
+                        "y": 54.0
+                    },
+                    {
+                        "x": "c53",
+                        "group": "v",
+                        "y": 53.0
+                    },
+                    {
+                        "x": "c52",
+                        "group": "v",
+                        "y": 52.0
+                    },
+                    {
+                        "x": "c51",
+                        "group": "v",
+                        "y": 51.0
+                    },
+                    {
+                        "x": "c50",
+                        "group": "v",
+                        "y": 50.0
+                    },
+                    {
+                        "x": "c49",
+                        "group": "v",
+                        "y": 49.0
+                    },
+                    {
+                        "x": "c48",
+                        "group": "v",
+                        "y": 48.0
+                    },
+                    {
+                        "x": "c47",
+                        "group": "v",
+                        "y": 47.0
+                    },
+                    {
+                        "x": "c46",
+                        "group": "v",
+                        "y": 46.0
+                    },
+                    {
+                        "x": "c45",
+                        "group": "v",
+                        "y": 45.0
+                    },
+                    {
+                        "x": "c44",
+                        "group": "v",
+                        "y": 44.0
+                    },
+                    {
+                        "x": "c43",
+                        "group": "v",
+                        "y": 43.0
+                    },
+                    {
+                        "x": "c42",
+                        "group": "v",
+                        "y": 42.0
+                    },
+                    {
+                        "x": "c41",
+                        "group": "v",
+                        "y": 41.0
+                    },
+                    {
+                        "x": "c40",
+                        "group": "v",
+                        "y": 40.0
+                    },
+                    {
+                        "x": "c39",
+                        "group": "v",
+                        "y": 39.0
+                    },
+                    {
+                        "x": "c38",
+                        "group": "v",
+                        "y": 38.0
+                    },
+                    {
+                        "x": "c37",
+                        "group": "v",
+                        "y": 37.0
+                    },
+                    {
+                        "x": "c36",
+                        "group": "v",
+                        "y": 36.0
+                    },
+                    {
+                        "x": "c35",
+                        "group": "v",
+                        "y": 35.0
+                    },
+                    {
+                        "x": "c34",
+                        "group": "v",
+                        "y": 34.0
+                    },
+                    {
+                        "x": "c33",
+                        "group": "v",
+                        "y": 33.0
+                    },
+                    {
+                        "x": "c32",
+                        "group": "v",
+                        "y": 32.0
+                    },
+                    {
+                        "x": "c31",
+                        "group": "v",
+                        "y": 31.0
+                    },
+                    {
+                        "x": "c30",
+                        "group": "v",
+                        "y": 30.0
+                    },
+                    {
+                        "x": "c29",
+                        "group": "v",
+                        "y": 29.0
+                    },
+                    {
+                        "x": "c28",
+                        "group": "v",
+                        "y": 28.0
+                    },
+                    {
+                        "x": "c27",
+                        "group": "v",
+                        "y": 27.0
+                    },
+                    {
+                        "x": "c26",
+                        "group": "v",
+                        "y": 26.0
+                    },
+                    {
+                        "x": "c25",
+                        "group": "v",
+                        "y": 25.0
+                    },
+                    {
+                        "x": "c24",
+                        "group": "v",
+                        "y": 24.0
+                    },
+                    {
+                        "x": "c23",
+                        "group": "v",
+                        "y": 23.0
+                    },
+                    {
+                        "x": "c22",
+                        "group": "v",
+                        "y": 22.0
+                    },
+                    {
+                        "x": "c21",
+                        "group": "v",
+                        "y": 21.0
+                    },
+                    {
+                        "x": "c20",
+                        "group": "v",
+                        "y": 20.0
+                    },
+                    {
+                        "x": "c19",
+                        "group": "v",
+                        "y": 19.0
+                    },
+                    {
+                        "x": "c18",
+                        "group": "v",
+                        "y": 18.0
+                    },
+                    {
+                        "x": "c17",
+                        "group": "v",
+                        "y": 17.0
+                    },
+                    {
+                        "x": "c16",
+                        "group": "v",
+                        "y": 16.0
+                    },
+                    {
+                        "x": "c15",
+                        "group": "v",
+                        "y": 15.0
+                    },
+                    {
+                        "x": "c14",
+                        "group": "v",
+                        "y": 14.0
+                    },
+                    {
+                        "x": "c13",
+                        "group": "v",
+                        "y": 13.0
+                    },
+                    {
+                        "x": "c12",
+                        "group": "v",
+                        "y": 12.0
+                    },
+                    {
+                        "x": "c11",
+                        "group": "v",
+                        "y": 11.0
+                    }
+                ],
+                "groups": [
+                    "v"
+                ],
+                "categories": [
+                    "c60",
+                    "c59",
+                    "c58",
+                    "c57",
+                    "c56",
+                    "c55",
+                    "c54",
+                    "c53",
+                    "c52",
+                    "c51",
+                    "c50",
+                    "c49",
+                    "c48",
+                    "c47",
+                    "c46",
+                    "c45",
+                    "c44",
+                    "c43",
+                    "c42",
+                    "c41",
+                    "c40",
+                    "c39",
+                    "c38",
+                    "c37",
+                    "c36",
+                    "c35",
+                    "c34",
+                    "c33",
+                    "c32",
+                    "c31",
+                    "c30",
+                    "c29",
+                    "c28",
+                    "c27",
+                    "c26",
+                    "c25",
+                    "c24",
+                    "c23",
+                    "c22",
+                    "c21",
+                    "c20",
+                    "c19",
+                    "c18",
+                    "c17",
+                    "c16",
+                    "c15",
+                    "c14",
+                    "c13",
+                    "c12",
+                    "c11"
+                ],
+                "skippedRows": 0,
+                "omittedCategories": 10,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "c",
+                "yLabel": "v"
+            }
+        },
+        {
+            "name": "fifty categories are all kept",
+            "output": {
+                "xKind": "Category",
+                "points": [
+                    {
+                        "x": "c50",
+                        "group": "v",
+                        "y": 50.0
+                    },
+                    {
+                        "x": "c49",
+                        "group": "v",
+                        "y": 49.0
+                    },
+                    {
+                        "x": "c48",
+                        "group": "v",
+                        "y": 48.0
+                    },
+                    {
+                        "x": "c47",
+                        "group": "v",
+                        "y": 47.0
+                    },
+                    {
+                        "x": "c46",
+                        "group": "v",
+                        "y": 46.0
+                    },
+                    {
+                        "x": "c45",
+                        "group": "v",
+                        "y": 45.0
+                    },
+                    {
+                        "x": "c44",
+                        "group": "v",
+                        "y": 44.0
+                    },
+                    {
+                        "x": "c43",
+                        "group": "v",
+                        "y": 43.0
+                    },
+                    {
+                        "x": "c42",
+                        "group": "v",
+                        "y": 42.0
+                    },
+                    {
+                        "x": "c41",
+                        "group": "v",
+                        "y": 41.0
+                    },
+                    {
+                        "x": "c40",
+                        "group": "v",
+                        "y": 40.0
+                    },
+                    {
+                        "x": "c39",
+                        "group": "v",
+                        "y": 39.0
+                    },
+                    {
+                        "x": "c38",
+                        "group": "v",
+                        "y": 38.0
+                    },
+                    {
+                        "x": "c37",
+                        "group": "v",
+                        "y": 37.0
+                    },
+                    {
+                        "x": "c36",
+                        "group": "v",
+                        "y": 36.0
+                    },
+                    {
+                        "x": "c35",
+                        "group": "v",
+                        "y": 35.0
+                    },
+                    {
+                        "x": "c34",
+                        "group": "v",
+                        "y": 34.0
+                    },
+                    {
+                        "x": "c33",
+                        "group": "v",
+                        "y": 33.0
+                    },
+                    {
+                        "x": "c32",
+                        "group": "v",
+                        "y": 32.0
+                    },
+                    {
+                        "x": "c31",
+                        "group": "v",
+                        "y": 31.0
+                    },
+                    {
+                        "x": "c30",
+                        "group": "v",
+                        "y": 30.0
+                    },
+                    {
+                        "x": "c29",
+                        "group": "v",
+                        "y": 29.0
+                    },
+                    {
+                        "x": "c28",
+                        "group": "v",
+                        "y": 28.0
+                    },
+                    {
+                        "x": "c27",
+                        "group": "v",
+                        "y": 27.0
+                    },
+                    {
+                        "x": "c26",
+                        "group": "v",
+                        "y": 26.0
+                    },
+                    {
+                        "x": "c25",
+                        "group": "v",
+                        "y": 25.0
+                    },
+                    {
+                        "x": "c24",
+                        "group": "v",
+                        "y": 24.0
+                    },
+                    {
+                        "x": "c23",
+                        "group": "v",
+                        "y": 23.0
+                    },
+                    {
+                        "x": "c22",
+                        "group": "v",
+                        "y": 22.0
+                    },
+                    {
+                        "x": "c21",
+                        "group": "v",
+                        "y": 21.0
+                    },
+                    {
+                        "x": "c20",
+                        "group": "v",
+                        "y": 20.0
+                    },
+                    {
+                        "x": "c19",
+                        "group": "v",
+                        "y": 19.0
+                    },
+                    {
+                        "x": "c18",
+                        "group": "v",
+                        "y": 18.0
+                    },
+                    {
+                        "x": "c17",
+                        "group": "v",
+                        "y": 17.0
+                    },
+                    {
+                        "x": "c16",
+                        "group": "v",
+                        "y": 16.0
+                    },
+                    {
+                        "x": "c15",
+                        "group": "v",
+                        "y": 15.0
+                    },
+                    {
+                        "x": "c14",
+                        "group": "v",
+                        "y": 14.0
+                    },
+                    {
+                        "x": "c13",
+                        "group": "v",
+                        "y": 13.0
+                    },
+                    {
+                        "x": "c12",
+                        "group": "v",
+                        "y": 12.0
+                    },
+                    {
+                        "x": "c11",
+                        "group": "v",
+                        "y": 11.0
+                    },
+                    {
+                        "x": "c10",
+                        "group": "v",
+                        "y": 10.0
+                    },
+                    {
+                        "x": "c09",
+                        "group": "v",
+                        "y": 9.0
+                    },
+                    {
+                        "x": "c08",
+                        "group": "v",
+                        "y": 8.0
+                    },
+                    {
+                        "x": "c07",
+                        "group": "v",
+                        "y": 7.0
+                    },
+                    {
+                        "x": "c06",
+                        "group": "v",
+                        "y": 6.0
+                    },
+                    {
+                        "x": "c05",
+                        "group": "v",
+                        "y": 5.0
+                    },
+                    {
+                        "x": "c04",
+                        "group": "v",
+                        "y": 4.0
+                    },
+                    {
+                        "x": "c03",
+                        "group": "v",
+                        "y": 3.0
+                    },
+                    {
+                        "x": "c02",
+                        "group": "v",
+                        "y": 2.0
+                    },
+                    {
+                        "x": "c01",
+                        "group": "v",
+                        "y": 1.0
+                    }
+                ],
+                "groups": [
+                    "v"
+                ],
+                "categories": [
+                    "c50",
+                    "c49",
+                    "c48",
+                    "c47",
+                    "c46",
+                    "c45",
+                    "c44",
+                    "c43",
+                    "c42",
+                    "c41",
+                    "c40",
+                    "c39",
+                    "c38",
+                    "c37",
+                    "c36",
+                    "c35",
+                    "c34",
+                    "c33",
+                    "c32",
+                    "c31",
+                    "c30",
+                    "c29",
+                    "c28",
+                    "c27",
+                    "c26",
+                    "c25",
+                    "c24",
+                    "c23",
+                    "c22",
+                    "c21",
+                    "c20",
+                    "c19",
+                    "c18",
+                    "c17",
+                    "c16",
+                    "c15",
+                    "c14",
+                    "c13",
+                    "c12",
+                    "c11",
+                    "c10",
+                    "c09",
+                    "c08",
+                    "c07",
+                    "c06",
+                    "c05",
+                    "c04",
+                    "c03",
+                    "c02",
+                    "c01"
+                ],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "c",
+                "yLabel": "v"
+            }
+        },
+        {
+            "name": "a pie keeps eight slices",
+            "output": {
+                "xKind": "Category",
+                "points": [
+                    {
+                        "x": "c12",
+                        "group": "v",
+                        "y": 12.0
+                    },
+                    {
+                        "x": "c11",
+                        "group": "v",
+                        "y": 11.0
+                    },
+                    {
+                        "x": "c10",
+                        "group": "v",
+                        "y": 10.0
+                    },
+                    {
+                        "x": "c09",
+                        "group": "v",
+                        "y": 9.0
+                    },
+                    {
+                        "x": "c08",
+                        "group": "v",
+                        "y": 8.0
+                    },
+                    {
+                        "x": "c07",
+                        "group": "v",
+                        "y": 7.0
+                    },
+                    {
+                        "x": "c06",
+                        "group": "v",
+                        "y": 6.0
+                    },
+                    {
+                        "x": "c05",
+                        "group": "v",
+                        "y": 5.0
+                    }
+                ],
+                "groups": [
+                    "v"
+                ],
+                "categories": [
+                    "c12",
+                    "c11",
+                    "c10",
+                    "c09",
+                    "c08",
+                    "c07",
+                    "c06",
+                    "c05"
+                ],
+                "skippedRows": 0,
+                "omittedCategories": 4,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "c",
+                "yLabel": "v"
+            }
+        },
+        {
+            "name": "a pie of exactly eight slices",
+            "output": {
+                "xKind": "Category",
+                "points": [
+                    {
+                        "x": "c08",
+                        "group": "v",
+                        "y": 8.0
+                    },
+                    {
+                        "x": "c07",
+                        "group": "v",
+                        "y": 7.0
+                    },
+                    {
+                        "x": "c06",
+                        "group": "v",
+                        "y": 6.0
+                    },
+                    {
+                        "x": "c05",
+                        "group": "v",
+                        "y": 5.0
+                    },
+                    {
+                        "x": "c04",
+                        "group": "v",
+                        "y": 4.0
+                    },
+                    {
+                        "x": "c03",
+                        "group": "v",
+                        "y": 3.0
+                    },
+                    {
+                        "x": "c02",
+                        "group": "v",
+                        "y": 2.0
+                    },
+                    {
+                        "x": "c01",
+                        "group": "v",
+                        "y": 1.0
+                    }
+                ],
+                "groups": [
+                    "v"
+                ],
+                "categories": [
+                    "c08",
+                    "c07",
+                    "c06",
+                    "c05",
+                    "c04",
+                    "c03",
+                    "c02",
+                    "c01"
+                ],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "c",
+                "yLabel": "v"
+            }
+        },
+        {
+            "name": "a line keeps categories as they came",
+            "output": {
+                "xKind": "Category",
+                "points": [
+                    {
+                        "x": "z",
+                        "group": "v",
+                        "y": 1.0
+                    },
+                    {
+                        "x": "a",
+                        "group": "v",
+                        "y": 5.0
+                    },
+                    {
+                        "x": "m",
+                        "group": "v",
+                        "y": 3.0
+                    }
+                ],
+                "groups": [
+                    "v"
+                ],
+                "categories": [
+                    "z",
+                    "a",
+                    "m"
+                ],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "c",
+                "yLabel": "v"
+            }
+        },
+        {
+            "name": "an area with many categories is cut in order",
+            "output": {
+                "xKind": "Category",
+                "points": [
+                    {
+                        "x": "c01",
+                        "group": "v",
+                        "y": 99.0
+                    },
+                    {
+                        "x": "c02",
+                        "group": "v",
+                        "y": 98.0
+                    },
+                    {
+                        "x": "c03",
+                        "group": "v",
+                        "y": 97.0
+                    },
+                    {
+                        "x": "c04",
+                        "group": "v",
+                        "y": 96.0
+                    },
+                    {
+                        "x": "c05",
+                        "group": "v",
+                        "y": 95.0
+                    },
+                    {
+                        "x": "c06",
+                        "group": "v",
+                        "y": 94.0
+                    },
+                    {
+                        "x": "c07",
+                        "group": "v",
+                        "y": 93.0
+                    },
+                    {
+                        "x": "c08",
+                        "group": "v",
+                        "y": 92.0
+                    },
+                    {
+                        "x": "c09",
+                        "group": "v",
+                        "y": 91.0
+                    },
+                    {
+                        "x": "c10",
+                        "group": "v",
+                        "y": 90.0
+                    },
+                    {
+                        "x": "c11",
+                        "group": "v",
+                        "y": 89.0
+                    },
+                    {
+                        "x": "c12",
+                        "group": "v",
+                        "y": 88.0
+                    },
+                    {
+                        "x": "c13",
+                        "group": "v",
+                        "y": 87.0
+                    },
+                    {
+                        "x": "c14",
+                        "group": "v",
+                        "y": 86.0
+                    },
+                    {
+                        "x": "c15",
+                        "group": "v",
+                        "y": 85.0
+                    },
+                    {
+                        "x": "c16",
+                        "group": "v",
+                        "y": 84.0
+                    },
+                    {
+                        "x": "c17",
+                        "group": "v",
+                        "y": 83.0
+                    },
+                    {
+                        "x": "c18",
+                        "group": "v",
+                        "y": 82.0
+                    },
+                    {
+                        "x": "c19",
+                        "group": "v",
+                        "y": 81.0
+                    },
+                    {
+                        "x": "c20",
+                        "group": "v",
+                        "y": 80.0
+                    },
+                    {
+                        "x": "c21",
+                        "group": "v",
+                        "y": 79.0
+                    },
+                    {
+                        "x": "c22",
+                        "group": "v",
+                        "y": 78.0
+                    },
+                    {
+                        "x": "c23",
+                        "group": "v",
+                        "y": 77.0
+                    },
+                    {
+                        "x": "c24",
+                        "group": "v",
+                        "y": 76.0
+                    },
+                    {
+                        "x": "c25",
+                        "group": "v",
+                        "y": 75.0
+                    },
+                    {
+                        "x": "c26",
+                        "group": "v",
+                        "y": 74.0
+                    },
+                    {
+                        "x": "c27",
+                        "group": "v",
+                        "y": 73.0
+                    },
+                    {
+                        "x": "c28",
+                        "group": "v",
+                        "y": 72.0
+                    },
+                    {
+                        "x": "c29",
+                        "group": "v",
+                        "y": 71.0
+                    },
+                    {
+                        "x": "c30",
+                        "group": "v",
+                        "y": 70.0
+                    },
+                    {
+                        "x": "c31",
+                        "group": "v",
+                        "y": 69.0
+                    },
+                    {
+                        "x": "c32",
+                        "group": "v",
+                        "y": 68.0
+                    },
+                    {
+                        "x": "c33",
+                        "group": "v",
+                        "y": 67.0
+                    },
+                    {
+                        "x": "c34",
+                        "group": "v",
+                        "y": 66.0
+                    },
+                    {
+                        "x": "c35",
+                        "group": "v",
+                        "y": 65.0
+                    },
+                    {
+                        "x": "c36",
+                        "group": "v",
+                        "y": 64.0
+                    },
+                    {
+                        "x": "c37",
+                        "group": "v",
+                        "y": 63.0
+                    },
+                    {
+                        "x": "c38",
+                        "group": "v",
+                        "y": 62.0
+                    },
+                    {
+                        "x": "c39",
+                        "group": "v",
+                        "y": 61.0
+                    },
+                    {
+                        "x": "c40",
+                        "group": "v",
+                        "y": 60.0
+                    },
+                    {
+                        "x": "c41",
+                        "group": "v",
+                        "y": 59.0
+                    },
+                    {
+                        "x": "c42",
+                        "group": "v",
+                        "y": 58.0
+                    },
+                    {
+                        "x": "c43",
+                        "group": "v",
+                        "y": 57.0
+                    },
+                    {
+                        "x": "c44",
+                        "group": "v",
+                        "y": 56.0
+                    },
+                    {
+                        "x": "c45",
+                        "group": "v",
+                        "y": 55.0
+                    },
+                    {
+                        "x": "c46",
+                        "group": "v",
+                        "y": 54.0
+                    },
+                    {
+                        "x": "c47",
+                        "group": "v",
+                        "y": 53.0
+                    },
+                    {
+                        "x": "c48",
+                        "group": "v",
+                        "y": 52.0
+                    },
+                    {
+                        "x": "c49",
+                        "group": "v",
+                        "y": 51.0
+                    },
+                    {
+                        "x": "c50",
+                        "group": "v",
+                        "y": 50.0
+                    }
+                ],
+                "groups": [
+                    "v"
+                ],
+                "categories": [
+                    "c01",
+                    "c02",
+                    "c03",
+                    "c04",
+                    "c05",
+                    "c06",
+                    "c07",
+                    "c08",
+                    "c09",
+                    "c10",
+                    "c11",
+                    "c12",
+                    "c13",
+                    "c14",
+                    "c15",
+                    "c16",
+                    "c17",
+                    "c18",
+                    "c19",
+                    "c20",
+                    "c21",
+                    "c22",
+                    "c23",
+                    "c24",
+                    "c25",
+                    "c26",
+                    "c27",
+                    "c28",
+                    "c29",
+                    "c30",
+                    "c31",
+                    "c32",
+                    "c33",
+                    "c34",
+                    "c35",
+                    "c36",
+                    "c37",
+                    "c38",
+                    "c39",
+                    "c40",
+                    "c41",
+                    "c42",
+                    "c43",
+                    "c44",
+                    "c45",
+                    "c46",
+                    "c47",
+                    "c48",
+                    "c49",
+                    "c50"
+                ],
+                "skippedRows": 0,
+                "omittedCategories": 10,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "c",
+                "yLabel": "v"
+            }
+        },
+        {
+            "name": "a bar split by series is ordered by category totals",
+            "output": {
+                "xKind": "Category",
+                "points": [
+                    {
+                        "x": "b",
+                        "group": "x",
+                        "y": 10.0
+                    },
+                    {
+                        "x": "b",
+                        "group": "y",
+                        "y": 20.0
+                    },
+                    {
+                        "x": "c",
+                        "group": "x",
+                        "y": 5.0
+                    },
+                    {
+                        "x": "c",
+                        "group": "y",
+                        "y": 5.5
+                    },
+                    {
+                        "x": "a",
+                        "group": "x",
+                        "y": 1.0
+                    },
+                    {
+                        "x": "a",
+                        "group": "y",
+                        "y": 2.0
+                    }
+                ],
+                "groups": [
+                    "x",
+                    "y"
+                ],
+                "categories": [
+                    "b",
+                    "c",
+                    "a"
+                ],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "c",
+                "yLabel": "sum(v)"
+            }
+        },
+        {
+            "name": "categories with a null",
+            "output": {
+                "xKind": "Category",
+                "points": [
+                    {
+                        "x": "(null)",
+                        "group": "sum(v)",
+                        "y": 7.0
+                    },
+                    {
+                        "x": "b",
+                        "group": "sum(v)",
+                        "y": 3.0
+                    },
+                    {
+                        "x": "a",
+                        "group": "sum(v)",
+                        "y": 1.0
+                    }
+                ],
+                "groups": [
+                    "sum(v)"
+                ],
+                "categories": [
+                    "(null)",
+                    "b",
+                    "a"
+                ],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "c",
+                "yLabel": "sum(v)"
+            }
+        },
+        {
+            "name": "a pie ties are kept in first seen order",
+            "output": {
+                "xKind": "Category",
+                "points": [
+                    {
+                        "x": "a",
+                        "group": "v",
+                        "y": 1.0
+                    },
+                    {
+                        "x": "b",
+                        "group": "v",
+                        "y": 1.0
+                    },
+                    {
+                        "x": "c",
+                        "group": "v",
+                        "y": 1.0
+                    }
+                ],
+                "groups": [
+                    "v"
+                ],
+                "categories": [
+                    "a",
+                    "b",
+                    "c"
+                ],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "c",
+                "yLabel": "v"
+            }
+        },
+        {
+            "name": "numbers on x ascending",
+            "output": {
+                "xKind": "Numeric",
+                "points": [
+                    {
+                        "x": -2.0,
+                        "group": "y",
+                        "y": 2.0
+                    },
+                    {
+                        "x": 0.0,
+                        "group": "y",
+                        "y": 3.0
+                    },
+                    {
+                        "x": 3.5,
+                        "group": "y",
+                        "y": 1.0
+                    },
+                    {
+                        "x": 10.0,
+                        "group": "y",
+                        "y": 4.0
+                    }
+                ],
+                "groups": [
+                    "y"
+                ],
+                "categories": [],
+                "skippedRows": 2,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "x",
+                "yLabel": "y"
+            }
+        },
+        {
+            "name": "numbers on x aggregated",
+            "output": {
+                "xKind": "Numeric",
+                "points": [
+                    {
+                        "x": 1.0,
+                        "group": "avg(y)",
+                        "y": 15.0
+                    },
+                    {
+                        "x": 2.0,
+                        "group": "avg(y)",
+                        "y": 5.0
+                    }
+                ],
+                "groups": [
+                    "avg(y)"
+                ],
+                "categories": [],
+                "skippedRows": 2,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "x",
+                "yLabel": "avg(y)"
+            }
+        },
+        {
+            "name": "aggregate None over repeated x",
+            "output": {
+                "xKind": "Numeric",
+                "points": [
+                    {
+                        "x": 1.0,
+                        "group": "y",
+                        "y": 4.0
+                    },
+                    {
+                        "x": 1.0,
+                        "group": "y",
+                        "y": -2.0
+                    },
+                    {
+                        "x": 1.0,
+                        "group": "y",
+                        "y": 9.0
+                    },
+                    {
+                        "x": 2.0,
+                        "group": "y",
+                        "y": 7.0
+                    }
+                ],
+                "groups": [
+                    "y"
+                ],
+                "categories": [],
+                "skippedRows": 2,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "x",
+                "yLabel": "y"
+            }
+        },
+        {
+            "name": "aggregate Sum over repeated x",
+            "output": {
+                "xKind": "Numeric",
+                "points": [
+                    {
+                        "x": 1.0,
+                        "group": "sum(y)",
+                        "y": 11.0
+                    },
+                    {
+                        "x": 2.0,
+                        "group": "sum(y)",
+                        "y": 7.0
+                    }
+                ],
+                "groups": [
+                    "sum(y)"
+                ],
+                "categories": [],
+                "skippedRows": 2,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "x",
+                "yLabel": "sum(y)"
+            }
+        },
+        {
+            "name": "aggregate Avg over repeated x",
+            "output": {
+                "xKind": "Numeric",
+                "points": [
+                    {
+                        "x": 1.0,
+                        "group": "avg(y)",
+                        "y": 3.6666666666666665
+                    },
+                    {
+                        "x": 2.0,
+                        "group": "avg(y)",
+                        "y": 7.0
+                    }
+                ],
+                "groups": [
+                    "avg(y)"
+                ],
+                "categories": [],
+                "skippedRows": 2,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "x",
+                "yLabel": "avg(y)"
+            }
+        },
+        {
+            "name": "aggregate Min over repeated x",
+            "output": {
+                "xKind": "Numeric",
+                "points": [
+                    {
+                        "x": 1.0,
+                        "group": "min(y)",
+                        "y": -2.0
+                    },
+                    {
+                        "x": 2.0,
+                        "group": "min(y)",
+                        "y": 7.0
+                    }
+                ],
+                "groups": [
+                    "min(y)"
+                ],
+                "categories": [],
+                "skippedRows": 2,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "x",
+                "yLabel": "min(y)"
+            }
+        },
+        {
+            "name": "aggregate Max over repeated x",
+            "output": {
+                "xKind": "Numeric",
+                "points": [
+                    {
+                        "x": 1.0,
+                        "group": "max(y)",
+                        "y": 9.0
+                    },
+                    {
+                        "x": 2.0,
+                        "group": "max(y)",
+                        "y": 7.0
+                    }
+                ],
+                "groups": [
+                    "max(y)"
+                ],
+                "categories": [],
+                "skippedRows": 2,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "x",
+                "yLabel": "max(y)"
+            }
+        },
+        {
+            "name": "aggregate Count over repeated x",
+            "output": {
+                "xKind": "Numeric",
+                "points": [
+                    {
+                        "x": 1.0,
+                        "group": "count(y)",
+                        "y": 3.0
+                    },
+                    {
+                        "x": 2.0,
+                        "group": "count(y)",
+                        "y": 2.0
+                    }
+                ],
+                "groups": [
+                    "count(y)"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "x",
+                "yLabel": "count(y)"
+            }
+        },
+        {
+            "name": "bucket Hour sums",
+            "output": {
+                "xKind": "Temporal",
+                "points": [
+                    {
+                        "x": 1.7040636E12,
+                        "group": "sum(v)",
+                        "y": 7.0
+                    },
+                    {
+                        "x": 1.7091648E12,
+                        "group": "sum(v)",
+                        "y": 8.0
+                    },
+                    {
+                        "x": 1.7233344E12,
+                        "group": "sum(v)",
+                        "y": 5.0
+                    },
+                    {
+                        "x": 1.7237124E12,
+                        "group": "sum(v)",
+                        "y": 3.0
+                    },
+                    {
+                        "x": 1.7237268E12,
+                        "group": "sum(v)",
+                        "y": 3.0
+                    },
+                    {
+                        "x": 1.7241084E12,
+                        "group": "sum(v)",
+                        "y": 4.0
+                    },
+                    {
+                        "x": 1.7305416E12,
+                        "group": "sum(v)",
+                        "y": 6.0
+                    }
+                ],
+                "groups": [
+                    "sum(v)"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "t (hour)",
+                "yLabel": "sum(v)"
+            }
+        },
+        {
+            "name": "bucket Day sums",
+            "output": {
+                "xKind": "Temporal",
+                "points": [
+                    {
+                        "x": 1.7039808E12,
+                        "group": "sum(v)",
+                        "y": 7.0
+                    },
+                    {
+                        "x": 1.7091648E12,
+                        "group": "sum(v)",
+                        "y": 8.0
+                    },
+                    {
+                        "x": 1.7233344E12,
+                        "group": "sum(v)",
+                        "y": 5.0
+                    },
+                    {
+                        "x": 1.72368E12,
+                        "group": "sum(v)",
+                        "y": 6.0
+                    },
+                    {
+                        "x": 1.7240256E12,
+                        "group": "sum(v)",
+                        "y": 4.0
+                    },
+                    {
+                        "x": 1.7305056E12,
+                        "group": "sum(v)",
+                        "y": 6.0
+                    }
+                ],
+                "groups": [
+                    "sum(v)"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "t (day)",
+                "yLabel": "sum(v)"
+            }
+        },
+        {
+            "name": "bucket Week sums",
+            "output": {
+                "xKind": "Temporal",
+                "points": [
+                    {
+                        "x": 1.7034624E12,
+                        "group": "sum(v)",
+                        "y": 7.0
+                    },
+                    {
+                        "x": 1.7089056E12,
+                        "group": "sum(v)",
+                        "y": 8.0
+                    },
+                    {
+                        "x": 1.722816E12,
+                        "group": "sum(v)",
+                        "y": 5.0
+                    },
+                    {
+                        "x": 1.7234208E12,
+                        "group": "sum(v)",
+                        "y": 6.0
+                    },
+                    {
+                        "x": 1.7240256E12,
+                        "group": "sum(v)",
+                        "y": 4.0
+                    },
+                    {
+                        "x": 1.7300736E12,
+                        "group": "sum(v)",
+                        "y": 6.0
+                    }
+                ],
+                "groups": [
+                    "sum(v)"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "t (week)",
+                "yLabel": "sum(v)"
+            }
+        },
+        {
+            "name": "bucket Month sums",
+            "output": {
+                "xKind": "Temporal",
+                "points": [
+                    {
+                        "x": 1.7013888E12,
+                        "group": "sum(v)",
+                        "y": 7.0
+                    },
+                    {
+                        "x": 1.7067456E12,
+                        "group": "sum(v)",
+                        "y": 8.0
+                    },
+                    {
+                        "x": 1.7224704E12,
+                        "group": "sum(v)",
+                        "y": 15.0
+                    },
+                    {
+                        "x": 1.7304192E12,
+                        "group": "sum(v)",
+                        "y": 6.0
+                    }
+                ],
+                "groups": [
+                    "sum(v)"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "t (month)",
+                "yLabel": "sum(v)"
+            }
+        },
+        {
+            "name": "bucket Quarter sums",
+            "output": {
+                "xKind": "Temporal",
+                "points": [
+                    {
+                        "x": 1.6961184E12,
+                        "group": "sum(v)",
+                        "y": 7.0
+                    },
+                    {
+                        "x": 1.7040672E12,
+                        "group": "sum(v)",
+                        "y": 8.0
+                    },
+                    {
+                        "x": 1.719792E12,
+                        "group": "sum(v)",
+                        "y": 15.0
+                    },
+                    {
+                        "x": 1.7277408E12,
+                        "group": "sum(v)",
+                        "y": 6.0
+                    }
+                ],
+                "groups": [
+                    "sum(v)"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "t (quarter)",
+                "yLabel": "sum(v)"
+            }
+        },
+        {
+            "name": "bucket Year sums",
+            "output": {
+                "xKind": "Temporal",
+                "points": [
+                    {
+                        "x": 1.6725312E12,
+                        "group": "sum(v)",
+                        "y": 7.0
+                    },
+                    {
+                        "x": 1.7040672E12,
+                        "group": "sum(v)",
+                        "y": 29.0
+                    }
+                ],
+                "groups": [
+                    "sum(v)"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "t (year)",
+                "yLabel": "sum(v)"
+            }
+        },
+        {
+            "name": "bucket with several measures",
+            "output": {
+                "xKind": "Temporal",
+                "points": [
+                    {
+                        "x": 1.7040672E12,
+                        "group": "sum(a)",
+                        "y": 3.0
+                    },
+                    {
+                        "x": 1.7040672E12,
+                        "group": "count(b)",
+                        "y": 1.0
+                    },
+                    {
+                        "x": 1.7040672E12,
+                        "group": "max(a)",
+                        "y": 2.0
+                    },
+                    {
+                        "x": 1.7041536E12,
+                        "group": "sum(a)",
+                        "y": 3.0
+                    },
+                    {
+                        "x": 1.7041536E12,
+                        "group": "count(b)",
+                        "y": 1.0
+                    },
+                    {
+                        "x": 1.7041536E12,
+                        "group": "max(a)",
+                        "y": 3.0
+                    }
+                ],
+                "groups": [
+                    "sum(a)",
+                    "count(b)",
+                    "max(a)"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "t (day)",
+                "yLabel": "sum(a), count(b), max(a)"
+            }
+        },
+        {
+            "name": "dates without a bucket keep their time",
+            "output": {
+                "xKind": "Temporal",
+                "points": [
+                    {
+                        "x": 1.7041068E12,
+                        "group": "v",
+                        "y": 1.0
+                    },
+                    {
+                        "x": 1.7041068E12,
+                        "group": "v",
+                        "y": 9.0
+                    },
+                    {
+                        "x": 1.7041896E12,
+                        "group": "v",
+                        "y": 2.0
+                    },
+                    {
+                        "x": 1.7042436E12,
+                        "group": "v",
+                        "y": 3.0
+                    },
+                    {
+                        "x": 1.7043336E12,
+                        "group": "v",
+                        "y": 4.0
+                    }
+                ],
+                "groups": [
+                    "v"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "t",
+                "yLabel": "v"
+            }
+        },
+        {
+            "name": "dates as text columns",
+            "output": {
+                "xKind": "Temporal",
+                "points": [
+                    {
+                        "x": 1.7040672E12,
+                        "group": "v",
+                        "y": 1.0
+                    },
+                    {
+                        "x": 1.7041536E12,
+                        "group": "v",
+                        "y": 2.0
+                    },
+                    {
+                        "x": 1.70424E12,
+                        "group": "v",
+                        "y": 3.0
+                    }
+                ],
+                "groups": [
+                    "v"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "t",
+                "yLabel": "v"
+            }
+        },
+        {
+            "name": "unusable rows are skipped",
+            "output": {
+                "xKind": "Numeric",
+                "points": [
+                    {
+                        "x": 1.0,
+                        "group": "y",
+                        "y": 1.0
+                    },
+                    {
+                        "x": 5.0,
+                        "group": "y",
+                        "y": 5.0
+                    }
+                ],
+                "groups": [
+                    "y"
+                ],
+                "categories": [],
+                "skippedRows": 3,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "x",
+                "yLabel": "y"
+            }
+        },
+        {
+            "name": "a row is usable when any measure has a value",
+            "output": {
+                "xKind": "Numeric",
+                "points": [
+                    {
+                        "x": 1.0,
+                        "group": "a",
+                        "y": 1.0
+                    },
+                    {
+                        "x": 2.0,
+                        "group": "b",
+                        "y": 2.0
+                    }
+                ],
+                "groups": [
+                    "a",
+                    "b"
+                ],
+                "categories": [],
+                "skippedRows": 1,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "x",
+                "yLabel": "a, b"
+            }
+        },
+        {
+            "name": "count counts non null values",
+            "output": {
+                "xKind": "Category",
+                "points": [
+                    {
+                        "x": "c",
+                        "group": "count(v)",
+                        "y": 3.0
+                    },
+                    {
+                        "x": "a",
+                        "group": "count(v)",
+                        "y": 1.0
+                    },
+                    {
+                        "x": "b",
+                        "group": "count(v)",
+                        "y": 0.0
+                    }
+                ],
+                "groups": [
+                    "count(v)"
+                ],
+                "categories": [
+                    "c",
+                    "a",
+                    "b"
+                ],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "c",
+                "yLabel": "count(v)"
+            }
+        },
+        {
+            "name": "x of an unreadable kind skips every row",
+            "output": {
+                "xKind": "Other",
+                "points": [],
+                "groups": [],
+                "categories": [],
+                "skippedRows": 2,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "b",
+                "yLabel": "v"
+            }
+        },
+        {
+            "name": "no rows",
+            "output": {
+                "xKind": "Category",
+                "points": [],
+                "groups": [],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "c",
+                "yLabel": "v"
+            }
+        },
+        {
+            "name": "no rows with a bucket",
+            "output": {
+                "xKind": "Temporal",
+                "points": [],
+                "groups": [],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "t (day)",
+                "yLabel": "sum(v)"
+            }
+        },
+        {
+            "name": "labels with a bucket and several measures",
+            "output": {
+                "xKind": "Temporal",
+                "points": [
+                    {
+                        "x": 1.7040672E12,
+                        "group": "sum(a)",
+                        "y": 1.0
+                    },
+                    {
+                        "x": 1.7040672E12,
+                        "group": "avg(b)",
+                        "y": 2.0
+                    }
+                ],
+                "groups": [
+                    "sum(a)",
+                    "avg(b)"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "t (month)",
+                "yLabel": "sum(a), avg(b)"
+            }
+        },
+        {
+            "name": "a single measure label",
+            "output": {
+                "xKind": "Category",
+                "points": [
+                    {
+                        "x": "x",
+                        "group": "min(a)",
+                        "y": 1.0
+                    }
+                ],
+                "groups": [
+                    "min(a)"
+                ],
+                "categories": [
+                    "x"
+                ],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "c",
+                "yLabel": "min(a)"
+            }
+        },
+        {
+            "name": "a measure that is also the x",
+            "output": {
+                "xKind": "Numeric",
+                "points": [
+                    {
+                        "x": 1.0,
+                        "group": "x",
+                        "y": 1.0
+                    },
+                    {
+                        "x": 2.0,
+                        "group": "x",
+                        "y": 2.0
+                    }
+                ],
+                "groups": [
+                    "x"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "x",
+                "yLabel": "x"
+            }
+        },
+        {
+            "name": "a measure that is also the series column is just a column",
+            "output": {
+                "xKind": "Category",
+                "points": [
+                    {
+                        "x": "a",
+                        "group": "a",
+                        "y": 4.0
+                    },
+                    {
+                        "x": "b",
+                        "group": "b",
+                        "y": 2.0
+                    }
+                ],
+                "groups": [
+                    "a",
+                    "b"
+                ],
+                "categories": [
+                    "a",
+                    "b"
+                ],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "s",
+                "yLabel": "sum(v)"
+            }
+        },
+        {
+            "name": "big and small doubles",
+            "output": {
+                "xKind": "Numeric",
+                "points": [
+                    {
+                        "x": 0.1,
+                        "group": "sum(y)",
+                        "y": 0.30000000000000004
+                    },
+                    {
+                        "x": 1.0E10,
+                        "group": "sum(y)",
+                        "y": 3.0000000001
+                    }
+                ],
+                "groups": [
+                    "sum(y)"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "x",
+                "yLabel": "sum(y)"
+            }
+        },
+        {
+            "name": "a long line is downsampled",
+            "output": {
+                "xKind": "Numeric",
+                "points": {
+                    "count": 2000,
+                    "first": {
+                        "x": 0.0,
+                        "group": "y",
+                        "y": 0.0
+                    },
+                    "last": {
+                        "x": 4999.0,
+                        "group": "y",
+                        "y": 1.0
+                    },
+                    "sumY": 5425.0
+                },
+                "groups": [
+                    "y"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": true,
+                "xLabel": "x",
+                "yLabel": "y"
+            }
+        },
+        {
+            "name": "a line of exactly the limit is kept",
+            "output": {
+                "xKind": "Numeric",
+                "points": {
+                    "count": 2000,
+                    "first": {
+                        "x": 0.0,
+                        "group": "y",
+                        "y": 0.0
+                    },
+                    "last": {
+                        "x": 1999.0,
+                        "group": "y",
+                        "y": 4.0
+                    },
+                    "sumY": 5995.0
+                },
+                "groups": [
+                    "y"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "x",
+                "yLabel": "y"
+            }
+        },
+        {
+            "name": "a line one past the limit is downsampled",
+            "output": {
+                "xKind": "Numeric",
+                "points": {
+                    "count": 2000,
+                    "first": {
+                        "x": 0.0,
+                        "group": "y",
+                        "y": 0.0
+                    },
+                    "last": {
+                        "x": 2000.0,
+                        "group": "y",
+                        "y": 5.0
+                    },
+                    "sumY": 5996.0
+                },
+                "groups": [
+                    "y"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": true,
+                "xLabel": "x",
+                "yLabel": "y"
+            }
+        },
+        {
+            "name": "an area is downsampled too",
+            "output": {
+                "xKind": "Numeric",
+                "points": {
+                    "count": 2000,
+                    "first": {
+                        "x": 0.0,
+                        "group": "y",
+                        "y": 0.0
+                    },
+                    "last": {
+                        "x": 2999.0,
+                        "group": "y",
+                        "y": 7.0
+                    },
+                    "sumY": 10080.0
+                },
+                "groups": [
+                    "y"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": true,
+                "xLabel": "x",
+                "yLabel": "y"
+            }
+        },
+        {
+            "name": "each series of a line is downsampled alone",
+            "output": {
+                "xKind": "Numeric",
+                "points": {
+                    "count": 6000,
+                    "first": {
+                        "x": 0.0,
+                        "group": "g0",
+                        "y": 0.0
+                    },
+                    "last": {
+                        "x": 6998.0,
+                        "group": "g2",
+                        "y": 4.0
+                    },
+                    "sumY": 36676.0
+                },
+                "groups": [
+                    "g0",
+                    "g1",
+                    "g2"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": true,
+                "xLabel": "x",
+                "yLabel": "y"
+            }
+        },
+        {
+            "name": "only the long series of a line is downsampled",
+            "output": {
+                "xKind": "Numeric",
+                "points": {
+                    "count": 4000,
+                    "first": {
+                        "x": 0.0,
+                        "group": "g0",
+                        "y": 0.0
+                    },
+                    "last": {
+                        "x": 4499.0,
+                        "group": "g1",
+                        "y": 1.0
+                    },
+                    "sumY": 24121.0
+                },
+                "groups": [
+                    "g0",
+                    "g1"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": true,
+                "xLabel": "x",
+                "yLabel": "y"
+            }
+        },
+        {
+            "name": "a bar is never downsampled",
+            "output": {
+                "xKind": "Numeric",
+                "points": {
+                    "count": 3000,
+                    "first": {
+                        "x": 0.0,
+                        "group": "y",
+                        "y": 0.0
+                    },
+                    "last": {
+                        "x": 2999.0,
+                        "group": "y",
+                        "y": 3.0
+                    },
+                    "sumY": 8994.0
+                },
+                "groups": [
+                    "y"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "x",
+                "yLabel": "y"
+            }
+        },
+        {
+            "name": "a scatter of the limit is kept",
+            "output": {
+                "xKind": "Numeric",
+                "points": {
+                    "count": 20000,
+                    "first": {
+                        "x": 0.0,
+                        "group": "y",
+                        "y": 0.0
+                    },
+                    "last": {
+                        "x": 19999.0,
+                        "group": "y",
+                        "y": 17.0
+                    },
+                    "sumY": 959289.0
+                },
+                "groups": [
+                    "y"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "x",
+                "yLabel": "y"
+            }
+        },
+        {
+            "name": "a scatter past the limit is thinned",
+            "output": {
+                "xKind": "Numeric",
+                "points": {
+                    "count": 20000,
+                    "first": {
+                        "x": 0.0,
+                        "group": "y",
+                        "y": 0.0
+                    },
+                    "last": {
+                        "x": 24998.0,
+                        "group": "y",
+                        "y": 69.0
+                    },
+                    "sumY": 959272.0
+                },
+                "groups": [
+                    "y"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": true,
+                "xLabel": "x",
+                "yLabel": "y"
+            }
+        },
+        {
+            "name": "a scatter of a million odd steps",
+            "output": {
+                "xKind": "Numeric",
+                "points": {
+                    "count": 20000,
+                    "first": {
+                        "x": 0.0,
+                        "group": "y",
+                        "y": 0.0
+                    },
+                    "last": {
+                        "x": 30009.0,
+                        "group": "y",
+                        "y": 16.0
+                    },
+                    "sumY": 879544.0
+                },
+                "groups": [
+                    "y"
+                ],
+                "categories": [],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": true,
+                "xLabel": "x",
+                "yLabel": "y"
+            }
+        },
+        {
+            "name": "many categories in a thousand rows",
+            "output": {
+                "xKind": "Category",
+                "points": {
+                    "count": 50,
+                    "first": {
+                        "x": "c119",
+                        "group": "sum(v)",
+                        "y": 6590.0
+                    },
+                    "last": {
+                        "x": "c70",
+                        "group": "sum(v)",
+                        "y": 6100.0
+                    },
+                    "sumY": 317250.0
+                },
+                "groups": [
+                    "sum(v)"
+                ],
+                "categories": [
+                    "c119",
+                    "c118",
+                    "c117",
+                    "c116",
+                    "c115",
+                    "c114",
+                    "c113",
+                    "c112",
+                    "c111",
+                    "c110",
+                    "c109",
+                    "c108",
+                    "c107",
+                    "c106",
+                    "c105",
+                    "c104",
+                    "c103",
+                    "c102",
+                    "c101",
+                    "c100",
+                    "c99",
+                    "c98",
+                    "c97",
+                    "c96",
+                    "c95",
+                    "c94",
+                    "c93",
+                    "c92",
+                    "c91",
+                    "c90",
+                    "c89",
+                    "c88",
+                    "c87",
+                    "c86",
+                    "c85",
+                    "c84",
+                    "c83",
+                    "c82",
+                    "c81",
+                    "c80",
+                    "c79",
+                    "c78",
+                    "c77",
+                    "c76",
+                    "c75",
+                    "c74",
+                    "c73",
+                    "c72",
+                    "c71",
+                    "c70"
+                ],
+                "skippedRows": 0,
+                "omittedCategories": 70,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "c",
+                "yLabel": "sum(v)"
+            }
+        },
+        {
+            "name": "profiles given outright",
+            "output": {
+                "xKind": "Category",
+                "points": [
+                    {
+                        "x": "b",
+                        "group": "v",
+                        "y": 2.0
+                    },
+                    {
+                        "x": "a",
+                        "group": "v",
+                        "y": 1.0
+                    }
+                ],
+                "groups": [
+                    "v"
+                ],
+                "categories": [
+                    "b",
+                    "a"
+                ],
+                "skippedRows": 0,
+                "omittedCategories": 0,
+                "mergedSeries": 0,
+                "downsampled": false,
+                "xLabel": "c",
+                "yLabel": "v"
+            }
+        }
+    ]
+}

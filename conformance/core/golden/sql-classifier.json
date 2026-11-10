@@ -198,6 +198,159 @@
                 "danger": null,
                 "changesData": true
             }
+        },
+        {
+            "name": "kotlin: leading comment select",
+            "output": {
+                "kind": "Read",
+                "verb": "SELECT",
+                "danger": null,
+                "changesData": false
+            }
+        },
+        {
+            "name": "kotlin: explain select",
+            "output": {
+                "kind": "Read",
+                "verb": "EXPLAIN",
+                "danger": null,
+                "changesData": false
+            }
+        },
+        {
+            "name": "kotlin: explain analyze delete with where",
+            "output": {
+                "kind": "Write",
+                "verb": "EXPLAIN",
+                "danger": null,
+                "changesData": true
+            }
+        },
+        {
+            "name": "kotlin: lower insert",
+            "output": {
+                "kind": "Write",
+                "verb": "INSERT",
+                "danger": null,
+                "changesData": true
+            }
+        },
+        {
+            "name": "kotlin: create table",
+            "output": {
+                "kind": "Ddl",
+                "verb": "CREATE",
+                "danger": null,
+                "changesData": true
+            }
+        },
+        {
+            "name": "kotlin: set search path",
+            "output": {
+                "kind": "Other",
+                "verb": "SET",
+                "danger": null,
+                "changesData": false
+            }
+        },
+        {
+            "name": "kotlin: cte select",
+            "output": {
+                "kind": "Read",
+                "verb": "SELECT",
+                "danger": null,
+                "changesData": false
+            }
+        },
+        {
+            "name": "kotlin: data-modifying cte",
+            "output": {
+                "kind": "Write",
+                "verb": "SELECT",
+                "danger": null,
+                "changesData": true
+            }
+        },
+        {
+            "name": "kotlin: cte then delete",
+            "output": {
+                "kind": "Write",
+                "verb": "DELETE",
+                "danger": null,
+                "changesData": true
+            }
+        },
+        {
+            "name": "kotlin: lower update without where",
+            "output": {
+                "kind": "Write",
+                "verb": "UPDATE",
+                "danger": "UPDATE without WHERE affects every row",
+                "changesData": true
+            }
+        },
+        {
+            "name": "kotlin: where only in subquery",
+            "output": {
+                "kind": "Write",
+                "verb": "UPDATE",
+                "danger": "UPDATE without WHERE affects every row",
+                "changesData": true
+            }
+        },
+        {
+            "name": "kotlin: truncate without table",
+            "output": {
+                "kind": "Ddl",
+                "verb": "TRUNCATE",
+                "danger": "TRUNCATE removes every row",
+                "changesData": true
+            }
+        },
+        {
+            "name": "alter drop column",
+            "output": {
+                "kind": "Ddl",
+                "verb": "ALTER",
+                "danger": "ALTER … DROP removes part of a schema object",
+                "changesData": true
+            }
+        },
+        {
+            "name": "alter add column",
+            "output": {
+                "kind": "Ddl",
+                "verb": "ALTER",
+                "danger": null,
+                "changesData": true
+            }
+        },
+        {
+            "name": "drop alone",
+            "output": {
+                "kind": "Ddl",
+                "verb": "DROP",
+                "danger": "DROP permanently removes an object",
+                "changesData": true
+            }
+        },
+        {
+            "name": "rollback",
+            "output": {
+                "kind": "Transaction",
+                "verb": "ROLLBACK",
+                "danger": null,
+                "changesData": false
+            }
+        },
+        {
+            "name": "starts with a number",
+            "output": {
+                "kind": "Other",
+                "verb": "42",
+                "danger": null,
+                "changesData": false
+            }
         }
     ]
 }

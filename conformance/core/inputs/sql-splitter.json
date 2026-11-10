@@ -68,6 +68,77 @@
         1,
         14
       ]
+    },
+    {
+      "name": "kotlin: drops empty statements",
+      "syntax": "PostgreSQL",
+      "sql": "SELECT 1;\n\n;  SELECT 2  "
+    },
+    {
+      "name": "kotlin: delimiters in strings, identifiers and comments",
+      "syntax": "PostgreSQL",
+      "sql": "SELECT 'a;b', \"c;d\" -- x;y\nFROM /* ; */ t /* trailing */;SELECT 'it''s;'"
+    },
+    {
+      "name": "kotlin: dollar-quoted body with tag",
+      "syntax": "PostgreSQL",
+      "sql": "CREATE FUNCTION f() RETURNS int AS $body$ BEGIN RETURN 1; END; $body$ LANGUAGE plpgsql;\nSELECT f();"
+    },
+    {
+      "name": "kotlin: mysql escapes, hash comments, DELIMITER",
+      "syntax": "MySQL",
+      "sql": "SELECT 'a\\';b' # c;d\n;\nDELIMITER //\nCREATE PROCEDURE p() BEGIN SELECT 1; SELECT 2; END//\nDELIMITER ;\nCALL p();"
+    },
+    {
+      "name": "kotlin: sqlite trigger body",
+      "syntax": "SQLite",
+      "sql": "CREATE TRIGGER t AFTER INSERT ON a BEGIN UPDATE b SET n = CASE WHEN 1 THEN 2 END; DELETE FROM c; END;\nBEGIN;\nCOMMIT;"
+    },
+    {
+      "name": "kotlin: statement at caret",
+      "syntax": "PostgreSQL",
+      "sql": "SELECT 1;\nSELECT 2;   \n\nSELECT 3",
+      "at": [
+        3,
+        9,
+        20,
+        21,
+        31,
+        32
+      ]
+    },
+    {
+      "name": "kotlin: tsql GO alone on a line",
+      "syntax": "TSql",
+      "sql": "SELECT 'GO'\nGO\nSELECT 1 AS go\n  go  \nSELECT 2;\nSELECT 3\nGO 5\n"
+    },
+    {
+      "name": "kotlin: GO is a name elsewhere",
+      "syntax": "PostgreSQL",
+      "sql": "SELECT 1\nGO\n"
+    },
+    {
+      "name": "caret between statements on blank lines",
+      "sql": "SELECT 1;\n\n\nSELECT 2",
+      "at": [
+        10,
+        11,
+        12
+      ]
+    },
+    {
+      "name": "empty script",
+      "sql": "",
+      "at": [
+        0
+      ]
+    },
+    {
+      "name": "only comments",
+      "sql": "-- a\n/* b */",
+      "at": [
+        3
+      ]
     }
   ]
 }

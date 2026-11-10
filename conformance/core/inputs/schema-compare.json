@@ -1,0 +1,938 @@
+{
+  "subject": "schema-compare",
+  "cases": [
+    {
+      "name": "compare and migrate defaults",
+      "source": [
+        {
+          "table": {
+            "catalog": null,
+            "schema": "src",
+            "name": "users"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "type": "integer",
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "id"
+            },
+            {
+              "name": "Email",
+              "type": "varchar(100)",
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "Email"
+            },
+            {
+              "name": "age",
+              "type": "int4",
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "age"
+            },
+            {
+              "name": "created",
+              "type": "timestamp",
+              "nullable": true,
+              "defaultValue": "now()",
+              "autoIncrement": false,
+              "originalName": "created"
+            },
+            {
+              "name": "seq",
+              "type": "integer",
+              "nullable": true,
+              "defaultValue": "nextval('a_seq')",
+              "autoIncrement": false,
+              "originalName": "seq"
+            }
+          ],
+          "primaryKey": [
+            "id"
+          ],
+          "indexes": [
+            {
+              "name": "users_email",
+              "columns": [
+                "email"
+              ],
+              "unique": true
+            },
+            {
+              "name": "users_age",
+              "columns": [
+                "age"
+              ],
+              "unique": false
+            }
+          ],
+          "foreignKeys": [
+            {
+              "name": "users_team",
+              "columns": [
+                "team_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "src",
+                "name": "teams"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": "CASCADE"
+            },
+            {
+              "name": "",
+              "columns": [
+                "age"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": null,
+                "name": "ages"
+              },
+              "referencedColumns": [
+                "v"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": "users_pkey",
+          "uniqueConstraints": [],
+          "checks": [],
+          "triggers": [
+            "CREATE TRIGGER x"
+          ]
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "src",
+            "name": "teams"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "type": "integer",
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "id"
+            },
+            {
+              "name": "name",
+              "type": "text",
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "name"
+            }
+          ],
+          "primaryKey": [
+            "id"
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null,
+          "uniqueConstraints": [],
+          "checks": [],
+          "triggers": []
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "src",
+            "name": "Logs"
+          },
+          "columns": [
+            {
+              "name": "at",
+              "type": "timestamptz",
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "at"
+            }
+          ],
+          "primaryKey": [],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null,
+          "uniqueConstraints": [],
+          "checks": [],
+          "triggers": []
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "src",
+            "name": "same"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "type": "int",
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "id"
+            }
+          ],
+          "primaryKey": [
+            "id"
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null,
+          "uniqueConstraints": [],
+          "checks": [],
+          "triggers": []
+        }
+      ],
+      "target": [
+        {
+          "table": {
+            "catalog": null,
+            "schema": "dst",
+            "name": "USERS"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "type": "int4",
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "id"
+            },
+            {
+              "name": "email",
+              "type": "character varying(100)",
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "email"
+            },
+            {
+              "name": "legacy",
+              "type": "text",
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "legacy"
+            },
+            {
+              "name": "created",
+              "type": "timestamp without time zone",
+              "nullable": true,
+              "defaultValue": "CURRENT_TIMESTAMP",
+              "autoIncrement": false,
+              "originalName": "created"
+            },
+            {
+              "name": "seq",
+              "type": "integer",
+              "nullable": true,
+              "defaultValue": "nextval('b_seq')",
+              "autoIncrement": false,
+              "originalName": "seq"
+            }
+          ],
+          "primaryKey": [
+            "id",
+            "email"
+          ],
+          "indexes": [
+            {
+              "name": "USERS_EMAIL",
+              "columns": [
+                "EMAIL"
+              ],
+              "unique": true
+            },
+            {
+              "name": "users_old",
+              "columns": [
+                "legacy"
+              ],
+              "unique": false
+            },
+            {
+              "name": "users_age",
+              "columns": [
+                "age"
+              ],
+              "unique": true
+            }
+          ],
+          "foreignKeys": [
+            {
+              "name": "users_team",
+              "columns": [
+                "team_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "dst",
+                "name": "teams"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            },
+            {
+              "name": "users_legacy",
+              "columns": [
+                "legacy"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "dst",
+                "name": "legacy"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null,
+          "uniqueConstraints": [],
+          "checks": [],
+          "triggers": []
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "dst",
+            "name": "old"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "type": "int",
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "id"
+            }
+          ],
+          "primaryKey": [],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null,
+          "uniqueConstraints": [],
+          "checks": [],
+          "triggers": []
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "dst",
+            "name": "same"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "type": "integer",
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "id"
+            }
+          ],
+          "primaryKey": [
+            "id"
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null,
+          "uniqueConstraints": [],
+          "checks": [],
+          "triggers": []
+        }
+      ],
+      "targetNamespace": {
+        "catalog": null,
+        "schema": "dst"
+      }
+    },
+    {
+      "name": "migrate everything",
+      "source": [
+        {
+          "table": {
+            "catalog": null,
+            "schema": "src",
+            "name": "users"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "type": "integer",
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "id"
+            },
+            {
+              "name": "Email",
+              "type": "varchar(100)",
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "Email"
+            },
+            {
+              "name": "age",
+              "type": "int4",
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "age"
+            },
+            {
+              "name": "created",
+              "type": "timestamp",
+              "nullable": true,
+              "defaultValue": "now()",
+              "autoIncrement": false,
+              "originalName": "created"
+            },
+            {
+              "name": "seq",
+              "type": "integer",
+              "nullable": true,
+              "defaultValue": "nextval('a_seq')",
+              "autoIncrement": false,
+              "originalName": "seq"
+            }
+          ],
+          "primaryKey": [
+            "id"
+          ],
+          "indexes": [
+            {
+              "name": "users_email",
+              "columns": [
+                "email"
+              ],
+              "unique": true
+            },
+            {
+              "name": "users_age",
+              "columns": [
+                "age"
+              ],
+              "unique": false
+            }
+          ],
+          "foreignKeys": [
+            {
+              "name": "users_team",
+              "columns": [
+                "team_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "src",
+                "name": "teams"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": "CASCADE"
+            },
+            {
+              "name": "",
+              "columns": [
+                "age"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": null,
+                "name": "ages"
+              },
+              "referencedColumns": [
+                "v"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": "users_pkey",
+          "uniqueConstraints": [],
+          "checks": [],
+          "triggers": [
+            "CREATE TRIGGER x"
+          ]
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "src",
+            "name": "teams"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "type": "integer",
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "id"
+            },
+            {
+              "name": "name",
+              "type": "text",
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "name"
+            }
+          ],
+          "primaryKey": [
+            "id"
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null,
+          "uniqueConstraints": [],
+          "checks": [],
+          "triggers": []
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "src",
+            "name": "Logs"
+          },
+          "columns": [
+            {
+              "name": "at",
+              "type": "timestamptz",
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "at"
+            }
+          ],
+          "primaryKey": [],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null,
+          "uniqueConstraints": [],
+          "checks": [],
+          "triggers": []
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "src",
+            "name": "same"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "type": "int",
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "id"
+            }
+          ],
+          "primaryKey": [
+            "id"
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null,
+          "uniqueConstraints": [],
+          "checks": [],
+          "triggers": []
+        }
+      ],
+      "target": [
+        {
+          "table": {
+            "catalog": null,
+            "schema": "dst",
+            "name": "USERS"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "type": "int4",
+              "nullable": false,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "id"
+            },
+            {
+              "name": "email",
+              "type": "character varying(100)",
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "email"
+            },
+            {
+              "name": "legacy",
+              "type": "text",
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "legacy"
+            },
+            {
+              "name": "created",
+              "type": "timestamp without time zone",
+              "nullable": true,
+              "defaultValue": "CURRENT_TIMESTAMP",
+              "autoIncrement": false,
+              "originalName": "created"
+            },
+            {
+              "name": "seq",
+              "type": "integer",
+              "nullable": true,
+              "defaultValue": "nextval('b_seq')",
+              "autoIncrement": false,
+              "originalName": "seq"
+            }
+          ],
+          "primaryKey": [
+            "id",
+            "email"
+          ],
+          "indexes": [
+            {
+              "name": "USERS_EMAIL",
+              "columns": [
+                "EMAIL"
+              ],
+              "unique": true
+            },
+            {
+              "name": "users_old",
+              "columns": [
+                "legacy"
+              ],
+              "unique": false
+            },
+            {
+              "name": "users_age",
+              "columns": [
+                "age"
+              ],
+              "unique": true
+            }
+          ],
+          "foreignKeys": [
+            {
+              "name": "users_team",
+              "columns": [
+                "team_id"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "dst",
+                "name": "teams"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            },
+            {
+              "name": "users_legacy",
+              "columns": [
+                "legacy"
+              ],
+              "referencedTable": {
+                "catalog": null,
+                "schema": "dst",
+                "name": "legacy"
+              },
+              "referencedColumns": [
+                "id"
+              ],
+              "onUpdate": null,
+              "onDelete": null
+            }
+          ],
+          "primaryKeyName": null,
+          "uniqueConstraints": [],
+          "checks": [],
+          "triggers": []
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "dst",
+            "name": "old"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "type": "int",
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "id"
+            }
+          ],
+          "primaryKey": [],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null,
+          "uniqueConstraints": [],
+          "checks": [],
+          "triggers": []
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "dst",
+            "name": "same"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "type": "integer",
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "id"
+            }
+          ],
+          "primaryKey": [
+            "id"
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null,
+          "uniqueConstraints": [],
+          "checks": [],
+          "triggers": []
+        }
+      ],
+      "targetNamespace": {
+        "catalog": null,
+        "schema": "dst"
+      },
+      "selection": [
+        "table:Logs",
+        "table:old",
+        "table:teams",
+        "USERS/column:Email",
+        "USERS/column:age",
+        "USERS/column:legacy",
+        "USERS/pk",
+        "USERS/index:users_email",
+        "USERS/index:users_old",
+        "USERS/index:users_age",
+        "USERS/fk:users_team",
+        "USERS/fk:users_legacy",
+        "USERS/fk:age->ages(v)",
+        "USERS/column:created"
+      ]
+    },
+    {
+      "name": "identical",
+      "source": [
+        {
+          "table": {
+            "catalog": null,
+            "schema": "src",
+            "name": "same"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "type": "int",
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "id"
+            }
+          ],
+          "primaryKey": [
+            "id"
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null,
+          "uniqueConstraints": [],
+          "checks": [],
+          "triggers": []
+        }
+      ],
+      "target": [
+        {
+          "table": {
+            "catalog": null,
+            "schema": "dst",
+            "name": "same"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "type": "integer",
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "id"
+            }
+          ],
+          "primaryKey": [
+            "id"
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null,
+          "uniqueConstraints": [],
+          "checks": [],
+          "triggers": []
+        }
+      ],
+      "targetNamespace": {
+        "catalog": null,
+        "schema": "dst"
+      }
+    },
+    {
+      "name": "empty",
+      "source": [],
+      "target": [],
+      "targetNamespace": {
+        "catalog": "db",
+        "schema": null
+      }
+    },
+    {
+      "name": "primary key added and dropped",
+      "source": [
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "a"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "type": "int",
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "id"
+            }
+          ],
+          "primaryKey": [
+            "id"
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null,
+          "uniqueConstraints": [],
+          "checks": [],
+          "triggers": []
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "b"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "type": "int",
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "id"
+            }
+          ],
+          "primaryKey": [],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null,
+          "uniqueConstraints": [],
+          "checks": [],
+          "triggers": []
+        }
+      ],
+      "target": [
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "a"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "type": "int",
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "id"
+            }
+          ],
+          "primaryKey": [],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null,
+          "uniqueConstraints": [],
+          "checks": [],
+          "triggers": []
+        },
+        {
+          "table": {
+            "catalog": null,
+            "schema": "app",
+            "name": "b"
+          },
+          "columns": [
+            {
+              "name": "id",
+              "type": "int",
+              "nullable": true,
+              "defaultValue": null,
+              "autoIncrement": false,
+              "originalName": "id"
+            }
+          ],
+          "primaryKey": [
+            "id"
+          ],
+          "indexes": [],
+          "foreignKeys": [],
+          "primaryKeyName": null,
+          "uniqueConstraints": [],
+          "checks": [],
+          "triggers": []
+        }
+      ],
+      "targetNamespace": {
+        "catalog": null,
+        "schema": "app"
+      }
+    }
+  ]
+}

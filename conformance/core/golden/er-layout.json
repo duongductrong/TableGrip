@@ -1,0 +1,1057 @@
+{
+    "subject": "er-layout",
+    "cases": [
+        {
+            "name": "layered with loose table",
+            "output": {
+                "edges": [
+                    {
+                        "from": "users",
+                        "fromColumns": [
+                            "teams_id"
+                        ],
+                        "to": "teams",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": true
+                    },
+                    {
+                        "from": "orders",
+                        "fromColumns": [
+                            "users_id"
+                        ],
+                        "to": "users",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "items",
+                        "fromColumns": [
+                            "orders_id"
+                        ],
+                        "to": "orders",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "items",
+                        "fromColumns": [
+                            "products_id"
+                        ],
+                        "to": "products",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    }
+                ],
+                "boxes": {
+                    "teams": [
+                        0,
+                        1114112000,
+                        1128792064,
+                        1115947008
+                    ],
+                    "users": [
+                        1133576192,
+                        1111228416,
+                        1128792064,
+                        1118830592
+                    ],
+                    "orders": [
+                        1141964800,
+                        0,
+                        1128792064,
+                        1118830592
+                    ],
+                    "products": [
+                        1141964800,
+                        1122500608,
+                        1128792064,
+                        1115947008
+                    ],
+                    "items": [
+                        1146716160,
+                        1108344832,
+                        1128792064,
+                        1121714176
+                    ],
+                    "log": [
+                        0,
+                        1133903872,
+                        1128792064,
+                        1115947008
+                    ]
+                },
+                "neighbourhood": [
+                    "users",
+                    "orders",
+                    "items"
+                ]
+            }
+        },
+        {
+            "name": "cycles and self references",
+            "output": {
+                "edges": [
+                    {
+                        "from": "a",
+                        "fromColumns": [
+                            "b_id"
+                        ],
+                        "to": "b",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "b",
+                        "fromColumns": [
+                            "a_id"
+                        ],
+                        "to": "a",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "c",
+                        "fromColumns": [
+                            "c_id"
+                        ],
+                        "to": "c",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    }
+                ],
+                "boxes": {
+                    "b": [
+                        0,
+                        0,
+                        1127481344,
+                        1118830592
+                    ],
+                    "a": [
+                        1132920832,
+                        0,
+                        1127481344,
+                        1118830592
+                    ],
+                    "c": [
+                        0,
+                        1129185280,
+                        1127481344,
+                        1118830592
+                    ]
+                }
+            }
+        },
+        {
+            "name": "empty",
+            "output": {
+                "edges": [],
+                "boxes": {}
+            }
+        },
+        {
+            "name": "only loose tables",
+            "output": {
+                "edges": [],
+                "boxes": {
+                    "t0": [
+                        0,
+                        0,
+                        1120403456,
+                        1115947008
+                    ],
+                    "t1": [
+                        1124990976,
+                        0,
+                        1122146714,
+                        1118830592
+                    ],
+                    "t2": [
+                        1133815398,
+                        0,
+                        1123889971,
+                        1121714176
+                    ],
+                    "t3": [
+                        1139340083,
+                        0,
+                        1124853350,
+                        1124335616
+                    ],
+                    "t4": [
+                        0,
+                        1127088128,
+                        1125724979,
+                        1125777408
+                    ],
+                    "t5": [
+                        1128477491,
+                        1127088128,
+                        1126596608,
+                        1127219200
+                    ],
+                    "t6": [
+                        1137301914,
+                        1127088128,
+                        1127468237,
+                        1128660992
+                    ]
+                }
+            }
+        },
+        {
+            "name": "tall layer wraps",
+            "output": {
+                "edges": [
+                    {
+                        "from": "leaf00",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf01",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf02",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf03",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf04",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf05",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf06",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf07",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf08",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf09",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf10",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf11",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf12",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf13",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf14",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf15",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf16",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf17",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf18",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf19",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf20",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf21",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf22",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf23",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf24",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf25",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf26",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf27",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf28",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "leaf29",
+                        "fromColumns": [
+                            "root_id"
+                        ],
+                        "to": "root",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    }
+                ],
+                "boxes": {
+                    "root": [
+                        0,
+                        1143373824,
+                        1128792064,
+                        1115947008
+                    ],
+                    "leaf00": [
+                        1133576192,
+                        1119485952,
+                        1125777408,
+                        1118830592
+                    ],
+                    "leaf01": [
+                        1133576192,
+                        1129381888,
+                        1125777408,
+                        1125777408
+                    ],
+                    "leaf02": [
+                        1133576192,
+                        1136885760,
+                        1125777408,
+                        1130102784
+                    ],
+                    "leaf03": [
+                        1133576192,
+                        1142931456,
+                        1125777408,
+                        1133445120
+                    ],
+                    "leaf04": [
+                        1133576192,
+                        1148076032,
+                        1125777408,
+                        1135607808
+                    ],
+                    "leaf05": [
+                        1141211136,
+                        0,
+                        1125974016,
+                        1137770496
+                    ],
+                    "leaf06": [
+                        1141211136,
+                        1138688000,
+                        1125974016,
+                        1139212288
+                    ],
+                    "leaf07": [
+                        1141211136,
+                        1147797504,
+                        1125974016,
+                        1139212288
+                    ],
+                    "leaf08": [
+                        1145257984,
+                        1124139008,
+                        1126236160,
+                        1139212288
+                    ],
+                    "leaf09": [
+                        1145257984,
+                        1142603776,
+                        1126236160,
+                        1124335616
+                    ],
+                    "leaf10": [
+                        1145257984,
+                        1145225216,
+                        1126236160,
+                        1128660992
+                    ],
+                    "leaf11": [
+                        1145257984,
+                        1148928000,
+                        1126236160,
+                        1132724224
+                    ],
+                    "leaf12": [
+                        1149304832,
+                        1117388800,
+                        1126432768,
+                        1134886912
+                    ],
+                    "leaf13": [
+                        1149304832,
+                        1138327552,
+                        1126432768,
+                        1137049600
+                    ],
+                    "leaf14": [
+                        1149304832,
+                        1146535936,
+                        1126432768,
+                        1139212288
+                    ],
+                    "leaf15": [
+                        1151385600,
+                        1112539136,
+                        1126694912,
+                        1139212288
+                    ],
+                    "leaf16": [
+                        1151385600,
+                        1141342208,
+                        1126694912,
+                        1139212288
+                    ],
+                    "leaf17": [
+                        1151385600,
+                        1149304832,
+                        1126694912,
+                        1121714176
+                    ],
+                    "leaf18": [
+                        1151385600,
+                        1150435328,
+                        1126694912,
+                        1127219200
+                    ],
+                    "leaf19": [
+                        1153499136,
+                        1129381888,
+                        1126891520,
+                        1131544576
+                    ],
+                    "leaf20": [
+                        1153499136,
+                        1139769344,
+                        1126891520,
+                        1134166016
+                    ],
+                    "leaf21": [
+                        1153499136,
+                        1145815040,
+                        1126891520,
+                        1136328704
+                    ],
+                    "leaf22": [
+                        1155637248,
+                        1131020288,
+                        1127022592,
+                        1138491392
+                    ],
+                    "leaf23": [
+                        1155637248,
+                        1143963648,
+                        1127022592,
+                        1139212288
+                    ],
+                    "leaf24": [
+                        1157709824,
+                        1108869120,
+                        1127350272,
+                        1139212288
+                    ],
+                    "leaf25": [
+                        1157709824,
+                        1141112832,
+                        1127350272,
+                        1118830592
+                    ],
+                    "leaf26": [
+                        1157709824,
+                        1143013376,
+                        1127350272,
+                        1125777408
+                    ],
+                    "leaf27": [
+                        1157709824,
+                        1145995264,
+                        1127350272,
+                        1130102784
+                    ],
+                    "leaf28": [
+                        1157709824,
+                        1149648896,
+                        1127350272,
+                        1133445120
+                    ],
+                    "leaf29": [
+                        1158807552,
+                        1141030912,
+                        1127415808,
+                        1135607808
+                    ],
+                    "z1": [
+                        0,
+                        1153269760,
+                        1128792064,
+                        1115947008
+                    ],
+                    "z2": [
+                        1131544576,
+                        1153269760,
+                        1128792064,
+                        1115947008
+                    ]
+                },
+                "neighbourhood": [
+                    "root",
+                    "leaf00",
+                    "leaf01",
+                    "leaf02",
+                    "leaf03",
+                    "leaf04",
+                    "leaf05",
+                    "leaf06",
+                    "leaf07",
+                    "leaf08",
+                    "leaf09",
+                    "leaf10",
+                    "leaf11",
+                    "leaf12",
+                    "leaf13",
+                    "leaf14",
+                    "leaf15",
+                    "leaf16",
+                    "leaf17",
+                    "leaf18",
+                    "leaf19",
+                    "leaf20",
+                    "leaf21",
+                    "leaf22",
+                    "leaf23",
+                    "leaf24",
+                    "leaf25",
+                    "leaf26",
+                    "leaf27",
+                    "leaf28",
+                    "leaf29"
+                ]
+            }
+        },
+        {
+            "name": "unknown reference and case",
+            "output": {
+                "edges": [
+                    {
+                        "from": "b",
+                        "fromColumns": [
+                            "a_id"
+                        ],
+                        "to": "A",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    }
+                ],
+                "boxes": {
+                    "A": [
+                        0,
+                        0,
+                        1128792064,
+                        1115947008
+                    ],
+                    "b": [
+                        1133576192,
+                        0,
+                        1128792064,
+                        1115947008
+                    ]
+                }
+            }
+        },
+        {
+            "name": "long chain with skips",
+            "output": {
+                "edges": [
+                    {
+                        "from": "n1",
+                        "fromColumns": [
+                            "n0_id"
+                        ],
+                        "to": "n0",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "n1",
+                        "fromColumns": [
+                            "n0_id"
+                        ],
+                        "to": "n0",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "n2",
+                        "fromColumns": [
+                            "n1_id"
+                        ],
+                        "to": "n1",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "n2",
+                        "fromColumns": [
+                            "n0_id"
+                        ],
+                        "to": "n0",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "n3",
+                        "fromColumns": [
+                            "n2_id"
+                        ],
+                        "to": "n2",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "n3",
+                        "fromColumns": [
+                            "n0_id"
+                        ],
+                        "to": "n0",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "n4",
+                        "fromColumns": [
+                            "n3_id"
+                        ],
+                        "to": "n3",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "n4",
+                        "fromColumns": [
+                            "n1_id"
+                        ],
+                        "to": "n1",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "n5",
+                        "fromColumns": [
+                            "n4_id"
+                        ],
+                        "to": "n4",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "n5",
+                        "fromColumns": [
+                            "n2_id"
+                        ],
+                        "to": "n2",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "n6",
+                        "fromColumns": [
+                            "n5_id"
+                        ],
+                        "to": "n5",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "n6",
+                        "fromColumns": [
+                            "n3_id"
+                        ],
+                        "to": "n3",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "n7",
+                        "fromColumns": [
+                            "n6_id"
+                        ],
+                        "to": "n6",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "n7",
+                        "fromColumns": [
+                            "n4_id"
+                        ],
+                        "to": "n4",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "n8",
+                        "fromColumns": [
+                            "n7_id"
+                        ],
+                        "to": "n7",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    },
+                    {
+                        "from": "n8",
+                        "fromColumns": [
+                            "n5_id"
+                        ],
+                        "to": "n5",
+                        "toColumns": [
+                            "id"
+                        ],
+                        "optional": false
+                    }
+                ],
+                "boxes": {
+                    "n0": [
+                        0,
+                        1102053376,
+                        1036831949,
+                        1115947008
+                    ],
+                    "n1": [
+                        1119105843,
+                        0,
+                        1066192077,
+                        1121714176
+                    ],
+                    "n2": [
+                        1127559987,
+                        0,
+                        1074161254,
+                        1121714176
+                    ],
+                    "n3": [
+                        1133028966,
+                        0,
+                        1078355558,
+                        1121714176
+                    ],
+                    "n4": [
+                        1136079667,
+                        0,
+                        1082340147,
+                        1121714176
+                    ],
+                    "n5": [
+                        1139163136,
+                        0,
+                        1084437299,
+                        1121714176
+                    ],
+                    "n6": [
+                        1141565030,
+                        0,
+                        1086534451,
+                        1121714176
+                    ],
+                    "n7": [
+                        1143139532,
+                        0,
+                        1088631603,
+                        1121714176
+                    ],
+                    "n8": [
+                        1144730418,
+                        0,
+                        1090623898,
+                        1121714176
+                    ]
+                }
+            }
+        }
+    ]
+}

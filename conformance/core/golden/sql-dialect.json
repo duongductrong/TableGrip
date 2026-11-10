@@ -1,0 +1,4667 @@
+{
+    "subject": "sql-dialect",
+    "cases": [
+        {
+            "name": "properties",
+            "output": {
+                "PostgreSQL": {
+                    "name": "PostgreSQL",
+                    "syntax": {
+                        "backtickIdentifiers": false,
+                        "doubleQuotedStrings": false,
+                        "hashComments": false,
+                        "dollarQuotedStrings": true,
+                        "backslashEscapes": false,
+                        "delimiterCommand": false,
+                        "bracketIdentifiers": false,
+                        "batchSeparator": false
+                    },
+                    "tableTypes": {
+                        "TABLE": false,
+                        "PARTITIONED TABLE": false,
+                        "VIEW": true,
+                        "MATERIALIZED VIEW": true
+                    },
+                    "supportsRegex": true,
+                    "regexHonoursCase": true,
+                    "functions": [
+                        "now",
+                        "date_trunc",
+                        "to_char",
+                        "string_agg",
+                        "array_agg",
+                        "jsonb_build_object",
+                        "generate_series",
+                        "gen_random_uuid"
+                    ]
+                },
+                "MySQL": {
+                    "name": "MySQL",
+                    "syntax": {
+                        "backtickIdentifiers": true,
+                        "doubleQuotedStrings": true,
+                        "hashComments": true,
+                        "dollarQuotedStrings": false,
+                        "backslashEscapes": true,
+                        "delimiterCommand": true,
+                        "bracketIdentifiers": false,
+                        "batchSeparator": false
+                    },
+                    "tableTypes": {
+                        "TABLE": false,
+                        "VIEW": true
+                    },
+                    "supportsRegex": true,
+                    "regexHonoursCase": false,
+                    "functions": [
+                        "now",
+                        "date_format",
+                        "group_concat",
+                        "ifnull",
+                        "json_object",
+                        "json_extract",
+                        "uuid"
+                    ]
+                },
+                "MariaDB": {
+                    "name": "MySQL",
+                    "syntax": {
+                        "backtickIdentifiers": true,
+                        "doubleQuotedStrings": true,
+                        "hashComments": true,
+                        "dollarQuotedStrings": false,
+                        "backslashEscapes": true,
+                        "delimiterCommand": true,
+                        "bracketIdentifiers": false,
+                        "batchSeparator": false
+                    },
+                    "tableTypes": {
+                        "TABLE": false,
+                        "VIEW": true
+                    },
+                    "supportsRegex": true,
+                    "regexHonoursCase": false,
+                    "functions": [
+                        "now",
+                        "date_format",
+                        "group_concat",
+                        "ifnull",
+                        "json_object",
+                        "json_extract",
+                        "uuid"
+                    ]
+                },
+                "SQLite": {
+                    "name": "SQLite",
+                    "syntax": {
+                        "backtickIdentifiers": true,
+                        "doubleQuotedStrings": false,
+                        "hashComments": false,
+                        "dollarQuotedStrings": false,
+                        "backslashEscapes": false,
+                        "delimiterCommand": false,
+                        "bracketIdentifiers": false,
+                        "batchSeparator": false
+                    },
+                    "tableTypes": {
+                        "TABLE": false,
+                        "VIEW": true
+                    },
+                    "supportsRegex": false,
+                    "regexHonoursCase": false,
+                    "functions": [
+                        "datetime",
+                        "strftime",
+                        "group_concat",
+                        "ifnull",
+                        "json_extract",
+                        "random"
+                    ]
+                },
+                "SqlServer": {
+                    "name": "SQL Server",
+                    "syntax": {
+                        "backtickIdentifiers": false,
+                        "doubleQuotedStrings": false,
+                        "hashComments": false,
+                        "dollarQuotedStrings": false,
+                        "backslashEscapes": false,
+                        "delimiterCommand": false,
+                        "bracketIdentifiers": true,
+                        "batchSeparator": true
+                    },
+                    "tableTypes": {
+                        "TABLE": false,
+                        "VIEW": true
+                    },
+                    "supportsRegex": false,
+                    "regexHonoursCase": false,
+                    "functions": [
+                        "getdate",
+                        "sysdatetime",
+                        "dateadd",
+                        "datediff",
+                        "format",
+                        "isnull",
+                        "string_agg",
+                        "newid",
+                        "convert",
+                        "iif"
+                    ]
+                },
+                "ClickHouse": {
+                    "name": "ClickHouse",
+                    "syntax": {
+                        "backtickIdentifiers": true,
+                        "doubleQuotedStrings": false,
+                        "hashComments": false,
+                        "dollarQuotedStrings": false,
+                        "backslashEscapes": true,
+                        "delimiterCommand": false,
+                        "bracketIdentifiers": false,
+                        "batchSeparator": false
+                    },
+                    "tableTypes": {
+                        "TABLE": false,
+                        "VIEW": true
+                    },
+                    "supportsRegex": true,
+                    "regexHonoursCase": true,
+                    "functions": [
+                        "now",
+                        "today",
+                        "toDate",
+                        "toStartOfDay",
+                        "formatDateTime",
+                        "uniq",
+                        "groupArray",
+                        "arrayJoin",
+                        "JSONExtractString",
+                        "countIf"
+                    ]
+                },
+                "DuckDB": {
+                    "name": "DuckDB",
+                    "syntax": {
+                        "backtickIdentifiers": false,
+                        "doubleQuotedStrings": false,
+                        "hashComments": false,
+                        "dollarQuotedStrings": true,
+                        "backslashEscapes": false,
+                        "delimiterCommand": false,
+                        "bracketIdentifiers": false,
+                        "batchSeparator": false
+                    },
+                    "tableTypes": {
+                        "TABLE": false,
+                        "VIEW": true
+                    },
+                    "supportsRegex": true,
+                    "regexHonoursCase": true,
+                    "functions": [
+                        "now",
+                        "date_trunc",
+                        "strftime",
+                        "string_agg",
+                        "list",
+                        "unnest",
+                        "read_parquet",
+                        "read_csv_auto",
+                        "regexp_matches"
+                    ]
+                },
+                "CockroachDB": {
+                    "name": "CockroachDB",
+                    "syntax": {
+                        "backtickIdentifiers": false,
+                        "doubleQuotedStrings": false,
+                        "hashComments": false,
+                        "dollarQuotedStrings": true,
+                        "backslashEscapes": false,
+                        "delimiterCommand": false,
+                        "bracketIdentifiers": false,
+                        "batchSeparator": false
+                    },
+                    "tableTypes": {
+                        "TABLE": false,
+                        "PARTITIONED TABLE": false,
+                        "VIEW": true,
+                        "MATERIALIZED VIEW": true
+                    },
+                    "supportsRegex": true,
+                    "regexHonoursCase": true,
+                    "functions": [
+                        "now",
+                        "date_trunc",
+                        "to_char",
+                        "string_agg",
+                        "array_agg",
+                        "jsonb_build_object",
+                        "generate_series",
+                        "gen_random_uuid",
+                        "unique_rowid",
+                        "gen_random_ulid",
+                        "crdb_internal.cluster_id"
+                    ]
+                },
+                "TimescaleDB": {
+                    "name": "PostgreSQL",
+                    "syntax": {
+                        "backtickIdentifiers": false,
+                        "doubleQuotedStrings": false,
+                        "hashComments": false,
+                        "dollarQuotedStrings": true,
+                        "backslashEscapes": false,
+                        "delimiterCommand": false,
+                        "bracketIdentifiers": false,
+                        "batchSeparator": false
+                    },
+                    "tableTypes": {
+                        "TABLE": false,
+                        "PARTITIONED TABLE": false,
+                        "VIEW": true,
+                        "MATERIALIZED VIEW": true
+                    },
+                    "supportsRegex": true,
+                    "regexHonoursCase": true,
+                    "functions": [
+                        "now",
+                        "date_trunc",
+                        "to_char",
+                        "string_agg",
+                        "array_agg",
+                        "jsonb_build_object",
+                        "generate_series",
+                        "gen_random_uuid"
+                    ]
+                },
+                "Neon": {
+                    "name": "PostgreSQL",
+                    "syntax": {
+                        "backtickIdentifiers": false,
+                        "doubleQuotedStrings": false,
+                        "hashComments": false,
+                        "dollarQuotedStrings": true,
+                        "backslashEscapes": false,
+                        "delimiterCommand": false,
+                        "bracketIdentifiers": false,
+                        "batchSeparator": false
+                    },
+                    "tableTypes": {
+                        "TABLE": false,
+                        "PARTITIONED TABLE": false,
+                        "VIEW": true,
+                        "MATERIALIZED VIEW": true
+                    },
+                    "supportsRegex": true,
+                    "regexHonoursCase": true,
+                    "functions": [
+                        "now",
+                        "date_trunc",
+                        "to_char",
+                        "string_agg",
+                        "array_agg",
+                        "jsonb_build_object",
+                        "generate_series",
+                        "gen_random_uuid"
+                    ]
+                },
+                "Supabase": {
+                    "name": "PostgreSQL",
+                    "syntax": {
+                        "backtickIdentifiers": false,
+                        "doubleQuotedStrings": false,
+                        "hashComments": false,
+                        "dollarQuotedStrings": true,
+                        "backslashEscapes": false,
+                        "delimiterCommand": false,
+                        "bracketIdentifiers": false,
+                        "batchSeparator": false
+                    },
+                    "tableTypes": {
+                        "TABLE": false,
+                        "PARTITIONED TABLE": false,
+                        "VIEW": true,
+                        "MATERIALIZED VIEW": true
+                    },
+                    "supportsRegex": true,
+                    "regexHonoursCase": true,
+                    "functions": [
+                        "now",
+                        "date_trunc",
+                        "to_char",
+                        "string_agg",
+                        "array_agg",
+                        "jsonb_build_object",
+                        "generate_series",
+                        "gen_random_uuid"
+                    ]
+                },
+                "TiDB": {
+                    "name": "MySQL",
+                    "syntax": {
+                        "backtickIdentifiers": true,
+                        "doubleQuotedStrings": true,
+                        "hashComments": true,
+                        "dollarQuotedStrings": false,
+                        "backslashEscapes": true,
+                        "delimiterCommand": true,
+                        "bracketIdentifiers": false,
+                        "batchSeparator": false
+                    },
+                    "tableTypes": {
+                        "TABLE": false,
+                        "VIEW": true
+                    },
+                    "supportsRegex": true,
+                    "regexHonoursCase": false,
+                    "functions": [
+                        "now",
+                        "date_format",
+                        "group_concat",
+                        "ifnull",
+                        "json_object",
+                        "json_extract",
+                        "uuid"
+                    ]
+                },
+                "PlanetScale": {
+                    "name": "MySQL",
+                    "syntax": {
+                        "backtickIdentifiers": true,
+                        "doubleQuotedStrings": true,
+                        "hashComments": true,
+                        "dollarQuotedStrings": false,
+                        "backslashEscapes": true,
+                        "delimiterCommand": true,
+                        "bracketIdentifiers": false,
+                        "batchSeparator": false
+                    },
+                    "tableTypes": {
+                        "TABLE": false,
+                        "VIEW": true
+                    },
+                    "supportsRegex": true,
+                    "regexHonoursCase": false,
+                    "functions": [
+                        "now",
+                        "date_format",
+                        "group_concat",
+                        "ifnull",
+                        "json_object",
+                        "json_extract",
+                        "uuid"
+                    ]
+                },
+                "AzureSql": {
+                    "name": "SQL Server",
+                    "syntax": {
+                        "backtickIdentifiers": false,
+                        "doubleQuotedStrings": false,
+                        "hashComments": false,
+                        "dollarQuotedStrings": false,
+                        "backslashEscapes": false,
+                        "delimiterCommand": false,
+                        "bracketIdentifiers": true,
+                        "batchSeparator": true
+                    },
+                    "tableTypes": {
+                        "TABLE": false,
+                        "VIEW": true
+                    },
+                    "supportsRegex": false,
+                    "regexHonoursCase": false,
+                    "functions": [
+                        "getdate",
+                        "sysdatetime",
+                        "dateadd",
+                        "datediff",
+                        "format",
+                        "isnull",
+                        "string_agg",
+                        "newid",
+                        "convert",
+                        "iif"
+                    ]
+                },
+                "H2": {
+                    "name": "Generic",
+                    "syntax": {
+                        "backtickIdentifiers": false,
+                        "doubleQuotedStrings": false,
+                        "hashComments": false,
+                        "dollarQuotedStrings": false,
+                        "backslashEscapes": false,
+                        "delimiterCommand": false,
+                        "bracketIdentifiers": false,
+                        "batchSeparator": false
+                    },
+                    "tableTypes": {
+                        "TABLE": false,
+                        "VIEW": true
+                    },
+                    "supportsRegex": false,
+                    "regexHonoursCase": false,
+                    "functions": []
+                },
+                "HSQLDB": {
+                    "name": "Generic",
+                    "syntax": {
+                        "backtickIdentifiers": false,
+                        "doubleQuotedStrings": false,
+                        "hashComments": false,
+                        "dollarQuotedStrings": false,
+                        "backslashEscapes": false,
+                        "delimiterCommand": false,
+                        "bracketIdentifiers": false,
+                        "batchSeparator": false
+                    },
+                    "tableTypes": {
+                        "TABLE": false,
+                        "VIEW": true
+                    },
+                    "supportsRegex": false,
+                    "regexHonoursCase": false,
+                    "functions": []
+                },
+                "Derby": {
+                    "name": "Generic",
+                    "syntax": {
+                        "backtickIdentifiers": false,
+                        "doubleQuotedStrings": false,
+                        "hashComments": false,
+                        "dollarQuotedStrings": false,
+                        "backslashEscapes": false,
+                        "delimiterCommand": false,
+                        "bracketIdentifiers": false,
+                        "batchSeparator": false
+                    },
+                    "tableTypes": {
+                        "TABLE": false,
+                        "VIEW": true
+                    },
+                    "supportsRegex": false,
+                    "regexHonoursCase": false,
+                    "functions": []
+                },
+                "OtherJdbc": {
+                    "name": "Generic",
+                    "syntax": {
+                        "backtickIdentifiers": false,
+                        "doubleQuotedStrings": false,
+                        "hashComments": false,
+                        "dollarQuotedStrings": false,
+                        "backslashEscapes": false,
+                        "delimiterCommand": false,
+                        "bracketIdentifiers": false,
+                        "batchSeparator": false
+                    },
+                    "tableTypes": {
+                        "TABLE": false,
+                        "VIEW": true
+                    },
+                    "supportsRegex": false,
+                    "regexHonoursCase": false,
+                    "functions": []
+                },
+                "CsvFile": {
+                    "name": "SQLite",
+                    "syntax": {
+                        "backtickIdentifiers": true,
+                        "doubleQuotedStrings": false,
+                        "hashComments": false,
+                        "dollarQuotedStrings": false,
+                        "backslashEscapes": false,
+                        "delimiterCommand": false,
+                        "bracketIdentifiers": false,
+                        "batchSeparator": false
+                    },
+                    "tableTypes": {
+                        "TABLE": false,
+                        "VIEW": true
+                    },
+                    "supportsRegex": false,
+                    "regexHonoursCase": false,
+                    "functions": [
+                        "datetime",
+                        "strftime",
+                        "group_concat",
+                        "ifnull",
+                        "json_extract",
+                        "random"
+                    ]
+                },
+                "ExcelFile": {
+                    "name": "SQLite",
+                    "syntax": {
+                        "backtickIdentifiers": true,
+                        "doubleQuotedStrings": false,
+                        "hashComments": false,
+                        "dollarQuotedStrings": false,
+                        "backslashEscapes": false,
+                        "delimiterCommand": false,
+                        "bracketIdentifiers": false,
+                        "batchSeparator": false
+                    },
+                    "tableTypes": {
+                        "TABLE": false,
+                        "VIEW": true
+                    },
+                    "supportsRegex": false,
+                    "regexHonoursCase": false,
+                    "functions": [
+                        "datetime",
+                        "strftime",
+                        "group_concat",
+                        "ifnull",
+                        "json_extract",
+                        "random"
+                    ]
+                },
+                "JsonFile": {
+                    "name": "SQLite",
+                    "syntax": {
+                        "backtickIdentifiers": true,
+                        "doubleQuotedStrings": false,
+                        "hashComments": false,
+                        "dollarQuotedStrings": false,
+                        "backslashEscapes": false,
+                        "delimiterCommand": false,
+                        "bracketIdentifiers": false,
+                        "batchSeparator": false
+                    },
+                    "tableTypes": {
+                        "TABLE": false,
+                        "VIEW": true
+                    },
+                    "supportsRegex": false,
+                    "regexHonoursCase": false,
+                    "functions": [
+                        "datetime",
+                        "strftime",
+                        "group_concat",
+                        "ifnull",
+                        "json_extract",
+                        "random"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "quote plain",
+            "output": {
+                "PostgreSQL": "\"users\"",
+                "MySQL": "`users`",
+                "MariaDB": "`users`",
+                "SQLite": "\"users\"",
+                "SqlServer": "[users]",
+                "ClickHouse": "`users`",
+                "DuckDB": "\"users\"",
+                "CockroachDB": "\"users\"",
+                "TimescaleDB": "\"users\"",
+                "Neon": "\"users\"",
+                "Supabase": "\"users\"",
+                "TiDB": "`users`",
+                "PlanetScale": "`users`",
+                "AzureSql": "[users]",
+                "H2": "\"users\"",
+                "HSQLDB": "\"users\"",
+                "Derby": "\"users\"",
+                "OtherJdbc": "\"users\"",
+                "CsvFile": "\"users\"",
+                "ExcelFile": "\"users\"",
+                "JsonFile": "\"users\""
+            }
+        },
+        {
+            "name": "quote awkward",
+            "output": {
+                "PostgreSQL": "\"a\"\"b`c]d\\e f\"",
+                "MySQL": "`a\"b``c]d\\e f`",
+                "MariaDB": "`a\"b``c]d\\e f`",
+                "SQLite": "\"a\"\"b`c]d\\e f\"",
+                "SqlServer": "[a\"b`c]]d\\e f]",
+                "ClickHouse": "`a\"b\\`c]d\\\\e f`",
+                "DuckDB": "\"a\"\"b`c]d\\e f\"",
+                "CockroachDB": "\"a\"\"b`c]d\\e f\"",
+                "TimescaleDB": "\"a\"\"b`c]d\\e f\"",
+                "Neon": "\"a\"\"b`c]d\\e f\"",
+                "Supabase": "\"a\"\"b`c]d\\e f\"",
+                "TiDB": "`a\"b``c]d\\e f`",
+                "PlanetScale": "`a\"b``c]d\\e f`",
+                "AzureSql": "[a\"b`c]]d\\e f]",
+                "H2": "\"a\"\"b`c]d\\e f\"",
+                "HSQLDB": "\"a\"\"b`c]d\\e f\"",
+                "Derby": "\"a\"\"b`c]d\\e f\"",
+                "OtherJdbc": "\"a\"\"b`c]d\\e f\"",
+                "CsvFile": "\"a\"\"b`c]d\\e f\"",
+                "ExcelFile": "\"a\"\"b`c]d\\e f\"",
+                "JsonFile": "\"a\"\"b`c]d\\e f\""
+            }
+        },
+        {
+            "name": "literal null",
+            "output": {
+                "PostgreSQL": "NULL",
+                "MySQL": "NULL",
+                "MariaDB": "NULL",
+                "SQLite": "NULL",
+                "SqlServer": "NULL",
+                "ClickHouse": "NULL",
+                "DuckDB": "NULL",
+                "CockroachDB": "NULL",
+                "TimescaleDB": "NULL",
+                "Neon": "NULL",
+                "Supabase": "NULL",
+                "TiDB": "NULL",
+                "PlanetScale": "NULL",
+                "AzureSql": "NULL",
+                "H2": "NULL",
+                "HSQLDB": "NULL",
+                "Derby": "NULL",
+                "OtherJdbc": "NULL",
+                "CsvFile": "NULL",
+                "ExcelFile": "NULL",
+                "JsonFile": "NULL"
+            }
+        },
+        {
+            "name": "literal number",
+            "output": {
+                "PostgreSQL": "12.5e3",
+                "MySQL": "12.5e3",
+                "MariaDB": "12.5e3",
+                "SQLite": "12.5e3",
+                "SqlServer": "12.5e3",
+                "ClickHouse": "12.5e3",
+                "DuckDB": "12.5e3",
+                "CockroachDB": "12.5e3",
+                "TimescaleDB": "12.5e3",
+                "Neon": "12.5e3",
+                "Supabase": "12.5e3",
+                "TiDB": "12.5e3",
+                "PlanetScale": "12.5e3",
+                "AzureSql": "12.5e3",
+                "H2": "12.5e3",
+                "HSQLDB": "12.5e3",
+                "Derby": "12.5e3",
+                "OtherJdbc": "12.5e3",
+                "CsvFile": "12.5e3",
+                "ExcelFile": "12.5e3",
+                "JsonFile": "12.5e3"
+            }
+        },
+        {
+            "name": "literal non-number as numeric",
+            "output": {
+                "PostgreSQL": "'12a'",
+                "MySQL": "'12a'",
+                "MariaDB": "'12a'",
+                "SQLite": "'12a'",
+                "SqlServer": "'12a'",
+                "ClickHouse": "'12a'",
+                "DuckDB": "'12a'",
+                "CockroachDB": "'12a'",
+                "TimescaleDB": "'12a'",
+                "Neon": "'12a'",
+                "Supabase": "'12a'",
+                "TiDB": "'12a'",
+                "PlanetScale": "'12a'",
+                "AzureSql": "'12a'",
+                "H2": "'12a'",
+                "HSQLDB": "'12a'",
+                "Derby": "'12a'",
+                "OtherJdbc": "'12a'",
+                "CsvFile": "'12a'",
+                "ExcelFile": "'12a'",
+                "JsonFile": "'12a'"
+            }
+        },
+        {
+            "name": "literal text with quotes and backslashes",
+            "output": {
+                "PostgreSQL": "'it''s a \\ test'",
+                "MySQL": "'it''s a \\\\ test'",
+                "MariaDB": "'it''s a \\\\ test'",
+                "SQLite": "'it''s a \\ test'",
+                "SqlServer": "'it''s a \\ test'",
+                "ClickHouse": "'it\\'s a \\\\ test'",
+                "DuckDB": "'it''s a \\ test'",
+                "CockroachDB": "'it''s a \\ test'",
+                "TimescaleDB": "'it''s a \\ test'",
+                "Neon": "'it''s a \\ test'",
+                "Supabase": "'it''s a \\ test'",
+                "TiDB": "'it''s a \\\\ test'",
+                "PlanetScale": "'it''s a \\\\ test'",
+                "AzureSql": "'it''s a \\ test'",
+                "H2": "'it''s a \\ test'",
+                "HSQLDB": "'it''s a \\ test'",
+                "Derby": "'it''s a \\ test'",
+                "OtherJdbc": "'it''s a \\ test'",
+                "CsvFile": "'it''s a \\ test'",
+                "ExcelFile": "'it''s a \\ test'",
+                "JsonFile": "'it''s a \\ test'"
+            }
+        },
+        {
+            "name": "literal number as text",
+            "output": {
+                "PostgreSQL": "'42'",
+                "MySQL": "'42'",
+                "MariaDB": "'42'",
+                "SQLite": "'42'",
+                "SqlServer": "'42'",
+                "ClickHouse": "'42'",
+                "DuckDB": "'42'",
+                "CockroachDB": "'42'",
+                "TimescaleDB": "'42'",
+                "Neon": "'42'",
+                "Supabase": "'42'",
+                "TiDB": "'42'",
+                "PlanetScale": "'42'",
+                "AzureSql": "'42'",
+                "H2": "'42'",
+                "HSQLDB": "'42'",
+                "Derby": "'42'",
+                "OtherJdbc": "'42'",
+                "CsvFile": "'42'",
+                "ExcelFile": "'42'",
+                "JsonFile": "'42'"
+            }
+        },
+        {
+            "name": "literal unicode",
+            "output": {
+                "PostgreSQL": "'chào '' 😀'",
+                "MySQL": "'chào '' 😀'",
+                "MariaDB": "'chào '' 😀'",
+                "SQLite": "'chào '' 😀'",
+                "SqlServer": "'chào '' 😀'",
+                "ClickHouse": "'chào \\' 😀'",
+                "DuckDB": "'chào '' 😀'",
+                "CockroachDB": "'chào '' 😀'",
+                "TimescaleDB": "'chào '' 😀'",
+                "Neon": "'chào '' 😀'",
+                "Supabase": "'chào '' 😀'",
+                "TiDB": "'chào '' 😀'",
+                "PlanetScale": "'chào '' 😀'",
+                "AzureSql": "'chào '' 😀'",
+                "H2": "'chào '' 😀'",
+                "HSQLDB": "'chào '' 😀'",
+                "Derby": "'chào '' 😀'",
+                "OtherJdbc": "'chào '' 😀'",
+                "CsvFile": "'chào '' 😀'",
+                "ExcelFile": "'chào '' 😀'",
+                "JsonFile": "'chào '' 😀'"
+            }
+        },
+        {
+            "name": "literal param Text o'k",
+            "output": {
+                "PostgreSQL": "'o''k'",
+                "MySQL": "'o''k'",
+                "MariaDB": "'o''k'",
+                "SQLite": "'o''k'",
+                "SqlServer": "'o''k'",
+                "ClickHouse": "'o\\'k'",
+                "DuckDB": "'o''k'",
+                "CockroachDB": "'o''k'",
+                "TimescaleDB": "'o''k'",
+                "Neon": "'o''k'",
+                "Supabase": "'o''k'",
+                "TiDB": "'o''k'",
+                "PlanetScale": "'o''k'",
+                "AzureSql": "'o''k'",
+                "H2": "'o''k'",
+                "HSQLDB": "'o''k'",
+                "Derby": "'o''k'",
+                "OtherJdbc": "'o''k'",
+                "CsvFile": "'o''k'",
+                "ExcelFile": "'o''k'",
+                "JsonFile": "'o''k'"
+            }
+        },
+        {
+            "name": "literal param Long -42",
+            "output": {
+                "PostgreSQL": "-42",
+                "MySQL": "-42",
+                "MariaDB": "-42",
+                "SQLite": "-42",
+                "SqlServer": "-42",
+                "ClickHouse": "-42",
+                "DuckDB": "-42",
+                "CockroachDB": "-42",
+                "TimescaleDB": "-42",
+                "Neon": "-42",
+                "Supabase": "-42",
+                "TiDB": "-42",
+                "PlanetScale": "-42",
+                "AzureSql": "-42",
+                "H2": "-42",
+                "HSQLDB": "-42",
+                "Derby": "-42",
+                "OtherJdbc": "-42",
+                "CsvFile": "-42",
+                "ExcelFile": "-42",
+                "JsonFile": "-42"
+            }
+        },
+        {
+            "name": "literal param Decimal 1.50",
+            "output": {
+                "PostgreSQL": "1.50",
+                "MySQL": "1.50",
+                "MariaDB": "1.50",
+                "SQLite": "1.50",
+                "SqlServer": "1.50",
+                "ClickHouse": "1.50",
+                "DuckDB": "1.50",
+                "CockroachDB": "1.50",
+                "TimescaleDB": "1.50",
+                "Neon": "1.50",
+                "Supabase": "1.50",
+                "TiDB": "1.50",
+                "PlanetScale": "1.50",
+                "AzureSql": "1.50",
+                "H2": "1.50",
+                "HSQLDB": "1.50",
+                "Derby": "1.50",
+                "OtherJdbc": "1.50",
+                "CsvFile": "1.50",
+                "ExcelFile": "1.50",
+                "JsonFile": "1.50"
+            }
+        },
+        {
+            "name": "literal param Decimal 1E+3",
+            "output": {
+                "PostgreSQL": "1000",
+                "MySQL": "1000",
+                "MariaDB": "1000",
+                "SQLite": "1000",
+                "SqlServer": "1000",
+                "ClickHouse": "1000",
+                "DuckDB": "1000",
+                "CockroachDB": "1000",
+                "TimescaleDB": "1000",
+                "Neon": "1000",
+                "Supabase": "1000",
+                "TiDB": "1000",
+                "PlanetScale": "1000",
+                "AzureSql": "1000",
+                "H2": "1000",
+                "HSQLDB": "1000",
+                "Derby": "1000",
+                "OtherJdbc": "1000",
+                "CsvFile": "1000",
+                "ExcelFile": "1000",
+                "JsonFile": "1000"
+            }
+        },
+        {
+            "name": "literal param Bool true",
+            "output": {
+                "PostgreSQL": "TRUE",
+                "MySQL": "TRUE",
+                "MariaDB": "TRUE",
+                "SQLite": "TRUE",
+                "SqlServer": "1",
+                "ClickHouse": "TRUE",
+                "DuckDB": "TRUE",
+                "CockroachDB": "TRUE",
+                "TimescaleDB": "TRUE",
+                "Neon": "TRUE",
+                "Supabase": "TRUE",
+                "TiDB": "TRUE",
+                "PlanetScale": "TRUE",
+                "AzureSql": "1",
+                "H2": "TRUE",
+                "HSQLDB": "TRUE",
+                "Derby": "TRUE",
+                "OtherJdbc": "TRUE",
+                "CsvFile": "TRUE",
+                "ExcelFile": "TRUE",
+                "JsonFile": "TRUE"
+            }
+        },
+        {
+            "name": "literal param Bool false",
+            "output": {
+                "PostgreSQL": "FALSE",
+                "MySQL": "FALSE",
+                "MariaDB": "FALSE",
+                "SQLite": "FALSE",
+                "SqlServer": "0",
+                "ClickHouse": "FALSE",
+                "DuckDB": "FALSE",
+                "CockroachDB": "FALSE",
+                "TimescaleDB": "FALSE",
+                "Neon": "FALSE",
+                "Supabase": "FALSE",
+                "TiDB": "FALSE",
+                "PlanetScale": "FALSE",
+                "AzureSql": "0",
+                "H2": "FALSE",
+                "HSQLDB": "FALSE",
+                "Derby": "FALSE",
+                "OtherJdbc": "FALSE",
+                "CsvFile": "FALSE",
+                "ExcelFile": "FALSE",
+                "JsonFile": "FALSE"
+            }
+        },
+        {
+            "name": "literal param Uuid 123e4567-e89b-12d3-a456-426614174000",
+            "output": {
+                "PostgreSQL": "'123e4567-e89b-12d3-a456-426614174000'",
+                "MySQL": "'123e4567-e89b-12d3-a456-426614174000'",
+                "MariaDB": "'123e4567-e89b-12d3-a456-426614174000'",
+                "SQLite": "'123e4567-e89b-12d3-a456-426614174000'",
+                "SqlServer": "'123e4567-e89b-12d3-a456-426614174000'",
+                "ClickHouse": "'123e4567-e89b-12d3-a456-426614174000'",
+                "DuckDB": "'123e4567-e89b-12d3-a456-426614174000'",
+                "CockroachDB": "'123e4567-e89b-12d3-a456-426614174000'",
+                "TimescaleDB": "'123e4567-e89b-12d3-a456-426614174000'",
+                "Neon": "'123e4567-e89b-12d3-a456-426614174000'",
+                "Supabase": "'123e4567-e89b-12d3-a456-426614174000'",
+                "TiDB": "'123e4567-e89b-12d3-a456-426614174000'",
+                "PlanetScale": "'123e4567-e89b-12d3-a456-426614174000'",
+                "AzureSql": "'123e4567-e89b-12d3-a456-426614174000'",
+                "H2": "'123e4567-e89b-12d3-a456-426614174000'",
+                "HSQLDB": "'123e4567-e89b-12d3-a456-426614174000'",
+                "Derby": "'123e4567-e89b-12d3-a456-426614174000'",
+                "OtherJdbc": "'123e4567-e89b-12d3-a456-426614174000'",
+                "CsvFile": "'123e4567-e89b-12d3-a456-426614174000'",
+                "ExcelFile": "'123e4567-e89b-12d3-a456-426614174000'",
+                "JsonFile": "'123e4567-e89b-12d3-a456-426614174000'"
+            }
+        },
+        {
+            "name": "literal param Date 2026-10-28",
+            "output": {
+                "PostgreSQL": "'2026-10-28'",
+                "MySQL": "'2026-10-28'",
+                "MariaDB": "'2026-10-28'",
+                "SQLite": "'2026-10-28'",
+                "SqlServer": "'2026-10-28'",
+                "ClickHouse": "'2026-10-28'",
+                "DuckDB": "'2026-10-28'",
+                "CockroachDB": "'2026-10-28'",
+                "TimescaleDB": "'2026-10-28'",
+                "Neon": "'2026-10-28'",
+                "Supabase": "'2026-10-28'",
+                "TiDB": "'2026-10-28'",
+                "PlanetScale": "'2026-10-28'",
+                "AzureSql": "'2026-10-28'",
+                "H2": "'2026-10-28'",
+                "HSQLDB": "'2026-10-28'",
+                "Derby": "'2026-10-28'",
+                "OtherJdbc": "'2026-10-28'",
+                "CsvFile": "'2026-10-28'",
+                "ExcelFile": "'2026-10-28'",
+                "JsonFile": "'2026-10-28'"
+            }
+        },
+        {
+            "name": "literal param DateTime 2026-10-28T13:45:00",
+            "output": {
+                "PostgreSQL": "'2026-10-28 13:45:00'",
+                "MySQL": "'2026-10-28 13:45:00'",
+                "MariaDB": "'2026-10-28 13:45:00'",
+                "SQLite": "'2026-10-28 13:45:00'",
+                "SqlServer": "'2026-10-28 13:45:00'",
+                "ClickHouse": "'2026-10-28 13:45:00'",
+                "DuckDB": "'2026-10-28 13:45:00'",
+                "CockroachDB": "'2026-10-28 13:45:00'",
+                "TimescaleDB": "'2026-10-28 13:45:00'",
+                "Neon": "'2026-10-28 13:45:00'",
+                "Supabase": "'2026-10-28 13:45:00'",
+                "TiDB": "'2026-10-28 13:45:00'",
+                "PlanetScale": "'2026-10-28 13:45:00'",
+                "AzureSql": "'2026-10-28 13:45:00'",
+                "H2": "'2026-10-28 13:45:00'",
+                "HSQLDB": "'2026-10-28 13:45:00'",
+                "Derby": "'2026-10-28 13:45:00'",
+                "OtherJdbc": "'2026-10-28 13:45:00'",
+                "CsvFile": "'2026-10-28 13:45:00'",
+                "ExcelFile": "'2026-10-28 13:45:00'",
+                "JsonFile": "'2026-10-28 13:45:00'"
+            }
+        },
+        {
+            "name": "literal param DateTime 2026-10-28T13:45:00.120",
+            "output": {
+                "PostgreSQL": "'2026-10-28 13:45:00.12'",
+                "MySQL": "'2026-10-28 13:45:00.12'",
+                "MariaDB": "'2026-10-28 13:45:00.12'",
+                "SQLite": "'2026-10-28 13:45:00.12'",
+                "SqlServer": "'2026-10-28 13:45:00.12'",
+                "ClickHouse": "'2026-10-28 13:45:00.12'",
+                "DuckDB": "'2026-10-28 13:45:00.12'",
+                "CockroachDB": "'2026-10-28 13:45:00.12'",
+                "TimescaleDB": "'2026-10-28 13:45:00.12'",
+                "Neon": "'2026-10-28 13:45:00.12'",
+                "Supabase": "'2026-10-28 13:45:00.12'",
+                "TiDB": "'2026-10-28 13:45:00.12'",
+                "PlanetScale": "'2026-10-28 13:45:00.12'",
+                "AzureSql": "'2026-10-28 13:45:00.12'",
+                "H2": "'2026-10-28 13:45:00.12'",
+                "HSQLDB": "'2026-10-28 13:45:00.12'",
+                "Derby": "'2026-10-28 13:45:00.12'",
+                "OtherJdbc": "'2026-10-28 13:45:00.12'",
+                "CsvFile": "'2026-10-28 13:45:00.12'",
+                "ExcelFile": "'2026-10-28 13:45:00.12'",
+                "JsonFile": "'2026-10-28 13:45:00.12'"
+            }
+        },
+        {
+            "name": "literal param Time 13:45:00.000000001",
+            "output": {
+                "PostgreSQL": "'13:45:00.000000001'",
+                "MySQL": "'13:45:00.000000001'",
+                "MariaDB": "'13:45:00.000000001'",
+                "SQLite": "'13:45:00.000000001'",
+                "SqlServer": "'13:45:00.000000001'",
+                "ClickHouse": "'13:45:00.000000001'",
+                "DuckDB": "'13:45:00.000000001'",
+                "CockroachDB": "'13:45:00.000000001'",
+                "TimescaleDB": "'13:45:00.000000001'",
+                "Neon": "'13:45:00.000000001'",
+                "Supabase": "'13:45:00.000000001'",
+                "TiDB": "'13:45:00.000000001'",
+                "PlanetScale": "'13:45:00.000000001'",
+                "AzureSql": "'13:45:00.000000001'",
+                "H2": "'13:45:00.000000001'",
+                "HSQLDB": "'13:45:00.000000001'",
+                "Derby": "'13:45:00.000000001'",
+                "OtherJdbc": "'13:45:00.000000001'",
+                "CsvFile": "'13:45:00.000000001'",
+                "ExcelFile": "'13:45:00.000000001'",
+                "JsonFile": "'13:45:00.000000001'"
+            }
+        },
+        {
+            "name": "literal param Time 00:00",
+            "output": {
+                "PostgreSQL": "'00:00:00'",
+                "MySQL": "'00:00:00'",
+                "MariaDB": "'00:00:00'",
+                "SQLite": "'00:00:00'",
+                "SqlServer": "'00:00:00'",
+                "ClickHouse": "'00:00:00'",
+                "DuckDB": "'00:00:00'",
+                "CockroachDB": "'00:00:00'",
+                "TimescaleDB": "'00:00:00'",
+                "Neon": "'00:00:00'",
+                "Supabase": "'00:00:00'",
+                "TiDB": "'00:00:00'",
+                "PlanetScale": "'00:00:00'",
+                "AzureSql": "'00:00:00'",
+                "H2": "'00:00:00'",
+                "HSQLDB": "'00:00:00'",
+                "Derby": "'00:00:00'",
+                "OtherJdbc": "'00:00:00'",
+                "CsvFile": "'00:00:00'",
+                "ExcelFile": "'00:00:00'",
+                "JsonFile": "'00:00:00'"
+            }
+        },
+        {
+            "name": "text match cs=False neg=False",
+            "output": {
+                "PostgreSQL": [
+                    "\"c\" ILIKE ",
+                    " ESCAPE '!'"
+                ],
+                "MySQL": [
+                    "LOWER(\"c\") LIKE LOWER(",
+                    ") ESCAPE '!'"
+                ],
+                "MariaDB": [
+                    "LOWER(\"c\") LIKE LOWER(",
+                    ") ESCAPE '!'"
+                ],
+                "SQLite": [
+                    "\"c\" LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "SqlServer": [
+                    "LOWER(\"c\") LIKE LOWER(",
+                    ") ESCAPE '!'"
+                ],
+                "ClickHouse": [
+                    "\"c\" ILIKE ",
+                    ""
+                ],
+                "DuckDB": [
+                    "\"c\" ILIKE ",
+                    " ESCAPE '!'"
+                ],
+                "CockroachDB": [
+                    "\"c\" ILIKE ",
+                    " ESCAPE '!'"
+                ],
+                "TimescaleDB": [
+                    "\"c\" ILIKE ",
+                    " ESCAPE '!'"
+                ],
+                "Neon": [
+                    "\"c\" ILIKE ",
+                    " ESCAPE '!'"
+                ],
+                "Supabase": [
+                    "\"c\" ILIKE ",
+                    " ESCAPE '!'"
+                ],
+                "TiDB": [
+                    "LOWER(\"c\") LIKE LOWER(",
+                    ") ESCAPE '!'"
+                ],
+                "PlanetScale": [
+                    "LOWER(\"c\") LIKE LOWER(",
+                    ") ESCAPE '!'"
+                ],
+                "AzureSql": [
+                    "LOWER(\"c\") LIKE LOWER(",
+                    ") ESCAPE '!'"
+                ],
+                "H2": [
+                    "LOWER(\"c\") LIKE LOWER(",
+                    ") ESCAPE '!'"
+                ],
+                "HSQLDB": [
+                    "LOWER(\"c\") LIKE LOWER(",
+                    ") ESCAPE '!'"
+                ],
+                "Derby": [
+                    "LOWER(\"c\") LIKE LOWER(",
+                    ") ESCAPE '!'"
+                ],
+                "OtherJdbc": [
+                    "LOWER(\"c\") LIKE LOWER(",
+                    ") ESCAPE '!'"
+                ],
+                "CsvFile": [
+                    "\"c\" LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "ExcelFile": [
+                    "\"c\" LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "JsonFile": [
+                    "\"c\" LIKE ",
+                    " ESCAPE '!'"
+                ]
+            }
+        },
+        {
+            "name": "regex match cs=False neg=False",
+            "output": {
+                "PostgreSQL": [
+                    "\"c\" ~* ",
+                    ""
+                ],
+                "MySQL": [
+                    "\"c\" REGEXP ",
+                    ""
+                ],
+                "MariaDB": [
+                    "\"c\" REGEXP ",
+                    ""
+                ],
+                "SQLite": null,
+                "SqlServer": null,
+                "ClickHouse": [
+                    "match(\"c\", concat('(?i)', ",
+                    "))"
+                ],
+                "DuckDB": [
+                    "regexp_matches(\"c\", ",
+                    ", 'i')"
+                ],
+                "CockroachDB": [
+                    "\"c\" ~* ",
+                    ""
+                ],
+                "TimescaleDB": [
+                    "\"c\" ~* ",
+                    ""
+                ],
+                "Neon": [
+                    "\"c\" ~* ",
+                    ""
+                ],
+                "Supabase": [
+                    "\"c\" ~* ",
+                    ""
+                ],
+                "TiDB": [
+                    "\"c\" REGEXP ",
+                    ""
+                ],
+                "PlanetScale": [
+                    "\"c\" REGEXP ",
+                    ""
+                ],
+                "AzureSql": null,
+                "H2": null,
+                "HSQLDB": null,
+                "Derby": null,
+                "OtherJdbc": null,
+                "CsvFile": null,
+                "ExcelFile": null,
+                "JsonFile": null
+            }
+        },
+        {
+            "name": "text match cs=False neg=True",
+            "output": {
+                "PostgreSQL": [
+                    "\"c\" NOT ILIKE ",
+                    " ESCAPE '!'"
+                ],
+                "MySQL": [
+                    "LOWER(\"c\") NOT LIKE LOWER(",
+                    ") ESCAPE '!'"
+                ],
+                "MariaDB": [
+                    "LOWER(\"c\") NOT LIKE LOWER(",
+                    ") ESCAPE '!'"
+                ],
+                "SQLite": [
+                    "\"c\" NOT LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "SqlServer": [
+                    "LOWER(\"c\") NOT LIKE LOWER(",
+                    ") ESCAPE '!'"
+                ],
+                "ClickHouse": [
+                    "\"c\" NOT ILIKE ",
+                    ""
+                ],
+                "DuckDB": [
+                    "\"c\" NOT ILIKE ",
+                    " ESCAPE '!'"
+                ],
+                "CockroachDB": [
+                    "\"c\" NOT ILIKE ",
+                    " ESCAPE '!'"
+                ],
+                "TimescaleDB": [
+                    "\"c\" NOT ILIKE ",
+                    " ESCAPE '!'"
+                ],
+                "Neon": [
+                    "\"c\" NOT ILIKE ",
+                    " ESCAPE '!'"
+                ],
+                "Supabase": [
+                    "\"c\" NOT ILIKE ",
+                    " ESCAPE '!'"
+                ],
+                "TiDB": [
+                    "LOWER(\"c\") NOT LIKE LOWER(",
+                    ") ESCAPE '!'"
+                ],
+                "PlanetScale": [
+                    "LOWER(\"c\") NOT LIKE LOWER(",
+                    ") ESCAPE '!'"
+                ],
+                "AzureSql": [
+                    "LOWER(\"c\") NOT LIKE LOWER(",
+                    ") ESCAPE '!'"
+                ],
+                "H2": [
+                    "LOWER(\"c\") NOT LIKE LOWER(",
+                    ") ESCAPE '!'"
+                ],
+                "HSQLDB": [
+                    "LOWER(\"c\") NOT LIKE LOWER(",
+                    ") ESCAPE '!'"
+                ],
+                "Derby": [
+                    "LOWER(\"c\") NOT LIKE LOWER(",
+                    ") ESCAPE '!'"
+                ],
+                "OtherJdbc": [
+                    "LOWER(\"c\") NOT LIKE LOWER(",
+                    ") ESCAPE '!'"
+                ],
+                "CsvFile": [
+                    "\"c\" NOT LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "ExcelFile": [
+                    "\"c\" NOT LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "JsonFile": [
+                    "\"c\" NOT LIKE ",
+                    " ESCAPE '!'"
+                ]
+            }
+        },
+        {
+            "name": "regex match cs=False neg=True",
+            "output": {
+                "PostgreSQL": [
+                    "\"c\" !~* ",
+                    ""
+                ],
+                "MySQL": [
+                    "\"c\" NOT REGEXP ",
+                    ""
+                ],
+                "MariaDB": [
+                    "\"c\" NOT REGEXP ",
+                    ""
+                ],
+                "SQLite": null,
+                "SqlServer": null,
+                "ClickHouse": [
+                    "NOT match(\"c\", concat('(?i)', ",
+                    "))"
+                ],
+                "DuckDB": [
+                    "NOT regexp_matches(\"c\", ",
+                    ", 'i')"
+                ],
+                "CockroachDB": [
+                    "\"c\" !~* ",
+                    ""
+                ],
+                "TimescaleDB": [
+                    "\"c\" !~* ",
+                    ""
+                ],
+                "Neon": [
+                    "\"c\" !~* ",
+                    ""
+                ],
+                "Supabase": [
+                    "\"c\" !~* ",
+                    ""
+                ],
+                "TiDB": [
+                    "\"c\" NOT REGEXP ",
+                    ""
+                ],
+                "PlanetScale": [
+                    "\"c\" NOT REGEXP ",
+                    ""
+                ],
+                "AzureSql": null,
+                "H2": null,
+                "HSQLDB": null,
+                "Derby": null,
+                "OtherJdbc": null,
+                "CsvFile": null,
+                "ExcelFile": null,
+                "JsonFile": null
+            }
+        },
+        {
+            "name": "text match cs=True neg=False",
+            "output": {
+                "PostgreSQL": [
+                    "\"c\" LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "MySQL": [
+                    "CAST(\"c\" AS BINARY) LIKE CAST(",
+                    " AS BINARY) ESCAPE '!'"
+                ],
+                "MariaDB": [
+                    "CAST(\"c\" AS BINARY) LIKE CAST(",
+                    " AS BINARY) ESCAPE '!'"
+                ],
+                "SQLite": [
+                    "\"c\" GLOB ",
+                    ""
+                ],
+                "SqlServer": [
+                    "\"c\" COLLATE Latin1_General_CS_AS LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "ClickHouse": [
+                    "\"c\" LIKE ",
+                    ""
+                ],
+                "DuckDB": [
+                    "\"c\" LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "CockroachDB": [
+                    "\"c\" LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "TimescaleDB": [
+                    "\"c\" LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "Neon": [
+                    "\"c\" LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "Supabase": [
+                    "\"c\" LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "TiDB": [
+                    "CAST(\"c\" AS BINARY) LIKE CAST(",
+                    " AS BINARY) ESCAPE '!'"
+                ],
+                "PlanetScale": [
+                    "CAST(\"c\" AS BINARY) LIKE CAST(",
+                    " AS BINARY) ESCAPE '!'"
+                ],
+                "AzureSql": [
+                    "\"c\" COLLATE Latin1_General_CS_AS LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "H2": [
+                    "\"c\" LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "HSQLDB": [
+                    "\"c\" LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "Derby": [
+                    "\"c\" LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "OtherJdbc": [
+                    "\"c\" LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "CsvFile": [
+                    "\"c\" GLOB ",
+                    ""
+                ],
+                "ExcelFile": [
+                    "\"c\" GLOB ",
+                    ""
+                ],
+                "JsonFile": [
+                    "\"c\" GLOB ",
+                    ""
+                ]
+            }
+        },
+        {
+            "name": "regex match cs=True neg=False",
+            "output": {
+                "PostgreSQL": [
+                    "\"c\" ~ ",
+                    ""
+                ],
+                "MySQL": [
+                    "\"c\" REGEXP ",
+                    ""
+                ],
+                "MariaDB": [
+                    "\"c\" REGEXP ",
+                    ""
+                ],
+                "SQLite": null,
+                "SqlServer": null,
+                "ClickHouse": [
+                    "match(\"c\", ",
+                    ")"
+                ],
+                "DuckDB": [
+                    "regexp_matches(\"c\", ",
+                    ")"
+                ],
+                "CockroachDB": [
+                    "\"c\" ~ ",
+                    ""
+                ],
+                "TimescaleDB": [
+                    "\"c\" ~ ",
+                    ""
+                ],
+                "Neon": [
+                    "\"c\" ~ ",
+                    ""
+                ],
+                "Supabase": [
+                    "\"c\" ~ ",
+                    ""
+                ],
+                "TiDB": [
+                    "\"c\" REGEXP ",
+                    ""
+                ],
+                "PlanetScale": [
+                    "\"c\" REGEXP ",
+                    ""
+                ],
+                "AzureSql": null,
+                "H2": null,
+                "HSQLDB": null,
+                "Derby": null,
+                "OtherJdbc": null,
+                "CsvFile": null,
+                "ExcelFile": null,
+                "JsonFile": null
+            }
+        },
+        {
+            "name": "text match cs=True neg=True",
+            "output": {
+                "PostgreSQL": [
+                    "\"c\" NOT LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "MySQL": [
+                    "CAST(\"c\" AS BINARY) NOT LIKE CAST(",
+                    " AS BINARY) ESCAPE '!'"
+                ],
+                "MariaDB": [
+                    "CAST(\"c\" AS BINARY) NOT LIKE CAST(",
+                    " AS BINARY) ESCAPE '!'"
+                ],
+                "SQLite": [
+                    "\"c\" NOT GLOB ",
+                    ""
+                ],
+                "SqlServer": [
+                    "\"c\" COLLATE Latin1_General_CS_AS NOT LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "ClickHouse": [
+                    "\"c\" NOT LIKE ",
+                    ""
+                ],
+                "DuckDB": [
+                    "\"c\" NOT LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "CockroachDB": [
+                    "\"c\" NOT LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "TimescaleDB": [
+                    "\"c\" NOT LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "Neon": [
+                    "\"c\" NOT LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "Supabase": [
+                    "\"c\" NOT LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "TiDB": [
+                    "CAST(\"c\" AS BINARY) NOT LIKE CAST(",
+                    " AS BINARY) ESCAPE '!'"
+                ],
+                "PlanetScale": [
+                    "CAST(\"c\" AS BINARY) NOT LIKE CAST(",
+                    " AS BINARY) ESCAPE '!'"
+                ],
+                "AzureSql": [
+                    "\"c\" COLLATE Latin1_General_CS_AS NOT LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "H2": [
+                    "\"c\" NOT LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "HSQLDB": [
+                    "\"c\" NOT LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "Derby": [
+                    "\"c\" NOT LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "OtherJdbc": [
+                    "\"c\" NOT LIKE ",
+                    " ESCAPE '!'"
+                ],
+                "CsvFile": [
+                    "\"c\" NOT GLOB ",
+                    ""
+                ],
+                "ExcelFile": [
+                    "\"c\" NOT GLOB ",
+                    ""
+                ],
+                "JsonFile": [
+                    "\"c\" NOT GLOB ",
+                    ""
+                ]
+            }
+        },
+        {
+            "name": "regex match cs=True neg=True",
+            "output": {
+                "PostgreSQL": [
+                    "\"c\" !~ ",
+                    ""
+                ],
+                "MySQL": [
+                    "\"c\" NOT REGEXP ",
+                    ""
+                ],
+                "MariaDB": [
+                    "\"c\" NOT REGEXP ",
+                    ""
+                ],
+                "SQLite": null,
+                "SqlServer": null,
+                "ClickHouse": [
+                    "NOT match(\"c\", ",
+                    ")"
+                ],
+                "DuckDB": [
+                    "NOT regexp_matches(\"c\", ",
+                    ")"
+                ],
+                "CockroachDB": [
+                    "\"c\" !~ ",
+                    ""
+                ],
+                "TimescaleDB": [
+                    "\"c\" !~ ",
+                    ""
+                ],
+                "Neon": [
+                    "\"c\" !~ ",
+                    ""
+                ],
+                "Supabase": [
+                    "\"c\" !~ ",
+                    ""
+                ],
+                "TiDB": [
+                    "\"c\" NOT REGEXP ",
+                    ""
+                ],
+                "PlanetScale": [
+                    "\"c\" NOT REGEXP ",
+                    ""
+                ],
+                "AzureSql": null,
+                "H2": null,
+                "HSQLDB": null,
+                "Derby": null,
+                "OtherJdbc": null,
+                "CsvFile": null,
+                "ExcelFile": null,
+                "JsonFile": null
+            }
+        },
+        {
+            "name": "text pattern '%a!_b_c!%' cs=False",
+            "output": {
+                "PostgreSQL": "%a!_b_c!%",
+                "MySQL": "%a!_b_c!%",
+                "MariaDB": "%a!_b_c!%",
+                "SQLite": "%a!_b_c!%",
+                "SqlServer": "%a!_b_c!%",
+                "ClickHouse": "%a\\_b_c\\%",
+                "DuckDB": "%a!_b_c!%",
+                "CockroachDB": "%a!_b_c!%",
+                "TimescaleDB": "%a!_b_c!%",
+                "Neon": "%a!_b_c!%",
+                "Supabase": "%a!_b_c!%",
+                "TiDB": "%a!_b_c!%",
+                "PlanetScale": "%a!_b_c!%",
+                "AzureSql": "%a!_b_c!%",
+                "H2": "%a!_b_c!%",
+                "HSQLDB": "%a!_b_c!%",
+                "Derby": "%a!_b_c!%",
+                "OtherJdbc": "%a!_b_c!%",
+                "CsvFile": "%a!_b_c!%",
+                "ExcelFile": "%a!_b_c!%",
+                "JsonFile": "%a!_b_c!%"
+            }
+        },
+        {
+            "name": "text pattern '%a!_b_c!%' cs=True",
+            "output": {
+                "PostgreSQL": "%a!_b_c!%",
+                "MySQL": "%a!_b_c!%",
+                "MariaDB": "%a!_b_c!%",
+                "SQLite": "*a_b?c%",
+                "SqlServer": "%a!_b_c!%",
+                "ClickHouse": "%a\\_b_c\\%",
+                "DuckDB": "%a!_b_c!%",
+                "CockroachDB": "%a!_b_c!%",
+                "TimescaleDB": "%a!_b_c!%",
+                "Neon": "%a!_b_c!%",
+                "Supabase": "%a!_b_c!%",
+                "TiDB": "%a!_b_c!%",
+                "PlanetScale": "%a!_b_c!%",
+                "AzureSql": "%a!_b_c!%",
+                "H2": "%a!_b_c!%",
+                "HSQLDB": "%a!_b_c!%",
+                "Derby": "%a!_b_c!%",
+                "OtherJdbc": "%a!_b_c!%",
+                "CsvFile": "*a_b?c%",
+                "ExcelFile": "*a_b?c%",
+                "JsonFile": "*a_b?c%"
+            }
+        },
+        {
+            "name": "text pattern 'x*y?[z]!!w\\\\' cs=False",
+            "output": {
+                "PostgreSQL": "x*y?[z]!!w\\",
+                "MySQL": "x*y?[z]!!w\\",
+                "MariaDB": "x*y?[z]!!w\\",
+                "SQLite": "x*y?[z]!!w\\",
+                "SqlServer": "x*y?[z]!!w\\",
+                "ClickHouse": "x*y?[z]\\!w\\\\",
+                "DuckDB": "x*y?[z]!!w\\",
+                "CockroachDB": "x*y?[z]!!w\\",
+                "TimescaleDB": "x*y?[z]!!w\\",
+                "Neon": "x*y?[z]!!w\\",
+                "Supabase": "x*y?[z]!!w\\",
+                "TiDB": "x*y?[z]!!w\\",
+                "PlanetScale": "x*y?[z]!!w\\",
+                "AzureSql": "x*y?[z]!!w\\",
+                "H2": "x*y?[z]!!w\\",
+                "HSQLDB": "x*y?[z]!!w\\",
+                "Derby": "x*y?[z]!!w\\",
+                "OtherJdbc": "x*y?[z]!!w\\",
+                "CsvFile": "x*y?[z]!!w\\",
+                "ExcelFile": "x*y?[z]!!w\\",
+                "JsonFile": "x*y?[z]!!w\\"
+            }
+        },
+        {
+            "name": "text pattern 'x*y?[z]!!w\\\\' cs=True",
+            "output": {
+                "PostgreSQL": "x*y?[z]!!w\\",
+                "MySQL": "x*y?[z]!!w\\",
+                "MariaDB": "x*y?[z]!!w\\",
+                "SQLite": "x[*]y[?][[]z]!w\\",
+                "SqlServer": "x*y?[z]!!w\\",
+                "ClickHouse": "x*y?[z]\\!w\\\\",
+                "DuckDB": "x*y?[z]!!w\\",
+                "CockroachDB": "x*y?[z]!!w\\",
+                "TimescaleDB": "x*y?[z]!!w\\",
+                "Neon": "x*y?[z]!!w\\",
+                "Supabase": "x*y?[z]!!w\\",
+                "TiDB": "x*y?[z]!!w\\",
+                "PlanetScale": "x*y?[z]!!w\\",
+                "AzureSql": "x*y?[z]!!w\\",
+                "H2": "x*y?[z]!!w\\",
+                "HSQLDB": "x*y?[z]!!w\\",
+                "Derby": "x*y?[z]!!w\\",
+                "OtherJdbc": "x*y?[z]!!w\\",
+                "CsvFile": "x[*]y[?][[]z]!w\\",
+                "ExcelFile": "x[*]y[?][[]z]!w\\",
+                "JsonFile": "x[*]y[?][[]z]!w\\"
+            }
+        },
+        {
+            "name": "text pattern 'trailing!' cs=False",
+            "output": {
+                "PostgreSQL": "trailing!",
+                "MySQL": "trailing!",
+                "MariaDB": "trailing!",
+                "SQLite": "trailing!",
+                "SqlServer": "trailing!",
+                "ClickHouse": "trailing!",
+                "DuckDB": "trailing!",
+                "CockroachDB": "trailing!",
+                "TimescaleDB": "trailing!",
+                "Neon": "trailing!",
+                "Supabase": "trailing!",
+                "TiDB": "trailing!",
+                "PlanetScale": "trailing!",
+                "AzureSql": "trailing!",
+                "H2": "trailing!",
+                "HSQLDB": "trailing!",
+                "Derby": "trailing!",
+                "OtherJdbc": "trailing!",
+                "CsvFile": "trailing!",
+                "ExcelFile": "trailing!",
+                "JsonFile": "trailing!"
+            }
+        },
+        {
+            "name": "text pattern 'trailing!' cs=True",
+            "output": {
+                "PostgreSQL": "trailing!",
+                "MySQL": "trailing!",
+                "MariaDB": "trailing!",
+                "SQLite": "trailing",
+                "SqlServer": "trailing!",
+                "ClickHouse": "trailing!",
+                "DuckDB": "trailing!",
+                "CockroachDB": "trailing!",
+                "TimescaleDB": "trailing!",
+                "Neon": "trailing!",
+                "Supabase": "trailing!",
+                "TiDB": "trailing!",
+                "PlanetScale": "trailing!",
+                "AzureSql": "trailing!",
+                "H2": "trailing!",
+                "HSQLDB": "trailing!",
+                "Derby": "trailing!",
+                "OtherJdbc": "trailing!",
+                "CsvFile": "trailing",
+                "ExcelFile": "trailing",
+                "JsonFile": "trailing"
+            }
+        },
+        {
+            "name": "text pattern 'plain' cs=False",
+            "output": {
+                "PostgreSQL": "plain",
+                "MySQL": "plain",
+                "MariaDB": "plain",
+                "SQLite": "plain",
+                "SqlServer": "plain",
+                "ClickHouse": "plain",
+                "DuckDB": "plain",
+                "CockroachDB": "plain",
+                "TimescaleDB": "plain",
+                "Neon": "plain",
+                "Supabase": "plain",
+                "TiDB": "plain",
+                "PlanetScale": "plain",
+                "AzureSql": "plain",
+                "H2": "plain",
+                "HSQLDB": "plain",
+                "Derby": "plain",
+                "OtherJdbc": "plain",
+                "CsvFile": "plain",
+                "ExcelFile": "plain",
+                "JsonFile": "plain"
+            }
+        },
+        {
+            "name": "text pattern 'plain' cs=True",
+            "output": {
+                "PostgreSQL": "plain",
+                "MySQL": "plain",
+                "MariaDB": "plain",
+                "SQLite": "plain",
+                "SqlServer": "plain",
+                "ClickHouse": "plain",
+                "DuckDB": "plain",
+                "CockroachDB": "plain",
+                "TimescaleDB": "plain",
+                "Neon": "plain",
+                "Supabase": "plain",
+                "TiDB": "plain",
+                "PlanetScale": "plain",
+                "AzureSql": "plain",
+                "H2": "plain",
+                "HSQLDB": "plain",
+                "Derby": "plain",
+                "OtherJdbc": "plain",
+                "CsvFile": "plain",
+                "ExcelFile": "plain",
+                "JsonFile": "plain"
+            }
+        },
+        {
+            "name": "text pattern '' cs=False",
+            "output": {
+                "PostgreSQL": "",
+                "MySQL": "",
+                "MariaDB": "",
+                "SQLite": "",
+                "SqlServer": "",
+                "ClickHouse": "",
+                "DuckDB": "",
+                "CockroachDB": "",
+                "TimescaleDB": "",
+                "Neon": "",
+                "Supabase": "",
+                "TiDB": "",
+                "PlanetScale": "",
+                "AzureSql": "",
+                "H2": "",
+                "HSQLDB": "",
+                "Derby": "",
+                "OtherJdbc": "",
+                "CsvFile": "",
+                "ExcelFile": "",
+                "JsonFile": ""
+            }
+        },
+        {
+            "name": "text pattern '' cs=True",
+            "output": {
+                "PostgreSQL": "",
+                "MySQL": "",
+                "MariaDB": "",
+                "SQLite": "",
+                "SqlServer": "",
+                "ClickHouse": "",
+                "DuckDB": "",
+                "CockroachDB": "",
+                "TimescaleDB": "",
+                "Neon": "",
+                "Supabase": "",
+                "TiDB": "",
+                "PlanetScale": "",
+                "AzureSql": "",
+                "H2": "",
+                "HSQLDB": "",
+                "Derby": "",
+                "OtherJdbc": "",
+                "CsvFile": "",
+                "ExcelFile": "",
+                "JsonFile": ""
+            }
+        },
+        {
+            "name": "default namespace pick",
+            "output": {
+                "PostgreSQL": "public",
+                "MySQL": "shop",
+                "MariaDB": "shop",
+                "SQLite": "app",
+                "SqlServer": "dbo",
+                "ClickHouse": "shop",
+                "DuckDB": "main",
+                "CockroachDB": "public",
+                "TimescaleDB": "public",
+                "Neon": "public",
+                "Supabase": "public",
+                "TiDB": "shop",
+                "PlanetScale": "shop",
+                "AzureSql": "dbo",
+                "H2": "public",
+                "HSQLDB": "public",
+                "Derby": "public",
+                "OtherJdbc": "public",
+                "CsvFile": "app",
+                "ExcelFile": "app",
+                "JsonFile": "app"
+            }
+        },
+        {
+            "name": "default namespace fallback",
+            "output": {
+                "PostgreSQL": "zeta",
+                "MySQL": "zeta",
+                "MariaDB": "zeta",
+                "SQLite": "zeta",
+                "SqlServer": "zeta",
+                "ClickHouse": "zeta",
+                "DuckDB": "zeta",
+                "CockroachDB": "zeta",
+                "TimescaleDB": "zeta",
+                "Neon": "zeta",
+                "Supabase": "zeta",
+                "TiDB": "zeta",
+                "PlanetScale": "zeta",
+                "AzureSql": "zeta",
+                "H2": "zeta",
+                "HSQLDB": "zeta",
+                "Derby": "zeta",
+                "OtherJdbc": "zeta",
+                "CsvFile": "zeta",
+                "ExcelFile": "zeta",
+                "JsonFile": "zeta"
+            }
+        },
+        {
+            "name": "default namespace generic public",
+            "output": {
+                "PostgreSQL": "x",
+                "MySQL": "x",
+                "MariaDB": "x",
+                "SQLite": "x",
+                "SqlServer": "x",
+                "ClickHouse": "x",
+                "DuckDB": "x",
+                "CockroachDB": "x",
+                "TimescaleDB": "x",
+                "Neon": "x",
+                "Supabase": "x",
+                "TiDB": "x",
+                "PlanetScale": "x",
+                "AzureSql": "x",
+                "H2": "Public",
+                "HSQLDB": "Public",
+                "Derby": "Public",
+                "OtherJdbc": "Public",
+                "CsvFile": "x",
+                "ExcelFile": "x",
+                "JsonFile": "x"
+            }
+        },
+        {
+            "name": "default namespace generic app",
+            "output": {
+                "PostgreSQL": "x",
+                "MySQL": "x",
+                "MariaDB": "x",
+                "SQLite": "x",
+                "SqlServer": "x",
+                "ClickHouse": "x",
+                "DuckDB": "x",
+                "CockroachDB": "x",
+                "TimescaleDB": "x",
+                "Neon": "x",
+                "Supabase": "x",
+                "TiDB": "x",
+                "PlanetScale": "x",
+                "AzureSql": "x",
+                "H2": "App",
+                "HSQLDB": "App",
+                "Derby": "App",
+                "OtherJdbc": "App",
+                "CsvFile": "x",
+                "ExcelFile": "x",
+                "JsonFile": "x"
+            }
+        },
+        {
+            "name": "default namespace empty",
+            "output": {
+                "PostgreSQL": null,
+                "MySQL": null,
+                "MariaDB": null,
+                "SQLite": null,
+                "SqlServer": null,
+                "ClickHouse": null,
+                "DuckDB": null,
+                "CockroachDB": null,
+                "TimescaleDB": null,
+                "Neon": null,
+                "Supabase": null,
+                "TiDB": null,
+                "PlanetScale": null,
+                "AzureSql": null,
+                "H2": null,
+                "HSQLDB": null,
+                "Derby": null,
+                "OtherJdbc": null,
+                "CsvFile": null,
+                "ExcelFile": null,
+                "JsonFile": null
+            }
+        },
+        {
+            "name": "explain",
+            "output": {
+                "PostgreSQL": [
+                    "EXPLAIN SELECT 1"
+                ],
+                "MySQL": [
+                    "EXPLAIN SELECT 1"
+                ],
+                "MariaDB": [
+                    "EXPLAIN SELECT 1"
+                ],
+                "SQLite": [
+                    "EXPLAIN QUERY PLAN SELECT 1"
+                ],
+                "SqlServer": [
+                    "SET SHOWPLAN_TEXT ON",
+                    "SELECT 1",
+                    "SET SHOWPLAN_TEXT OFF"
+                ],
+                "ClickHouse": [
+                    "EXPLAIN SELECT 1"
+                ],
+                "DuckDB": [
+                    "EXPLAIN SELECT 1"
+                ],
+                "CockroachDB": [
+                    "EXPLAIN SELECT 1"
+                ],
+                "TimescaleDB": [
+                    "EXPLAIN SELECT 1"
+                ],
+                "Neon": [
+                    "EXPLAIN SELECT 1"
+                ],
+                "Supabase": [
+                    "EXPLAIN SELECT 1"
+                ],
+                "TiDB": [
+                    "EXPLAIN SELECT 1"
+                ],
+                "PlanetScale": [
+                    "EXPLAIN SELECT 1"
+                ],
+                "AzureSql": [
+                    "SET SHOWPLAN_TEXT ON",
+                    "SELECT 1",
+                    "SET SHOWPLAN_TEXT OFF"
+                ],
+                "H2": [
+                    "EXPLAIN SELECT 1"
+                ],
+                "HSQLDB": [
+                    "EXPLAIN SELECT 1"
+                ],
+                "Derby": [
+                    "EXPLAIN SELECT 1"
+                ],
+                "OtherJdbc": [
+                    "EXPLAIN SELECT 1"
+                ],
+                "CsvFile": [
+                    "EXPLAIN QUERY PLAN SELECT 1"
+                ],
+                "ExcelFile": [
+                    "EXPLAIN QUERY PLAN SELECT 1"
+                ],
+                "JsonFile": [
+                    "EXPLAIN QUERY PLAN SELECT 1"
+                ]
+            }
+        },
+        {
+            "name": "plain identifiers",
+            "output": {
+                "PostgreSQL": [
+                    true,
+                    false,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true
+                ],
+                "MySQL": [
+                    true,
+                    true,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true
+                ],
+                "MariaDB": [
+                    true,
+                    true,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true
+                ],
+                "SQLite": [
+                    true,
+                    true,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true
+                ],
+                "SqlServer": [
+                    true,
+                    true,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true
+                ],
+                "ClickHouse": [
+                    true,
+                    true,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true
+                ],
+                "DuckDB": [
+                    true,
+                    true,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true
+                ],
+                "CockroachDB": [
+                    true,
+                    false,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true
+                ],
+                "TimescaleDB": [
+                    true,
+                    false,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true
+                ],
+                "Neon": [
+                    true,
+                    false,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true
+                ],
+                "Supabase": [
+                    true,
+                    false,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true
+                ],
+                "TiDB": [
+                    true,
+                    true,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true
+                ],
+                "PlanetScale": [
+                    true,
+                    true,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true
+                ],
+                "AzureSql": [
+                    true,
+                    true,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true
+                ],
+                "H2": [
+                    true,
+                    true,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true
+                ],
+                "HSQLDB": [
+                    true,
+                    true,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true
+                ],
+                "Derby": [
+                    true,
+                    true,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true
+                ],
+                "OtherJdbc": [
+                    true,
+                    true,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true
+                ],
+                "CsvFile": [
+                    true,
+                    true,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true
+                ],
+                "ExcelFile": [
+                    true,
+                    true,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true
+                ],
+                "JsonFile": [
+                    true,
+                    true,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true
+                ]
+            }
+        },
+        {
+            "name": "qualified schema",
+            "output": {
+                "PostgreSQL": "\"public\".\"users\"",
+                "MySQL": "`public`.`users`",
+                "MariaDB": "`public`.`users`",
+                "SQLite": "\"public\".\"users\"",
+                "SqlServer": "[public].[users]",
+                "ClickHouse": "`public`.`users`",
+                "DuckDB": "\"public\".\"users\"",
+                "CockroachDB": "\"public\".\"users\"",
+                "TimescaleDB": "\"public\".\"users\"",
+                "Neon": "\"public\".\"users\"",
+                "Supabase": "\"public\".\"users\"",
+                "TiDB": "`public`.`users`",
+                "PlanetScale": "`public`.`users`",
+                "AzureSql": "[public].[users]",
+                "H2": "\"public\".\"users\"",
+                "HSQLDB": "\"public\".\"users\"",
+                "Derby": "\"public\".\"users\"",
+                "OtherJdbc": "\"public\".\"users\"",
+                "CsvFile": "\"public\".\"users\"",
+                "ExcelFile": "\"public\".\"users\"",
+                "JsonFile": "\"public\".\"users\""
+            }
+        },
+        {
+            "name": "qualified catalog and schema",
+            "output": {
+                "PostgreSQL": "\"db\".\"dbo\".\"we\"\"ird]`na\\me\"",
+                "MySQL": "`db`.`dbo`.`we\"ird]``na\\me`",
+                "MariaDB": "`db`.`dbo`.`we\"ird]``na\\me`",
+                "SQLite": "\"db\".\"dbo\".\"we\"\"ird]`na\\me\"",
+                "SqlServer": "[db].[dbo].[we\"ird]]`na\\me]",
+                "ClickHouse": "`db`.`dbo`.`we\"ird]\\`na\\\\me`",
+                "DuckDB": "\"db\".\"dbo\".\"we\"\"ird]`na\\me\"",
+                "CockroachDB": "\"db\".\"dbo\".\"we\"\"ird]`na\\me\"",
+                "TimescaleDB": "\"db\".\"dbo\".\"we\"\"ird]`na\\me\"",
+                "Neon": "\"db\".\"dbo\".\"we\"\"ird]`na\\me\"",
+                "Supabase": "\"db\".\"dbo\".\"we\"\"ird]`na\\me\"",
+                "TiDB": "`db`.`dbo`.`we\"ird]``na\\me`",
+                "PlanetScale": "`db`.`dbo`.`we\"ird]``na\\me`",
+                "AzureSql": "[db].[dbo].[we\"ird]]`na\\me]",
+                "H2": "\"db\".\"dbo\".\"we\"\"ird]`na\\me\"",
+                "HSQLDB": "\"db\".\"dbo\".\"we\"\"ird]`na\\me\"",
+                "Derby": "\"db\".\"dbo\".\"we\"\"ird]`na\\me\"",
+                "OtherJdbc": "\"db\".\"dbo\".\"we\"\"ird]`na\\me\"",
+                "CsvFile": "\"db\".\"dbo\".\"we\"\"ird]`na\\me\"",
+                "ExcelFile": "\"db\".\"dbo\".\"we\"\"ird]`na\\me\"",
+                "JsonFile": "\"db\".\"dbo\".\"we\"\"ird]`na\\me\""
+            }
+        },
+        {
+            "name": "qualified bare",
+            "output": {
+                "PostgreSQL": "\"plain\"",
+                "MySQL": "`plain`",
+                "MariaDB": "`plain`",
+                "SQLite": "\"plain\"",
+                "SqlServer": "[plain]",
+                "ClickHouse": "`plain`",
+                "DuckDB": "\"plain\"",
+                "CockroachDB": "\"plain\"",
+                "TimescaleDB": "\"plain\"",
+                "Neon": "\"plain\"",
+                "Supabase": "\"plain\"",
+                "TiDB": "`plain`",
+                "PlanetScale": "`plain`",
+                "AzureSql": "[plain]",
+                "H2": "\"plain\"",
+                "HSQLDB": "\"plain\"",
+                "Derby": "\"plain\"",
+                "OtherJdbc": "\"plain\"",
+                "CsvFile": "\"plain\"",
+                "ExcelFile": "\"plain\"",
+                "JsonFile": "\"plain\""
+            }
+        },
+        {
+            "name": "select page plain",
+            "output": {
+                "PostgreSQL": "SELECT * FROM \"public\".\"users\" LIMIT 100 OFFSET 0",
+                "MySQL": "SELECT * FROM `public`.`users` LIMIT 100 OFFSET 0",
+                "MariaDB": "SELECT * FROM `public`.`users` LIMIT 100 OFFSET 0",
+                "SQLite": "SELECT * FROM \"public\".\"users\" LIMIT 100 OFFSET 0",
+                "SqlServer": "SELECT * FROM [public].[users] ORDER BY (SELECT NULL) OFFSET 0 ROWS FETCH NEXT 100 ROWS ONLY",
+                "ClickHouse": "SELECT * FROM `public`.`users` LIMIT 100 OFFSET 0",
+                "DuckDB": "SELECT * FROM \"public\".\"users\" LIMIT 100 OFFSET 0",
+                "CockroachDB": "SELECT * FROM \"public\".\"users\" LIMIT 100 OFFSET 0",
+                "TimescaleDB": "SELECT * FROM \"public\".\"users\" LIMIT 100 OFFSET 0",
+                "Neon": "SELECT * FROM \"public\".\"users\" LIMIT 100 OFFSET 0",
+                "Supabase": "SELECT * FROM \"public\".\"users\" LIMIT 100 OFFSET 0",
+                "TiDB": "SELECT * FROM `public`.`users` LIMIT 100 OFFSET 0",
+                "PlanetScale": "SELECT * FROM `public`.`users` LIMIT 100 OFFSET 0",
+                "AzureSql": "SELECT * FROM [public].[users] ORDER BY (SELECT NULL) OFFSET 0 ROWS FETCH NEXT 100 ROWS ONLY",
+                "H2": "SELECT * FROM \"public\".\"users\" OFFSET 0 ROWS FETCH NEXT 100 ROWS ONLY",
+                "HSQLDB": "SELECT * FROM \"public\".\"users\" OFFSET 0 ROWS FETCH NEXT 100 ROWS ONLY",
+                "Derby": "SELECT * FROM \"public\".\"users\" OFFSET 0 ROWS FETCH NEXT 100 ROWS ONLY",
+                "OtherJdbc": "SELECT * FROM \"public\".\"users\" OFFSET 0 ROWS FETCH NEXT 100 ROWS ONLY",
+                "CsvFile": "SELECT * FROM \"public\".\"users\" LIMIT 100 OFFSET 0",
+                "ExcelFile": "SELECT * FROM \"public\".\"users\" LIMIT 100 OFFSET 0",
+                "JsonFile": "SELECT * FROM \"public\".\"users\" LIMIT 100 OFFSET 0"
+            }
+        },
+        {
+            "name": "select page filtered and sorted",
+            "output": {
+                "PostgreSQL": "SELECT * FROM \"public\".\"users\" WHERE \"age\" > ? ORDER BY \"name\" ASC, \"id\" DESC LIMIT 50 OFFSET 200",
+                "MySQL": "SELECT * FROM `public`.`users` WHERE \"age\" > ? ORDER BY `name` ASC, `id` DESC LIMIT 50 OFFSET 200",
+                "MariaDB": "SELECT * FROM `public`.`users` WHERE \"age\" > ? ORDER BY `name` ASC, `id` DESC LIMIT 50 OFFSET 200",
+                "SQLite": "SELECT * FROM \"public\".\"users\" WHERE \"age\" > ? ORDER BY \"name\" ASC, \"id\" DESC LIMIT 50 OFFSET 200",
+                "SqlServer": "SELECT * FROM [public].[users] WHERE \"age\" > ? ORDER BY [name] ASC, [id] DESC OFFSET 200 ROWS FETCH NEXT 50 ROWS ONLY",
+                "ClickHouse": "SELECT * FROM `public`.`users` WHERE \"age\" > ? ORDER BY `name` ASC, `id` DESC LIMIT 50 OFFSET 200",
+                "DuckDB": "SELECT * FROM \"public\".\"users\" WHERE \"age\" > ? ORDER BY \"name\" ASC, \"id\" DESC LIMIT 50 OFFSET 200",
+                "CockroachDB": "SELECT * FROM \"public\".\"users\" WHERE \"age\" > ? ORDER BY \"name\" ASC, \"id\" DESC LIMIT 50 OFFSET 200",
+                "TimescaleDB": "SELECT * FROM \"public\".\"users\" WHERE \"age\" > ? ORDER BY \"name\" ASC, \"id\" DESC LIMIT 50 OFFSET 200",
+                "Neon": "SELECT * FROM \"public\".\"users\" WHERE \"age\" > ? ORDER BY \"name\" ASC, \"id\" DESC LIMIT 50 OFFSET 200",
+                "Supabase": "SELECT * FROM \"public\".\"users\" WHERE \"age\" > ? ORDER BY \"name\" ASC, \"id\" DESC LIMIT 50 OFFSET 200",
+                "TiDB": "SELECT * FROM `public`.`users` WHERE \"age\" > ? ORDER BY `name` ASC, `id` DESC LIMIT 50 OFFSET 200",
+                "PlanetScale": "SELECT * FROM `public`.`users` WHERE \"age\" > ? ORDER BY `name` ASC, `id` DESC LIMIT 50 OFFSET 200",
+                "AzureSql": "SELECT * FROM [public].[users] WHERE \"age\" > ? ORDER BY [name] ASC, [id] DESC OFFSET 200 ROWS FETCH NEXT 50 ROWS ONLY",
+                "H2": "SELECT * FROM \"public\".\"users\" WHERE \"age\" > ? ORDER BY \"name\" ASC, \"id\" DESC OFFSET 200 ROWS FETCH NEXT 50 ROWS ONLY",
+                "HSQLDB": "SELECT * FROM \"public\".\"users\" WHERE \"age\" > ? ORDER BY \"name\" ASC, \"id\" DESC OFFSET 200 ROWS FETCH NEXT 50 ROWS ONLY",
+                "Derby": "SELECT * FROM \"public\".\"users\" WHERE \"age\" > ? ORDER BY \"name\" ASC, \"id\" DESC OFFSET 200 ROWS FETCH NEXT 50 ROWS ONLY",
+                "OtherJdbc": "SELECT * FROM \"public\".\"users\" WHERE \"age\" > ? ORDER BY \"name\" ASC, \"id\" DESC OFFSET 200 ROWS FETCH NEXT 50 ROWS ONLY",
+                "CsvFile": "SELECT * FROM \"public\".\"users\" WHERE \"age\" > ? ORDER BY \"name\" ASC, \"id\" DESC LIMIT 50 OFFSET 200",
+                "ExcelFile": "SELECT * FROM \"public\".\"users\" WHERE \"age\" > ? ORDER BY \"name\" ASC, \"id\" DESC LIMIT 50 OFFSET 200",
+                "JsonFile": "SELECT * FROM \"public\".\"users\" WHERE \"age\" > ? ORDER BY \"name\" ASC, \"id\" DESC LIMIT 50 OFFSET 200"
+            }
+        },
+        {
+            "name": "select page blank filter distinct",
+            "output": {
+                "PostgreSQL": "SELECT DISTINCT \"a\", \"b\" FROM \"db\".\"dbo\".\"we\"\"ird]`na\\me\" LIMIT 10 OFFSET 5",
+                "MySQL": "SELECT DISTINCT \"a\", \"b\" FROM `db`.`dbo`.`we\"ird]``na\\me` LIMIT 10 OFFSET 5",
+                "MariaDB": "SELECT DISTINCT \"a\", \"b\" FROM `db`.`dbo`.`we\"ird]``na\\me` LIMIT 10 OFFSET 5",
+                "SQLite": "SELECT DISTINCT \"a\", \"b\" FROM \"db\".\"dbo\".\"we\"\"ird]`na\\me\" LIMIT 10 OFFSET 5",
+                "SqlServer": "SELECT DISTINCT \"a\", \"b\" FROM [db].[dbo].[we\"ird]]`na\\me] ORDER BY 1 OFFSET 5 ROWS FETCH NEXT 10 ROWS ONLY",
+                "ClickHouse": "SELECT DISTINCT \"a\", \"b\" FROM `db`.`dbo`.`we\"ird]\\`na\\\\me` LIMIT 10 OFFSET 5",
+                "DuckDB": "SELECT DISTINCT \"a\", \"b\" FROM \"db\".\"dbo\".\"we\"\"ird]`na\\me\" LIMIT 10 OFFSET 5",
+                "CockroachDB": "SELECT DISTINCT \"a\", \"b\" FROM \"db\".\"dbo\".\"we\"\"ird]`na\\me\" LIMIT 10 OFFSET 5",
+                "TimescaleDB": "SELECT DISTINCT \"a\", \"b\" FROM \"db\".\"dbo\".\"we\"\"ird]`na\\me\" LIMIT 10 OFFSET 5",
+                "Neon": "SELECT DISTINCT \"a\", \"b\" FROM \"db\".\"dbo\".\"we\"\"ird]`na\\me\" LIMIT 10 OFFSET 5",
+                "Supabase": "SELECT DISTINCT \"a\", \"b\" FROM \"db\".\"dbo\".\"we\"\"ird]`na\\me\" LIMIT 10 OFFSET 5",
+                "TiDB": "SELECT DISTINCT \"a\", \"b\" FROM `db`.`dbo`.`we\"ird]``na\\me` LIMIT 10 OFFSET 5",
+                "PlanetScale": "SELECT DISTINCT \"a\", \"b\" FROM `db`.`dbo`.`we\"ird]``na\\me` LIMIT 10 OFFSET 5",
+                "AzureSql": "SELECT DISTINCT \"a\", \"b\" FROM [db].[dbo].[we\"ird]]`na\\me] ORDER BY 1 OFFSET 5 ROWS FETCH NEXT 10 ROWS ONLY",
+                "H2": "SELECT DISTINCT \"a\", \"b\" FROM \"db\".\"dbo\".\"we\"\"ird]`na\\me\" OFFSET 5 ROWS FETCH NEXT 10 ROWS ONLY",
+                "HSQLDB": "SELECT DISTINCT \"a\", \"b\" FROM \"db\".\"dbo\".\"we\"\"ird]`na\\me\" OFFSET 5 ROWS FETCH NEXT 10 ROWS ONLY",
+                "Derby": "SELECT DISTINCT \"a\", \"b\" FROM \"db\".\"dbo\".\"we\"\"ird]`na\\me\" OFFSET 5 ROWS FETCH NEXT 10 ROWS ONLY",
+                "OtherJdbc": "SELECT DISTINCT \"a\", \"b\" FROM \"db\".\"dbo\".\"we\"\"ird]`na\\me\" OFFSET 5 ROWS FETCH NEXT 10 ROWS ONLY",
+                "CsvFile": "SELECT DISTINCT \"a\", \"b\" FROM \"db\".\"dbo\".\"we\"\"ird]`na\\me\" LIMIT 10 OFFSET 5",
+                "ExcelFile": "SELECT DISTINCT \"a\", \"b\" FROM \"db\".\"dbo\".\"we\"\"ird]`na\\me\" LIMIT 10 OFFSET 5",
+                "JsonFile": "SELECT DISTINCT \"a\", \"b\" FROM \"db\".\"dbo\".\"we\"\"ird]`na\\me\" LIMIT 10 OFFSET 5"
+            }
+        },
+        {
+            "name": "select page projection not distinct",
+            "output": {
+                "PostgreSQL": "SELECT x FROM \"plain\" LIMIT 1 OFFSET 3000000000",
+                "MySQL": "SELECT x FROM `plain` LIMIT 1 OFFSET 3000000000",
+                "MariaDB": "SELECT x FROM `plain` LIMIT 1 OFFSET 3000000000",
+                "SQLite": "SELECT x FROM \"plain\" LIMIT 1 OFFSET 3000000000",
+                "SqlServer": "SELECT x FROM [plain] ORDER BY (SELECT NULL) OFFSET 3000000000 ROWS FETCH NEXT 1 ROWS ONLY",
+                "ClickHouse": "SELECT x FROM `plain` LIMIT 1 OFFSET 3000000000",
+                "DuckDB": "SELECT x FROM \"plain\" LIMIT 1 OFFSET 3000000000",
+                "CockroachDB": "SELECT x FROM \"plain\" LIMIT 1 OFFSET 3000000000",
+                "TimescaleDB": "SELECT x FROM \"plain\" LIMIT 1 OFFSET 3000000000",
+                "Neon": "SELECT x FROM \"plain\" LIMIT 1 OFFSET 3000000000",
+                "Supabase": "SELECT x FROM \"plain\" LIMIT 1 OFFSET 3000000000",
+                "TiDB": "SELECT x FROM `plain` LIMIT 1 OFFSET 3000000000",
+                "PlanetScale": "SELECT x FROM `plain` LIMIT 1 OFFSET 3000000000",
+                "AzureSql": "SELECT x FROM [plain] ORDER BY (SELECT NULL) OFFSET 3000000000 ROWS FETCH NEXT 1 ROWS ONLY",
+                "H2": "SELECT x FROM \"plain\" OFFSET 3000000000 ROWS FETCH NEXT 1 ROWS ONLY",
+                "HSQLDB": "SELECT x FROM \"plain\" OFFSET 3000000000 ROWS FETCH NEXT 1 ROWS ONLY",
+                "Derby": "SELECT x FROM \"plain\" OFFSET 3000000000 ROWS FETCH NEXT 1 ROWS ONLY",
+                "OtherJdbc": "SELECT x FROM \"plain\" OFFSET 3000000000 ROWS FETCH NEXT 1 ROWS ONLY",
+                "CsvFile": "SELECT x FROM \"plain\" LIMIT 1 OFFSET 3000000000",
+                "ExcelFile": "SELECT x FROM \"plain\" LIMIT 1 OFFSET 3000000000",
+                "JsonFile": "SELECT x FROM \"plain\" LIMIT 1 OFFSET 3000000000"
+            }
+        },
+        {
+            "name": "select all",
+            "output": {
+                "PostgreSQL": "SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\" WHERE a = 1 ORDER BY \"n\" DESC",
+                "MySQL": "SELECT DISTINCT \"a\", \"b\" FROM `public`.`users` WHERE a = 1 ORDER BY `n` DESC",
+                "MariaDB": "SELECT DISTINCT \"a\", \"b\" FROM `public`.`users` WHERE a = 1 ORDER BY `n` DESC",
+                "SQLite": "SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\" WHERE a = 1 ORDER BY \"n\" DESC",
+                "SqlServer": "SELECT DISTINCT \"a\", \"b\" FROM [public].[users] WHERE a = 1 ORDER BY [n] DESC",
+                "ClickHouse": "SELECT DISTINCT \"a\", \"b\" FROM `public`.`users` WHERE a = 1 ORDER BY `n` DESC",
+                "DuckDB": "SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\" WHERE a = 1 ORDER BY \"n\" DESC",
+                "CockroachDB": "SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\" WHERE a = 1 ORDER BY \"n\" DESC",
+                "TimescaleDB": "SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\" WHERE a = 1 ORDER BY \"n\" DESC",
+                "Neon": "SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\" WHERE a = 1 ORDER BY \"n\" DESC",
+                "Supabase": "SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\" WHERE a = 1 ORDER BY \"n\" DESC",
+                "TiDB": "SELECT DISTINCT \"a\", \"b\" FROM `public`.`users` WHERE a = 1 ORDER BY `n` DESC",
+                "PlanetScale": "SELECT DISTINCT \"a\", \"b\" FROM `public`.`users` WHERE a = 1 ORDER BY `n` DESC",
+                "AzureSql": "SELECT DISTINCT \"a\", \"b\" FROM [public].[users] WHERE a = 1 ORDER BY [n] DESC",
+                "H2": "SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\" WHERE a = 1 ORDER BY \"n\" DESC",
+                "HSQLDB": "SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\" WHERE a = 1 ORDER BY \"n\" DESC",
+                "Derby": "SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\" WHERE a = 1 ORDER BY \"n\" DESC",
+                "OtherJdbc": "SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\" WHERE a = 1 ORDER BY \"n\" DESC",
+                "CsvFile": "SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\" WHERE a = 1 ORDER BY \"n\" DESC",
+                "ExcelFile": "SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\" WHERE a = 1 ORDER BY \"n\" DESC",
+                "JsonFile": "SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\" WHERE a = 1 ORDER BY \"n\" DESC"
+            }
+        },
+        {
+            "name": "count rows",
+            "output": {
+                "PostgreSQL": "SELECT COUNT(*) FROM \"public\".\"users\" WHERE a = 1",
+                "MySQL": "SELECT COUNT(*) FROM `public`.`users` WHERE a = 1",
+                "MariaDB": "SELECT COUNT(*) FROM `public`.`users` WHERE a = 1",
+                "SQLite": "SELECT COUNT(*) FROM \"public\".\"users\" WHERE a = 1",
+                "SqlServer": "SELECT COUNT(*) FROM [public].[users] WHERE a = 1",
+                "ClickHouse": "SELECT COUNT(*) FROM `public`.`users` WHERE a = 1",
+                "DuckDB": "SELECT COUNT(*) FROM \"public\".\"users\" WHERE a = 1",
+                "CockroachDB": "SELECT COUNT(*) FROM \"public\".\"users\" WHERE a = 1",
+                "TimescaleDB": "SELECT COUNT(*) FROM \"public\".\"users\" WHERE a = 1",
+                "Neon": "SELECT COUNT(*) FROM \"public\".\"users\" WHERE a = 1",
+                "Supabase": "SELECT COUNT(*) FROM \"public\".\"users\" WHERE a = 1",
+                "TiDB": "SELECT COUNT(*) FROM `public`.`users` WHERE a = 1",
+                "PlanetScale": "SELECT COUNT(*) FROM `public`.`users` WHERE a = 1",
+                "AzureSql": "SELECT COUNT(*) FROM [public].[users] WHERE a = 1",
+                "H2": "SELECT COUNT(*) FROM \"public\".\"users\" WHERE a = 1",
+                "HSQLDB": "SELECT COUNT(*) FROM \"public\".\"users\" WHERE a = 1",
+                "Derby": "SELECT COUNT(*) FROM \"public\".\"users\" WHERE a = 1",
+                "OtherJdbc": "SELECT COUNT(*) FROM \"public\".\"users\" WHERE a = 1",
+                "CsvFile": "SELECT COUNT(*) FROM \"public\".\"users\" WHERE a = 1",
+                "ExcelFile": "SELECT COUNT(*) FROM \"public\".\"users\" WHERE a = 1",
+                "JsonFile": "SELECT COUNT(*) FROM \"public\".\"users\" WHERE a = 1"
+            }
+        },
+        {
+            "name": "count rows distinct",
+            "output": {
+                "PostgreSQL": "SELECT COUNT(*) FROM (SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\") d",
+                "MySQL": "SELECT COUNT(*) FROM (SELECT DISTINCT \"a\", \"b\" FROM `public`.`users`) d",
+                "MariaDB": "SELECT COUNT(*) FROM (SELECT DISTINCT \"a\", \"b\" FROM `public`.`users`) d",
+                "SQLite": "SELECT COUNT(*) FROM (SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\") d",
+                "SqlServer": "SELECT COUNT(*) FROM (SELECT DISTINCT \"a\", \"b\" FROM [public].[users]) d",
+                "ClickHouse": "SELECT COUNT(*) FROM (SELECT DISTINCT \"a\", \"b\" FROM `public`.`users`) d",
+                "DuckDB": "SELECT COUNT(*) FROM (SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\") d",
+                "CockroachDB": "SELECT COUNT(*) FROM (SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\") d",
+                "TimescaleDB": "SELECT COUNT(*) FROM (SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\") d",
+                "Neon": "SELECT COUNT(*) FROM (SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\") d",
+                "Supabase": "SELECT COUNT(*) FROM (SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\") d",
+                "TiDB": "SELECT COUNT(*) FROM (SELECT DISTINCT \"a\", \"b\" FROM `public`.`users`) d",
+                "PlanetScale": "SELECT COUNT(*) FROM (SELECT DISTINCT \"a\", \"b\" FROM `public`.`users`) d",
+                "AzureSql": "SELECT COUNT(*) FROM (SELECT DISTINCT \"a\", \"b\" FROM [public].[users]) d",
+                "H2": "SELECT COUNT(*) FROM (SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\") d",
+                "HSQLDB": "SELECT COUNT(*) FROM (SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\") d",
+                "Derby": "SELECT COUNT(*) FROM (SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\") d",
+                "OtherJdbc": "SELECT COUNT(*) FROM (SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\") d",
+                "CsvFile": "SELECT COUNT(*) FROM (SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\") d",
+                "ExcelFile": "SELECT COUNT(*) FROM (SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\") d",
+                "JsonFile": "SELECT COUNT(*) FROM (SELECT DISTINCT \"a\", \"b\" FROM \"public\".\"users\") d"
+            }
+        },
+        {
+            "name": "count rows not distinct",
+            "output": {
+                "PostgreSQL": "SELECT COUNT(*) FROM \"public\".\"users\"",
+                "MySQL": "SELECT COUNT(*) FROM `public`.`users`",
+                "MariaDB": "SELECT COUNT(*) FROM `public`.`users`",
+                "SQLite": "SELECT COUNT(*) FROM \"public\".\"users\"",
+                "SqlServer": "SELECT COUNT(*) FROM [public].[users]",
+                "ClickHouse": "SELECT COUNT(*) FROM `public`.`users`",
+                "DuckDB": "SELECT COUNT(*) FROM \"public\".\"users\"",
+                "CockroachDB": "SELECT COUNT(*) FROM \"public\".\"users\"",
+                "TimescaleDB": "SELECT COUNT(*) FROM \"public\".\"users\"",
+                "Neon": "SELECT COUNT(*) FROM \"public\".\"users\"",
+                "Supabase": "SELECT COUNT(*) FROM \"public\".\"users\"",
+                "TiDB": "SELECT COUNT(*) FROM `public`.`users`",
+                "PlanetScale": "SELECT COUNT(*) FROM `public`.`users`",
+                "AzureSql": "SELECT COUNT(*) FROM [public].[users]",
+                "H2": "SELECT COUNT(*) FROM \"public\".\"users\"",
+                "HSQLDB": "SELECT COUNT(*) FROM \"public\".\"users\"",
+                "Derby": "SELECT COUNT(*) FROM \"public\".\"users\"",
+                "OtherJdbc": "SELECT COUNT(*) FROM \"public\".\"users\"",
+                "CsvFile": "SELECT COUNT(*) FROM \"public\".\"users\"",
+                "ExcelFile": "SELECT COUNT(*) FROM \"public\".\"users\"",
+                "JsonFile": "SELECT COUNT(*) FROM \"public\".\"users\""
+            }
+        },
+        {
+            "name": "cast to text",
+            "output": {
+                "PostgreSQL": "CAST(\"c\" AS TEXT)",
+                "MySQL": "CAST(\"c\" AS CHAR)",
+                "MariaDB": "CAST(\"c\" AS CHAR)",
+                "SQLite": "CAST(\"c\" AS TEXT)",
+                "SqlServer": "CAST(\"c\" AS NVARCHAR(4000))",
+                "ClickHouse": "toString(\"c\")",
+                "DuckDB": "CAST(\"c\" AS VARCHAR)",
+                "CockroachDB": "CAST(\"c\" AS TEXT)",
+                "TimescaleDB": "CAST(\"c\" AS TEXT)",
+                "Neon": "CAST(\"c\" AS TEXT)",
+                "Supabase": "CAST(\"c\" AS TEXT)",
+                "TiDB": "CAST(\"c\" AS CHAR)",
+                "PlanetScale": "CAST(\"c\" AS CHAR)",
+                "AzureSql": "CAST(\"c\" AS NVARCHAR(4000))",
+                "H2": "CAST(\"c\" AS VARCHAR(4000))",
+                "HSQLDB": "CAST(\"c\" AS VARCHAR(4000))",
+                "Derby": "CAST(\"c\" AS VARCHAR(4000))",
+                "OtherJdbc": "CAST(\"c\" AS VARCHAR(4000))",
+                "CsvFile": "CAST(\"c\" AS TEXT)",
+                "ExcelFile": "CAST(\"c\" AS TEXT)",
+                "JsonFile": "CAST(\"c\" AS TEXT)"
+            }
+        },
+        {
+            "name": "sample pattern",
+            "output": {
+                "PostgreSQL": "a!%b!_c!!d\\e%",
+                "MySQL": "a!%b!_c!!d\\e%",
+                "MariaDB": "a!%b!_c!!d\\e%",
+                "SQLite": "a!%b!_c!!d\\e%",
+                "SqlServer": "a!%b!_c!!d\\e%",
+                "ClickHouse": "a\\%b\\_c!d\\\\e%",
+                "DuckDB": "a!%b!_c!!d\\e%",
+                "CockroachDB": "a!%b!_c!!d\\e%",
+                "TimescaleDB": "a!%b!_c!!d\\e%",
+                "Neon": "a!%b!_c!!d\\e%",
+                "Supabase": "a!%b!_c!!d\\e%",
+                "TiDB": "a!%b!_c!!d\\e%",
+                "PlanetScale": "a!%b!_c!!d\\e%",
+                "AzureSql": "a!%b!_c!!d\\e%",
+                "H2": "a!%b!_c!!d\\e%",
+                "HSQLDB": "a!%b!_c!!d\\e%",
+                "Derby": "a!%b!_c!!d\\e%",
+                "OtherJdbc": "a!%b!_c!!d\\e%",
+                "CsvFile": "a!%b!_c!!d\\e%",
+                "ExcelFile": "a!%b!_c!!d\\e%",
+                "JsonFile": "a!%b!_c!!d\\e%"
+            }
+        },
+        {
+            "name": "sample values",
+            "output": {
+                "PostgreSQL": "SELECT DISTINCT v FROM (SELECT \"name\" AS v FROM \"public\".\"users\" WHERE \"name\" IS NOT NULL AND CAST(\"name\" AS TEXT) LIKE ? ESCAPE '!' LIMIT 10000) s ORDER BY v LIMIT 20",
+                "MySQL": "SELECT DISTINCT v FROM (SELECT `name` AS v FROM `public`.`users` WHERE `name` IS NOT NULL AND CAST(`name` AS CHAR) LIKE ? ESCAPE '!' LIMIT 10000) s ORDER BY v LIMIT 20",
+                "MariaDB": "SELECT DISTINCT v FROM (SELECT `name` AS v FROM `public`.`users` WHERE `name` IS NOT NULL AND CAST(`name` AS CHAR) LIKE ? ESCAPE '!' LIMIT 10000) s ORDER BY v LIMIT 20",
+                "SQLite": "SELECT DISTINCT v FROM (SELECT \"name\" AS v FROM \"public\".\"users\" WHERE \"name\" IS NOT NULL AND CAST(\"name\" AS TEXT) LIKE ? ESCAPE '!' LIMIT 10000) s ORDER BY v LIMIT 20",
+                "SqlServer": "SELECT DISTINCT TOP 20 v FROM (SELECT TOP 10000 [name] AS v FROM [public].[users] WHERE [name] IS NOT NULL AND CAST([name] AS NVARCHAR(4000)) LIKE ? ESCAPE '!') s ORDER BY v",
+                "ClickHouse": "SELECT DISTINCT v FROM (SELECT `name` AS v FROM `public`.`users` WHERE `name` IS NOT NULL AND toString(`name`) LIKE ? LIMIT 10000) s ORDER BY v LIMIT 20",
+                "DuckDB": "SELECT DISTINCT v FROM (SELECT \"name\" AS v FROM \"public\".\"users\" WHERE \"name\" IS NOT NULL AND CAST(\"name\" AS VARCHAR) LIKE ? ESCAPE '!' LIMIT 10000) s ORDER BY v LIMIT 20",
+                "CockroachDB": "SELECT DISTINCT v FROM (SELECT \"name\" AS v FROM \"public\".\"users\" WHERE \"name\" IS NOT NULL AND CAST(\"name\" AS TEXT) LIKE ? ESCAPE '!' LIMIT 10000) s ORDER BY v LIMIT 20",
+                "TimescaleDB": "SELECT DISTINCT v FROM (SELECT \"name\" AS v FROM \"public\".\"users\" WHERE \"name\" IS NOT NULL AND CAST(\"name\" AS TEXT) LIKE ? ESCAPE '!' LIMIT 10000) s ORDER BY v LIMIT 20",
+                "Neon": "SELECT DISTINCT v FROM (SELECT \"name\" AS v FROM \"public\".\"users\" WHERE \"name\" IS NOT NULL AND CAST(\"name\" AS TEXT) LIKE ? ESCAPE '!' LIMIT 10000) s ORDER BY v LIMIT 20",
+                "Supabase": "SELECT DISTINCT v FROM (SELECT \"name\" AS v FROM \"public\".\"users\" WHERE \"name\" IS NOT NULL AND CAST(\"name\" AS TEXT) LIKE ? ESCAPE '!' LIMIT 10000) s ORDER BY v LIMIT 20",
+                "TiDB": "SELECT DISTINCT v FROM (SELECT `name` AS v FROM `public`.`users` WHERE `name` IS NOT NULL AND CAST(`name` AS CHAR) LIKE ? ESCAPE '!' LIMIT 10000) s ORDER BY v LIMIT 20",
+                "PlanetScale": "SELECT DISTINCT v FROM (SELECT `name` AS v FROM `public`.`users` WHERE `name` IS NOT NULL AND CAST(`name` AS CHAR) LIKE ? ESCAPE '!' LIMIT 10000) s ORDER BY v LIMIT 20",
+                "AzureSql": "SELECT DISTINCT TOP 20 v FROM (SELECT TOP 10000 [name] AS v FROM [public].[users] WHERE [name] IS NOT NULL AND CAST([name] AS NVARCHAR(4000)) LIKE ? ESCAPE '!') s ORDER BY v",
+                "H2": "SELECT DISTINCT v FROM (SELECT \"name\" AS v FROM \"public\".\"users\" WHERE \"name\" IS NOT NULL AND CAST(\"name\" AS VARCHAR(4000)) LIKE ? ESCAPE '!' FETCH FIRST 10000 ROWS ONLY) s ORDER BY v FETCH FIRST 20 ROWS ONLY",
+                "HSQLDB": "SELECT DISTINCT v FROM (SELECT \"name\" AS v FROM \"public\".\"users\" WHERE \"name\" IS NOT NULL AND CAST(\"name\" AS VARCHAR(4000)) LIKE ? ESCAPE '!' FETCH FIRST 10000 ROWS ONLY) s ORDER BY v FETCH FIRST 20 ROWS ONLY",
+                "Derby": "SELECT DISTINCT v FROM (SELECT \"name\" AS v FROM \"public\".\"users\" WHERE \"name\" IS NOT NULL AND CAST(\"name\" AS VARCHAR(4000)) LIKE ? ESCAPE '!' FETCH FIRST 10000 ROWS ONLY) s ORDER BY v FETCH FIRST 20 ROWS ONLY",
+                "OtherJdbc": "SELECT DISTINCT v FROM (SELECT \"name\" AS v FROM \"public\".\"users\" WHERE \"name\" IS NOT NULL AND CAST(\"name\" AS VARCHAR(4000)) LIKE ? ESCAPE '!' FETCH FIRST 10000 ROWS ONLY) s ORDER BY v FETCH FIRST 20 ROWS ONLY",
+                "CsvFile": "SELECT DISTINCT v FROM (SELECT \"name\" AS v FROM \"public\".\"users\" WHERE \"name\" IS NOT NULL AND CAST(\"name\" AS TEXT) LIKE ? ESCAPE '!' LIMIT 10000) s ORDER BY v LIMIT 20",
+                "ExcelFile": "SELECT DISTINCT v FROM (SELECT \"name\" AS v FROM \"public\".\"users\" WHERE \"name\" IS NOT NULL AND CAST(\"name\" AS TEXT) LIKE ? ESCAPE '!' LIMIT 10000) s ORDER BY v LIMIT 20",
+                "JsonFile": "SELECT DISTINCT v FROM (SELECT \"name\" AS v FROM \"public\".\"users\" WHERE \"name\" IS NOT NULL AND CAST(\"name\" AS TEXT) LIKE ? ESCAPE '!' LIMIT 10000) s ORDER BY v LIMIT 20"
+            }
+        },
+        {
+            "name": "select functions",
+            "output": {
+                "PostgreSQL": {
+                    "None": "\"c\"",
+                    "Upper": "UPPER(\"c\")",
+                    "Lower": "LOWER(\"c\")",
+                    "Trim": "TRIM(\"c\")",
+                    "Length": "LENGTH(\"c\")",
+                    "Substring": "SUBSTRING(\"c\", 1, 10)",
+                    "Round": "ROUND(CAST(\"c\" AS NUMERIC), 2)",
+                    "Abs": "ABS(\"c\")",
+                    "Floor": "FLOOR(\"c\")",
+                    "Ceil": "CEILING(\"c\")",
+                    "Truncate": "date_trunc('month', \"c\")",
+                    "Coalesce": "COALESCE(\"c\", 'n/a')",
+                    "AsText": "CAST(\"c\" AS TEXT)"
+                },
+                "MySQL": {
+                    "None": "\"c\"",
+                    "Upper": "UPPER(\"c\")",
+                    "Lower": "LOWER(\"c\")",
+                    "Trim": "TRIM(\"c\")",
+                    "Length": "CHAR_LENGTH(\"c\")",
+                    "Substring": "SUBSTRING(\"c\", 1, 10)",
+                    "Round": "ROUND(\"c\", 2)",
+                    "Abs": "ABS(\"c\")",
+                    "Floor": "FLOOR(\"c\")",
+                    "Ceil": "CEILING(\"c\")",
+                    "Truncate": "DATE(DATE_FORMAT(\"c\", '%Y-%m-01'))",
+                    "Coalesce": "COALESCE(\"c\", 'n/a')",
+                    "AsText": "CAST(\"c\" AS CHAR)"
+                },
+                "MariaDB": {
+                    "None": "\"c\"",
+                    "Upper": "UPPER(\"c\")",
+                    "Lower": "LOWER(\"c\")",
+                    "Trim": "TRIM(\"c\")",
+                    "Length": "CHAR_LENGTH(\"c\")",
+                    "Substring": "SUBSTRING(\"c\", 1, 10)",
+                    "Round": "ROUND(\"c\", 2)",
+                    "Abs": "ABS(\"c\")",
+                    "Floor": "FLOOR(\"c\")",
+                    "Ceil": "CEILING(\"c\")",
+                    "Truncate": "DATE(DATE_FORMAT(\"c\", '%Y-%m-01'))",
+                    "Coalesce": "COALESCE(\"c\", 'n/a')",
+                    "AsText": "CAST(\"c\" AS CHAR)"
+                },
+                "SQLite": {
+                    "None": "\"c\"",
+                    "Upper": "UPPER(\"c\")",
+                    "Lower": "LOWER(\"c\")",
+                    "Trim": "TRIM(\"c\")",
+                    "Length": "LENGTH(\"c\")",
+                    "Substring": "substr(\"c\", 1, 10)",
+                    "Round": "ROUND(\"c\", 2)",
+                    "Abs": "ABS(\"c\")",
+                    "Floor": "FLOOR(\"c\")",
+                    "Ceil": "CEILING(\"c\")",
+                    "Truncate": "strftime('%Y-%m-01', \"c\")",
+                    "Coalesce": "COALESCE(\"c\", 'n/a')",
+                    "AsText": "CAST(\"c\" AS TEXT)"
+                },
+                "SqlServer": {
+                    "None": "\"c\"",
+                    "Upper": "UPPER(\"c\")",
+                    "Lower": "LOWER(\"c\")",
+                    "Trim": "LTRIM(RTRIM(\"c\"))",
+                    "Length": "LEN(\"c\")",
+                    "Substring": "SUBSTRING(\"c\", 1, 10)",
+                    "Round": "ROUND(\"c\", 2)",
+                    "Abs": "ABS(\"c\")",
+                    "Floor": "FLOOR(\"c\")",
+                    "Ceil": "CEILING(\"c\")",
+                    "Truncate": "DATEFROMPARTS(YEAR(\"c\"), MONTH(\"c\"), 1)",
+                    "Coalesce": "COALESCE(\"c\", 'n/a')",
+                    "AsText": "CAST(\"c\" AS NVARCHAR(4000))"
+                },
+                "ClickHouse": {
+                    "None": "\"c\"",
+                    "Upper": "upperUTF8(\"c\")",
+                    "Lower": "lowerUTF8(\"c\")",
+                    "Trim": "trimBoth(\"c\")",
+                    "Length": "lengthUTF8(\"c\")",
+                    "Substring": "substringUTF8(\"c\", 1, 10)",
+                    "Round": "ROUND(\"c\", 2)",
+                    "Abs": "ABS(\"c\")",
+                    "Floor": "FLOOR(\"c\")",
+                    "Ceil": "ceil(\"c\")",
+                    "Truncate": "toStartOfMonth(\"c\")",
+                    "Coalesce": "COALESCE(\"c\", 'n/a')",
+                    "AsText": "toString(\"c\")"
+                },
+                "DuckDB": {
+                    "None": "\"c\"",
+                    "Upper": "UPPER(\"c\")",
+                    "Lower": "LOWER(\"c\")",
+                    "Trim": "TRIM(\"c\")",
+                    "Length": "LENGTH(\"c\")",
+                    "Substring": "SUBSTRING(\"c\", 1, 10)",
+                    "Round": "ROUND(\"c\", 2)",
+                    "Abs": "ABS(\"c\")",
+                    "Floor": "FLOOR(\"c\")",
+                    "Ceil": "CEILING(\"c\")",
+                    "Truncate": "date_trunc('month', \"c\")",
+                    "Coalesce": "COALESCE(\"c\", 'n/a')",
+                    "AsText": "CAST(\"c\" AS VARCHAR)"
+                },
+                "CockroachDB": {
+                    "None": "\"c\"",
+                    "Upper": "UPPER(\"c\")",
+                    "Lower": "LOWER(\"c\")",
+                    "Trim": "TRIM(\"c\")",
+                    "Length": "LENGTH(\"c\")",
+                    "Substring": "SUBSTRING(\"c\", 1, 10)",
+                    "Round": "ROUND(CAST(\"c\" AS NUMERIC), 2)",
+                    "Abs": "ABS(\"c\")",
+                    "Floor": "FLOOR(\"c\")",
+                    "Ceil": "CEILING(\"c\")",
+                    "Truncate": "date_trunc('month', \"c\")",
+                    "Coalesce": "COALESCE(\"c\", 'n/a')",
+                    "AsText": "CAST(\"c\" AS TEXT)"
+                },
+                "TimescaleDB": {
+                    "None": "\"c\"",
+                    "Upper": "UPPER(\"c\")",
+                    "Lower": "LOWER(\"c\")",
+                    "Trim": "TRIM(\"c\")",
+                    "Length": "LENGTH(\"c\")",
+                    "Substring": "SUBSTRING(\"c\", 1, 10)",
+                    "Round": "ROUND(CAST(\"c\" AS NUMERIC), 2)",
+                    "Abs": "ABS(\"c\")",
+                    "Floor": "FLOOR(\"c\")",
+                    "Ceil": "CEILING(\"c\")",
+                    "Truncate": "date_trunc('month', \"c\")",
+                    "Coalesce": "COALESCE(\"c\", 'n/a')",
+                    "AsText": "CAST(\"c\" AS TEXT)"
+                },
+                "Neon": {
+                    "None": "\"c\"",
+                    "Upper": "UPPER(\"c\")",
+                    "Lower": "LOWER(\"c\")",
+                    "Trim": "TRIM(\"c\")",
+                    "Length": "LENGTH(\"c\")",
+                    "Substring": "SUBSTRING(\"c\", 1, 10)",
+                    "Round": "ROUND(CAST(\"c\" AS NUMERIC), 2)",
+                    "Abs": "ABS(\"c\")",
+                    "Floor": "FLOOR(\"c\")",
+                    "Ceil": "CEILING(\"c\")",
+                    "Truncate": "date_trunc('month', \"c\")",
+                    "Coalesce": "COALESCE(\"c\", 'n/a')",
+                    "AsText": "CAST(\"c\" AS TEXT)"
+                },
+                "Supabase": {
+                    "None": "\"c\"",
+                    "Upper": "UPPER(\"c\")",
+                    "Lower": "LOWER(\"c\")",
+                    "Trim": "TRIM(\"c\")",
+                    "Length": "LENGTH(\"c\")",
+                    "Substring": "SUBSTRING(\"c\", 1, 10)",
+                    "Round": "ROUND(CAST(\"c\" AS NUMERIC), 2)",
+                    "Abs": "ABS(\"c\")",
+                    "Floor": "FLOOR(\"c\")",
+                    "Ceil": "CEILING(\"c\")",
+                    "Truncate": "date_trunc('month', \"c\")",
+                    "Coalesce": "COALESCE(\"c\", 'n/a')",
+                    "AsText": "CAST(\"c\" AS TEXT)"
+                },
+                "TiDB": {
+                    "None": "\"c\"",
+                    "Upper": "UPPER(\"c\")",
+                    "Lower": "LOWER(\"c\")",
+                    "Trim": "TRIM(\"c\")",
+                    "Length": "CHAR_LENGTH(\"c\")",
+                    "Substring": "SUBSTRING(\"c\", 1, 10)",
+                    "Round": "ROUND(\"c\", 2)",
+                    "Abs": "ABS(\"c\")",
+                    "Floor": "FLOOR(\"c\")",
+                    "Ceil": "CEILING(\"c\")",
+                    "Truncate": "DATE(DATE_FORMAT(\"c\", '%Y-%m-01'))",
+                    "Coalesce": "COALESCE(\"c\", 'n/a')",
+                    "AsText": "CAST(\"c\" AS CHAR)"
+                },
+                "PlanetScale": {
+                    "None": "\"c\"",
+                    "Upper": "UPPER(\"c\")",
+                    "Lower": "LOWER(\"c\")",
+                    "Trim": "TRIM(\"c\")",
+                    "Length": "CHAR_LENGTH(\"c\")",
+                    "Substring": "SUBSTRING(\"c\", 1, 10)",
+                    "Round": "ROUND(\"c\", 2)",
+                    "Abs": "ABS(\"c\")",
+                    "Floor": "FLOOR(\"c\")",
+                    "Ceil": "CEILING(\"c\")",
+                    "Truncate": "DATE(DATE_FORMAT(\"c\", '%Y-%m-01'))",
+                    "Coalesce": "COALESCE(\"c\", 'n/a')",
+                    "AsText": "CAST(\"c\" AS CHAR)"
+                },
+                "AzureSql": {
+                    "None": "\"c\"",
+                    "Upper": "UPPER(\"c\")",
+                    "Lower": "LOWER(\"c\")",
+                    "Trim": "LTRIM(RTRIM(\"c\"))",
+                    "Length": "LEN(\"c\")",
+                    "Substring": "SUBSTRING(\"c\", 1, 10)",
+                    "Round": "ROUND(\"c\", 2)",
+                    "Abs": "ABS(\"c\")",
+                    "Floor": "FLOOR(\"c\")",
+                    "Ceil": "CEILING(\"c\")",
+                    "Truncate": "DATEFROMPARTS(YEAR(\"c\"), MONTH(\"c\"), 1)",
+                    "Coalesce": "COALESCE(\"c\", 'n/a')",
+                    "AsText": "CAST(\"c\" AS NVARCHAR(4000))"
+                },
+                "H2": {
+                    "None": "\"c\"",
+                    "Upper": "UPPER(\"c\")",
+                    "Lower": "LOWER(\"c\")",
+                    "Trim": "TRIM(\"c\")",
+                    "Length": "LENGTH(\"c\")",
+                    "Substring": "SUBSTRING(\"c\", 1, 10)",
+                    "Round": "ROUND(\"c\", 2)",
+                    "Abs": "ABS(\"c\")",
+                    "Floor": "FLOOR(\"c\")",
+                    "Ceil": "CEILING(\"c\")",
+                    "Truncate": null,
+                    "Coalesce": "COALESCE(\"c\", 'n/a')",
+                    "AsText": "CAST(\"c\" AS VARCHAR(4000))"
+                },
+                "HSQLDB": {
+                    "None": "\"c\"",
+                    "Upper": "UPPER(\"c\")",
+                    "Lower": "LOWER(\"c\")",
+                    "Trim": "TRIM(\"c\")",
+                    "Length": "LENGTH(\"c\")",
+                    "Substring": "SUBSTRING(\"c\", 1, 10)",
+                    "Round": "ROUND(\"c\", 2)",
+                    "Abs": "ABS(\"c\")",
+                    "Floor": "FLOOR(\"c\")",
+                    "Ceil": "CEILING(\"c\")",
+                    "Truncate": null,
+                    "Coalesce": "COALESCE(\"c\", 'n/a')",
+                    "AsText": "CAST(\"c\" AS VARCHAR(4000))"
+                },
+                "Derby": {
+                    "None": "\"c\"",
+                    "Upper": "UPPER(\"c\")",
+                    "Lower": "LOWER(\"c\")",
+                    "Trim": "TRIM(\"c\")",
+                    "Length": "LENGTH(\"c\")",
+                    "Substring": "SUBSTRING(\"c\", 1, 10)",
+                    "Round": "ROUND(\"c\", 2)",
+                    "Abs": "ABS(\"c\")",
+                    "Floor": "FLOOR(\"c\")",
+                    "Ceil": "CEILING(\"c\")",
+                    "Truncate": null,
+                    "Coalesce": "COALESCE(\"c\", 'n/a')",
+                    "AsText": "CAST(\"c\" AS VARCHAR(4000))"
+                },
+                "OtherJdbc": {
+                    "None": "\"c\"",
+                    "Upper": "UPPER(\"c\")",
+                    "Lower": "LOWER(\"c\")",
+                    "Trim": "TRIM(\"c\")",
+                    "Length": "LENGTH(\"c\")",
+                    "Substring": "SUBSTRING(\"c\", 1, 10)",
+                    "Round": "ROUND(\"c\", 2)",
+                    "Abs": "ABS(\"c\")",
+                    "Floor": "FLOOR(\"c\")",
+                    "Ceil": "CEILING(\"c\")",
+                    "Truncate": null,
+                    "Coalesce": "COALESCE(\"c\", 'n/a')",
+                    "AsText": "CAST(\"c\" AS VARCHAR(4000))"
+                },
+                "CsvFile": {
+                    "None": "\"c\"",
+                    "Upper": "UPPER(\"c\")",
+                    "Lower": "LOWER(\"c\")",
+                    "Trim": "TRIM(\"c\")",
+                    "Length": "LENGTH(\"c\")",
+                    "Substring": "substr(\"c\", 1, 10)",
+                    "Round": "ROUND(\"c\", 2)",
+                    "Abs": "ABS(\"c\")",
+                    "Floor": "FLOOR(\"c\")",
+                    "Ceil": "CEILING(\"c\")",
+                    "Truncate": "strftime('%Y-%m-01', \"c\")",
+                    "Coalesce": "COALESCE(\"c\", 'n/a')",
+                    "AsText": "CAST(\"c\" AS TEXT)"
+                },
+                "ExcelFile": {
+                    "None": "\"c\"",
+                    "Upper": "UPPER(\"c\")",
+                    "Lower": "LOWER(\"c\")",
+                    "Trim": "TRIM(\"c\")",
+                    "Length": "LENGTH(\"c\")",
+                    "Substring": "substr(\"c\", 1, 10)",
+                    "Round": "ROUND(\"c\", 2)",
+                    "Abs": "ABS(\"c\")",
+                    "Floor": "FLOOR(\"c\")",
+                    "Ceil": "CEILING(\"c\")",
+                    "Truncate": "strftime('%Y-%m-01', \"c\")",
+                    "Coalesce": "COALESCE(\"c\", 'n/a')",
+                    "AsText": "CAST(\"c\" AS TEXT)"
+                },
+                "JsonFile": {
+                    "None": "\"c\"",
+                    "Upper": "UPPER(\"c\")",
+                    "Lower": "LOWER(\"c\")",
+                    "Trim": "TRIM(\"c\")",
+                    "Length": "LENGTH(\"c\")",
+                    "Substring": "substr(\"c\", 1, 10)",
+                    "Round": "ROUND(\"c\", 2)",
+                    "Abs": "ABS(\"c\")",
+                    "Floor": "FLOOR(\"c\")",
+                    "Ceil": "CEILING(\"c\")",
+                    "Truncate": "strftime('%Y-%m-01', \"c\")",
+                    "Coalesce": "COALESCE(\"c\", 'n/a')",
+                    "AsText": "CAST(\"c\" AS TEXT)"
+                }
+            }
+        },
+        {
+            "name": "select function truncate unknown bucket",
+            "output": {
+                "PostgreSQL": {
+                    "None": "x",
+                    "Upper": "UPPER(x)",
+                    "Lower": "LOWER(x)",
+                    "Trim": "TRIM(x)",
+                    "Length": "LENGTH(x)",
+                    "Substring": "SUBSTRING(x, )",
+                    "Round": "ROUND(CAST(x AS NUMERIC), 0)",
+                    "Abs": "ABS(x)",
+                    "Floor": "FLOOR(x)",
+                    "Ceil": "CEILING(x)",
+                    "Truncate": null,
+                    "Coalesce": "COALESCE(x, 0)",
+                    "AsText": "CAST(x AS TEXT)"
+                },
+                "MySQL": {
+                    "None": "x",
+                    "Upper": "UPPER(x)",
+                    "Lower": "LOWER(x)",
+                    "Trim": "TRIM(x)",
+                    "Length": "CHAR_LENGTH(x)",
+                    "Substring": "SUBSTRING(x, )",
+                    "Round": "ROUND(x, 0)",
+                    "Abs": "ABS(x)",
+                    "Floor": "FLOOR(x)",
+                    "Ceil": "CEILING(x)",
+                    "Truncate": null,
+                    "Coalesce": "COALESCE(x, 0)",
+                    "AsText": "CAST(x AS CHAR)"
+                },
+                "MariaDB": {
+                    "None": "x",
+                    "Upper": "UPPER(x)",
+                    "Lower": "LOWER(x)",
+                    "Trim": "TRIM(x)",
+                    "Length": "CHAR_LENGTH(x)",
+                    "Substring": "SUBSTRING(x, )",
+                    "Round": "ROUND(x, 0)",
+                    "Abs": "ABS(x)",
+                    "Floor": "FLOOR(x)",
+                    "Ceil": "CEILING(x)",
+                    "Truncate": null,
+                    "Coalesce": "COALESCE(x, 0)",
+                    "AsText": "CAST(x AS CHAR)"
+                },
+                "SQLite": {
+                    "None": "x",
+                    "Upper": "UPPER(x)",
+                    "Lower": "LOWER(x)",
+                    "Trim": "TRIM(x)",
+                    "Length": "LENGTH(x)",
+                    "Substring": "substr(x, )",
+                    "Round": "ROUND(x, 0)",
+                    "Abs": "ABS(x)",
+                    "Floor": "FLOOR(x)",
+                    "Ceil": "CEILING(x)",
+                    "Truncate": null,
+                    "Coalesce": "COALESCE(x, 0)",
+                    "AsText": "CAST(x AS TEXT)"
+                },
+                "SqlServer": {
+                    "None": "x",
+                    "Upper": "UPPER(x)",
+                    "Lower": "LOWER(x)",
+                    "Trim": "LTRIM(RTRIM(x))",
+                    "Length": "LEN(x)",
+                    "Substring": "SUBSTRING(x, )",
+                    "Round": "ROUND(x, 0)",
+                    "Abs": "ABS(x)",
+                    "Floor": "FLOOR(x)",
+                    "Ceil": "CEILING(x)",
+                    "Truncate": null,
+                    "Coalesce": "COALESCE(x, 0)",
+                    "AsText": "CAST(x AS NVARCHAR(4000))"
+                },
+                "ClickHouse": {
+                    "None": "x",
+                    "Upper": "upperUTF8(x)",
+                    "Lower": "lowerUTF8(x)",
+                    "Trim": "trimBoth(x)",
+                    "Length": "lengthUTF8(x)",
+                    "Substring": "substringUTF8(x, )",
+                    "Round": "ROUND(x, 0)",
+                    "Abs": "ABS(x)",
+                    "Floor": "FLOOR(x)",
+                    "Ceil": "ceil(x)",
+                    "Truncate": null,
+                    "Coalesce": "COALESCE(x, 0)",
+                    "AsText": "toString(x)"
+                },
+                "DuckDB": {
+                    "None": "x",
+                    "Upper": "UPPER(x)",
+                    "Lower": "LOWER(x)",
+                    "Trim": "TRIM(x)",
+                    "Length": "LENGTH(x)",
+                    "Substring": "SUBSTRING(x, )",
+                    "Round": "ROUND(x, 0)",
+                    "Abs": "ABS(x)",
+                    "Floor": "FLOOR(x)",
+                    "Ceil": "CEILING(x)",
+                    "Truncate": null,
+                    "Coalesce": "COALESCE(x, 0)",
+                    "AsText": "CAST(x AS VARCHAR)"
+                },
+                "CockroachDB": {
+                    "None": "x",
+                    "Upper": "UPPER(x)",
+                    "Lower": "LOWER(x)",
+                    "Trim": "TRIM(x)",
+                    "Length": "LENGTH(x)",
+                    "Substring": "SUBSTRING(x, )",
+                    "Round": "ROUND(CAST(x AS NUMERIC), 0)",
+                    "Abs": "ABS(x)",
+                    "Floor": "FLOOR(x)",
+                    "Ceil": "CEILING(x)",
+                    "Truncate": null,
+                    "Coalesce": "COALESCE(x, 0)",
+                    "AsText": "CAST(x AS TEXT)"
+                },
+                "TimescaleDB": {
+                    "None": "x",
+                    "Upper": "UPPER(x)",
+                    "Lower": "LOWER(x)",
+                    "Trim": "TRIM(x)",
+                    "Length": "LENGTH(x)",
+                    "Substring": "SUBSTRING(x, )",
+                    "Round": "ROUND(CAST(x AS NUMERIC), 0)",
+                    "Abs": "ABS(x)",
+                    "Floor": "FLOOR(x)",
+                    "Ceil": "CEILING(x)",
+                    "Truncate": null,
+                    "Coalesce": "COALESCE(x, 0)",
+                    "AsText": "CAST(x AS TEXT)"
+                },
+                "Neon": {
+                    "None": "x",
+                    "Upper": "UPPER(x)",
+                    "Lower": "LOWER(x)",
+                    "Trim": "TRIM(x)",
+                    "Length": "LENGTH(x)",
+                    "Substring": "SUBSTRING(x, )",
+                    "Round": "ROUND(CAST(x AS NUMERIC), 0)",
+                    "Abs": "ABS(x)",
+                    "Floor": "FLOOR(x)",
+                    "Ceil": "CEILING(x)",
+                    "Truncate": null,
+                    "Coalesce": "COALESCE(x, 0)",
+                    "AsText": "CAST(x AS TEXT)"
+                },
+                "Supabase": {
+                    "None": "x",
+                    "Upper": "UPPER(x)",
+                    "Lower": "LOWER(x)",
+                    "Trim": "TRIM(x)",
+                    "Length": "LENGTH(x)",
+                    "Substring": "SUBSTRING(x, )",
+                    "Round": "ROUND(CAST(x AS NUMERIC), 0)",
+                    "Abs": "ABS(x)",
+                    "Floor": "FLOOR(x)",
+                    "Ceil": "CEILING(x)",
+                    "Truncate": null,
+                    "Coalesce": "COALESCE(x, 0)",
+                    "AsText": "CAST(x AS TEXT)"
+                },
+                "TiDB": {
+                    "None": "x",
+                    "Upper": "UPPER(x)",
+                    "Lower": "LOWER(x)",
+                    "Trim": "TRIM(x)",
+                    "Length": "CHAR_LENGTH(x)",
+                    "Substring": "SUBSTRING(x, )",
+                    "Round": "ROUND(x, 0)",
+                    "Abs": "ABS(x)",
+                    "Floor": "FLOOR(x)",
+                    "Ceil": "CEILING(x)",
+                    "Truncate": null,
+                    "Coalesce": "COALESCE(x, 0)",
+                    "AsText": "CAST(x AS CHAR)"
+                },
+                "PlanetScale": {
+                    "None": "x",
+                    "Upper": "UPPER(x)",
+                    "Lower": "LOWER(x)",
+                    "Trim": "TRIM(x)",
+                    "Length": "CHAR_LENGTH(x)",
+                    "Substring": "SUBSTRING(x, )",
+                    "Round": "ROUND(x, 0)",
+                    "Abs": "ABS(x)",
+                    "Floor": "FLOOR(x)",
+                    "Ceil": "CEILING(x)",
+                    "Truncate": null,
+                    "Coalesce": "COALESCE(x, 0)",
+                    "AsText": "CAST(x AS CHAR)"
+                },
+                "AzureSql": {
+                    "None": "x",
+                    "Upper": "UPPER(x)",
+                    "Lower": "LOWER(x)",
+                    "Trim": "LTRIM(RTRIM(x))",
+                    "Length": "LEN(x)",
+                    "Substring": "SUBSTRING(x, )",
+                    "Round": "ROUND(x, 0)",
+                    "Abs": "ABS(x)",
+                    "Floor": "FLOOR(x)",
+                    "Ceil": "CEILING(x)",
+                    "Truncate": null,
+                    "Coalesce": "COALESCE(x, 0)",
+                    "AsText": "CAST(x AS NVARCHAR(4000))"
+                },
+                "H2": {
+                    "None": "x",
+                    "Upper": "UPPER(x)",
+                    "Lower": "LOWER(x)",
+                    "Trim": "TRIM(x)",
+                    "Length": "LENGTH(x)",
+                    "Substring": "SUBSTRING(x, )",
+                    "Round": "ROUND(x, 0)",
+                    "Abs": "ABS(x)",
+                    "Floor": "FLOOR(x)",
+                    "Ceil": "CEILING(x)",
+                    "Truncate": null,
+                    "Coalesce": "COALESCE(x, 0)",
+                    "AsText": "CAST(x AS VARCHAR(4000))"
+                },
+                "HSQLDB": {
+                    "None": "x",
+                    "Upper": "UPPER(x)",
+                    "Lower": "LOWER(x)",
+                    "Trim": "TRIM(x)",
+                    "Length": "LENGTH(x)",
+                    "Substring": "SUBSTRING(x, )",
+                    "Round": "ROUND(x, 0)",
+                    "Abs": "ABS(x)",
+                    "Floor": "FLOOR(x)",
+                    "Ceil": "CEILING(x)",
+                    "Truncate": null,
+                    "Coalesce": "COALESCE(x, 0)",
+                    "AsText": "CAST(x AS VARCHAR(4000))"
+                },
+                "Derby": {
+                    "None": "x",
+                    "Upper": "UPPER(x)",
+                    "Lower": "LOWER(x)",
+                    "Trim": "TRIM(x)",
+                    "Length": "LENGTH(x)",
+                    "Substring": "SUBSTRING(x, )",
+                    "Round": "ROUND(x, 0)",
+                    "Abs": "ABS(x)",
+                    "Floor": "FLOOR(x)",
+                    "Ceil": "CEILING(x)",
+                    "Truncate": null,
+                    "Coalesce": "COALESCE(x, 0)",
+                    "AsText": "CAST(x AS VARCHAR(4000))"
+                },
+                "OtherJdbc": {
+                    "None": "x",
+                    "Upper": "UPPER(x)",
+                    "Lower": "LOWER(x)",
+                    "Trim": "TRIM(x)",
+                    "Length": "LENGTH(x)",
+                    "Substring": "SUBSTRING(x, )",
+                    "Round": "ROUND(x, 0)",
+                    "Abs": "ABS(x)",
+                    "Floor": "FLOOR(x)",
+                    "Ceil": "CEILING(x)",
+                    "Truncate": null,
+                    "Coalesce": "COALESCE(x, 0)",
+                    "AsText": "CAST(x AS VARCHAR(4000))"
+                },
+                "CsvFile": {
+                    "None": "x",
+                    "Upper": "UPPER(x)",
+                    "Lower": "LOWER(x)",
+                    "Trim": "TRIM(x)",
+                    "Length": "LENGTH(x)",
+                    "Substring": "substr(x, )",
+                    "Round": "ROUND(x, 0)",
+                    "Abs": "ABS(x)",
+                    "Floor": "FLOOR(x)",
+                    "Ceil": "CEILING(x)",
+                    "Truncate": null,
+                    "Coalesce": "COALESCE(x, 0)",
+                    "AsText": "CAST(x AS TEXT)"
+                },
+                "ExcelFile": {
+                    "None": "x",
+                    "Upper": "UPPER(x)",
+                    "Lower": "LOWER(x)",
+                    "Trim": "TRIM(x)",
+                    "Length": "LENGTH(x)",
+                    "Substring": "substr(x, )",
+                    "Round": "ROUND(x, 0)",
+                    "Abs": "ABS(x)",
+                    "Floor": "FLOOR(x)",
+                    "Ceil": "CEILING(x)",
+                    "Truncate": null,
+                    "Coalesce": "COALESCE(x, 0)",
+                    "AsText": "CAST(x AS TEXT)"
+                },
+                "JsonFile": {
+                    "None": "x",
+                    "Upper": "UPPER(x)",
+                    "Lower": "LOWER(x)",
+                    "Trim": "TRIM(x)",
+                    "Length": "LENGTH(x)",
+                    "Substring": "substr(x, )",
+                    "Round": "ROUND(x, 0)",
+                    "Abs": "ABS(x)",
+                    "Floor": "FLOOR(x)",
+                    "Ceil": "CEILING(x)",
+                    "Truncate": null,
+                    "Coalesce": "COALESCE(x, 0)",
+                    "AsText": "CAST(x AS TEXT)"
+                }
+            }
+        },
+        {
+            "name": "time buckets",
+            "output": {
+                "PostgreSQL": {
+                    "Hour": "date_trunc('hour', \"created_at\")",
+                    "Day": "date_trunc('day', \"created_at\")",
+                    "Week": "date_trunc('week', \"created_at\")",
+                    "Month": "date_trunc('month', \"created_at\")",
+                    "Quarter": "date_trunc('quarter', \"created_at\")",
+                    "Year": "date_trunc('year', \"created_at\")"
+                },
+                "MySQL": {
+                    "Hour": "STR_TO_DATE(DATE_FORMAT(\"created_at\", '%Y-%m-%d %H:00:00'), '%Y-%m-%d %H:%i:%s')",
+                    "Day": "DATE(\"created_at\")",
+                    "Week": "DATE(DATE_SUB(\"created_at\", INTERVAL WEEKDAY(\"created_at\") DAY))",
+                    "Month": "DATE(DATE_FORMAT(\"created_at\", '%Y-%m-01'))",
+                    "Quarter": "MAKEDATE(YEAR(\"created_at\"), 1) + INTERVAL (QUARTER(\"created_at\") - 1) QUARTER",
+                    "Year": "MAKEDATE(YEAR(\"created_at\"), 1)"
+                },
+                "MariaDB": {
+                    "Hour": "STR_TO_DATE(DATE_FORMAT(\"created_at\", '%Y-%m-%d %H:00:00'), '%Y-%m-%d %H:%i:%s')",
+                    "Day": "DATE(\"created_at\")",
+                    "Week": "DATE(DATE_SUB(\"created_at\", INTERVAL WEEKDAY(\"created_at\") DAY))",
+                    "Month": "DATE(DATE_FORMAT(\"created_at\", '%Y-%m-01'))",
+                    "Quarter": "MAKEDATE(YEAR(\"created_at\"), 1) + INTERVAL (QUARTER(\"created_at\") - 1) QUARTER",
+                    "Year": "MAKEDATE(YEAR(\"created_at\"), 1)"
+                },
+                "SQLite": {
+                    "Hour": "strftime('%Y-%m-%d %H:00:00', \"created_at\")",
+                    "Day": "date(\"created_at\")",
+                    "Week": "date(\"created_at\", 'weekday 0', '-6 days')",
+                    "Month": "strftime('%Y-%m-01', \"created_at\")",
+                    "Quarter": "printf('%s-%02d-01', strftime('%Y', \"created_at\"), (CAST(strftime('%m', \"created_at\") AS INTEGER) - 1) / 3 * 3 + 1)",
+                    "Year": "strftime('%Y-01-01', \"created_at\")"
+                },
+                "SqlServer": {
+                    "Hour": "DATEADD(hour, DATEDIFF(hour, 0, \"created_at\"), 0)",
+                    "Day": "CAST(\"created_at\" AS date)",
+                    "Week": "DATEADD(day, -(DATEDIFF(day, 0, \"created_at\") % 7), CAST(\"created_at\" AS date))",
+                    "Month": "DATEFROMPARTS(YEAR(\"created_at\"), MONTH(\"created_at\"), 1)",
+                    "Quarter": "DATEFROMPARTS(YEAR(\"created_at\"), (DATEPART(quarter, \"created_at\") - 1) * 3 + 1, 1)",
+                    "Year": "DATEFROMPARTS(YEAR(\"created_at\"), 1, 1)"
+                },
+                "ClickHouse": {
+                    "Hour": "toStartOfHour(\"created_at\")",
+                    "Day": "toDate(\"created_at\")",
+                    "Week": "toMonday(\"created_at\")",
+                    "Month": "toStartOfMonth(\"created_at\")",
+                    "Quarter": "toStartOfQuarter(\"created_at\")",
+                    "Year": "toStartOfYear(\"created_at\")"
+                },
+                "DuckDB": {
+                    "Hour": "date_trunc('hour', \"created_at\")",
+                    "Day": "date_trunc('day', \"created_at\")",
+                    "Week": "date_trunc('week', \"created_at\")",
+                    "Month": "date_trunc('month', \"created_at\")",
+                    "Quarter": "date_trunc('quarter', \"created_at\")",
+                    "Year": "date_trunc('year', \"created_at\")"
+                },
+                "CockroachDB": {
+                    "Hour": "date_trunc('hour', \"created_at\")",
+                    "Day": "date_trunc('day', \"created_at\")",
+                    "Week": "date_trunc('week', \"created_at\")",
+                    "Month": "date_trunc('month', \"created_at\")",
+                    "Quarter": "date_trunc('quarter', \"created_at\")",
+                    "Year": "date_trunc('year', \"created_at\")"
+                },
+                "TimescaleDB": {
+                    "Hour": "date_trunc('hour', \"created_at\")",
+                    "Day": "date_trunc('day', \"created_at\")",
+                    "Week": "date_trunc('week', \"created_at\")",
+                    "Month": "date_trunc('month', \"created_at\")",
+                    "Quarter": "date_trunc('quarter', \"created_at\")",
+                    "Year": "date_trunc('year', \"created_at\")"
+                },
+                "Neon": {
+                    "Hour": "date_trunc('hour', \"created_at\")",
+                    "Day": "date_trunc('day', \"created_at\")",
+                    "Week": "date_trunc('week', \"created_at\")",
+                    "Month": "date_trunc('month', \"created_at\")",
+                    "Quarter": "date_trunc('quarter', \"created_at\")",
+                    "Year": "date_trunc('year', \"created_at\")"
+                },
+                "Supabase": {
+                    "Hour": "date_trunc('hour', \"created_at\")",
+                    "Day": "date_trunc('day', \"created_at\")",
+                    "Week": "date_trunc('week', \"created_at\")",
+                    "Month": "date_trunc('month', \"created_at\")",
+                    "Quarter": "date_trunc('quarter', \"created_at\")",
+                    "Year": "date_trunc('year', \"created_at\")"
+                },
+                "TiDB": {
+                    "Hour": "STR_TO_DATE(DATE_FORMAT(\"created_at\", '%Y-%m-%d %H:00:00'), '%Y-%m-%d %H:%i:%s')",
+                    "Day": "DATE(\"created_at\")",
+                    "Week": "DATE(DATE_SUB(\"created_at\", INTERVAL WEEKDAY(\"created_at\") DAY))",
+                    "Month": "DATE(DATE_FORMAT(\"created_at\", '%Y-%m-01'))",
+                    "Quarter": "MAKEDATE(YEAR(\"created_at\"), 1) + INTERVAL (QUARTER(\"created_at\") - 1) QUARTER",
+                    "Year": "MAKEDATE(YEAR(\"created_at\"), 1)"
+                },
+                "PlanetScale": {
+                    "Hour": "STR_TO_DATE(DATE_FORMAT(\"created_at\", '%Y-%m-%d %H:00:00'), '%Y-%m-%d %H:%i:%s')",
+                    "Day": "DATE(\"created_at\")",
+                    "Week": "DATE(DATE_SUB(\"created_at\", INTERVAL WEEKDAY(\"created_at\") DAY))",
+                    "Month": "DATE(DATE_FORMAT(\"created_at\", '%Y-%m-01'))",
+                    "Quarter": "MAKEDATE(YEAR(\"created_at\"), 1) + INTERVAL (QUARTER(\"created_at\") - 1) QUARTER",
+                    "Year": "MAKEDATE(YEAR(\"created_at\"), 1)"
+                },
+                "AzureSql": {
+                    "Hour": "DATEADD(hour, DATEDIFF(hour, 0, \"created_at\"), 0)",
+                    "Day": "CAST(\"created_at\" AS date)",
+                    "Week": "DATEADD(day, -(DATEDIFF(day, 0, \"created_at\") % 7), CAST(\"created_at\" AS date))",
+                    "Month": "DATEFROMPARTS(YEAR(\"created_at\"), MONTH(\"created_at\"), 1)",
+                    "Quarter": "DATEFROMPARTS(YEAR(\"created_at\"), (DATEPART(quarter, \"created_at\") - 1) * 3 + 1, 1)",
+                    "Year": "DATEFROMPARTS(YEAR(\"created_at\"), 1, 1)"
+                },
+                "H2": {
+                    "Hour": null,
+                    "Day": null,
+                    "Week": null,
+                    "Month": null,
+                    "Quarter": null,
+                    "Year": null
+                },
+                "HSQLDB": {
+                    "Hour": null,
+                    "Day": null,
+                    "Week": null,
+                    "Month": null,
+                    "Quarter": null,
+                    "Year": null
+                },
+                "Derby": {
+                    "Hour": null,
+                    "Day": null,
+                    "Week": null,
+                    "Month": null,
+                    "Quarter": null,
+                    "Year": null
+                },
+                "OtherJdbc": {
+                    "Hour": null,
+                    "Day": null,
+                    "Week": null,
+                    "Month": null,
+                    "Quarter": null,
+                    "Year": null
+                },
+                "CsvFile": {
+                    "Hour": "strftime('%Y-%m-%d %H:00:00', \"created_at\")",
+                    "Day": "date(\"created_at\")",
+                    "Week": "date(\"created_at\", 'weekday 0', '-6 days')",
+                    "Month": "strftime('%Y-%m-01', \"created_at\")",
+                    "Quarter": "printf('%s-%02d-01', strftime('%Y', \"created_at\"), (CAST(strftime('%m', \"created_at\") AS INTEGER) - 1) / 3 * 3 + 1)",
+                    "Year": "strftime('%Y-01-01', \"created_at\")"
+                },
+                "ExcelFile": {
+                    "Hour": "strftime('%Y-%m-%d %H:00:00', \"created_at\")",
+                    "Day": "date(\"created_at\")",
+                    "Week": "date(\"created_at\", 'weekday 0', '-6 days')",
+                    "Month": "strftime('%Y-%m-01', \"created_at\")",
+                    "Quarter": "printf('%s-%02d-01', strftime('%Y', \"created_at\"), (CAST(strftime('%m', \"created_at\") AS INTEGER) - 1) / 3 * 3 + 1)",
+                    "Year": "strftime('%Y-01-01', \"created_at\")"
+                },
+                "JsonFile": {
+                    "Hour": "strftime('%Y-%m-%d %H:00:00', \"created_at\")",
+                    "Day": "date(\"created_at\")",
+                    "Week": "date(\"created_at\", 'weekday 0', '-6 days')",
+                    "Month": "strftime('%Y-%m-01', \"created_at\")",
+                    "Quarter": "printf('%s-%02d-01', strftime('%Y', \"created_at\"), (CAST(strftime('%m', \"created_at\") AS INTEGER) - 1) / 3 * 3 + 1)",
+                    "Year": "strftime('%Y-01-01', \"created_at\")"
+                }
+            }
+        },
+        {
+            "name": "namespaces typical",
+            "output": {
+                "PostgreSQL": [
+                    {
+                        "catalog": null,
+                        "schema": "INFORMATION_SCHEMA"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "NULLID"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "SYSIBM"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "Zeta"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "app"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "db_owner"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "dbo"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "guest"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "main"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "main"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "public"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "sys"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "system"
+                    }
+                ],
+                "MySQL": [
+                    {
+                        "catalog": "alpha",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "default",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "shop",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "system",
+                        "schema": null
+                    }
+                ],
+                "MariaDB": [
+                    {
+                        "catalog": "alpha",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "default",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "shop",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "system",
+                        "schema": null
+                    }
+                ],
+                "SQLite": [
+                    {
+                        "catalog": null,
+                        "schema": null
+                    }
+                ],
+                "SqlServer": [
+                    {
+                        "catalog": null,
+                        "schema": "NULLID"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "SYSIBM"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "Zeta"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "app"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "dbo"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "information_schema"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "main"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "main"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "pg_catalog"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "pg_temp_1"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "pg_toast"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "public"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "system"
+                    }
+                ],
+                "ClickHouse": [
+                    {
+                        "catalog": null,
+                        "schema": "NULLID"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "SYSIBM"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "Zeta"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "app"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "db_owner"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "dbo"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "guest"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "main"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "main"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "pg_catalog"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "pg_temp_1"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "pg_toast"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "public"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "sys"
+                    }
+                ],
+                "DuckDB": [
+                    {
+                        "catalog": null,
+                        "schema": "INFORMATION_SCHEMA"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "NULLID"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "SYSIBM"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "Zeta"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "app"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "db_owner"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "dbo"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "guest"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "main"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "pg_temp_1"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "pg_toast"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "public"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "sys"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "system"
+                    }
+                ],
+                "CockroachDB": [
+                    {
+                        "catalog": null,
+                        "schema": "INFORMATION_SCHEMA"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "NULLID"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "SYSIBM"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "Zeta"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "app"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "db_owner"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "dbo"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "guest"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "main"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "main"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "public"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "sys"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "system"
+                    }
+                ],
+                "TimescaleDB": [
+                    {
+                        "catalog": null,
+                        "schema": "INFORMATION_SCHEMA"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "NULLID"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "SYSIBM"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "Zeta"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "app"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "db_owner"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "dbo"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "guest"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "main"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "main"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "public"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "sys"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "system"
+                    }
+                ],
+                "Neon": [
+                    {
+                        "catalog": null,
+                        "schema": "INFORMATION_SCHEMA"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "NULLID"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "SYSIBM"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "Zeta"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "app"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "db_owner"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "dbo"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "guest"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "main"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "main"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "public"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "sys"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "system"
+                    }
+                ],
+                "Supabase": [
+                    {
+                        "catalog": null,
+                        "schema": "INFORMATION_SCHEMA"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "NULLID"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "SYSIBM"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "Zeta"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "app"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "db_owner"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "dbo"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "guest"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "main"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "main"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "public"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "sys"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "system"
+                    }
+                ],
+                "TiDB": [
+                    {
+                        "catalog": "alpha",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "default",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "shop",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "system",
+                        "schema": null
+                    }
+                ],
+                "PlanetScale": [
+                    {
+                        "catalog": "alpha",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "default",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "shop",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "system",
+                        "schema": null
+                    }
+                ],
+                "AzureSql": [
+                    {
+                        "catalog": null,
+                        "schema": "NULLID"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "SYSIBM"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "Zeta"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "app"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "dbo"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "information_schema"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "main"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "main"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "pg_catalog"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "pg_temp_1"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "pg_toast"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "public"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "system"
+                    }
+                ],
+                "H2": [
+                    {
+                        "catalog": null,
+                        "schema": "Zeta"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "app"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "db_owner"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "dbo"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "guest"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "main"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "main"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "pg_catalog"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "pg_temp_1"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "pg_toast"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "public"
+                    }
+                ],
+                "HSQLDB": [
+                    {
+                        "catalog": null,
+                        "schema": "Zeta"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "app"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "db_owner"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "dbo"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "guest"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "main"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "main"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "pg_catalog"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "pg_temp_1"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "pg_toast"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "public"
+                    }
+                ],
+                "Derby": [
+                    {
+                        "catalog": null,
+                        "schema": "Zeta"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "app"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "db_owner"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "dbo"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "guest"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "main"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "main"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "pg_catalog"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "pg_temp_1"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "pg_toast"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "public"
+                    }
+                ],
+                "OtherJdbc": [
+                    {
+                        "catalog": null,
+                        "schema": "Zeta"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "app"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "db_owner"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "dbo"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "guest"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "main"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "main"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "pg_catalog"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "pg_temp_1"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "pg_toast"
+                    },
+                    {
+                        "catalog": null,
+                        "schema": "public"
+                    }
+                ],
+                "CsvFile": [
+                    {
+                        "catalog": null,
+                        "schema": null
+                    }
+                ],
+                "ExcelFile": [
+                    {
+                        "catalog": null,
+                        "schema": null
+                    }
+                ],
+                "JsonFile": [
+                    {
+                        "catalog": null,
+                        "schema": null
+                    }
+                ]
+            }
+        },
+        {
+            "name": "namespaces no schemas",
+            "output": {
+                "PostgreSQL": [],
+                "MySQL": [
+                    {
+                        "catalog": "SYSCAT",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "alpha",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "shop",
+                        "schema": null
+                    }
+                ],
+                "MariaDB": [
+                    {
+                        "catalog": "SYSCAT",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "alpha",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "shop",
+                        "schema": null
+                    }
+                ],
+                "SQLite": [
+                    {
+                        "catalog": null,
+                        "schema": null
+                    }
+                ],
+                "SqlServer": [],
+                "ClickHouse": [
+                    {
+                        "catalog": "SYSCAT",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "alpha",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "shop",
+                        "schema": null
+                    }
+                ],
+                "DuckDB": [],
+                "CockroachDB": [],
+                "TimescaleDB": [],
+                "Neon": [],
+                "Supabase": [],
+                "TiDB": [
+                    {
+                        "catalog": "SYSCAT",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "alpha",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "shop",
+                        "schema": null
+                    }
+                ],
+                "PlanetScale": [
+                    {
+                        "catalog": "SYSCAT",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "alpha",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "shop",
+                        "schema": null
+                    }
+                ],
+                "AzureSql": [],
+                "H2": [
+                    {
+                        "catalog": "alpha",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "shop",
+                        "schema": null
+                    }
+                ],
+                "HSQLDB": [
+                    {
+                        "catalog": "alpha",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "shop",
+                        "schema": null
+                    }
+                ],
+                "Derby": [
+                    {
+                        "catalog": "alpha",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "shop",
+                        "schema": null
+                    }
+                ],
+                "OtherJdbc": [
+                    {
+                        "catalog": "alpha",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "shop",
+                        "schema": null
+                    }
+                ],
+                "CsvFile": [
+                    {
+                        "catalog": null,
+                        "schema": null
+                    }
+                ],
+                "ExcelFile": [
+                    {
+                        "catalog": null,
+                        "schema": null
+                    }
+                ],
+                "JsonFile": [
+                    {
+                        "catalog": null,
+                        "schema": null
+                    }
+                ]
+            }
+        },
+        {
+            "name": "namespaces schemas fail",
+            "output": {
+                "PostgreSQL": "error",
+                "MySQL": [
+                    {
+                        "catalog": "a",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "b",
+                        "schema": null
+                    }
+                ],
+                "MariaDB": [
+                    {
+                        "catalog": "a",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "b",
+                        "schema": null
+                    }
+                ],
+                "SQLite": [
+                    {
+                        "catalog": null,
+                        "schema": null
+                    }
+                ],
+                "SqlServer": "error",
+                "ClickHouse": "error",
+                "DuckDB": "error",
+                "CockroachDB": "error",
+                "TimescaleDB": "error",
+                "Neon": "error",
+                "Supabase": "error",
+                "TiDB": [
+                    {
+                        "catalog": "a",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "b",
+                        "schema": null
+                    }
+                ],
+                "PlanetScale": [
+                    {
+                        "catalog": "a",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "b",
+                        "schema": null
+                    }
+                ],
+                "AzureSql": "error",
+                "H2": [
+                    {
+                        "catalog": "a",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "b",
+                        "schema": null
+                    }
+                ],
+                "HSQLDB": [
+                    {
+                        "catalog": "a",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "b",
+                        "schema": null
+                    }
+                ],
+                "Derby": [
+                    {
+                        "catalog": "a",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "b",
+                        "schema": null
+                    }
+                ],
+                "OtherJdbc": [
+                    {
+                        "catalog": "a",
+                        "schema": null
+                    },
+                    {
+                        "catalog": "b",
+                        "schema": null
+                    }
+                ],
+                "CsvFile": [
+                    {
+                        "catalog": null,
+                        "schema": null
+                    }
+                ],
+                "ExcelFile": [
+                    {
+                        "catalog": null,
+                        "schema": null
+                    }
+                ],
+                "JsonFile": [
+                    {
+                        "catalog": null,
+                        "schema": null
+                    }
+                ]
+            }
+        },
+        {
+            "name": "namespaces nothing",
+            "output": {
+                "PostgreSQL": [],
+                "MySQL": [],
+                "MariaDB": [],
+                "SQLite": [
+                    {
+                        "catalog": null,
+                        "schema": null
+                    }
+                ],
+                "SqlServer": [],
+                "ClickHouse": [],
+                "DuckDB": [],
+                "CockroachDB": [],
+                "TimescaleDB": [],
+                "Neon": [],
+                "Supabase": [],
+                "TiDB": [],
+                "PlanetScale": [],
+                "AzureSql": [],
+                "H2": [
+                    {
+                        "catalog": null,
+                        "schema": null
+                    }
+                ],
+                "HSQLDB": [
+                    {
+                        "catalog": null,
+                        "schema": null
+                    }
+                ],
+                "Derby": [
+                    {
+                        "catalog": null,
+                        "schema": null
+                    }
+                ],
+                "OtherJdbc": [
+                    {
+                        "catalog": null,
+                        "schema": null
+                    }
+                ],
+                "CsvFile": [
+                    {
+                        "catalog": null,
+                        "schema": null
+                    }
+                ],
+                "ExcelFile": [
+                    {
+                        "catalog": null,
+                        "schema": null
+                    }
+                ],
+                "JsonFile": [
+                    {
+                        "catalog": null,
+                        "schema": null
+                    }
+                ]
+            }
+        }
+    ]
+}
