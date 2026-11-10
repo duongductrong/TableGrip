@@ -351,7 +351,10 @@ mod tests {
         t.close_nodes(&items, ["a"]);
         assert!(!t.is_open(&"a") && !t.is_open(&"a2") && t.is_open(&"b"));
         assert_eq!(t.flip(&items, &"a"), TreeEvent::Opened("a"));
-        assert!(!t.is_open(&"a2"), "reopening doesn't bring back what was open inside");
+        assert!(
+            !t.is_open(&"a2"),
+            "reopening doesn't bring back what was open inside"
+        );
         assert_eq!(t.flip(&items, &"a"), TreeEvent::Closed("a"));
     }
 
