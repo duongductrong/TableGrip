@@ -93,10 +93,10 @@ pub fn inline(
 }
 
 /// Standard SQL quoting: `'` doubled, nothing else special.
-#[cfg(test)]
+#[cfg(any(test, feature = "duckdb"))]
 pub struct Standard;
 
-#[cfg(test)]
+#[cfg(any(test, feature = "duckdb"))]
 impl Literals for Standard {
     fn text(&self, value: &str) -> Result<String> {
         Ok(format!("'{}'", value.replace('\'', "''")))

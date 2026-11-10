@@ -22,3 +22,7 @@ Agreement – Permissive, Version 2.0; its licence text ships in the third-party
 The Rust SQL Server driver (crates/tg-driver, feature `mssql`) uses tiberius (MIT or Apache License, Version 2.0),
 which links the aws-lc-rs crypto library (ISC, Apache License 2.0 and OpenSSL-style terms, copyright Amazon.com and
 the OpenSSL/BoringSSL authors); TableGrip makes rustls use ring at run time, but aws-lc is compiled in.
+
+The Rust DuckDB driver (crates/tg-driver, feature `duckdb`) builds DuckDB in (MIT License, copyright Stichting DuckDB
+Foundation), which bundles third-party code under its own permissive licences, listed in DuckDB's LICENSE and
+third-party notices; they ship in the third-party licence listing of the Rust build.

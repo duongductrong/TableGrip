@@ -4,6 +4,7 @@
 //! (`intn`), so such columns are named by their first value.
 
 use crate::binary_text;
+use crate::engine::java::{java_double, java_float};
 use crate::result::{Cell, ResultColumn};
 use chrono::{Duration, NaiveDate};
 use tg_sql::model::jdbc_types as t;
@@ -83,50 +84,6 @@ pub fn result_columns(columns: &[Column], first: Option<&tiberius::Row>) -> Vec<
 pub enum BinaryAs {
     Preview,
     Placeholder,
-}
-
-/// Java's `Double.toString`: plain between 10⁻³ and 10⁷, else `d.dddE±n`; always a fraction digit.
-pub fn java_double(v: f64) -> String {
-    if v.is_nan() {
-        return "NaN".into();
-    }
-    if v.is_infinite() {
-        return if v > 0.0 { "Infinity" } else { "-Infinity" }.into();
-    }
-    if v == 0.0 {
-        return if v.is_sign_negative() { "-0.0" } else { "0.0" }.into();
-    }
-    if (1e-3..1e7).contains(&v.abs()) {
-        let s = v.to_string();
-        return if s.contains('.') { s } else { s + ".0" };
-    }
-    let s = format!("{v:e}");
-    let (mantissa, exponent) = s.split_once('e').unwrap_or((&s, "0"));
-    let mantissa = if mantissa.contains('.') {
-        mantissa.to_owned()
-    } else {
-        format!("{mantissa}.0")
-    };
-    format!("{mantissa}E{exponent}")
-}
-
-/// Java's `Float.toString`, from the float's own shortest digits.
-pub fn java_float(v: f32) -> String {
-    if v.is_nan() || v.is_infinite() || v == 0.0 {
-        return java_double(f64::from(v));
-    }
-    if (1e-3..1e7).contains(&v.abs()) {
-        let s = v.to_string();
-        return if s.contains('.') { s } else { s + ".0" };
-    }
-    let s = format!("{v:e}");
-    let (mantissa, exponent) = s.split_once('e').unwrap_or((&s, "0"));
-    let mantissa = if mantissa.contains('.') {
-        mantissa.to_owned()
-    } else {
-        format!("{mantissa}.0")
-    };
-    format!("{mantissa}E{exponent}")
 }
 
 /// A scaled integer as `BigDecimal.toPlainString`.
@@ -267,12 +224,6 @@ mod tests {
 
     #[test]
     fn numbers_print_as_java_does() {
-        assert_eq!(java_double(2.5), "2.5");
-        assert_eq!(java_double(100.0), "100.0");
-        assert_eq!(java_double(1e10), "1.0E10");
-        assert_eq!(java_double(1.5e-5), "1.5E-5");
-        assert_eq!(java_double(-0.0), "-0.0");
-        assert_eq!(java_float(0.1), "0.1");
         assert_eq!(decimal(12345, 2), "123.45");
         assert_eq!(decimal(-5, 3), "-0.005");
         assert_eq!(decimal(7, 0), "7");

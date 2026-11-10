@@ -2,8 +2,17 @@
 
 #[cfg(feature = "clickhouse")]
 pub mod clickhouse;
-#[cfg(any(feature = "mysql", feature = "mssql", feature = "clickhouse"))]
+#[cfg(feature = "duckdb")]
+pub mod duckdb;
+#[cfg(any(
+    feature = "mysql",
+    feature = "mssql",
+    feature = "clickhouse",
+    feature = "duckdb"
+))]
 pub(crate) mod inline;
+#[cfg(any(feature = "mssql", feature = "duckdb"))]
+pub(crate) mod java;
 #[cfg(feature = "mssql")]
 pub mod mssql;
 #[cfg(feature = "mysql")]
@@ -121,6 +130,8 @@ pub async fn connect_relational(
         EngineFamily::SqlServer => mssql::connect(config, secrets, paths).await,
         #[cfg(feature = "clickhouse")]
         EngineFamily::ClickHouse => clickhouse::connect(config, secrets, paths).await,
+        #[cfg(feature = "duckdb")]
+        EngineFamily::DuckDB => duckdb::connect(config).await,
         _ => Err(unsupported(&config.db_type)),
     }
 }
