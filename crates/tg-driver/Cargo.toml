@@ -7,7 +7,10 @@ publish.workspace = true
 rust-version.workspace = true
 
 [features]
-default = ["postgres", "sqlite", "mysql", "mssql", "clickhouse", "duckdb"]
+default = ["postgres", "sqlite", "mysql", "mssql", "clickhouse", "duckdb", "redis", "mongodb", "etcd"]
+mongodb = ["dep:mongodb", "dep:bson", "dep:rustls"]
+etcd = ["dep:reqwest", "dep:rustls"]
+redis = ["dep:redis", "dep:rustls"]
 duckdb = ["dep:duckdb"]
 clickhouse = ["dep:reqwest", "dep:rustls", "dep:rustls-native-certs"]
 mssql = ["dep:tiberius", "dep:rustls", "tokio-util/compat"]
@@ -32,6 +35,9 @@ duckdb = { workspace = true, optional = true }
 mysql_async = { workspace = true, optional = true }
 tiberius = { workspace = true, optional = true }
 reqwest = { workspace = true, optional = true }
+redis = { workspace = true, optional = true }
+mongodb = { workspace = true, optional = true }
+bson = { workspace = true, optional = true }
 rusqlite = { workspace = true, optional = true }
 rustls = { workspace = true, optional = true }
 rustls-native-certs = { workspace = true, optional = true }

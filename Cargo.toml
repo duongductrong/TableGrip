@@ -17,6 +17,7 @@ rust-version = "1.97"
 gpui = "=0.2.2"
 chrono = { version = "0.4.42", default-features = false, features = ["std", "clock"] }
 image = { version = "0.25", default-features = false, features = ["png"] }
+libc = "=0.2.189"
 indexmap = { version = "=2.14.2", features = ["serde"] }
 keyring = { version = "=3.6.3", default-features = false }
 objc = "0.2"
@@ -51,5 +52,20 @@ reqwest = { version = "=0.13.5", default-features = false, features = ["rustls-n
 tiberius = { version = "=0.13.0", default-features = false, features = ["tds73", "rustls", "chrono"] }
 # MySQL, MariaDB and TiDB (tg-driver). rustls with ring, as for PostgreSQL; `rustls-tls` also brings webpki-roots.
 mysql_async = { version = "=0.37.1", default-features = false, features = ["minimal-rust", "rustls-tls", "ring", "tls12"] }
+# Redis, Valkey, KeyDB, Dragonfly (tg-driver): async with cluster and sentinel; TLS on rustls (ring, via use_ring).
+redis = { version = "=1.7.1", default-features = false, features = ["tokio-comp", "cluster-async", "sentinel", "tokio-rustls-comp", "tls-rustls-insecure"] }
+# MongoDB and FerretDB (tg-driver): the official driver on bson 3, TLS on rustls with ring, SRV through hickory.
+mongodb = { version = "=3.9.1", default-features = false, features = ["compat-3-3-0", "bson-3", "rustls-tls", "dns-resolver"] }
+bson = { version = "=3.1.0", features = ["serde_json-1"] }
+# Data files (tg-data): encodings by name, and .xlsx as the zip of XML parts it is.
+encoding_rs = "=0.8.44"
+zip = { version = "=9.5.0", default-features = false, features = ["deflate-flate2-zlib-rs"] }
+quick-xml = "=0.41.0"
+sha2 = "=0.10.9"
+# Test data (tg-data): folding accented names to ASCII for emails and user names.
+unicode-normalization = "=0.1.26"
+# DBeaver's credentials file (tg-data): AES-128-CBC with its published key.
+aes = "=0.8.4"
+cbc = { version = "=0.1.2", features = ["block-padding"] }
 # Test-only (tg-core dev-dependencies).
 rand = "=0.10.3"

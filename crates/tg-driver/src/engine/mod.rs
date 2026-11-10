@@ -4,6 +4,8 @@
 pub mod clickhouse;
 #[cfg(feature = "duckdb")]
 pub mod duckdb;
+#[cfg(feature = "etcd")]
+pub mod etcd;
 #[cfg(any(
     feature = "mysql",
     feature = "mssql",
@@ -11,14 +13,18 @@ pub mod duckdb;
     feature = "duckdb"
 ))]
 pub(crate) mod inline;
-#[cfg(any(feature = "mssql", feature = "duckdb"))]
+#[cfg(any(feature = "mssql", feature = "duckdb", feature = "mongodb"))]
 pub(crate) mod java;
+#[cfg(feature = "mongodb")]
+pub mod mongodb;
 #[cfg(feature = "mssql")]
 pub mod mssql;
 #[cfg(feature = "mysql")]
 pub mod mysql;
 #[cfg(feature = "postgres")]
 pub mod postgres;
+#[cfg(feature = "redis")]
+pub mod redis;
 #[cfg(feature = "sqlite")]
 pub mod sqlite;
 
@@ -71,6 +77,16 @@ pub async fn connect(
         Paradigm::Relational => connect_relational(config, secrets, paths)
             .await
             .map(Connection::Relational),
+        Paradigm::KeyValue => connect_key_value(config, secrets, paths)
+            .await
+            .map(Connection::KeyValue),
+        Paradigm::Document => match config.db_type.family {
+            #[cfg(feature = "mongodb")]
+            EngineFamily::MongoDB => mongodb::connect(config, secrets, paths)
+                .await
+                .map(Connection::Document),
+            _ => Err(unsupported(&config.db_type)),
+        },
         _ => Err(unsupported(&config.db_type)),
     }
 }
@@ -136,6 +152,22 @@ pub async fn connect_relational(
     }
 }
 
+/// The key-value engine for the profile's family (`KeyValueStore.connect`).
+pub async fn connect_key_value(
+    config: &ConnectionConfig,
+    secrets: &Secrets,
+    paths: &TableGripPaths,
+) -> Result<Arc<dyn KeyValueConnection>> {
+    let _ = (secrets, paths);
+    match config.db_type.family {
+        #[cfg(feature = "redis")]
+        EngineFamily::Redis => redis::connect(config, secrets, paths).await,
+        #[cfg(feature = "etcd")]
+        EngineFamily::Etcd => etcd::connect(config, secrets, paths).await,
+        _ => Err(unsupported(&config.db_type)),
+    }
+}
+
 fn unsupported(db_type: &DatabaseType) -> DriverError {
     DriverError::Unsupported(format!(
         "This build of TableGrip has no driver for {}.",
@@ -146,7 +178,14 @@ fn unsupported(db_type: &DatabaseType) -> DriverError {
 /// Makes ring rustls' process-wide crypto provider, unless one is set already. mysql_async builds its TLS config
 /// with the process default, which rustls can't pick by itself once a second provider is compiled in (tiberius
 /// brings aws-lc-rs); tiberius honours the default too, so every engine's TLS runs on ring.
-#[cfg(any(feature = "mysql", feature = "mssql", feature = "clickhouse"))]
+#[cfg(any(
+    feature = "mysql",
+    feature = "mssql",
+    feature = "clickhouse",
+    feature = "redis",
+    feature = "mongodb",
+    feature = "etcd"
+))]
 pub(crate) fn use_ring() {
     let _ = rustls::crypto::ring::default_provider().install_default();
 }

@@ -27,6 +27,7 @@ pub fn java_double(v: f64) -> String {
 }
 
 /// Java's `Float.toString`, from the float's own shortest digits.
+#[cfg_attr(not(any(feature = "mssql", feature = "duckdb")), allow(dead_code))]
 pub fn java_float(v: f32) -> String {
     if v.is_nan() || v.is_infinite() || v == 0.0 {
         return java_double(f64::from(v));

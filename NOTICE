@@ -26,3 +26,10 @@ the OpenSSL/BoringSSL authors); TableGrip makes rustls use ring at run time, but
 The Rust DuckDB driver (crates/tg-driver, feature `duckdb`) builds DuckDB in (MIT License, copyright Stichting DuckDB
 Foundation), which bundles third-party code under its own permissive licences, listed in DuckDB's LICENSE and
 third-party notices; they ship in the third-party licence listing of the Rust build.
+
+The Rust Redis driver (crates/tg-driver, feature `redis`) uses redis-rs (BSD 3-Clause License, copyright Armin
+Ronacher and the redis-rs contributors); its licence text ships in the third-party licence listing of the Rust build.
+
+The Rust MongoDB driver (crates/tg-driver, feature `mongodb`) uses the official mongodb and bson crates (Apache
+License, Version 2.0), which bundle webpki-roots (see above) and resolve SRV records with hickory-dns (MIT or Apache
+License, Version 2.0).

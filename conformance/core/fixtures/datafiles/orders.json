@@ -1,0 +1,1 @@
+[{"id":1,"customer":{"name":"Ann","tags":["a","b"]},"total":12.50,"paid":true,"note":null},{"id":2,"customer":{"name":"Bo"},"total":1e3,"paid":false,"extra":"only here"}]

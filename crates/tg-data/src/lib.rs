@@ -6,10 +6,16 @@
 //! the result formats and clipboard tables. They are held to the Kotlin output through `conformance/core` (subjects
 //! `data-*`).
 
+pub mod backup;
 pub mod clipboard;
+pub mod datafile;
 pub mod formats;
+pub mod importer;
+pub mod imports;
 pub mod infer;
 mod kotlinx_json;
+pub mod testdata;
+pub mod tools;
 
 pub use clipboard::ClipboardTable;
 pub use formats::{CopyFormat, ResultColumn, ResultFormats, ResultWriter};

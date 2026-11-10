@@ -1,0 +1,1 @@
+{"multiTable":false,"readOnlyReason":null,"notes":[],"tables":[{"name":"orders","columns":["id","customer","total","paid","note","extra"],"rows":[["1","{\"name\":\"Ann\",\"tags\":[\"a\",\"b\"]}","12.50","true",null,null],["2","{\"name\":\"Bo\"}","1e3","false",null,"only here"]]}]}

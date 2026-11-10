@@ -290,7 +290,7 @@ fn json_number(decimal: &Decimal) -> io::Result<String> {
 }
 
 /// `Double.toString`: shortest digits that read back the same; plain between 1e-3 and 1e7, else `d.dddE±n`.
-fn java_double(value: f64) -> String {
+pub(crate) fn java_double(value: f64) -> String {
     if value == 0.0 {
         return if value.is_sign_negative() {
             "-0.0"
