@@ -142,6 +142,21 @@ impl Parser {
         Ok(c)
     }
 
+    /// Consumes the character just peeked, e.g. an array's `[`.
+    pub fn value_start(&mut self) -> std::result::Result<(), String> {
+        self.bump().map(|_| ())
+    }
+
+    /// After an array element: `,` or `]`.
+    pub fn next_separator(&mut self) -> std::result::Result<char, String> {
+        self.space()?;
+        match self.bump()? {
+            Some(c @ (',' | ']')) => Ok(c),
+            Some(c) => Err(format!("Expected ',' or ']' but found '{c}'")),
+            None => Err("Unterminated array".into()),
+        }
+    }
+
     pub fn space(&mut self) -> std::result::Result<(), String> {
         while self.peek()?.is_some_and(char::is_whitespace) {
             self.bump()?;

@@ -7899,12 +7899,19 @@ dependencies = [
 name = "tg-data"
 version = "0.0.0"
 dependencies = [
+ "async-trait",
  "chrono",
  "encoding_rs",
  "quick-xml",
+ "regex",
+ "rusqlite",
  "serde_json",
+ "sha2 0.10.9",
  "tempfile",
+ "tg-core",
+ "tg-driver",
  "tg-sql",
+ "tokio",
  "zip",
 ]
 

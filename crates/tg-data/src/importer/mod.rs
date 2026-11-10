@@ -3,7 +3,7 @@
 
 pub mod charset;
 mod csv;
-mod json;
+pub mod json;
 pub mod xlsx;
 
 pub use charset::Charset;
@@ -150,7 +150,7 @@ pub type Rows<'a> = Box<dyn Iterator<Item = Result<ImportRow>> + 'a>;
 
 /// An open file. Rows are read lazily; rows shorter than the columns are padded with None, longer ones are an error
 /// naming the line.
-pub trait ImportSource {
+pub trait ImportSource: Send {
     /// Header names, trimmed, de-duplicated case-insensitively (name, name_2), blanks -> column_N.
     fn columns(&self) -> &[String];
 

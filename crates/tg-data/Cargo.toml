@@ -7,12 +7,20 @@ publish.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+async-trait.workspace = true
 chrono.workspace = true
+regex.workspace = true
+rusqlite.workspace = true
+sha2.workspace = true
+tg-core = { path = "../tg-core" }
+tg-driver = { path = "../tg-driver", default-features = false, features = ["sqlite"] }
+tokio = { workspace = true, features = ["rt", "sync"] }
 encoding_rs.workspace = true
 quick-xml.workspace = true
 zip.workspace = true
 tg-sql = { path = "../tg-sql" }
 
 [dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
 tempfile.workspace = true
 serde_json.workspace = true

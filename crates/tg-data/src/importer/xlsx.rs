@@ -21,10 +21,10 @@ pub enum DateKind {
     Time,
 }
 
-type Archive = zip::ZipArchive<std::io::BufReader<File>>;
+pub type Archive = zip::ZipArchive<std::io::BufReader<File>>;
 
 /// Zip names are case-sensitive but some writers disagree with their own relationships on case.
-fn find_entry(zip: &Archive, path: &str) -> Option<String> {
+pub fn find_entry(zip: &Archive, path: &str) -> Option<String> {
     if zip.index_for_name(path).is_some() {
         return Some(path.to_owned());
     }
@@ -32,6 +32,11 @@ fn find_entry(zip: &Archive, path: &str) -> Option<String> {
         .filter_map(|n| n.ok())
         .find(|n| n.eq_ignore_ascii_case(path))
         .map(|n| n.into_owned())
+}
+
+/// A part as text, or None when it's missing and not `required`.
+pub fn read_text(zip: &mut Archive, path: &str, required: bool) -> Result<Option<String>> {
+    Ok(read_entry(zip, path, required)?.map(|b| String::from_utf8_lossy(&b).into_owned()))
 }
 
 fn read_entry(zip: &mut Archive, path: &str, required: bool) -> Result<Option<Vec<u8>>> {
@@ -257,7 +262,7 @@ fn with_slash(s: &str) -> String {
 }
 
 /// Relationship id -> (type, zip path), with targets resolved against `base` (the source part's directory).
-fn relationships(
+pub fn relationships(
     zip: &mut Archive,
     path: &str,
     base: &str,
@@ -330,7 +335,7 @@ fn read_shared_strings(zip: &mut Archive, path: &str) -> Result<Vec<String>> {
 }
 
 /// Per `cellXfs` index, whether its number format shows a date/time. `cellStyleXfs` (named styles) are ignored.
-fn read_styles(zip: &mut Archive, path: &str) -> Result<Vec<Option<DateKind>>> {
+pub fn read_styles(zip: &mut Archive, path: &str) -> Result<Vec<Option<DateKind>>> {
     let mut custom: HashMap<u32, String> = HashMap::new();
     let mut ids = Vec::new();
     let Some(bytes) = read_entry(zip, path, false)? else {

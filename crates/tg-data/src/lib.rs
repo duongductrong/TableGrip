@@ -7,6 +7,7 @@
 //! `data-*`).
 
 pub mod clipboard;
+pub mod datafile;
 pub mod formats;
 pub mod importer;
 pub mod infer;
