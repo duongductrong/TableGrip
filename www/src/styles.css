@@ -48,6 +48,7 @@
   --radius: 0.5rem;
 
   --shot-shadow: 0 1px 2px oklch(0% 0 0 / 0.05), 0 12px 40px -12px oklch(0% 0 0 / 0.18);
+  --float-shadow: 0 1px 2px oklch(0% 0 0 / 0.04), 0 10px 30px -10px oklch(0% 0 0 / 0.16);
   color-scheme: light;
 }
 
@@ -71,6 +72,7 @@
   --danger: oklch(72% 0.16 25);
 
   --shot-shadow: 0 1px 2px oklch(0% 0 0 / 0.5), 0 16px 48px -12px oklch(0% 0 0 / 0.6);
+  --float-shadow: 0 1px 2px oklch(0% 0 0 / 0.4), 0 12px 32px -10px oklch(0% 0 0 / 0.65);
   color-scheme: dark;
 }
 
@@ -115,6 +117,14 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* Theme switch (components/site/theme-toggle.tsx): the new theme is revealed by a clip-path animation in script, so
+ * the browser's default cross-fade is turned off for that one transition. */
+:root[data-theme-switching]::view-transition-old(root),
+:root[data-theme-switching]::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
 }
 
 @layer base {
@@ -406,4 +416,62 @@
     color: var(--muted-foreground);
     text-align: center;
   }
+}
+
+/*
+ * The hero's product demo (components/site/demo): TableGrip's own window colours, light and dark, matching the
+ * screenshots in public/screenshots.
+ */
+.tg-demo {
+  --d-bg: #ececec;
+  --d-panel: #ffffff;
+  --d-panel-2: #f2f2f2;
+  --d-hover: #ececec;
+  --d-rule: #e3e3e3;
+  --d-rule-strong: #cdcdcd;
+  --d-fg: #1f1f1f;
+  --d-muted: #7a7a7a;
+  --d-faint: #a6a6a6;
+  --d-accent: #2f6fec;
+  --d-sel: #e3ecfd;
+  --d-sel-border: #9db9f2;
+  --d-pending: #fff1c7;
+  --d-pending-fg: #8a5a00;
+  --d-success: #1f8f4e;
+  --d-success-bg: #e2f4e9;
+  --d-danger: #d63a32;
+  --d-danger-bg: #fdeeee;
+  --d-kw: #0033b3;
+  --d-str: #067d17;
+  --d-num: #1750eb;
+  --d-com: #8c8c8c;
+  --d-fn: #00627a;
+  --d-shadow: 0 0 0 1px rgb(0 0 0 / 0.04), 0 12px 32px -8px rgb(0 0 0 / 0.22);
+  background: var(--d-bg);
+}
+.dark .tg-demo {
+  --d-bg: #1e1f22;
+  --d-panel: #26272b;
+  --d-panel-2: #303136;
+  --d-hover: #34363b;
+  --d-rule: #383a3f;
+  --d-rule-strong: #50535a;
+  --d-fg: #dfe1e5;
+  --d-muted: #9a9da4;
+  --d-faint: #6c7078;
+  --d-accent: #3d7bf5;
+  --d-sel: #2b3c5f;
+  --d-sel-border: #4069bd;
+  --d-pending: #4a3c18;
+  --d-pending-fg: #f2c45a;
+  --d-success: #5fcf8a;
+  --d-success-bg: #1f3a2a;
+  --d-danger: #f06b63;
+  --d-danger-bg: #3f2324;
+  --d-kw: #cf8e6d;
+  --d-str: #6aab73;
+  --d-num: #2aacb8;
+  --d-com: #7a7e85;
+  --d-fn: #56a8f5;
+  --d-shadow: 0 0 0 1px rgb(0 0 0 / 0.3), 0 14px 36px -8px rgb(0 0 0 / 0.6);
 }
