@@ -1,5 +1,6 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 
+import { DownloadProvider } from '#/components/site/download-dialog'
 import { GridBackdrop } from '#/components/site/grid-backdrop'
 import { SiteFooter } from '#/components/site/site-footer'
 import { SiteHeader } from '#/components/site/site-header'
@@ -46,12 +47,14 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         <ThemeProvider>
           <TooltipProvider delayDuration={300}>
-            <div className="relative isolate">
-              <GridBackdrop />
-              <SiteHeader />
-              <main>{children}</main>
-              <SiteFooter />
-            </div>
+            <DownloadProvider>
+              <div className="relative isolate">
+                <GridBackdrop />
+                <SiteHeader />
+                <main>{children}</main>
+                <SiteFooter />
+              </div>
+            </DownloadProvider>
           </TooltipProvider>
         </ThemeProvider>
         <Scripts />

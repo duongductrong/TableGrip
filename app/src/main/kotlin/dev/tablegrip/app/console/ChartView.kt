@@ -1,5 +1,6 @@
 package dev.tablegrip.app.console
 
+import dev.tablegrip.app.ui.AppIcons
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -201,7 +202,7 @@ private fun ChartAsk(tab: ConsoleTab, view: ResultSetView) {
             enter
         },
         placeholder = { Text("Describe a chart, e.g. revenue by month") },
-        leadingIcon = { Icon(AllIconsKeys.Toolwindows.ToolWindowAskAI, null, Modifier.size(14.dp).padding(end = 2.dp)) },
+        leadingIcon = { Icon(AppIcons.Agent, null, Modifier.size(14.dp).padding(end = 2.dp)) },
     )
     when (val assist = chart.assist) {
         null -> Unit

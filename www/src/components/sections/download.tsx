@@ -1,4 +1,6 @@
-import { ArrowUpRight, Heart } from 'lucide-react'
+import { Download, Heart } from 'lucide-react'
+
+import { DownloadLink } from '#/components/site/download-dialog'
 
 import { Section, SectionHeader } from '#/components/site/frame'
 import { GithubIcon } from '#/components/site/github-icon'
@@ -10,13 +12,13 @@ export function DownloadSection() {
     <Section id="download">
       <SectionHeader
         title="Download TableGrip"
-        description="Free, with every feature. Installers for each platform are on the releases page."
+        description="Free, with every feature. Pick your system and the installer downloads right away."
       />
       <div className="grid border-t border-rule md:grid-cols-3">
         {platforms.map((p, i) => (
-          <a
+          <DownloadLink
             key={p.os}
-            href={links.releases}
+            os={p.id}
             className={[
               'group flex items-center justify-between gap-4 border-rule px-5 py-6 transition-colors hover:bg-surface sm:px-8',
               i > 0 ? 'border-t md:border-t-0 md:border-l' : '',
@@ -28,8 +30,8 @@ export function DownloadSection() {
               </div>
               <div className="mt-1 text-[13px] text-muted-foreground">{p.note}</div>
             </div>
-            <ArrowUpRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-foreground" />
-          </a>
+            <Download className="size-4 text-muted-foreground transition-transform group-hover:translate-y-0.5 group-hover:text-foreground" />
+          </DownloadLink>
         ))}
       </div>
       <div className="grid border-t border-rule md:grid-cols-2">

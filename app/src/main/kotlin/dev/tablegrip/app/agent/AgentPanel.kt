@@ -1,5 +1,6 @@
 package dev.tablegrip.app.agent
 
+import dev.tablegrip.app.ui.AppIcons
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -176,7 +177,7 @@ private fun EmptyState(agent: AgentViewModel) {
         verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Icon(AllIconsKeys.Toolwindows.ToolWindowAskAI, null, Modifier.size(28.dp))
+        Icon(AppIcons.Agent, null, Modifier.size(28.dp))
         when {
             agent.discovering -> Text("Looking for agents on this machine…", color = info)
             agent.agents.isEmpty() -> {
@@ -425,7 +426,7 @@ private fun RunRequestCard(app: AppState, message: ChatMessage, index: Int, bloc
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(AllIconsKeys.Toolwindows.ToolWindowAskAI, null, Modifier.size(14.dp))
+            Icon(AppIcons.Agent, null, Modifier.size(14.dp))
             Text("${app.agent.selected?.descriptor?.name ?: "The agent"} wants to run a query", Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
         }
         if (risks.isNotEmpty()) RiskNotice(risks, Modifier.padding(horizontal = 12.dp, vertical = 4.dp))
@@ -645,7 +646,7 @@ private fun AgentPicker(agent: AgentViewModel) {
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(AllIconsKeys.Toolwindows.ToolWindowAskAI, null, Modifier.size(14.dp))
+            Icon(AppIcons.Agent, null, Modifier.size(14.dp))
             Text(
                 selected?.descriptor?.name ?: if (agent.discovering) "Detecting…" else "No agent",
                 Modifier.widthIn(max = 180.dp),

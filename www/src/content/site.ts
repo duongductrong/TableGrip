@@ -111,10 +111,10 @@ export const highlights = [
 export const importSources = ['DBeaver', 'IDE data sources', 'Connections.plist', '~/.pgpass', '.env files', 'Connection URLs']
 
 export const platforms = [
-  { os: 'macOS', pkg: '.dmg', note: 'Signed and notarized · updates itself' },
-  { os: 'Windows', pkg: '.msi', note: 'MSI installer' },
-  { os: 'Linux', pkg: '.deb', note: 'Debian package' },
-]
+  { id: 'macos', os: 'macOS', pkg: '.dmg', note: 'Signed and notarized · updates itself' },
+  { id: 'windows', os: 'Windows', pkg: '.msi', note: 'MSI installer' },
+  { id: 'linux', os: 'Linux', pkg: '.deb', note: 'Debian package' },
+] as const
 
 /** The CLI agents TableGrip can run (core/agent/cli/CliAgentPreset.kt), plus any HTTP provider. */
 export const agentClients = ['Claude Code', 'Codex', 'Gemini CLI', 'Cursor Agent', 'Grok', 'OpenCode', 'Antigravity']

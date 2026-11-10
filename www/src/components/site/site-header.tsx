@@ -1,6 +1,7 @@
 import { Bot, ChevronDown, Code2, Database, Download, Network, Table2, type LucideIcon } from 'lucide-react'
 import { NavigationMenu } from 'radix-ui'
 
+import { DownloadLink } from '#/components/site/download-dialog'
 import { GithubIcon } from '#/components/site/github-icon'
 import { SiteLink } from '#/components/site/site-link'
 import { ThemeToggle } from '#/components/site/theme-toggle'
@@ -86,10 +87,10 @@ export function SiteHeader() {
             </a>
           </Button>
           <Button variant="default" size="sm" asChild>
-            <SiteLink href="/#download">
+            <DownloadLink>
               <Download />
               Download
-            </SiteLink>
+            </DownloadLink>
           </Button>
         </div>
       </div>

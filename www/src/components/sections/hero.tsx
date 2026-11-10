@@ -1,5 +1,6 @@
 import { ArrowRight, Download } from 'lucide-react'
 
+import { DownloadLink } from '#/components/site/download-dialog'
 import { Section } from '#/components/site/frame'
 import { ProductShot, ShotThemeSwitch } from '#/components/site/product-shot'
 import { Button } from '#/components/ui/button'
@@ -24,10 +25,10 @@ export function Hero() {
       <div className="grid border-t border-rule md:grid-cols-2">
         <div className="space-y-3 px-5 py-7 sm:px-8">
           <Button variant="default" size="lg" asChild>
-            <a href={links.releases}>
+            <DownloadLink>
               <Download />
               Download TableGrip
-            </a>
+            </DownloadLink>
           </Button>
           <p className="text-[13px] text-muted-foreground">macOS · Windows · Linux</p>
           <Button variant="arrow" size="sm" asChild>

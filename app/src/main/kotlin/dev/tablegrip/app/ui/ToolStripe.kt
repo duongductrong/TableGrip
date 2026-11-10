@@ -104,7 +104,7 @@ private fun StripeItemButton(app: AppState, item: StripeItem) {
             StripeItem.GoTo -> Triple(AllIconsKeys.Actions.Search, "Go to Anything (${Shortcuts.GoToAnything})", app.goToOpen)
             StripeItem.NewConnection -> Triple(AllIconsKeys.General.Add, "New Connection", false)
             StripeItem.Shortcuts -> Triple(AllIconsKeys.General.Keyboard, "Keyboard Shortcuts (${Shortcuts.ShowShortcuts})", app.shortcutsOpen)
-            StripeItem.Agent -> Triple(AllIconsKeys.Toolwindows.ToolWindowAskAI, "Agent (${Shortcuts.Agent})", app.agentOpen)
+            StripeItem.Agent -> Triple(AppIcons.Agent, "Agent (${Shortcuts.Agent})", app.agentOpen)
         }
     ContextMenuArea(items = { listOf(ContextMenuItem("Hide ${item.label}") { app.updateSettings { it.copy(stripeHidden = it.stripeHidden + item.name) } }) }) {
         StripeButton(icon, tooltip, selected) {
