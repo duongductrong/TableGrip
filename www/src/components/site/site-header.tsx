@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { Bot, ChevronDown, Code2, Database, Download, Network, Table2, type LucideIcon } from 'lucide-react'
 import { NavigationMenu } from 'radix-ui'
 
@@ -55,11 +56,42 @@ function FeaturesMenu() {
   )
 }
 
+/** True once the page has scrolled past the first few pixels. */
+function useScrolled(threshold = 8) {
+  const [scrolled, setScrolled] = React.useState(false)
+  React.useEffect(() => {
+    const update = () => setScrolled(window.scrollY > threshold)
+    update()
+    window.addEventListener('scroll', update, { passive: true })
+    return () => window.removeEventListener('scroll', update)
+  }, [threshold])
+  return scrolled
+}
+
 export function SiteHeader() {
+  const floating = useScrolled()
   return (
-    <header className="sticky top-0 z-40 border-b border-rule bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/75">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-6 border-x border-rule px-4 sm:px-6">
-        <SiteLink href="/" className="flex items-center gap-2 font-semibold tracking-tight">
+    // At the top the bar sits flush with the page's ruled column. Once the page scrolls it lifts off into a floating,
+    // inset panel; the header keeps its height either way, so nothing below it moves.
+    <header
+      data-floating={floating || undefined}
+      className={cn(
+        'group/header sticky top-0 z-40 h-14 border-b transition-[background-color,border-color] duration-300',
+        floating
+          ? 'border-transparent bg-transparent'
+          : 'border-rule bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/75',
+      )}
+    >
+      <div
+        className={cn(
+          'mx-auto grid grid-cols-[1fr_auto] items-center border transition-all duration-300 ease-out md:grid-cols-[1fr_auto_1fr]',
+          // Floating, it shrinks to a compact bar about the width of its contents rather than spanning the page.
+          floating
+            ? 'h-12 translate-y-4 w-[calc(100%-1.5rem)] max-w-[44rem] gap-3 rounded-2xl border-rule bg-background/80 pr-1.5 pl-3 shadow-[var(--float-shadow)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/70'
+            : 'h-14 w-full max-w-6xl gap-6 border-y-transparent border-x-rule px-4 sm:px-6',
+        )}
+      >
+        <SiteLink href="/" className="flex items-center gap-2 justify-self-start font-semibold tracking-tight">
           <img src="/logo.png" alt="" width={24} height={24} className="size-6 rounded-[6px]" />
           TableGrip
         </SiteLink>
@@ -77,16 +109,15 @@ export function SiteHeader() {
             ))}
           </NavigationMenu.List>
         </NavigationMenu.Root>
-        <div className="ml-auto flex items-center gap-2">
-          <div className="hidden sm:block">
-            <ThemeToggle />
-          </div>
+        <div className="flex items-center gap-1 justify-self-end">
+          <ThemeToggle />
           <Button variant="ghost" size="icon-sm" asChild>
             <a href={links.github} target="_blank" rel="noreferrer" aria-label="TableGrip on GitHub">
               <GithubIcon className="size-4" />
             </a>
           </Button>
-          <Button variant="default" size="sm" asChild>
+          {/* Inside the floating bar the button's corners follow the bar's (16px radius, 6px inset). */}
+          <Button variant="default" size="sm" className={cn('transition-[border-radius]', floating && 'rounded-[10px]')} asChild>
             <DownloadLink>
               <Download />
               Download

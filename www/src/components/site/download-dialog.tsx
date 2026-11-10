@@ -81,7 +81,12 @@ export function DownloadProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
-type DownloadLinkProps = Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {
+/** The visitor's detected installer, for labels like "Download for macOS". Undefined until detected. */
+export function useDetectedTarget(): DownloadTarget | undefined {
+  return useDownload().detected
+}
+
+type DownloadLinkProps =Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {
   /** A fixed installer. Without one, the link uses the visitor's detected system. */
   target?: DownloadTarget
   /** An operating system: its installer for the visitor's architecture when they run it, else its default. */

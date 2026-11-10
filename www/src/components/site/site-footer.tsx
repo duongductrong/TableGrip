@@ -48,7 +48,7 @@ export function SiteFooter() {
             </a>
             .
           </p>
-          <ThemeToggle withLabels />
+          <ThemeToggle align="start" className="-ml-2" />
         </div>
         {columns.map((column) => (
           <div key={column.title}>
@@ -66,8 +66,12 @@ export function SiteFooter() {
         ))}
       </div>
       <div className="border-t border-rule">
-        <div className="mx-auto max-w-6xl border-x border-rule px-5 py-5 text-xs text-muted-foreground sm:px-8">
-          Built with Kotlin, Compose for Desktop and Jewel.
+        <div className="mx-auto flex max-w-6xl flex-col gap-1.5 border-x border-rule px-5 py-5 text-xs text-muted-foreground sm:px-8 md:flex-row md:justify-between">
+          <p>Built with Kotlin, Compose for Desktop and Jewel.</p>
+          <p>
+            Database names and logos are trademarks of their owners, shown to identify supported databases. No
+            endorsement is implied.
+          </p>
         </div>
       </div>
     </footer>

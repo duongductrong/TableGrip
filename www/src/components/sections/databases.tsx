@@ -1,17 +1,20 @@
 import { ArrowRight } from 'lucide-react'
 
-import { DbMonogram } from '#/components/site/db-tile'
 import { Section, SectionHeader } from '#/components/site/frame'
-import { Button } from '#/components/ui/button'
-import { databaseFamilies, featuredDatabases, links } from '#/content/site'
 import { SiteLink } from '#/components/site/site-link'
+import { Button } from '#/components/ui/button'
+import { dbLogos } from '#/content/db-logos'
+import { databaseFamilies, featuredDatabases, links } from '#/content/site'
+import { cn } from '#/lib/utils'
 
 export function Databases() {
   return (
     <Section id="databases">
       <SectionHeader
-        title="Supported databases"
-        description="One app for relational, analytical, key-value and document stores, plus the files you keep data in."
+        index="03"
+        eyebrow="Databases"
+        title="One client for every store you run."
+        description="Relational, analytical, key-value and document databases, plus the files you keep data in."
         aside={
           <Button variant="arrow" size="sm" asChild>
             <SiteLink href={links.drivers}>
@@ -20,36 +23,44 @@ export function Databases() {
           </Button>
         }
       />
+
       <ul className="grid grid-cols-2 border-t border-rule sm:grid-cols-4">
         {featuredDatabases.map((db, i) => (
           <li
             key={db.name}
-            className={[
-              'flex items-center gap-3 border-rule px-5 py-5 text-[15px] font-medium sm:px-8',
-              i % 2 === 1 ? 'border-l' : '',
-              i >= 2 ? 'border-t sm:border-t-0' : '',
+            className={cn(
+              'group flex items-center gap-3 border-rule px-5 py-6 text-[15px] font-medium transition-colors hover:bg-surface sm:px-8',
+              i % 2 === 1 && 'border-l',
+              i >= 2 && 'border-t sm:border-t-0',
               i % 4 !== 0 ? 'sm:border-l' : 'sm:border-l-0',
-              i >= 4 ? 'sm:border-t' : '',
-            ].join(' ')}
+              i >= 4 && 'sm:border-t',
+            )}
           >
-            <DbMonogram mono={db.mono} color={db.color} />
+            <span
+              aria-hidden
+              className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-rule bg-raised text-foreground/75 shadow-xs transition-colors group-hover:text-foreground"
+            >
+              {dbLogos[db.name] ? (
+                <svg viewBox="0 0 24 24" className="size-5" fill="currentColor">
+                  <path d={dbLogos[db.name].path} />
+                </svg>
+              ) : (
+                <span className="font-mono text-[10.5px] font-semibold">{db.mono}</span>
+              )}
+            </span>
             {db.name}
           </li>
         ))}
       </ul>
+
       <dl className="grid border-t border-rule md:grid-cols-3">
         {databaseFamilies.map((f, i) => (
           <div
             key={f.family}
-            className={[
-              'border-rule px-5 py-6 sm:px-8',
-              i > 0 ? 'border-t' : '',
-              i < 3 ? 'md:border-t-0' : '',
-              i % 3 !== 0 ? 'md:border-l' : '',
-            ].join(' ')}
+            className={cn('border-rule px-5 py-6 sm:px-8', i > 0 && 'border-t', i < 3 && 'md:border-t-0', i % 3 !== 0 && 'md:border-l')}
           >
-            <dt className="text-sm font-medium">{f.family}</dt>
-            <dd className="mt-1.5 text-sm text-foreground/85">{f.engines}</dd>
+            <dt className="font-mono text-[11px] tracking-wide text-muted-foreground uppercase">{f.family}</dt>
+            <dd className="mt-2 text-sm font-medium">{f.engines}</dd>
             <dd className="mt-1 text-[13px] leading-relaxed text-muted-foreground">{f.note}</dd>
           </div>
         ))}
