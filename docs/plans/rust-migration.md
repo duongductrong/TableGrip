@@ -425,7 +425,12 @@ script rollback. `tests/sqlite.rs` chạy mặc định. `tests/postgres.rs` t�
 `net`), `tokio-util`, `tokio-postgres`, `deadpool-postgres`, `tokio-postgres-rustls`, `rustls`,
 `rustls-platform-verifier`, `rusqlite` (`bundled`), `futures-util`. Đều là MIT/Apache. `ring` đã có trong NOTICE.
 
-#### Cần người dùng chốt
+#### Đã chốt (10/11/2026): A1 + B1
+
+Người dùng chọn A1 (ô là `Option<String>`) và B1 (Postgres đọc bằng simple query, tham số inline thành literal).
+Literal text inline không kèm kiểu, nên server tự suy kiểu y như khi pgjdbc bind `setObject(…, Types.OTHER)`.
+
+#### Phương án đã cân nhắc
 
 **A. Kiểu giá trị ô.**
 - A1: `type Cell = Option<String>`, giống Kotlin (`List<String?>`). Driver tự đổi mọi giá trị ra text, binary ra

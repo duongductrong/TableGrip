@@ -8,7 +8,6 @@
 
 use std::collections::HashSet;
 use std::io::{self, Write};
-use tg_sql::model::jdbc_types as types;
 use tg_sql::{Decimal, SqlDialect};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -65,40 +64,7 @@ impl CopyFormat {
     }
 }
 
-/// A result column as the writers need it: its name and JDBC type, which says whether its values are numbers.
-///
-/// The driver layer (M3) will own the shared result types; until then this mirrors the Kotlin `ResultColumn`.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ResultColumn {
-    pub name: String,
-    pub type_name: String,
-    pub jdbc_type: i32,
-}
-
-impl ResultColumn {
-    pub fn new(name: &str, type_name: &str, jdbc_type: i32) -> Self {
-        Self {
-            name: name.to_owned(),
-            type_name: type_name.to_owned(),
-            jdbc_type,
-        }
-    }
-
-    pub fn is_numeric(&self) -> bool {
-        [
-            types::TINYINT,
-            types::SMALLINT,
-            types::INTEGER,
-            types::BIGINT,
-            types::REAL,
-            types::FLOAT,
-            types::DOUBLE,
-            types::NUMERIC,
-            types::DECIMAL,
-        ]
-        .contains(&self.jdbc_type)
-    }
-}
+pub use tg_sql::model::ResultColumn;
 
 pub struct ResultWriter<'a, W: Write> {
     format: CopyFormat,

@@ -27,49 +27,8 @@ impl ColumnKind {
     }
 }
 
-/// A result column as the profiler needs it: its name, type name and JDBC type (what the Kotlin core's
-/// `ResultColumn` carries).
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ChartColumn {
-    pub name: String,
-    pub type_name: String,
-    pub jdbc_type: i32,
-}
-
-impl ChartColumn {
-    pub fn new(name: &str, type_name: &str, jdbc_type: i32) -> Self {
-        Self {
-            name: name.to_owned(),
-            type_name: type_name.to_owned(),
-            jdbc_type,
-        }
-    }
-
-    pub fn is_numeric(&self) -> bool {
-        [
-            types::TINYINT,
-            types::SMALLINT,
-            types::INTEGER,
-            types::BIGINT,
-            types::REAL,
-            types::FLOAT,
-            types::DOUBLE,
-            types::NUMERIC,
-            types::DECIMAL,
-        ]
-        .contains(&self.jdbc_type)
-    }
-
-    pub fn is_binary(&self) -> bool {
-        [
-            types::BINARY,
-            types::VARBINARY,
-            types::LONGVARBINARY,
-            types::BLOB,
-        ]
-        .contains(&self.jdbc_type)
-    }
-}
+/// A result column as the profiler sees it: the drivers' [`tg_sql::model::ResultColumn`].
+pub type ChartColumn = tg_sql::model::ResultColumn;
 
 /// One column of a result as the chart sees it. `distinct` stops counting past [`ColumnProfiler::DISTINCT_CAP`];
 /// `min` and `max` are numbers, or epoch milliseconds for dates, and None for other kinds or when no value parses.

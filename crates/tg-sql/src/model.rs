@@ -428,6 +428,38 @@ pub struct TableInfo {
     pub remarks: Option<String>,
 }
 
+/// A result column (`driver/QueryResult.kt`): its label, the type name the server reports, and a [`jdbc_types`]
+/// constant that says how to treat its values. Shared by the drivers, the exporters and the chart profiler.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ResultColumn {
+    pub name: String,
+    pub type_name: String,
+    pub jdbc_type: i32,
+}
+
+impl ResultColumn {
+    pub fn new(name: &str, type_name: &str, jdbc_type: i32) -> Self {
+        Self {
+            name: name.to_owned(),
+            type_name: type_name.to_owned(),
+            jdbc_type,
+        }
+    }
+
+    pub fn is_numeric(&self) -> bool {
+        use jdbc_types::*;
+        [
+            TINYINT, SMALLINT, INTEGER, BIGINT, REAL, FLOAT, DOUBLE, NUMERIC, DECIMAL,
+        ]
+        .contains(&self.jdbc_type)
+    }
+
+    pub fn is_binary(&self) -> bool {
+        use jdbc_types::*;
+        [BINARY, VARBINARY, LONGVARBINARY, BLOB].contains(&self.jdbc_type)
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ColumnInfo {
     pub name: String,
