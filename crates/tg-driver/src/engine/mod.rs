@@ -1,5 +1,9 @@
 //! Opening connections: the engine for a profile's family, its SSH tunnel, and "Test Connection".
 
+#[cfg(feature = "mysql")]
+pub(crate) mod inline;
+#[cfg(feature = "mysql")]
+pub mod mysql;
 #[cfg(feature = "postgres")]
 pub mod postgres;
 #[cfg(feature = "sqlite")]
@@ -70,6 +74,11 @@ pub async fn test(
             suggested_type: postgres::test(config, secrets, paths).await?,
             server: None,
         }),
+        #[cfg(feature = "mysql")]
+        EngineFamily::MySQL => Ok(TestOutcome {
+            suggested_type: mysql::test(config, secrets, paths).await?,
+            server: None,
+        }),
         _ => match connect(config, secrets, paths).await? {
             Connection::Relational(c) => {
                 c.namespaces().await?;
@@ -102,6 +111,8 @@ pub async fn connect_relational(
         EngineFamily::PostgreSQL => postgres::connect(config, secrets, paths).await,
         #[cfg(feature = "sqlite")]
         EngineFamily::SQLite => sqlite::connect(config).await,
+        #[cfg(feature = "mysql")]
+        EngineFamily::MySQL => mysql::connect(config, secrets, paths).await,
         _ => Err(unsupported(&config.db_type)),
     }
 }

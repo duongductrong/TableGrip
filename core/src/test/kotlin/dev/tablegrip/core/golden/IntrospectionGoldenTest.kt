@@ -63,6 +63,22 @@ class IntrospectionGoldenTest {
         }
     }
 
+    /**
+     * A MySQL or MariaDB server (`-Pit.mysql=host:port`, root password `pw`) with database `app` seeded from
+     * `mysql.sql`, read through the family's default driver (MariaDB Connector/J). The golden is named after the server
+     * it turned out to be, so one property records both.
+     */
+    @Test
+    fun mysql() = runBlocking {
+        val (host, port) = System.getProperty("it.mysql")?.split(":") ?: return@runBlocking
+        val config = ConnectionConfig(id = "golden", name = "golden", type = DatabaseType.MySQL, host = host, port = port.toInt(), database = "app", user = "root", properties = mapOf("allowPublicKeyRetrieval" to "true"))
+        Database.connect(config, "pw").use { db ->
+            val version = db.openSession().use { (it.execute("SELECT version()") as QueryResult.Rows).rows.single().single().orEmpty() }
+            val engine = if ("MariaDB" in version) "mariadb" else "mysql"
+            compare(engine, dump(db, listOf("SELECT * FROM orders ORDER BY id", MysqlQueries), namespaces = { it.catalog == "app" }))
+        }
+    }
+
     private suspend fun dump(db: Database, queries: List<String>, namespaces: (Namespace) -> Boolean = { true }): JsonObject {
         val all = db.namespaces()
         return buildJsonObject {
@@ -162,6 +178,12 @@ class IntrospectionGoldenTest {
             "SELECT 1 AS i, 2.5::numeric AS n, 2.5::float8 AS f, 'a'::text AS t, '\\x00ff'::bytea AS b, NULL AS z, true AS yes, " +
                 "DATE '2024-02-03' AS d, TIMESTAMP '2024-02-03 04:05:06.5' AS ts, INTERVAL '1 day 2 hours' AS iv, ARRAY[1,2] AS arr, " +
                 "'{\"a\": 1}'::jsonb AS j, 'b0a1d9d0-0f3e-4b1a-9b6c-6c1f1c0f9a11'::uuid AS u"
+
+        const val MysqlQueries =
+            "SELECT 1 AS i, 2.5 AS n, CAST(2.5 AS DOUBLE) AS f, 'a' AS t, x'00ff' AS b, NULL AS z, true AS yes, " +
+                "DATE '2024-02-03' AS d, TIMESTAMP '2024-02-03 04:05:06.5' AS ts, TIME '04:05:06' AS tm, JSON_OBJECT('a', 1) AS j, " +
+                "3000000000 AS big, CAST(7 AS UNSIGNED) AS u, b'101' AS bits, 0.25 AS q, CAST('2024-02-03 04:05:06' AS DATETIME) AS dt, " +
+                "CAST(1.5 AS FLOAT) AS fl"
 
         val root: File by lazy {
             generateSequence(File("").absoluteFile) { it.parentFile }.map { File(it, "conformance/core") }.firstOrNull { it.isDirectory }

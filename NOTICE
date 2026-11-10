@@ -14,3 +14,7 @@ lists them. This software includes code from IntelliJ IDEA, Copyright (C) JetBra
 The Rust SSH tunnel (crates/tg-core/src/ssh) uses russh (Apache License, Version 2.0) with the `ring` crypto backend,
 which carries ISC and OpenSSL-style licence terms (copyright Brian Smith and the OpenSSL/BoringSSL authors); its
 licence text ships in the third-party licence listing of the Rust build.
+
+The Rust MySQL driver (crates/tg-driver, feature `mysql`) uses mysql_async (MIT or Apache License, Version 2.0),
+whose TLS support bundles webpki-roots: Mozilla's list of root certificates, under the Community Data License
+Agreement – Permissive, Version 2.0; its licence text ships in the third-party licence listing of the Rust build.

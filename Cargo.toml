@@ -43,5 +43,7 @@ rustls-native-certs = "=0.8.5"
 tokio-postgres = { version = "=0.7.18", default-features = false, features = ["runtime"] }
 tokio-postgres-rustls = "=0.14.0"
 tokio-util = { version = "=0.7.20", default-features = false }
+# MySQL, MariaDB and TiDB (tg-driver). rustls with ring, as for PostgreSQL; `rustls-tls` also brings webpki-roots.
+mysql_async = { version = "=0.37.1", default-features = false, features = ["minimal-rust", "rustls-tls", "ring", "tls12"] }
 # Test-only (tg-core dev-dependencies).
 rand = "=0.10.3"

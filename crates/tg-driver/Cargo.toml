@@ -7,7 +7,8 @@ publish.workspace = true
 rust-version.workspace = true
 
 [features]
-default = ["postgres", "sqlite"]
+default = ["postgres", "sqlite", "mysql"]
+mysql = ["dep:mysql_async"]
 postgres = ["dep:tokio-postgres", "dep:deadpool-postgres", "dep:tokio-postgres-rustls", "dep:rustls", "dep:rustls-native-certs"]
 sqlite = ["dep:rusqlite"]
 
@@ -24,6 +25,7 @@ tokio = { workspace = true, features = ["rt", "sync", "time", "net", "macros"] }
 tokio-util.workspace = true
 
 deadpool-postgres = { workspace = true, optional = true }
+mysql_async = { workspace = true, optional = true }
 rusqlite = { workspace = true, optional = true }
 rustls = { workspace = true, optional = true }
 rustls-native-certs = { workspace = true, optional = true }

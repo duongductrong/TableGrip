@@ -1,0 +1,914 @@
+{
+    "namespaces": [
+        {
+            "catalog": "app",
+            "schema": null
+        }
+    ],
+    "objects": [
+        {
+            "namespace": {
+                "catalog": "app",
+                "schema": null
+            },
+            "tables": [
+                {
+                    "ref": {
+                        "namespace": {
+                            "catalog": "app",
+                            "schema": null
+                        },
+                        "name": "big_orders"
+                    },
+                    "isView": true,
+                    "remarks": "VIEW"
+                },
+                {
+                    "ref": {
+                        "namespace": {
+                            "catalog": "app",
+                            "schema": null
+                        },
+                        "name": "customers"
+                    },
+                    "isView": false,
+                    "remarks": null
+                },
+                {
+                    "ref": {
+                        "namespace": {
+                            "catalog": "app",
+                            "schema": null
+                        },
+                        "name": "orders"
+                    },
+                    "isView": false,
+                    "remarks": null
+                }
+            ],
+            "columnsOf": {
+                "big_orders": [
+                    {
+                        "name": "id",
+                        "typeName": "BIGINT",
+                        "size": 19,
+                        "nullable": false,
+                        "defaultValue": "0",
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": -5,
+                        "scale": 0
+                    },
+                    {
+                        "name": "total",
+                        "typeName": "DECIMAL",
+                        "size": 10,
+                        "nullable": false,
+                        "defaultValue": "0.00",
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 3,
+                        "scale": 2
+                    }
+                ],
+                "customers": [
+                    {
+                        "name": "id",
+                        "typeName": "INT",
+                        "size": 10,
+                        "nullable": false,
+                        "defaultValue": null,
+                        "autoIncrement": true,
+                        "primaryKey": false,
+                        "jdbcType": 4,
+                        "scale": 0
+                    },
+                    {
+                        "name": "email",
+                        "typeName": "VARCHAR",
+                        "size": 120,
+                        "nullable": false,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 12,
+                        "scale": null
+                    }
+                ],
+                "orders": [
+                    {
+                        "name": "id",
+                        "typeName": "BIGINT",
+                        "size": 19,
+                        "nullable": false,
+                        "defaultValue": null,
+                        "autoIncrement": true,
+                        "primaryKey": false,
+                        "jdbcType": -5,
+                        "scale": 0
+                    },
+                    {
+                        "name": "customer_id",
+                        "typeName": "INT",
+                        "size": 10,
+                        "nullable": false,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 4,
+                        "scale": 0
+                    },
+                    {
+                        "name": "total",
+                        "typeName": "DECIMAL",
+                        "size": 10,
+                        "nullable": false,
+                        "defaultValue": "0.00",
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 3,
+                        "scale": 2
+                    },
+                    {
+                        "name": "status",
+                        "typeName": "VARCHAR",
+                        "size": 20,
+                        "nullable": false,
+                        "defaultValue": "new",
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 12,
+                        "scale": null
+                    }
+                ]
+            },
+            "details": [
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": "app",
+                            "schema": null
+                        },
+                        "name": "big_orders"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "BIGINT",
+                            "size": 19,
+                            "nullable": false,
+                            "defaultValue": "0",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": -5,
+                            "scale": 0
+                        },
+                        {
+                            "name": "total",
+                            "typeName": "DECIMAL",
+                            "size": 10,
+                            "nullable": false,
+                            "defaultValue": "0.00",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 3,
+                            "scale": 2
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [],
+                    "primaryKeyName": null
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": "app",
+                            "schema": null
+                        },
+                        "name": "customers"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "INT",
+                            "size": 10,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": true,
+                            "primaryKey": true,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "email",
+                            "typeName": "VARCHAR",
+                            "size": 120,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": null
+                        }
+                    ],
+                    "indexes": [
+                        {
+                            "name": "customers_email",
+                            "columns": [
+                                "email"
+                            ],
+                            "unique": true
+                        },
+                        {
+                            "name": "PRIMARY",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": true
+                        }
+                    ],
+                    "foreignKeys": [],
+                    "primaryKeyName": "PRIMARY"
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": "app",
+                            "schema": null
+                        },
+                        "name": "orders"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "BIGINT",
+                            "size": 19,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": true,
+                            "primaryKey": true,
+                            "jdbcType": -5,
+                            "scale": 0
+                        },
+                        {
+                            "name": "customer_id",
+                            "typeName": "INT",
+                            "size": 10,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "total",
+                            "typeName": "DECIMAL",
+                            "size": 10,
+                            "nullable": false,
+                            "defaultValue": "0.00",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 3,
+                            "scale": 2
+                        },
+                        {
+                            "name": "status",
+                            "typeName": "VARCHAR",
+                            "size": 20,
+                            "nullable": false,
+                            "defaultValue": "new",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": null
+                        }
+                    ],
+                    "indexes": [
+                        {
+                            "name": "PRIMARY",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": true
+                        },
+                        {
+                            "name": "orders_customer",
+                            "columns": [
+                                "customer_id"
+                            ],
+                            "unique": false
+                        },
+                        {
+                            "name": "orders_status",
+                            "columns": [
+                                "status"
+                            ],
+                            "unique": false
+                        }
+                    ],
+                    "foreignKeys": [
+                        {
+                            "name": "orders_customer",
+                            "columns": [
+                                "customer_id"
+                            ],
+                            "referencedTable": {
+                                "namespace": {
+                                    "catalog": "app",
+                                    "schema": null
+                                },
+                                "name": "customers"
+                            },
+                            "referencedColumns": [
+                                "id"
+                            ],
+                            "onUpdate": null,
+                            "onDelete": "CASCADE"
+                        }
+                    ],
+                    "primaryKeyName": "PRIMARY"
+                }
+            ],
+            "columns": [
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": "app",
+                            "schema": null
+                        },
+                        "name": "big_orders"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "BIGINT",
+                            "size": 19,
+                            "nullable": false,
+                            "defaultValue": "0",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": -5,
+                            "scale": 0
+                        },
+                        {
+                            "name": "total",
+                            "typeName": "DECIMAL",
+                            "size": 10,
+                            "nullable": false,
+                            "defaultValue": "0.00",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 3,
+                            "scale": 2
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [],
+                    "primaryKeyName": null
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": "app",
+                            "schema": null
+                        },
+                        "name": "customers"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "INT",
+                            "size": 10,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": true,
+                            "primaryKey": true,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "email",
+                            "typeName": "VARCHAR",
+                            "size": 120,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": null
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [],
+                    "primaryKeyName": "PRIMARY"
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": "app",
+                            "schema": null
+                        },
+                        "name": "orders"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "BIGINT",
+                            "size": 19,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": true,
+                            "primaryKey": true,
+                            "jdbcType": -5,
+                            "scale": 0
+                        },
+                        {
+                            "name": "customer_id",
+                            "typeName": "INT",
+                            "size": 10,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "total",
+                            "typeName": "DECIMAL",
+                            "size": 10,
+                            "nullable": false,
+                            "defaultValue": "0.00",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 3,
+                            "scale": 2
+                        },
+                        {
+                            "name": "status",
+                            "typeName": "VARCHAR",
+                            "size": 20,
+                            "nullable": false,
+                            "defaultValue": "new",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": null
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [],
+                    "primaryKeyName": "PRIMARY"
+                }
+            ],
+            "structures": [
+                {
+                    "details": {
+                        "table": {
+                            "namespace": {
+                                "catalog": "app",
+                                "schema": null
+                            },
+                            "name": "big_orders"
+                        },
+                        "columns": [
+                            {
+                                "name": "id",
+                                "typeName": "BIGINT",
+                                "size": 19,
+                                "nullable": false,
+                                "defaultValue": "0",
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": -5,
+                                "scale": 0
+                            },
+                            {
+                                "name": "total",
+                                "typeName": "DECIMAL",
+                                "size": 10,
+                                "nullable": false,
+                                "defaultValue": "0.00",
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 3,
+                                "scale": 2
+                            }
+                        ],
+                        "indexes": [],
+                        "foreignKeys": [],
+                        "primaryKeyName": null
+                    },
+                    "constraints": [],
+                    "triggers": [],
+                    "ddl": "CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `big_orders` AS select `orders`.`id` AS `id`,`orders`.`total` AS `total` from `orders` where (`orders`.`total` > 100);"
+                },
+                {
+                    "details": {
+                        "table": {
+                            "namespace": {
+                                "catalog": "app",
+                                "schema": null
+                            },
+                            "name": "customers"
+                        },
+                        "columns": [
+                            {
+                                "name": "id",
+                                "typeName": "INT",
+                                "size": 10,
+                                "nullable": false,
+                                "defaultValue": null,
+                                "autoIncrement": true,
+                                "primaryKey": true,
+                                "jdbcType": 4,
+                                "scale": 0
+                            },
+                            {
+                                "name": "email",
+                                "typeName": "VARCHAR",
+                                "size": 120,
+                                "nullable": false,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 12,
+                                "scale": null
+                            }
+                        ],
+                        "indexes": [
+                            {
+                                "name": "customers_email",
+                                "columns": [
+                                    "email"
+                                ],
+                                "unique": true
+                            },
+                            {
+                                "name": "PRIMARY",
+                                "columns": [
+                                    "id"
+                                ],
+                                "unique": true
+                            }
+                        ],
+                        "foreignKeys": [],
+                        "primaryKeyName": "PRIMARY"
+                    },
+                    "constraints": [
+                        {
+                            "name": "PRIMARY",
+                            "kind": "PrimaryKey",
+                            "columns": [
+                                "id"
+                            ],
+                            "definition": "PRIMARY KEY (`id`)"
+                        },
+                        {
+                            "name": "customers_email",
+                            "kind": "Unique",
+                            "columns": [
+                                "email"
+                            ],
+                            "definition": "UNIQUE (`email`)"
+                        }
+                    ],
+                    "triggers": [],
+                    "ddl": "CREATE TABLE `customers` (\n  `id` int NOT NULL AUTO_INCREMENT,\n  `email` varchar(120) NOT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `customers_email` (`email`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;"
+                },
+                {
+                    "details": {
+                        "table": {
+                            "namespace": {
+                                "catalog": "app",
+                                "schema": null
+                            },
+                            "name": "orders"
+                        },
+                        "columns": [
+                            {
+                                "name": "id",
+                                "typeName": "BIGINT",
+                                "size": 19,
+                                "nullable": false,
+                                "defaultValue": null,
+                                "autoIncrement": true,
+                                "primaryKey": true,
+                                "jdbcType": -5,
+                                "scale": 0
+                            },
+                            {
+                                "name": "customer_id",
+                                "typeName": "INT",
+                                "size": 10,
+                                "nullable": false,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 4,
+                                "scale": 0
+                            },
+                            {
+                                "name": "total",
+                                "typeName": "DECIMAL",
+                                "size": 10,
+                                "nullable": false,
+                                "defaultValue": "0.00",
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 3,
+                                "scale": 2
+                            },
+                            {
+                                "name": "status",
+                                "typeName": "VARCHAR",
+                                "size": 20,
+                                "nullable": false,
+                                "defaultValue": "new",
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 12,
+                                "scale": null
+                            }
+                        ],
+                        "indexes": [
+                            {
+                                "name": "PRIMARY",
+                                "columns": [
+                                    "id"
+                                ],
+                                "unique": true
+                            },
+                            {
+                                "name": "orders_customer",
+                                "columns": [
+                                    "customer_id"
+                                ],
+                                "unique": false
+                            },
+                            {
+                                "name": "orders_status",
+                                "columns": [
+                                    "status"
+                                ],
+                                "unique": false
+                            }
+                        ],
+                        "foreignKeys": [
+                            {
+                                "name": "orders_customer",
+                                "columns": [
+                                    "customer_id"
+                                ],
+                                "referencedTable": {
+                                    "namespace": {
+                                        "catalog": "app",
+                                        "schema": null
+                                    },
+                                    "name": "customers"
+                                },
+                                "referencedColumns": [
+                                    "id"
+                                ],
+                                "onUpdate": null,
+                                "onDelete": "CASCADE"
+                            }
+                        ],
+                        "primaryKeyName": "PRIMARY"
+                    },
+                    "constraints": [
+                        {
+                            "name": "PRIMARY",
+                            "kind": "PrimaryKey",
+                            "columns": [
+                                "id"
+                            ],
+                            "definition": "PRIMARY KEY (`id`)"
+                        },
+                        {
+                            "name": "orders_customer",
+                            "kind": "ForeignKey",
+                            "columns": [
+                                "customer_id"
+                            ],
+                            "definition": "FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE CASCADE"
+                        },
+                        {
+                            "name": "orders_chk_1",
+                            "kind": "Check",
+                            "columns": [],
+                            "definition": "CHECK (`status` in (_latin1'new',_latin1'paid'))"
+                        },
+                        {
+                            "name": "positive_total",
+                            "kind": "Check",
+                            "columns": [],
+                            "definition": "CHECK (`total` >= 0)"
+                        }
+                    ],
+                    "triggers": [
+                        {
+                            "name": "orders_bi",
+                            "timing": "BEFORE",
+                            "events": "INSERT",
+                            "enabled": true,
+                            "definition": "CREATE TRIGGER `orders_bi` BEFORE INSERT ON `orders` FOR EACH ROW SET NEW.status = lower(NEW.status)"
+                        }
+                    ],
+                    "ddl": "CREATE TABLE `orders` (\n  `id` bigint NOT NULL AUTO_INCREMENT,\n  `customer_id` int NOT NULL,\n  `total` decimal(10,2) NOT NULL DEFAULT '0.00',\n  `status` varchar(20) NOT NULL DEFAULT 'new',\n  PRIMARY KEY (`id`),\n  KEY `orders_customer` (`customer_id`),\n  KEY `orders_status` (`status`),\n  CONSTRAINT `orders_customer` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `orders_chk_1` CHECK ((`status` in (_latin1'new',_latin1'paid'))),\n  CONSTRAINT `positive_total` CHECK ((`total` >= 0))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n\nCREATE TRIGGER `orders_bi` BEFORE INSERT ON `orders` FOR EACH ROW SET NEW.status = lower(NEW.status);"
+                }
+            ],
+            "relations": [
+                [],
+                [
+                    {
+                        "from": {
+                            "namespace": {
+                                "catalog": "app",
+                                "schema": null
+                            },
+                            "name": "orders"
+                        },
+                        "fromColumns": [
+                            "customer_id"
+                        ],
+                        "to": {
+                            "namespace": {
+                                "catalog": "app",
+                                "schema": null
+                            },
+                            "name": "customers"
+                        },
+                        "toColumns": [
+                            "id"
+                        ]
+                    }
+                ],
+                [
+                    {
+                        "from": {
+                            "namespace": {
+                                "catalog": "app",
+                                "schema": null
+                            },
+                            "name": "orders"
+                        },
+                        "fromColumns": [
+                            "customer_id"
+                        ],
+                        "to": {
+                            "namespace": {
+                                "catalog": "app",
+                                "schema": null
+                            },
+                            "name": "customers"
+                        },
+                        "toColumns": [
+                            "id"
+                        ]
+                    }
+                ]
+            ]
+        }
+    ],
+    "queries": [
+        {
+            "sql": "SELECT * FROM orders ORDER BY id",
+            "columns": [
+                {
+                    "name": "id",
+                    "typeName": "BIGINT",
+                    "jdbcType": -5
+                },
+                {
+                    "name": "customer_id",
+                    "typeName": "INTEGER",
+                    "jdbcType": 4
+                },
+                {
+                    "name": "total",
+                    "typeName": "DECIMAL",
+                    "jdbcType": 3
+                },
+                {
+                    "name": "status",
+                    "typeName": "VARCHAR",
+                    "jdbcType": 12
+                }
+            ],
+            "rows": []
+        },
+        {
+            "sql": "SELECT 1 AS i, 2.5 AS n, CAST(2.5 AS DOUBLE) AS f, 'a' AS t, x'00ff' AS b, NULL AS z, true AS yes, DATE '2024-02-03' AS d, TIMESTAMP '2024-02-03 04:05:06.5' AS ts, TIME '04:05:06' AS tm, JSON_OBJECT('a', 1) AS j, 3000000000 AS big, CAST(7 AS UNSIGNED) AS u, b'101' AS bits, 0.25 AS q, CAST('2024-02-03 04:05:06' AS DATETIME) AS dt, CAST(1.5 AS FLOAT) AS fl",
+            "columns": [
+                {
+                    "name": "i",
+                    "typeName": "BIGINT",
+                    "jdbcType": -5
+                },
+                {
+                    "name": "n",
+                    "typeName": "DECIMAL",
+                    "jdbcType": 3
+                },
+                {
+                    "name": "f",
+                    "typeName": "DOUBLE",
+                    "jdbcType": 8
+                },
+                {
+                    "name": "t",
+                    "typeName": "VARCHAR",
+                    "jdbcType": 12
+                },
+                {
+                    "name": "b",
+                    "typeName": "VARBINARY",
+                    "jdbcType": -3
+                },
+                {
+                    "name": "z",
+                    "typeName": "NULL",
+                    "jdbcType": 0
+                },
+                {
+                    "name": "yes",
+                    "typeName": "BIGINT",
+                    "jdbcType": -5
+                },
+                {
+                    "name": "d",
+                    "typeName": "DATE",
+                    "jdbcType": 91
+                },
+                {
+                    "name": "ts",
+                    "typeName": "DATETIME",
+                    "jdbcType": 93
+                },
+                {
+                    "name": "tm",
+                    "typeName": "TIME",
+                    "jdbcType": 92
+                },
+                {
+                    "name": "j",
+                    "typeName": "JSON",
+                    "jdbcType": -1
+                },
+                {
+                    "name": "big",
+                    "typeName": "BIGINT",
+                    "jdbcType": -5
+                },
+                {
+                    "name": "u",
+                    "typeName": "BIGINT UNSIGNED",
+                    "jdbcType": -5
+                },
+                {
+                    "name": "bits",
+                    "typeName": "VARBINARY",
+                    "jdbcType": -3
+                },
+                {
+                    "name": "q",
+                    "typeName": "DECIMAL",
+                    "jdbcType": 3
+                },
+                {
+                    "name": "dt",
+                    "typeName": "DATETIME",
+                    "jdbcType": 93
+                },
+                {
+                    "name": "fl",
+                    "typeName": "FLOAT",
+                    "jdbcType": 7
+                }
+            ],
+            "rows": [
+                [
+                    "1",
+                    "2.5",
+                    "2.5",
+                    "a",
+                    "0x00FF",
+                    null,
+                    "1",
+                    "2024-02-03",
+                    "2024-02-03 04:05:06.500000",
+                    "04:05:06",
+                    "{\"a\": 1}",
+                    "3000000000",
+                    "7",
+                    "0x05",
+                    "0.25",
+                    "2024-02-03 04:05:06",
+                    "1.5"
+                ]
+            ]
+        }
+    ]
+}
