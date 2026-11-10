@@ -212,7 +212,22 @@ fn favourites_then_groups_by_name_then_the_rest() {
         mk("f", "work", true),
         mk("h", "Home", false),
     ];
-    let e = Explorer::default();
+    let mut e = Explorer::default();
+    e.open_new_groups(&profiles);
+    let (open, _) = e.take_pending();
+    assert_eq!(
+        open,
+        ["g:1:Favorites", "g:0:Home", "g:0:work"],
+        "groups open the first time they show"
+    );
+    e.open_new_groups(&profiles);
+    assert!(e.take_pending().0.is_empty(), "and only then");
+    e.reveal("w", &profiles);
+    assert_eq!(
+        e.take_pending().0,
+        ["g:0:work", "c:w"],
+        "revealing opens the connection and its group"
+    );
     let built = e.build(&profiles);
     assert_eq!(
         labels(&built.items, &built, &profiles),

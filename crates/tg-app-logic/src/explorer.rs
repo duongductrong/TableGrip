@@ -235,6 +235,9 @@ pub struct Built {
 pub struct Explorer {
     children: HashMap<String, Children>,
     open: HashSet<String>,
+    /// Groups already shown once: a group opens the first time it appears, as the Kotlin panel does, and stays as
+    /// the user leaves it after that.
+    seen_groups: HashSet<String>,
     /// Narrows the tree to connections, and tables and columns already loaded, whose name matches.
     pub search: String,
     /// Nodes for the tree to open (reveal, a lone namespace) or close (a disconnect) the next time it draws.
@@ -284,8 +287,49 @@ impl Explorer {
         self.open.retain(|k| k != key && !k.starts_with(&prefix));
     }
 
-    /// Opens a connection's node (which connects and loads its namespaces).
+    /// Opens already loaded nodes so search matches show (`searchMatchAncestors`); nothing loads.
+    pub fn reveal_keys(&mut self, keys: Vec<String>) {
+        for key in keys {
+            // The tree may not have it open even when we do (`opened` was told first), so always ask it.
+            self.open.insert(key.clone());
+            self.pending_open.push(key);
+        }
+    }
+
+    /// Opens groups that weren't there before (on the first draw, every group).
+    pub fn open_new_groups(&mut self, profiles: &[ConnectionConfig]) {
+        let fresh: Vec<String> = Self::top_level(profiles)
+            .into_iter()
+            .filter(|n| matches!(n.kind, NodeKind::Group { .. }))
+            .map(|n| n.key)
+            .filter(|k| self.seen_groups.insert(k.clone()))
+            .collect();
+        if !fresh.is_empty() {
+            self.reveal_keys(fresh);
+            self.changed();
+        }
+    }
+
+    /// The key of the group a profile is listed in, if any.
+    fn group_key(config: &ConnectionConfig) -> Option<String> {
+        if config.favorite {
+            Some("g:1:Favorites".to_owned())
+        } else if !config.group.trim().is_empty() {
+            Some(format!("g:0:{}", config.group.trim()))
+        } else {
+            None
+        }
+    }
+
+    /// Opens a connection's node (which connects and loads its namespaces), and its group so it shows.
     pub fn reveal(&mut self, id: &str, profiles: &[ConnectionConfig]) -> Option<LoadJob> {
+        if let Some(group) = profiles
+            .iter()
+            .find(|c| c.id == id)
+            .and_then(Self::group_key)
+        {
+            self.reveal_keys(vec![group]);
+        }
         let key = connection_key(id);
         self.pending_open.push(key.clone());
         self.opened(&key, profiles)
