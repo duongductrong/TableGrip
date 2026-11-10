@@ -255,15 +255,12 @@ Keychain (SecretStore):
   UTF-8); Windows = credential generic có target `TableGrip|<key>`, UserName = key, blob UTF-16LE; Linux = Secret Service với
   attribute `service`/`account`, label `service|account`. `keyring` đọc/ghi hai kiểu đầu đúng như vậy (Windows dùng
   `Entry::new_with_target("TableGrip|<key>", ...)` vì mặc định của crate là `<user>.<service>`).
-- Đã kiểm macOS: `KeychainProbeTest` (Kotlin, chỉ chạy khi có `-Pkeychain.probe=set|delete`) ghi được item
-  `service=TableGrip account=tablegrip-s2-probe` (xác nhận bằng `security find-generic-password`). Test Rust ignore
-  `reads_the_item_java_keyring_wrote` bị **treo hơn 2 phút**, nhiều khả năng do hộp thoại cho phép truy cập keychain (ACL của
-  item thuộc tiến trình JVM): đã dừng và xoá item. **Còn phải làm tay** (cần bấm "Allow" khi macOS hỏi):
-  `./gradlew :core:test --tests '*KeychainProbeTest*' -Pkeychain.probe=set`, rồi
-  `cargo test -p tg-core --test keychain -- --ignored`, rồi
-  `./gradlew :core:test --tests '*KeychainProbeTest*' -Pkeychain.probe=delete` (hoặc
-  `security delete-generic-password -s TableGrip -a tablegrip-s2-probe`). Cùng file có thêm test ghi rồi xoá
-  `tablegrip-s2-rust-probe`. Windows chưa kiểm được (chỉ theo mã nguồn).
+- **Đã kiểm tay trên macOS (10/11/2026): đạt.** `KeychainProbeTest` (Kotlin, chỉ chạy khi có
+  `-Pkeychain.probe=set|delete`) ghi item `service=TableGrip account=tablegrip-s2-probe`; test Rust
+  `reads_the_item_java_keyring_wrote` đọc lại đúng giá trị, và `writes_an_item_java_keyring_can_read_and_removes_it`
+  ghi rồi xoá được một item. Cả hai là `#[ignore]` vì macOS hỏi quyền truy cập (lần đầu agent chạy thì treo chờ hộp
+  thoại). Cách chạy lại: `./gradlew :core:test --tests '*KeychainProbeTest*' -Pkeychain.probe=set`, rồi
+  `cargo test -p tg-core --test keychain -- --ignored` (bấm "Allow"), rồi `-Pkeychain.probe=delete`. Windows chưa kiểm được (chỉ theo mã nguồn).
 - **Quyết định còn mở: Linux.** `keyring` 3.x ghi Secret Service với attribute `service` + `username`, còn java-keyring ghi
   `service` + `account`, nên item cũ sẽ không tìm thấy; ngoài ra backend sync cần libdbus (CI Linux sẽ vỡ). Hiện
   `KeyringSecretStore` trên Linux là stub (get = None, set = lỗi). Phương án A: dùng trực tiếp crate `secret-service` (zbus,
@@ -286,6 +283,6 @@ SshTunnel (`tg_core::ssh`, russh 0.65.1, backend crypto `ring` nên không cần
 - Chưa làm: key PuTTY `.ppk`, chứng chỉ SSH (host và agent).
 
 Còn dở:
-- ChatStore (S5); kiểm tay keychain như trên.
+- ChatStore (S5).
 - `KeyringSecretStore::get` nuốt mọi lỗi thành None như Kotlin; nếu UI muốn phân biệt "chưa lưu" với "keychain từ chối" thì
   cần thêm `try_get`.
