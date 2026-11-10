@@ -7915,6 +7915,7 @@ dependencies = [
  "tg-driver",
  "tg-sql",
  "tokio",
+ "unicode-normalization",
  "zip",
 ]
 

@@ -19,6 +19,7 @@ sha2.workspace = true
 tg-core = { path = "../tg-core" }
 tg-driver = { path = "../tg-driver", default-features = false, features = ["sqlite"] }
 tokio = { workspace = true, features = ["rt", "sync"] }
+unicode-normalization.workspace = true
 encoding_rs.workspace = true
 quick-xml.workspace = true
 zip.workspace = true
