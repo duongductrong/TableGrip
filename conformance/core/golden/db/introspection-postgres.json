@@ -1,0 +1,1603 @@
+{
+    "namespaces": [
+        {
+            "catalog": null,
+            "schema": "public"
+        },
+        {
+            "catalog": null,
+            "schema": "shop"
+        }
+    ],
+    "objects": [
+        {
+            "namespace": {
+                "catalog": null,
+                "schema": "public"
+            },
+            "tables": [
+                {
+                    "ref": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": "public"
+                        },
+                        "name": "Mixed Case"
+                    },
+                    "isView": false,
+                    "remarks": null
+                }
+            ],
+            "columnsOf": {
+                "Mixed Case": [
+                    {
+                        "name": "Id",
+                        "typeName": "int4",
+                        "size": 10,
+                        "nullable": false,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 4,
+                        "scale": 0
+                    },
+                    {
+                        "name": "a\"b",
+                        "typeName": "text",
+                        "size": 2147483647,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 12,
+                        "scale": 0
+                    }
+                ]
+            },
+            "details": [
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": "public"
+                        },
+                        "name": "Mixed Case"
+                    },
+                    "columns": [
+                        {
+                            "name": "Id",
+                            "typeName": "int4",
+                            "size": 10,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": true,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "a\"b",
+                            "typeName": "text",
+                            "size": 2147483647,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        }
+                    ],
+                    "indexes": [
+                        {
+                            "name": "Mixed Case_pkey",
+                            "columns": [
+                                "Id"
+                            ],
+                            "unique": true
+                        }
+                    ],
+                    "foreignKeys": [],
+                    "primaryKeyName": "Mixed Case_pkey"
+                }
+            ],
+            "columns": [
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": "public"
+                        },
+                        "name": "Mixed Case"
+                    },
+                    "columns": [
+                        {
+                            "name": "Id",
+                            "typeName": "int4",
+                            "size": 10,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": true,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "a\"b",
+                            "typeName": "text",
+                            "size": 2147483647,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [],
+                    "primaryKeyName": "Mixed Case_pkey"
+                }
+            ],
+            "structures": [
+                {
+                    "details": {
+                        "table": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": "public"
+                            },
+                            "name": "Mixed Case"
+                        },
+                        "columns": [
+                            {
+                                "name": "Id",
+                                "typeName": "int4",
+                                "size": 10,
+                                "nullable": false,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": true,
+                                "jdbcType": 4,
+                                "scale": 0
+                            },
+                            {
+                                "name": "a\"b",
+                                "typeName": "text",
+                                "size": 2147483647,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 12,
+                                "scale": 0
+                            }
+                        ],
+                        "indexes": [
+                            {
+                                "name": "Mixed Case_pkey",
+                                "columns": [
+                                    "Id"
+                                ],
+                                "unique": true
+                            }
+                        ],
+                        "foreignKeys": [],
+                        "primaryKeyName": "Mixed Case_pkey"
+                    },
+                    "constraints": [
+                        {
+                            "name": "Mixed Case_pkey",
+                            "kind": "PrimaryKey",
+                            "columns": [
+                                "Id"
+                            ],
+                            "definition": "PRIMARY KEY (\"Id\")"
+                        }
+                    ],
+                    "triggers": [],
+                    "ddl": "CREATE TABLE \"public\".\"Mixed Case\" (\n    \"Id\" integer NOT NULL,\n    \"a\"\"b\" text,\n    CONSTRAINT \"Mixed Case_pkey\" PRIMARY KEY (\"Id\")\n);"
+                }
+            ],
+            "relations": [
+                []
+            ]
+        },
+        {
+            "namespace": {
+                "catalog": null,
+                "schema": "shop"
+            },
+            "tables": [
+                {
+                    "ref": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": "shop"
+                        },
+                        "name": "big_orders"
+                    },
+                    "isView": true,
+                    "remarks": null
+                },
+                {
+                    "ref": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": "shop"
+                        },
+                        "name": "customers"
+                    },
+                    "isView": false,
+                    "remarks": null
+                },
+                {
+                    "ref": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": "shop"
+                        },
+                        "name": "events"
+                    },
+                    "isView": false,
+                    "remarks": null
+                },
+                {
+                    "ref": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": "shop"
+                        },
+                        "name": "orders"
+                    },
+                    "isView": false,
+                    "remarks": "Customer's orders"
+                },
+                {
+                    "ref": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": "shop"
+                        },
+                        "name": "totals"
+                    },
+                    "isView": true,
+                    "remarks": null
+                }
+            ],
+            "columnsOf": {
+                "big_orders": [
+                    {
+                        "name": "id",
+                        "typeName": "int8",
+                        "size": 19,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": -5,
+                        "scale": 0
+                    },
+                    {
+                        "name": "total",
+                        "typeName": "numeric",
+                        "size": 10,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 2,
+                        "scale": 2
+                    }
+                ],
+                "customers": [
+                    {
+                        "name": "id",
+                        "typeName": "int4",
+                        "size": 10,
+                        "nullable": false,
+                        "defaultValue": null,
+                        "autoIncrement": true,
+                        "primaryKey": false,
+                        "jdbcType": 4,
+                        "scale": 0
+                    },
+                    {
+                        "name": "email",
+                        "typeName": "varchar",
+                        "size": 120,
+                        "nullable": false,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 12,
+                        "scale": 0
+                    },
+                    {
+                        "name": "name",
+                        "typeName": "text",
+                        "size": 2147483647,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 12,
+                        "scale": 0
+                    }
+                ],
+                "events": [
+                    {
+                        "name": "id",
+                        "typeName": "int4",
+                        "size": 10,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 4,
+                        "scale": 0
+                    },
+                    {
+                        "name": "at",
+                        "typeName": "date",
+                        "size": 13,
+                        "nullable": false,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 91,
+                        "scale": 0
+                    }
+                ],
+                "orders": [
+                    {
+                        "name": "id",
+                        "typeName": "int8",
+                        "size": 19,
+                        "nullable": false,
+                        "defaultValue": null,
+                        "autoIncrement": true,
+                        "primaryKey": false,
+                        "jdbcType": -5,
+                        "scale": 0
+                    },
+                    {
+                        "name": "customer_id",
+                        "typeName": "int4",
+                        "size": 10,
+                        "nullable": false,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 4,
+                        "scale": 0
+                    },
+                    {
+                        "name": "total",
+                        "typeName": "numeric",
+                        "size": 10,
+                        "nullable": false,
+                        "defaultValue": "0",
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 2,
+                        "scale": 2
+                    },
+                    {
+                        "name": "qty",
+                        "typeName": "int4",
+                        "size": 10,
+                        "nullable": false,
+                        "defaultValue": "1",
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 4,
+                        "scale": 0
+                    },
+                    {
+                        "name": "total_with_tax",
+                        "typeName": "numeric",
+                        "size": 0,
+                        "nullable": true,
+                        "defaultValue": "(total * 1.1)",
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 2,
+                        "scale": null
+                    },
+                    {
+                        "name": "status",
+                        "typeName": "text",
+                        "size": 2147483647,
+                        "nullable": false,
+                        "defaultValue": "'new'::text",
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 12,
+                        "scale": 0
+                    },
+                    {
+                        "name": "during",
+                        "typeName": "tsrange",
+                        "size": 2147483647,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 1111,
+                        "scale": 0
+                    }
+                ],
+                "totals": [
+                    {
+                        "name": "customer_id",
+                        "typeName": "int4",
+                        "size": 10,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 4,
+                        "scale": 0
+                    },
+                    {
+                        "name": "s",
+                        "typeName": "numeric",
+                        "size": 0,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 2,
+                        "scale": null
+                    }
+                ]
+            },
+            "details": [
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": "shop"
+                        },
+                        "name": "big_orders"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "int8",
+                            "size": 19,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": -5,
+                            "scale": 0
+                        },
+                        {
+                            "name": "total",
+                            "typeName": "numeric",
+                            "size": 10,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 2,
+                            "scale": 2
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [],
+                    "primaryKeyName": null
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": "shop"
+                        },
+                        "name": "customers"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "int4",
+                            "size": 10,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": true,
+                            "primaryKey": true,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "email",
+                            "typeName": "varchar",
+                            "size": 120,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        },
+                        {
+                            "name": "name",
+                            "typeName": "text",
+                            "size": 2147483647,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        }
+                    ],
+                    "indexes": [
+                        {
+                            "name": "customers_email_key",
+                            "columns": [
+                                "email"
+                            ],
+                            "unique": true
+                        },
+                        {
+                            "name": "customers_pkey",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": true
+                        }
+                    ],
+                    "foreignKeys": [],
+                    "primaryKeyName": "customers_pkey"
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": "shop"
+                        },
+                        "name": "events"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "int4",
+                            "size": 10,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "at",
+                            "typeName": "date",
+                            "size": 13,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 91,
+                            "scale": 0
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [],
+                    "primaryKeyName": null
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": "shop"
+                        },
+                        "name": "orders"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "int8",
+                            "size": 19,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": true,
+                            "primaryKey": true,
+                            "jdbcType": -5,
+                            "scale": 0
+                        },
+                        {
+                            "name": "customer_id",
+                            "typeName": "int4",
+                            "size": 10,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "total",
+                            "typeName": "numeric",
+                            "size": 10,
+                            "nullable": false,
+                            "defaultValue": "0",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 2,
+                            "scale": 2
+                        },
+                        {
+                            "name": "qty",
+                            "typeName": "int4",
+                            "size": 10,
+                            "nullable": false,
+                            "defaultValue": "1",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "total_with_tax",
+                            "typeName": "numeric",
+                            "size": 0,
+                            "nullable": true,
+                            "defaultValue": "(total * 1.1)",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 2,
+                            "scale": null
+                        },
+                        {
+                            "name": "status",
+                            "typeName": "text",
+                            "size": 2147483647,
+                            "nullable": false,
+                            "defaultValue": "'new'::text",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        },
+                        {
+                            "name": "during",
+                            "typeName": "tsrange",
+                            "size": 2147483647,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 1111,
+                            "scale": 0
+                        }
+                    ],
+                    "indexes": [
+                        {
+                            "name": "orders_pk",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": true
+                        },
+                        {
+                            "name": "no_overlap",
+                            "columns": [
+                                "customer_id",
+                                "during"
+                            ],
+                            "unique": false
+                        },
+                        {
+                            "name": "orders_lower",
+                            "columns": [
+                                "lower(status)"
+                            ],
+                            "unique": false
+                        },
+                        {
+                            "name": "orders_status",
+                            "columns": [
+                                "status"
+                            ],
+                            "unique": false
+                        }
+                    ],
+                    "foreignKeys": [
+                        {
+                            "name": "orders_customer_id_fkey",
+                            "columns": [
+                                "customer_id"
+                            ],
+                            "referencedTable": {
+                                "namespace": {
+                                    "catalog": null,
+                                    "schema": "shop"
+                                },
+                                "name": "customers"
+                            },
+                            "referencedColumns": [
+                                "id"
+                            ],
+                            "onUpdate": "SET NULL",
+                            "onDelete": "CASCADE"
+                        }
+                    ],
+                    "primaryKeyName": "orders_pk"
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": "shop"
+                        },
+                        "name": "totals"
+                    },
+                    "columns": [
+                        {
+                            "name": "customer_id",
+                            "typeName": "int4",
+                            "size": 10,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "s",
+                            "typeName": "numeric",
+                            "size": 0,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 2,
+                            "scale": null
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [],
+                    "primaryKeyName": null
+                }
+            ],
+            "columns": [
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": "shop"
+                        },
+                        "name": "big_orders"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "int8",
+                            "size": 19,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": -5,
+                            "scale": 0
+                        },
+                        {
+                            "name": "total",
+                            "typeName": "numeric",
+                            "size": 10,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 2,
+                            "scale": 2
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [],
+                    "primaryKeyName": null
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": "shop"
+                        },
+                        "name": "customers"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "int4",
+                            "size": 10,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": true,
+                            "primaryKey": true,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "email",
+                            "typeName": "varchar",
+                            "size": 120,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        },
+                        {
+                            "name": "name",
+                            "typeName": "text",
+                            "size": 2147483647,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [],
+                    "primaryKeyName": "customers_pkey"
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": "shop"
+                        },
+                        "name": "events"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "int4",
+                            "size": 10,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "at",
+                            "typeName": "date",
+                            "size": 13,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 91,
+                            "scale": 0
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [],
+                    "primaryKeyName": null
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": "shop"
+                        },
+                        "name": "orders"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "int8",
+                            "size": 19,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": true,
+                            "primaryKey": true,
+                            "jdbcType": -5,
+                            "scale": 0
+                        },
+                        {
+                            "name": "customer_id",
+                            "typeName": "int4",
+                            "size": 10,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "total",
+                            "typeName": "numeric",
+                            "size": 10,
+                            "nullable": false,
+                            "defaultValue": "0",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 2,
+                            "scale": 2
+                        },
+                        {
+                            "name": "qty",
+                            "typeName": "int4",
+                            "size": 10,
+                            "nullable": false,
+                            "defaultValue": "1",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "total_with_tax",
+                            "typeName": "numeric",
+                            "size": 0,
+                            "nullable": true,
+                            "defaultValue": "(total * 1.1)",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 2,
+                            "scale": null
+                        },
+                        {
+                            "name": "status",
+                            "typeName": "text",
+                            "size": 2147483647,
+                            "nullable": false,
+                            "defaultValue": "'new'::text",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        },
+                        {
+                            "name": "during",
+                            "typeName": "tsrange",
+                            "size": 2147483647,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 1111,
+                            "scale": 0
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [],
+                    "primaryKeyName": "orders_pk"
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": "shop"
+                        },
+                        "name": "totals"
+                    },
+                    "columns": [
+                        {
+                            "name": "customer_id",
+                            "typeName": "int4",
+                            "size": 10,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "s",
+                            "typeName": "numeric",
+                            "size": 0,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 2,
+                            "scale": null
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [],
+                    "primaryKeyName": null
+                }
+            ],
+            "structures": [
+                {
+                    "details": {
+                        "table": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": "shop"
+                            },
+                            "name": "big_orders"
+                        },
+                        "columns": [
+                            {
+                                "name": "id",
+                                "typeName": "int8",
+                                "size": 19,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": -5,
+                                "scale": 0
+                            },
+                            {
+                                "name": "total",
+                                "typeName": "numeric",
+                                "size": 10,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 2,
+                                "scale": 2
+                            }
+                        ],
+                        "indexes": [],
+                        "foreignKeys": [],
+                        "primaryKeyName": null
+                    },
+                    "constraints": [],
+                    "triggers": [],
+                    "ddl": "CREATE OR REPLACE VIEW \"shop\".\"big_orders\" AS\n SELECT id,\n    total\n   FROM shop.orders\n  WHERE total > 100::numeric;"
+                },
+                {
+                    "details": {
+                        "table": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": "shop"
+                            },
+                            "name": "customers"
+                        },
+                        "columns": [
+                            {
+                                "name": "id",
+                                "typeName": "int4",
+                                "size": 10,
+                                "nullable": false,
+                                "defaultValue": null,
+                                "autoIncrement": true,
+                                "primaryKey": true,
+                                "jdbcType": 4,
+                                "scale": 0
+                            },
+                            {
+                                "name": "email",
+                                "typeName": "varchar",
+                                "size": 120,
+                                "nullable": false,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 12,
+                                "scale": 0
+                            },
+                            {
+                                "name": "name",
+                                "typeName": "text",
+                                "size": 2147483647,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 12,
+                                "scale": 0
+                            }
+                        ],
+                        "indexes": [
+                            {
+                                "name": "customers_email_key",
+                                "columns": [
+                                    "email"
+                                ],
+                                "unique": true
+                            },
+                            {
+                                "name": "customers_pkey",
+                                "columns": [
+                                    "id"
+                                ],
+                                "unique": true
+                            }
+                        ],
+                        "foreignKeys": [],
+                        "primaryKeyName": "customers_pkey"
+                    },
+                    "constraints": [
+                        {
+                            "name": "customers_pkey",
+                            "kind": "PrimaryKey",
+                            "columns": [
+                                "id"
+                            ],
+                            "definition": "PRIMARY KEY (id)"
+                        },
+                        {
+                            "name": "customers_email_key",
+                            "kind": "Unique",
+                            "columns": [
+                                "email"
+                            ],
+                            "definition": "UNIQUE (email)"
+                        }
+                    ],
+                    "triggers": [],
+                    "ddl": "CREATE TABLE \"shop\".\"customers\" (\n    \"id\" integer GENERATED ALWAYS AS IDENTITY NOT NULL,\n    \"email\" character varying(120) NOT NULL,\n    \"name\" text,\n    CONSTRAINT \"customers_pkey\" PRIMARY KEY (id),\n    CONSTRAINT \"customers_email_key\" UNIQUE (email)\n);"
+                },
+                {
+                    "details": {
+                        "table": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": "shop"
+                            },
+                            "name": "events"
+                        },
+                        "columns": [
+                            {
+                                "name": "id",
+                                "typeName": "int4",
+                                "size": 10,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 4,
+                                "scale": 0
+                            },
+                            {
+                                "name": "at",
+                                "typeName": "date",
+                                "size": 13,
+                                "nullable": false,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 91,
+                                "scale": 0
+                            }
+                        ],
+                        "indexes": [],
+                        "foreignKeys": [],
+                        "primaryKeyName": null
+                    },
+                    "constraints": [],
+                    "triggers": [],
+                    "ddl": "CREATE TABLE \"shop\".\"events\" (\n    \"id\" integer,\n    \"at\" date NOT NULL\n) PARTITION BY RANGE (at);"
+                },
+                {
+                    "details": {
+                        "table": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": "shop"
+                            },
+                            "name": "orders"
+                        },
+                        "columns": [
+                            {
+                                "name": "id",
+                                "typeName": "int8",
+                                "size": 19,
+                                "nullable": false,
+                                "defaultValue": null,
+                                "autoIncrement": true,
+                                "primaryKey": true,
+                                "jdbcType": -5,
+                                "scale": 0
+                            },
+                            {
+                                "name": "customer_id",
+                                "typeName": "int4",
+                                "size": 10,
+                                "nullable": false,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 4,
+                                "scale": 0
+                            },
+                            {
+                                "name": "total",
+                                "typeName": "numeric",
+                                "size": 10,
+                                "nullable": false,
+                                "defaultValue": "0",
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 2,
+                                "scale": 2
+                            },
+                            {
+                                "name": "qty",
+                                "typeName": "int4",
+                                "size": 10,
+                                "nullable": false,
+                                "defaultValue": "1",
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 4,
+                                "scale": 0
+                            },
+                            {
+                                "name": "total_with_tax",
+                                "typeName": "numeric",
+                                "size": 0,
+                                "nullable": true,
+                                "defaultValue": "(total * 1.1)",
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 2,
+                                "scale": null
+                            },
+                            {
+                                "name": "status",
+                                "typeName": "text",
+                                "size": 2147483647,
+                                "nullable": false,
+                                "defaultValue": "'new'::text",
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 12,
+                                "scale": 0
+                            },
+                            {
+                                "name": "during",
+                                "typeName": "tsrange",
+                                "size": 2147483647,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 1111,
+                                "scale": 0
+                            }
+                        ],
+                        "indexes": [
+                            {
+                                "name": "orders_pk",
+                                "columns": [
+                                    "id"
+                                ],
+                                "unique": true
+                            },
+                            {
+                                "name": "no_overlap",
+                                "columns": [
+                                    "customer_id",
+                                    "during"
+                                ],
+                                "unique": false
+                            },
+                            {
+                                "name": "orders_lower",
+                                "columns": [
+                                    "lower(status)"
+                                ],
+                                "unique": false
+                            },
+                            {
+                                "name": "orders_status",
+                                "columns": [
+                                    "status"
+                                ],
+                                "unique": false
+                            }
+                        ],
+                        "foreignKeys": [
+                            {
+                                "name": "orders_customer_id_fkey",
+                                "columns": [
+                                    "customer_id"
+                                ],
+                                "referencedTable": {
+                                    "namespace": {
+                                        "catalog": null,
+                                        "schema": "shop"
+                                    },
+                                    "name": "customers"
+                                },
+                                "referencedColumns": [
+                                    "id"
+                                ],
+                                "onUpdate": "SET NULL",
+                                "onDelete": "CASCADE"
+                            }
+                        ],
+                        "primaryKeyName": "orders_pk"
+                    },
+                    "constraints": [
+                        {
+                            "name": "orders_pk",
+                            "kind": "PrimaryKey",
+                            "columns": [
+                                "id"
+                            ],
+                            "definition": "PRIMARY KEY (id)"
+                        },
+                        {
+                            "name": "orders_customer_id_fkey",
+                            "kind": "ForeignKey",
+                            "columns": [
+                                "customer_id"
+                            ],
+                            "definition": "FOREIGN KEY (customer_id) REFERENCES shop.customers(id) ON UPDATE SET NULL ON DELETE CASCADE"
+                        },
+                        {
+                            "name": "positive_total",
+                            "kind": "Check",
+                            "columns": [
+                                "total"
+                            ],
+                            "definition": "CHECK (total >= 0::numeric)"
+                        },
+                        {
+                            "name": "no_overlap",
+                            "kind": "Exclusion",
+                            "columns": [
+                                "customer_id",
+                                "during"
+                            ],
+                            "definition": "EXCLUDE USING gist (customer_id WITH =, during WITH &&)"
+                        }
+                    ],
+                    "triggers": [
+                        {
+                            "name": "orders_audit",
+                            "timing": "AFTER",
+                            "events": "DELETE",
+                            "enabled": false,
+                            "definition": "CREATE TRIGGER orders_audit AFTER DELETE ON shop.orders FOR EACH STATEMENT EXECUTE FUNCTION shop.touch()"
+                        },
+                        {
+                            "name": "orders_touch",
+                            "timing": "BEFORE",
+                            "events": "INSERT OR UPDATE",
+                            "enabled": true,
+                            "definition": "CREATE TRIGGER orders_touch BEFORE INSERT OR UPDATE ON shop.orders FOR EACH ROW EXECUTE FUNCTION shop.touch()"
+                        }
+                    ],
+                    "ddl": "CREATE TABLE \"shop\".\"orders\" (\n    \"id\" bigint GENERATED BY DEFAULT AS IDENTITY NOT NULL,\n    \"customer_id\" integer NOT NULL,\n    \"total\" numeric(10,2) DEFAULT 0 NOT NULL,\n    \"qty\" integer DEFAULT 1 NOT NULL,\n    \"total_with_tax\" numeric GENERATED ALWAYS AS ((total * 1.1)) STORED,\n    \"status\" text DEFAULT 'new'::text NOT NULL,\n    \"during\" tsrange,\n    CONSTRAINT \"orders_pk\" PRIMARY KEY (id),\n    CONSTRAINT \"orders_customer_id_fkey\" FOREIGN KEY (customer_id) REFERENCES shop.customers(id) ON UPDATE SET NULL ON DELETE CASCADE,\n    CONSTRAINT \"positive_total\" CHECK (total >= 0::numeric),\n    CONSTRAINT \"no_overlap\" EXCLUDE USING gist (customer_id WITH =, during WITH &&)\n);\n\nCREATE INDEX orders_lower ON shop.orders USING btree (lower(status));\n\nCREATE INDEX orders_status ON shop.orders USING btree (status) WHERE (status <> 'done'::text);\n\nCREATE TRIGGER orders_audit AFTER DELETE ON shop.orders FOR EACH STATEMENT EXECUTE FUNCTION shop.touch();\n\nCREATE TRIGGER orders_touch BEFORE INSERT OR UPDATE ON shop.orders FOR EACH ROW EXECUTE FUNCTION shop.touch();\n\nALTER TABLE \"shop\".\"orders\" DISABLE TRIGGER \"orders_audit\";\n\nCOMMENT ON TABLE \"shop\".\"orders\" IS 'Customer''s orders';\n\nCOMMENT ON COLUMN \"shop\".\"orders\".\"total\" IS 'Gross total';"
+                },
+                {
+                    "details": {
+                        "table": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": "shop"
+                            },
+                            "name": "totals"
+                        },
+                        "columns": [
+                            {
+                                "name": "customer_id",
+                                "typeName": "int4",
+                                "size": 10,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 4,
+                                "scale": 0
+                            },
+                            {
+                                "name": "s",
+                                "typeName": "numeric",
+                                "size": 0,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 2,
+                                "scale": null
+                            }
+                        ],
+                        "indexes": [],
+                        "foreignKeys": [],
+                        "primaryKeyName": null
+                    },
+                    "constraints": [],
+                    "triggers": [],
+                    "ddl": "CREATE MATERIALIZED VIEW \"shop\".\"totals\" AS\n SELECT customer_id,\n    sum(total) AS s\n   FROM shop.orders\n  GROUP BY customer_id;"
+                }
+            ],
+            "relations": [
+                [],
+                [
+                    {
+                        "from": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": "shop"
+                            },
+                            "name": "orders"
+                        },
+                        "fromColumns": [
+                            "customer_id"
+                        ],
+                        "to": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": "shop"
+                            },
+                            "name": "customers"
+                        },
+                        "toColumns": [
+                            "id"
+                        ]
+                    }
+                ],
+                [],
+                [
+                    {
+                        "from": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": "shop"
+                            },
+                            "name": "orders"
+                        },
+                        "fromColumns": [
+                            "customer_id"
+                        ],
+                        "to": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": "shop"
+                            },
+                            "name": "customers"
+                        },
+                        "toColumns": [
+                            "id"
+                        ]
+                    }
+                ],
+                []
+            ]
+        }
+    ],
+    "queries": [
+        {
+            "sql": "SELECT * FROM shop.orders ORDER BY id",
+            "columns": [
+                {
+                    "name": "id",
+                    "typeName": "bigserial",
+                    "jdbcType": -5
+                },
+                {
+                    "name": "customer_id",
+                    "typeName": "int4",
+                    "jdbcType": 4
+                },
+                {
+                    "name": "total",
+                    "typeName": "numeric",
+                    "jdbcType": 2
+                },
+                {
+                    "name": "qty",
+                    "typeName": "int4",
+                    "jdbcType": 4
+                },
+                {
+                    "name": "total_with_tax",
+                    "typeName": "numeric",
+                    "jdbcType": 2
+                },
+                {
+                    "name": "status",
+                    "typeName": "text",
+                    "jdbcType": 12
+                },
+                {
+                    "name": "during",
+                    "typeName": "tsrange",
+                    "jdbcType": 1111
+                }
+            ],
+            "rows": []
+        },
+        {
+            "sql": "SELECT 1 AS i, 2.5::numeric AS n, 2.5::float8 AS f, 'a'::text AS t, '\\x00ff'::bytea AS b, NULL AS z, true AS yes, DATE '2024-02-03' AS d, TIMESTAMP '2024-02-03 04:05:06.5' AS ts, INTERVAL '1 day 2 hours' AS iv, ARRAY[1,2] AS arr, '{\"a\": 1}'::jsonb AS j, 'b0a1d9d0-0f3e-4b1a-9b6c-6c1f1c0f9a11'::uuid AS u",
+            "columns": [
+                {
+                    "name": "i",
+                    "typeName": "int4",
+                    "jdbcType": 4
+                },
+                {
+                    "name": "n",
+                    "typeName": "numeric",
+                    "jdbcType": 2
+                },
+                {
+                    "name": "f",
+                    "typeName": "float8",
+                    "jdbcType": 8
+                },
+                {
+                    "name": "t",
+                    "typeName": "text",
+                    "jdbcType": 12
+                },
+                {
+                    "name": "b",
+                    "typeName": "bytea",
+                    "jdbcType": -2
+                },
+                {
+                    "name": "z",
+                    "typeName": "text",
+                    "jdbcType": 12
+                },
+                {
+                    "name": "yes",
+                    "typeName": "bool",
+                    "jdbcType": -7
+                },
+                {
+                    "name": "d",
+                    "typeName": "date",
+                    "jdbcType": 91
+                },
+                {
+                    "name": "ts",
+                    "typeName": "timestamp",
+                    "jdbcType": 93
+                },
+                {
+                    "name": "iv",
+                    "typeName": "interval",
+                    "jdbcType": 1111
+                },
+                {
+                    "name": "arr",
+                    "typeName": "_int4",
+                    "jdbcType": 2003
+                },
+                {
+                    "name": "j",
+                    "typeName": "jsonb",
+                    "jdbcType": 1111
+                },
+                {
+                    "name": "u",
+                    "typeName": "uuid",
+                    "jdbcType": 1111
+                }
+            ],
+            "rows": [
+                [
+                    "1",
+                    "2.5",
+                    "2.5",
+                    "a",
+                    "0x00FF",
+                    null,
+                    "t",
+                    "2024-02-03",
+                    "2024-02-03 04:05:06.5",
+                    "1 day 02:00:00",
+                    "{1,2}",
+                    "{\"a\": 1}",
+                    "b0a1d9d0-0f3e-4b1a-9b6c-6c1f1c0f9a11"
+                ]
+            ]
+        }
+    ]
+}

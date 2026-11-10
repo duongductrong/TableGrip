@@ -25,6 +25,8 @@ pub struct Options {
     pub transactions: bool,
     /// A query that runs until cancelled.
     pub endless: &'static str,
+    /// Whether the server honours a cancel request (CockroachDB ignores pgwire's).
+    pub cancellation: bool,
 }
 
 impl Default for Options {
@@ -36,6 +38,7 @@ impl Default for Options {
             foreign_keys: true,
             transactions: true,
             endless: "WITH RECURSIVE c(x) AS (SELECT 1 UNION ALL SELECT x + 1 FROM c) SELECT count(*) FROM c",
+            cancellation: true,
         }
     }
 }
@@ -463,7 +466,9 @@ pub async fn run(db: Arc<dyn RelationalConnection>, o: Options) {
     if o.transactions {
         manual_commit(db.as_ref(), &o).await;
     }
-    cancellation(db.as_ref(), &o).await;
+    if o.cancellation {
+        cancellation(db.as_ref(), &o).await;
+    }
 }
 
 fn suffix_for(o: &Options, key: &str) -> String {
