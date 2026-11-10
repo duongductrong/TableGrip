@@ -1,0 +1,312 @@
+{
+  "subject": "edit-changes",
+  "cases": [
+    {
+      "name": "contract changes",
+      "table": {
+        "schema": "public",
+        "name": "users"
+      },
+      "changes": [
+        {
+          "op": "update",
+          "key": [
+            [
+              "id",
+              "1",
+              4,
+              true,
+              false
+            ]
+          ],
+          "values": [
+            [
+              "name",
+              "carol2",
+              12,
+              false,
+              false
+            ]
+          ]
+        },
+        {
+          "op": "delete",
+          "key": [
+            [
+              "id",
+              "2",
+              4,
+              true,
+              false
+            ]
+          ]
+        },
+        {
+          "op": "insert",
+          "values": [
+            [
+              "id",
+              "4",
+              4,
+              true,
+              false
+            ],
+            [
+              "name",
+              "dave",
+              12,
+              false,
+              false
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ordered deletes then updates then inserts",
+      "table": {
+        "schema": "public",
+        "name": "users"
+      },
+      "changes": [
+        {
+          "op": "insert",
+          "values": [
+            [
+              "id",
+              "9",
+              4,
+              true,
+              false
+            ]
+          ]
+        },
+        {
+          "op": "update",
+          "key": [
+            [
+              "id",
+              "1",
+              4,
+              true,
+              false
+            ]
+          ],
+          "values": [
+            [
+              "name",
+              "x",
+              12,
+              false,
+              false
+            ]
+          ]
+        },
+        {
+          "op": "delete",
+          "key": [
+            [
+              "id",
+              "3",
+              4,
+              true,
+              false
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "null key uses IS NULL",
+      "table": {
+        "schema": "public",
+        "name": "users"
+      },
+      "changes": [
+        {
+          "op": "delete",
+          "key": [
+            [
+              "a",
+              null,
+              12,
+              false,
+              false
+            ],
+            [
+              "b",
+              "2",
+              4,
+              true,
+              false
+            ]
+          ]
+        },
+        {
+          "op": "update",
+          "key": [
+            [
+              "a",
+              null,
+              12,
+              false,
+              false
+            ]
+          ],
+          "values": [
+            [
+              "b",
+              null,
+              4,
+              true,
+              false
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "set default",
+      "table": {
+        "schema": "public",
+        "name": "users"
+      },
+      "changes": [
+        {
+          "op": "update",
+          "key": [
+            [
+              "id",
+              "1",
+              4,
+              true,
+              false
+            ]
+          ],
+          "values": [
+            [
+              "created",
+              null,
+              93,
+              false,
+              true
+            ],
+            [
+              "name",
+              "n",
+              12,
+              false,
+              false
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "insert default values",
+      "table": {
+        "schema": "public",
+        "name": "users"
+      },
+      "changes": [
+        {
+          "op": "insert",
+          "values": []
+        }
+      ]
+    },
+    {
+      "name": "quotes and odd identifiers",
+      "table": {
+        "catalog": "app",
+        "name": "odd \"t\""
+      },
+      "changes": [
+        {
+          "op": "update",
+          "key": [
+            [
+              "Id",
+              "1",
+              4,
+              true,
+              false
+            ]
+          ],
+          "values": [
+            [
+              "a b",
+              "it's",
+              12,
+              false,
+              false
+            ],
+            [
+              "x]y",
+              "back\\slash",
+              12,
+              false,
+              false
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "numeric text that is not a number",
+      "table": {
+        "schema": "public",
+        "name": "users"
+      },
+      "changes": [
+        {
+          "op": "insert",
+          "values": [
+            [
+              "n",
+              "12abc",
+              4,
+              true,
+              false
+            ],
+            [
+              "d",
+              "1.5e3",
+              3,
+              true,
+              false
+            ],
+            [
+              "u",
+              "",
+              12,
+              false,
+              false
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "unicode values",
+      "table": {
+        "schema": "public",
+        "name": "users"
+      },
+      "changes": [
+        {
+          "op": "insert",
+          "values": [
+            [
+              "name",
+              "Tiếng Việt 😀",
+              12,
+              false,
+              false
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

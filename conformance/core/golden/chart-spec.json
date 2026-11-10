@@ -1,0 +1,1658 @@
+{
+    "subject": "chart-spec",
+    "cases": [
+        {
+            "name": "a bar of numbers over categories is fine",
+            "output": {
+                "validate": [],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "name",
+                    "n"
+                ],
+                "labels": [
+                    "n"
+                ]
+            }
+        },
+        {
+            "name": "a line over dates",
+            "output": {
+                "validate": [],
+                "adjusted": {
+                    "type": "Line",
+                    "x": "d",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "d",
+                    "n"
+                ],
+                "labels": [
+                    "n"
+                ]
+            }
+        },
+        {
+            "name": "a line over dates grouped",
+            "output": {
+                "validate": [],
+                "adjusted": {
+                    "type": "Line",
+                    "x": "d",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "Sum"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": "Month",
+                    "horizontal": false
+                },
+                "aggregates": true,
+                "columns": [
+                    "d",
+                    "n"
+                ],
+                "labels": [
+                    "sum(n)"
+                ]
+            }
+        },
+        {
+            "name": "an unknown x",
+            "output": {
+                "validate": [
+                    "There is no column \"missing\" for x; the columns are: name, n, d, blob, s, n2."
+                ],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "missing",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "missing",
+                    "n"
+                ],
+                "labels": [
+                    "n"
+                ]
+            }
+        },
+        {
+            "name": "an unknown measure",
+            "output": {
+                "validate": [
+                    "There is no column \"nope\" for y; the columns are: name, n, d, blob, s, n2."
+                ],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "nope",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "name",
+                    "nope"
+                ],
+                "labels": [
+                    "nope"
+                ]
+            }
+        },
+        {
+            "name": "an unknown series",
+            "output": {
+                "validate": [
+                    "There is no column \"nope\" for series; the columns are: name, n, d, blob, s, n2."
+                ],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": "nope",
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "name",
+                    "n",
+                    "nope"
+                ],
+                "labels": [
+                    "n"
+                ]
+            }
+        },
+        {
+            "name": "every unknown at once",
+            "output": {
+                "validate": [
+                    "There is no column \"a\" for x; the columns are: name, n, d, blob, s, n2.",
+                    "There is no column \"b\" for y; the columns are: name, n, d, blob, s, n2.",
+                    "There is no column \"c\" for series; the columns are: name, n, d, blob, s, n2."
+                ],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "a",
+                    "y": [
+                        {
+                            "column": "b",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": "c",
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "a",
+                    "b",
+                    "c"
+                ],
+                "labels": [
+                    "b"
+                ]
+            }
+        },
+        {
+            "name": "no measures",
+            "output": {
+                "validate": [
+                    "Choose at least one measure for y."
+                ],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "name",
+                    "y": [],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "name"
+                ],
+                "labels": []
+            }
+        },
+        {
+            "name": "six measures",
+            "output": {
+                "validate": [
+                    "At most 5 measures; there are 6."
+                ],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        },
+                        {
+                            "column": "n2",
+                            "aggregate": "None"
+                        },
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        },
+                        {
+                            "column": "n2",
+                            "aggregate": "None"
+                        },
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        },
+                        {
+                            "column": "n2",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "name",
+                    "n",
+                    "n2"
+                ],
+                "labels": [
+                    "n",
+                    "n2",
+                    "n",
+                    "n2",
+                    "n",
+                    "n2"
+                ]
+            }
+        },
+        {
+            "name": "five measures",
+            "output": {
+                "validate": [],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        },
+                        {
+                            "column": "n2",
+                            "aggregate": "None"
+                        },
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        },
+                        {
+                            "column": "n2",
+                            "aggregate": "None"
+                        },
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "name",
+                    "n",
+                    "n2"
+                ],
+                "labels": [
+                    "n",
+                    "n2",
+                    "n",
+                    "n2",
+                    "n"
+                ]
+            }
+        },
+        {
+            "name": "a measure that isn't numeric",
+            "output": {
+                "validate": [
+                    "\"name\" isn't numeric (category); count it or pick a numeric column."
+                ],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "name",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "name"
+                ],
+                "labels": [
+                    "name"
+                ]
+            }
+        },
+        {
+            "name": "a measure that is a date",
+            "output": {
+                "validate": [
+                    "\"d\" isn't numeric (temporal); count it or pick a numeric column."
+                ],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "d",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "name",
+                    "d"
+                ],
+                "labels": [
+                    "d"
+                ]
+            }
+        },
+        {
+            "name": "a measure that is other",
+            "output": {
+                "validate": [
+                    "\"blob\" isn't numeric (other); count it or pick a numeric column."
+                ],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "blob",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "name",
+                    "blob"
+                ],
+                "labels": [
+                    "blob"
+                ]
+            }
+        },
+        {
+            "name": "count needs no numbers",
+            "output": {
+                "validate": [],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "name",
+                            "aggregate": "Count"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": true,
+                "columns": [
+                    "name"
+                ],
+                "labels": [
+                    "count(name)"
+                ]
+            }
+        },
+        {
+            "name": "count of an unreadable column",
+            "output": {
+                "validate": [],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "blob",
+                            "aggregate": "Count"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": true,
+                "columns": [
+                    "name",
+                    "blob"
+                ],
+                "labels": [
+                    "count(blob)"
+                ]
+            }
+        },
+        {
+            "name": "sum of text",
+            "output": {
+                "validate": [
+                    "\"name\" isn't numeric (category); count it or pick a numeric column."
+                ],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "name",
+                            "aggregate": "Sum"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": true,
+                "columns": [
+                    "name"
+                ],
+                "labels": [
+                    "sum(name)"
+                ]
+            }
+        },
+        {
+            "name": "series can't be x",
+            "output": {
+                "validate": [
+                    "The series column can't also be x."
+                ],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "name",
+                    "n"
+                ],
+                "labels": [
+                    "n"
+                ]
+            }
+        },
+        {
+            "name": "series can't be other",
+            "output": {
+                "validate": [
+                    "\"blob\" can't split series: its values can't be compared."
+                ],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": "blob",
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "name",
+                    "n",
+                    "blob"
+                ],
+                "labels": [
+                    "n"
+                ]
+            }
+        },
+        {
+            "name": "series with several measures",
+            "output": {
+                "validate": [
+                    "Split by series with one measure only."
+                ],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": "s",
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "name",
+                    "n",
+                    "n2",
+                    "s"
+                ],
+                "labels": [
+                    "n",
+                    "n2"
+                ]
+            }
+        },
+        {
+            "name": "series with one measure",
+            "output": {
+                "validate": [],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": "s",
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "name",
+                    "n",
+                    "s"
+                ],
+                "labels": [
+                    "n"
+                ]
+            }
+        },
+        {
+            "name": "a numeric series",
+            "output": {
+                "validate": [],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": "n2",
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "name",
+                    "n",
+                    "n2"
+                ],
+                "labels": [
+                    "n"
+                ]
+            }
+        },
+        {
+            "name": "x can't be other",
+            "output": {
+                "validate": [
+                    "\"blob\" can't be plotted on x: its values are neither numbers, dates nor categories."
+                ],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "blob",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "blob",
+                    "n"
+                ],
+                "labels": [
+                    "n"
+                ]
+            }
+        },
+        {
+            "name": "bucket on a category",
+            "output": {
+                "validate": [
+                    "Only dates can be grouped by day; \"name\" is category."
+                ],
+                "adjusted": {
+                    "type": "Line",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "Sum"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": true,
+                "columns": [
+                    "name",
+                    "n"
+                ],
+                "labels": [
+                    "sum(n)"
+                ]
+            }
+        },
+        {
+            "name": "bucket on a number",
+            "output": {
+                "validate": [
+                    "Only dates can be grouped by hour; \"n\" is numeric."
+                ],
+                "adjusted": {
+                    "type": "Line",
+                    "x": "n",
+                    "y": [
+                        {
+                            "column": "n2",
+                            "aggregate": "Sum"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": true,
+                "columns": [
+                    "n",
+                    "n2"
+                ],
+                "labels": [
+                    "sum(n2)"
+                ]
+            }
+        },
+        {
+            "name": "bucket needs aggregates",
+            "output": {
+                "validate": [
+                    "Grouping by day needs an aggregate (sum, average, count…) for every measure."
+                ],
+                "adjusted": {
+                    "type": "Line",
+                    "x": "d",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "Sum"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": "Day",
+                    "horizontal": false
+                },
+                "aggregates": true,
+                "columns": [
+                    "d",
+                    "n"
+                ],
+                "labels": [
+                    "n"
+                ]
+            }
+        },
+        {
+            "name": "bucket needs aggregates for every measure",
+            "output": {
+                "validate": [
+                    "Grouping by week needs an aggregate (sum, average, count…) for every measure."
+                ],
+                "adjusted": {
+                    "type": "Line",
+                    "x": "d",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "Avg"
+                        },
+                        {
+                            "column": "n2",
+                            "aggregate": "Sum"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": "Week",
+                    "horizontal": false
+                },
+                "aggregates": true,
+                "columns": [
+                    "d",
+                    "n",
+                    "n2"
+                ],
+                "labels": [
+                    "avg(n)",
+                    "n2"
+                ]
+            }
+        },
+        {
+            "name": "bucket with aggregates",
+            "output": {
+                "validate": [],
+                "adjusted": {
+                    "type": "Line",
+                    "x": "d",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "Avg"
+                        },
+                        {
+                            "column": "n2",
+                            "aggregate": "Max"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": "Quarter",
+                    "horizontal": false
+                },
+                "aggregates": true,
+                "columns": [
+                    "d",
+                    "n",
+                    "n2"
+                ],
+                "labels": [
+                    "avg(n)",
+                    "max(n2)"
+                ]
+            }
+        },
+        {
+            "name": "a scatter of numbers",
+            "output": {
+                "validate": [],
+                "adjusted": {
+                    "type": "Scatter",
+                    "x": "n",
+                    "y": [
+                        {
+                            "column": "n2",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "n",
+                    "n2"
+                ],
+                "labels": [
+                    "n2"
+                ]
+            }
+        },
+        {
+            "name": "a scatter of dates",
+            "output": {
+                "validate": [],
+                "adjusted": {
+                    "type": "Scatter",
+                    "x": "d",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "d",
+                    "n"
+                ],
+                "labels": [
+                    "n"
+                ]
+            }
+        },
+        {
+            "name": "a scatter of categories",
+            "output": {
+                "validate": [
+                    "A scatter plot needs numbers or dates on x."
+                ],
+                "adjusted": {
+                    "type": "Scatter",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "name",
+                    "n"
+                ],
+                "labels": [
+                    "n"
+                ]
+            }
+        },
+        {
+            "name": "a scatter with a bucket",
+            "output": {
+                "validate": [],
+                "adjusted": {
+                    "type": "Scatter",
+                    "x": "d",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "Sum"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": true,
+                "columns": [
+                    "d",
+                    "n"
+                ],
+                "labels": [
+                    "sum(n)"
+                ]
+            }
+        },
+        {
+            "name": "a pie of categories",
+            "output": {
+                "validate": [],
+                "adjusted": {
+                    "type": "Pie",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "name",
+                    "n"
+                ],
+                "labels": [
+                    "n"
+                ]
+            }
+        },
+        {
+            "name": "a pie of numbers",
+            "output": {
+                "validate": [
+                    "A pie needs categories for its slices; \"n\" is numeric."
+                ],
+                "adjusted": {
+                    "type": "Pie",
+                    "x": "n",
+                    "y": [
+                        {
+                            "column": "n2",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "n",
+                    "n2"
+                ],
+                "labels": [
+                    "n2"
+                ]
+            }
+        },
+        {
+            "name": "a pie of dates",
+            "output": {
+                "validate": [
+                    "A pie needs categories for its slices; \"d\" is temporal."
+                ],
+                "adjusted": {
+                    "type": "Pie",
+                    "x": "d",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "d",
+                    "n"
+                ],
+                "labels": [
+                    "n"
+                ]
+            }
+        },
+        {
+            "name": "a pie with two measures",
+            "output": {
+                "validate": [
+                    "A pie shows one measure, without series."
+                ],
+                "adjusted": {
+                    "type": "Pie",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "name",
+                    "n",
+                    "n2"
+                ],
+                "labels": [
+                    "n",
+                    "n2"
+                ]
+            }
+        },
+        {
+            "name": "a pie with a series",
+            "output": {
+                "validate": [
+                    "A pie shows one measure, without series."
+                ],
+                "adjusted": {
+                    "type": "Pie",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "name",
+                    "n",
+                    "s"
+                ],
+                "labels": [
+                    "n"
+                ]
+            }
+        },
+        {
+            "name": "a pie with two measures and a series",
+            "output": {
+                "validate": [
+                    "Split by series with one measure only.",
+                    "A pie shows one measure, without series."
+                ],
+                "adjusted": {
+                    "type": "Pie",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "name",
+                    "n",
+                    "n2",
+                    "s"
+                ],
+                "labels": [
+                    "n",
+                    "n2"
+                ]
+            }
+        },
+        {
+            "name": "an area over dates",
+            "output": {
+                "validate": [],
+                "adjusted": {
+                    "type": "Area",
+                    "x": "d",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "d",
+                    "n"
+                ],
+                "labels": [
+                    "n"
+                ]
+            }
+        },
+        {
+            "name": "an unknown x skips the x checks",
+            "output": {
+                "validate": [
+                    "There is no column \"missing\" for x; the columns are: name, n, d, blob, s, n2.",
+                    "Split by series with one measure only."
+                ],
+                "adjusted": {
+                    "type": "Pie",
+                    "x": "missing",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": true,
+                "columns": [
+                    "missing",
+                    "n",
+                    "n2",
+                    "s"
+                ],
+                "labels": [
+                    "n",
+                    "n2"
+                ]
+            }
+        },
+        {
+            "name": "horizontal bars",
+            "output": {
+                "validate": [],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "Sum"
+                        }
+                    ],
+                    "series": "s",
+                    "bucket": null,
+                    "horizontal": true
+                },
+                "aggregates": true,
+                "columns": [
+                    "name",
+                    "n",
+                    "s"
+                ],
+                "labels": [
+                    "sum(n)"
+                ]
+            }
+        },
+        {
+            "name": "adjusted drops a bucket for a pie of dates",
+            "output": {
+                "validate": [
+                    "A pie needs categories for its slices; \"d\" is temporal.",
+                    "A pie shows one measure, without series."
+                ],
+                "adjusted": {
+                    "type": "Pie",
+                    "x": "d",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "Sum"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": "Day",
+                    "horizontal": false
+                },
+                "aggregates": true,
+                "columns": [
+                    "d",
+                    "n",
+                    "n2"
+                ],
+                "labels": [
+                    "sum(n)",
+                    "sum(n2)"
+                ]
+            }
+        },
+        {
+            "name": "adjusted drops series equal to x",
+            "output": {
+                "validate": [
+                    "The series column can't also be x.",
+                    "Split by series with one measure only."
+                ],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        },
+                        {
+                            "column": "n2",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "name",
+                    "n",
+                    "n2"
+                ],
+                "labels": [
+                    "n",
+                    "n2"
+                ]
+            }
+        },
+        {
+            "name": "adjusted keeps one measure for a series",
+            "output": {
+                "validate": [
+                    "Split by series with one measure only."
+                ],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": "s",
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "name",
+                    "n",
+                    "n2",
+                    "s"
+                ],
+                "labels": [
+                    "n",
+                    "n2"
+                ]
+            }
+        },
+        {
+            "name": "adjusted fills in sum for a bucket",
+            "output": {
+                "validate": [
+                    "Grouping by month needs an aggregate (sum, average, count…) for every measure."
+                ],
+                "adjusted": {
+                    "type": "Line",
+                    "x": "d",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "Sum"
+                        },
+                        {
+                            "column": "n2",
+                            "aggregate": "Max"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": "Month",
+                    "horizontal": false
+                },
+                "aggregates": true,
+                "columns": [
+                    "d",
+                    "n",
+                    "n2"
+                ],
+                "labels": [
+                    "n",
+                    "max(n2)"
+                ]
+            }
+        },
+        {
+            "name": "adjusted drops the bucket of a scatter",
+            "output": {
+                "validate": [
+                    "Grouping by month needs an aggregate (sum, average, count…) for every measure."
+                ],
+                "adjusted": {
+                    "type": "Scatter",
+                    "x": "d",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": true,
+                "columns": [
+                    "d",
+                    "n"
+                ],
+                "labels": [
+                    "n"
+                ]
+            }
+        },
+        {
+            "name": "adjusted drops the bucket of other kinds",
+            "output": {
+                "validate": [
+                    "Only dates can be grouped by month; \"name\" is category."
+                ],
+                "adjusted": {
+                    "type": "Line",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "Count"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": true,
+                "columns": [
+                    "name",
+                    "n"
+                ],
+                "labels": [
+                    "count(n)"
+                ]
+            }
+        },
+        {
+            "name": "adjusted for an unknown x",
+            "output": {
+                "validate": [
+                    "There is no column \"zz\" for x; the columns are: name, n, d, blob, s, n2."
+                ],
+                "adjusted": {
+                    "type": "Line",
+                    "x": "zz",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": true,
+                "columns": [
+                    "zz",
+                    "n"
+                ],
+                "labels": [
+                    "n"
+                ]
+            }
+        },
+        {
+            "name": "columns without duplicates",
+            "output": {
+                "validate": [
+                    "Split by series with one measure only."
+                ],
+                "adjusted": {
+                    "type": "Line",
+                    "x": "d",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": "s",
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": true,
+                "columns": [
+                    "d",
+                    "n",
+                    "n2",
+                    "s"
+                ],
+                "labels": [
+                    "n",
+                    "sum(n)",
+                    "n2"
+                ]
+            }
+        },
+        {
+            "name": "columns when x repeats",
+            "output": {
+                "validate": [
+                    "The series column can't also be x.",
+                    "Split by series with one measure only."
+                ],
+                "adjusted": {
+                    "type": "Line",
+                    "x": "n",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        },
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "n"
+                ],
+                "labels": [
+                    "n",
+                    "n"
+                ]
+            }
+        },
+        {
+            "name": "labels",
+            "output": {
+                "validate": [
+                    "At most 5 measures; there are 6."
+                ],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        },
+                        {
+                            "column": "n",
+                            "aggregate": "Avg"
+                        },
+                        {
+                            "column": "n2",
+                            "aggregate": "Min"
+                        },
+                        {
+                            "column": "n2",
+                            "aggregate": "Max"
+                        },
+                        {
+                            "column": "name",
+                            "aggregate": "Count"
+                        },
+                        {
+                            "column": "n",
+                            "aggregate": "Sum"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": true,
+                "columns": [
+                    "name",
+                    "n",
+                    "n2"
+                ],
+                "labels": [
+                    "n",
+                    "avg(n)",
+                    "min(n2)",
+                    "max(n2)",
+                    "count(name)",
+                    "sum(n)"
+                ]
+            }
+        },
+        {
+            "name": "profiles from rows",
+            "output": {
+                "validate": [
+                    "There is no column \"n\" for y; the columns are: name."
+                ],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "name",
+                    "n"
+                ],
+                "labels": [
+                    "n"
+                ]
+            }
+        },
+        {
+            "name": "empty profiles",
+            "output": {
+                "validate": [
+                    "There is no column \"name\" for x; the columns are: .",
+                    "There is no column \"n\" for y; the columns are: ."
+                ],
+                "adjusted": {
+                    "type": "Bar",
+                    "x": "name",
+                    "y": [
+                        {
+                            "column": "n",
+                            "aggregate": "None"
+                        }
+                    ],
+                    "series": null,
+                    "bucket": null,
+                    "horizontal": false
+                },
+                "aggregates": false,
+                "columns": [
+                    "name",
+                    "n"
+                ],
+                "labels": [
+                    "n"
+                ]
+            }
+        },
+        {
+            "name": "parse names",
+            "output": {
+                "type": [
+                    "Line",
+                    "Line",
+                    "Line",
+                    "Area",
+                    "Bar",
+                    "Scatter",
+                    "Pie",
+                    null,
+                    null,
+                    null,
+                    null
+                ],
+                "aggregate": [
+                    "Sum",
+                    "Sum",
+                    "Sum",
+                    "Avg",
+                    "Avg",
+                    "Avg",
+                    "Avg",
+                    "Avg",
+                    "Avg",
+                    "None",
+                    "None",
+                    "None",
+                    "None",
+                    "Min",
+                    "Max",
+                    "Count",
+                    "Count",
+                    null,
+                    null
+                ],
+                "bucket": [
+                    "Hour",
+                    "Day",
+                    "Week",
+                    "Month",
+                    "Quarter",
+                    "Year",
+                    null,
+                    null,
+                    null
+                ]
+            }
+        }
+    ]
+}

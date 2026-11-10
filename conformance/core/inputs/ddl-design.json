@@ -1,0 +1,227 @@
+{
+  "subject": "ddl-design",
+  "cases": [
+    {
+      "name": "design from details",
+      "details": {
+        "table": {
+          "catalog": null,
+          "schema": "app",
+          "name": "users"
+        },
+        "columns": [
+          {
+            "name": "id",
+            "typeName": "int4",
+            "size": 10,
+            "nullable": false,
+            "defaultValue": "nextval('users_id_seq'::regclass)",
+            "autoIncrement": true,
+            "primaryKey": true,
+            "scale": null
+          },
+          {
+            "name": "email",
+            "typeName": "varchar",
+            "size": 100,
+            "nullable": false,
+            "defaultValue": null,
+            "autoIncrement": false,
+            "primaryKey": false,
+            "scale": null,
+            "jdbcType": 12
+          },
+          {
+            "name": "status",
+            "typeName": "varchar",
+            "size": 20,
+            "nullable": true,
+            "defaultValue": "draft",
+            "autoIncrement": false,
+            "primaryKey": false,
+            "scale": null,
+            "jdbcType": 12
+          },
+          {
+            "name": "n",
+            "typeName": "int",
+            "size": null,
+            "nullable": true,
+            "defaultValue": "42",
+            "autoIncrement": false,
+            "primaryKey": false,
+            "scale": null
+          },
+          {
+            "name": "price",
+            "typeName": "numeric",
+            "size": 10,
+            "nullable": true,
+            "defaultValue": null,
+            "autoIncrement": false,
+            "primaryKey": false,
+            "scale": 2
+          },
+          {
+            "name": "code",
+            "typeName": "nvarchar",
+            "size": 2147483647,
+            "nullable": true,
+            "defaultValue": null,
+            "autoIncrement": false,
+            "primaryKey": false,
+            "scale": null
+          },
+          {
+            "name": "k",
+            "typeName": "int identity",
+            "size": 10,
+            "nullable": false,
+            "defaultValue": null,
+            "autoIncrement": false,
+            "primaryKey": false,
+            "scale": null
+          }
+        ],
+        "indexes": [
+          {
+            "name": "users_pkey",
+            "columns": [
+              "id"
+            ],
+            "unique": true
+          },
+          {
+            "name": "users_email_key",
+            "columns": [
+              "email"
+            ],
+            "unique": true
+          },
+          {
+            "name": "users_status",
+            "columns": [
+              "status"
+            ],
+            "unique": false
+          },
+          {
+            "name": "sqlite_autoindex_users_2",
+            "columns": [
+              "code"
+            ],
+            "unique": true
+          },
+          {
+            "name": "PRIMARY",
+            "columns": [
+              "id"
+            ],
+            "unique": true
+          }
+        ],
+        "foreignKeys": [],
+        "primaryKeyName": "users_pkey"
+      },
+      "constraints": [
+        {
+          "name": "users_email_key",
+          "kind": "Unique",
+          "columns": [
+            "email"
+          ],
+          "definition": "UNIQUE (email)"
+        },
+        {
+          "name": "positive",
+          "kind": "Check",
+          "columns": [
+            "n"
+          ],
+          "definition": "CHECK (n > 0)"
+        }
+      ],
+      "triggers": [
+        {
+          "name": "t",
+          "definition": "CREATE TRIGGER t AFTER INSERT ON users BEGIN SELECT 1; END"
+        }
+      ]
+    },
+    {
+      "name": "primary key index names",
+      "details": {
+        "table": {
+          "catalog": null,
+          "schema": "app",
+          "name": "t"
+        },
+        "columns": [
+          {
+            "name": "id",
+            "typeName": "integer",
+            "size": null,
+            "nullable": true,
+            "defaultValue": null,
+            "autoIncrement": false,
+            "primaryKey": true,
+            "scale": null
+          }
+        ],
+        "indexes": [
+          {
+            "name": "PK__t__123",
+            "columns": [
+              "id"
+            ],
+            "unique": true
+          },
+          {
+            "name": "SYS_IDX_1",
+            "columns": [
+              "id"
+            ],
+            "unique": true
+          },
+          {
+            "name": "SQL123456789012",
+            "columns": [
+              "id"
+            ],
+            "unique": true
+          },
+          {
+            "name": "SQL1",
+            "columns": [
+              "id"
+            ],
+            "unique": true
+          },
+          {
+            "name": "t_pkey",
+            "columns": [
+              "id"
+            ],
+            "unique": false
+          },
+          {
+            "name": "other",
+            "columns": [
+              "id"
+            ],
+            "unique": true
+          },
+          {
+            "name": "PRIMARY_KEY_X",
+            "columns": [
+              "id"
+            ],
+            "unique": true
+          }
+        ],
+        "foreignKeys": [],
+        "primaryKeyName": null
+      }
+    }
+  ]
+}

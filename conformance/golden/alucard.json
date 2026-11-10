@@ -1,0 +1,138 @@
+{
+    "theme": "Alucard",
+    "density": 2.0,
+    "metrics": {
+        "button.default": {
+            "width": 72.0,
+            "height": 28.0
+        },
+        "button.default.disabled": {
+            "width": 72.0,
+            "height": 28.0
+        },
+        "button.outlined": {
+            "width": 72.0,
+            "height": 28.0
+        },
+        "button.outlined.disabled": {
+            "width": 72.0,
+            "height": 28.0
+        },
+        "checkbox.unchecked": {
+            "width": 92.5,
+            "height": 24.0
+        },
+        "checkbox.checked": {
+            "width": 92.5,
+            "height": 24.0
+        },
+        "checkbox.disabled": {
+            "width": 92.5,
+            "height": 24.0
+        },
+        "textfield": {
+            "width": 120.0,
+            "height": 28.0
+        },
+        "textfield.disabled": {
+            "width": 120.0,
+            "height": 28.0
+        },
+        "textfield.error": {
+            "width": 120.0,
+            "height": 28.0
+        },
+        "textfield.focused": {
+            "width": 120.0,
+            "height": 28.0
+        },
+        "divider": {
+            "width": 200.0,
+            "height": 1.0
+        },
+        "divider.horizontal": {
+            "width": 240.0,
+            "height": 1.0
+        },
+        "divider.vertical": {
+            "width": 1.0,
+            "height": 71.0
+        },
+        "divider.toolbar": {
+            "width": 1.0,
+            "height": 18.0
+        },
+        "island": {
+            "width": 120.0,
+            "height": 96.0
+        },
+        "combo.rest": {
+            "width": 200.0,
+            "height": 28.0
+        },
+        "row:0": {
+            "width": 144.0,
+            "height": 28.0
+        },
+        "menu": {
+            "width": 122.0,
+            "height": 117.0
+        },
+        "scroll.top": {
+            "width": 64.0,
+            "height": 160.0
+        },
+        "text:normal": {
+            "width": 77.5,
+            "height": 15.5
+        },
+        "text:editor": {
+            "width": 148.5,
+            "height": 17.0
+        },
+        "text:small": {
+            "width": 73.5,
+            "height": 13.5
+        }
+    },
+    "colors": {
+        "island.background": "#FFFBEB",
+        "button.default.fill": "#644AC9",
+        "button.default.border": "#644AC9",
+        "button.default.outline": "#FFFBEB",
+        "button.default.disabled.fill": "#FFFBEB",
+        "button.default.disabled.border": "#CFCFDE",
+        "button.default.disabled.outline": "#FFFBEB",
+        "button.outlined.fill": "#FFFBEB",
+        "button.outlined.border": "#CFCFDE",
+        "button.outlined.outline": "#FFFBEB",
+        "button.outlined.disabled.fill": "#FFFBEB",
+        "button.outlined.disabled.border": "#E2E0E3",
+        "button.outlined.disabled.outline": "#FFFBEB",
+        "textfield.fill": "#FFFDF5",
+        "textfield.border": "#CFCFDE",
+        "textfield.outline": "#FFFBEB",
+        "textfield.disabled.fill": "#FFFBEB",
+        "textfield.disabled.border": "#CFCFDE",
+        "textfield.disabled.outline": "#FFFBEB",
+        "textfield.error.fill": "#FFFDF5",
+        "textfield.error.border": "#FAD4D8",
+        "textfield.error.outline": "#FAD4D8",
+        "textfield.focused.fill": "#FFFDF5",
+        "textfield.focused.border": "#644AC9",
+        "textfield.focused.outline": "#644AC9",
+        "checkbox.unchecked.box.border": "#A8ADBD",
+        "checkbox.unchecked.box.fill": "#FFFFFF",
+        "checkbox.checked.box.border": "#644AC9",
+        "checkbox.checked.box.fill": "#644AC9",
+        "checkbox.disabled.box.border": "#DFE1E5",
+        "checkbox.disabled.box.fill": "#F7F8FA",
+        "divider": "#DED8C0",
+        "divider.horizontal": "#DED8C0",
+        "divider.vertical": "#DED8C0",
+        "divider.toolbar": "#DED8C0",
+        "island.fill": "#FFFBEB",
+        "island.edge": "#E8E4D6",
+        "frame.background": "#EFEAD2"
+    }
+}

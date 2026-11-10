@@ -1,0 +1,85 @@
+# Checks the Rust workspace (crates/) on macOS, Linux and Windows, and the Kotlin app against the same conformance
+# suite and golden files, on every push or PR that touches either. See docs/plans/rust-migration.md.
+name: Rust
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "crates/**"
+      - "conformance/**"
+      # tg-theme and tg-ui read the shared theme files and icons.
+      - "resources/**"
+      - "app/src/test/kotlin/dev/tablegrip/app/conformance/**"
+      - "core/src/test/kotlin/dev/tablegrip/core/golden/**"
+      # The core golden files follow the Kotlin core.
+      - "core/src/main/**"
+      # The golden files follow the app's theme code.
+      - "app/src/main/kotlin/dev/tablegrip/app/ui/**"
+      - ".github/workflows/rust.yml"
+  pull_request:
+    paths:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "crates/**"
+      - "conformance/**"
+      # tg-theme and tg-ui read the shared theme files and icons.
+      - "resources/**"
+      - "app/src/test/kotlin/dev/tablegrip/app/conformance/**"
+      - "core/src/test/kotlin/dev/tablegrip/core/golden/**"
+      # The core golden files follow the Kotlin core.
+      - "core/src/main/**"
+      # The golden files follow the app's theme code.
+      - "app/src/main/kotlin/dev/tablegrip/app/ui/**"
+      - ".github/workflows/rust.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rust-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Linux libraries GPUI links against
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxkbcommon-x11-dev libwayland-dev libfontconfig-dev libx11-xcb-dev libxcb1-dev libvulkan-dev libasound2-dev libzstd-dev
+      # rustup on the runner installs the toolchain and components rust-toolchain.toml names.
+      - run: cargo fmt --all --check
+        if: runner.os == 'macOS'
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+        if: runner.os == 'macOS'
+      - run: cargo test --workspace --locked
+      - name: Spike builds
+        run: cargo build -p tg-spike --locked
+
+  kotlin:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+      - run: ./gradlew :app:test --tests '*ConformanceTest*' --tests '*GoldenTest*'
+      - run: ./gradlew :core:test --tests '*CoreGoldenTest*'

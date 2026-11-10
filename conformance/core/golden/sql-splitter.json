@@ -1,0 +1,475 @@
+{
+    "subject": "sql-splitter",
+    "cases": [
+        {
+            "name": "two statements",
+            "output": {
+                "statements": [
+                    {
+                        "text": "SELECT 1",
+                        "start": 0,
+                        "end": 8,
+                        "delimiterEnd": 9
+                    },
+                    {
+                        "text": "SELECT 2",
+                        "start": 10,
+                        "end": 18,
+                        "delimiterEnd": 19
+                    }
+                ],
+                "statementAt": [
+                    {
+                        "start": 0,
+                        "end": 8
+                    },
+                    {
+                        "start": 0,
+                        "end": 8
+                    },
+                    {
+                        "start": 10,
+                        "end": 18
+                    },
+                    {
+                        "start": 10,
+                        "end": 18
+                    }
+                ]
+            }
+        },
+        {
+            "name": "semicolon in string and comment",
+            "output": {
+                "statements": [
+                    {
+                        "text": "SELECT ';'",
+                        "start": 0,
+                        "end": 10,
+                        "delimiterEnd": 11
+                    },
+                    {
+                        "text": "SELECT 2",
+                        "start": 26,
+                        "end": 34,
+                        "delimiterEnd": 34
+                    }
+                ],
+                "statementAt": [
+                    {
+                        "start": 0,
+                        "end": 10
+                    },
+                    {
+                        "start": 26,
+                        "end": 34
+                    }
+                ]
+            }
+        },
+        {
+            "name": "trailing statement without semicolon",
+            "output": {
+                "statements": [
+                    {
+                        "text": "SELECT 1",
+                        "start": 0,
+                        "end": 8,
+                        "delimiterEnd": 9
+                    },
+                    {
+                        "text": "SELECT 2",
+                        "start": 11,
+                        "end": 19,
+                        "delimiterEnd": 19
+                    }
+                ],
+                "statementAt": [
+                    {
+                        "start": 11,
+                        "end": 19
+                    }
+                ]
+            }
+        },
+        {
+            "name": "empty statements",
+            "output": {
+                "statements": [],
+                "statementAt": [
+                    null,
+                    null
+                ]
+            }
+        },
+        {
+            "name": "postgres function body",
+            "output": {
+                "statements": [
+                    {
+                        "text": "CREATE FUNCTION f() RETURNS int AS $$ BEGIN RETURN 1; END $$ LANGUAGE plpgsql",
+                        "start": 0,
+                        "end": 77,
+                        "delimiterEnd": 78
+                    },
+                    {
+                        "text": "SELECT f()",
+                        "start": 79,
+                        "end": 89,
+                        "delimiterEnd": 90
+                    }
+                ],
+                "statementAt": [
+                    {
+                        "start": 0,
+                        "end": 77
+                    },
+                    {
+                        "start": 79,
+                        "end": 89
+                    }
+                ]
+            }
+        },
+        {
+            "name": "mysql delimiter command",
+            "output": {
+                "statements": [
+                    {
+                        "text": "CREATE PROCEDURE p() BEGIN SELECT 1; SELECT 2; END",
+                        "start": 13,
+                        "end": 63,
+                        "delimiterEnd": 66
+                    },
+                    {
+                        "text": "CALL p()",
+                        "start": 79,
+                        "end": 87,
+                        "delimiterEnd": 88
+                    }
+                ],
+                "statementAt": [
+                    {
+                        "start": 13,
+                        "end": 63
+                    },
+                    {
+                        "start": 79,
+                        "end": 87
+                    }
+                ]
+            }
+        },
+        {
+            "name": "tsql GO batches",
+            "output": {
+                "statements": [
+                    {
+                        "text": "SELECT 1",
+                        "start": 0,
+                        "end": 8,
+                        "delimiterEnd": 11
+                    },
+                    {
+                        "text": "SELECT 2",
+                        "start": 12,
+                        "end": 20,
+                        "delimiterEnd": 23
+                    }
+                ],
+                "statementAt": [
+                    {
+                        "start": 0,
+                        "end": 8
+                    },
+                    {
+                        "start": 12,
+                        "end": 20
+                    }
+                ]
+            }
+        },
+        {
+            "name": "non-ascii",
+            "output": {
+                "statements": [
+                    {
+                        "text": "SELECT 'ồ'",
+                        "start": 0,
+                        "end": 10,
+                        "delimiterEnd": 11
+                    },
+                    {
+                        "text": "SELECT '😀'",
+                        "start": 11,
+                        "end": 22,
+                        "delimiterEnd": 23
+                    }
+                ],
+                "statementAt": [
+                    {
+                        "start": 0,
+                        "end": 10
+                    },
+                    {
+                        "start": 11,
+                        "end": 22
+                    }
+                ]
+            }
+        },
+        {
+            "name": "kotlin: drops empty statements",
+            "output": {
+                "statements": [
+                    {
+                        "text": "SELECT 1",
+                        "start": 0,
+                        "end": 8,
+                        "delimiterEnd": 9
+                    },
+                    {
+                        "text": "SELECT 2",
+                        "start": 14,
+                        "end": 22,
+                        "delimiterEnd": 22
+                    }
+                ]
+            }
+        },
+        {
+            "name": "kotlin: delimiters in strings, identifiers and comments",
+            "output": {
+                "statements": [
+                    {
+                        "text": "SELECT 'a;b', \"c;d\" -- x;y\nFROM /* ; */ t",
+                        "start": 0,
+                        "end": 41,
+                        "delimiterEnd": 57
+                    },
+                    {
+                        "text": "SELECT 'it''s;'",
+                        "start": 57,
+                        "end": 72,
+                        "delimiterEnd": 72
+                    }
+                ]
+            }
+        },
+        {
+            "name": "kotlin: dollar-quoted body with tag",
+            "output": {
+                "statements": [
+                    {
+                        "text": "CREATE FUNCTION f() RETURNS int AS $body$ BEGIN RETURN 1; END; $body$ LANGUAGE plpgsql",
+                        "start": 0,
+                        "end": 86,
+                        "delimiterEnd": 87
+                    },
+                    {
+                        "text": "SELECT f()",
+                        "start": 88,
+                        "end": 98,
+                        "delimiterEnd": 99
+                    }
+                ]
+            }
+        },
+        {
+            "name": "kotlin: mysql escapes, hash comments, DELIMITER",
+            "output": {
+                "statements": [
+                    {
+                        "text": "SELECT 'a\\';b'",
+                        "start": 0,
+                        "end": 14,
+                        "delimiterEnd": 22
+                    },
+                    {
+                        "text": "CREATE PROCEDURE p() BEGIN SELECT 1; SELECT 2; END",
+                        "start": 36,
+                        "end": 86,
+                        "delimiterEnd": 88
+                    },
+                    {
+                        "text": "CALL p()",
+                        "start": 101,
+                        "end": 109,
+                        "delimiterEnd": 110
+                    }
+                ]
+            }
+        },
+        {
+            "name": "kotlin: sqlite trigger body",
+            "output": {
+                "statements": [
+                    {
+                        "text": "CREATE TRIGGER t AFTER INSERT ON a BEGIN UPDATE b SET n = CASE WHEN 1 THEN 2 END; DELETE FROM c; END",
+                        "start": 0,
+                        "end": 100,
+                        "delimiterEnd": 101
+                    },
+                    {
+                        "text": "BEGIN",
+                        "start": 102,
+                        "end": 107,
+                        "delimiterEnd": 108
+                    },
+                    {
+                        "text": "COMMIT",
+                        "start": 109,
+                        "end": 115,
+                        "delimiterEnd": 116
+                    }
+                ]
+            }
+        },
+        {
+            "name": "kotlin: statement at caret",
+            "output": {
+                "statements": [
+                    {
+                        "text": "SELECT 1",
+                        "start": 0,
+                        "end": 8,
+                        "delimiterEnd": 9
+                    },
+                    {
+                        "text": "SELECT 2",
+                        "start": 10,
+                        "end": 18,
+                        "delimiterEnd": 19
+                    },
+                    {
+                        "text": "SELECT 3",
+                        "start": 24,
+                        "end": 32,
+                        "delimiterEnd": 32
+                    }
+                ],
+                "statementAt": [
+                    {
+                        "start": 0,
+                        "end": 8
+                    },
+                    {
+                        "start": 0,
+                        "end": 8
+                    },
+                    {
+                        "start": 10,
+                        "end": 18
+                    },
+                    {
+                        "start": 10,
+                        "end": 18
+                    },
+                    {
+                        "start": 24,
+                        "end": 32
+                    },
+                    {
+                        "start": 24,
+                        "end": 32
+                    }
+                ]
+            }
+        },
+        {
+            "name": "kotlin: tsql GO alone on a line",
+            "output": {
+                "statements": [
+                    {
+                        "text": "SELECT 'GO'",
+                        "start": 0,
+                        "end": 11,
+                        "delimiterEnd": 14
+                    },
+                    {
+                        "text": "SELECT 1 AS go",
+                        "start": 15,
+                        "end": 29,
+                        "delimiterEnd": 34
+                    },
+                    {
+                        "text": "SELECT 2",
+                        "start": 37,
+                        "end": 45,
+                        "delimiterEnd": 46
+                    },
+                    {
+                        "text": "SELECT 3",
+                        "start": 47,
+                        "end": 55,
+                        "delimiterEnd": 58
+                    }
+                ]
+            }
+        },
+        {
+            "name": "kotlin: GO is a name elsewhere",
+            "output": {
+                "statements": [
+                    {
+                        "text": "SELECT 1\nGO",
+                        "start": 0,
+                        "end": 11,
+                        "delimiterEnd": 11
+                    }
+                ]
+            }
+        },
+        {
+            "name": "caret between statements on blank lines",
+            "output": {
+                "statements": [
+                    {
+                        "text": "SELECT 1",
+                        "start": 0,
+                        "end": 8,
+                        "delimiterEnd": 9
+                    },
+                    {
+                        "text": "SELECT 2",
+                        "start": 12,
+                        "end": 20,
+                        "delimiterEnd": 20
+                    }
+                ],
+                "statementAt": [
+                    {
+                        "start": 0,
+                        "end": 8
+                    },
+                    {
+                        "start": 0,
+                        "end": 8
+                    },
+                    {
+                        "start": 12,
+                        "end": 20
+                    }
+                ]
+            }
+        },
+        {
+            "name": "empty script",
+            "output": {
+                "statements": [],
+                "statementAt": [
+                    null
+                ]
+            }
+        },
+        {
+            "name": "only comments",
+            "output": {
+                "statements": [],
+                "statementAt": [
+                    null
+                ]
+            }
+        }
+    ]
+}

@@ -1,0 +1,19 @@
+{
+    "specimen": "checkbox-pressed",
+    "theme": "One Dark",
+    "density": 2.0,
+    "width": 288,
+    "height": 88,
+    "regions": [
+        {
+            "tag": "text:checkbox.pressed",
+            "kind": "text",
+            "rect": [
+                90,
+                33,
+                127,
+                31
+            ]
+        }
+    ]
+}

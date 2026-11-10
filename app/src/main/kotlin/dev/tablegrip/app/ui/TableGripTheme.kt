@@ -38,6 +38,7 @@ import org.jetbrains.jewel.foundation.GlobalColors
 import org.jetbrains.jewel.foundation.OutlineColors
 import org.jetbrains.jewel.foundation.TextColors
 import org.jetbrains.jewel.foundation.theme.JewelTheme
+import org.jetbrains.jewel.foundation.theme.ThemeIconData
 import org.jetbrains.jewel.intui.standalone.theme.IntUiTheme
 import org.jetbrains.jewel.intui.standalone.theme.createDefaultTextStyle
 import org.jetbrains.jewel.intui.standalone.theme.createEditorTextStyle
@@ -113,9 +114,13 @@ fun TableGripTheme(isDark: Boolean, settings: Settings = Settings(), content: @C
     val editorFont = remember(settings.editorFontFamily) { systemFontFamily(settings.editorFontFamily) }
     val editorStyle = if (editorFont != null) JewelTheme.createEditorTextStyle(fontFamily = editorFont) else JewelTheme.createEditorTextStyle()
     val colors = globalColors(colorTheme, islands.island)
-    val theme =
+    val base =
         if (dark) JewelTheme.darkThemeDefinition(colors = colors, defaultTextStyle = textStyle, editorTextStyle = editorStyle)
         else JewelTheme.lightThemeDefinition(colors = colors, defaultTextStyle = textStyle, editorTextStyle = editorStyle)
+    val iconData = accentIcons(base.iconData, islands.accent, dark)
+    val theme =
+        if (dark) JewelTheme.darkThemeDefinition(colors = colors, iconData = iconData, defaultTextStyle = textStyle, editorTextStyle = editorStyle)
+        else JewelTheme.lightThemeDefinition(colors = colors, iconData = iconData, defaultTextStyle = textStyle, editorTextStyle = editorStyle)
     val titleBarStyle =
         if (dark) {
             TitleBarStyle.dark(
@@ -140,6 +145,17 @@ fun TableGripTheme(isDark: Boolean, settings: Settings = Settings(), content: @C
             ThemedControls(colorTheme.controls, dark, islands.accent, content)
         }
     }
+}
+
+/**
+ * Int UI's icons with selected checkboxes and radio buttons (they share these palette keys) in [accent]. They are SVG
+ * icons drawn in Int UI's own blue, so without this every theme and accent colour got Graphite's.
+ */
+private fun accentIcons(base: ThemeIconData, accent: Color, dark: Boolean): ThemeIconData {
+    val hex = accent.toHex()
+    val suffix = if (dark) ".Dark" else ""
+    val keys = listOf("Checkbox.Background.Selected", "Checkbox.Border.Selected")
+    return ThemeIconData(base.iconOverrides, base.colorPalette + keys.associate { "$it$suffix" to hex }, base.selectionColorPalette)
 }
 
 /** Int UI's global colours with the theme's text, borders and focus ring where it sets them. */

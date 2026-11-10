@@ -1,0 +1,609 @@
+{
+    "specimen": "scrollbar",
+    "theme": "Dracula",
+    "density": 2.0,
+    "width": 480,
+    "height": 368,
+    "regions": [
+        {
+            "tag": "text:scroll.end.0",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.end.1",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.end.10",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.end.11",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.end.12",
+            "kind": "text",
+            "rect": [
+                328,
+                24,
+                87,
+                40
+            ]
+        },
+        {
+            "tag": "text:scroll.end.13",
+            "kind": "text",
+            "rect": [
+                328,
+                64,
+                87,
+                40
+            ]
+        },
+        {
+            "tag": "text:scroll.end.14",
+            "kind": "text",
+            "rect": [
+                328,
+                104,
+                88,
+                40
+            ]
+        },
+        {
+            "tag": "text:scroll.end.15",
+            "kind": "text",
+            "rect": [
+                328,
+                144,
+                87,
+                40
+            ]
+        },
+        {
+            "tag": "text:scroll.end.16",
+            "kind": "text",
+            "rect": [
+                328,
+                184,
+                87,
+                40
+            ]
+        },
+        {
+            "tag": "text:scroll.end.17",
+            "kind": "text",
+            "rect": [
+                328,
+                224,
+                86,
+                40
+            ]
+        },
+        {
+            "tag": "text:scroll.end.18",
+            "kind": "text",
+            "rect": [
+                328,
+                264,
+                87,
+                40
+            ]
+        },
+        {
+            "tag": "text:scroll.end.19",
+            "kind": "text",
+            "rect": [
+                328,
+                304,
+                87,
+                40
+            ]
+        },
+        {
+            "tag": "text:scroll.end.2",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.end.3",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.end.4",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.end.5",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.end.6",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.end.7",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.end.8",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.end.9",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.middle.0",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.middle.1",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.middle.10",
+            "kind": "text",
+            "rect": [
+                176,
+                184,
+                88,
+                40
+            ]
+        },
+        {
+            "tag": "text:scroll.middle.11",
+            "kind": "text",
+            "rect": [
+                176,
+                224,
+                82,
+                40
+            ]
+        },
+        {
+            "tag": "text:scroll.middle.12",
+            "kind": "text",
+            "rect": [
+                176,
+                264,
+                87,
+                40
+            ]
+        },
+        {
+            "tag": "text:scroll.middle.13",
+            "kind": "text",
+            "rect": [
+                176,
+                304,
+                87,
+                40
+            ]
+        },
+        {
+            "tag": "text:scroll.middle.14",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.middle.15",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.middle.16",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.middle.17",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.middle.18",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.middle.19",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.middle.2",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.middle.3",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.middle.4",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.middle.5",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.middle.6",
+            "kind": "text",
+            "rect": [
+                176,
+                24,
+                77,
+                40
+            ]
+        },
+        {
+            "tag": "text:scroll.middle.7",
+            "kind": "text",
+            "rect": [
+                176,
+                64,
+                75,
+                40
+            ]
+        },
+        {
+            "tag": "text:scroll.middle.8",
+            "kind": "text",
+            "rect": [
+                176,
+                104,
+                77,
+                40
+            ]
+        },
+        {
+            "tag": "text:scroll.middle.9",
+            "kind": "text",
+            "rect": [
+                176,
+                144,
+                77,
+                40
+            ]
+        },
+        {
+            "tag": "text:scroll.top.0",
+            "kind": "text",
+            "rect": [
+                24,
+                24,
+                77,
+                40
+            ]
+        },
+        {
+            "tag": "text:scroll.top.1",
+            "kind": "text",
+            "rect": [
+                24,
+                64,
+                71,
+                40
+            ]
+        },
+        {
+            "tag": "text:scroll.top.10",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.top.11",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.top.12",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.top.13",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.top.14",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.top.15",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.top.16",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.top.17",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.top.18",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.top.19",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.top.2",
+            "kind": "text",
+            "rect": [
+                24,
+                104,
+                76,
+                40
+            ]
+        },
+        {
+            "tag": "text:scroll.top.3",
+            "kind": "text",
+            "rect": [
+                24,
+                144,
+                77,
+                40
+            ]
+        },
+        {
+            "tag": "text:scroll.top.4",
+            "kind": "text",
+            "rect": [
+                24,
+                184,
+                77,
+                40
+            ]
+        },
+        {
+            "tag": "text:scroll.top.5",
+            "kind": "text",
+            "rect": [
+                24,
+                224,
+                76,
+                40
+            ]
+        },
+        {
+            "tag": "text:scroll.top.6",
+            "kind": "text",
+            "rect": [
+                24,
+                264,
+                77,
+                40
+            ]
+        },
+        {
+            "tag": "text:scroll.top.7",
+            "kind": "text",
+            "rect": [
+                24,
+                304,
+                75,
+                40
+            ]
+        },
+        {
+            "tag": "text:scroll.top.8",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "tag": "text:scroll.top.9",
+            "kind": "text",
+            "rect": [
+                0,
+                0,
+                0,
+                0
+            ]
+        }
+    ]
+}

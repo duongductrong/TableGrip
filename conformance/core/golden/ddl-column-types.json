@@ -1,0 +1,920 @@
+{
+    "subject": "ddl-column-types",
+    "cases": [
+        {
+            "name": "declared type 0 varchar",
+            "output": {
+                "PostgreSQL": [
+                    "varchar(100)",
+                    false
+                ],
+                "CockroachDB": [
+                    "varchar(100)",
+                    false
+                ],
+                "MySQL": [
+                    "varchar(100)",
+                    false
+                ],
+                "SQLite": [
+                    "varchar(100)",
+                    false
+                ],
+                "SqlServer": [
+                    "varchar(100)",
+                    false
+                ],
+                "ClickHouse": [
+                    "varchar(100)",
+                    false
+                ],
+                "DuckDB": [
+                    "varchar(100)",
+                    false
+                ],
+                "H2": [
+                    "varchar(100)",
+                    false
+                ]
+            }
+        },
+        {
+            "name": "declared type 1 VARCHAR",
+            "output": {
+                "PostgreSQL": [
+                    "VARCHAR",
+                    false
+                ],
+                "CockroachDB": [
+                    "VARCHAR",
+                    false
+                ],
+                "MySQL": [
+                    "VARCHAR",
+                    false
+                ],
+                "SQLite": [
+                    "VARCHAR",
+                    false
+                ],
+                "SqlServer": [
+                    "VARCHAR(max)",
+                    false
+                ],
+                "ClickHouse": [
+                    "VARCHAR",
+                    false
+                ],
+                "DuckDB": [
+                    "VARCHAR",
+                    false
+                ],
+                "H2": [
+                    "VARCHAR",
+                    false
+                ]
+            }
+        },
+        {
+            "name": "declared type 2 numeric",
+            "output": {
+                "PostgreSQL": [
+                    "numeric(10,2)",
+                    false
+                ],
+                "CockroachDB": [
+                    "numeric(10,2)",
+                    false
+                ],
+                "MySQL": [
+                    "numeric(10,2)",
+                    false
+                ],
+                "SQLite": [
+                    "numeric(10,2)",
+                    false
+                ],
+                "SqlServer": [
+                    "numeric(10,2)",
+                    false
+                ],
+                "ClickHouse": [
+                    "numeric(10,2)",
+                    false
+                ],
+                "DuckDB": [
+                    "numeric(10,2)",
+                    false
+                ],
+                "H2": [
+                    "numeric(10,2)",
+                    false
+                ]
+            }
+        },
+        {
+            "name": "declared type 3 numeric",
+            "output": {
+                "PostgreSQL": [
+                    "numeric(10)",
+                    false
+                ],
+                "CockroachDB": [
+                    "numeric(10)",
+                    false
+                ],
+                "MySQL": [
+                    "numeric(10)",
+                    false
+                ],
+                "SQLite": [
+                    "numeric(10)",
+                    false
+                ],
+                "SqlServer": [
+                    "numeric(10)",
+                    false
+                ],
+                "ClickHouse": [
+                    "numeric(10)",
+                    false
+                ],
+                "DuckDB": [
+                    "numeric(10)",
+                    false
+                ],
+                "H2": [
+                    "numeric(10)",
+                    false
+                ]
+            }
+        },
+        {
+            "name": "declared type 4 decimal",
+            "output": {
+                "PostgreSQL": [
+                    "decimal",
+                    false
+                ],
+                "CockroachDB": [
+                    "decimal",
+                    false
+                ],
+                "MySQL": [
+                    "decimal",
+                    false
+                ],
+                "SQLite": [
+                    "decimal",
+                    false
+                ],
+                "SqlServer": [
+                    "decimal",
+                    false
+                ],
+                "ClickHouse": [
+                    "decimal",
+                    false
+                ],
+                "DuckDB": [
+                    "decimal",
+                    false
+                ],
+                "H2": [
+                    "decimal",
+                    false
+                ]
+            }
+        },
+        {
+            "name": "declared type 5 Decimal(10, 2)",
+            "output": {
+                "PostgreSQL": [
+                    "Decimal(10, 2)",
+                    false
+                ],
+                "CockroachDB": [
+                    "Decimal(10, 2)",
+                    false
+                ],
+                "MySQL": [
+                    "Decimal(10, 2)",
+                    false
+                ],
+                "SQLite": [
+                    "Decimal(10, 2)",
+                    false
+                ],
+                "SqlServer": [
+                    "Decimal(10, 2)",
+                    false
+                ],
+                "ClickHouse": [
+                    "Decimal(10, 2)",
+                    false
+                ],
+                "DuckDB": [
+                    "Decimal(10, 2)",
+                    false
+                ],
+                "H2": [
+                    "Decimal(10, 2)",
+                    false
+                ]
+            }
+        },
+        {
+            "name": "declared type 6 int",
+            "output": {
+                "PostgreSQL": [
+                    "int",
+                    false
+                ],
+                "CockroachDB": [
+                    "int",
+                    false
+                ],
+                "MySQL": [
+                    "int",
+                    false
+                ],
+                "SQLite": [
+                    "int",
+                    false
+                ],
+                "SqlServer": [
+                    "int",
+                    false
+                ],
+                "ClickHouse": [
+                    "int",
+                    false
+                ],
+                "DuckDB": [
+                    "int",
+                    false
+                ],
+                "H2": [
+                    "int",
+                    false
+                ]
+            }
+        },
+        {
+            "name": "declared type 7 int identity",
+            "output": {
+                "PostgreSQL": [
+                    "int",
+                    true
+                ],
+                "CockroachDB": [
+                    "int",
+                    true
+                ],
+                "MySQL": [
+                    "int",
+                    true
+                ],
+                "SQLite": [
+                    "int",
+                    true
+                ],
+                "SqlServer": [
+                    "int",
+                    true
+                ],
+                "ClickHouse": [
+                    "int",
+                    true
+                ],
+                "DuckDB": [
+                    "int",
+                    true
+                ],
+                "H2": [
+                    "int",
+                    true
+                ]
+            }
+        },
+        {
+            "name": "declared type 8 bigint IDENTITY",
+            "output": {
+                "PostgreSQL": [
+                    "bigint",
+                    true
+                ],
+                "CockroachDB": [
+                    "bigint",
+                    true
+                ],
+                "MySQL": [
+                    "bigint",
+                    true
+                ],
+                "SQLite": [
+                    "bigint",
+                    true
+                ],
+                "SqlServer": [
+                    "bigint",
+                    true
+                ],
+                "ClickHouse": [
+                    "bigint",
+                    true
+                ],
+                "DuckDB": [
+                    "bigint",
+                    true
+                ],
+                "H2": [
+                    "bigint",
+                    true
+                ]
+            }
+        },
+        {
+            "name": "declared type 9 bit",
+            "output": {
+                "PostgreSQL": [
+                    "bit(1)",
+                    false
+                ],
+                "CockroachDB": [
+                    "bit(1)",
+                    false
+                ],
+                "MySQL": [
+                    "bit(1)",
+                    false
+                ],
+                "SQLite": [
+                    "bit(1)",
+                    false
+                ],
+                "SqlServer": [
+                    "bit(1)",
+                    false
+                ],
+                "ClickHouse": [
+                    "bit(1)",
+                    false
+                ],
+                "DuckDB": [
+                    "bit(1)",
+                    false
+                ],
+                "H2": [
+                    "bit(1)",
+                    false
+                ]
+            }
+        },
+        {
+            "name": "declared type 10 character varying",
+            "output": {
+                "PostgreSQL": [
+                    "character varying",
+                    false
+                ],
+                "CockroachDB": [
+                    "character varying",
+                    false
+                ],
+                "MySQL": [
+                    "character varying",
+                    false
+                ],
+                "SQLite": [
+                    "character varying",
+                    false
+                ],
+                "SqlServer": [
+                    "character varying",
+                    false
+                ],
+                "ClickHouse": [
+                    "character varying",
+                    false
+                ],
+                "DuckDB": [
+                    "character varying",
+                    false
+                ],
+                "H2": [
+                    "character varying",
+                    false
+                ]
+            }
+        },
+        {
+            "name": "declared type 11  text ",
+            "output": {
+                "PostgreSQL": [
+                    "text",
+                    false
+                ],
+                "CockroachDB": [
+                    "text",
+                    false
+                ],
+                "MySQL": [
+                    "text",
+                    false
+                ],
+                "SQLite": [
+                    "text",
+                    false
+                ],
+                "SqlServer": [
+                    "text",
+                    false
+                ],
+                "ClickHouse": [
+                    "text",
+                    false
+                ],
+                "DuckDB": [
+                    "text",
+                    false
+                ],
+                "H2": [
+                    "text",
+                    false
+                ]
+            }
+        },
+        {
+            "name": "declared type 12 nchar",
+            "output": {
+                "PostgreSQL": [
+                    "nchar",
+                    false
+                ],
+                "CockroachDB": [
+                    "nchar",
+                    false
+                ],
+                "MySQL": [
+                    "nchar",
+                    false
+                ],
+                "SQLite": [
+                    "nchar",
+                    false
+                ],
+                "SqlServer": [
+                    "nchar",
+                    false
+                ],
+                "ClickHouse": [
+                    "nchar",
+                    false
+                ],
+                "DuckDB": [
+                    "nchar",
+                    false
+                ],
+                "H2": [
+                    "nchar",
+                    false
+                ]
+            }
+        },
+        {
+            "name": "declared type 13 raw",
+            "output": {
+                "PostgreSQL": [
+                    "raw(16)",
+                    false
+                ],
+                "CockroachDB": [
+                    "raw(16)",
+                    false
+                ],
+                "MySQL": [
+                    "raw(16)",
+                    false
+                ],
+                "SQLite": [
+                    "raw(16)",
+                    false
+                ],
+                "SqlServer": [
+                    "raw(16)",
+                    false
+                ],
+                "ClickHouse": [
+                    "raw(16)",
+                    false
+                ],
+                "DuckDB": [
+                    "raw(16)",
+                    false
+                ],
+                "H2": [
+                    "raw(16)",
+                    false
+                ]
+            }
+        },
+        {
+            "name": "declared type 14 Ở identity",
+            "output": {
+                "PostgreSQL": [
+                    "Ở",
+                    true
+                ],
+                "CockroachDB": [
+                    "Ở",
+                    true
+                ],
+                "MySQL": [
+                    "Ở",
+                    true
+                ],
+                "SQLite": [
+                    "Ở",
+                    true
+                ],
+                "SqlServer": [
+                    "Ở",
+                    true
+                ],
+                "ClickHouse": [
+                    "Ở",
+                    true
+                ],
+                "DuckDB": [
+                    "Ở",
+                    true
+                ],
+                "H2": [
+                    "Ở",
+                    true
+                ]
+            }
+        },
+        {
+            "name": "default expression 0",
+            "output": {
+                "PostgreSQL": "draft",
+                "CockroachDB": "draft",
+                "MySQL": "' draft '",
+                "SQLite": "draft",
+                "SqlServer": "draft",
+                "ClickHouse": "draft",
+                "DuckDB": "draft",
+                "H2": "draft"
+            }
+        },
+        {
+            "name": "default expression 1",
+            "output": {
+                "PostgreSQL": "NULL",
+                "CockroachDB": "NULL",
+                "MySQL": null,
+                "SQLite": "NULL",
+                "SqlServer": "NULL",
+                "ClickHouse": "NULL",
+                "DuckDB": "NULL",
+                "H2": "NULL"
+            }
+        },
+        {
+            "name": "default expression 2",
+            "output": {
+                "PostgreSQL": "'x'",
+                "CockroachDB": "'x'",
+                "MySQL": "'x'",
+                "SQLite": "'x'",
+                "SqlServer": "'x'",
+                "ClickHouse": "'x'",
+                "DuckDB": "'x'",
+                "H2": "'x'"
+            }
+        },
+        {
+            "name": "default expression 3",
+            "output": {
+                "PostgreSQL": "CURRENT_TIMESTAMP(3)",
+                "CockroachDB": "CURRENT_TIMESTAMP(3)",
+                "MySQL": "CURRENT_TIMESTAMP(3)",
+                "SQLite": "CURRENT_TIMESTAMP(3)",
+                "SqlServer": "CURRENT_TIMESTAMP(3)",
+                "ClickHouse": "CURRENT_TIMESTAMP(3)",
+                "DuckDB": "CURRENT_TIMESTAMP(3)",
+                "H2": "CURRENT_TIMESTAMP(3)"
+            }
+        },
+        {
+            "name": "default expression 4",
+            "output": {
+                "PostgreSQL": "now()",
+                "CockroachDB": "now()",
+                "MySQL": "now()",
+                "SQLite": "now()",
+                "SqlServer": "now()",
+                "ClickHouse": "now()",
+                "DuckDB": "now()",
+                "H2": "now()"
+            }
+        },
+        {
+            "name": "default expression 5",
+            "output": {
+                "PostgreSQL": "12.5",
+                "CockroachDB": "12.5",
+                "MySQL": "12.5",
+                "SQLite": "12.5",
+                "SqlServer": "12.5",
+                "ClickHouse": "12.5",
+                "DuckDB": "12.5",
+                "H2": "12.5"
+            }
+        },
+        {
+            "name": "default expression 6",
+            "output": {
+                "PostgreSQL": "12",
+                "CockroachDB": "12",
+                "MySQL": "'12'",
+                "SQLite": "12",
+                "SqlServer": "12",
+                "ClickHouse": "12",
+                "DuckDB": "12",
+                "H2": "12"
+            }
+        },
+        {
+            "name": "default expression 7",
+            "output": {
+                "PostgreSQL": "b'101'",
+                "CockroachDB": "b'101'",
+                "MySQL": "b'101'",
+                "SQLite": "b'101'",
+                "SqlServer": "b'101'",
+                "ClickHouse": "b'101'",
+                "DuckDB": "b'101'",
+                "H2": "b'101'"
+            }
+        },
+        {
+            "name": "default expression 8",
+            "output": {
+                "PostgreSQL": "it's \\ here",
+                "CockroachDB": "it's \\ here",
+                "MySQL": "'it''s \\\\ here'",
+                "SQLite": "it's \\ here",
+                "SqlServer": "it's \\ here",
+                "ClickHouse": "it's \\ here",
+                "DuckDB": "it's \\ here",
+                "H2": "it's \\ here"
+            }
+        },
+        {
+            "name": "default expression 9",
+            "output": {
+                "PostgreSQL": "true",
+                "CockroachDB": "true",
+                "MySQL": "true",
+                "SQLite": "true",
+                "SqlServer": "true",
+                "ClickHouse": "true",
+                "DuckDB": "true",
+                "H2": "true"
+            }
+        },
+        {
+            "name": "default expression 10",
+            "output": {
+                "PostgreSQL": null,
+                "CockroachDB": null,
+                "MySQL": null,
+                "SQLite": null,
+                "SqlServer": null,
+                "ClickHouse": null,
+                "DuckDB": null,
+                "H2": null
+            }
+        },
+        {
+            "name": "default expression 11",
+            "output": {
+                "PostgreSQL": "(1 + 2)",
+                "CockroachDB": "(1 + 2)",
+                "MySQL": "(1 + 2)",
+                "SQLite": "(1 + 2)",
+                "SqlServer": "(1 + 2)",
+                "ClickHouse": "(1 + 2)",
+                "DuckDB": "(1 + 2)",
+                "H2": "(1 + 2)"
+            }
+        },
+        {
+            "name": "default expression 12",
+            "output": {
+                "PostgreSQL": "uuid()",
+                "CockroachDB": "uuid()",
+                "MySQL": "uuid()",
+                "SQLite": "uuid()",
+                "SqlServer": "uuid()",
+                "ClickHouse": "uuid()",
+                "DuckDB": "uuid()",
+                "H2": "uuid()"
+            }
+        },
+        {
+            "name": "normalize",
+            "output": [
+                "varchar(20)",
+                "varchar(20)",
+                "integer",
+                "integer",
+                "numeric(10,2)",
+                "numeric(10,2)",
+                "timestamp",
+                "double precision",
+                "boolean",
+                "text[]",
+                "double precision",
+                "numeric(5,1)",
+                ""
+            ]
+        },
+        {
+            "name": "normalize default",
+            "output": [
+                "'draft'",
+                "'draft'",
+                "now()",
+                "now()",
+                null,
+                null,
+                "1",
+                "(a) + (b)",
+                "'X'",
+                "0",
+                "current_timestamp",
+                ""
+            ]
+        },
+        {
+            "name": "common types",
+            "output": {
+                "PostgreSQL": [
+                    "integer",
+                    "bigint",
+                    "smallint",
+                    "serial",
+                    "bigserial",
+                    "numeric(10,2)",
+                    "real",
+                    "double precision",
+                    "boolean",
+                    "text",
+                    "varchar(255)",
+                    "char(1)",
+                    "uuid",
+                    "date",
+                    "timestamp",
+                    "timestamptz",
+                    "time",
+                    "interval",
+                    "jsonb",
+                    "json",
+                    "bytea",
+                    "inet",
+                    "text[]",
+                    "integer[]"
+                ],
+                "CockroachDB": [
+                    "integer",
+                    "bigint",
+                    "smallint",
+                    "serial",
+                    "bigserial",
+                    "numeric(10,2)",
+                    "real",
+                    "double precision",
+                    "boolean",
+                    "text",
+                    "varchar(255)",
+                    "char(1)",
+                    "uuid",
+                    "date",
+                    "timestamp",
+                    "timestamptz",
+                    "time",
+                    "interval",
+                    "jsonb",
+                    "json",
+                    "bytea",
+                    "inet",
+                    "text[]",
+                    "integer[]"
+                ],
+                "MySQL": [
+                    "INT",
+                    "BIGINT",
+                    "SMALLINT",
+                    "TINYINT",
+                    "DECIMAL(10,2)",
+                    "DOUBLE",
+                    "FLOAT",
+                    "BOOLEAN",
+                    "VARCHAR(255)",
+                    "CHAR(36)",
+                    "TEXT",
+                    "MEDIUMTEXT",
+                    "LONGTEXT",
+                    "DATE",
+                    "DATETIME",
+                    "TIMESTAMP",
+                    "TIME",
+                    "YEAR",
+                    "JSON",
+                    "BLOB",
+                    "ENUM('a','b')"
+                ],
+                "SQLite": [
+                    "INTEGER",
+                    "TEXT",
+                    "REAL",
+                    "NUMERIC",
+                    "BLOB",
+                    "BOOLEAN",
+                    "DATE",
+                    "DATETIME",
+                    "VARCHAR(255)"
+                ],
+                "SqlServer": [
+                    "int",
+                    "bigint",
+                    "smallint",
+                    "tinyint",
+                    "bit",
+                    "decimal(10,2)",
+                    "float",
+                    "nvarchar(255)",
+                    "nvarchar(max)",
+                    "varchar(255)",
+                    "char(1)",
+                    "uniqueidentifier",
+                    "date",
+                    "datetime2",
+                    "datetimeoffset",
+                    "time",
+                    "varbinary(max)"
+                ],
+                "ClickHouse": [
+                    "Int32",
+                    "Int64",
+                    "UInt32",
+                    "UInt64",
+                    "Float64",
+                    "Decimal(18, 2)",
+                    "String",
+                    "Bool",
+                    "UUID",
+                    "Date",
+                    "DateTime",
+                    "DateTime64(3)",
+                    "LowCardinality(String)"
+                ],
+                "DuckDB": [
+                    "INTEGER",
+                    "BIGINT",
+                    "SMALLINT",
+                    "DECIMAL(10,2)",
+                    "DOUBLE",
+                    "BOOLEAN",
+                    "VARCHAR",
+                    "UUID",
+                    "DATE",
+                    "TIMESTAMP",
+                    "TIMESTAMPTZ",
+                    "TIME",
+                    "JSON",
+                    "BLOB"
+                ],
+                "H2": [
+                    "INTEGER",
+                    "BIGINT",
+                    "SMALLINT",
+                    "DECIMAL(10,2)",
+                    "DOUBLE",
+                    "BOOLEAN",
+                    "VARCHAR(255)",
+                    "CHAR(1)",
+                    "CLOB",
+                    "DATE",
+                    "TIMESTAMP",
+                    "TIME",
+                    "BLOB"
+                ]
+            }
+        }
+    ]
+}

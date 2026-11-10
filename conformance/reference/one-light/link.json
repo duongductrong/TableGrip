@@ -1,0 +1,49 @@
+{
+    "specimen": "link",
+    "theme": "One Light",
+    "density": 2.0,
+    "width": 640,
+    "height": 144,
+    "regions": [
+        {
+            "tag": "text:link",
+            "kind": "text",
+            "rect": [
+                32,
+                24,
+                141,
+                31
+            ]
+        },
+        {
+            "tag": "text:link.disabled",
+            "kind": "text",
+            "rect": [
+                336,
+                24,
+                141,
+                31
+            ]
+        },
+        {
+            "tag": "text:link.focused",
+            "kind": "text",
+            "rect": [
+                336,
+                80,
+                141,
+                31
+            ]
+        },
+        {
+            "tag": "text:link.hovered",
+            "kind": "text",
+            "rect": [
+                32,
+                80,
+                141,
+                31
+            ]
+        }
+    ]
+}

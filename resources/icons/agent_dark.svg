@@ -1,0 +1,5 @@
+<!-- Copyright 2026 The TableGrip Authors. Licensed under the Apache License, Version 2.0. Drawn for TableGrip. -->
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M3.5 2.5h9a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H7.5l-3 2.5v-2.5h-1a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2Z" stroke="#CED0D6" stroke-linejoin="round"/>
+  <path d="M8 4.25 8.75 6.25 10.75 7 8.75 7.75 8 9.75 7.25 7.75 5.25 7 7.25 6.25Z" fill="#CED0D6"/>
+</svg>

@@ -1,0 +1,3598 @@
+{
+  "subject": "ddl-script",
+  "cases": [
+    {
+      "name": "create users",
+      "changes": [
+        {
+          "original": null,
+          "target": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": null
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": null
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": null
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": null
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "alter columns, rename first",
+      "changes": [
+        {
+          "original": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          },
+          "target": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email_address",
+                "type": "varchar(255)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "status"
+              },
+              {
+                "name": "created_at",
+                "type": "timestamptz",
+                "nullable": false,
+                "defaultValue": "now()",
+                "autoIncrement": false,
+                "originalName": null
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email_address"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "restate columns and drop foreign key",
+      "changes": [
+        {
+          "original": {
+            "table": {
+              "catalog": "shop",
+              "schema": null,
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": "PRIMARY",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          },
+          "target": {
+            "table": {
+              "catalog": "shop",
+              "schema": null,
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "mail",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "varchar(20)",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "mail"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [],
+            "primaryKeyName": "PRIMARY",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "rename table and add column",
+      "changes": [
+        {
+          "original": {
+            "table": {
+              "catalog": null,
+              "schema": "dbo",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": "PK__users__3213E83F",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          },
+          "target": {
+            "table": {
+              "catalog": null,
+              "schema": "dbo",
+              "name": "people"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              },
+              {
+                "name": "age",
+                "type": "int",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": null
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": "PK__users__3213E83F",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "add plain column",
+      "changes": [
+        {
+          "original": {
+            "table": {
+              "catalog": null,
+              "schema": null,
+              "name": "notes"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "INTEGER",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "body",
+                "type": "TEXT",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "body"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "notes_body",
+                "columns": [
+                  "body"
+                ],
+                "unique": false
+              }
+            ],
+            "foreignKeys": [],
+            "primaryKeyName": null,
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          },
+          "target": {
+            "table": {
+              "catalog": null,
+              "schema": null,
+              "name": "notes"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "INTEGER",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "body",
+                "type": "TEXT",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "body"
+              },
+              {
+                "name": "tag",
+                "type": "TEXT",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": null
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "notes_body",
+                "columns": [
+                  "body"
+                ],
+                "unique": false
+              }
+            ],
+            "foreignKeys": [],
+            "primaryKeyName": null,
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "change column nullability and rename",
+      "changes": [
+        {
+          "original": {
+            "table": {
+              "catalog": null,
+              "schema": null,
+              "name": "notes"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "INTEGER",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "body",
+                "type": "TEXT",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "body"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "notes_body",
+                "columns": [
+                  "body"
+                ],
+                "unique": false
+              }
+            ],
+            "foreignKeys": [],
+            "primaryKeyName": null,
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          },
+          "target": {
+            "table": {
+              "catalog": null,
+              "schema": null,
+              "name": "notes"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "INTEGER",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "text",
+                "type": "TEXT",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "body"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "notes_body",
+                "columns": [
+                  "text"
+                ],
+                "unique": false
+              }
+            ],
+            "foreignKeys": [],
+            "primaryKeyName": null,
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": [
+              "CREATE TRIGGER t AFTER INSERT ON notes BEGIN SELECT 1; END"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "create events",
+      "changes": [
+        {
+          "original": null,
+          "target": {
+            "table": {
+              "catalog": "default",
+              "schema": null,
+              "name": "events"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "UInt64",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": null
+              },
+              {
+                "name": "name",
+                "type": "String",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": null
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [],
+            "foreignKeys": [],
+            "primaryKeyName": null,
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "drop table",
+      "changes": [
+        {
+          "original": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          },
+          "target": null
+        }
+      ]
+    },
+    {
+      "name": "change primary key",
+      "changes": [
+        {
+          "original": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          },
+          "target": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id",
+              "email"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "drop primary key unnamed",
+      "changes": [
+        {
+          "original": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": null,
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          },
+          "target": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": null,
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "add primary key",
+      "changes": [
+        {
+          "original": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": null,
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          },
+          "target": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "change and add indexes",
+      "changes": [
+        {
+          "original": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          },
+          "target": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email",
+                  "status"
+                ],
+                "unique": false
+              },
+              {
+                "name": "users_status",
+                "columns": [
+                  "status"
+                ],
+                "unique": false
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "change and add foreign keys",
+      "changes": [
+        {
+          "original": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          },
+          "target": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "CASCADE"
+              },
+              {
+                "name": "",
+                "columns": [
+                  "status"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": null,
+                  "name": "statuses"
+                },
+                "referencedColumns": [
+                  "code"
+                ],
+                "onUpdate": null,
+                "onDelete": null
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "drop column",
+      "changes": [
+        {
+          "original": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          },
+          "target": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "drop key column",
+      "changes": [
+        {
+          "original": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          },
+          "target": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "switch auto increment",
+      "changes": [
+        {
+          "original": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          },
+          "target": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "change defaults",
+      "changes": [
+        {
+          "original": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          },
+          "target": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": "0",
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'ACTIVE'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "aliases are not changes",
+      "changes": [
+        {
+          "original": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          },
+          "target": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "CHARACTER VARYING( 100 )",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "('active'::text)",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "add not null columns",
+      "changes": [
+        {
+          "original": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          },
+          "target": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              },
+              {
+                "name": "code",
+                "type": "text",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": null
+              },
+              {
+                "name": "seq",
+                "type": "integer",
+                "nullable": false,
+                "defaultValue": "(1+1)",
+                "autoIncrement": false,
+                "originalName": null
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with everything",
+      "changes": [
+        {
+          "original": null,
+          "target": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "orders"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "serial",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": null
+              },
+              {
+                "name": "user_id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": null
+              },
+              {
+                "name": "total",
+                "type": "numeric(10,2)",
+                "nullable": true,
+                "defaultValue": "0",
+                "autoIncrement": false,
+                "originalName": null
+              },
+              {
+                "name": "note",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": null
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "orders_user",
+                "columns": [
+                  "user_id"
+                ],
+                "unique": false
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "orders_user_fk",
+                "columns": [
+                  "user_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "users"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": "CASCADE",
+                "onDelete": "RESTRICT"
+              },
+              {
+                "name": "orders_ext_fk",
+                "columns": [
+                  "note"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "other",
+                  "name": "notes"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": null
+              },
+              {
+                "name": "",
+                "columns": [
+                  "total"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": null,
+                  "name": "totals"
+                },
+                "referencedColumns": [
+                  "v"
+                ],
+                "onUpdate": null,
+                "onDelete": null
+              }
+            ],
+            "primaryKeyName": "orders_pkey",
+            "uniqueConstraints": [
+              {
+                "name": "orders_uq",
+                "columns": [
+                  "user_id",
+                  "total"
+                ],
+                "unique": true
+              },
+              {
+                "name": "sqlite_autoindex_orders_1",
+                "columns": [
+                  "note"
+                ],
+                "unique": true
+              }
+            ],
+            "checks": [
+              "CHECK (total >= 0)"
+            ],
+            "triggers": [
+              "CREATE TRIGGER x"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "several tables in phases",
+      "changes": [
+        {
+          "original": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "SET NULL"
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          },
+          "target": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "users_team_fk",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": "CASCADE"
+              },
+              {
+                "name": "",
+                "columns": [
+                  "status"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": null,
+                  "name": "statuses"
+                },
+                "referencedColumns": [
+                  "code"
+                ],
+                "onUpdate": null,
+                "onDelete": null
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          }
+        },
+        {
+          "original": null,
+          "target": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "orders"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "serial",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": null
+              },
+              {
+                "name": "user_id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": null
+              },
+              {
+                "name": "total",
+                "type": "numeric(10,2)",
+                "nullable": true,
+                "defaultValue": "0",
+                "autoIncrement": false,
+                "originalName": null
+              },
+              {
+                "name": "note",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": null
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "orders_user",
+                "columns": [
+                  "user_id"
+                ],
+                "unique": false
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "orders_user_fk",
+                "columns": [
+                  "user_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "users"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": "CASCADE",
+                "onDelete": "RESTRICT"
+              },
+              {
+                "name": "orders_ext_fk",
+                "columns": [
+                  "note"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "other",
+                  "name": "notes"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": null
+              },
+              {
+                "name": "",
+                "columns": [
+                  "total"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": null,
+                  "name": "totals"
+                },
+                "referencedColumns": [
+                  "v"
+                ],
+                "onUpdate": null,
+                "onDelete": null
+              }
+            ],
+            "primaryKeyName": "orders_pkey",
+            "uniqueConstraints": [
+              {
+                "name": "orders_uq",
+                "columns": [
+                  "user_id",
+                  "total"
+                ],
+                "unique": true
+              },
+              {
+                "name": "sqlite_autoindex_orders_1",
+                "columns": [
+                  "note"
+                ],
+                "unique": true
+              }
+            ],
+            "checks": [
+              "CHECK (total >= 0)"
+            ],
+            "triggers": [
+              "CREATE TRIGGER x"
+            ]
+          }
+        },
+        {
+          "original": {
+            "table": {
+              "catalog": null,
+              "schema": null,
+              "name": "notes"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "INTEGER",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "body",
+                "type": "TEXT",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "body"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "notes_body",
+                "columns": [
+                  "body"
+                ],
+                "unique": false
+              }
+            ],
+            "foreignKeys": [],
+            "primaryKeyName": null,
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          },
+          "target": null
+        },
+        {
+          "original": {
+            "table": {
+              "catalog": null,
+              "schema": null,
+              "name": "notes"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "INTEGER",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "body",
+                "type": "TEXT",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "body"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "notes_body",
+                "columns": [
+                  "body"
+                ],
+                "unique": false
+              }
+            ],
+            "foreignKeys": [],
+            "primaryKeyName": null,
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          },
+          "target": {
+            "table": {
+              "catalog": null,
+              "schema": null,
+              "name": "notes"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "INTEGER",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "text",
+                "type": "TEXT",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "body"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "notes_body",
+                "columns": [
+                  "text"
+                ],
+                "unique": false
+              }
+            ],
+            "foreignKeys": [],
+            "primaryKeyName": null,
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": [
+              "CREATE TRIGGER t AFTER INSERT ON notes BEGIN SELECT 1; END"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with single auto key",
+      "changes": [
+        {
+          "original": null,
+          "target": {
+            "table": {
+              "catalog": null,
+              "schema": null,
+              "name": "t"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "INTEGER",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": null
+              },
+              {
+                "name": "v",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": null
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [],
+            "foreignKeys": [],
+            "primaryKeyName": null,
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "unnamed foreign key follows renamed column",
+      "changes": [
+        {
+          "original": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team_id",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "",
+                "columns": [
+                  "team_id"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": null
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          },
+          "target": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "users"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "bigint",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "email",
+                "type": "varchar(100)",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "email"
+              },
+              {
+                "name": "team",
+                "type": "integer",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "team_id"
+              },
+              {
+                "name": "status",
+                "type": "text",
+                "nullable": true,
+                "defaultValue": "'active'",
+                "autoIncrement": false,
+                "originalName": "status"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "users_email",
+                "columns": [
+                  "email"
+                ],
+                "unique": true
+              }
+            ],
+            "foreignKeys": [
+              {
+                "name": "",
+                "columns": [
+                  "team"
+                ],
+                "referencedTable": {
+                  "catalog": null,
+                  "schema": "app",
+                  "name": "teams"
+                },
+                "referencedColumns": [
+                  "id"
+                ],
+                "onUpdate": null,
+                "onDelete": null
+              }
+            ],
+            "primaryKeyName": "users_pkey",
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "columns sqlite can't add",
+      "changes": [
+        {
+          "original": {
+            "table": {
+              "catalog": null,
+              "schema": null,
+              "name": "notes"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "INTEGER",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "body",
+                "type": "TEXT",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "body"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "notes_body",
+                "columns": [
+                  "body"
+                ],
+                "unique": false
+              }
+            ],
+            "foreignKeys": [],
+            "primaryKeyName": null,
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          },
+          "target": {
+            "table": {
+              "catalog": null,
+              "schema": null,
+              "name": "notes"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "INTEGER",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "body",
+                "type": "TEXT",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "body"
+              },
+              {
+                "name": "at",
+                "type": "TEXT",
+                "nullable": true,
+                "defaultValue": "CURRENT_TIMESTAMP",
+                "autoIncrement": false,
+                "originalName": null
+              },
+              {
+                "name": "u",
+                "type": "TEXT",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": null
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "notes_body",
+                "columns": [
+                  "body"
+                ],
+                "unique": false
+              }
+            ],
+            "foreignKeys": [],
+            "primaryKeyName": null,
+            "uniqueConstraints": [
+              {
+                "name": "u_uq",
+                "columns": [
+                  "u"
+                ],
+                "unique": true
+              }
+            ],
+            "checks": [],
+            "triggers": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "drop indexed column",
+      "changes": [
+        {
+          "original": {
+            "table": {
+              "catalog": null,
+              "schema": null,
+              "name": "notes"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "INTEGER",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              },
+              {
+                "name": "body",
+                "type": "TEXT",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": "body"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [
+              {
+                "name": "notes_body",
+                "columns": [
+                  "body"
+                ],
+                "unique": false
+              }
+            ],
+            "foreignKeys": [],
+            "primaryKeyName": null,
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          },
+          "target": {
+            "table": {
+              "catalog": null,
+              "schema": null,
+              "name": "notes"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "INTEGER",
+                "nullable": false,
+                "defaultValue": null,
+                "autoIncrement": true,
+                "originalName": "id"
+              }
+            ],
+            "primaryKey": [
+              "id"
+            ],
+            "indexes": [],
+            "foreignKeys": [],
+            "primaryKeyName": null,
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "create minimal no key",
+      "changes": [
+        {
+          "original": null,
+          "target": {
+            "table": {
+              "catalog": null,
+              "schema": "app",
+              "name": "x"
+            },
+            "columns": [
+              {
+                "name": "id",
+                "type": "int",
+                "nullable": true,
+                "defaultValue": null,
+                "autoIncrement": false,
+                "originalName": null
+              }
+            ],
+            "primaryKey": [],
+            "indexes": [],
+            "foreignKeys": [],
+            "primaryKeyName": null,
+            "uniqueConstraints": [],
+            "checks": [],
+            "triggers": []
+          }
+        }
+      ]
+    }
+  ]
+}

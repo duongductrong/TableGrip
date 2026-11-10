@@ -1,0 +1,1463 @@
+{
+    "subject": "schema-compare",
+    "cases": [
+        {
+            "name": "compare and migrate defaults",
+            "output": {
+                "diffs": [
+                    {
+                        "name": "Logs",
+                        "kind": "Added",
+                        "id": "table:Logs",
+                        "items": []
+                    },
+                    {
+                        "name": "teams",
+                        "kind": "Added",
+                        "id": "table:teams",
+                        "items": []
+                    },
+                    {
+                        "name": "USERS",
+                        "kind": "Changed",
+                        "id": "table:USERS",
+                        "items": [
+                            {
+                                "type": "ColumnChanged",
+                                "id": "column:email",
+                                "key": "USERS/column:email",
+                                "label": "Change column email: NOT NULL",
+                                "destructive": false
+                            },
+                            {
+                                "type": "ColumnAdded",
+                                "id": "column:age",
+                                "key": "USERS/column:age",
+                                "label": "Add column age int4",
+                                "destructive": false
+                            },
+                            {
+                                "type": "ColumnChanged",
+                                "id": "column:created",
+                                "key": "USERS/column:created",
+                                "label": "Change column created: default CURRENT_TIMESTAMP → now()",
+                                "destructive": false
+                            },
+                            {
+                                "type": "ColumnRemoved",
+                                "id": "column:legacy",
+                                "key": "USERS/column:legacy",
+                                "label": "Drop column legacy",
+                                "destructive": true
+                            },
+                            {
+                                "type": "PrimaryKeyChanged",
+                                "id": "pk",
+                                "key": "USERS/pk",
+                                "label": "Change primary key (id, email) → (id)",
+                                "destructive": false
+                            },
+                            {
+                                "type": "IndexChanged",
+                                "id": "index:users_age",
+                                "key": "USERS/index:users_age",
+                                "label": "Recreate index users_age (age)",
+                                "destructive": false
+                            },
+                            {
+                                "type": "IndexRemoved",
+                                "id": "index:users_old",
+                                "key": "USERS/index:users_old",
+                                "label": "Drop index users_old",
+                                "destructive": true
+                            },
+                            {
+                                "type": "ForeignKeyChanged",
+                                "id": "fk:users_team",
+                                "key": "USERS/fk:users_team",
+                                "label": "Recreate foreign key users_team → teams(id)",
+                                "destructive": false
+                            },
+                            {
+                                "type": "ForeignKeyAdded",
+                                "id": "fk:age->ages(v)",
+                                "key": "USERS/fk:age->ages(v)",
+                                "label": "Add foreign key age → ages(v)",
+                                "destructive": false
+                            },
+                            {
+                                "type": "ForeignKeyRemoved",
+                                "id": "fk:users_legacy",
+                                "key": "USERS/fk:users_legacy",
+                                "label": "Drop foreign key users_legacy",
+                                "destructive": true
+                            }
+                        ]
+                    },
+                    {
+                        "name": "old",
+                        "kind": "Removed",
+                        "id": "table:old",
+                        "items": []
+                    }
+                ],
+                "identical": 1,
+                "defaultSelection": [
+                    "USERS/column:age",
+                    "USERS/column:created",
+                    "USERS/column:email",
+                    "USERS/fk:age->ages(v)",
+                    "USERS/fk:users_team",
+                    "USERS/index:users_age",
+                    "USERS/pk",
+                    "table:Logs",
+                    "table:teams"
+                ],
+                "migration": {
+                    "PostgreSQL": {
+                        "statements": [
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"users_team\"",
+                                "phase": "DropForeignKeys"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT IF EXISTS \"users_age\"",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "DROP INDEX IF EXISTS \"dst\".\"users_age\"",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"USERS_pkey\"",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "CREATE TABLE \"dst\".\"Logs\" (\n    \"at\" timestamptz\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE TABLE \"dst\".\"teams\" (\n    \"id\" integer NOT NULL,\n    \"name\" text,\n    PRIMARY KEY (\"id\")\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ALTER COLUMN \"email\" SET NOT NULL",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ALTER COLUMN \"created\" SET DEFAULT now()",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD COLUMN \"age\" int4",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD PRIMARY KEY (\"id\")",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE INDEX \"users_age\" ON \"dst\".\"USERS\" (\"age\")",
+                                "phase": "CreateIndexes"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD CONSTRAINT \"users_team\" FOREIGN KEY (\"team_id\") REFERENCES \"dst\".\"teams\" (\"id\") ON DELETE CASCADE",
+                                "phase": "AddForeignKeys"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD FOREIGN KEY (\"age\") REFERENCES \"dst\".\"ages\" (\"v\")",
+                                "phase": "AddForeignKeys"
+                            }
+                        ],
+                        "warnings": [
+                            "USERS.email becomes NOT NULL: this fails if any row has NULL there."
+                        ],
+                        "transactional": true,
+                        "text": "ALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"users_team\";\n\nALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT IF EXISTS \"users_age\";\n\nDROP INDEX IF EXISTS \"dst\".\"users_age\";\n\nALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"USERS_pkey\";\n\nCREATE TABLE \"dst\".\"Logs\" (\n    \"at\" timestamptz\n);\n\nCREATE TABLE \"dst\".\"teams\" (\n    \"id\" integer NOT NULL,\n    \"name\" text,\n    PRIMARY KEY (\"id\")\n);\n\nALTER TABLE \"dst\".\"USERS\" ALTER COLUMN \"email\" SET NOT NULL;\n\nALTER TABLE \"dst\".\"USERS\" ALTER COLUMN \"created\" SET DEFAULT now();\n\nALTER TABLE \"dst\".\"USERS\" ADD COLUMN \"age\" int4;\n\nALTER TABLE \"dst\".\"USERS\" ADD PRIMARY KEY (\"id\");\n\nCREATE INDEX \"users_age\" ON \"dst\".\"USERS\" (\"age\");\n\nALTER TABLE \"dst\".\"USERS\" ADD CONSTRAINT \"users_team\" FOREIGN KEY (\"team_id\") REFERENCES \"dst\".\"teams\" (\"id\") ON DELETE CASCADE;\n\nALTER TABLE \"dst\".\"USERS\" ADD FOREIGN KEY (\"age\") REFERENCES \"dst\".\"ages\" (\"v\");"
+                    },
+                    "CockroachDB": {
+                        "statements": [
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"users_team\"",
+                                "phase": "DropForeignKeys"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT IF EXISTS \"users_age\"",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "DROP INDEX IF EXISTS \"dst\".\"users_age\"",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"USERS_pkey\"",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "CREATE TABLE \"dst\".\"Logs\" (\n    \"at\" timestamptz\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE TABLE \"dst\".\"teams\" (\n    \"id\" integer NOT NULL,\n    \"name\" text,\n    PRIMARY KEY (\"id\")\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ALTER COLUMN \"email\" SET NOT NULL",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ALTER COLUMN \"created\" SET DEFAULT now()",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD COLUMN \"age\" int4",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD PRIMARY KEY (\"id\")",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE INDEX \"users_age\" ON \"dst\".\"USERS\" (\"age\")",
+                                "phase": "CreateIndexes"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD CONSTRAINT \"users_team\" FOREIGN KEY (\"team_id\") REFERENCES \"dst\".\"teams\" (\"id\") ON DELETE CASCADE",
+                                "phase": "AddForeignKeys"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD FOREIGN KEY (\"age\") REFERENCES \"dst\".\"ages\" (\"v\")",
+                                "phase": "AddForeignKeys"
+                            }
+                        ],
+                        "warnings": [
+                            "USERS.email becomes NOT NULL: this fails if any row has NULL there."
+                        ],
+                        "transactional": true,
+                        "text": "ALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"users_team\";\n\nALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT IF EXISTS \"users_age\";\n\nDROP INDEX IF EXISTS \"dst\".\"users_age\";\n\nALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"USERS_pkey\";\n\nCREATE TABLE \"dst\".\"Logs\" (\n    \"at\" timestamptz\n);\n\nCREATE TABLE \"dst\".\"teams\" (\n    \"id\" integer NOT NULL,\n    \"name\" text,\n    PRIMARY KEY (\"id\")\n);\n\nALTER TABLE \"dst\".\"USERS\" ALTER COLUMN \"email\" SET NOT NULL;\n\nALTER TABLE \"dst\".\"USERS\" ALTER COLUMN \"created\" SET DEFAULT now();\n\nALTER TABLE \"dst\".\"USERS\" ADD COLUMN \"age\" int4;\n\nALTER TABLE \"dst\".\"USERS\" ADD PRIMARY KEY (\"id\");\n\nCREATE INDEX \"users_age\" ON \"dst\".\"USERS\" (\"age\");\n\nALTER TABLE \"dst\".\"USERS\" ADD CONSTRAINT \"users_team\" FOREIGN KEY (\"team_id\") REFERENCES \"dst\".\"teams\" (\"id\") ON DELETE CASCADE;\n\nALTER TABLE \"dst\".\"USERS\" ADD FOREIGN KEY (\"age\") REFERENCES \"dst\".\"ages\" (\"v\");"
+                    },
+                    "MySQL": {
+                        "statements": [
+                            {
+                                "sql": "ALTER TABLE `dst`.`USERS` DROP FOREIGN KEY `users_team`",
+                                "phase": "DropForeignKeys"
+                            },
+                            {
+                                "sql": "DROP INDEX `users_age` ON `dst`.`USERS`",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "ALTER TABLE `dst`.`USERS` DROP PRIMARY KEY",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "CREATE TABLE `dst`.`Logs` (\n    `at` timestamptz NULL\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE TABLE `dst`.`teams` (\n    `id` integer NOT NULL,\n    `name` text NULL,\n    PRIMARY KEY (`id`)\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE `dst`.`USERS` MODIFY COLUMN `email` varchar(100) NOT NULL",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE `dst`.`USERS` MODIFY COLUMN `created` timestamp DEFAULT now() NULL",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE `dst`.`USERS` ADD COLUMN `age` int4 NULL",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE `dst`.`USERS` ADD PRIMARY KEY (`id`)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE INDEX `users_age` ON `dst`.`USERS` (`age`)",
+                                "phase": "CreateIndexes"
+                            },
+                            {
+                                "sql": "ALTER TABLE `dst`.`USERS` ADD CONSTRAINT `users_team` FOREIGN KEY (`team_id`) REFERENCES `dst`.`teams` (`id`) ON DELETE CASCADE",
+                                "phase": "AddForeignKeys"
+                            },
+                            {
+                                "sql": "ALTER TABLE `dst`.`USERS` ADD FOREIGN KEY (`age`) REFERENCES `dst`.`ages` (`v`)",
+                                "phase": "AddForeignKeys"
+                            }
+                        ],
+                        "warnings": [
+                            "USERS.email becomes NOT NULL: this fails if any row has NULL there."
+                        ],
+                        "transactional": false,
+                        "text": "ALTER TABLE `dst`.`USERS` DROP FOREIGN KEY `users_team`;\n\nDROP INDEX `users_age` ON `dst`.`USERS`;\n\nALTER TABLE `dst`.`USERS` DROP PRIMARY KEY;\n\nCREATE TABLE `dst`.`Logs` (\n    `at` timestamptz NULL\n);\n\nCREATE TABLE `dst`.`teams` (\n    `id` integer NOT NULL,\n    `name` text NULL,\n    PRIMARY KEY (`id`)\n);\n\nALTER TABLE `dst`.`USERS` MODIFY COLUMN `email` varchar(100) NOT NULL;\n\nALTER TABLE `dst`.`USERS` MODIFY COLUMN `created` timestamp DEFAULT now() NULL;\n\nALTER TABLE `dst`.`USERS` ADD COLUMN `age` int4 NULL;\n\nALTER TABLE `dst`.`USERS` ADD PRIMARY KEY (`id`);\n\nCREATE INDEX `users_age` ON `dst`.`USERS` (`age`);\n\nALTER TABLE `dst`.`USERS` ADD CONSTRAINT `users_team` FOREIGN KEY (`team_id`) REFERENCES `dst`.`teams` (`id`) ON DELETE CASCADE;\n\nALTER TABLE `dst`.`USERS` ADD FOREIGN KEY (`age`) REFERENCES `dst`.`ages` (`v`);"
+                    },
+                    "SQLite": {
+                        "statements": [
+                            {
+                                "sql": "PRAGMA foreign_keys = OFF",
+                                "phase": "Prologue"
+                            },
+                            {
+                                "sql": "CREATE TABLE \"dst\".\"Logs\" (\n    \"at\" timestamptz\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE TABLE \"dst\".\"teams\" (\n    \"id\" integer NOT NULL,\n    \"name\" text,\n    PRIMARY KEY (\"id\")\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE TABLE \"dst\".\"_USERS_new\" (\n    \"id\" int4 NOT NULL,\n    \"email\" varchar(100) NOT NULL,\n    \"age\" int4,\n    \"legacy\" text,\n    \"created\" timestamp DEFAULT now(),\n    \"seq\" integer DEFAULT nextval('b_seq'),\n    PRIMARY KEY (\"id\"),\n    FOREIGN KEY (\"team_id\") REFERENCES \"dst\".\"teams\" (\"id\") ON DELETE CASCADE,\n    FOREIGN KEY (\"legacy\") REFERENCES \"dst\".\"legacy\" (\"id\"),\n    FOREIGN KEY (\"age\") REFERENCES \"dst\".\"ages\" (\"v\")\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "INSERT INTO \"dst\".\"_USERS_new\" (\"id\", \"email\", \"legacy\", \"created\", \"seq\") SELECT \"id\", \"email\", \"legacy\", \"created\", \"seq\" FROM \"dst\".\"USERS\"",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "DROP TABLE \"dst\".\"USERS\"",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"_USERS_new\" RENAME TO \"USERS\"",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE UNIQUE INDEX \"USERS_EMAIL\" ON \"dst\".\"USERS\" (\"EMAIL\")",
+                                "phase": "CreateIndexes"
+                            },
+                            {
+                                "sql": "CREATE INDEX \"users_old\" ON \"dst\".\"USERS\" (\"legacy\")",
+                                "phase": "CreateIndexes"
+                            },
+                            {
+                                "sql": "CREATE INDEX \"users_age\" ON \"dst\".\"USERS\" (\"age\")",
+                                "phase": "CreateIndexes"
+                            },
+                            {
+                                "sql": "PRAGMA foreign_keys = ON",
+                                "phase": "Epilogue"
+                            }
+                        ],
+                        "warnings": [
+                            "SQLite can't make these changes to USERS in place: the table is rebuilt and its rows copied. Views that use it may need recreating."
+                        ],
+                        "transactional": true,
+                        "text": "PRAGMA foreign_keys = OFF;\n\nCREATE TABLE \"dst\".\"Logs\" (\n    \"at\" timestamptz\n);\n\nCREATE TABLE \"dst\".\"teams\" (\n    \"id\" integer NOT NULL,\n    \"name\" text,\n    PRIMARY KEY (\"id\")\n);\n\nCREATE TABLE \"dst\".\"_USERS_new\" (\n    \"id\" int4 NOT NULL,\n    \"email\" varchar(100) NOT NULL,\n    \"age\" int4,\n    \"legacy\" text,\n    \"created\" timestamp DEFAULT now(),\n    \"seq\" integer DEFAULT nextval('b_seq'),\n    PRIMARY KEY (\"id\"),\n    FOREIGN KEY (\"team_id\") REFERENCES \"dst\".\"teams\" (\"id\") ON DELETE CASCADE,\n    FOREIGN KEY (\"legacy\") REFERENCES \"dst\".\"legacy\" (\"id\"),\n    FOREIGN KEY (\"age\") REFERENCES \"dst\".\"ages\" (\"v\")\n);\n\nINSERT INTO \"dst\".\"_USERS_new\" (\"id\", \"email\", \"legacy\", \"created\", \"seq\") SELECT \"id\", \"email\", \"legacy\", \"created\", \"seq\" FROM \"dst\".\"USERS\";\n\nDROP TABLE \"dst\".\"USERS\";\n\nALTER TABLE \"dst\".\"_USERS_new\" RENAME TO \"USERS\";\n\nCREATE UNIQUE INDEX \"USERS_EMAIL\" ON \"dst\".\"USERS\" (\"EMAIL\");\n\nCREATE INDEX \"users_old\" ON \"dst\".\"USERS\" (\"legacy\");\n\nCREATE INDEX \"users_age\" ON \"dst\".\"USERS\" (\"age\");\n\nPRAGMA foreign_keys = ON;"
+                    },
+                    "SqlServer": {
+                        "statements": [
+                            {
+                                "sql": "ALTER TABLE [dst].[USERS] DROP CONSTRAINT [users_team]",
+                                "phase": "DropForeignKeys"
+                            },
+                            {
+                                "sql": "DROP INDEX [users_age] ON [dst].[USERS]",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "CREATE TABLE [dst].[Logs] (\n    [at] timestamptz NULL\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE TABLE [dst].[teams] (\n    [id] integer NOT NULL,\n    [name] text NULL,\n    PRIMARY KEY ([id])\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE [dst].[USERS] ALTER COLUMN [email] varchar(100) NOT NULL",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE [dst].[USERS] ADD DEFAULT now() FOR [created]",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE [dst].[USERS] ADD [age] int4 NULL",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE [dst].[USERS] ADD CONSTRAINT [PK_USERS] PRIMARY KEY ([id])",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE INDEX [users_age] ON [dst].[USERS] ([age])",
+                                "phase": "CreateIndexes"
+                            },
+                            {
+                                "sql": "ALTER TABLE [dst].[USERS] ADD CONSTRAINT [users_team] FOREIGN KEY ([team_id]) REFERENCES [dst].[teams] ([id]) ON DELETE CASCADE",
+                                "phase": "AddForeignKeys"
+                            },
+                            {
+                                "sql": "ALTER TABLE [dst].[USERS] ADD FOREIGN KEY ([age]) REFERENCES [dst].[ages] ([v])",
+                                "phase": "AddForeignKeys"
+                            }
+                        ],
+                        "warnings": [
+                            "USERS: the primary key's constraint name is unknown; drop it by name before this runs.",
+                            "USERS.email becomes NOT NULL: this fails if any row has NULL there.",
+                            "USERS.created: SQL Server keeps defaults as named constraints; drop the old default constraint before this runs."
+                        ],
+                        "transactional": true,
+                        "text": "ALTER TABLE [dst].[USERS] DROP CONSTRAINT [users_team];\n\nDROP INDEX [users_age] ON [dst].[USERS];\n\nCREATE TABLE [dst].[Logs] (\n    [at] timestamptz NULL\n);\n\nCREATE TABLE [dst].[teams] (\n    [id] integer NOT NULL,\n    [name] text NULL,\n    PRIMARY KEY ([id])\n);\n\nALTER TABLE [dst].[USERS] ALTER COLUMN [email] varchar(100) NOT NULL;\n\nALTER TABLE [dst].[USERS] ADD DEFAULT now() FOR [created];\n\nALTER TABLE [dst].[USERS] ADD [age] int4 NULL;\n\nALTER TABLE [dst].[USERS] ADD CONSTRAINT [PK_USERS] PRIMARY KEY ([id]);\n\nCREATE INDEX [users_age] ON [dst].[USERS] ([age]);\n\nALTER TABLE [dst].[USERS] ADD CONSTRAINT [users_team] FOREIGN KEY ([team_id]) REFERENCES [dst].[teams] ([id]) ON DELETE CASCADE;\n\nALTER TABLE [dst].[USERS] ADD FOREIGN KEY ([age]) REFERENCES [dst].[ages] ([v]);"
+                    },
+                    "ClickHouse": {
+                        "statements": [
+                            {
+                                "sql": "DROP INDEX `users_age`",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "CREATE TABLE `dst`.`Logs` (\n    `at` Nullable(timestamptz)\n)\nENGINE = MergeTree\nORDER BY tuple()",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE TABLE `dst`.`teams` (\n    `id` integer,\n    `name` Nullable(text)\n)\nENGINE = MergeTree\nORDER BY (`id`)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE `dst`.`USERS` MODIFY COLUMN `email` varchar(100)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE `dst`.`USERS` MODIFY COLUMN `created` Nullable(timestamp) DEFAULT now()",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE `dst`.`USERS` ADD COLUMN `age` Nullable(int4)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE INDEX `users_age` ON `dst`.`USERS` (`age`)",
+                                "phase": "CreateIndexes"
+                            }
+                        ],
+                        "warnings": [
+                            "ClickHouse can't change the primary key of USERS in place; recreate the table instead.",
+                            "USERS.email becomes NOT NULL: this fails if any row has NULL there.",
+                            "ClickHouse has no foreign keys: users_team is left out.",
+                            "ClickHouse has no foreign keys:  is left out."
+                        ],
+                        "transactional": false,
+                        "text": "DROP INDEX `users_age`;\n\nCREATE TABLE `dst`.`Logs` (\n    `at` Nullable(timestamptz)\n)\nENGINE = MergeTree\nORDER BY tuple();\n\nCREATE TABLE `dst`.`teams` (\n    `id` integer,\n    `name` Nullable(text)\n)\nENGINE = MergeTree\nORDER BY (`id`);\n\nALTER TABLE `dst`.`USERS` MODIFY COLUMN `email` varchar(100);\n\nALTER TABLE `dst`.`USERS` MODIFY COLUMN `created` Nullable(timestamp) DEFAULT now();\n\nALTER TABLE `dst`.`USERS` ADD COLUMN `age` Nullable(int4);\n\nCREATE INDEX `users_age` ON `dst`.`USERS` (`age`);"
+                    },
+                    "DuckDB": {
+                        "statements": [
+                            {
+                                "sql": "DROP INDEX \"dst\".\"users_age\"",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "CREATE TABLE \"dst\".\"Logs\" (\n    \"at\" timestamptz\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE TABLE \"dst\".\"teams\" (\n    \"id\" integer NOT NULL,\n    \"name\" text,\n    PRIMARY KEY (\"id\")\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ALTER COLUMN \"email\" SET NOT NULL",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ALTER COLUMN \"created\" SET DEFAULT now()",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD COLUMN \"age\" int4",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE INDEX \"users_age\" ON \"dst\".\"USERS\" (\"age\")",
+                                "phase": "CreateIndexes"
+                            }
+                        ],
+                        "warnings": [
+                            "DuckDB can't drop a foreign key from an existing table: users_team stays.",
+                            "DuckDB can't change the primary key of USERS in place; recreate the table instead.",
+                            "USERS.email becomes NOT NULL: this fails if any row has NULL there.",
+                            "DuckDB can't add a foreign key to an existing table: users_team is left out.",
+                            "DuckDB can't add a foreign key to an existing table:  is left out."
+                        ],
+                        "transactional": true,
+                        "text": "DROP INDEX \"dst\".\"users_age\";\n\nCREATE TABLE \"dst\".\"Logs\" (\n    \"at\" timestamptz\n);\n\nCREATE TABLE \"dst\".\"teams\" (\n    \"id\" integer NOT NULL,\n    \"name\" text,\n    PRIMARY KEY (\"id\")\n);\n\nALTER TABLE \"dst\".\"USERS\" ALTER COLUMN \"email\" SET NOT NULL;\n\nALTER TABLE \"dst\".\"USERS\" ALTER COLUMN \"created\" SET DEFAULT now();\n\nALTER TABLE \"dst\".\"USERS\" ADD COLUMN \"age\" int4;\n\nCREATE INDEX \"users_age\" ON \"dst\".\"USERS\" (\"age\");"
+                    },
+                    "H2": {
+                        "statements": [
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"users_team\"",
+                                "phase": "DropForeignKeys"
+                            },
+                            {
+                                "sql": "DROP INDEX \"dst\".\"users_age\"",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" DROP PRIMARY KEY",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "CREATE TABLE \"dst\".\"Logs\" (\n    \"at\" timestamptz\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE TABLE \"dst\".\"teams\" (\n    \"id\" integer NOT NULL,\n    \"name\" text,\n    PRIMARY KEY (\"id\")\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ALTER COLUMN \"email\" SET NOT NULL",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ALTER COLUMN \"created\" SET DEFAULT now()",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD COLUMN \"age\" int4",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD PRIMARY KEY (\"id\")",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE INDEX \"users_age\" ON \"dst\".\"USERS\" (\"age\")",
+                                "phase": "CreateIndexes"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD CONSTRAINT \"users_team\" FOREIGN KEY (\"team_id\") REFERENCES \"dst\".\"teams\" (\"id\") ON DELETE CASCADE",
+                                "phase": "AddForeignKeys"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD FOREIGN KEY (\"age\") REFERENCES \"dst\".\"ages\" (\"v\")",
+                                "phase": "AddForeignKeys"
+                            }
+                        ],
+                        "warnings": [
+                            "USERS.email becomes NOT NULL: this fails if any row has NULL there.",
+                            "Written in standard SQL for Generic: check it against your database's syntax before running it."
+                        ],
+                        "transactional": false,
+                        "text": "ALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"users_team\";\n\nDROP INDEX \"dst\".\"users_age\";\n\nALTER TABLE \"dst\".\"USERS\" DROP PRIMARY KEY;\n\nCREATE TABLE \"dst\".\"Logs\" (\n    \"at\" timestamptz\n);\n\nCREATE TABLE \"dst\".\"teams\" (\n    \"id\" integer NOT NULL,\n    \"name\" text,\n    PRIMARY KEY (\"id\")\n);\n\nALTER TABLE \"dst\".\"USERS\" ALTER COLUMN \"email\" SET NOT NULL;\n\nALTER TABLE \"dst\".\"USERS\" ALTER COLUMN \"created\" SET DEFAULT now();\n\nALTER TABLE \"dst\".\"USERS\" ADD COLUMN \"age\" int4;\n\nALTER TABLE \"dst\".\"USERS\" ADD PRIMARY KEY (\"id\");\n\nCREATE INDEX \"users_age\" ON \"dst\".\"USERS\" (\"age\");\n\nALTER TABLE \"dst\".\"USERS\" ADD CONSTRAINT \"users_team\" FOREIGN KEY (\"team_id\") REFERENCES \"dst\".\"teams\" (\"id\") ON DELETE CASCADE;\n\nALTER TABLE \"dst\".\"USERS\" ADD FOREIGN KEY (\"age\") REFERENCES \"dst\".\"ages\" (\"v\");"
+                    }
+                }
+            }
+        },
+        {
+            "name": "migrate everything",
+            "output": {
+                "diffs": [
+                    {
+                        "name": "Logs",
+                        "kind": "Added",
+                        "id": "table:Logs",
+                        "items": []
+                    },
+                    {
+                        "name": "teams",
+                        "kind": "Added",
+                        "id": "table:teams",
+                        "items": []
+                    },
+                    {
+                        "name": "USERS",
+                        "kind": "Changed",
+                        "id": "table:USERS",
+                        "items": [
+                            {
+                                "type": "ColumnChanged",
+                                "id": "column:email",
+                                "key": "USERS/column:email",
+                                "label": "Change column email: NOT NULL",
+                                "destructive": false
+                            },
+                            {
+                                "type": "ColumnAdded",
+                                "id": "column:age",
+                                "key": "USERS/column:age",
+                                "label": "Add column age int4",
+                                "destructive": false
+                            },
+                            {
+                                "type": "ColumnChanged",
+                                "id": "column:created",
+                                "key": "USERS/column:created",
+                                "label": "Change column created: default CURRENT_TIMESTAMP → now()",
+                                "destructive": false
+                            },
+                            {
+                                "type": "ColumnRemoved",
+                                "id": "column:legacy",
+                                "key": "USERS/column:legacy",
+                                "label": "Drop column legacy",
+                                "destructive": true
+                            },
+                            {
+                                "type": "PrimaryKeyChanged",
+                                "id": "pk",
+                                "key": "USERS/pk",
+                                "label": "Change primary key (id, email) → (id)",
+                                "destructive": false
+                            },
+                            {
+                                "type": "IndexChanged",
+                                "id": "index:users_age",
+                                "key": "USERS/index:users_age",
+                                "label": "Recreate index users_age (age)",
+                                "destructive": false
+                            },
+                            {
+                                "type": "IndexRemoved",
+                                "id": "index:users_old",
+                                "key": "USERS/index:users_old",
+                                "label": "Drop index users_old",
+                                "destructive": true
+                            },
+                            {
+                                "type": "ForeignKeyChanged",
+                                "id": "fk:users_team",
+                                "key": "USERS/fk:users_team",
+                                "label": "Recreate foreign key users_team → teams(id)",
+                                "destructive": false
+                            },
+                            {
+                                "type": "ForeignKeyAdded",
+                                "id": "fk:age->ages(v)",
+                                "key": "USERS/fk:age->ages(v)",
+                                "label": "Add foreign key age → ages(v)",
+                                "destructive": false
+                            },
+                            {
+                                "type": "ForeignKeyRemoved",
+                                "id": "fk:users_legacy",
+                                "key": "USERS/fk:users_legacy",
+                                "label": "Drop foreign key users_legacy",
+                                "destructive": true
+                            }
+                        ]
+                    },
+                    {
+                        "name": "old",
+                        "kind": "Removed",
+                        "id": "table:old",
+                        "items": []
+                    }
+                ],
+                "identical": 1,
+                "defaultSelection": [
+                    "USERS/column:age",
+                    "USERS/column:created",
+                    "USERS/column:email",
+                    "USERS/fk:age->ages(v)",
+                    "USERS/fk:users_team",
+                    "USERS/index:users_age",
+                    "USERS/pk",
+                    "table:Logs",
+                    "table:teams"
+                ],
+                "migration": {
+                    "PostgreSQL": {
+                        "statements": [
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"users_team\"",
+                                "phase": "DropForeignKeys"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"users_legacy\"",
+                                "phase": "DropForeignKeys"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT IF EXISTS \"users_old\"",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "DROP INDEX IF EXISTS \"dst\".\"users_old\"",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT IF EXISTS \"users_age\"",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "DROP INDEX IF EXISTS \"dst\".\"users_age\"",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"USERS_pkey\"",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "CREATE TABLE \"dst\".\"Logs\" (\n    \"at\" timestamptz\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE TABLE \"dst\".\"teams\" (\n    \"id\" integer NOT NULL,\n    \"name\" text,\n    PRIMARY KEY (\"id\")\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" DROP COLUMN \"legacy\"",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ALTER COLUMN \"created\" SET DEFAULT now()",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD COLUMN \"age\" int4",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD PRIMARY KEY (\"id\")",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE INDEX \"users_age\" ON \"dst\".\"USERS\" (\"age\")",
+                                "phase": "CreateIndexes"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD CONSTRAINT \"users_team\" FOREIGN KEY (\"team_id\") REFERENCES \"dst\".\"teams\" (\"id\") ON DELETE CASCADE",
+                                "phase": "AddForeignKeys"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD FOREIGN KEY (\"age\") REFERENCES \"dst\".\"ages\" (\"v\")",
+                                "phase": "AddForeignKeys"
+                            },
+                            {
+                                "sql": "DROP TABLE \"dst\".\"old\"",
+                                "phase": "DropTables"
+                            }
+                        ],
+                        "warnings": [],
+                        "transactional": true,
+                        "text": "ALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"users_team\";\n\nALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"users_legacy\";\n\nALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT IF EXISTS \"users_old\";\n\nDROP INDEX IF EXISTS \"dst\".\"users_old\";\n\nALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT IF EXISTS \"users_age\";\n\nDROP INDEX IF EXISTS \"dst\".\"users_age\";\n\nALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"USERS_pkey\";\n\nCREATE TABLE \"dst\".\"Logs\" (\n    \"at\" timestamptz\n);\n\nCREATE TABLE \"dst\".\"teams\" (\n    \"id\" integer NOT NULL,\n    \"name\" text,\n    PRIMARY KEY (\"id\")\n);\n\nALTER TABLE \"dst\".\"USERS\" DROP COLUMN \"legacy\";\n\nALTER TABLE \"dst\".\"USERS\" ALTER COLUMN \"created\" SET DEFAULT now();\n\nALTER TABLE \"dst\".\"USERS\" ADD COLUMN \"age\" int4;\n\nALTER TABLE \"dst\".\"USERS\" ADD PRIMARY KEY (\"id\");\n\nCREATE INDEX \"users_age\" ON \"dst\".\"USERS\" (\"age\");\n\nALTER TABLE \"dst\".\"USERS\" ADD CONSTRAINT \"users_team\" FOREIGN KEY (\"team_id\") REFERENCES \"dst\".\"teams\" (\"id\") ON DELETE CASCADE;\n\nALTER TABLE \"dst\".\"USERS\" ADD FOREIGN KEY (\"age\") REFERENCES \"dst\".\"ages\" (\"v\");\n\nDROP TABLE \"dst\".\"old\";"
+                    },
+                    "CockroachDB": {
+                        "statements": [
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"users_team\"",
+                                "phase": "DropForeignKeys"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"users_legacy\"",
+                                "phase": "DropForeignKeys"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT IF EXISTS \"users_old\"",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "DROP INDEX IF EXISTS \"dst\".\"users_old\"",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT IF EXISTS \"users_age\"",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "DROP INDEX IF EXISTS \"dst\".\"users_age\"",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"USERS_pkey\"",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "CREATE TABLE \"dst\".\"Logs\" (\n    \"at\" timestamptz\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE TABLE \"dst\".\"teams\" (\n    \"id\" integer NOT NULL,\n    \"name\" text,\n    PRIMARY KEY (\"id\")\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" DROP COLUMN \"legacy\"",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ALTER COLUMN \"created\" SET DEFAULT now()",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD COLUMN \"age\" int4",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD PRIMARY KEY (\"id\")",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE INDEX \"users_age\" ON \"dst\".\"USERS\" (\"age\")",
+                                "phase": "CreateIndexes"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD CONSTRAINT \"users_team\" FOREIGN KEY (\"team_id\") REFERENCES \"dst\".\"teams\" (\"id\") ON DELETE CASCADE",
+                                "phase": "AddForeignKeys"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD FOREIGN KEY (\"age\") REFERENCES \"dst\".\"ages\" (\"v\")",
+                                "phase": "AddForeignKeys"
+                            },
+                            {
+                                "sql": "DROP TABLE \"dst\".\"old\"",
+                                "phase": "DropTables"
+                            }
+                        ],
+                        "warnings": [],
+                        "transactional": true,
+                        "text": "ALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"users_team\";\n\nALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"users_legacy\";\n\nALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT IF EXISTS \"users_old\";\n\nDROP INDEX IF EXISTS \"dst\".\"users_old\";\n\nALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT IF EXISTS \"users_age\";\n\nDROP INDEX IF EXISTS \"dst\".\"users_age\";\n\nALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"USERS_pkey\";\n\nCREATE TABLE \"dst\".\"Logs\" (\n    \"at\" timestamptz\n);\n\nCREATE TABLE \"dst\".\"teams\" (\n    \"id\" integer NOT NULL,\n    \"name\" text,\n    PRIMARY KEY (\"id\")\n);\n\nALTER TABLE \"dst\".\"USERS\" DROP COLUMN \"legacy\";\n\nALTER TABLE \"dst\".\"USERS\" ALTER COLUMN \"created\" SET DEFAULT now();\n\nALTER TABLE \"dst\".\"USERS\" ADD COLUMN \"age\" int4;\n\nALTER TABLE \"dst\".\"USERS\" ADD PRIMARY KEY (\"id\");\n\nCREATE INDEX \"users_age\" ON \"dst\".\"USERS\" (\"age\");\n\nALTER TABLE \"dst\".\"USERS\" ADD CONSTRAINT \"users_team\" FOREIGN KEY (\"team_id\") REFERENCES \"dst\".\"teams\" (\"id\") ON DELETE CASCADE;\n\nALTER TABLE \"dst\".\"USERS\" ADD FOREIGN KEY (\"age\") REFERENCES \"dst\".\"ages\" (\"v\");\n\nDROP TABLE \"dst\".\"old\";"
+                    },
+                    "MySQL": {
+                        "statements": [
+                            {
+                                "sql": "ALTER TABLE `dst`.`USERS` DROP FOREIGN KEY `users_team`",
+                                "phase": "DropForeignKeys"
+                            },
+                            {
+                                "sql": "ALTER TABLE `dst`.`USERS` DROP FOREIGN KEY `users_legacy`",
+                                "phase": "DropForeignKeys"
+                            },
+                            {
+                                "sql": "DROP INDEX `users_old` ON `dst`.`USERS`",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "DROP INDEX `users_age` ON `dst`.`USERS`",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "ALTER TABLE `dst`.`USERS` DROP PRIMARY KEY",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "CREATE TABLE `dst`.`Logs` (\n    `at` timestamptz NULL\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE TABLE `dst`.`teams` (\n    `id` integer NOT NULL,\n    `name` text NULL,\n    PRIMARY KEY (`id`)\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE `dst`.`USERS` DROP COLUMN `legacy`",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE `dst`.`USERS` MODIFY COLUMN `created` timestamp DEFAULT now() NULL",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE `dst`.`USERS` ADD COLUMN `age` int4 NULL",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE `dst`.`USERS` ADD PRIMARY KEY (`id`)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE INDEX `users_age` ON `dst`.`USERS` (`age`)",
+                                "phase": "CreateIndexes"
+                            },
+                            {
+                                "sql": "ALTER TABLE `dst`.`USERS` ADD CONSTRAINT `users_team` FOREIGN KEY (`team_id`) REFERENCES `dst`.`teams` (`id`) ON DELETE CASCADE",
+                                "phase": "AddForeignKeys"
+                            },
+                            {
+                                "sql": "ALTER TABLE `dst`.`USERS` ADD FOREIGN KEY (`age`) REFERENCES `dst`.`ages` (`v`)",
+                                "phase": "AddForeignKeys"
+                            },
+                            {
+                                "sql": "DROP TABLE `dst`.`old`",
+                                "phase": "DropTables"
+                            }
+                        ],
+                        "warnings": [],
+                        "transactional": false,
+                        "text": "ALTER TABLE `dst`.`USERS` DROP FOREIGN KEY `users_team`;\n\nALTER TABLE `dst`.`USERS` DROP FOREIGN KEY `users_legacy`;\n\nDROP INDEX `users_old` ON `dst`.`USERS`;\n\nDROP INDEX `users_age` ON `dst`.`USERS`;\n\nALTER TABLE `dst`.`USERS` DROP PRIMARY KEY;\n\nCREATE TABLE `dst`.`Logs` (\n    `at` timestamptz NULL\n);\n\nCREATE TABLE `dst`.`teams` (\n    `id` integer NOT NULL,\n    `name` text NULL,\n    PRIMARY KEY (`id`)\n);\n\nALTER TABLE `dst`.`USERS` DROP COLUMN `legacy`;\n\nALTER TABLE `dst`.`USERS` MODIFY COLUMN `created` timestamp DEFAULT now() NULL;\n\nALTER TABLE `dst`.`USERS` ADD COLUMN `age` int4 NULL;\n\nALTER TABLE `dst`.`USERS` ADD PRIMARY KEY (`id`);\n\nCREATE INDEX `users_age` ON `dst`.`USERS` (`age`);\n\nALTER TABLE `dst`.`USERS` ADD CONSTRAINT `users_team` FOREIGN KEY (`team_id`) REFERENCES `dst`.`teams` (`id`) ON DELETE CASCADE;\n\nALTER TABLE `dst`.`USERS` ADD FOREIGN KEY (`age`) REFERENCES `dst`.`ages` (`v`);\n\nDROP TABLE `dst`.`old`;"
+                    },
+                    "SQLite": {
+                        "statements": [
+                            {
+                                "sql": "PRAGMA foreign_keys = OFF",
+                                "phase": "Prologue"
+                            },
+                            {
+                                "sql": "CREATE TABLE \"dst\".\"Logs\" (\n    \"at\" timestamptz\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE TABLE \"dst\".\"teams\" (\n    \"id\" integer NOT NULL,\n    \"name\" text,\n    PRIMARY KEY (\"id\")\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE TABLE \"dst\".\"_USERS_new\" (\n    \"id\" int4 NOT NULL,\n    \"email\" character varying(100),\n    \"age\" int4,\n    \"created\" timestamp DEFAULT now(),\n    \"seq\" integer DEFAULT nextval('b_seq'),\n    PRIMARY KEY (\"id\"),\n    FOREIGN KEY (\"team_id\") REFERENCES \"dst\".\"teams\" (\"id\") ON DELETE CASCADE,\n    FOREIGN KEY (\"age\") REFERENCES \"dst\".\"ages\" (\"v\")\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "INSERT INTO \"dst\".\"_USERS_new\" (\"id\", \"email\", \"created\", \"seq\") SELECT \"id\", \"email\", \"created\", \"seq\" FROM \"dst\".\"USERS\"",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "DROP TABLE \"dst\".\"USERS\"",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"_USERS_new\" RENAME TO \"USERS\"",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE UNIQUE INDEX \"USERS_EMAIL\" ON \"dst\".\"USERS\" (\"EMAIL\")",
+                                "phase": "CreateIndexes"
+                            },
+                            {
+                                "sql": "CREATE INDEX \"users_age\" ON \"dst\".\"USERS\" (\"age\")",
+                                "phase": "CreateIndexes"
+                            },
+                            {
+                                "sql": "DROP TABLE \"dst\".\"old\"",
+                                "phase": "DropTables"
+                            },
+                            {
+                                "sql": "PRAGMA foreign_keys = ON",
+                                "phase": "Epilogue"
+                            }
+                        ],
+                        "warnings": [
+                            "SQLite can't make these changes to USERS in place: the table is rebuilt and its rows copied. Views that use it may need recreating."
+                        ],
+                        "transactional": true,
+                        "text": "PRAGMA foreign_keys = OFF;\n\nCREATE TABLE \"dst\".\"Logs\" (\n    \"at\" timestamptz\n);\n\nCREATE TABLE \"dst\".\"teams\" (\n    \"id\" integer NOT NULL,\n    \"name\" text,\n    PRIMARY KEY (\"id\")\n);\n\nCREATE TABLE \"dst\".\"_USERS_new\" (\n    \"id\" int4 NOT NULL,\n    \"email\" character varying(100),\n    \"age\" int4,\n    \"created\" timestamp DEFAULT now(),\n    \"seq\" integer DEFAULT nextval('b_seq'),\n    PRIMARY KEY (\"id\"),\n    FOREIGN KEY (\"team_id\") REFERENCES \"dst\".\"teams\" (\"id\") ON DELETE CASCADE,\n    FOREIGN KEY (\"age\") REFERENCES \"dst\".\"ages\" (\"v\")\n);\n\nINSERT INTO \"dst\".\"_USERS_new\" (\"id\", \"email\", \"created\", \"seq\") SELECT \"id\", \"email\", \"created\", \"seq\" FROM \"dst\".\"USERS\";\n\nDROP TABLE \"dst\".\"USERS\";\n\nALTER TABLE \"dst\".\"_USERS_new\" RENAME TO \"USERS\";\n\nCREATE UNIQUE INDEX \"USERS_EMAIL\" ON \"dst\".\"USERS\" (\"EMAIL\");\n\nCREATE INDEX \"users_age\" ON \"dst\".\"USERS\" (\"age\");\n\nDROP TABLE \"dst\".\"old\";\n\nPRAGMA foreign_keys = ON;"
+                    },
+                    "SqlServer": {
+                        "statements": [
+                            {
+                                "sql": "ALTER TABLE [dst].[USERS] DROP CONSTRAINT [users_team]",
+                                "phase": "DropForeignKeys"
+                            },
+                            {
+                                "sql": "ALTER TABLE [dst].[USERS] DROP CONSTRAINT [users_legacy]",
+                                "phase": "DropForeignKeys"
+                            },
+                            {
+                                "sql": "DROP INDEX [users_old] ON [dst].[USERS]",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "DROP INDEX [users_age] ON [dst].[USERS]",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "CREATE TABLE [dst].[Logs] (\n    [at] timestamptz NULL\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE TABLE [dst].[teams] (\n    [id] integer NOT NULL,\n    [name] text NULL,\n    PRIMARY KEY ([id])\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE [dst].[USERS] DROP COLUMN [legacy]",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE [dst].[USERS] ADD DEFAULT now() FOR [created]",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE [dst].[USERS] ADD [age] int4 NULL",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE [dst].[USERS] ADD CONSTRAINT [PK_USERS] PRIMARY KEY ([id])",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE INDEX [users_age] ON [dst].[USERS] ([age])",
+                                "phase": "CreateIndexes"
+                            },
+                            {
+                                "sql": "ALTER TABLE [dst].[USERS] ADD CONSTRAINT [users_team] FOREIGN KEY ([team_id]) REFERENCES [dst].[teams] ([id]) ON DELETE CASCADE",
+                                "phase": "AddForeignKeys"
+                            },
+                            {
+                                "sql": "ALTER TABLE [dst].[USERS] ADD FOREIGN KEY ([age]) REFERENCES [dst].[ages] ([v])",
+                                "phase": "AddForeignKeys"
+                            },
+                            {
+                                "sql": "DROP TABLE [dst].[old]",
+                                "phase": "DropTables"
+                            }
+                        ],
+                        "warnings": [
+                            "USERS: the primary key's constraint name is unknown; drop it by name before this runs.",
+                            "USERS.created: SQL Server keeps defaults as named constraints; drop the old default constraint before this runs."
+                        ],
+                        "transactional": true,
+                        "text": "ALTER TABLE [dst].[USERS] DROP CONSTRAINT [users_team];\n\nALTER TABLE [dst].[USERS] DROP CONSTRAINT [users_legacy];\n\nDROP INDEX [users_old] ON [dst].[USERS];\n\nDROP INDEX [users_age] ON [dst].[USERS];\n\nCREATE TABLE [dst].[Logs] (\n    [at] timestamptz NULL\n);\n\nCREATE TABLE [dst].[teams] (\n    [id] integer NOT NULL,\n    [name] text NULL,\n    PRIMARY KEY ([id])\n);\n\nALTER TABLE [dst].[USERS] DROP COLUMN [legacy];\n\nALTER TABLE [dst].[USERS] ADD DEFAULT now() FOR [created];\n\nALTER TABLE [dst].[USERS] ADD [age] int4 NULL;\n\nALTER TABLE [dst].[USERS] ADD CONSTRAINT [PK_USERS] PRIMARY KEY ([id]);\n\nCREATE INDEX [users_age] ON [dst].[USERS] ([age]);\n\nALTER TABLE [dst].[USERS] ADD CONSTRAINT [users_team] FOREIGN KEY ([team_id]) REFERENCES [dst].[teams] ([id]) ON DELETE CASCADE;\n\nALTER TABLE [dst].[USERS] ADD FOREIGN KEY ([age]) REFERENCES [dst].[ages] ([v]);\n\nDROP TABLE [dst].[old];"
+                    },
+                    "ClickHouse": {
+                        "statements": [
+                            {
+                                "sql": "DROP INDEX `users_old`",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "DROP INDEX `users_age`",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "CREATE TABLE `dst`.`Logs` (\n    `at` Nullable(timestamptz)\n)\nENGINE = MergeTree\nORDER BY tuple()",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE TABLE `dst`.`teams` (\n    `id` integer,\n    `name` Nullable(text)\n)\nENGINE = MergeTree\nORDER BY (`id`)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE `dst`.`USERS` DROP COLUMN `legacy`",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE `dst`.`USERS` MODIFY COLUMN `created` Nullable(timestamp) DEFAULT now()",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE `dst`.`USERS` ADD COLUMN `age` Nullable(int4)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE INDEX `users_age` ON `dst`.`USERS` (`age`)",
+                                "phase": "CreateIndexes"
+                            },
+                            {
+                                "sql": "DROP TABLE `dst`.`old`",
+                                "phase": "DropTables"
+                            }
+                        ],
+                        "warnings": [
+                            "ClickHouse can't change the primary key of USERS in place; recreate the table instead.",
+                            "ClickHouse has no foreign keys: users_team is left out.",
+                            "ClickHouse has no foreign keys:  is left out."
+                        ],
+                        "transactional": false,
+                        "text": "DROP INDEX `users_old`;\n\nDROP INDEX `users_age`;\n\nCREATE TABLE `dst`.`Logs` (\n    `at` Nullable(timestamptz)\n)\nENGINE = MergeTree\nORDER BY tuple();\n\nCREATE TABLE `dst`.`teams` (\n    `id` integer,\n    `name` Nullable(text)\n)\nENGINE = MergeTree\nORDER BY (`id`);\n\nALTER TABLE `dst`.`USERS` DROP COLUMN `legacy`;\n\nALTER TABLE `dst`.`USERS` MODIFY COLUMN `created` Nullable(timestamp) DEFAULT now();\n\nALTER TABLE `dst`.`USERS` ADD COLUMN `age` Nullable(int4);\n\nCREATE INDEX `users_age` ON `dst`.`USERS` (`age`);\n\nDROP TABLE `dst`.`old`;"
+                    },
+                    "DuckDB": {
+                        "statements": [
+                            {
+                                "sql": "DROP INDEX \"dst\".\"users_old\"",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "DROP INDEX \"dst\".\"users_age\"",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "CREATE TABLE \"dst\".\"Logs\" (\n    \"at\" timestamptz\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE TABLE \"dst\".\"teams\" (\n    \"id\" integer NOT NULL,\n    \"name\" text,\n    PRIMARY KEY (\"id\")\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" DROP COLUMN \"legacy\"",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ALTER COLUMN \"created\" SET DEFAULT now()",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD COLUMN \"age\" int4",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE INDEX \"users_age\" ON \"dst\".\"USERS\" (\"age\")",
+                                "phase": "CreateIndexes"
+                            },
+                            {
+                                "sql": "DROP TABLE \"dst\".\"old\"",
+                                "phase": "DropTables"
+                            }
+                        ],
+                        "warnings": [
+                            "DuckDB can't drop a foreign key from an existing table: users_team stays.",
+                            "DuckDB can't drop a foreign key from an existing table: users_legacy stays.",
+                            "DuckDB can't change the primary key of USERS in place; recreate the table instead.",
+                            "DuckDB can't add a foreign key to an existing table: users_team is left out.",
+                            "DuckDB can't add a foreign key to an existing table:  is left out."
+                        ],
+                        "transactional": true,
+                        "text": "DROP INDEX \"dst\".\"users_old\";\n\nDROP INDEX \"dst\".\"users_age\";\n\nCREATE TABLE \"dst\".\"Logs\" (\n    \"at\" timestamptz\n);\n\nCREATE TABLE \"dst\".\"teams\" (\n    \"id\" integer NOT NULL,\n    \"name\" text,\n    PRIMARY KEY (\"id\")\n);\n\nALTER TABLE \"dst\".\"USERS\" DROP COLUMN \"legacy\";\n\nALTER TABLE \"dst\".\"USERS\" ALTER COLUMN \"created\" SET DEFAULT now();\n\nALTER TABLE \"dst\".\"USERS\" ADD COLUMN \"age\" int4;\n\nCREATE INDEX \"users_age\" ON \"dst\".\"USERS\" (\"age\");\n\nDROP TABLE \"dst\".\"old\";"
+                    },
+                    "H2": {
+                        "statements": [
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"users_team\"",
+                                "phase": "DropForeignKeys"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"users_legacy\"",
+                                "phase": "DropForeignKeys"
+                            },
+                            {
+                                "sql": "DROP INDEX \"dst\".\"users_old\"",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "DROP INDEX \"dst\".\"users_age\"",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" DROP PRIMARY KEY",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "CREATE TABLE \"dst\".\"Logs\" (\n    \"at\" timestamptz\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE TABLE \"dst\".\"teams\" (\n    \"id\" integer NOT NULL,\n    \"name\" text,\n    PRIMARY KEY (\"id\")\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" DROP COLUMN \"legacy\"",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ALTER COLUMN \"created\" SET DEFAULT now()",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD COLUMN \"age\" int4",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD PRIMARY KEY (\"id\")",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE INDEX \"users_age\" ON \"dst\".\"USERS\" (\"age\")",
+                                "phase": "CreateIndexes"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD CONSTRAINT \"users_team\" FOREIGN KEY (\"team_id\") REFERENCES \"dst\".\"teams\" (\"id\") ON DELETE CASCADE",
+                                "phase": "AddForeignKeys"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"dst\".\"USERS\" ADD FOREIGN KEY (\"age\") REFERENCES \"dst\".\"ages\" (\"v\")",
+                                "phase": "AddForeignKeys"
+                            },
+                            {
+                                "sql": "DROP TABLE \"dst\".\"old\"",
+                                "phase": "DropTables"
+                            }
+                        ],
+                        "warnings": [
+                            "Written in standard SQL for Generic: check it against your database's syntax before running it."
+                        ],
+                        "transactional": false,
+                        "text": "ALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"users_team\";\n\nALTER TABLE \"dst\".\"USERS\" DROP CONSTRAINT \"users_legacy\";\n\nDROP INDEX \"dst\".\"users_old\";\n\nDROP INDEX \"dst\".\"users_age\";\n\nALTER TABLE \"dst\".\"USERS\" DROP PRIMARY KEY;\n\nCREATE TABLE \"dst\".\"Logs\" (\n    \"at\" timestamptz\n);\n\nCREATE TABLE \"dst\".\"teams\" (\n    \"id\" integer NOT NULL,\n    \"name\" text,\n    PRIMARY KEY (\"id\")\n);\n\nALTER TABLE \"dst\".\"USERS\" DROP COLUMN \"legacy\";\n\nALTER TABLE \"dst\".\"USERS\" ALTER COLUMN \"created\" SET DEFAULT now();\n\nALTER TABLE \"dst\".\"USERS\" ADD COLUMN \"age\" int4;\n\nALTER TABLE \"dst\".\"USERS\" ADD PRIMARY KEY (\"id\");\n\nCREATE INDEX \"users_age\" ON \"dst\".\"USERS\" (\"age\");\n\nALTER TABLE \"dst\".\"USERS\" ADD CONSTRAINT \"users_team\" FOREIGN KEY (\"team_id\") REFERENCES \"dst\".\"teams\" (\"id\") ON DELETE CASCADE;\n\nALTER TABLE \"dst\".\"USERS\" ADD FOREIGN KEY (\"age\") REFERENCES \"dst\".\"ages\" (\"v\");\n\nDROP TABLE \"dst\".\"old\";"
+                    }
+                }
+            }
+        },
+        {
+            "name": "identical",
+            "output": {
+                "diffs": [],
+                "identical": 1,
+                "defaultSelection": [],
+                "migration": {
+                    "PostgreSQL": {
+                        "statements": [],
+                        "warnings": [],
+                        "transactional": true,
+                        "text": ""
+                    },
+                    "CockroachDB": {
+                        "statements": [],
+                        "warnings": [],
+                        "transactional": true,
+                        "text": ""
+                    },
+                    "MySQL": {
+                        "statements": [],
+                        "warnings": [],
+                        "transactional": false,
+                        "text": ""
+                    },
+                    "SQLite": {
+                        "statements": [],
+                        "warnings": [],
+                        "transactional": true,
+                        "text": ""
+                    },
+                    "SqlServer": {
+                        "statements": [],
+                        "warnings": [],
+                        "transactional": true,
+                        "text": ""
+                    },
+                    "ClickHouse": {
+                        "statements": [],
+                        "warnings": [],
+                        "transactional": false,
+                        "text": ""
+                    },
+                    "DuckDB": {
+                        "statements": [],
+                        "warnings": [],
+                        "transactional": true,
+                        "text": ""
+                    },
+                    "H2": {
+                        "statements": [],
+                        "warnings": [],
+                        "transactional": false,
+                        "text": ""
+                    }
+                }
+            }
+        },
+        {
+            "name": "empty",
+            "output": {
+                "diffs": [],
+                "identical": 0,
+                "defaultSelection": [],
+                "migration": {
+                    "PostgreSQL": {
+                        "statements": [],
+                        "warnings": [],
+                        "transactional": true,
+                        "text": ""
+                    },
+                    "CockroachDB": {
+                        "statements": [],
+                        "warnings": [],
+                        "transactional": true,
+                        "text": ""
+                    },
+                    "MySQL": {
+                        "statements": [],
+                        "warnings": [],
+                        "transactional": false,
+                        "text": ""
+                    },
+                    "SQLite": {
+                        "statements": [],
+                        "warnings": [],
+                        "transactional": true,
+                        "text": ""
+                    },
+                    "SqlServer": {
+                        "statements": [],
+                        "warnings": [],
+                        "transactional": true,
+                        "text": ""
+                    },
+                    "ClickHouse": {
+                        "statements": [],
+                        "warnings": [],
+                        "transactional": false,
+                        "text": ""
+                    },
+                    "DuckDB": {
+                        "statements": [],
+                        "warnings": [],
+                        "transactional": true,
+                        "text": ""
+                    },
+                    "H2": {
+                        "statements": [],
+                        "warnings": [],
+                        "transactional": false,
+                        "text": ""
+                    }
+                }
+            }
+        },
+        {
+            "name": "primary key added and dropped",
+            "output": {
+                "diffs": [
+                    {
+                        "name": "a",
+                        "kind": "Changed",
+                        "id": "table:a",
+                        "items": [
+                            {
+                                "type": "PrimaryKeyChanged",
+                                "id": "pk",
+                                "key": "a/pk",
+                                "label": "Add primary key (id)",
+                                "destructive": false
+                            }
+                        ]
+                    },
+                    {
+                        "name": "b",
+                        "kind": "Changed",
+                        "id": "table:b",
+                        "items": [
+                            {
+                                "type": "PrimaryKeyChanged",
+                                "id": "pk",
+                                "key": "b/pk",
+                                "label": "Drop primary key (id)",
+                                "destructive": false
+                            }
+                        ]
+                    }
+                ],
+                "identical": 0,
+                "defaultSelection": [
+                    "a/pk",
+                    "b/pk"
+                ],
+                "migration": {
+                    "PostgreSQL": {
+                        "statements": [
+                            {
+                                "sql": "ALTER TABLE \"app\".\"b\" DROP CONSTRAINT \"b_pkey\"",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"app\".\"a\" ADD PRIMARY KEY (\"id\")",
+                                "phase": "Tables"
+                            }
+                        ],
+                        "warnings": [],
+                        "transactional": true,
+                        "text": "ALTER TABLE \"app\".\"b\" DROP CONSTRAINT \"b_pkey\";\n\nALTER TABLE \"app\".\"a\" ADD PRIMARY KEY (\"id\");"
+                    },
+                    "CockroachDB": {
+                        "statements": [
+                            {
+                                "sql": "ALTER TABLE \"app\".\"b\" DROP CONSTRAINT \"b_pkey\"",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"app\".\"a\" ADD PRIMARY KEY (\"id\")",
+                                "phase": "Tables"
+                            }
+                        ],
+                        "warnings": [],
+                        "transactional": true,
+                        "text": "ALTER TABLE \"app\".\"b\" DROP CONSTRAINT \"b_pkey\";\n\nALTER TABLE \"app\".\"a\" ADD PRIMARY KEY (\"id\");"
+                    },
+                    "MySQL": {
+                        "statements": [
+                            {
+                                "sql": "ALTER TABLE `app`.`b` DROP PRIMARY KEY",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "ALTER TABLE `app`.`a` ADD PRIMARY KEY (`id`)",
+                                "phase": "Tables"
+                            }
+                        ],
+                        "warnings": [],
+                        "transactional": false,
+                        "text": "ALTER TABLE `app`.`b` DROP PRIMARY KEY;\n\nALTER TABLE `app`.`a` ADD PRIMARY KEY (`id`);"
+                    },
+                    "SQLite": {
+                        "statements": [
+                            {
+                                "sql": "PRAGMA foreign_keys = OFF",
+                                "phase": "Prologue"
+                            },
+                            {
+                                "sql": "CREATE TABLE \"app\".\"_a_new\" (\n    \"id\" int,\n    PRIMARY KEY (\"id\")\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "INSERT INTO \"app\".\"_a_new\" (\"id\") SELECT \"id\" FROM \"app\".\"a\"",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "DROP TABLE \"app\".\"a\"",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"app\".\"_a_new\" RENAME TO \"a\"",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "CREATE TABLE \"app\".\"_b_new\" (\n    \"id\" int\n)",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "INSERT INTO \"app\".\"_b_new\" (\"id\") SELECT \"id\" FROM \"app\".\"b\"",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "DROP TABLE \"app\".\"b\"",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"app\".\"_b_new\" RENAME TO \"b\"",
+                                "phase": "Tables"
+                            },
+                            {
+                                "sql": "PRAGMA foreign_keys = ON",
+                                "phase": "Epilogue"
+                            }
+                        ],
+                        "warnings": [
+                            "SQLite can't make these changes to a in place: the table is rebuilt and its rows copied. Views that use it may need recreating.",
+                            "SQLite can't make these changes to b in place: the table is rebuilt and its rows copied. Views that use it may need recreating."
+                        ],
+                        "transactional": true,
+                        "text": "PRAGMA foreign_keys = OFF;\n\nCREATE TABLE \"app\".\"_a_new\" (\n    \"id\" int,\n    PRIMARY KEY (\"id\")\n);\n\nINSERT INTO \"app\".\"_a_new\" (\"id\") SELECT \"id\" FROM \"app\".\"a\";\n\nDROP TABLE \"app\".\"a\";\n\nALTER TABLE \"app\".\"_a_new\" RENAME TO \"a\";\n\nCREATE TABLE \"app\".\"_b_new\" (\n    \"id\" int\n);\n\nINSERT INTO \"app\".\"_b_new\" (\"id\") SELECT \"id\" FROM \"app\".\"b\";\n\nDROP TABLE \"app\".\"b\";\n\nALTER TABLE \"app\".\"_b_new\" RENAME TO \"b\";\n\nPRAGMA foreign_keys = ON;"
+                    },
+                    "SqlServer": {
+                        "statements": [
+                            {
+                                "sql": "ALTER TABLE [app].[a] ADD CONSTRAINT [PK_a] PRIMARY KEY ([id])",
+                                "phase": "Tables"
+                            }
+                        ],
+                        "warnings": [
+                            "b: the primary key's constraint name is unknown; drop it by name before this runs."
+                        ],
+                        "transactional": true,
+                        "text": "ALTER TABLE [app].[a] ADD CONSTRAINT [PK_a] PRIMARY KEY ([id]);"
+                    },
+                    "ClickHouse": {
+                        "statements": [],
+                        "warnings": [
+                            "ClickHouse can't change the primary key of b in place; recreate the table instead."
+                        ],
+                        "transactional": false,
+                        "text": ""
+                    },
+                    "DuckDB": {
+                        "statements": [],
+                        "warnings": [
+                            "DuckDB can't change the primary key of b in place; recreate the table instead."
+                        ],
+                        "transactional": true,
+                        "text": ""
+                    },
+                    "H2": {
+                        "statements": [
+                            {
+                                "sql": "ALTER TABLE \"app\".\"b\" DROP PRIMARY KEY",
+                                "phase": "DropIndexes"
+                            },
+                            {
+                                "sql": "ALTER TABLE \"app\".\"a\" ADD PRIMARY KEY (\"id\")",
+                                "phase": "Tables"
+                            }
+                        ],
+                        "warnings": [
+                            "Written in standard SQL for Generic: check it against your database's syntax before running it."
+                        ],
+                        "transactional": false,
+                        "text": "ALTER TABLE \"app\".\"b\" DROP PRIMARY KEY;\n\nALTER TABLE \"app\".\"a\" ADD PRIMARY KEY (\"id\");"
+                    }
+                }
+            }
+        }
+    ]
+}

@@ -1,0 +1,50 @@
+[package]
+name = "tg-driver"
+version = "0.0.0"
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+rust-version.workspace = true
+
+[features]
+default = ["postgres", "sqlite", "mysql", "mssql", "clickhouse", "duckdb", "redis", "mongodb", "etcd"]
+mongodb = ["dep:mongodb", "dep:bson", "dep:rustls"]
+etcd = ["dep:reqwest", "dep:rustls"]
+redis = ["dep:redis", "dep:rustls"]
+duckdb = ["dep:duckdb"]
+clickhouse = ["dep:reqwest", "dep:rustls", "dep:rustls-native-certs"]
+mssql = ["dep:tiberius", "dep:rustls", "tokio-util/compat"]
+mysql = ["dep:mysql_async", "dep:rustls"]
+postgres = ["dep:tokio-postgres", "dep:deadpool-postgres", "dep:tokio-postgres-rustls", "dep:rustls", "dep:rustls-native-certs"]
+sqlite = ["dep:rusqlite"]
+
+[dependencies]
+async-trait.workspace = true
+chrono.workspace = true
+futures-util.workspace = true
+regex.workspace = true
+serde_json.workspace = true
+tg-core = { path = "../tg-core" }
+tg-sql = { path = "../tg-sql" }
+thiserror.workspace = true
+tokio = { workspace = true, features = ["rt", "sync", "time", "net", "macros"] }
+tokio-util.workspace = true
+
+deadpool-postgres = { workspace = true, optional = true }
+duckdb = { workspace = true, optional = true }
+mysql_async = { workspace = true, optional = true }
+tiberius = { workspace = true, optional = true }
+reqwest = { workspace = true, optional = true }
+redis = { workspace = true, optional = true }
+mongodb = { workspace = true, optional = true }
+bson = { workspace = true, optional = true }
+rusqlite = { workspace = true, optional = true }
+rustls = { workspace = true, optional = true }
+rustls-native-certs = { workspace = true, optional = true }
+tokio-postgres = { workspace = true, optional = true }
+tokio-postgres-rustls = { workspace = true, optional = true }
+
+[dev-dependencies]
+serde_json.workspace = true
+tempfile.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

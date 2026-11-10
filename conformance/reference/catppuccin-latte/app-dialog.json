@@ -1,0 +1,29 @@
+{
+    "specimen": "app-dialog",
+    "theme": "Catppuccin Latte",
+    "density": 2.0,
+    "width": 640,
+    "height": 400,
+    "regions": [
+        {
+            "tag": "text:app-dialog.body",
+            "kind": "text",
+            "rect": [
+                32,
+                88,
+                373,
+                31
+            ]
+        },
+        {
+            "tag": "text:app-dialog.title",
+            "kind": "text",
+            "rect": [
+                248,
+                17,
+                145,
+                31
+            ]
+        }
+    ]
+}

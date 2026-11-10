@@ -1,0 +1,3714 @@
+{
+    "subject": "document-completion",
+    "cases": [
+        {
+            "name": "Filter {|}",
+            "output": {
+                "replaceStart": 1,
+                "replaceEnd": 1,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "_id",
+                        "insertText": "_id: ",
+                        "kind": "Column",
+                        "detail": "objectId",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "status",
+                        "insertText": "status: ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "total",
+                        "insertText": "total: ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "tags",
+                        "insertText": "tags: ",
+                        "kind": "Column",
+                        "detail": "array",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "items",
+                        "insertText": "items: ",
+                        "kind": "Column",
+                        "detail": "array",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "items.sku",
+                        "insertText": "'items.sku': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "items.qty",
+                        "insertText": "'items.qty': ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "address",
+                        "insertText": "address: ",
+                        "kind": "Column",
+                        "detail": "object",
+                        "caretOffset": 9
+                    },
+                    {
+                        "label": "address.city",
+                        "insertText": "'address.city': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 16
+                    },
+                    {
+                        "label": "first name",
+                        "insertText": "'first name': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 14
+                    },
+                    {
+                        "label": "$and",
+                        "insertText": "$and: [{}]",
+                        "kind": "Operator",
+                        "detail": "all of the conditions",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$or",
+                        "insertText": "$or: [{}]",
+                        "kind": "Operator",
+                        "detail": "any of the conditions",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$nor",
+                        "insertText": "$nor: [{}]",
+                        "kind": "Operator",
+                        "detail": "none of the conditions",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$expr",
+                        "insertText": "$expr: {}",
+                        "kind": "Operator",
+                        "detail": "aggregation expression",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$text",
+                        "insertText": "$text: {$search: ''}",
+                        "kind": "Operator",
+                        "detail": "text index search",
+                        "caretOffset": 17
+                    },
+                    {
+                        "label": "$jsonSchema",
+                        "insertText": "$jsonSchema: {}",
+                        "kind": "Operator",
+                        "detail": "matches a JSON schema",
+                        "caretOffset": 14
+                    },
+                    {
+                        "label": "$comment",
+                        "insertText": "$comment: ",
+                        "kind": "Operator",
+                        "detail": "comment for the profiler",
+                        "caretOffset": 10
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {sta|}",
+            "output": {
+                "replaceStart": 1,
+                "replaceEnd": 4,
+                "prefix": "sta",
+                "items": [
+                    {
+                        "label": "status",
+                        "insertText": "status: ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 8
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {status: 'A', tot|}",
+            "output": {
+                "replaceStart": 14,
+                "replaceEnd": 17,
+                "prefix": "tot",
+                "items": [
+                    {
+                        "label": "total",
+                        "insertText": "total: ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 7
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {cit|}",
+            "output": {
+                "replaceStart": 1,
+                "replaceEnd": 4,
+                "prefix": "cit",
+                "items": [
+                    {
+                        "label": "address.city",
+                        "insertText": "'address.city': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 16
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {first|}",
+            "output": {
+                "replaceStart": 1,
+                "replaceEnd": 6,
+                "prefix": "first",
+                "items": [
+                    {
+                        "label": "first name",
+                        "insertText": "'first name': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 14
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {'addr|ess.c': 'x'}",
+            "output": {
+                "replaceStart": 1,
+                "replaceEnd": 12,
+                "prefix": "'addr",
+                "items": [
+                    {
+                        "label": "address",
+                        "insertText": "address",
+                        "kind": "Column",
+                        "detail": "object",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "address.city",
+                        "insertText": "'address.city'",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 14
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter stat|",
+            "output": {
+                "replaceStart": 0,
+                "replaceEnd": 4,
+                "prefix": "stat",
+                "items": [
+                    {
+                        "label": "status",
+                        "insertText": "status: ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 8
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {total: {$g|}}",
+            "output": {
+                "replaceStart": 9,
+                "replaceEnd": 11,
+                "prefix": "$g",
+                "items": [
+                    {
+                        "label": "$gt",
+                        "insertText": "$gt: ",
+                        "kind": "Operator",
+                        "detail": "greater than",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "$gte",
+                        "insertText": "$gte: ",
+                        "kind": "Operator",
+                        "detail": "greater than or equal to",
+                        "caretOffset": 6
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {total: {$i|}}",
+            "output": {
+                "replaceStart": 9,
+                "replaceEnd": 11,
+                "prefix": "$i",
+                "items": [
+                    {
+                        "label": "$in",
+                        "insertText": "$in: []",
+                        "kind": "Operator",
+                        "detail": "any of the values",
+                        "caretOffset": 6
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {tags: {$elem|}}",
+            "output": {
+                "replaceStart": 8,
+                "replaceEnd": 13,
+                "prefix": "$elem",
+                "items": [
+                    {
+                        "label": "$elemMatch",
+                        "insertText": "$elemMatch: {}",
+                        "kind": "Operator",
+                        "detail": "an array element matches all conditions",
+                        "caretOffset": 13
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {status: 'a|",
+            "output": {
+                "replaceStart": 9,
+                "replaceEnd": 11,
+                "prefix": "'a",
+                "items": [
+                    {
+                        "label": "'A'",
+                        "insertText": "'A'",
+                        "kind": "Value",
+                        "detail": "status value",
+                        "caretOffset": 3
+                    },
+                    {
+                        "label": "'archived'",
+                        "insertText": "'archived'",
+                        "kind": "Value",
+                        "detail": "status value",
+                        "caretOffset": 10
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {status: 'ar|'}",
+            "output": {
+                "replaceStart": 9,
+                "replaceEnd": 13,
+                "prefix": "'ar",
+                "items": [
+                    {
+                        "label": "'archived'",
+                        "insertText": "'archived'",
+                        "kind": "Value",
+                        "detail": "status value",
+                        "caretOffset": 10
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {status: |}",
+            "output": {
+                "replaceStart": 9,
+                "replaceEnd": 9,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "'A'",
+                        "insertText": "'A'",
+                        "kind": "Value",
+                        "detail": "status value",
+                        "caretOffset": 3
+                    },
+                    {
+                        "label": "'B'",
+                        "insertText": "'B'",
+                        "kind": "Value",
+                        "detail": "status value",
+                        "caretOffset": 3
+                    },
+                    {
+                        "label": "'archived'",
+                        "insertText": "'archived'",
+                        "kind": "Value",
+                        "detail": "status value",
+                        "caretOffset": 10
+                    },
+                    {
+                        "label": "{$gt: }",
+                        "insertText": "{$gt: }",
+                        "kind": "Keyword",
+                        "detail": "a comparison",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "{$in: []}",
+                        "insertText": "{$in: []}",
+                        "kind": "Keyword",
+                        "detail": "any of these values",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "{$exists: true}",
+                        "insertText": "{$exists: true}",
+                        "kind": "Keyword",
+                        "detail": "has the field",
+                        "caretOffset": 15
+                    },
+                    {
+                        "label": "{$regex: '', $options: 'i'}",
+                        "insertText": "{$regex: '', $options: 'i'}",
+                        "kind": "Keyword",
+                        "detail": "matches a pattern",
+                        "caretOffset": 10
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {total: {$gt: |}}",
+            "output": {
+                "replaceStart": 14,
+                "replaceEnd": 14,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "30",
+                        "insertText": "30",
+                        "kind": "Value",
+                        "detail": "total value",
+                        "caretOffset": 2
+                    },
+                    {
+                        "label": "10",
+                        "insertText": "10",
+                        "kind": "Value",
+                        "detail": "total value",
+                        "caretOffset": 2
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {tags: {$in: ['ink', |]}}",
+            "output": {
+                "replaceStart": 21,
+                "replaceEnd": 21,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "'pen'",
+                        "insertText": "'pen'",
+                        "kind": "Value",
+                        "detail": "tags value",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "'ink'",
+                        "insertText": "'ink'",
+                        "kind": "Value",
+                        "detail": "tags value",
+                        "caretOffset": 5
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {address: {$exists: |}}",
+            "output": {
+                "replaceStart": 20,
+                "replaceEnd": 20,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "true",
+                        "insertText": "true",
+                        "kind": "Value",
+                        "detail": null,
+                        "caretOffset": 4
+                    },
+                    {
+                        "label": "false",
+                        "insertText": "false",
+                        "kind": "Value",
+                        "detail": null,
+                        "caretOffset": 5
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {_id: {$type: |}}",
+            "output": {
+                "replaceStart": 14,
+                "replaceEnd": 14,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "'string'",
+                        "insertText": "'string'",
+                        "kind": "Value",
+                        "detail": "BSON type",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "'number'",
+                        "insertText": "'number'",
+                        "kind": "Value",
+                        "detail": "BSON type",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "'int'",
+                        "insertText": "'int'",
+                        "kind": "Value",
+                        "detail": "BSON type",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "'long'",
+                        "insertText": "'long'",
+                        "kind": "Value",
+                        "detail": "BSON type",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "'double'",
+                        "insertText": "'double'",
+                        "kind": "Value",
+                        "detail": "BSON type",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "'decimal'",
+                        "insertText": "'decimal'",
+                        "kind": "Value",
+                        "detail": "BSON type",
+                        "caretOffset": 9
+                    },
+                    {
+                        "label": "'bool'",
+                        "insertText": "'bool'",
+                        "kind": "Value",
+                        "detail": "BSON type",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "'date'",
+                        "insertText": "'date'",
+                        "kind": "Value",
+                        "detail": "BSON type",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "'objectId'",
+                        "insertText": "'objectId'",
+                        "kind": "Value",
+                        "detail": "BSON type",
+                        "caretOffset": 10
+                    },
+                    {
+                        "label": "'object'",
+                        "insertText": "'object'",
+                        "kind": "Value",
+                        "detail": "BSON type",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "'array'",
+                        "insertText": "'array'",
+                        "kind": "Value",
+                        "detail": "BSON type",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "'null'",
+                        "insertText": "'null'",
+                        "kind": "Value",
+                        "detail": "BSON type",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "'binData'",
+                        "insertText": "'binData'",
+                        "kind": "Value",
+                        "detail": "BSON type",
+                        "caretOffset": 9
+                    },
+                    {
+                        "label": "'regex'",
+                        "insertText": "'regex'",
+                        "kind": "Value",
+                        "detail": "BSON type",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "'timestamp'",
+                        "insertText": "'timestamp'",
+                        "kind": "Value",
+                        "detail": "BSON type",
+                        "caretOffset": 11
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {'address.city': |}",
+            "output": {
+                "replaceStart": 17,
+                "replaceEnd": 17,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "'London'",
+                        "insertText": "'London'",
+                        "kind": "Value",
+                        "detail": "address.city value",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "{$gt: }",
+                        "insertText": "{$gt: }",
+                        "kind": "Keyword",
+                        "detail": "a comparison",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "{$in: []}",
+                        "insertText": "{$in: []}",
+                        "kind": "Keyword",
+                        "detail": "any of these values",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "{$exists: true}",
+                        "insertText": "{$exists: true}",
+                        "kind": "Keyword",
+                        "detail": "has the field",
+                        "caretOffset": 15
+                    },
+                    {
+                        "label": "{$regex: '', $options: 'i'}",
+                        "insertText": "{$regex: '', $options: 'i'}",
+                        "kind": "Keyword",
+                        "detail": "matches a pattern",
+                        "caretOffset": 10
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {$or: [{|}]}",
+            "output": {
+                "replaceStart": 8,
+                "replaceEnd": 8,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "_id",
+                        "insertText": "_id: ",
+                        "kind": "Column",
+                        "detail": "objectId",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "status",
+                        "insertText": "status: ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "total",
+                        "insertText": "total: ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "tags",
+                        "insertText": "tags: ",
+                        "kind": "Column",
+                        "detail": "array",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "items",
+                        "insertText": "items: ",
+                        "kind": "Column",
+                        "detail": "array",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "items.sku",
+                        "insertText": "'items.sku': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "items.qty",
+                        "insertText": "'items.qty': ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "address",
+                        "insertText": "address: ",
+                        "kind": "Column",
+                        "detail": "object",
+                        "caretOffset": 9
+                    },
+                    {
+                        "label": "address.city",
+                        "insertText": "'address.city': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 16
+                    },
+                    {
+                        "label": "first name",
+                        "insertText": "'first name': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 14
+                    },
+                    {
+                        "label": "$and",
+                        "insertText": "$and: [{}]",
+                        "kind": "Operator",
+                        "detail": "all of the conditions",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$or",
+                        "insertText": "$or: [{}]",
+                        "kind": "Operator",
+                        "detail": "any of the conditions",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$nor",
+                        "insertText": "$nor: [{}]",
+                        "kind": "Operator",
+                        "detail": "none of the conditions",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$expr",
+                        "insertText": "$expr: {}",
+                        "kind": "Operator",
+                        "detail": "aggregation expression",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$text",
+                        "insertText": "$text: {$search: ''}",
+                        "kind": "Operator",
+                        "detail": "text index search",
+                        "caretOffset": 17
+                    },
+                    {
+                        "label": "$jsonSchema",
+                        "insertText": "$jsonSchema: {}",
+                        "kind": "Operator",
+                        "detail": "matches a JSON schema",
+                        "caretOffset": 14
+                    },
+                    {
+                        "label": "$comment",
+                        "insertText": "$comment: ",
+                        "kind": "Operator",
+                        "detail": "comment for the profiler",
+                        "caretOffset": 10
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {$o|}",
+            "output": {
+                "replaceStart": 1,
+                "replaceEnd": 3,
+                "prefix": "$o",
+                "items": [
+                    {
+                        "label": "$or",
+                        "insertText": "$or: [{}]",
+                        "kind": "Operator",
+                        "detail": "any of the conditions",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "total",
+                        "insertText": "total: ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 7
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {items: {$elemMatch: {|}}}",
+            "output": {
+                "replaceStart": 22,
+                "replaceEnd": 22,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "sku",
+                        "insertText": "sku: ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "qty",
+                        "insertText": "qty: ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "$and",
+                        "insertText": "$and: [{}]",
+                        "kind": "Operator",
+                        "detail": "all of the conditions",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$or",
+                        "insertText": "$or: [{}]",
+                        "kind": "Operator",
+                        "detail": "any of the conditions",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$nor",
+                        "insertText": "$nor: [{}]",
+                        "kind": "Operator",
+                        "detail": "none of the conditions",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$expr",
+                        "insertText": "$expr: {}",
+                        "kind": "Operator",
+                        "detail": "aggregation expression",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$text",
+                        "insertText": "$text: {$search: ''}",
+                        "kind": "Operator",
+                        "detail": "text index search",
+                        "caretOffset": 17
+                    },
+                    {
+                        "label": "$jsonSchema",
+                        "insertText": "$jsonSchema: {}",
+                        "kind": "Operator",
+                        "detail": "matches a JSON schema",
+                        "caretOffset": 14
+                    },
+                    {
+                        "label": "$comment",
+                        "insertText": "$comment: ",
+                        "kind": "Operator",
+                        "detail": "comment for the profiler",
+                        "caretOffset": 10
+                    },
+                    {
+                        "label": "$eq",
+                        "insertText": "$eq: ",
+                        "kind": "Operator",
+                        "detail": "equal to",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "$ne",
+                        "insertText": "$ne: ",
+                        "kind": "Operator",
+                        "detail": "not equal to",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "$gt",
+                        "insertText": "$gt: ",
+                        "kind": "Operator",
+                        "detail": "greater than",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "$gte",
+                        "insertText": "$gte: ",
+                        "kind": "Operator",
+                        "detail": "greater than or equal to",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$lt",
+                        "insertText": "$lt: ",
+                        "kind": "Operator",
+                        "detail": "less than",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "$lte",
+                        "insertText": "$lte: ",
+                        "kind": "Operator",
+                        "detail": "less than or equal to",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$in",
+                        "insertText": "$in: []",
+                        "kind": "Operator",
+                        "detail": "any of the values",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$nin",
+                        "insertText": "$nin: []",
+                        "kind": "Operator",
+                        "detail": "none of the values",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$exists",
+                        "insertText": "$exists: true",
+                        "kind": "Operator",
+                        "detail": "has the field",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "$type",
+                        "insertText": "$type: ",
+                        "kind": "Operator",
+                        "detail": "BSON type is",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$regex",
+                        "insertText": "$regex: ''",
+                        "kind": "Operator",
+                        "detail": "matches a regular expression",
+                        "caretOffset": 9
+                    },
+                    {
+                        "label": "$options",
+                        "insertText": "$options: ",
+                        "kind": "Operator",
+                        "detail": "regex flags: i m x s",
+                        "caretOffset": 10
+                    },
+                    {
+                        "label": "$not",
+                        "insertText": "$not: {}",
+                        "kind": "Operator",
+                        "detail": "doesn't match the condition",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$all",
+                        "insertText": "$all: []",
+                        "kind": "Operator",
+                        "detail": "array has all the values",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$elemMatch",
+                        "insertText": "$elemMatch: {}",
+                        "kind": "Operator",
+                        "detail": "an array element matches all conditions",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "$size",
+                        "insertText": "$size: ",
+                        "kind": "Operator",
+                        "detail": "array has this many elements",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$mod",
+                        "insertText": "$mod: []",
+                        "kind": "Operator",
+                        "detail": "divisor and remainder",
+                        "caretOffset": 7
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {items: {$elemMatch: {sku: |}}}",
+            "output": {
+                "replaceStart": 27,
+                "replaceEnd": 27,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "'X-1'",
+                        "insertText": "'X-1'",
+                        "kind": "Value",
+                        "detail": "items.sku value",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "{$gt: }",
+                        "insertText": "{$gt: }",
+                        "kind": "Keyword",
+                        "detail": "a comparison",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "{$in: []}",
+                        "insertText": "{$in: []}",
+                        "kind": "Keyword",
+                        "detail": "any of these values",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "{$exists: true}",
+                        "insertText": "{$exists: true}",
+                        "kind": "Keyword",
+                        "detail": "has the field",
+                        "caretOffset": 15
+                    },
+                    {
+                        "label": "{$regex: '', $options: 'i'}",
+                        "insertText": "{$regex: '', $options: 'i'}",
+                        "kind": "Keyword",
+                        "detail": "matches a pattern",
+                        "caretOffset": 10
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {address: {ci|}}",
+            "output": {
+                "replaceStart": 11,
+                "replaceEnd": 13,
+                "prefix": "ci",
+                "items": [
+                    {
+                        "label": "city",
+                        "insertText": "city: ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 6
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {$text: {|}}",
+            "output": {
+                "replaceStart": 9,
+                "replaceEnd": 9,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "$search",
+                        "insertText": "$search: ''",
+                        "kind": "Operator",
+                        "detail": "words to search for",
+                        "caretOffset": 10
+                    },
+                    {
+                        "label": "$language",
+                        "insertText": "$language: ''",
+                        "kind": "Operator",
+                        "detail": "stemming language",
+                        "caretOffset": 12
+                    },
+                    {
+                        "label": "$caseSensitive",
+                        "insertText": "$caseSensitive: ",
+                        "kind": "Operator",
+                        "detail": "match case",
+                        "caretOffset": 16
+                    },
+                    {
+                        "label": "$diacriticSensitive",
+                        "insertText": "$diacriticSensitive: ",
+                        "kind": "Operator",
+                        "detail": "match diacritics",
+                        "caretOffset": 21
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {$expr: {|}}",
+            "output": {
+                "replaceStart": 9,
+                "replaceEnd": 9,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "$eq",
+                        "insertText": "$eq: []",
+                        "kind": "Operator",
+                        "detail": "equal",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$ne",
+                        "insertText": "$ne: []",
+                        "kind": "Operator",
+                        "detail": "not equal",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$gt",
+                        "insertText": "$gt: []",
+                        "kind": "Operator",
+                        "detail": "greater than",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$gte",
+                        "insertText": "$gte: []",
+                        "kind": "Operator",
+                        "detail": "greater or equal",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$lt",
+                        "insertText": "$lt: []",
+                        "kind": "Operator",
+                        "detail": "less than",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$lte",
+                        "insertText": "$lte: []",
+                        "kind": "Operator",
+                        "detail": "less or equal",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$and",
+                        "insertText": "$and: []",
+                        "kind": "Operator",
+                        "detail": "all true",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$or",
+                        "insertText": "$or: []",
+                        "kind": "Operator",
+                        "detail": "any true",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$not",
+                        "insertText": "$not: []",
+                        "kind": "Operator",
+                        "detail": "negation",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$in",
+                        "insertText": "$in: []",
+                        "kind": "Operator",
+                        "detail": "value in array",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$cmp",
+                        "insertText": "$cmp: []",
+                        "kind": "Operator",
+                        "detail": "compare",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$add",
+                        "insertText": "$add: []",
+                        "kind": "Operator",
+                        "detail": "sum",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$subtract",
+                        "insertText": "$subtract: []",
+                        "kind": "Operator",
+                        "detail": "difference",
+                        "caretOffset": 12
+                    },
+                    {
+                        "label": "$multiply",
+                        "insertText": "$multiply: []",
+                        "kind": "Operator",
+                        "detail": "product",
+                        "caretOffset": 12
+                    },
+                    {
+                        "label": "$divide",
+                        "insertText": "$divide: []",
+                        "kind": "Operator",
+                        "detail": "quotient",
+                        "caretOffset": 10
+                    },
+                    {
+                        "label": "$mod",
+                        "insertText": "$mod: []",
+                        "kind": "Operator",
+                        "detail": "remainder",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$abs",
+                        "insertText": "$abs: ",
+                        "kind": "Operator",
+                        "detail": "absolute value",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$size",
+                        "insertText": "$size: ",
+                        "kind": "Operator",
+                        "detail": "array length",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$ifNull",
+                        "insertText": "$ifNull: []",
+                        "kind": "Operator",
+                        "detail": "first non-null",
+                        "caretOffset": 10
+                    },
+                    {
+                        "label": "$cond",
+                        "insertText": "$cond: ",
+                        "kind": "Operator",
+                        "detail": "if-then-else",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$concat",
+                        "insertText": "$concat: []",
+                        "kind": "Operator",
+                        "detail": "join strings",
+                        "caretOffset": 10
+                    },
+                    {
+                        "label": "$toLower",
+                        "insertText": "$toLower: ",
+                        "kind": "Operator",
+                        "detail": "lower case",
+                        "caretOffset": 10
+                    },
+                    {
+                        "label": "$toUpper",
+                        "insertText": "$toUpper: ",
+                        "kind": "Operator",
+                        "detail": "upper case",
+                        "caretOffset": 10
+                    },
+                    {
+                        "label": "$strLenCP",
+                        "insertText": "$strLenCP: ",
+                        "kind": "Operator",
+                        "detail": "string length",
+                        "caretOffset": 11
+                    },
+                    {
+                        "label": "$regexMatch",
+                        "insertText": "$regexMatch: ",
+                        "kind": "Operator",
+                        "detail": "matches a regex",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "$toString",
+                        "insertText": "$toString: ",
+                        "kind": "Operator",
+                        "detail": "convert to string",
+                        "caretOffset": 11
+                    },
+                    {
+                        "label": "$toInt",
+                        "insertText": "$toInt: ",
+                        "kind": "Operator",
+                        "detail": "convert to int",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$toDouble",
+                        "insertText": "$toDouble: ",
+                        "kind": "Operator",
+                        "detail": "convert to double",
+                        "caretOffset": 11
+                    },
+                    {
+                        "label": "$toDate",
+                        "insertText": "$toDate: ",
+                        "kind": "Operator",
+                        "detail": "convert to date",
+                        "caretOffset": 9
+                    },
+                    {
+                        "label": "$type",
+                        "insertText": "$type: ",
+                        "kind": "Operator",
+                        "detail": "BSON type",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$year",
+                        "insertText": "$year: ",
+                        "kind": "Operator",
+                        "detail": "year of a date",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$month",
+                        "insertText": "$month: ",
+                        "kind": "Operator",
+                        "detail": "month of a date",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$dayOfMonth",
+                        "insertText": "$dayOfMonth: ",
+                        "kind": "Operator",
+                        "detail": "day of a date",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "$dateToString",
+                        "insertText": "$dateToString: ",
+                        "kind": "Operator",
+                        "detail": "format a date",
+                        "caretOffset": 15
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {status: 'A' |}",
+            "output": {
+                "replaceStart": 13,
+                "replaceEnd": 13,
+                "prefix": "",
+                "items": [],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {_id: ObjectId('65|')}",
+            "output": {
+                "replaceStart": 18,
+                "replaceEnd": 18,
+                "prefix": "",
+                "items": [],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {total: {$gt: 1} |}",
+            "output": {
+                "replaceStart": 17,
+                "replaceEnd": 17,
+                "prefix": "",
+                "items": [],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {} |",
+            "output": {
+                "replaceStart": 3,
+                "replaceEnd": 3,
+                "prefix": "",
+                "items": [],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter |",
+            "output": {
+                "replaceStart": 0,
+                "replaceEnd": 0,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "_id",
+                        "insertText": "_id: ",
+                        "kind": "Column",
+                        "detail": "objectId",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "status",
+                        "insertText": "status: ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "total",
+                        "insertText": "total: ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "tags",
+                        "insertText": "tags: ",
+                        "kind": "Column",
+                        "detail": "array",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "items",
+                        "insertText": "items: ",
+                        "kind": "Column",
+                        "detail": "array",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "items.sku",
+                        "insertText": "'items.sku': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "items.qty",
+                        "insertText": "'items.qty': ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "address",
+                        "insertText": "address: ",
+                        "kind": "Column",
+                        "detail": "object",
+                        "caretOffset": 9
+                    },
+                    {
+                        "label": "address.city",
+                        "insertText": "'address.city': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 16
+                    },
+                    {
+                        "label": "first name",
+                        "insertText": "'first name': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 14
+                    },
+                    {
+                        "label": "$and",
+                        "insertText": "$and: [{}]",
+                        "kind": "Operator",
+                        "detail": "all of the conditions",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$or",
+                        "insertText": "$or: [{}]",
+                        "kind": "Operator",
+                        "detail": "any of the conditions",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$nor",
+                        "insertText": "$nor: [{}]",
+                        "kind": "Operator",
+                        "detail": "none of the conditions",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$expr",
+                        "insertText": "$expr: {}",
+                        "kind": "Operator",
+                        "detail": "aggregation expression",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$text",
+                        "insertText": "$text: {$search: ''}",
+                        "kind": "Operator",
+                        "detail": "text index search",
+                        "caretOffset": 17
+                    },
+                    {
+                        "label": "$jsonSchema",
+                        "insertText": "$jsonSchema: {}",
+                        "kind": "Operator",
+                        "detail": "matches a JSON schema",
+                        "caretOffset": 14
+                    },
+                    {
+                        "label": "$comment",
+                        "insertText": "$comment: ",
+                        "kind": "Operator",
+                        "detail": "comment for the profiler",
+                        "caretOffset": 10
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {status: /ab|/}",
+            "output": {
+                "replaceStart": 12,
+                "replaceEnd": 12,
+                "prefix": "",
+                "items": [],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {status: /a\\/b/, |}",
+            "output": {
+                "replaceStart": 17,
+                "replaceEnd": 17,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "_id",
+                        "insertText": "_id: ",
+                        "kind": "Column",
+                        "detail": "objectId",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "status",
+                        "insertText": "status: ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "total",
+                        "insertText": "total: ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "tags",
+                        "insertText": "tags: ",
+                        "kind": "Column",
+                        "detail": "array",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "items",
+                        "insertText": "items: ",
+                        "kind": "Column",
+                        "detail": "array",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "items.sku",
+                        "insertText": "'items.sku': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "items.qty",
+                        "insertText": "'items.qty': ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "address",
+                        "insertText": "address: ",
+                        "kind": "Column",
+                        "detail": "object",
+                        "caretOffset": 9
+                    },
+                    {
+                        "label": "address.city",
+                        "insertText": "'address.city': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 16
+                    },
+                    {
+                        "label": "first name",
+                        "insertText": "'first name': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 14
+                    },
+                    {
+                        "label": "$and",
+                        "insertText": "$and: [{}]",
+                        "kind": "Operator",
+                        "detail": "all of the conditions",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$or",
+                        "insertText": "$or: [{}]",
+                        "kind": "Operator",
+                        "detail": "any of the conditions",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$nor",
+                        "insertText": "$nor: [{}]",
+                        "kind": "Operator",
+                        "detail": "none of the conditions",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$expr",
+                        "insertText": "$expr: {}",
+                        "kind": "Operator",
+                        "detail": "aggregation expression",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$text",
+                        "insertText": "$text: {$search: ''}",
+                        "kind": "Operator",
+                        "detail": "text index search",
+                        "caretOffset": 17
+                    },
+                    {
+                        "label": "$jsonSchema",
+                        "insertText": "$jsonSchema: {}",
+                        "kind": "Operator",
+                        "detail": "matches a JSON schema",
+                        "caretOffset": 14
+                    },
+                    {
+                        "label": "$comment",
+                        "insertText": "$comment: ",
+                        "kind": "Operator",
+                        "detail": "comment for the profiler",
+                        "caretOffset": 10
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {$and: [{total: 1}, {|}]}",
+            "output": {
+                "replaceStart": 21,
+                "replaceEnd": 21,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "_id",
+                        "insertText": "_id: ",
+                        "kind": "Column",
+                        "detail": "objectId",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "status",
+                        "insertText": "status: ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "total",
+                        "insertText": "total: ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "tags",
+                        "insertText": "tags: ",
+                        "kind": "Column",
+                        "detail": "array",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "items",
+                        "insertText": "items: ",
+                        "kind": "Column",
+                        "detail": "array",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "items.sku",
+                        "insertText": "'items.sku': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "items.qty",
+                        "insertText": "'items.qty': ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "address",
+                        "insertText": "address: ",
+                        "kind": "Column",
+                        "detail": "object",
+                        "caretOffset": 9
+                    },
+                    {
+                        "label": "address.city",
+                        "insertText": "'address.city': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 16
+                    },
+                    {
+                        "label": "first name",
+                        "insertText": "'first name': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 14
+                    },
+                    {
+                        "label": "$and",
+                        "insertText": "$and: [{}]",
+                        "kind": "Operator",
+                        "detail": "all of the conditions",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$or",
+                        "insertText": "$or: [{}]",
+                        "kind": "Operator",
+                        "detail": "any of the conditions",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$nor",
+                        "insertText": "$nor: [{}]",
+                        "kind": "Operator",
+                        "detail": "none of the conditions",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$expr",
+                        "insertText": "$expr: {}",
+                        "kind": "Operator",
+                        "detail": "aggregation expression",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$text",
+                        "insertText": "$text: {$search: ''}",
+                        "kind": "Operator",
+                        "detail": "text index search",
+                        "caretOffset": 17
+                    },
+                    {
+                        "label": "$jsonSchema",
+                        "insertText": "$jsonSchema: {}",
+                        "kind": "Operator",
+                        "detail": "matches a JSON schema",
+                        "caretOffset": 14
+                    },
+                    {
+                        "label": "$comment",
+                        "insertText": "$comment: ",
+                        "kind": "Operator",
+                        "detail": "comment for the profiler",
+                        "caretOffset": 10
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {$and: |}",
+            "output": {
+                "replaceStart": 7,
+                "replaceEnd": 7,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "[{}]",
+                        "insertText": "[{}]",
+                        "kind": "Keyword",
+                        "detail": "conditions, all/any/none of which match",
+                        "caretOffset": 2
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {$expr: |}",
+            "output": {
+                "replaceStart": 8,
+                "replaceEnd": 8,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "{}",
+                        "insertText": "{}",
+                        "kind": "Keyword",
+                        "detail": "an aggregation expression",
+                        "caretOffset": 1
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {$text: |}",
+            "output": {
+                "replaceStart": 8,
+                "replaceEnd": 8,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "{$search: ''}",
+                        "insertText": "{$search: ''}",
+                        "kind": "Keyword",
+                        "detail": "text index search",
+                        "caretOffset": 10
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {$comment: |}",
+            "output": {
+                "replaceStart": 11,
+                "replaceEnd": 11,
+                "prefix": "",
+                "items": [],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {$text: {$caseSensitive: |}}",
+            "output": {
+                "replaceStart": 25,
+                "replaceEnd": 25,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "true",
+                        "insertText": "true",
+                        "kind": "Value",
+                        "detail": null,
+                        "caretOffset": 4
+                    },
+                    {
+                        "label": "false",
+                        "insertText": "false",
+                        "kind": "Value",
+                        "detail": null,
+                        "caretOffset": 5
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {$text: {$language: |}}",
+            "output": {
+                "replaceStart": 20,
+                "replaceEnd": 20,
+                "prefix": "",
+                "items": [],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {status: {$regex: 'a', $options: |}}",
+            "output": {
+                "replaceStart": 33,
+                "replaceEnd": 33,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "'i'",
+                        "insertText": "'i'",
+                        "kind": "Value",
+                        "detail": "case-insensitive",
+                        "caretOffset": 3
+                    },
+                    {
+                        "label": "'m'",
+                        "insertText": "'m'",
+                        "kind": "Value",
+                        "detail": "multi-line anchors",
+                        "caretOffset": 3
+                    },
+                    {
+                        "label": "'x'",
+                        "insertText": "'x'",
+                        "kind": "Value",
+                        "detail": "ignore whitespace",
+                        "caretOffset": 3
+                    },
+                    {
+                        "label": "'s'",
+                        "insertText": "'s'",
+                        "kind": "Value",
+                        "detail": "dot matches newlines",
+                        "caretOffset": 3
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {status: {$regex: |}}",
+            "output": {
+                "replaceStart": 18,
+                "replaceEnd": 18,
+                "prefix": "",
+                "items": [],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {tags: {$all: |}}",
+            "output": {
+                "replaceStart": 14,
+                "replaceEnd": 14,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "[]",
+                        "insertText": "[]",
+                        "kind": "Keyword",
+                        "detail": "a list of values",
+                        "caretOffset": 1
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {tags: {$not: |}}",
+            "output": {
+                "replaceStart": 14,
+                "replaceEnd": 14,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "{}",
+                        "insertText": "{}",
+                        "kind": "Keyword",
+                        "detail": "a condition that must not match",
+                        "caretOffset": 1
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {tags: {$not: {|}}}",
+            "output": {
+                "replaceStart": 15,
+                "replaceEnd": 15,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "$eq",
+                        "insertText": "$eq: ",
+                        "kind": "Operator",
+                        "detail": "equal to",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "$ne",
+                        "insertText": "$ne: ",
+                        "kind": "Operator",
+                        "detail": "not equal to",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "$gt",
+                        "insertText": "$gt: ",
+                        "kind": "Operator",
+                        "detail": "greater than",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "$gte",
+                        "insertText": "$gte: ",
+                        "kind": "Operator",
+                        "detail": "greater than or equal to",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$lt",
+                        "insertText": "$lt: ",
+                        "kind": "Operator",
+                        "detail": "less than",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "$lte",
+                        "insertText": "$lte: ",
+                        "kind": "Operator",
+                        "detail": "less than or equal to",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$in",
+                        "insertText": "$in: []",
+                        "kind": "Operator",
+                        "detail": "any of the values",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$nin",
+                        "insertText": "$nin: []",
+                        "kind": "Operator",
+                        "detail": "none of the values",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$exists",
+                        "insertText": "$exists: true",
+                        "kind": "Operator",
+                        "detail": "has the field",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "$type",
+                        "insertText": "$type: ",
+                        "kind": "Operator",
+                        "detail": "BSON type is",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$regex",
+                        "insertText": "$regex: ''",
+                        "kind": "Operator",
+                        "detail": "matches a regular expression",
+                        "caretOffset": 9
+                    },
+                    {
+                        "label": "$options",
+                        "insertText": "$options: ",
+                        "kind": "Operator",
+                        "detail": "regex flags: i m x s",
+                        "caretOffset": 10
+                    },
+                    {
+                        "label": "$not",
+                        "insertText": "$not: {}",
+                        "kind": "Operator",
+                        "detail": "doesn't match the condition",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$all",
+                        "insertText": "$all: []",
+                        "kind": "Operator",
+                        "detail": "array has all the values",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$elemMatch",
+                        "insertText": "$elemMatch: {}",
+                        "kind": "Operator",
+                        "detail": "an array element matches all conditions",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "$size",
+                        "insertText": "$size: ",
+                        "kind": "Operator",
+                        "detail": "array has this many elements",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$mod",
+                        "insertText": "$mod: []",
+                        "kind": "Operator",
+                        "detail": "divisor and remainder",
+                        "caretOffset": 7
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {address: {city: |}}",
+            "output": {
+                "replaceStart": 17,
+                "replaceEnd": 17,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "'London'",
+                        "insertText": "'London'",
+                        "kind": "Value",
+                        "detail": "address.city value",
+                        "caretOffset": 8
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {address: {city: {$in: [|]}}}",
+            "output": {
+                "replaceStart": 24,
+                "replaceEnd": 24,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "'London'",
+                        "insertText": "'London'",
+                        "kind": "Value",
+                        "detail": "address.city value",
+                        "caretOffset": 8
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {\"stat|\"}",
+            "output": {
+                "replaceStart": 1,
+                "replaceEnd": 7,
+                "prefix": "\"stat",
+                "items": [
+                    {
+                        "label": "status",
+                        "insertText": "status: ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 8
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {status: \"x\\\"|\"}",
+            "output": {
+                "replaceStart": 9,
+                "replaceEnd": 14,
+                "prefix": "\"x\\\"",
+                "items": [],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {total: 1, |}",
+            "output": {
+                "replaceStart": 11,
+                "replaceEnd": 11,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "_id",
+                        "insertText": "_id: ",
+                        "kind": "Column",
+                        "detail": "objectId",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "status",
+                        "insertText": "status: ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "total",
+                        "insertText": "total: ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "tags",
+                        "insertText": "tags: ",
+                        "kind": "Column",
+                        "detail": "array",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "items",
+                        "insertText": "items: ",
+                        "kind": "Column",
+                        "detail": "array",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "items.sku",
+                        "insertText": "'items.sku': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "items.qty",
+                        "insertText": "'items.qty': ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "address",
+                        "insertText": "address: ",
+                        "kind": "Column",
+                        "detail": "object",
+                        "caretOffset": 9
+                    },
+                    {
+                        "label": "address.city",
+                        "insertText": "'address.city': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 16
+                    },
+                    {
+                        "label": "first name",
+                        "insertText": "'first name': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 14
+                    },
+                    {
+                        "label": "$and",
+                        "insertText": "$and: [{}]",
+                        "kind": "Operator",
+                        "detail": "all of the conditions",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$or",
+                        "insertText": "$or: [{}]",
+                        "kind": "Operator",
+                        "detail": "any of the conditions",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$nor",
+                        "insertText": "$nor: [{}]",
+                        "kind": "Operator",
+                        "detail": "none of the conditions",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$expr",
+                        "insertText": "$expr: {}",
+                        "kind": "Operator",
+                        "detail": "aggregation expression",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$text",
+                        "insertText": "$text: {$search: ''}",
+                        "kind": "Operator",
+                        "detail": "text index search",
+                        "caretOffset": 17
+                    },
+                    {
+                        "label": "$jsonSchema",
+                        "insertText": "$jsonSchema: {}",
+                        "kind": "Operator",
+                        "detail": "matches a JSON schema",
+                        "caretOffset": 14
+                    },
+                    {
+                        "label": "$comment",
+                        "insertText": "$comment: ",
+                        "kind": "Operator",
+                        "detail": "comment for the profiler",
+                        "caretOffset": 10
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {total: 1|}",
+            "output": {
+                "replaceStart": 8,
+                "replaceEnd": 9,
+                "prefix": "1",
+                "items": [
+                    {
+                        "label": "10",
+                        "insertText": "10",
+                        "kind": "Value",
+                        "detail": "total value",
+                        "caretOffset": 2
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {tot|al: 1}",
+            "output": {
+                "replaceStart": 1,
+                "replaceEnd": 6,
+                "prefix": "tot",
+                "items": [
+                    {
+                        "label": "total",
+                        "insertText": "total",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 5
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {$expr: {$eq: [|]}}",
+            "output": {
+                "replaceStart": 15,
+                "replaceEnd": 15,
+                "prefix": "",
+                "items": [],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {$expr: {$eq: [{|}]}}",
+            "output": {
+                "replaceStart": 16,
+                "replaceEnd": 16,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "$eq",
+                        "insertText": "$eq: []",
+                        "kind": "Operator",
+                        "detail": "equal",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$ne",
+                        "insertText": "$ne: []",
+                        "kind": "Operator",
+                        "detail": "not equal",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$gt",
+                        "insertText": "$gt: []",
+                        "kind": "Operator",
+                        "detail": "greater than",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$gte",
+                        "insertText": "$gte: []",
+                        "kind": "Operator",
+                        "detail": "greater or equal",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$lt",
+                        "insertText": "$lt: []",
+                        "kind": "Operator",
+                        "detail": "less than",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$lte",
+                        "insertText": "$lte: []",
+                        "kind": "Operator",
+                        "detail": "less or equal",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$and",
+                        "insertText": "$and: []",
+                        "kind": "Operator",
+                        "detail": "all true",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$or",
+                        "insertText": "$or: []",
+                        "kind": "Operator",
+                        "detail": "any true",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$not",
+                        "insertText": "$not: []",
+                        "kind": "Operator",
+                        "detail": "negation",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$in",
+                        "insertText": "$in: []",
+                        "kind": "Operator",
+                        "detail": "value in array",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$cmp",
+                        "insertText": "$cmp: []",
+                        "kind": "Operator",
+                        "detail": "compare",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$add",
+                        "insertText": "$add: []",
+                        "kind": "Operator",
+                        "detail": "sum",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$subtract",
+                        "insertText": "$subtract: []",
+                        "kind": "Operator",
+                        "detail": "difference",
+                        "caretOffset": 12
+                    },
+                    {
+                        "label": "$multiply",
+                        "insertText": "$multiply: []",
+                        "kind": "Operator",
+                        "detail": "product",
+                        "caretOffset": 12
+                    },
+                    {
+                        "label": "$divide",
+                        "insertText": "$divide: []",
+                        "kind": "Operator",
+                        "detail": "quotient",
+                        "caretOffset": 10
+                    },
+                    {
+                        "label": "$mod",
+                        "insertText": "$mod: []",
+                        "kind": "Operator",
+                        "detail": "remainder",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$abs",
+                        "insertText": "$abs: ",
+                        "kind": "Operator",
+                        "detail": "absolute value",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$size",
+                        "insertText": "$size: ",
+                        "kind": "Operator",
+                        "detail": "array length",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$ifNull",
+                        "insertText": "$ifNull: []",
+                        "kind": "Operator",
+                        "detail": "first non-null",
+                        "caretOffset": 10
+                    },
+                    {
+                        "label": "$cond",
+                        "insertText": "$cond: ",
+                        "kind": "Operator",
+                        "detail": "if-then-else",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$concat",
+                        "insertText": "$concat: []",
+                        "kind": "Operator",
+                        "detail": "join strings",
+                        "caretOffset": 10
+                    },
+                    {
+                        "label": "$toLower",
+                        "insertText": "$toLower: ",
+                        "kind": "Operator",
+                        "detail": "lower case",
+                        "caretOffset": 10
+                    },
+                    {
+                        "label": "$toUpper",
+                        "insertText": "$toUpper: ",
+                        "kind": "Operator",
+                        "detail": "upper case",
+                        "caretOffset": 10
+                    },
+                    {
+                        "label": "$strLenCP",
+                        "insertText": "$strLenCP: ",
+                        "kind": "Operator",
+                        "detail": "string length",
+                        "caretOffset": 11
+                    },
+                    {
+                        "label": "$regexMatch",
+                        "insertText": "$regexMatch: ",
+                        "kind": "Operator",
+                        "detail": "matches a regex",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "$toString",
+                        "insertText": "$toString: ",
+                        "kind": "Operator",
+                        "detail": "convert to string",
+                        "caretOffset": 11
+                    },
+                    {
+                        "label": "$toInt",
+                        "insertText": "$toInt: ",
+                        "kind": "Operator",
+                        "detail": "convert to int",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$toDouble",
+                        "insertText": "$toDouble: ",
+                        "kind": "Operator",
+                        "detail": "convert to double",
+                        "caretOffset": 11
+                    },
+                    {
+                        "label": "$toDate",
+                        "insertText": "$toDate: ",
+                        "kind": "Operator",
+                        "detail": "convert to date",
+                        "caretOffset": 9
+                    },
+                    {
+                        "label": "$type",
+                        "insertText": "$type: ",
+                        "kind": "Operator",
+                        "detail": "BSON type",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$year",
+                        "insertText": "$year: ",
+                        "kind": "Operator",
+                        "detail": "year of a date",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$month",
+                        "insertText": "$month: ",
+                        "kind": "Operator",
+                        "detail": "month of a date",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$dayOfMonth",
+                        "insertText": "$dayOfMonth: ",
+                        "kind": "Operator",
+                        "detail": "day of a date",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "$dateToString",
+                        "insertText": "$dateToString: ",
+                        "kind": "Operator",
+                        "detail": "format a date",
+                        "caretOffset": 15
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {$and: [[|]]}",
+            "output": {
+                "replaceStart": 9,
+                "replaceEnd": 9,
+                "prefix": "",
+                "items": [],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {tags: [|]}",
+            "output": {
+                "replaceStart": 8,
+                "replaceEnd": 8,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "'pen'",
+                        "insertText": "'pen'",
+                        "kind": "Value",
+                        "detail": "tags value",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "'ink'",
+                        "insertText": "'ink'",
+                        "kind": "Value",
+                        "detail": "tags value",
+                        "caretOffset": 5
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {status: 'A', $|}",
+            "output": {
+                "replaceStart": 14,
+                "replaceEnd": 15,
+                "prefix": "$",
+                "items": [
+                    {
+                        "label": "$and",
+                        "insertText": "$and: [{}]",
+                        "kind": "Operator",
+                        "detail": "all of the conditions",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$or",
+                        "insertText": "$or: [{}]",
+                        "kind": "Operator",
+                        "detail": "any of the conditions",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$nor",
+                        "insertText": "$nor: [{}]",
+                        "kind": "Operator",
+                        "detail": "none of the conditions",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$expr",
+                        "insertText": "$expr: {}",
+                        "kind": "Operator",
+                        "detail": "aggregation expression",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "$text",
+                        "insertText": "$text: {$search: ''}",
+                        "kind": "Operator",
+                        "detail": "text index search",
+                        "caretOffset": 17
+                    },
+                    {
+                        "label": "$jsonSchema",
+                        "insertText": "$jsonSchema: {}",
+                        "kind": "Operator",
+                        "detail": "matches a JSON schema",
+                        "caretOffset": 14
+                    },
+                    {
+                        "label": "$comment",
+                        "insertText": "$comment: ",
+                        "kind": "Operator",
+                        "detail": "comment for the profiler",
+                        "caretOffset": 10
+                    },
+                    {
+                        "label": "_id",
+                        "insertText": "_id: ",
+                        "kind": "Column",
+                        "detail": "objectId",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "status",
+                        "insertText": "status: ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "total",
+                        "insertText": "total: ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "tags",
+                        "insertText": "tags: ",
+                        "kind": "Column",
+                        "detail": "array",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "items",
+                        "insertText": "items: ",
+                        "kind": "Column",
+                        "detail": "array",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "address",
+                        "insertText": "address: ",
+                        "kind": "Column",
+                        "detail": "object",
+                        "caretOffset": 9
+                    },
+                    {
+                        "label": "first name",
+                        "insertText": "'first name': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 14
+                    },
+                    {
+                        "label": "items.sku",
+                        "insertText": "'items.sku': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "items.qty",
+                        "insertText": "'items.qty': ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "address.city",
+                        "insertText": "'address.city': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 16
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {status: {$|}}",
+            "output": {
+                "replaceStart": 10,
+                "replaceEnd": 11,
+                "prefix": "$",
+                "items": [
+                    {
+                        "label": "$eq",
+                        "insertText": "$eq: ",
+                        "kind": "Operator",
+                        "detail": "equal to",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "$ne",
+                        "insertText": "$ne: ",
+                        "kind": "Operator",
+                        "detail": "not equal to",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "$gt",
+                        "insertText": "$gt: ",
+                        "kind": "Operator",
+                        "detail": "greater than",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "$gte",
+                        "insertText": "$gte: ",
+                        "kind": "Operator",
+                        "detail": "greater than or equal to",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$lt",
+                        "insertText": "$lt: ",
+                        "kind": "Operator",
+                        "detail": "less than",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "$lte",
+                        "insertText": "$lte: ",
+                        "kind": "Operator",
+                        "detail": "less than or equal to",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$in",
+                        "insertText": "$in: []",
+                        "kind": "Operator",
+                        "detail": "any of the values",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$nin",
+                        "insertText": "$nin: []",
+                        "kind": "Operator",
+                        "detail": "none of the values",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$exists",
+                        "insertText": "$exists: true",
+                        "kind": "Operator",
+                        "detail": "has the field",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "$type",
+                        "insertText": "$type: ",
+                        "kind": "Operator",
+                        "detail": "BSON type is",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$regex",
+                        "insertText": "$regex: ''",
+                        "kind": "Operator",
+                        "detail": "matches a regular expression",
+                        "caretOffset": 9
+                    },
+                    {
+                        "label": "$options",
+                        "insertText": "$options: ",
+                        "kind": "Operator",
+                        "detail": "regex flags: i m x s",
+                        "caretOffset": 10
+                    },
+                    {
+                        "label": "$not",
+                        "insertText": "$not: {}",
+                        "kind": "Operator",
+                        "detail": "doesn't match the condition",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$all",
+                        "insertText": "$all: []",
+                        "kind": "Operator",
+                        "detail": "array has all the values",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$elemMatch",
+                        "insertText": "$elemMatch: {}",
+                        "kind": "Operator",
+                        "detail": "an array element matches all conditions",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "$size",
+                        "insertText": "$size: ",
+                        "kind": "Operator",
+                        "detail": "array has this many elements",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$mod",
+                        "insertText": "$mod: []",
+                        "kind": "Operator",
+                        "detail": "divisor and remainder",
+                        "caretOffset": 7
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {items.s|}",
+            "output": {
+                "replaceStart": 1,
+                "replaceEnd": 8,
+                "prefix": "items.s",
+                "items": [
+                    {
+                        "label": "items.sku",
+                        "insertText": "'items.sku': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 13
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter { ITEMS|}",
+            "output": {
+                "replaceStart": 2,
+                "replaceEnd": 7,
+                "prefix": "ITEMS",
+                "items": [
+                    {
+                        "label": "items",
+                        "insertText": "items: ",
+                        "kind": "Column",
+                        "detail": "array",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "items.sku",
+                        "insertText": "'items.sku': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "items.qty",
+                        "insertText": "'items.qty': ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 13
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {_id: ObjectId(|)}",
+            "output": {
+                "replaceStart": 15,
+                "replaceEnd": 15,
+                "prefix": "",
+                "items": [],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {x: {y: {|}}}",
+            "output": {
+                "replaceStart": 9,
+                "replaceEnd": 9,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "$eq",
+                        "insertText": "$eq: ",
+                        "kind": "Operator",
+                        "detail": "equal to",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "$ne",
+                        "insertText": "$ne: ",
+                        "kind": "Operator",
+                        "detail": "not equal to",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "$gt",
+                        "insertText": "$gt: ",
+                        "kind": "Operator",
+                        "detail": "greater than",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "$gte",
+                        "insertText": "$gte: ",
+                        "kind": "Operator",
+                        "detail": "greater than or equal to",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$lt",
+                        "insertText": "$lt: ",
+                        "kind": "Operator",
+                        "detail": "less than",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "$lte",
+                        "insertText": "$lte: ",
+                        "kind": "Operator",
+                        "detail": "less than or equal to",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$in",
+                        "insertText": "$in: []",
+                        "kind": "Operator",
+                        "detail": "any of the values",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "$nin",
+                        "insertText": "$nin: []",
+                        "kind": "Operator",
+                        "detail": "none of the values",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$exists",
+                        "insertText": "$exists: true",
+                        "kind": "Operator",
+                        "detail": "has the field",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "$type",
+                        "insertText": "$type: ",
+                        "kind": "Operator",
+                        "detail": "BSON type is",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$regex",
+                        "insertText": "$regex: ''",
+                        "kind": "Operator",
+                        "detail": "matches a regular expression",
+                        "caretOffset": 9
+                    },
+                    {
+                        "label": "$options",
+                        "insertText": "$options: ",
+                        "kind": "Operator",
+                        "detail": "regex flags: i m x s",
+                        "caretOffset": 10
+                    },
+                    {
+                        "label": "$not",
+                        "insertText": "$not: {}",
+                        "kind": "Operator",
+                        "detail": "doesn't match the condition",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$all",
+                        "insertText": "$all: []",
+                        "kind": "Operator",
+                        "detail": "array has all the values",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$elemMatch",
+                        "insertText": "$elemMatch: {}",
+                        "kind": "Operator",
+                        "detail": "an array element matches all conditions",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "$size",
+                        "insertText": "$size: ",
+                        "kind": "Operator",
+                        "detail": "array has this many elements",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "$mod",
+                        "insertText": "$mod: []",
+                        "kind": "Operator",
+                        "detail": "divisor and remainder",
+                        "caretOffset": 7
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Filter {status: 'ồ|'}",
+            "output": {
+                "replaceStart": 9,
+                "replaceEnd": 12,
+                "prefix": "'ồ",
+                "items": [],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Sort {tot|}",
+            "output": {
+                "replaceStart": 1,
+                "replaceEnd": 4,
+                "prefix": "tot",
+                "items": [
+                    {
+                        "label": "total",
+                        "insertText": "total: ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 7
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Projection {tot|}",
+            "output": {
+                "replaceStart": 1,
+                "replaceEnd": 4,
+                "prefix": "tot",
+                "items": [
+                    {
+                        "label": "total",
+                        "insertText": "total: ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 7
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Sort {total: |}",
+            "output": {
+                "replaceStart": 8,
+                "replaceEnd": 8,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "1",
+                        "insertText": "1",
+                        "kind": "Value",
+                        "detail": "ascending",
+                        "caretOffset": 1
+                    },
+                    {
+                        "label": "-1",
+                        "insertText": "-1",
+                        "kind": "Value",
+                        "detail": "descending",
+                        "caretOffset": 2
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Projection {total: |}",
+            "output": {
+                "replaceStart": 8,
+                "replaceEnd": 8,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "1",
+                        "insertText": "1",
+                        "kind": "Value",
+                        "detail": "include",
+                        "caretOffset": 1
+                    },
+                    {
+                        "label": "0",
+                        "insertText": "0",
+                        "kind": "Value",
+                        "detail": "exclude",
+                        "caretOffset": 1
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Sort {|}",
+            "output": {
+                "replaceStart": 1,
+                "replaceEnd": 1,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "_id",
+                        "insertText": "_id: ",
+                        "kind": "Column",
+                        "detail": "objectId",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "status",
+                        "insertText": "status: ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "total",
+                        "insertText": "total: ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "tags",
+                        "insertText": "tags: ",
+                        "kind": "Column",
+                        "detail": "array",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "items",
+                        "insertText": "items: ",
+                        "kind": "Column",
+                        "detail": "array",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "items.sku",
+                        "insertText": "'items.sku': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "items.qty",
+                        "insertText": "'items.qty': ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "address",
+                        "insertText": "address: ",
+                        "kind": "Column",
+                        "detail": "object",
+                        "caretOffset": 9
+                    },
+                    {
+                        "label": "address.city",
+                        "insertText": "'address.city': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 16
+                    },
+                    {
+                        "label": "first name",
+                        "insertText": "'first name': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 14
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Projection {|}",
+            "output": {
+                "replaceStart": 1,
+                "replaceEnd": 1,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "_id",
+                        "insertText": "_id: ",
+                        "kind": "Column",
+                        "detail": "objectId",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "status",
+                        "insertText": "status: ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "total",
+                        "insertText": "total: ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "tags",
+                        "insertText": "tags: ",
+                        "kind": "Column",
+                        "detail": "array",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "items",
+                        "insertText": "items: ",
+                        "kind": "Column",
+                        "detail": "array",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "items.sku",
+                        "insertText": "'items.sku': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "items.qty",
+                        "insertText": "'items.qty': ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "address",
+                        "insertText": "address: ",
+                        "kind": "Column",
+                        "detail": "object",
+                        "caretOffset": 9
+                    },
+                    {
+                        "label": "address.city",
+                        "insertText": "'address.city': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 16
+                    },
+                    {
+                        "label": "first name",
+                        "insertText": "'first name': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 14
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Sort {total: -|}",
+            "output": {
+                "replaceStart": 8,
+                "replaceEnd": 9,
+                "prefix": "-",
+                "items": [
+                    {
+                        "label": "-1",
+                        "insertText": "-1",
+                        "kind": "Value",
+                        "detail": "descending",
+                        "caretOffset": 2
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Projection {total: -|}",
+            "output": {
+                "replaceStart": 8,
+                "replaceEnd": 9,
+                "prefix": "-",
+                "items": [],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Sort {$|}",
+            "output": {
+                "replaceStart": 1,
+                "replaceEnd": 2,
+                "prefix": "$",
+                "items": [
+                    {
+                        "label": "_id",
+                        "insertText": "_id: ",
+                        "kind": "Column",
+                        "detail": "objectId",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "status",
+                        "insertText": "status: ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "total",
+                        "insertText": "total: ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "tags",
+                        "insertText": "tags: ",
+                        "kind": "Column",
+                        "detail": "array",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "items",
+                        "insertText": "items: ",
+                        "kind": "Column",
+                        "detail": "array",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "address",
+                        "insertText": "address: ",
+                        "kind": "Column",
+                        "detail": "object",
+                        "caretOffset": 9
+                    },
+                    {
+                        "label": "first name",
+                        "insertText": "'first name': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 14
+                    },
+                    {
+                        "label": "items.sku",
+                        "insertText": "'items.sku': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "items.qty",
+                        "insertText": "'items.qty': ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "address.city",
+                        "insertText": "'address.city': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 16
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "Projection {$|}",
+            "output": {
+                "replaceStart": 1,
+                "replaceEnd": 2,
+                "prefix": "$",
+                "items": [
+                    {
+                        "label": "_id",
+                        "insertText": "_id: ",
+                        "kind": "Column",
+                        "detail": "objectId",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "status",
+                        "insertText": "status: ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "total",
+                        "insertText": "total: ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "tags",
+                        "insertText": "tags: ",
+                        "kind": "Column",
+                        "detail": "array",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "items",
+                        "insertText": "items: ",
+                        "kind": "Column",
+                        "detail": "array",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "address",
+                        "insertText": "address: ",
+                        "kind": "Column",
+                        "detail": "object",
+                        "caretOffset": 9
+                    },
+                    {
+                        "label": "first name",
+                        "insertText": "'first name': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 14
+                    },
+                    {
+                        "label": "items.sku",
+                        "insertText": "'items.sku': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "items.qty",
+                        "insertText": "'items.qty': ",
+                        "kind": "Column",
+                        "detail": "number",
+                        "caretOffset": 13
+                    },
+                    {
+                        "label": "address.city",
+                        "insertText": "'address.city': ",
+                        "kind": "Column",
+                        "detail": "string",
+                        "caretOffset": 16
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "plain values",
+            "output": {
+                "replaceStart": 4,
+                "replaceEnd": 4,
+                "prefix": "",
+                "items": [
+                    {
+                        "label": "ISODate('2024-01-01')",
+                        "insertText": "ISODate('2024-01-01')",
+                        "kind": "Value",
+                        "detail": "a value",
+                        "caretOffset": 21
+                    },
+                    {
+                        "label": "'x)y'",
+                        "insertText": "'x)y'",
+                        "kind": "Value",
+                        "detail": "a value",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "(odd",
+                        "insertText": "(odd",
+                        "kind": "Value",
+                        "detail": "a value",
+                        "caretOffset": 4
+                    },
+                    {
+                        "label": "'Bob'",
+                        "insertText": "'Bob'",
+                        "kind": "Value",
+                        "detail": "a value",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "'bobby'",
+                        "insertText": "'bobby'",
+                        "kind": "Value",
+                        "detail": "a value",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "'Alibob'",
+                        "insertText": "'Alibob'",
+                        "kind": "Value",
+                        "detail": "a value",
+                        "caretOffset": 8
+                    },
+                    {
+                        "label": "{$gt: }",
+                        "insertText": "{$gt: }",
+                        "kind": "Keyword",
+                        "detail": "a comparison",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "{$in: []}",
+                        "insertText": "{$in: []}",
+                        "kind": "Keyword",
+                        "detail": "any of these values",
+                        "caretOffset": 6
+                    },
+                    {
+                        "label": "{$exists: true}",
+                        "insertText": "{$exists: true}",
+                        "kind": "Keyword",
+                        "detail": "has the field",
+                        "caretOffset": 15
+                    },
+                    {
+                        "label": "{$regex: '', $options: 'i'}",
+                        "insertText": "{$regex: '', $options: 'i'}",
+                        "kind": "Keyword",
+                        "detail": "matches a pattern",
+                        "caretOffset": 10
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        },
+        {
+            "name": "values starting first",
+            "output": {
+                "replaceStart": 4,
+                "replaceEnd": 7,
+                "prefix": "'bo",
+                "items": [
+                    {
+                        "label": "'Bob'",
+                        "insertText": "'Bob'",
+                        "kind": "Value",
+                        "detail": "a value",
+                        "caretOffset": 5
+                    },
+                    {
+                        "label": "'bobby'",
+                        "insertText": "'bobby'",
+                        "kind": "Value",
+                        "detail": "a value",
+                        "caretOffset": 7
+                    },
+                    {
+                        "label": "'Alibob'",
+                        "insertText": "'Alibob'",
+                        "kind": "Value",
+                        "detail": "a value",
+                        "caretOffset": 8
+                    }
+                ],
+                "value": null,
+                "pendingTables": []
+            }
+        }
+    ]
+}

@@ -1,0 +1,19 @@
+{
+    "specimen": "icon-button-pressed",
+    "theme": "Catppuccin Latte",
+    "density": 2.0,
+    "width": 112,
+    "height": 96,
+    "regions": [
+        {
+            "tag": "icon:icon-button.pressed",
+            "kind": "icon",
+            "rect": [
+                42,
+                34,
+                28,
+                28
+            ]
+        }
+    ]
+}

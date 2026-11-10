@@ -1,0 +1,440 @@
+{
+  "subject": "ddl-column-types",
+  "cases": [
+    {
+      "name": "declared type 0 varchar",
+      "op": "declaredType",
+      "column": {
+        "name": "a",
+        "typeName": "varchar",
+        "size": 100,
+        "nullable": true,
+        "defaultValue": null,
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null
+      }
+    },
+    {
+      "name": "declared type 1 VARCHAR",
+      "op": "declaredType",
+      "column": {
+        "name": "a",
+        "typeName": "VARCHAR",
+        "size": 2147483647,
+        "nullable": true,
+        "defaultValue": null,
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null
+      }
+    },
+    {
+      "name": "declared type 2 numeric",
+      "op": "declaredType",
+      "column": {
+        "name": "a",
+        "typeName": "numeric",
+        "size": 10,
+        "nullable": true,
+        "defaultValue": null,
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": 2
+      }
+    },
+    {
+      "name": "declared type 3 numeric",
+      "op": "declaredType",
+      "column": {
+        "name": "a",
+        "typeName": "numeric",
+        "size": 10,
+        "nullable": true,
+        "defaultValue": null,
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": 0
+      }
+    },
+    {
+      "name": "declared type 4 decimal",
+      "op": "declaredType",
+      "column": {
+        "name": "a",
+        "typeName": "decimal",
+        "size": 5000,
+        "nullable": true,
+        "defaultValue": null,
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null
+      }
+    },
+    {
+      "name": "declared type 5 Decimal(10, 2)",
+      "op": "declaredType",
+      "column": {
+        "name": "a",
+        "typeName": "Decimal(10, 2)",
+        "size": 10,
+        "nullable": true,
+        "defaultValue": null,
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null
+      }
+    },
+    {
+      "name": "declared type 6 int",
+      "op": "declaredType",
+      "column": {
+        "name": "a",
+        "typeName": "int",
+        "size": 10,
+        "nullable": true,
+        "defaultValue": null,
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null
+      }
+    },
+    {
+      "name": "declared type 7 int identity",
+      "op": "declaredType",
+      "column": {
+        "name": "a",
+        "typeName": "int identity",
+        "size": 10,
+        "nullable": true,
+        "defaultValue": null,
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null
+      }
+    },
+    {
+      "name": "declared type 8 bigint IDENTITY",
+      "op": "declaredType",
+      "column": {
+        "name": "a",
+        "typeName": "bigint IDENTITY",
+        "size": 19,
+        "nullable": true,
+        "defaultValue": null,
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null
+      }
+    },
+    {
+      "name": "declared type 9 bit",
+      "op": "declaredType",
+      "column": {
+        "name": "a",
+        "typeName": "bit",
+        "size": 1,
+        "nullable": true,
+        "defaultValue": null,
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null
+      }
+    },
+    {
+      "name": "declared type 10 character varying",
+      "op": "declaredType",
+      "column": {
+        "name": "a",
+        "typeName": "character varying",
+        "size": 0,
+        "nullable": true,
+        "defaultValue": null,
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null
+      }
+    },
+    {
+      "name": "declared type 11  text ",
+      "op": "declaredType",
+      "column": {
+        "name": "a",
+        "typeName": " text ",
+        "size": null,
+        "nullable": true,
+        "defaultValue": null,
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null
+      }
+    },
+    {
+      "name": "declared type 12 nchar",
+      "op": "declaredType",
+      "column": {
+        "name": "a",
+        "typeName": "nchar",
+        "size": -1,
+        "nullable": true,
+        "defaultValue": null,
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null
+      }
+    },
+    {
+      "name": "declared type 13 raw",
+      "op": "declaredType",
+      "column": {
+        "name": "a",
+        "typeName": "raw",
+        "size": 16,
+        "nullable": true,
+        "defaultValue": null,
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null
+      }
+    },
+    {
+      "name": "declared type 14 Ở identity",
+      "op": "declaredType",
+      "column": {
+        "name": "a",
+        "typeName": "Ở identity",
+        "size": 1,
+        "nullable": true,
+        "defaultValue": null,
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null
+      }
+    },
+    {
+      "name": "default expression 0",
+      "op": "defaultExpression",
+      "column": {
+        "name": "a",
+        "typeName": "varchar",
+        "size": null,
+        "nullable": true,
+        "defaultValue": " draft ",
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null,
+        "jdbcType": 12
+      }
+    },
+    {
+      "name": "default expression 1",
+      "op": "defaultExpression",
+      "column": {
+        "name": "a",
+        "typeName": "integer",
+        "size": null,
+        "nullable": true,
+        "defaultValue": "NULL",
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null
+      }
+    },
+    {
+      "name": "default expression 2",
+      "op": "defaultExpression",
+      "column": {
+        "name": "a",
+        "typeName": "integer",
+        "size": null,
+        "nullable": true,
+        "defaultValue": "'x'",
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null
+      }
+    },
+    {
+      "name": "default expression 3",
+      "op": "defaultExpression",
+      "column": {
+        "name": "a",
+        "typeName": "integer",
+        "size": null,
+        "nullable": true,
+        "defaultValue": "CURRENT_TIMESTAMP(3)",
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null
+      }
+    },
+    {
+      "name": "default expression 4",
+      "op": "defaultExpression",
+      "column": {
+        "name": "a",
+        "typeName": "integer",
+        "size": null,
+        "nullable": true,
+        "defaultValue": "now()",
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null
+      }
+    },
+    {
+      "name": "default expression 5",
+      "op": "defaultExpression",
+      "column": {
+        "name": "a",
+        "typeName": "integer",
+        "size": null,
+        "nullable": true,
+        "defaultValue": "12.5",
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null
+      }
+    },
+    {
+      "name": "default expression 6",
+      "op": "defaultExpression",
+      "column": {
+        "name": "a",
+        "typeName": "varchar",
+        "size": null,
+        "nullable": true,
+        "defaultValue": "12",
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null,
+        "jdbcType": 12
+      }
+    },
+    {
+      "name": "default expression 7",
+      "op": "defaultExpression",
+      "column": {
+        "name": "a",
+        "typeName": "integer",
+        "size": null,
+        "nullable": true,
+        "defaultValue": "b'101'",
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null
+      }
+    },
+    {
+      "name": "default expression 8",
+      "op": "defaultExpression",
+      "column": {
+        "name": "a",
+        "typeName": "integer",
+        "size": null,
+        "nullable": true,
+        "defaultValue": "it's \\ here",
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null
+      }
+    },
+    {
+      "name": "default expression 9",
+      "op": "defaultExpression",
+      "column": {
+        "name": "a",
+        "typeName": "integer",
+        "size": null,
+        "nullable": true,
+        "defaultValue": "true",
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null
+      }
+    },
+    {
+      "name": "default expression 10",
+      "op": "defaultExpression",
+      "column": {
+        "name": "a",
+        "typeName": "integer",
+        "size": null,
+        "nullable": true,
+        "defaultValue": null,
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null
+      }
+    },
+    {
+      "name": "default expression 11",
+      "op": "defaultExpression",
+      "column": {
+        "name": "a",
+        "typeName": "integer",
+        "size": null,
+        "nullable": true,
+        "defaultValue": "(1 + 2)",
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null
+      }
+    },
+    {
+      "name": "default expression 12",
+      "op": "defaultExpression",
+      "column": {
+        "name": "a",
+        "typeName": "integer",
+        "size": null,
+        "nullable": true,
+        "defaultValue": "uuid()",
+        "autoIncrement": false,
+        "primaryKey": false,
+        "scale": null
+      }
+    },
+    {
+      "name": "normalize",
+      "op": "normalize",
+      "values": [
+        "character varying(20)",
+        "VARCHAR( 20 )",
+        "int4",
+        "INTEGER",
+        "numeric(10, 2)",
+        "decimal(10,2)",
+        "timestamp  without time zone",
+        "double",
+        "Bool",
+        "text[]",
+        " float8 ",
+        "dec (5 ,1)",
+        ""
+      ]
+    },
+    {
+      "name": "normalize default",
+      "op": "normalizeDefault",
+      "values": [
+        "'draft'::character varying",
+        "'draft'",
+        "(now())",
+        "NOW()",
+        null,
+        "null",
+        "((1))",
+        "(a) + (b)",
+        "'X'::text[]",
+        "0::numeric(10,2)",
+        "  CURRENT_TIMESTAMP ",
+        "()"
+      ]
+    },
+    {
+      "name": "common types",
+      "op": "commonTypes"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "component": "link",
+  "description": "Link(text, onClick): a text button in the link colour, optionally disabled. A disabled link can't take focus at all (it has no focus action), so no case focuses one.",
+  "cases": [
+    { "name": "a click fires once", "setup": {}, "steps": ["click"], "expect": { "clicks": 1 } },
+    { "name": "a disabled link doesn't fire", "setup": { "enabled": false }, "steps": ["click"], "expect": { "clicks": 0 } },
+    { "name": "Enter fires the focused link", "setup": {}, "steps": ["focus", { "key": "Enter" }], "expect": { "clicks": 1, "focused": true } },
+    { "name": "Space fires the focused link", "setup": {}, "steps": ["focus", { "key": "Space" }], "expect": { "clicks": 1, "focused": true } },
+    { "name": "Enter with the primary modifier still fires", "setup": {}, "steps": ["focus", { "key": "Enter", "mods": ["primary"] }], "expect": { "clicks": 1 } },
+    { "name": "Enter with Shift still fires", "setup": {}, "steps": ["focus", { "key": "Enter", "mods": ["shift"] }], "expect": { "clicks": 1 } },
+    { "name": "a click focuses the link", "setup": {}, "steps": ["click"], "expect": { "focused": true } },
+    { "name": "a double click fires twice", "setup": {}, "steps": ["doubleClick"], "expect": { "clicks": 2 } },
+    { "name": "hovering neither fires nor focuses", "setup": {}, "steps": ["hover", { "wait": 100 }, "unhover"], "expect": { "clicks": 0, "focused": false } },
+    { "name": "Tab moves focus to the next control", "setup": { "next": true }, "steps": ["focus", { "key": "Tab" }], "expect": { "focused": false, "nextFocused": true } }
+  ]
+}

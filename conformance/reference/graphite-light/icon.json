@@ -1,0 +1,89 @@
+{
+    "specimen": "icon",
+    "theme": "Graphite Light",
+    "density": 2.0,
+    "width": 480,
+    "height": 112,
+    "regions": [
+        {
+            "tag": "icon:Actions.Refresh",
+            "kind": "icon",
+            "rect": [
+                256,
+                40,
+                32,
+                32
+            ]
+        },
+        {
+            "tag": "icon:Actions.Search",
+            "kind": "icon",
+            "rect": [
+                408,
+                42,
+                28,
+                28
+            ]
+        },
+        {
+            "tag": "icon:General.Add",
+            "kind": "icon",
+            "rect": [
+                32,
+                40,
+                32,
+                32
+            ]
+        },
+        {
+            "tag": "icon:General.ChevronRight",
+            "kind": "icon",
+            "rect": [
+                368,
+                44,
+                24,
+                24
+            ]
+        },
+        {
+            "tag": "icon:General.Error",
+            "kind": "icon",
+            "rect": [
+                144,
+                40,
+                32,
+                32
+            ]
+        },
+        {
+            "tag": "icon:General.Warning",
+            "kind": "icon",
+            "rect": [
+                88,
+                40,
+                32,
+                32
+            ]
+        },
+        {
+            "tag": "icon:Nodes.DataTables",
+            "kind": "icon",
+            "rect": [
+                200,
+                40,
+                32,
+                32
+            ]
+        },
+        {
+            "tag": "icon:TableGrip.Agent",
+            "kind": "icon",
+            "rect": [
+                312,
+                40,
+                32,
+                32
+            ]
+        }
+    ]
+}

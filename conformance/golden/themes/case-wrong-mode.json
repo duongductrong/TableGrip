@@ -1,0 +1,147 @@
+{
+    "case": "wrong-mode",
+    "setup": {
+        "id": "wrong-mode",
+        "dark": true,
+        "theme": "One Light"
+    },
+    "resolved": {
+        "name": "Graphite Dark",
+        "family": "Graphite",
+        "dark": true
+    },
+    "colors": {
+        "frame.background": "#27292E",
+        "island.background": "#1E1F22",
+        "island.border": "#FFFFFF14",
+        "divider": "#393B40",
+        "accent": "#3574F0",
+        "accent.foreground": "#FFFFFF",
+        "toolbar.hover.background": "#FFFFFF14",
+        "chip.hover.background": "#FFFFFF1A",
+        "scrim": "#0000008C",
+        "text": "#DFE1E5",
+        "text.muted": "#8F9094",
+        "jewel.text": null,
+        "jewel.text.muted": null,
+        "jewel.text.disabled": null,
+        "jewel.text.error": null,
+        "jewel.text.warning": null,
+        "jewel.border": null,
+        "jewel.border.focused": null,
+        "controls.text": null,
+        "controls.text.muted": null,
+        "controls.text.disabled": null,
+        "controls.focus": null,
+        "controls.link": null,
+        "controls.input.background": null,
+        "controls.input.border": null,
+        "controls.popup.background": null,
+        "controls.popup.border": null,
+        "controls.selection": null,
+        "controls.selection.inactive": null,
+        "controls.hover": null,
+        "controls.button.background": null,
+        "controls.button.foreground": null,
+        "controls.button.hover": null,
+        "controls.button.pressed": null,
+        "controls.secondary.border": null,
+        "editor.background": null,
+        "editor.foreground": null,
+        "editor.currentLine": "#FFFFFF0F",
+        "editor.findMatch": "#3D61854D",
+        "editor.findMatch.current": "#6F8FBF99",
+        "editor.bracket": "#43A04733",
+        "editor.bracket.border": "#43A04799",
+        "grid.modified": "#3574F040",
+        "grid.inserted": "#49A35B33",
+        "grid.deleted": "#DB5C5C33",
+        "chart.background": "#1E1F22",
+        "chart.text": "#DFE1E5",
+        "chart.text.muted": "#9DA0A8",
+        "chart.grid": "#2E3034",
+        "diagram.background": "#1E1F22",
+        "diagram.grid": "#2B2D30",
+        "diagram.box": "#2B2D30",
+        "diagram.header": "#393B40",
+        "diagram.header.text": "#DFE1E5",
+        "diagram.border": "#4E5157",
+        "diagram.text": "#DFE1E5",
+        "diagram.text.muted": "#8C8F94",
+        "diagram.line": "#6F737A",
+        "diagram.primaryKey": "#E0B53E",
+        "diagram.foreignKey": "#5C9CF5",
+        "diagram.match": "#E0B53E"
+    },
+    "syntax": {
+        "keyword": {
+            "color": "#CF8E6D",
+            "italic": false,
+            "bold": false
+        },
+        "string": {
+            "color": "#6AAB73",
+            "italic": false,
+            "bold": false
+        },
+        "number": {
+            "color": "#2AACB8",
+            "italic": false,
+            "bold": false
+        },
+        "comment": {
+            "color": "#7A7E85",
+            "italic": true,
+            "bold": false
+        },
+        "quotedIdentifier": {
+            "color": "#C77DBB",
+            "italic": false,
+            "bold": false
+        },
+        "parameter": {
+            "color": "#56A8F5",
+            "italic": false,
+            "bold": false
+        }
+    },
+    "chart": [
+        "#548AF7",
+        "#E5A33E",
+        "#5FB865",
+        "#E06C75",
+        "#B189F5",
+        "#3FB6C6",
+        "#D8829A",
+        "#A8B04F",
+        "#8E9BB0",
+        "#C97E4B"
+    ],
+    "ui": {
+        "ui.text": "#DFE1E5",
+        "ui.text.info": "#6F737A",
+        "ui.text.disabled": "#5A5D63",
+        "ui.text.error": "#DB5C5C",
+        "ui.text.warning": "#DFE1E5",
+        "ui.border": "#1E1F22",
+        "ui.border.focused": "#2B2D30",
+        "ui.border.disabled": "#43454A",
+        "ui.outline.focused": "#3574F0",
+        "ui.outline.error": "#472B2B",
+        "ui.outline.warning": "#5E4D33",
+        "ui.divider": "#393B40",
+        "ui.link": "#6B9BFA",
+        "ui.link.disabled": "#6F737A",
+        "ui.link.hovered": "#6B9BFA",
+        "ui.link.pressed": "#6B9BFA",
+        "ui.link.focused": "#6B9BFA",
+        "ui.link.visited": "#6B9BFA"
+    },
+    "fonts": {
+        "ui.size": 13.0,
+        "ui.lineHeight": 17.0,
+        "editor.size": 13.0,
+        "editor.lineHeight": 18.0,
+        "island.cornerRadius": 10.0
+    }
+}

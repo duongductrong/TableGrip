@@ -1,0 +1,47 @@
+{
+  "subject": "sql-parameters",
+  "cases": [
+    {
+      "name": "kotlin: colon and dollar-brace once each",
+      "syntax": "PostgreSQL",
+      "sql": "SELECT * FROM orders WHERE user_id = :user_id AND created_at >= ${from} AND user_id <> :user_id"
+    },
+    {
+      "name": "kotlin: ignores casts, strings and comments",
+      "syntax": "PostgreSQL",
+      "sql": "SELECT a::int, ':nope', \"x:y\" -- :comment\n/* ${also} */ FROM t WHERE b = :real"
+    },
+    {
+      "name": "kotlin: substitutes values as written",
+      "syntax": "PostgreSQL",
+      "sql": "SELECT * FROM t WHERE status = :status AND id IN (${ids}) AND x = :missing",
+      "values": {
+        "status": "'paid'",
+        "ids": "1, 2"
+      }
+    },
+    {
+      "name": "dotted and spaced dollar-brace names",
+      "sql": "SELECT ${ a.b } , ${bad name}, ${}, ${x",
+      "values": {
+        "a.b": "1"
+      }
+    },
+    {
+      "name": "non-ascii names",
+      "sql": "SELECT :tên, ${giá}",
+      "values": {
+        "tên": "'x'",
+        "giá": "2"
+      }
+    },
+    {
+      "name": "mysql strings hide parameters",
+      "syntax": "MySQL",
+      "sql": "SELECT \":a\", `:b`, :c",
+      "values": {
+        "c": "3"
+      }
+    }
+  ]
+}

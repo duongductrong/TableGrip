@@ -1,0 +1,1108 @@
+{
+  "artifact": "com.jetbrains.intellij.platform:icons:262.10968.63",
+  "artifactSha256": "639bb9363ea4e6855f957957849a468b33ebf1da77c5302adebe2d9bc8d66bad",
+  "license": "Apache-2.0 (header in each file)",
+  "notice": "This software includes code from IntelliJ IDEA, Copyright (C) JetBrains s.r.o.",
+  "generatedBy": "scripts/extract-icons.py",
+  "icons": [
+    {
+      "key": "General.ChevronDown",
+      "dark": false,
+      "file": "general/chevronDown.svg",
+      "source": "expui/general/chevronDown.svg",
+      "sha256": "8cc414b79234c71b263f65b11fc71e429411ce13512862add9ccef60264c1c34"
+    },
+    {
+      "key": "General.ChevronDown",
+      "dark": true,
+      "file": "general/chevronDown_dark.svg",
+      "source": "expui/general/chevronDown_dark.svg",
+      "sha256": "2002c988353dc8d3e4044ddc34ec062366c4c1b4307a5e135478ac44694ea30b"
+    },
+    {
+      "key": "General.Add",
+      "dark": false,
+      "file": "general/add.svg",
+      "source": "expui/general/add.svg",
+      "sha256": "337388830262aeb22502d3954f2bc543c332f025c1fab16a7231acc1fd5254b8"
+    },
+    {
+      "key": "General.Add",
+      "dark": true,
+      "file": "general/add_dark.svg",
+      "source": "expui/general/add_dark.svg",
+      "sha256": "1244cf1ce1320b2c95194230305c2e736bee457e96d6e431dda4240f18098756"
+    },
+    {
+      "key": "General.Warning",
+      "dark": false,
+      "file": "status/warning.svg",
+      "source": "expui/status/warning.svg",
+      "sha256": "b9109478271840e1d7f579863d7c4105ee954645cd37d876a7ec9544e1cb5d58"
+    },
+    {
+      "key": "General.Warning",
+      "dark": true,
+      "file": "status/warning_dark.svg",
+      "source": "expui/status/warning_dark.svg",
+      "sha256": "8df931e3668409275758190dbc8d55bfbc5036fa3e3c1537002c7256164321c5"
+    },
+    {
+      "key": "General.Error",
+      "dark": false,
+      "file": "status/error.svg",
+      "source": "expui/status/error.svg",
+      "sha256": "4f20bf06930a0f6b4e6572d7ba19051b31dd993e96a77ffff08d910246cb0bc6"
+    },
+    {
+      "key": "General.Error",
+      "dark": true,
+      "file": "status/error_dark.svg",
+      "source": "expui/status/error_dark.svg",
+      "sha256": "687c702095397f79a902639b6da2e910ec8e9bb822dd8b5994afd39408a678fc"
+    },
+    {
+      "key": "General.ChevronRight",
+      "dark": false,
+      "file": "general/chevronRight.svg",
+      "source": "expui/general/chevronRight.svg",
+      "sha256": "6dc8f3b872ec8b3ce7037e9f2adc40a393449ab88820a7efa9c683fba78c1d98"
+    },
+    {
+      "key": "General.ChevronRight",
+      "dark": true,
+      "file": "general/chevronRight_dark.svg",
+      "source": "expui/general/chevronRight_dark.svg",
+      "sha256": "bae1f68b729b1eab1ab2e6ce35033b71cdb52b3677fb90ac8aef286c7be68595"
+    },
+    {
+      "key": "General.Filter",
+      "dark": false,
+      "file": "general/filter.svg",
+      "source": "expui/general/filter.svg",
+      "sha256": "fee3a811567d5deabf6195792134c3c39a3a14096b3336c7cfb112f952dbaef1"
+    },
+    {
+      "key": "General.Filter",
+      "dark": true,
+      "file": "general/filter_dark.svg",
+      "source": "expui/general/filter_dark.svg",
+      "sha256": "8f422f8531c0eb71e092f2b15c819cddf58b581650d926ee26d56f295b1e8467"
+    },
+    {
+      "key": "General.Delete",
+      "dark": false,
+      "file": "general/delete.svg",
+      "source": "expui/general/delete.svg",
+      "sha256": "90ce02aac2a0ccf60e7d9470e192d72e7b1bbe046a17a5f4f5941c73c04e594d"
+    },
+    {
+      "key": "General.Delete",
+      "dark": true,
+      "file": "general/delete_dark.svg",
+      "source": "expui/general/delete_dark.svg",
+      "sha256": "3e58be48794d8eddeae69c7f64cbd6aea390c193fa08645ba4f5546cbe839596"
+    },
+    {
+      "key": "General.Information",
+      "dark": false,
+      "file": "status/info.svg",
+      "source": "expui/status/info.svg",
+      "sha256": "911a8caac822d034692313014886194c922caf8dfb003566154b4d23d3ab866f"
+    },
+    {
+      "key": "General.Information",
+      "dark": true,
+      "file": "status/info_dark.svg",
+      "source": "expui/status/info_dark.svg",
+      "sha256": "fe53b578033b97b848aea4549b84bcd56dbc3c6b7bff6772b96f0a9e5ab84287"
+    },
+    {
+      "key": "General.Settings",
+      "dark": false,
+      "file": "general/settings.svg",
+      "source": "expui/general/settings.svg",
+      "sha256": "81d7bb2e91986a47e9e40287d4da9c4719905378ecac8b26234b7d2bf95127ed"
+    },
+    {
+      "key": "General.Settings",
+      "dark": true,
+      "file": "general/settings_dark.svg",
+      "source": "expui/general/settings_dark.svg",
+      "sha256": "d2c6e46b3788e7fed67d0d36d87f879a5394be0ab68d03b4aa40790de20e5222"
+    },
+    {
+      "key": "General.CloseSmall",
+      "dark": false,
+      "file": "general/closeSmall.svg",
+      "source": "expui/general/closeSmall.svg",
+      "sha256": "a4cf038384cb91265c76bbfe2d94bb711864924bf112ad9a62daa9dba72e4515"
+    },
+    {
+      "key": "General.CloseSmall",
+      "dark": true,
+      "file": "general/closeSmall_dark.svg",
+      "source": "expui/general/closeSmall_dark.svg",
+      "sha256": "9d66fb068dca705b3e6342c23c27614837eeafefe1c38097dd64131ec3aa3c27"
+    },
+    {
+      "key": "General.ArrowUp",
+      "dark": false,
+      "file": "general/chevronUp.svg",
+      "source": "expui/general/chevronUp.svg",
+      "sha256": "14cf5aba194a708e7711f58b02912328dd8e8c8c30f88ed7ea006b9e0eb2baca"
+    },
+    {
+      "key": "General.ArrowUp",
+      "dark": true,
+      "file": "general/chevronUp_dark.svg",
+      "source": "expui/general/chevronUp_dark.svg",
+      "sha256": "be7fb520811eb143b5ce65b509a314dafddc5bb719e1d158bfd0b14889ea21c7"
+    },
+    {
+      "key": "General.ArrowRight",
+      "dark": false,
+      "file": "general/chevronRight.svg",
+      "source": "expui/general/chevronRight.svg",
+      "sha256": "6dc8f3b872ec8b3ce7037e9f2adc40a393449ab88820a7efa9c683fba78c1d98"
+    },
+    {
+      "key": "General.ArrowRight",
+      "dark": true,
+      "file": "general/chevronRight_dark.svg",
+      "source": "expui/general/chevronRight_dark.svg",
+      "sha256": "bae1f68b729b1eab1ab2e6ce35033b71cdb52b3677fb90ac8aef286c7be68595"
+    },
+    {
+      "key": "General.ArrowDown",
+      "dark": false,
+      "file": "general/chevronDown.svg",
+      "source": "expui/general/chevronDown.svg",
+      "sha256": "8cc414b79234c71b263f65b11fc71e429411ce13512862add9ccef60264c1c34"
+    },
+    {
+      "key": "General.ArrowDown",
+      "dark": true,
+      "file": "general/chevronDown_dark.svg",
+      "source": "expui/general/chevronDown_dark.svg",
+      "sha256": "2002c988353dc8d3e4044ddc34ec062366c4c1b4307a5e135478ac44694ea30b"
+    },
+    {
+      "key": "General.Remove",
+      "dark": false,
+      "file": "general/remove.svg",
+      "source": "expui/general/remove.svg",
+      "sha256": "02a3716106c09c8049e64b1e0abbbdf11a05abd78ca16b477d5d1b60a785d09a"
+    },
+    {
+      "key": "General.Remove",
+      "dark": true,
+      "file": "general/remove_dark.svg",
+      "source": "expui/general/remove_dark.svg",
+      "sha256": "004f8fd17f57a5c13d9e8009b48dcce4d29753bf516f500d73b4c635b62bb663"
+    },
+    {
+      "key": "General.InspectionsOK",
+      "dark": false,
+      "file": "general/inspections/inspectionsOK.svg",
+      "source": "expui/general/inspections/inspectionsOK.svg",
+      "sha256": "158a9c61b9b8279d2cb2bbf4ed99eaf375e4e32a52f50776039695547fe1293e"
+    },
+    {
+      "key": "General.InspectionsOK",
+      "dark": true,
+      "file": "general/inspections/inspectionsOK_dark.svg",
+      "source": "expui/general/inspections/inspectionsOK_dark.svg",
+      "sha256": "59df4fa6a20a07a2afeff79cec90cd7ea193c6ab05cc8ef3edb29443219cf4e1"
+    },
+    {
+      "key": "General.Keyboard",
+      "dark": false,
+      "file": "general/keyboard.svg",
+      "source": "expui/general/keyboard.svg",
+      "sha256": "736cfb1cabf4b5957a6c719e4f9b17d61cce8b443306d82a25f6c68dc2933a63"
+    },
+    {
+      "key": "General.Keyboard",
+      "dark": true,
+      "file": "general/keyboard_dark.svg",
+      "source": "expui/general/keyboard_dark.svg",
+      "sha256": "5422c69531502c5391fc49c1d30d36b437307c3b8523ee0be3de6babe5bdfe07"
+    },
+    {
+      "key": "General.ChevronUp",
+      "dark": false,
+      "file": "general/chevronUp.svg",
+      "source": "expui/general/chevronUp.svg",
+      "sha256": "14cf5aba194a708e7711f58b02912328dd8e8c8c30f88ed7ea006b9e0eb2baca"
+    },
+    {
+      "key": "General.ChevronUp",
+      "dark": true,
+      "file": "general/chevronUp_dark.svg",
+      "source": "expui/general/chevronUp_dark.svg",
+      "sha256": "be7fb520811eb143b5ce65b509a314dafddc5bb719e1d158bfd0b14889ea21c7"
+    },
+    {
+      "key": "General.ChevronLeft",
+      "dark": false,
+      "file": "general/chevronLeft.svg",
+      "source": "expui/general/chevronLeft.svg",
+      "sha256": "a1c21ca89e5f0f6263c4ef66b077c6d77dd8ba7dc021a35628456cba13de11c9"
+    },
+    {
+      "key": "General.ChevronLeft",
+      "dark": true,
+      "file": "general/chevronLeft_dark.svg",
+      "source": "expui/general/chevronLeft_dark.svg",
+      "sha256": "aea8b1cb0e8d71a10b29171627a7b8f850096c6cc20bf2940054ffe07d5be88f"
+    },
+    {
+      "key": "General.ZoomIn",
+      "dark": false,
+      "file": "general/zoomIn.svg",
+      "source": "general/zoomIn.svg",
+      "sha256": "62f3ccb97c0adf309a2d70fedcd8a4d0ec88ce587311dff2751b8bf2d8e88c10"
+    },
+    {
+      "key": "General.ZoomIn",
+      "dark": true,
+      "file": "general/zoomIn_dark.svg",
+      "source": "general/zoomIn_dark.svg",
+      "sha256": "f3031b7951032ee0cfad1710f9c3fed09c8daf4cfa10738d509357ede66c470f"
+    },
+    {
+      "key": "General.ZoomOut",
+      "dark": false,
+      "file": "general/zoomOut.svg",
+      "source": "general/zoomOut.svg",
+      "sha256": "459ef8984cf866afb36bd53dbd1102cb9749f45929d1d7bc1b07b454a84d57d8"
+    },
+    {
+      "key": "General.ZoomOut",
+      "dark": true,
+      "file": "general/zoomOut_dark.svg",
+      "source": "general/zoomOut_dark.svg",
+      "sha256": "16369e71107dea01337660c5fb6e4c4ca6a6ed06ed36ede53c5d2da24f305b90"
+    },
+    {
+      "key": "General.Reset",
+      "dark": false,
+      "file": "general/reset.svg",
+      "source": "expui/general/reset.svg",
+      "sha256": "97074fbfa988a1542c360bf355642cb385464cd24900afa956c8e1e542955170"
+    },
+    {
+      "key": "General.Reset",
+      "dark": true,
+      "file": "general/reset_dark.svg",
+      "source": "expui/general/reset_dark.svg",
+      "sha256": "7dced287bf72d4682df8b62198c3b15cd2348e4144f2a27d73126975f7d92739"
+    },
+    {
+      "key": "General.Pin",
+      "dark": false,
+      "file": "general/pin.svg",
+      "source": "expui/general/pin.svg",
+      "sha256": "99b16d998723509af9a068b06861a2099c11e9848a98d8f47a98015c0e4d3c4b"
+    },
+    {
+      "key": "General.Pin",
+      "dark": true,
+      "file": "general/pin_dark.svg",
+      "source": "expui/general/pin_dark.svg",
+      "sha256": "2e9b2f614c6656a5bb8a266b5a6eb1b59cb501de032cb88d8806a6b525f448ec"
+    },
+    {
+      "key": "General.PinSelected",
+      "dark": false,
+      "file": "general/pinSelected.svg",
+      "source": "expui/general/pinSelected.svg",
+      "sha256": "4fb3fd98e34d6124a8e18be864898613f34e1707ea30acbd825b894a8487c2c3"
+    },
+    {
+      "key": "General.PinSelected",
+      "dark": true,
+      "file": "general/pinSelected_dark.svg",
+      "source": "expui/general/pinSelected_dark.svg",
+      "sha256": "ad5d4a5fd36c6ae939b6cc7afc8d597618848cb7f1560f79661108ca37c165e8"
+    },
+    {
+      "key": "General.InlineAdd",
+      "dark": false,
+      "file": "inline/inlineAdd.svg",
+      "source": "expui/inline/inlineAdd.svg",
+      "sha256": "861d3eab7f2e4225771d63c159c0ca5a731a349318e504b36589b96472d1b1e2"
+    },
+    {
+      "key": "General.InlineAdd",
+      "dark": true,
+      "file": "inline/inlineAdd_dark.svg",
+      "source": "expui/inline/inlineAdd_dark.svg",
+      "sha256": "2c46ffde210f72620497d9bce992dc833e6091a8ebd1bc01ccb59eabd134f3c2"
+    },
+    {
+      "key": "General.HideToolWindow",
+      "dark": false,
+      "file": "general/hide.svg",
+      "source": "expui/general/hide.svg",
+      "sha256": "c753f8efb68916bcedc3a2f06e3cfa2c15ed64fc51b53cae4206f27fa1656ab4"
+    },
+    {
+      "key": "General.HideToolWindow",
+      "dark": true,
+      "file": "general/hide_dark.svg",
+      "source": "expui/general/hide_dark.svg",
+      "sha256": "1ae938bdf2aec06c65a5981b5b9fbbb1160a21945032fa6ba61579d15bbff415"
+    },
+    {
+      "key": "General.FitContent",
+      "dark": false,
+      "file": "image/fitContent.svg",
+      "source": "expui/image/fitContent.svg",
+      "sha256": "e64271a26a419d11450eaeb423ab15a89db4538470295b915f5608f49f6fc2ec"
+    },
+    {
+      "key": "General.FitContent",
+      "dark": true,
+      "file": "image/fitContent_dark.svg",
+      "source": "expui/image/fitContent_dark.svg",
+      "sha256": "483db9b17ff5d461fd259c31c6085ec8ea7cc118f38b4d72bfccc6ab82deccb6"
+    },
+    {
+      "key": "General.ExpandComponent",
+      "dark": false,
+      "file": "inline/expand.svg",
+      "source": "expui/inline/expand.svg",
+      "sha256": "653ed18af88f0a6129fcec301a121211d39146ccd518040a6dfbbbc690933b0d"
+    },
+    {
+      "key": "General.ExpandComponent",
+      "dark": true,
+      "file": "inline/expand_dark.svg",
+      "source": "expui/inline/expand_dark.svg",
+      "sha256": "1133b6a4ccb3e4dee3414716321e0c49cfa7e214cb4602c0c104f0af843cf914"
+    },
+    {
+      "key": "General.CollapseComponent",
+      "dark": false,
+      "file": "inline/collapse.svg",
+      "source": "expui/inline/collapse.svg",
+      "sha256": "7833658ce4e6e2f75cd8053940d0ca8b915d2e248a2832e3d4d0dd8e7f105911"
+    },
+    {
+      "key": "General.CollapseComponent",
+      "dark": true,
+      "file": "inline/collapse_dark.svg",
+      "source": "expui/inline/collapse_dark.svg",
+      "sha256": "b1e1ea0d0c54e3cd8a6ea36103000766fe308ce04ba2b16e2bb9682ff898e98b"
+    },
+    {
+      "key": "General.ActualZoom",
+      "dark": false,
+      "file": "image/actualZoom.svg",
+      "source": "expui/image/actualZoom.svg",
+      "sha256": "0247c8e571a3e0bb59d4b00aa8cf566478c12c00fb971325c8942d2608d034e6"
+    },
+    {
+      "key": "General.ActualZoom",
+      "dark": true,
+      "file": "image/actualZoom_dark.svg",
+      "source": "expui/image/actualZoom_dark.svg",
+      "sha256": "7a416843294252c75dde9b7881188b47afa947050e8000626fe62a11b9422336"
+    },
+    {
+      "key": "Actions.Search",
+      "dark": false,
+      "file": "general/search.svg",
+      "source": "expui/general/search.svg",
+      "sha256": "81e8241e7b38407420c573dfa264cd6df5deac0e8d59b935ce4c02b607bbe342"
+    },
+    {
+      "key": "Actions.Search",
+      "dark": true,
+      "file": "general/search_dark.svg",
+      "source": "expui/general/search_dark.svg",
+      "sha256": "aa3c118be2522e16522422aaa2fc2453dfa1016156d5e6a0e1b3484ffac15d14"
+    },
+    {
+      "key": "Actions.Refresh",
+      "dark": false,
+      "file": "general/refresh.svg",
+      "source": "expui/general/refresh.svg",
+      "sha256": "3efff615c01c60b9e1a30eabf31e4fe0fda1eec76c24fa1496aae4712165c816"
+    },
+    {
+      "key": "Actions.Refresh",
+      "dark": true,
+      "file": "general/refresh_dark.svg",
+      "source": "expui/general/refresh_dark.svg",
+      "sha256": "3c089055a2edb69e0b19ee5884dfebb3a705ca82293d2b09ded08060f92da6d1"
+    },
+    {
+      "key": "Actions.Copy",
+      "dark": false,
+      "file": "general/copy.svg",
+      "source": "expui/general/copy.svg",
+      "sha256": "e8fbcdf41aac27d2f719319acdfd4623b7623581dae62f03e6ca3d0d199a80cb"
+    },
+    {
+      "key": "Actions.Copy",
+      "dark": true,
+      "file": "general/copy_dark.svg",
+      "source": "expui/general/copy_dark.svg",
+      "sha256": "618c0d7cbc1b4d4f24e159784df1221c3b9b5a9b718a4255bf16b7c014727b01"
+    },
+    {
+      "key": "Actions.Rollback",
+      "dark": false,
+      "file": "vcs/revert.svg",
+      "source": "expui/vcs/revert.svg",
+      "sha256": "39c353087d43ee3d91992fd1cd848cd19e6e01d92687c47f0b7ffa7280af4902"
+    },
+    {
+      "key": "Actions.Rollback",
+      "dark": true,
+      "file": "vcs/revert_dark.svg",
+      "source": "expui/vcs/revert_dark.svg",
+      "sha256": "6821edf449ea5086e6ff37ce24c1cd4a7b7f4ddfef339df61b5f157e703988b2"
+    },
+    {
+      "key": "Actions.Edit",
+      "dark": false,
+      "file": "general/edit.svg",
+      "source": "expui/general/edit.svg",
+      "sha256": "1609c7d6fc56d19d27625f75a1b3113e74f49d782fd8d2abc42f8bda011f2cef"
+    },
+    {
+      "key": "Actions.Edit",
+      "dark": true,
+      "file": "general/edit_dark.svg",
+      "source": "expui/general/edit_dark.svg",
+      "sha256": "1b638b75f08f7cd2ca386fcd0c6a15da3a2b29af456537882e6c0f9bde3ce87d"
+    },
+    {
+      "key": "Actions.Close",
+      "dark": false,
+      "file": "general/closeSmall.svg",
+      "source": "expui/general/closeSmall.svg",
+      "sha256": "a4cf038384cb91265c76bbfe2d94bb711864924bf112ad9a62daa9dba72e4515"
+    },
+    {
+      "key": "Actions.Close",
+      "dark": true,
+      "file": "general/closeSmall_dark.svg",
+      "source": "expui/general/closeSmall_dark.svg",
+      "sha256": "9d66fb068dca705b3e6342c23c27614837eeafefe1c38097dd64131ec3aa3c27"
+    },
+    {
+      "key": "Actions.Commit",
+      "dark": false,
+      "file": "vcs/commit.svg",
+      "source": "expui/vcs/commit.svg",
+      "sha256": "3fac983347607a99adf75e2d88937fac14f6e4a5303cbb6b729e4894c79f86b9"
+    },
+    {
+      "key": "Actions.Commit",
+      "dark": true,
+      "file": "vcs/commit_dark.svg",
+      "source": "expui/vcs/commit_dark.svg",
+      "sha256": "91cee062791cf72e12280a94f245077656ebf118a0b2b3a1ef947bb396a3695a"
+    },
+    {
+      "key": "Actions.Suspend",
+      "dark": false,
+      "file": "run/stop.svg",
+      "source": "expui/run/stop.svg",
+      "sha256": "fc3a56e4ddf219f4abab8830669eed422bf130f9ad8b086b3f52f75aa4aeac14"
+    },
+    {
+      "key": "Actions.Suspend",
+      "dark": true,
+      "file": "run/stop_dark.svg",
+      "source": "expui/run/stop_dark.svg",
+      "sha256": "849dacfc40b7c7efdfbfcd2a59b800659c8e6149bc3d850a7f5cbbe25dbf4f82"
+    },
+    {
+      "key": "Actions.Preview",
+      "dark": false,
+      "file": "actions/preview.svg",
+      "source": "expui/actions/preview.svg",
+      "sha256": "523309086c13fd1c0b06971e4f1b138cbdc8188efbbca2a6288890e01320a78d"
+    },
+    {
+      "key": "Actions.Preview",
+      "dark": true,
+      "file": "actions/preview_dark.svg",
+      "source": "expui/actions/preview_dark.svg",
+      "sha256": "d5e58da742a8cb66e176af7dad228c007dd9ed6661e95557625766f28e9512c8"
+    },
+    {
+      "key": "Actions.Play_forward",
+      "dark": false,
+      "file": "actions/playForward.svg",
+      "source": "expui/actions/playForward.svg",
+      "sha256": "c73bef5573321338e153d3aea170b3f98acd3af820fb7ba8eb15a215201f51e6"
+    },
+    {
+      "key": "Actions.Play_forward",
+      "dark": true,
+      "file": "actions/playForward_dark.svg",
+      "source": "expui/actions/playForward_dark.svg",
+      "sha256": "ee4427ece21a804a22e510cf60ca62d649c7c9dc7dc0b6eae32076b0baf87e68"
+    },
+    {
+      "key": "Actions.Play_first",
+      "dark": false,
+      "file": "actions/playFirst.svg",
+      "source": "expui/actions/playFirst.svg",
+      "sha256": "db7af38ce623d229992e5f2dd9cf3002bf1b61830e7f5b743e017600fd9eb005"
+    },
+    {
+      "key": "Actions.Play_first",
+      "dark": true,
+      "file": "actions/playFirst_dark.svg",
+      "source": "expui/actions/playFirst_dark.svg",
+      "sha256": "995d4e6db203fa212bc7548e104a843d94bc8c3a175ff796227acd97d5f3c183"
+    },
+    {
+      "key": "Actions.Play_back",
+      "dark": false,
+      "file": "actions/playBack.svg",
+      "source": "expui/actions/playBack.svg",
+      "sha256": "38d91c00ccc650bd580d3e199fa2ab5e10fc22e6d5cb1b6df75bccc6d9f66120"
+    },
+    {
+      "key": "Actions.Play_back",
+      "dark": true,
+      "file": "actions/playBack_dark.svg",
+      "source": "expui/actions/playBack_dark.svg",
+      "sha256": "0773e8e44660e3298507579b989f9cd118c762706785222e8d12743744929a8f"
+    },
+    {
+      "key": "Actions.MenuSaveall",
+      "dark": false,
+      "file": "general/save.svg",
+      "source": "expui/general/save.svg",
+      "sha256": "e5ae9e72423d4fff5790f7cbacbffb0816777ac226d242a5e0aa14799aa5e5eb"
+    },
+    {
+      "key": "Actions.MenuSaveall",
+      "dark": true,
+      "file": "general/save_dark.svg",
+      "source": "expui/general/save_dark.svg",
+      "sha256": "4f17eae278e685ce07d9fc5fc2195a805bb803a3ae085e9f5c2b55bd760598f9"
+    },
+    {
+      "key": "Actions.Execute",
+      "dark": false,
+      "file": "run/run.svg",
+      "source": "expui/run/run.svg",
+      "sha256": "152f9b200bddd25b2ee3f0b03c2be710aa131891fc0e39e0d74f2532a626e6e9"
+    },
+    {
+      "key": "Actions.Execute",
+      "dark": true,
+      "file": "run/run_dark.svg",
+      "source": "expui/run/run_dark.svg",
+      "sha256": "dcd7e6658108d94976a295dad27d1ae11ae66f8d524dffdb5a2e87a336756c8e"
+    },
+    {
+      "key": "Actions.Download",
+      "dark": false,
+      "file": "general/download.svg",
+      "source": "expui/general/download.svg",
+      "sha256": "17445a4572cb0a0319899f7d3f30be35f5f363eb77da80fe6ff676590214133f"
+    },
+    {
+      "key": "Actions.Download",
+      "dark": true,
+      "file": "general/download_dark.svg",
+      "source": "expui/general/download_dark.svg",
+      "sha256": "0edd12e135a9749ebad886517243943a69619a96c87c752025cec9ad2653e115"
+    },
+    {
+      "key": "Actions.Collapseall",
+      "dark": false,
+      "file": "general/collapseAll.svg",
+      "source": "expui/general/collapseAll.svg",
+      "sha256": "19f4d4023e6621f998c0ccee8aec2b71b8fe2fb6f38a80b9bfe6c8ed4d451bcf"
+    },
+    {
+      "key": "Actions.Collapseall",
+      "dark": true,
+      "file": "general/collapseAll_dark.svg",
+      "source": "expui/general/collapseAll_dark.svg",
+      "sha256": "df75036a7433a78f21347e0732ab9e8b477aecb64e5880bf631e6af778a2dbed"
+    },
+    {
+      "key": "Actions.PreviewDetails",
+      "dark": false,
+      "file": "general/previewVertically.svg",
+      "source": "expui/general/previewVertically.svg",
+      "sha256": "b3a49f5c113d2fae8f79c74be79df6b1671b50720a69f2a7264b8ce5873fc78a"
+    },
+    {
+      "key": "Actions.PreviewDetails",
+      "dark": true,
+      "file": "general/previewVertically_dark.svg",
+      "source": "expui/general/previewVertically_dark.svg",
+      "sha256": "09e18ef20cce007a7fe4bbc1e749f6915c0bbbc686e8408ae5067c29931dc721"
+    },
+    {
+      "key": "Actions.MenuOpen",
+      "dark": false,
+      "file": "general/open.svg",
+      "source": "expui/general/open.svg",
+      "sha256": "9198a3888742424df3cba1579bd8566041af0e5e79ff81919adbad22310bcc32"
+    },
+    {
+      "key": "Actions.MenuOpen",
+      "dark": true,
+      "file": "general/open_dark.svg",
+      "source": "expui/general/open_dark.svg",
+      "sha256": "9b071b3976642d6018bc76adc632f33890997034f141b86ad1d8bdc7874e274a"
+    },
+    {
+      "key": "Actions.Expandall",
+      "dark": false,
+      "file": "general/expandAll.svg",
+      "source": "expui/general/expandAll.svg",
+      "sha256": "3ed66e8e641730be8e26ec22b108761e0249bf71d3110de9bb2379e294f12f91"
+    },
+    {
+      "key": "Actions.Expandall",
+      "dark": true,
+      "file": "general/expandAll_dark.svg",
+      "source": "expui/general/expandAll_dark.svg",
+      "sha256": "5d6f626ff67775c226daedcdbd93899c6efe4577910773d9682e3dab59305aa8"
+    },
+    {
+      "key": "Actions.Undo",
+      "dark": false,
+      "file": "general/undo.svg",
+      "source": "expui/general/undo.svg",
+      "sha256": "785ce6cd36860656ed0c65146cfb68167ffeeeeddcea0b76fde4a3d15a9df11a"
+    },
+    {
+      "key": "Actions.Undo",
+      "dark": true,
+      "file": "general/undo_dark.svg",
+      "source": "expui/general/undo_dark.svg",
+      "sha256": "0eacc309fee568527b90ba79a9fc7d9bb358df770d59801817edc10c621f5299"
+    },
+    {
+      "key": "Actions.Redo",
+      "dark": false,
+      "file": "general/redo.svg",
+      "source": "expui/general/redo.svg",
+      "sha256": "82db9c35de86819888ff982ba268b55040e86ec67dc397cd26541d440fd778a6"
+    },
+    {
+      "key": "Actions.Redo",
+      "dark": true,
+      "file": "general/redo_dark.svg",
+      "source": "expui/general/redo_dark.svg",
+      "sha256": "776903e948e7de5cb9cab3f6a4e4ee59531959d2a5c3f191bf794b03e1514834"
+    },
+    {
+      "key": "Actions.ShowCode",
+      "dark": false,
+      "file": "actions/toggleVisibility.svg",
+      "source": "expui/actions/toggleVisibility.svg",
+      "sha256": "137582724bf665dd01fd7786d603f5e2267570c9915a9d0ecab563460841c1ce"
+    },
+    {
+      "key": "Actions.ShowCode",
+      "dark": true,
+      "file": "actions/toggleVisibility_dark.svg",
+      "source": "expui/actions/toggleVisibility_dark.svg",
+      "sha256": "8a95746ad891e13a059d0c4821feb8f6a8e294b4e4640c563d7e7f098ab5f246"
+    },
+    {
+      "key": "Actions.ShowAsTree",
+      "dark": false,
+      "file": "general/showAsTree.svg",
+      "source": "expui/general/showAsTree.svg",
+      "sha256": "fb063d46b341d43d06a6f5ffdc0b55aec393436d3c05e70b19ae7e94ec1755e0"
+    },
+    {
+      "key": "Actions.ShowAsTree",
+      "dark": true,
+      "file": "general/showAsTree_dark.svg",
+      "source": "expui/general/showAsTree_dark.svg",
+      "sha256": "7e9511c6113c0cc7309c8cbb2c4daa2c160d9b0034e11c51192d430504c92e39"
+    },
+    {
+      "key": "Actions.Show",
+      "dark": false,
+      "file": "general/show.svg",
+      "source": "expui/general/show.svg",
+      "sha256": "e3e70aa05e37501e4082f9840b4ed28bedfbc296d6ab499a9c6cac1aa33908e8"
+    },
+    {
+      "key": "Actions.Show",
+      "dark": true,
+      "file": "general/show_dark.svg",
+      "source": "expui/general/show_dark.svg",
+      "sha256": "c67f3938ad43aa3eb9885ad1625ede324775a884e5b6805311c6ea88b3992527"
+    },
+    {
+      "key": "Actions.RunAll",
+      "dark": false,
+      "file": "actions/runAll.svg",
+      "source": "expui/actions/runAll.svg",
+      "sha256": "9815aff08d64e5d685a6bda10e0afc056c6fd8e53033bf73b977d37a5de03fa8"
+    },
+    {
+      "key": "Actions.RunAll",
+      "dark": true,
+      "file": "actions/runAll_dark.svg",
+      "source": "expui/actions/runAll_dark.svg",
+      "sha256": "64b6ea9de5b7d84f491069d3a54333c0010a7d67bac9a372ed8961b54e451d01"
+    },
+    {
+      "key": "Actions.ReformatCode",
+      "dark": false,
+      "file": "actions/reformatCode.svg",
+      "source": "expui/actions/reformatCode.svg",
+      "sha256": "28ae353d10fc1733979d9839a68e4c05d7be44108036e1bcd59c13275f2e17ec"
+    },
+    {
+      "key": "Actions.ReformatCode",
+      "dark": true,
+      "file": "actions/reformatCode_dark.svg",
+      "source": "expui/actions/reformatCode_dark.svg",
+      "sha256": "f9967cfe0364159fcafdf7ca6fa5269bb302b40e6787cd2bfa4b3a3c49bc9a5d"
+    },
+    {
+      "key": "Actions.PreviousOccurence",
+      "dark": false,
+      "file": "general/up.svg",
+      "source": "expui/general/up.svg",
+      "sha256": "8a4c4a0f501c0abf4b236bfe18dead04411bae7283b46d9f8061c43dff4eca28"
+    },
+    {
+      "key": "Actions.PreviousOccurence",
+      "dark": true,
+      "file": "general/up_dark.svg",
+      "source": "expui/general/up_dark.svg",
+      "sha256": "5ed91bcd7ef6c6e16e7d85225d8ad44012d9c8296b699343c8415d9cef2661a0"
+    },
+    {
+      "key": "Actions.NextOccurence",
+      "dark": false,
+      "file": "general/down.svg",
+      "source": "expui/general/down.svg",
+      "sha256": "fe152eea17f095a9566f3db4ef29afd4b347b899d255d5310c7e215aa32fdd5c"
+    },
+    {
+      "key": "Actions.NextOccurence",
+      "dark": true,
+      "file": "general/down_dark.svg",
+      "source": "expui/general/down_dark.svg",
+      "sha256": "fdb7d6f1e336fd9fccd8db15e06bf7cd224cb01ef23b44d16dc2bf505d2e8ce2"
+    },
+    {
+      "key": "Actions.Play_last",
+      "dark": false,
+      "file": "actions/playLast.svg",
+      "source": "expui/actions/playLast.svg",
+      "sha256": "5d776acdec8ed01d965aba388f3c6b39a3fffcfd73184e8ee307f7d76e6692f5"
+    },
+    {
+      "key": "Actions.Play_last",
+      "dark": true,
+      "file": "actions/playLast_dark.svg",
+      "source": "expui/actions/playLast_dark.svg",
+      "sha256": "f10ff8c52b644483843d6cc32ec4653b49509f8aa3fcd9006a4d0387946ecb85"
+    },
+    {
+      "key": "Actions.PinTab",
+      "dark": false,
+      "file": "general/pin.svg",
+      "source": "expui/general/pin.svg",
+      "sha256": "99b16d998723509af9a068b06861a2099c11e9848a98d8f47a98015c0e4d3c4b"
+    },
+    {
+      "key": "Actions.PinTab",
+      "dark": true,
+      "file": "general/pin_dark.svg",
+      "source": "expui/general/pin_dark.svg",
+      "sha256": "2e9b2f614c6656a5bb8a266b5a6eb1b59cb501de032cb88d8806a6b525f448ec"
+    },
+    {
+      "key": "Actions.ListFiles",
+      "dark": false,
+      "file": "general/listFiles.svg",
+      "source": "expui/general/listFiles.svg",
+      "sha256": "55819519cd456824233d5ad43acf7e41b5be538f37a5c86376e8c62f541edbc2"
+    },
+    {
+      "key": "Actions.ListFiles",
+      "dark": true,
+      "file": "general/listFiles_dark.svg",
+      "source": "expui/general/listFiles_dark.svg",
+      "sha256": "ccaf51e87b6eec1d1422b6c3f93e0c5736927c28c5daa47fade02748b4d83ff3"
+    },
+    {
+      "key": "Actions.Lightning",
+      "dark": false,
+      "file": "actions/lightning.svg",
+      "source": "expui/actions/lightning.svg",
+      "sha256": "a8bc524bb6362335545d912e12cc5e19770694c0f3562fccc58cbd0ff56177dd"
+    },
+    {
+      "key": "Actions.Lightning",
+      "dark": true,
+      "file": "actions/lightning_dark.svg",
+      "source": "expui/actions/lightning_dark.svg",
+      "sha256": "26cbaff8e4974e6bd24c3cc7f9ab700b592b03880def99121c945828e29cc1f1"
+    },
+    {
+      "key": "Actions.Checked",
+      "dark": false,
+      "file": "actions/checked.svg",
+      "source": "expui/actions/checked.svg",
+      "sha256": "32f1b1562a36f4d26e2a04c874e4cd13acdc1f2668a85d8a7d6cca130d3121cf"
+    },
+    {
+      "key": "Actions.Checked",
+      "dark": true,
+      "file": "actions/checked_dark.svg",
+      "source": "expui/actions/checked_dark.svg",
+      "sha256": "5b95a6eee80202ea3d97c6f84a1bce62fcabc4d3fa0e7c2f5f2356a8801a1fac"
+    },
+    {
+      "key": "Actions.CheckOut",
+      "dark": false,
+      "file": "vcs/update.svg",
+      "source": "expui/vcs/update.svg",
+      "sha256": "8d76f2b5fafd489ac5f53eaadaf15907d0be5de388d92ea81169e8590a89f513"
+    },
+    {
+      "key": "Actions.CheckOut",
+      "dark": true,
+      "file": "vcs/update_dark.svg",
+      "source": "expui/vcs/update_dark.svg",
+      "sha256": "0e69655c490466ae61ae796f17f9e16e9962efdc3a0f5c4e2d4f7ccc98dcc354"
+    },
+    {
+      "key": "Nodes.DataColumn",
+      "dark": false,
+      "file": "nodes/dataColumn.svg",
+      "source": "expui/nodes/dataColumn.svg",
+      "sha256": "c8b8d736c884a8892b651ab47a45639bed0bec42bddf46000ca291718534e0d1"
+    },
+    {
+      "key": "Nodes.DataColumn",
+      "dark": true,
+      "file": "nodes/dataColumn_dark.svg",
+      "source": "expui/nodes/dataColumn_dark.svg",
+      "sha256": "6db0ac7a1a2fd70e10ed6243747387e46c93d9db3a62abb302fa2e81eb2bad57"
+    },
+    {
+      "key": "Nodes.DataTables",
+      "dark": false,
+      "file": "nodes/dataTables.svg",
+      "source": "expui/nodes/dataTables.svg",
+      "sha256": "7aad910abbf58dd1e77e0ad2c576117f0991cb35d898c7a4df900893628b9586"
+    },
+    {
+      "key": "Nodes.DataTables",
+      "dark": true,
+      "file": "nodes/dataTables_dark.svg",
+      "source": "expui/nodes/dataTables_dark.svg",
+      "sha256": "4494d86f45e609296994a7d7c435701e11e6c170caec8ff5989aa8f789e3df79"
+    },
+    {
+      "key": "Nodes.Console",
+      "dark": false,
+      "file": "fileTypes/shell.svg",
+      "source": "expui/fileTypes/shell.svg",
+      "sha256": "4a8c336a8d0737df6ebee0b1006d03909f0ad5770a98d5ad28e746d3f95ae733"
+    },
+    {
+      "key": "Nodes.Console",
+      "dark": true,
+      "file": "fileTypes/shell_dark.svg",
+      "source": "expui/fileTypes/shell_dark.svg",
+      "sha256": "09c58f2d69bedc5f3c518f9e42998f3bbb3ec5b7fd33b06cd24d1734c74d6cc7"
+    },
+    {
+      "key": "Nodes.Folder",
+      "dark": false,
+      "file": "nodes/folder.svg",
+      "source": "expui/nodes/folder.svg",
+      "sha256": "e78b061f701e39613936bc68751ed51e6cb2b1451dba322cd98ffdfd1a105065"
+    },
+    {
+      "key": "Nodes.Folder",
+      "dark": true,
+      "file": "nodes/folder_dark.svg",
+      "source": "expui/nodes/folder_dark.svg",
+      "sha256": "4f08a99236e4b08632cafb159f31df27f238106d584ecf725be42b9702a0a02e"
+    },
+    {
+      "key": "Nodes.DataSchema",
+      "dark": false,
+      "file": "nodes/dataSchema.svg",
+      "source": "expui/nodes/dataSchema.svg",
+      "sha256": "a13a0cc203c91a0da6da7a892f6b341d3ff60a94aba6b0de53ce28aee5f8a641"
+    },
+    {
+      "key": "Nodes.DataSchema",
+      "dark": true,
+      "file": "nodes/dataSchema_dark.svg",
+      "source": "expui/nodes/dataSchema_dark.svg",
+      "sha256": "4f430d975df1cd12f49bde7760ea451e679594737e7fc2a2185278710c89a41c"
+    },
+    {
+      "key": "Nodes.FieldPK",
+      "dark": false,
+      "file": "nodes/fieldPK.svg",
+      "source": "nodes/fieldPK.svg",
+      "sha256": "43df68e5447408f7f7fa2716b3fa67d3c12797d779d820d5cce510c006cb5425"
+    },
+    {
+      "key": "Nodes.Padlock",
+      "dark": false,
+      "file": "diff/disableEditing.svg",
+      "source": "expui/diff/disableEditing.svg",
+      "sha256": "59c3f76a91e5939f1ac3e84b253e6c8f99600880b561c03af7503d3f20eb3706"
+    },
+    {
+      "key": "Nodes.Padlock",
+      "dark": true,
+      "file": "diff/disableEditing_dark.svg",
+      "source": "expui/diff/disableEditing_dark.svg",
+      "sha256": "12b960b1c5139e32d0b695cd0a90f4b783965b07397f26d8f0980ea0f35f3339"
+    },
+    {
+      "key": "Nodes.Favorite",
+      "dark": false,
+      "file": "nodes/star.svg",
+      "source": "expui/nodes/star.svg",
+      "sha256": "522fad99ce8f37b393ef1c19da430f2edfabc734ef1993861f238b767b41b6b5"
+    },
+    {
+      "key": "Nodes.Favorite",
+      "dark": true,
+      "file": "nodes/star_dark.svg",
+      "source": "expui/nodes/star_dark.svg",
+      "sha256": "7bcee313b797c8a055eeb28a05ecfca91fa45a614dfbe19d5994c6e930b63777"
+    },
+    {
+      "key": "Nodes.Bookmark",
+      "dark": false,
+      "file": "bookmarks/bookmark.svg",
+      "source": "expui/bookmarks/bookmark.svg",
+      "sha256": "672f9aa96bb563d6e8434a26af7808b5b12d06d72aa6c7c0065e7cb39e21b72e"
+    },
+    {
+      "key": "Nodes.Bookmark",
+      "dark": true,
+      "file": "bookmarks/bookmark_dark.svg",
+      "source": "expui/bookmarks/bookmark_dark.svg",
+      "sha256": "369e8268af711c1766d972214a0def2a7ba9b5cb38941c76251b026b81dd6f8a"
+    },
+    {
+      "key": "Vcs.History",
+      "dark": false,
+      "file": "general/history.svg",
+      "source": "expui/general/history.svg",
+      "sha256": "3687db5c7bc3938f72cbe387259ec26e6ce5de05b86ab5e2c57f2361bea59e0d"
+    },
+    {
+      "key": "Vcs.History",
+      "dark": true,
+      "file": "general/history_dark.svg",
+      "source": "expui/general/history_dark.svg",
+      "sha256": "5ea7471acbc1951d8309be78160bd6fe8bb83c9929c81415789acadd1dacea63"
+    },
+    {
+      "key": "FileTypes.Text",
+      "dark": false,
+      "file": "fileTypes/text.svg",
+      "source": "expui/fileTypes/text.svg",
+      "sha256": "d71666166da544ad42b13bb5af976eb6f0afb60cbaa636676d238c98383ee296"
+    },
+    {
+      "key": "FileTypes.Text",
+      "dark": true,
+      "file": "fileTypes/text_dark.svg",
+      "source": "expui/fileTypes/text_dark.svg",
+      "sha256": "3391cc35837a4420fa9517f2297d8f6b07428db63f57f07dd5c2c29ef00cb489"
+    },
+    {
+      "key": "ToolbarDecorator.Import",
+      "dark": false,
+      "file": "general/import.svg",
+      "source": "expui/general/import.svg",
+      "sha256": "40aaf31fd3ed3f6144d92bd080954de4a861fe7056c765698e4e4f68aab3ddef"
+    },
+    {
+      "key": "ToolbarDecorator.Import",
+      "dark": true,
+      "file": "general/import_dark.svg",
+      "source": "expui/general/import_dark.svg",
+      "sha256": "3fcb6ac10aeb8d904ee7ade073bc4ed217d0f5a3577871cbeb1c7d932f8ecdcc"
+    },
+    {
+      "key": "FileTypes.Diagram",
+      "dark": false,
+      "file": "fileTypes/diagram.svg",
+      "source": "expui/fileTypes/diagram.svg",
+      "sha256": "40840c84f72548dfee91cd5cd2ceb1f82e3ca35d003c0b5724a567bc48468e0d"
+    },
+    {
+      "key": "FileTypes.Diagram",
+      "dark": true,
+      "file": "fileTypes/diagram_dark.svg",
+      "source": "expui/fileTypes/diagram_dark.svg",
+      "sha256": "0706b73107636e3327755226c9b66f3b88bbc0f90264bb81ec94051006d3e997"
+    },
+    {
+      "key": "Diff.ArrowLeftRight",
+      "dark": false,
+      "file": "diff/arrowLeftRight.svg",
+      "source": "expui/diff/arrowLeftRight.svg",
+      "sha256": "cf884bdf8c8a2385fb45f1d6194dc37d951fec5dbf8ad8c3e79730676c59a2af"
+    },
+    {
+      "key": "Diff.ArrowLeftRight",
+      "dark": true,
+      "file": "diff/arrowLeftRight_dark.svg",
+      "source": "expui/diff/arrowLeftRight_dark.svg",
+      "sha256": "31ba50f2e3c6ee07860e26574621d15482867614257b98cc60d63eb78deb6122"
+    },
+    {
+      "key": "Graph.Layout",
+      "dark": false,
+      "file": "graph/graphLayout.svg",
+      "source": "expui/graph/graphLayout.svg",
+      "sha256": "2ca808dddc15d13699a4c313cc0518ab440d998467c8fc9eac50cc537e6b9da7"
+    },
+    {
+      "key": "Graph.Layout",
+      "dark": true,
+      "file": "graph/graphLayout_dark.svg",
+      "source": "expui/graph/graphLayout_dark.svg",
+      "sha256": "f228068a4f88f2451c678a496846a7f74ebea0f054e82faa31f4fff85cd8eb75"
+    },
+    {
+      "key": "ObjectBrowser.Sorted",
+      "dark": false,
+      "file": "objectBrowser/sortAlphabetically.svg",
+      "source": "expui/objectBrowser/sortAlphabetically.svg",
+      "sha256": "f1437c3a7c9bd463b3e3c9e33bbcd33e34b57f16268beacf1af2cdfcb5a16e8a"
+    },
+    {
+      "key": "ObjectBrowser.Sorted",
+      "dark": true,
+      "file": "objectBrowser/sortAlphabetically_dark.svg",
+      "source": "expui/objectBrowser/sortAlphabetically_dark.svg",
+      "sha256": "04344b645bb449692919737306266f5205cd992121402d68b5f4ef658205b3ea"
+    }
+  ]
+}

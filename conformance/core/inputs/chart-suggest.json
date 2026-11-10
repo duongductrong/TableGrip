@@ -1,0 +1,1325 @@
+{
+  "subject": "chart-suggest",
+  "cases": [
+    {
+      "name": "dates and numbers suggest a line grouped when dates repeat",
+      "columns": [
+        "day:DATE",
+        "total:NUMERIC"
+      ],
+      "rows": [
+        [
+          "2024-01-02",
+          "1"
+        ],
+        [
+          "2024-01-03",
+          "2"
+        ],
+        [
+          "2024-01-04",
+          "3"
+        ],
+        [
+          "2024-01-05",
+          "4"
+        ],
+        [
+          "2024-01-06",
+          "5"
+        ],
+        [
+          "2024-01-07",
+          "6"
+        ],
+        [
+          "2024-01-08",
+          "7"
+        ],
+        [
+          "2024-01-09",
+          "8"
+        ],
+        [
+          "2024-01-10",
+          "9"
+        ],
+        [
+          "2024-01-11",
+          "10"
+        ],
+        [
+          "2024-01-12",
+          "11"
+        ],
+        [
+          "2024-01-13",
+          "12"
+        ],
+        [
+          "2024-01-14",
+          "13"
+        ],
+        [
+          "2024-01-15",
+          "14"
+        ],
+        [
+          "2024-01-16",
+          "15"
+        ],
+        [
+          "2024-01-17",
+          "16"
+        ],
+        [
+          "2024-01-18",
+          "17"
+        ],
+        [
+          "2024-01-19",
+          "18"
+        ],
+        [
+          "2024-01-20",
+          "19"
+        ],
+        [
+          "2024-01-21",
+          "20"
+        ],
+        [
+          "2024-01-22",
+          "21"
+        ],
+        [
+          "2024-01-23",
+          "22"
+        ],
+        [
+          "2024-01-24",
+          "23"
+        ],
+        [
+          "2024-01-25",
+          "24"
+        ],
+        [
+          "2024-01-26",
+          "25"
+        ],
+        [
+          "2024-01-27",
+          "26"
+        ],
+        [
+          "2024-01-28",
+          "27"
+        ],
+        [
+          "2024-01-01",
+          "28"
+        ],
+        [
+          "2024-01-02",
+          "29"
+        ],
+        [
+          "2024-01-03",
+          "30"
+        ],
+        [
+          "2024-01-04",
+          "31"
+        ],
+        [
+          "2024-01-05",
+          "32"
+        ],
+        [
+          "2024-01-06",
+          "33"
+        ],
+        [
+          "2024-01-07",
+          "34"
+        ],
+        [
+          "2024-01-08",
+          "35"
+        ],
+        [
+          "2024-01-09",
+          "36"
+        ],
+        [
+          "2024-01-10",
+          "37"
+        ],
+        [
+          "2024-01-11",
+          "38"
+        ],
+        [
+          "2024-01-12",
+          "39"
+        ],
+        [
+          "2024-01-13",
+          "40"
+        ],
+        [
+          "2024-01-14",
+          "41"
+        ],
+        [
+          "2024-01-15",
+          "42"
+        ],
+        [
+          "2024-01-16",
+          "43"
+        ],
+        [
+          "2024-01-17",
+          "44"
+        ],
+        [
+          "2024-01-18",
+          "45"
+        ],
+        [
+          "2024-01-19",
+          "46"
+        ],
+        [
+          "2024-01-20",
+          "47"
+        ],
+        [
+          "2024-01-21",
+          "48"
+        ],
+        [
+          "2024-01-22",
+          "49"
+        ],
+        [
+          "2024-01-23",
+          "50"
+        ],
+        [
+          "2024-01-24",
+          "51"
+        ],
+        [
+          "2024-01-25",
+          "52"
+        ],
+        [
+          "2024-01-26",
+          "53"
+        ],
+        [
+          "2024-01-27",
+          "54"
+        ],
+        [
+          "2024-01-28",
+          "55"
+        ],
+        [
+          "2024-01-01",
+          "56"
+        ],
+        [
+          "2024-01-02",
+          "57"
+        ],
+        [
+          "2024-01-03",
+          "58"
+        ],
+        [
+          "2024-01-04",
+          "59"
+        ],
+        [
+          "2024-01-05",
+          "60"
+        ]
+      ]
+    },
+    {
+      "name": "a few categories and a number suggest sorted bars and a pie",
+      "columns": [
+        "region:VARCHAR",
+        "sales:INTEGER"
+      ],
+      "rows": [
+        [
+          "north",
+          "10"
+        ],
+        [
+          "south",
+          "30"
+        ],
+        [
+          "east",
+          "20"
+        ],
+        [
+          "north",
+          "5"
+        ]
+      ]
+    },
+    {
+      "name": "nothing is suggested when no column fits an axis",
+      "columns": [
+        "blob:BLOB"
+      ],
+      "rows": [
+        [
+          "a b c"
+        ],
+        [
+          "d e f"
+        ]
+      ]
+    },
+    {
+      "name": "no profiles",
+      "profiles": []
+    },
+    {
+      "name": "unique dates draw one point per row",
+      "columns": [
+        "day:DATE",
+        "total:NUMERIC"
+      ],
+      "rows": [
+        [
+          "2024-01-01",
+          "2"
+        ],
+        [
+          "2024-01-02",
+          "4"
+        ],
+        [
+          "2024-01-03",
+          "6"
+        ],
+        [
+          "2024-01-04",
+          "8"
+        ],
+        [
+          "2024-01-05",
+          "10"
+        ],
+        [
+          "2024-01-06",
+          "12"
+        ],
+        [
+          "2024-01-07",
+          "14"
+        ],
+        [
+          "2024-01-08",
+          "16"
+        ],
+        [
+          "2024-01-09",
+          "18"
+        ],
+        [
+          "2024-01-10",
+          "20"
+        ]
+      ]
+    },
+    {
+      "name": "unique dates with a category series group",
+      "columns": [
+        "day:DATE",
+        "total:NUMERIC",
+        "region:VARCHAR"
+      ],
+      "rows": [
+        [
+          "2024-01-01",
+          "2",
+          "b"
+        ],
+        [
+          "2024-01-02",
+          "4",
+          "a"
+        ],
+        [
+          "2024-01-03",
+          "6",
+          "b"
+        ],
+        [
+          "2024-01-04",
+          "8",
+          "a"
+        ],
+        [
+          "2024-01-05",
+          "10",
+          "b"
+        ],
+        [
+          "2024-01-06",
+          "12",
+          "a"
+        ],
+        [
+          "2024-01-07",
+          "14",
+          "b"
+        ],
+        [
+          "2024-01-08",
+          "16",
+          "a"
+        ],
+        [
+          "2024-01-09",
+          "18",
+          "b"
+        ],
+        [
+          "2024-01-10",
+          "20",
+          "a"
+        ]
+      ]
+    },
+    {
+      "name": "many dates are grouped even when unique",
+      "profiles": [
+        {
+          "name": "t",
+          "kind": "Temporal",
+          "distinct": 1000,
+          "rows": 1000,
+          "min": 0,
+          "max": 34560000000.0
+        },
+        {
+          "name": "v",
+          "kind": "Numeric",
+          "distinct": 1000,
+          "rows": 1000,
+          "min": 1,
+          "max": 9
+        }
+      ]
+    },
+    {
+      "name": "999 unique dates stay as they are",
+      "profiles": [
+        {
+          "name": "t",
+          "kind": "Temporal",
+          "distinct": 999,
+          "rows": 999,
+          "min": 0,
+          "max": 34560000000.0
+        },
+        {
+          "name": "v",
+          "kind": "Numeric",
+          "distinct": 999,
+          "rows": 999,
+          "min": 1,
+          "max": 9
+        }
+      ]
+    },
+    {
+      "name": "date with repeats",
+      "profiles": [
+        {
+          "name": "t",
+          "kind": "Temporal",
+          "distinct": 5,
+          "rows": 50,
+          "min": 0,
+          "max": 2592000000.0
+        },
+        {
+          "name": "v",
+          "kind": "Numeric",
+          "distinct": 50,
+          "rows": 50,
+          "min": 1,
+          "max": 9
+        }
+      ]
+    },
+    {
+      "name": "three measures at most",
+      "profiles": [
+        {
+          "name": "t",
+          "kind": "Temporal",
+          "distinct": 5,
+          "rows": 5,
+          "min": 0,
+          "max": 1000000000.0
+        },
+        {
+          "name": "a",
+          "kind": "Numeric",
+          "distinct": 5,
+          "rows": 5
+        },
+        {
+          "name": "b",
+          "kind": "Numeric",
+          "distinct": 5,
+          "rows": 5
+        },
+        {
+          "name": "c",
+          "kind": "Numeric",
+          "distinct": 5,
+          "rows": 5
+        },
+        {
+          "name": "d",
+          "kind": "Numeric",
+          "distinct": 5,
+          "rows": 5
+        }
+      ]
+    },
+    {
+      "name": "two measures take no series",
+      "profiles": [
+        {
+          "name": "t",
+          "kind": "Temporal",
+          "distinct": 5,
+          "rows": 5,
+          "min": 0,
+          "max": 1000000000.0
+        },
+        {
+          "name": "a",
+          "kind": "Numeric",
+          "distinct": 5,
+          "rows": 5
+        },
+        {
+          "name": "b",
+          "kind": "Numeric",
+          "distinct": 5,
+          "rows": 5
+        },
+        {
+          "name": "c",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 5
+        }
+      ]
+    },
+    {
+      "name": "a category of more than ten values is no series",
+      "profiles": [
+        {
+          "name": "t",
+          "kind": "Temporal",
+          "distinct": 5,
+          "rows": 5,
+          "min": 0,
+          "max": 1000000000.0
+        },
+        {
+          "name": "a",
+          "kind": "Numeric",
+          "distinct": 5,
+          "rows": 5
+        },
+        {
+          "name": "c",
+          "kind": "Category",
+          "distinct": 11,
+          "rows": 20
+        }
+      ]
+    },
+    {
+      "name": "a category of exactly ten values is a series",
+      "profiles": [
+        {
+          "name": "t",
+          "kind": "Temporal",
+          "distinct": 5,
+          "rows": 5,
+          "min": 0,
+          "max": 1000000000.0
+        },
+        {
+          "name": "a",
+          "kind": "Numeric",
+          "distinct": 5,
+          "rows": 5
+        },
+        {
+          "name": "c",
+          "kind": "Category",
+          "distinct": 10,
+          "rows": 20
+        }
+      ]
+    },
+    {
+      "name": "dates without numbers suggest no line",
+      "profiles": [
+        {
+          "name": "t",
+          "kind": "Temporal",
+          "distinct": 5,
+          "rows": 5,
+          "min": 0,
+          "max": 1000000000.0
+        },
+        {
+          "name": "c",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 5
+        }
+      ]
+    },
+    {
+      "name": "dates with no value are skipped",
+      "profiles": [
+        {
+          "name": "t",
+          "kind": "Temporal",
+          "distinct": 0,
+          "rows": 5,
+          "nulls": 5
+        },
+        {
+          "name": "a",
+          "kind": "Numeric",
+          "distinct": 5,
+          "rows": 5
+        }
+      ]
+    },
+    {
+      "name": "bucket for a span of zero days",
+      "profiles": [
+        {
+          "name": "t",
+          "kind": "Temporal",
+          "distinct": 5,
+          "rows": 50,
+          "min": 1000000000000.0,
+          "max": 1000000000000.0
+        },
+        {
+          "name": "a",
+          "kind": "Numeric",
+          "distinct": 50,
+          "rows": 50
+        }
+      ]
+    },
+    {
+      "name": "bucket for a span of three days",
+      "profiles": [
+        {
+          "name": "t",
+          "kind": "Temporal",
+          "distinct": 5,
+          "rows": 50,
+          "min": 1000000000000.0,
+          "max": 1000259200000.0
+        },
+        {
+          "name": "a",
+          "kind": "Numeric",
+          "distinct": 50,
+          "rows": 50
+        }
+      ]
+    },
+    {
+      "name": "bucket for a span of just over three days",
+      "profiles": [
+        {
+          "name": "t",
+          "kind": "Temporal",
+          "distinct": 5,
+          "rows": 50,
+          "min": 1000000000000.0,
+          "max": 1000259200008.64
+        },
+        {
+          "name": "a",
+          "kind": "Numeric",
+          "distinct": 50,
+          "rows": 50
+        }
+      ]
+    },
+    {
+      "name": "bucket for a span of 180 days",
+      "profiles": [
+        {
+          "name": "t",
+          "kind": "Temporal",
+          "distinct": 5,
+          "rows": 50,
+          "min": 1000000000000.0,
+          "max": 1015552000000.0
+        },
+        {
+          "name": "a",
+          "kind": "Numeric",
+          "distinct": 50,
+          "rows": 50
+        }
+      ]
+    },
+    {
+      "name": "bucket for a span of just over 180 days",
+      "profiles": [
+        {
+          "name": "t",
+          "kind": "Temporal",
+          "distinct": 5,
+          "rows": 50,
+          "min": 1000000000000.0,
+          "max": 1015595200000.0
+        },
+        {
+          "name": "a",
+          "kind": "Numeric",
+          "distinct": 50,
+          "rows": 50
+        }
+      ]
+    },
+    {
+      "name": "bucket for a span of 730 days",
+      "profiles": [
+        {
+          "name": "t",
+          "kind": "Temporal",
+          "distinct": 5,
+          "rows": 50,
+          "min": 1000000000000.0,
+          "max": 1063072000000.0
+        },
+        {
+          "name": "a",
+          "kind": "Numeric",
+          "distinct": 50,
+          "rows": 50
+        }
+      ]
+    },
+    {
+      "name": "bucket for a span of 731 days",
+      "profiles": [
+        {
+          "name": "t",
+          "kind": "Temporal",
+          "distinct": 5,
+          "rows": 50,
+          "min": 1000000000000.0,
+          "max": 1063158400000.0
+        },
+        {
+          "name": "a",
+          "kind": "Numeric",
+          "distinct": 50,
+          "rows": 50
+        }
+      ]
+    },
+    {
+      "name": "bucket for a span of 15 years days",
+      "profiles": [
+        {
+          "name": "t",
+          "kind": "Temporal",
+          "distinct": 5,
+          "rows": 50,
+          "min": 1000000000000.0,
+          "max": 1473040000000.0
+        },
+        {
+          "name": "a",
+          "kind": "Numeric",
+          "distinct": 50,
+          "rows": 50
+        }
+      ]
+    },
+    {
+      "name": "bucket for a span of over 15 years days",
+      "profiles": [
+        {
+          "name": "t",
+          "kind": "Temporal",
+          "distinct": 5,
+          "rows": 50,
+          "min": 1000000000000.0,
+          "max": 1473126400000.0
+        },
+        {
+          "name": "a",
+          "kind": "Numeric",
+          "distinct": 50,
+          "rows": 50
+        }
+      ]
+    },
+    {
+      "name": "bucket for a span of huge days",
+      "profiles": [
+        {
+          "name": "t",
+          "kind": "Temporal",
+          "distinct": 5,
+          "rows": 50,
+          "min": 1000000000000.0,
+          "max": 2728000000000.0
+        },
+        {
+          "name": "a",
+          "kind": "Numeric",
+          "distinct": 50,
+          "rows": 50
+        }
+      ]
+    },
+    {
+      "name": "bucket with no min and max",
+      "profiles": [
+        {
+          "name": "t",
+          "kind": "Temporal",
+          "distinct": 5,
+          "rows": 50
+        },
+        {
+          "name": "a",
+          "kind": "Numeric",
+          "distinct": 50,
+          "rows": 50
+        }
+      ]
+    },
+    {
+      "name": "bucket with min only",
+      "profiles": [
+        {
+          "name": "t",
+          "kind": "Temporal",
+          "distinct": 5,
+          "rows": 50,
+          "min": 500.0
+        },
+        {
+          "name": "a",
+          "kind": "Numeric",
+          "distinct": 50,
+          "rows": 50
+        }
+      ]
+    },
+    {
+      "name": "thirty categories make bars",
+      "profiles": [
+        {
+          "name": "c",
+          "kind": "Category",
+          "distinct": 30,
+          "rows": 60
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 60,
+          "rows": 60,
+          "min": 1
+        }
+      ]
+    },
+    {
+      "name": "thirty one categories make none",
+      "profiles": [
+        {
+          "name": "c",
+          "kind": "Category",
+          "distinct": 31,
+          "rows": 60
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 60,
+          "rows": 60,
+          "min": 1
+        }
+      ]
+    },
+    {
+      "name": "thirty one categories then a smaller one",
+      "profiles": [
+        {
+          "name": "big",
+          "kind": "Category",
+          "distinct": 31,
+          "rows": 60
+        },
+        {
+          "name": "c",
+          "kind": "Category",
+          "distinct": 4,
+          "rows": 60
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 60,
+          "rows": 60,
+          "min": 1
+        }
+      ]
+    },
+    {
+      "name": "unique categories need no aggregate",
+      "profiles": [
+        {
+          "name": "c",
+          "kind": "Category",
+          "distinct": 6,
+          "rows": 6
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 6,
+          "rows": 6,
+          "min": 0
+        }
+      ]
+    },
+    {
+      "name": "unique categories with a series are summed",
+      "profiles": [
+        {
+          "name": "c",
+          "kind": "Category",
+          "distinct": 6,
+          "rows": 6
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 6
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 6,
+          "rows": 6,
+          "min": 0
+        }
+      ]
+    },
+    {
+      "name": "series must have at most ten values",
+      "profiles": [
+        {
+          "name": "c",
+          "kind": "Category",
+          "distinct": 6,
+          "rows": 6
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 11,
+          "rows": 20
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 6,
+          "rows": 6,
+          "min": 0
+        }
+      ]
+    },
+    {
+      "name": "series is the second suggested category only",
+      "profiles": [
+        {
+          "name": "c",
+          "kind": "Category",
+          "distinct": 6,
+          "rows": 12
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 11,
+          "rows": 12
+        },
+        {
+          "name": "t",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 12
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 12,
+          "rows": 12,
+          "min": 0
+        }
+      ]
+    },
+    {
+      "name": "pie with eight slices",
+      "profiles": [
+        {
+          "name": "c",
+          "kind": "Category",
+          "distinct": 8,
+          "rows": 16
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 16,
+          "rows": 16,
+          "min": 0
+        }
+      ]
+    },
+    {
+      "name": "no pie with nine slices",
+      "profiles": [
+        {
+          "name": "c",
+          "kind": "Category",
+          "distinct": 9,
+          "rows": 16
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 16,
+          "rows": 16,
+          "min": 0
+        }
+      ]
+    },
+    {
+      "name": "no pie with a negative",
+      "profiles": [
+        {
+          "name": "c",
+          "kind": "Category",
+          "distinct": 4,
+          "rows": 16
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 16,
+          "rows": 16,
+          "min": -1
+        }
+      ]
+    },
+    {
+      "name": "no pie without a minimum",
+      "profiles": [
+        {
+          "name": "c",
+          "kind": "Category",
+          "distinct": 4,
+          "rows": 16
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 16,
+          "rows": 16
+        }
+      ]
+    },
+    {
+      "name": "pie with a zero minimum",
+      "profiles": [
+        {
+          "name": "c",
+          "kind": "Category",
+          "distinct": 4,
+          "rows": 16
+        },
+        {
+          "name": "n",
+          "kind": "Numeric",
+          "distinct": 16,
+          "rows": 16,
+          "min": 0
+        }
+      ]
+    },
+    {
+      "name": "categories alone are counted",
+      "profiles": [
+        {
+          "name": "c",
+          "kind": "Category",
+          "distinct": 4,
+          "rows": 16
+        }
+      ]
+    },
+    {
+      "name": "categories alone with a series are counted by series",
+      "profiles": [
+        {
+          "name": "c",
+          "kind": "Category",
+          "distinct": 4,
+          "rows": 16
+        },
+        {
+          "name": "s",
+          "kind": "Category",
+          "distinct": 3,
+          "rows": 16
+        }
+      ]
+    },
+    {
+      "name": "two numbers suggest a scatter",
+      "profiles": [
+        {
+          "name": "a",
+          "kind": "Numeric",
+          "distinct": 20,
+          "rows": 20
+        },
+        {
+          "name": "b",
+          "kind": "Numeric",
+          "distinct": 20,
+          "rows": 20
+        }
+      ]
+    },
+    {
+      "name": "a scatter is split by a category of ten values",
+      "profiles": [
+        {
+          "name": "a",
+          "kind": "Numeric",
+          "distinct": 20,
+          "rows": 20
+        },
+        {
+          "name": "b",
+          "kind": "Numeric",
+          "distinct": 20,
+          "rows": 20
+        },
+        {
+          "name": "c",
+          "kind": "Category",
+          "distinct": 10,
+          "rows": 20
+        }
+      ]
+    },
+    {
+      "name": "a scatter ignores a category of eleven",
+      "profiles": [
+        {
+          "name": "a",
+          "kind": "Numeric",
+          "distinct": 20,
+          "rows": 20
+        },
+        {
+          "name": "b",
+          "kind": "Numeric",
+          "distinct": 20,
+          "rows": 20
+        },
+        {
+          "name": "c",
+          "kind": "Category",
+          "distinct": 11,
+          "rows": 20
+        }
+      ]
+    },
+    {
+      "name": "a category of thirty five is too many for the series",
+      "profiles": [
+        {
+          "name": "a",
+          "kind": "Numeric",
+          "distinct": 20,
+          "rows": 20
+        },
+        {
+          "name": "b",
+          "kind": "Numeric",
+          "distinct": 20,
+          "rows": 20
+        },
+        {
+          "name": "c",
+          "kind": "Category",
+          "distinct": 35,
+          "rows": 40
+        }
+      ]
+    },
+    {
+      "name": "everything at once",
+      "profiles": [
+        {
+          "name": "t",
+          "kind": "Temporal",
+          "distinct": 20,
+          "rows": 100,
+          "min": 0,
+          "max": 7776000000.0
+        },
+        {
+          "name": "c",
+          "kind": "Category",
+          "distinct": 5,
+          "rows": 100
+        },
+        {
+          "name": "a",
+          "kind": "Numeric",
+          "distinct": 100,
+          "rows": 100,
+          "min": 0
+        },
+        {
+          "name": "b",
+          "kind": "Numeric",
+          "distinct": 100,
+          "rows": 100,
+          "min": 0
+        },
+        {
+          "name": "o",
+          "kind": "Other",
+          "distinct": 3,
+          "rows": 100
+        }
+      ]
+    },
+    {
+      "name": "numeric columns without values are skipped",
+      "profiles": [
+        {
+          "name": "a",
+          "kind": "Numeric",
+          "distinct": 0,
+          "rows": 3,
+          "nulls": 3
+        },
+        {
+          "name": "b",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        },
+        {
+          "name": "c",
+          "kind": "Numeric",
+          "distinct": 3,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "other kinds are ignored",
+      "profiles": [
+        {
+          "name": "o",
+          "kind": "Other",
+          "distinct": 10,
+          "rows": 10
+        },
+        {
+          "name": "p",
+          "kind": "Other",
+          "distinct": 10,
+          "rows": 10
+        }
+      ]
+    },
+    {
+      "name": "a single number suggests nothing",
+      "profiles": [
+        {
+          "name": "a",
+          "kind": "Numeric",
+          "distinct": 10,
+          "rows": 10
+        }
+      ]
+    },
+    {
+      "name": "a numeric column in the middle",
+      "profiles": [
+        {
+          "name": "c",
+          "kind": "Category",
+          "distinct": 4,
+          "rows": 8
+        },
+        {
+          "name": "a",
+          "kind": "Numeric",
+          "distinct": 8,
+          "rows": 8,
+          "min": 1
+        },
+        {
+          "name": "t",
+          "kind": "Temporal",
+          "distinct": 8,
+          "rows": 8,
+          "min": 0,
+          "max": 69120000000.0
+        }
+      ]
+    }
+  ]
+}

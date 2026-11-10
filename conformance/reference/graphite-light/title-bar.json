@@ -1,0 +1,49 @@
+{
+    "specimen": "title-bar",
+    "theme": "Graphite Light",
+    "density": 2.0,
+    "width": 960,
+    "height": 80,
+    "regions": [
+        {
+            "tag": "icon:title-bar.Actions.Console",
+            "kind": "icon",
+            "rect": [
+                764,
+                24,
+                32,
+                32
+            ]
+        },
+        {
+            "tag": "icon:title-bar.Actions.Execute",
+            "kind": "icon",
+            "rect": [
+                832,
+                24,
+                32,
+                32
+            ]
+        },
+        {
+            "tag": "text:title-bar.connection",
+            "kind": "text",
+            "rect": [
+                24,
+                25,
+                180,
+                31
+            ]
+        },
+        {
+            "tag": "text:title-bar.title",
+            "kind": "text",
+            "rect": [
+                446,
+                25,
+                68,
+                31
+            ]
+        }
+    ]
+}

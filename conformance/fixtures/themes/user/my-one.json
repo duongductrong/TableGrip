@@ -1,0 +1,11 @@
+{
+  "name": "My One",
+  "themes": [
+    {
+      "name": "One Light",
+      "appearance": "light",
+      "colors": { "accent": "#C18401", "frame.background": "#E5E5E6", "divider": "#D0D0D0" },
+      "chart": ["#C18401", "#4078F2"]
+    }
+  ]
+}

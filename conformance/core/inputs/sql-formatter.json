@@ -1,0 +1,86 @@
+{
+  "subject": "sql-formatter",
+  "cases": [
+    {
+      "name": "kotlin: clauses, lists and conditions",
+      "syntax": "PostgreSQL",
+      "sql": "select u.id,u.name, count(*) as orders from users u left join orders o on o.user_id=u.id where u.active = true and o.total>=10 or u.vip group by u.id,u.name order by orders desc limit 10"
+    },
+    {
+      "name": "kotlin: single items stay on the clause line",
+      "syntax": "PostgreSQL",
+      "sql": "select * from t where id=1"
+    },
+    {
+      "name": "kotlin: subqueries, calls and IN lists",
+      "syntax": "PostgreSQL",
+      "sql": "SELECT name FROM users WHERE id IN (SELECT user_id FROM orders WHERE total > coalesce(1,2)) AND status IN ('a','b')"
+    },
+    {
+      "name": "kotlin: strings, comments, quoted identifiers, casts",
+      "syntax": "PostgreSQL",
+      "sql": "select 'select  from' as \"Select\", x::text -- keep  me\nfrom t"
+    },
+    {
+      "name": "kotlin: between and separated statements",
+      "syntax": "PostgreSQL",
+      "sql": "select * from t where a between 1 and 5 and b < -1; delete from t where a = 2;"
+    },
+    {
+      "name": "kotlin: insert, update and set lists",
+      "syntax": "PostgreSQL",
+      "sql": "insert into t (a, b) values (1, 'x'); update t set a=1, b=2 where id=3"
+    },
+    {
+      "name": "kotlin: lower case with tab indent",
+      "syntax": "PostgreSQL",
+      "indent": "\t",
+      "keywordCase": "Lower",
+      "sql": "select id, name from users where active and vip"
+    },
+    {
+      "name": "kotlin: preserve case",
+      "syntax": "PostgreSQL",
+      "keywordCase": "Preserve",
+      "sql": "Select x From t"
+    },
+    {
+      "name": "empty",
+      "sql": "   \n "
+    },
+    {
+      "name": "union, joins and offsets",
+      "sql": "select a from t union all select b from u inner join v on u.id = v.id and v.x > 1 order by 1 limit 5 offset 10"
+    },
+    {
+      "name": "cte with nested subquery",
+      "syntax": "PostgreSQL",
+      "sql": "with recursive r as (select 1 union select n+1 from r where n < 3) select * from r where x in (with q as (select 2) select * from q)"
+    },
+    {
+      "name": "comments and unary minus",
+      "sql": "/* head */ select -1, a - -2, +3 -- tail\n, b from t where c = -d # x"
+    },
+    {
+      "name": "mysql hash comment",
+      "syntax": "MySQL",
+      "sql": "select a # note\nfrom t"
+    },
+    {
+      "name": "call-like keywords and table names",
+      "sql": "insert into s.t (a) select cast(x as int), replace(y, 'a', 'b'), left(z, 2), exists (select 1) from s.u join w (q) on true returning a, b"
+    },
+    {
+      "name": "delete with having",
+      "sql": "delete from t where a in (select a from u group by a having count(*) > 1 or max(b) < 2)"
+    },
+    {
+      "name": "non-ascii identifiers",
+      "sql": "select chào, 'ồ 😀' from bảng"
+    },
+    {
+      "name": "parenthesised expressions",
+      "sql": "select (a + b) * c, f(  x  ) from t where (a = 1 or b = 2) and c = 3"
+    }
+  ]
+}

@@ -1,0 +1,1258 @@
+{
+    "subject": "projection",
+    "cases": [
+        {
+            "name": "no items",
+            "output": {
+                "clause": null,
+                "editable": true,
+                "issues": {},
+                "outputNames": []
+            }
+        },
+        {
+            "name": "every column unchanged",
+            "output": {
+                "clause": null,
+                "editable": true,
+                "issues": {},
+                "outputNames": [
+                    "id",
+                    "name",
+                    "total",
+                    "created_at",
+                    "photo"
+                ]
+            }
+        },
+        {
+            "name": "subset and order",
+            "output": {
+                "clause": "\"name\", \"id\"",
+                "editable": true,
+                "issues": {},
+                "outputNames": [
+                    "name",
+                    "id",
+                    "total"
+                ]
+            }
+        },
+        {
+            "name": "function default name",
+            "output": {
+                "clause": "\"id\", UPPER(\"name\") AS \"upper(name)\"",
+                "editable": false,
+                "issues": {},
+                "outputNames": [
+                    "id",
+                    "upper(name)"
+                ]
+            }
+        },
+        {
+            "name": "alias renames plain column",
+            "output": {
+                "clause": "\"name\" AS \"customer\"",
+                "editable": false,
+                "issues": {},
+                "outputNames": [
+                    "customer"
+                ]
+            }
+        },
+        {
+            "name": "round with alias",
+            "output": {
+                "clause": "ROUND(CAST(\"total\" AS NUMERIC), 2) AS \"t\"",
+                "editable": false,
+                "issues": {},
+                "outputNames": [
+                    "t"
+                ]
+            }
+        },
+        {
+            "name": "round mysql default",
+            "output": {
+                "clause": "ROUND(`total`, 0) AS `round(total)`",
+                "editable": false,
+                "issues": {},
+                "outputNames": [
+                    "round(total)"
+                ]
+            }
+        },
+        {
+            "name": "substring",
+            "output": {
+                "clause": "SUBSTRING(\"name\", 2, 3) AS \"substring(name)\"",
+                "editable": false,
+                "issues": {},
+                "outputNames": [
+                    "substring(name)"
+                ]
+            }
+        },
+        {
+            "name": "coalesce text",
+            "output": {
+                "clause": "COALESCE(\"name\", 'it''s') AS \"coalesce(name)\"",
+                "editable": false,
+                "issues": {},
+                "outputNames": [
+                    "coalesce(name)"
+                ]
+            }
+        },
+        {
+            "name": "coalesce text keeps spaces",
+            "output": {
+                "clause": "COALESCE(\"name\", '  x ') AS \"coalesce(name)\"",
+                "editable": false,
+                "issues": {},
+                "outputNames": [
+                    "coalesce(name)"
+                ]
+            }
+        },
+        {
+            "name": "coalesce number",
+            "output": {
+                "clause": "COALESCE(\"total\", -1.5) AS \"coalesce(total)\"",
+                "editable": false,
+                "issues": {},
+                "outputNames": [
+                    "coalesce(total)"
+                ]
+            }
+        },
+        {
+            "name": "coalesce number empty",
+            "output": {
+                "clause": null,
+                "editable": false,
+                "issues": {
+                    "222": "Enter the number to show instead of NULL"
+                },
+                "outputNames": [
+                    "coalesce(total)"
+                ]
+            }
+        },
+        {
+            "name": "coalesce date",
+            "output": {
+                "clause": "COALESCE(\"created_at\", '2026-01-01') AS \"coalesce(created_at)\"",
+                "editable": false,
+                "issues": {},
+                "outputNames": [
+                    "coalesce(created_at)"
+                ]
+            }
+        },
+        {
+            "name": "coalesce date empty",
+            "output": {
+                "clause": null,
+                "editable": false,
+                "issues": {
+                    "224": "Enter the value to show instead of NULL"
+                },
+                "outputNames": [
+                    "coalesce(created_at)"
+                ]
+            }
+        },
+        {
+            "name": "truncate month",
+            "output": {
+                "clause": "date_trunc('month', \"created_at\") AS \"truncate(created_at)\"",
+                "editable": false,
+                "issues": {},
+                "outputNames": [
+                    "truncate(created_at)"
+                ]
+            }
+        },
+        {
+            "name": "truncate default day",
+            "output": {
+                "clause": "date_trunc('day', \"created_at\") AS \"truncate(created_at)\"",
+                "editable": false,
+                "issues": {},
+                "outputNames": [
+                    "truncate(created_at)"
+                ]
+            }
+        },
+        {
+            "name": "bad round",
+            "output": {
+                "clause": null,
+                "editable": false,
+                "issues": {
+                    "227": "Enter how many decimals to keep, 0 to 10"
+                },
+                "outputNames": [
+                    "round(total)"
+                ]
+            }
+        },
+        {
+            "name": "round out of range",
+            "output": {
+                "clause": null,
+                "editable": false,
+                "issues": {
+                    "228": "Enter how many decimals to keep, 0 to 10"
+                },
+                "outputNames": [
+                    "round(total)"
+                ]
+            }
+        },
+        {
+            "name": "bad substring start",
+            "output": {
+                "clause": null,
+                "editable": false,
+                "issues": {
+                    "229": "Start at character 1 or later"
+                },
+                "outputNames": [
+                    "substring(name)"
+                ]
+            }
+        },
+        {
+            "name": "substring one part",
+            "output": {
+                "clause": null,
+                "editable": false,
+                "issues": {
+                    "230": "Enter where to start and how many characters, e.g. 1, 10"
+                },
+                "outputNames": [
+                    "substring(name)"
+                ]
+            }
+        },
+        {
+            "name": "bad coalesce number",
+            "output": {
+                "clause": null,
+                "editable": false,
+                "issues": {
+                    "231": "“n/a” isn't a number"
+                },
+                "outputNames": [
+                    "coalesce(total)"
+                ]
+            }
+        },
+        {
+            "name": "bad truncate",
+            "output": {
+                "clause": null,
+                "editable": false,
+                "issues": {
+                    "232": "Truncate to hour, day, week, month, quarter or year"
+                },
+                "outputNames": [
+                    "truncate(created_at)"
+                ]
+            }
+        },
+        {
+            "name": "upper on number",
+            "output": {
+                "clause": null,
+                "editable": false,
+                "issues": {
+                    "233": "“UPPER” doesn't apply to number columns"
+                },
+                "outputNames": [
+                    "upper(total)"
+                ]
+            }
+        },
+        {
+            "name": "as text on binary",
+            "output": {
+                "clause": null,
+                "editable": false,
+                "issues": {
+                    "234": "“as text” doesn't apply to binary columns"
+                },
+                "outputNames": [
+                    "astext(photo)"
+                ]
+            }
+        },
+        {
+            "name": "missing column",
+            "output": {
+                "clause": null,
+                "editable": false,
+                "issues": {
+                    "235": "No column “missing” in this table"
+                },
+                "outputNames": [
+                    "missing"
+                ]
+            }
+        },
+        {
+            "name": "empty column",
+            "output": {
+                "clause": null,
+                "editable": false,
+                "issues": {
+                    "236": "Choose a column"
+                },
+                "outputNames": [
+                    ""
+                ]
+            }
+        },
+        {
+            "name": "length mysql",
+            "output": {
+                "clause": "CHAR_LENGTH(`name`) AS `length(name)`",
+                "editable": false,
+                "issues": {},
+                "outputNames": [
+                    "length(name)"
+                ]
+            }
+        },
+        {
+            "name": "length sql server",
+            "output": {
+                "clause": "LEN([name]) AS [length(name)]",
+                "editable": false,
+                "issues": {},
+                "outputNames": [
+                    "length(name)"
+                ]
+            }
+        },
+        {
+            "name": "substring sqlite",
+            "output": {
+                "clause": "substr(\"name\", 1, 2) AS \"substring(name)\"",
+                "editable": false,
+                "issues": {},
+                "outputNames": [
+                    "substring(name)"
+                ]
+            }
+        },
+        {
+            "name": "truncate on generic",
+            "output": {
+                "clause": null,
+                "editable": false,
+                "issues": {
+                    "240": "“truncate” doesn't apply to date-time columns"
+                },
+                "outputNames": [
+                    "truncate(created_at)"
+                ]
+            }
+        },
+        {
+            "name": "clickhouse functions",
+            "output": {
+                "clause": "upperUTF8(`name`) AS `upper(name)`, trimBoth(`name`) AS `trim(name)`, ceil(`total`) AS `ceil(total)`, toMonday(`created_at`) AS `truncate(created_at)`",
+                "editable": false,
+                "issues": {},
+                "outputNames": [
+                    "upper(name)",
+                    "trim(name)",
+                    "ceil(total)",
+                    "truncate(created_at)"
+                ]
+            }
+        },
+        {
+            "name": "expression default name",
+            "output": {
+                "clause": "total  *\n2 AS \"total * 2\"",
+                "editable": false,
+                "issues": {},
+                "outputNames": [
+                    "total * 2"
+                ]
+            }
+        },
+        {
+            "name": "expression alias",
+            "output": {
+                "clause": "total * 2 AS \"double\"",
+                "editable": false,
+                "issues": {},
+                "outputNames": [
+                    "double"
+                ]
+            }
+        },
+        {
+            "name": "blank expression",
+            "output": {
+                "clause": null,
+                "editable": false,
+                "issues": {
+                    "247": "Enter a SQL expression"
+                },
+                "outputNames": [
+                    ""
+                ]
+            }
+        },
+        {
+            "name": "long expression name",
+            "output": {
+                "clause": "coalesce(name, '') || ' ' || coalesce(name, '') || ' ' || coalesce(name, '') || ' ' || name AS \"coalesce(name, '') || ' ' || coalesce(name, '') || ' ' || co\"",
+                "editable": false,
+                "issues": {},
+                "outputNames": [
+                    "coalesce(name, '') || ' ' || coalesce(name, '') || ' ' || co"
+                ]
+            }
+        },
+        {
+            "name": "name clash",
+            "output": {
+                "clause": null,
+                "editable": false,
+                "issues": {
+                    "250": "Another column already shows as “NAME”; give this one a different name"
+                },
+                "outputNames": [
+                    "name",
+                    "NAME"
+                ]
+            }
+        },
+        {
+            "name": "clash after error",
+            "output": {
+                "clause": null,
+                "editable": false,
+                "issues": {
+                    "251": "“UPPER” doesn't apply to number columns",
+                    "253": "Another column already shows as “name”; give this one a different name"
+                },
+                "outputNames": [
+                    "upper(total)",
+                    "name",
+                    "name"
+                ]
+            }
+        },
+        {
+            "name": "everything hidden",
+            "output": {
+                "clause": null,
+                "editable": false,
+                "issues": {
+                    "0": "Choose at least one column to show"
+                },
+                "outputNames": [
+                    "id"
+                ]
+            }
+        },
+        {
+            "name": "distinct",
+            "output": {
+                "clause": "DISTINCT \"id\", \"name\"",
+                "editable": false,
+                "issues": {},
+                "outputNames": [
+                    "id",
+                    "name"
+                ]
+            }
+        },
+        {
+            "name": "distinct all columns",
+            "output": {
+                "clause": "DISTINCT \"id\", \"name\", \"total\", \"created_at\", \"photo\"",
+                "editable": false,
+                "issues": {},
+                "outputNames": [
+                    "id",
+                    "name",
+                    "total",
+                    "created_at",
+                    "photo"
+                ]
+            }
+        },
+        {
+            "name": "as text and coalesce on datetime",
+            "output": {
+                "clause": "CAST(\"created_at\" AS TEXT) AS \"astext(created_at)\", COALESCE(\"created_at\", 'now()') AS \"coalesce(created_at)\"",
+                "editable": false,
+                "issues": {},
+                "outputNames": [
+                    "astext(created_at)",
+                    "coalesce(created_at)"
+                ]
+            }
+        },
+        {
+            "name": "functions for kinds PostgreSQL",
+            "output": {
+                "Text": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Upper",
+                        "Lower",
+                        "Trim",
+                        "Length",
+                        "Substring"
+                    ],
+                    [
+                        "Coalesce"
+                    ]
+                ],
+                "Number": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Round",
+                        "Abs",
+                        "Floor",
+                        "Ceil"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Boolean": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "AsText"
+                    ]
+                ],
+                "Date": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Truncate"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Time": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "DateTime": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Truncate"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Uuid": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Json": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Binary": [
+                    [
+                        "None"
+                    ]
+                ],
+                "Other": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ]
+            }
+        },
+        {
+            "name": "functions for kinds MySQL",
+            "output": {
+                "Text": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Upper",
+                        "Lower",
+                        "Trim",
+                        "Length",
+                        "Substring"
+                    ],
+                    [
+                        "Coalesce"
+                    ]
+                ],
+                "Number": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Round",
+                        "Abs",
+                        "Floor",
+                        "Ceil"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Boolean": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "AsText"
+                    ]
+                ],
+                "Date": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Truncate"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Time": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "DateTime": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Truncate"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Uuid": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Json": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Binary": [
+                    [
+                        "None"
+                    ]
+                ],
+                "Other": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ]
+            }
+        },
+        {
+            "name": "functions for kinds SQLite",
+            "output": {
+                "Text": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Upper",
+                        "Lower",
+                        "Trim",
+                        "Length",
+                        "Substring"
+                    ],
+                    [
+                        "Coalesce"
+                    ]
+                ],
+                "Number": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Round",
+                        "Abs",
+                        "Floor",
+                        "Ceil"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Boolean": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "AsText"
+                    ]
+                ],
+                "Date": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Truncate"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Time": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "DateTime": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Truncate"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Uuid": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Json": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Binary": [
+                    [
+                        "None"
+                    ]
+                ],
+                "Other": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ]
+            }
+        },
+        {
+            "name": "functions for kinds SqlServer",
+            "output": {
+                "Text": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Upper",
+                        "Lower",
+                        "Trim",
+                        "Length",
+                        "Substring"
+                    ],
+                    [
+                        "Coalesce"
+                    ]
+                ],
+                "Number": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Round",
+                        "Abs",
+                        "Floor",
+                        "Ceil"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Boolean": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "AsText"
+                    ]
+                ],
+                "Date": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Truncate"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Time": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "DateTime": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Truncate"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Uuid": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Json": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Binary": [
+                    [
+                        "None"
+                    ]
+                ],
+                "Other": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ]
+            }
+        },
+        {
+            "name": "functions for kinds ClickHouse",
+            "output": {
+                "Text": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Upper",
+                        "Lower",
+                        "Trim",
+                        "Length",
+                        "Substring"
+                    ],
+                    [
+                        "Coalesce"
+                    ]
+                ],
+                "Number": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Round",
+                        "Abs",
+                        "Floor",
+                        "Ceil"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Boolean": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "AsText"
+                    ]
+                ],
+                "Date": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Truncate"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Time": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "DateTime": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Truncate"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Uuid": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Json": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Binary": [
+                    [
+                        "None"
+                    ]
+                ],
+                "Other": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ]
+            }
+        },
+        {
+            "name": "functions for kinds DuckDB",
+            "output": {
+                "Text": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Upper",
+                        "Lower",
+                        "Trim",
+                        "Length",
+                        "Substring"
+                    ],
+                    [
+                        "Coalesce"
+                    ]
+                ],
+                "Number": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Round",
+                        "Abs",
+                        "Floor",
+                        "Ceil"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Boolean": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "AsText"
+                    ]
+                ],
+                "Date": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Truncate"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Time": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "DateTime": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Truncate"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Uuid": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Json": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Binary": [
+                    [
+                        "None"
+                    ]
+                ],
+                "Other": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ]
+            }
+        },
+        {
+            "name": "functions for kinds H2",
+            "output": {
+                "Text": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Upper",
+                        "Lower",
+                        "Trim",
+                        "Length",
+                        "Substring"
+                    ],
+                    [
+                        "Coalesce"
+                    ]
+                ],
+                "Number": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Round",
+                        "Abs",
+                        "Floor",
+                        "Ceil"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Boolean": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "AsText"
+                    ]
+                ],
+                "Date": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Time": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "DateTime": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Uuid": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Json": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ],
+                "Binary": [
+                    [
+                        "None"
+                    ]
+                ],
+                "Other": [
+                    [
+                        "None"
+                    ],
+                    [
+                        "Coalesce",
+                        "AsText"
+                    ]
+                ]
+            }
+        }
+    ]
+}

@@ -1,0 +1,658 @@
+{
+    "subject": "filter-values",
+    "cases": [
+        {
+            "name": "kind 'int4'",
+            "output": "Number"
+        },
+        {
+            "name": "kind 'DECIMAL(10,2)'",
+            "output": "Number"
+        },
+        {
+            "name": "kind 'INT UNSIGNED'",
+            "output": "Number"
+        },
+        {
+            "name": "kind 'double precision'",
+            "output": "Number"
+        },
+        {
+            "name": "kind 'bool'",
+            "output": "Boolean"
+        },
+        {
+            "name": "kind 'timestamptz'",
+            "output": "DateTime"
+        },
+        {
+            "name": "kind 'timestamp without time zone'",
+            "output": "DateTime"
+        },
+        {
+            "name": "kind 'DATETIME'",
+            "output": "DateTime"
+        },
+        {
+            "name": "kind 'date'",
+            "output": "Date"
+        },
+        {
+            "name": "kind 'time with time zone'",
+            "output": "Time"
+        },
+        {
+            "name": "kind 'character varying'",
+            "output": "Text"
+        },
+        {
+            "name": "kind 'LONGTEXT'",
+            "output": "Text"
+        },
+        {
+            "name": "kind ''",
+            "output": "Text"
+        },
+        {
+            "name": "kind 'uuid'",
+            "output": "Uuid"
+        },
+        {
+            "name": "kind 'jsonb'",
+            "output": "Json"
+        },
+        {
+            "name": "kind 'bytea'",
+            "output": "Binary"
+        },
+        {
+            "name": "kind 'MEDIUMBLOB'",
+            "output": "Binary"
+        },
+        {
+            "name": "kind 'inet'",
+            "output": "Other"
+        },
+        {
+            "name": "kind 'mood'",
+            "output": "Other"
+        },
+        {
+            "name": "kind 'int zerofill'",
+            "output": "Number"
+        },
+        {
+            "name": "kind 'serial8'",
+            "output": "Number"
+        },
+        {
+            "name": "kind 'float4'",
+            "output": "Number"
+        },
+        {
+            "name": "kind 'uniqueidentifier'",
+            "output": "Uuid"
+        },
+        {
+            "name": "kind 'timetz'",
+            "output": "Time"
+        },
+        {
+            "name": "kind 'nvarchar(max)'",
+            "output": "Text"
+        },
+        {
+            "name": "kind 'clob'",
+            "output": "Text"
+        },
+        {
+            "name": "kind 'varbit'",
+            "output": "Binary"
+        },
+        {
+            "name": "kind 'integer[]'",
+            "output": "Other"
+        },
+        {
+            "name": "kind 'citext'",
+            "output": "Text"
+        },
+        {
+            "name": "kind 'set'",
+            "output": "Text"
+        },
+        {
+            "name": "kind 'year'",
+            "output": "Number"
+        },
+        {
+            "name": "kind 'time without time zone'",
+            "output": "Time"
+        },
+        {
+            "name": "kind 'Bit varying'",
+            "output": "Binary"
+        },
+        {
+            "name": "kind tinyint bit size 1",
+            "output": "Boolean"
+        },
+        {
+            "name": "kind bit size 8",
+            "output": "Other"
+        },
+        {
+            "name": "kind bit no size",
+            "output": "Boolean"
+        },
+        {
+            "name": "kind array",
+            "output": "Other"
+        },
+        {
+            "name": "kind unknown bigint",
+            "output": "Number"
+        },
+        {
+            "name": "kind unknown boolean",
+            "output": "Boolean"
+        },
+        {
+            "name": "kind unknown jdbc 12",
+            "output": "Text"
+        },
+        {
+            "name": "kind unknown jdbc 91",
+            "output": "Date"
+        },
+        {
+            "name": "kind unknown jdbc 92",
+            "output": "Time"
+        },
+        {
+            "name": "kind unknown jdbc 93",
+            "output": "DateTime"
+        },
+        {
+            "name": "kind unknown jdbc 2004",
+            "output": "Binary"
+        },
+        {
+            "name": "kind unknown jdbc 2",
+            "output": "Number"
+        },
+        {
+            "name": "kind unknown jdbc 2014",
+            "output": "DateTime"
+        },
+        {
+            "name": "kind unknown jdbc 1111",
+            "output": "Other"
+        },
+        {
+            "name": "temporal '2026-01-05'",
+            "output": {
+                "type": "Day",
+                "value": "2026-01-05"
+            }
+        },
+        {
+            "name": "temporal '2026/01/05'",
+            "output": {
+                "type": "Day",
+                "value": "2026-01-05"
+            }
+        },
+        {
+            "name": "temporal '2026-01-05 09:30'",
+            "output": {
+                "type": "Moment",
+                "value": "2026-01-05 09:30:00"
+            }
+        },
+        {
+            "name": "temporal '2026-01-05T09:30:15'",
+            "output": {
+                "type": "Moment",
+                "value": "2026-01-05 09:30:15"
+            }
+        },
+        {
+            "name": "temporal '2026-01-05 09:30:00+07'",
+            "output": {
+                "type": "Moment",
+                "value": "2026-01-05 02:30:00"
+            }
+        },
+        {
+            "name": "temporal '2026-01-05T09:30:00Z'",
+            "output": {
+                "type": "Moment",
+                "value": "2026-01-05 09:30:00"
+            }
+        },
+        {
+            "name": "temporal '17:05'",
+            "output": {
+                "type": "TimeOfDay",
+                "value": "17:05:00"
+            }
+        },
+        {
+            "name": "temporal 'Today'",
+            "output": {
+                "type": "Day",
+                "value": "2026-10-28"
+            }
+        },
+        {
+            "name": "temporal 'tomorrow'",
+            "output": {
+                "type": "Day",
+                "value": "2026-10-29"
+            }
+        },
+        {
+            "name": "temporal 'today - 2w'",
+            "output": {
+                "type": "Day",
+                "value": "2026-10-14"
+            }
+        },
+        {
+            "name": "temporal '-1mo'",
+            "output": {
+                "type": "Day",
+                "value": "2026-09-28"
+            }
+        },
+        {
+            "name": "temporal '-30min'",
+            "output": {
+                "type": "Moment",
+                "value": "2026-10-28 13:15:00"
+            }
+        },
+        {
+            "name": "temporal 'now-1d'",
+            "output": {
+                "type": "Moment",
+                "value": "2026-10-27 13:45:00"
+            }
+        },
+        {
+            "name": "temporal '3 hours ago'",
+            "output": {
+                "type": "Moment",
+                "value": "2026-10-28 10:45:00"
+            }
+        },
+        {
+            "name": "temporal '1 year ago'",
+            "output": {
+                "type": "Day",
+                "value": "2025-10-28"
+            }
+        },
+        {
+            "name": "temporal 'today+6h'",
+            "output": {
+                "type": "Moment",
+                "value": "2026-10-28 06:00:00"
+            }
+        },
+        {
+            "name": "temporal '2 fortnights ago'",
+            "output": {
+                "error": "Unknown unit “fortnights”; use s, min, h, d, w, mo or y"
+            }
+        },
+        {
+            "name": "temporal 'next tuesday'",
+            "output": {
+                "error": "“next tuesday” isn't a date or time; try 2026-10-28, 13:45 or today-7d"
+            }
+        },
+        {
+            "name": "temporal '2026-13-01'",
+            "output": {
+                "error": "“2026-13-01” isn't a date or time; try 2026-10-28, 13:45 or today-7d"
+            }
+        },
+        {
+            "name": "temporal ''",
+            "output": {
+                "error": "Enter a date"
+            }
+        },
+        {
+            "name": "temporal '  yesterday '",
+            "output": {
+                "type": "Day",
+                "value": "2026-10-27"
+            }
+        },
+        {
+            "name": "temporal 'now'",
+            "output": {
+                "type": "Moment",
+                "value": "2026-10-28 13:45:00"
+            }
+        },
+        {
+            "name": "temporal '+1d -2h'",
+            "output": {
+                "type": "Moment",
+                "value": "2026-10-29 11:45:00"
+            }
+        },
+        {
+            "name": "temporal '+90s'",
+            "output": {
+                "type": "Moment",
+                "value": "2026-10-28 13:46:30"
+            }
+        },
+        {
+            "name": "temporal '2026-01-31 + 1mo'",
+            "output": {
+                "error": "“2026-01-31 + 1mo” isn't a date or time; try 2026-10-28, 13:45 or today-7d"
+            }
+        },
+        {
+            "name": "temporal '2024-02-29'",
+            "output": {
+                "type": "Day",
+                "value": "2024-02-29"
+            }
+        },
+        {
+            "name": "temporal '2023-02-29'",
+            "output": {
+                "error": "“2023-02-29” isn't a date or time; try 2026-10-28, 13:45 or today-7d"
+            }
+        },
+        {
+            "name": "temporal '13:45:30.123456789'",
+            "output": {
+                "type": "TimeOfDay",
+                "value": "13:45:30.123456789"
+            }
+        },
+        {
+            "name": "temporal '13:45:30.'",
+            "output": {
+                "type": "TimeOfDay",
+                "value": "13:45:30"
+            }
+        },
+        {
+            "name": "temporal '25:00'",
+            "output": {
+                "error": "“25:00” isn't a date or time; try 2026-10-28, 13:45 or today-7d"
+            }
+        },
+        {
+            "name": "temporal '2026-01-05 09:30:00.5-0330'",
+            "output": {
+                "type": "Moment",
+                "value": "2026-01-05 13:00:00.5"
+            }
+        },
+        {
+            "name": "temporal '2026-01-05 09:30+25'",
+            "output": {
+                "type": "Moment",
+                "value": "2026-01-05 09:30:00"
+            }
+        },
+        {
+            "name": "temporal '2026-01-05 09:30:00 +07:00'",
+            "output": {
+                "type": "Moment",
+                "value": "2026-01-05 02:30:00"
+            }
+        },
+        {
+            "name": "temporal '5 days ago'",
+            "output": {
+                "type": "Day",
+                "value": "2026-10-23"
+            }
+        },
+        {
+            "name": "temporal '10 min ago'",
+            "output": {
+                "type": "Moment",
+                "value": "2026-10-28 13:35:00"
+            }
+        },
+        {
+            "name": "temporal 'today -1y'",
+            "output": {
+                "type": "Day",
+                "value": "2025-10-28"
+            }
+        },
+        {
+            "name": "temporal 'nowhere'",
+            "output": {
+                "error": "“nowhere” isn't a date or time; try 2026-10-28, 13:45 or today-7d"
+            }
+        },
+        {
+            "name": "temporal '2026-1-5'",
+            "output": {
+                "error": "“2026-1-5” isn't a date or time; try 2026-10-28, 13:45 or today-7d"
+            }
+        },
+        {
+            "name": "temporal '12:5'",
+            "output": {
+                "error": "“12:5” isn't a date or time; try 2026-10-28, 13:45 or today-7d"
+            }
+        },
+        {
+            "name": "temporal 'now - 2 h'",
+            "output": {
+                "type": "Moment",
+                "value": "2026-10-28 11:45:00"
+            }
+        },
+        {
+            "name": "temporal offset into zone",
+            "output": {
+                "type": "Moment",
+                "value": "2026-01-05 04:30:00"
+            }
+        },
+        {
+            "name": "temporal relative ignores zone",
+            "output": {
+                "type": "Moment",
+                "value": "2026-03-01 00:00:59"
+            }
+        },
+        {
+            "name": "temporal month end clamps",
+            "output": {
+                "type": "Day",
+                "value": "2026-02-28"
+            }
+        },
+        {
+            "name": "temporal leap year",
+            "output": {
+                "type": "Day",
+                "value": "2023-02-28"
+            }
+        },
+        {
+            "name": "list ' a ,b c,\\nNULL, \\'\\', \"x,y\" ,'",
+            "output": [
+                "a",
+                "b c",
+                null,
+                "",
+                "x,y"
+            ]
+        },
+        {
+            "name": "list ''",
+            "output": []
+        },
+        {
+            "name": "list '\\'it\\'\\'s\\', \"a\"\"b\"'",
+            "output": [
+                "it's",
+                "a\"b"
+            ]
+        },
+        {
+            "name": "list \"x 'y' z, 'unterminated\"",
+            "output": [
+                "x 'y' z",
+                "unterminated"
+            ]
+        },
+        {
+            "name": "list \"null,NULL,Null,'null'\"",
+            "output": [
+                null,
+                null,
+                null,
+                "null"
+            ]
+        },
+        {
+            "name": "list ',,,'",
+            "output": []
+        },
+        {
+            "name": "list 'a\\nb\\n\\nc'",
+            "output": [
+                "a",
+                "b",
+                "c"
+            ]
+        },
+        {
+            "name": "number ' 1_234.5 '",
+            "output": "1234.5"
+        },
+        {
+            "name": "number '1e3'",
+            "output": "1000"
+        },
+        {
+            "name": "number '-0.50'",
+            "output": "-0.50"
+        },
+        {
+            "name": "number ''",
+            "output": {
+                "error": "Enter a number"
+            }
+        },
+        {
+            "name": "number 'abc'",
+            "output": {
+                "error": "“abc” isn't a number"
+            }
+        },
+        {
+            "name": "number '1 000'",
+            "output": "1000"
+        },
+        {
+            "name": "number '+7'",
+            "output": "7"
+        },
+        {
+            "name": "number '.5'",
+            "output": "0.5"
+        },
+        {
+            "name": "uuid '6F1C2D3E-4A5B-4C6D-8E9F-A0B1C2D3E4F5'",
+            "output": "6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5"
+        },
+        {
+            "name": "uuid '{6f1c2d3e4a5b4c6d8e9fa0b1c2d3e4f5}'",
+            "output": "6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5"
+        },
+        {
+            "name": "uuid 'nope'",
+            "output": {
+                "error": "“nope” isn't a UUID"
+            }
+        },
+        {
+            "name": "uuid ' 6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5 '",
+            "output": "6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5"
+        },
+        {
+            "name": "boolean 't'",
+            "output": true
+        },
+        {
+            "name": "boolean 'No'",
+            "output": false
+        },
+        {
+            "name": "boolean 'ON'",
+            "output": true
+        },
+        {
+            "name": "boolean 'y'",
+            "output": true
+        },
+        {
+            "name": "boolean 'maybe'",
+            "output": null
+        },
+        {
+            "name": "boolean ' 1 '",
+            "output": true
+        },
+        {
+            "name": "boolean ''",
+            "output": null
+        },
+        {
+            "name": "format DateTime 2026-01-05T09:30:00.5",
+            "output": "2026-01-05 09:30:00.5"
+        },
+        {
+            "name": "format DateTime 2026-01-05T09:30",
+            "output": "2026-01-05 09:30:00"
+        },
+        {
+            "name": "format Time 13:45:00.000001",
+            "output": "13:45:00.000001"
+        },
+        {
+            "name": "format Date 2026-01-05",
+            "output": "2026-01-05"
+        },
+        {
+            "name": "format Decimal 1E+3",
+            "output": "1000"
+        },
+        {
+            "name": "format Long -5",
+            "output": "-5"
+        },
+        {
+            "name": "format Uuid 6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5",
+            "output": "6f1c2d3e-4a5b-4c6d-8e9f-a0b1c2d3e4f5"
+        },
+        {
+            "name": "format Bool true",
+            "output": "true"
+        },
+        {
+            "name": "format Text x",
+            "output": "x"
+        }
+    ]
+}

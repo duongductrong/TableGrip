@@ -1,0 +1,1108 @@
+{
+  "component": "keymap",
+  "description": "The window's shortcuts over the app's Shortcuts: modifiers must match exactly, 'primary' is Cmd on macOS and Ctrl elsewhere, the preset changes bindings, window shortcuts stand aside while a key is recorded. Preview-phase shortcuts run before the focused control; the others only if it declines. Only keys the runner can press: letters, Enter, Tab, arrows, F2.",
+  "cases": [
+    {
+      "name": "a letter alone is no shortcut",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "T"
+        }
+      ],
+      "expect": {
+        "fired": ""
+      }
+    },
+    {
+      "name": "the primary modifier with a letter runs its action",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "T",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "NewConsole"
+      }
+    },
+    {
+      "name": "an extra Shift makes it another shortcut",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "T",
+          "mods": [
+            "primary",
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": ""
+      }
+    },
+    {
+      "name": "an extra Alt makes it another shortcut",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "T",
+          "mods": [
+            "primary",
+            "alt"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": ""
+      }
+    },
+    {
+      "name": "Save and Save As differ by Shift",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "S",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "Save"
+      }
+    },
+    {
+      "name": "Save As is primary+Shift+S",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "S",
+          "mods": [
+            "primary",
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "SaveAs"
+      }
+    },
+    {
+      "name": "Copy",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "C",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "Copy"
+      }
+    },
+    {
+      "name": "Copy with header adds Shift",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "C",
+          "mods": [
+            "primary",
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "CopyWithHeader"
+      }
+    },
+    {
+      "name": "Alt alone is a shortcut of its own (Match case)",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "C",
+          "mods": [
+            "alt"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "MatchCase"
+      }
+    },
+    {
+      "name": "primary+Alt+C is Choose column, not Copy",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "C",
+          "mods": [
+            "primary",
+            "alt"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "ChooseColumn"
+      }
+    },
+    {
+      "name": "one key chord can belong to several actions",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "F",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "Find,FocusFilter"
+      }
+    },
+    {
+      "name": "primary+Alt+F is Filter by value",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "F",
+          "mods": [
+            "primary",
+            "alt"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "FilterByValue"
+      }
+    },
+    {
+      "name": "primary+Alt+Shift+F is Exclude value",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "F",
+          "mods": [
+            "primary",
+            "alt",
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "ExcludeValue"
+      }
+    },
+    {
+      "name": "primary+Shift+F toggles the filter mode",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "F",
+          "mods": [
+            "primary",
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "ToggleFilterMode"
+      }
+    },
+    {
+      "name": "Undo",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Z",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "Undo"
+      }
+    },
+    {
+      "name": "Redo adds Shift",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Z",
+          "mods": [
+            "primary",
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "Redo"
+      }
+    },
+    {
+      "name": "Revert rows adds Alt",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Z",
+          "mods": [
+            "primary",
+            "alt"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "RevertRows"
+      }
+    },
+    {
+      "name": "primary+Enter runs, submits and applies, in declaration order",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Enter",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "RunStatement,Submit,ApplyFilter"
+      }
+    },
+    {
+      "name": "primary+Shift+Enter runs the script",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Enter",
+          "mods": [
+            "primary",
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "RunScript"
+      }
+    },
+    {
+      "name": "Shift+Enter expands the editor",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Enter",
+          "mods": [
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "ExpandEditor"
+      }
+    },
+    {
+      "name": "a bare Enter is no shortcut",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Enter"
+        }
+      ],
+      "expect": {
+        "fired": ""
+      }
+    },
+    {
+      "name": "Alt+Shift+Down moves the line down",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Down",
+          "mods": [
+            "alt",
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "MoveLineDown"
+      }
+    },
+    {
+      "name": "Alt+Shift+Up moves the line up",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Up",
+          "mods": [
+            "alt",
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "MoveLineUp"
+      }
+    },
+    {
+      "name": "a bare Up is Previous condition",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Up"
+        }
+      ],
+      "expect": {
+        "fired": "PreviousCondition"
+      }
+    },
+    {
+      "name": "a bare Down is Next condition",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Down"
+        }
+      ],
+      "expect": {
+        "fired": "NextCondition"
+      }
+    },
+    {
+      "name": "Tab indents",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Tab"
+        }
+      ],
+      "expect": {
+        "fired": "Indent"
+      }
+    },
+    {
+      "name": "Shift+Tab outdents",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Tab",
+          "mods": [
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "Outdent"
+      }
+    },
+    {
+      "name": "F2 edits the cell",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "F2"
+        }
+      ],
+      "expect": {
+        "fired": "EditCell"
+      }
+    },
+    {
+      "name": "primary+Shift+Backspace clears the filter",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Backspace",
+          "mods": [
+            "primary",
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "ClearFilter"
+      }
+    },
+    {
+      "name": "primary+N adds a row or a condition",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "N",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "AddRow,AddCondition"
+      }
+    },
+    {
+      "name": "primary+Alt+N sets NULL or adds an SQL condition",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "N",
+          "mods": [
+            "primary",
+            "alt"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "SetNull,AddSqlCondition"
+      }
+    },
+    {
+      "name": "primary+Shift+N adds a group",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "N",
+          "mods": [
+            "primary",
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "AddConditionGroup"
+      }
+    },
+    {
+      "name": "primary+Alt+A opens activity",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "A",
+          "mods": [
+            "primary",
+            "alt"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "Activity"
+      }
+    },
+    {
+      "name": "primary+A selects all",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "A",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "SelectAll"
+      }
+    },
+    {
+      "name": "primary+Shift+A toggles the combinator",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "A",
+          "mods": [
+            "primary",
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "ToggleCombinator"
+      }
+    },
+    {
+      "name": "primary+Alt+L reformats",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "L",
+          "mods": [
+            "primary",
+            "alt"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "Format"
+      }
+    },
+    {
+      "name": "primary+L mentions in the chat",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "L",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "AddToChat"
+      }
+    },
+    {
+      "name": "primary+P is Go to anything",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "P",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "GoToAnything"
+      }
+    },
+    {
+      "name": "primary+B toggles the sidebar and goes to the referenced row",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "B",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "ToggleSidebar,GoToReferenced"
+      }
+    },
+    {
+      "name": "primary+Shift+E explains",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "E",
+          "mods": [
+            "primary",
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "Explain"
+      }
+    },
+    {
+      "name": "primary+D duplicates",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "D",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "Duplicate"
+      }
+    },
+    {
+      "name": "primary+R replaces and reloads",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "R",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "Replace,Reload"
+      }
+    },
+    {
+      "name": "primary+Alt+O chooses the operator",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "O",
+          "mods": [
+            "primary",
+            "alt"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "ChooseOperator"
+      }
+    },
+    {
+      "name": "the IDE Classic keymap moves Go to anything to primary+O",
+      "setup": {
+        "preset": "IdeClassic"
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "O",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "GoToAnything"
+      }
+    },
+    {
+      "name": "the IDE Classic keymap frees primary+P",
+      "setup": {
+        "preset": "IdeClassic"
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "P",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": ""
+      }
+    },
+    {
+      "name": "the VS Code keymap reformats with Alt+Shift+F",
+      "setup": {
+        "preset": "VsCode"
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "F",
+          "mods": [
+            "alt",
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "Format"
+      }
+    },
+    {
+      "name": "the VS Code keymap frees primary+Alt+L",
+      "setup": {
+        "preset": "VsCode"
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "L",
+          "mods": [
+            "primary",
+            "alt"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": ""
+      }
+    },
+    {
+      "name": "the VS Code keymap deletes a line with primary+Shift+K",
+      "setup": {
+        "preset": "VsCode"
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "K",
+          "mods": [
+            "primary",
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "DeleteLine"
+      }
+    },
+    {
+      "name": "the VS Code keymap moves a line with Alt+Down",
+      "setup": {
+        "preset": "VsCode"
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "Down",
+          "mods": [
+            "alt"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "MoveLineDown"
+      }
+    },
+    {
+      "name": "the VS Code keymap duplicates with Alt+Shift+Down",
+      "setup": {
+        "preset": "VsCode"
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "Down",
+          "mods": [
+            "alt",
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "Duplicate"
+      }
+    },
+    {
+      "name": "while a key is being recorded the window runs nothing",
+      "setup": {
+        "recording": true
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "T",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": ""
+      }
+    },
+    {
+      "name": "while recording, bare keys run nothing either",
+      "setup": {
+        "recording": true
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "Up"
+        }
+      ],
+      "expect": {
+        "fired": ""
+      }
+    },
+    {
+      "name": "a preview-phase shortcut runs even when the focused control would take the key",
+      "setup": {
+        "preview": [
+          "NewConsole"
+        ],
+        "inner": [
+          "T"
+        ]
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "T",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "NewConsole",
+        "innerHits": 0
+      }
+    },
+    {
+      "name": "a bubble-phase shortcut yields to a control that takes the key",
+      "setup": {
+        "inner": [
+          "T"
+        ]
+      },
+      "steps": [
+        "focus",
+        {
+          "key": "T",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "",
+        "innerHits": 1
+      }
+    },
+    {
+      "name": "a bubble-phase shortcut runs when the control declines",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "T",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "NewConsole",
+        "innerHits": 0
+      }
+    },
+    {
+      "name": "two shortcuts in a row: the last one is reported",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "T",
+          "mods": [
+            "primary"
+          ]
+        },
+        {
+          "key": "W",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "CloseTab"
+      }
+    },
+    {
+      "name": "primary with = zooms in",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Equals",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "ZoomIn"
+      }
+    },
+    {
+      "name": "primary with Shift and = (the + key) zooms in",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Equals",
+          "mods": [
+            "primary",
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "ZoomInAlt"
+      }
+    },
+    {
+      "name": "primary with - zooms out",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Minus",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "ZoomOut"
+      }
+    },
+    {
+      "name": "primary with 0 resets the zoom",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Digit0",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "ResetZoom"
+      }
+    },
+    {
+      "name": "primary with / comments lines",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Slash",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "Comment"
+      }
+    },
+    {
+      "name": "primary with Shift and / shows the shortcuts",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Slash",
+          "mods": [
+            "primary",
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "ShowShortcuts"
+      }
+    },
+    {
+      "name": "the keypad's Enter counts as Enter",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "NumpadEnter",
+          "mods": [
+            "primary"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "RunStatement,Submit,ApplyFilter"
+      }
+    },
+    {
+      "name": "the physical Control key with Tab goes to the next tab",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Tab",
+          "mods": [
+            "ctrl"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "NextTabAlt"
+      }
+    },
+    {
+      "name": "the physical Control key with Shift and Tab goes to the previous tab",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Tab",
+          "mods": [
+            "ctrl",
+            "shift"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "PreviousTabAlt"
+      }
+    },
+    {
+      "name": "the physical Control key with Space asks for completion",
+      "setup": {},
+      "steps": [
+        "focus",
+        {
+          "key": "Space",
+          "mods": [
+            "ctrl"
+          ]
+        }
+      ],
+      "expect": {
+        "fired": "Completion"
+      }
+    }
+  ]
+}

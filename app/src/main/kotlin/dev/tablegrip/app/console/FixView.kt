@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dev.tablegrip.app.AppState
 import dev.tablegrip.app.ui.LocalIslands
+import dev.tablegrip.app.ui.TableGripIcons
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.component.CircularProgressIndicator
 import org.jetbrains.jewel.ui.component.DefaultButton
@@ -82,7 +83,7 @@ internal fun FixCard(tab: ConsoleTab, fix: FixState) {
             }
             is FixState.Proposed -> {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(AllIconsKeys.Toolwindows.ToolWindowAskAI, null, Modifier.size(14.dp))
+                    Icon(TableGripIcons.Agent, null, Modifier.size(14.dp))
                     Text("Proposed fix", fontWeight = FontWeight.SemiBold)
                     Text("from ${fix.source}", color = info)
                 }

@@ -1,0 +1,49 @@
+{
+    "specimen": "icon-button",
+    "theme": "Contrast Light",
+    "density": 2.0,
+    "width": 320,
+    "height": 96,
+    "regions": [
+        {
+            "tag": "icon:icon-button.disabled",
+            "kind": "icon",
+            "rect": [
+                258,
+                34,
+                28,
+                28
+            ]
+        },
+        {
+            "tag": "icon:icon-button.focused",
+            "kind": "icon",
+            "rect": [
+                186,
+                34,
+                28,
+                28
+            ]
+        },
+        {
+            "tag": "icon:icon-button.hovered",
+            "kind": "icon",
+            "rect": [
+                114,
+                34,
+                28,
+                28
+            ]
+        },
+        {
+            "tag": "icon:icon-button.rest",
+            "kind": "icon",
+            "rect": [
+                42,
+                34,
+                28,
+                28
+            ]
+        }
+    ]
+}

@@ -1,0 +1,31 @@
+{
+    "subject": "mermaid",
+    "cases": [
+        {
+            "name": "keys and optional relationships",
+            "output": {
+                "PostgreSQL": "erDiagram\n    \"order items\" {\n    }\n    orders {\n        integer id PK\n        integer users_id FK \"not null\"\n    }\n    teams {\n        integer id PK\n    }\n    users {\n        integer id PK\n        integer teams_id FK\n    }\n    teams |o--o{ users : \"teams_id\"\n    users ||--o{ orders : \"users_id\"\n",
+                "CockroachDB": "erDiagram\n    \"order items\" {\n    }\n    orders {\n        integer id PK\n        integer users_id FK \"not null\"\n    }\n    teams {\n        integer id PK\n    }\n    users {\n        integer id PK\n        integer teams_id FK\n    }\n    teams |o--o{ users : \"teams_id\"\n    users ||--o{ orders : \"users_id\"\n",
+                "MySQL": "erDiagram\n    \"order items\" {\n    }\n    orders {\n        integer id PK\n        integer users_id FK \"not null\"\n    }\n    teams {\n        integer id PK\n    }\n    users {\n        integer id PK\n        integer teams_id FK\n    }\n    teams |o--o{ users : \"teams_id\"\n    users ||--o{ orders : \"users_id\"\n",
+                "SQLite": "erDiagram\n    \"order items\" {\n    }\n    orders {\n        integer id PK\n        integer users_id FK \"not null\"\n    }\n    teams {\n        integer id PK\n    }\n    users {\n        integer id PK\n        integer teams_id FK\n    }\n    teams |o--o{ users : \"teams_id\"\n    users ||--o{ orders : \"users_id\"\n",
+                "SqlServer": "erDiagram\n    \"order items\" {\n    }\n    orders {\n        integer id PK\n        integer users_id FK \"not null\"\n    }\n    teams {\n        integer id PK\n    }\n    users {\n        integer id PK\n        integer teams_id FK\n    }\n    teams |o--o{ users : \"teams_id\"\n    users ||--o{ orders : \"users_id\"\n",
+                "ClickHouse": "erDiagram\n    \"order items\" {\n    }\n    orders {\n        integer id PK\n        integer users_id FK \"not null\"\n    }\n    teams {\n        integer id PK\n    }\n    users {\n        integer id PK\n        integer teams_id FK\n    }\n    teams |o--o{ users : \"teams_id\"\n    users ||--o{ orders : \"users_id\"\n",
+                "DuckDB": "erDiagram\n    \"order items\" {\n    }\n    orders {\n        integer id PK\n        integer users_id FK \"not null\"\n    }\n    teams {\n        integer id PK\n    }\n    users {\n        integer id PK\n        integer teams_id FK\n    }\n    teams |o--o{ users : \"teams_id\"\n    users ||--o{ orders : \"users_id\"\n",
+                "H2": "erDiagram\n    \"order items\" {\n    }\n    orders {\n        integer id PK\n        integer users_id FK \"not null\"\n    }\n    teams {\n        integer id PK\n    }\n    users {\n        integer id PK\n        integer teams_id FK\n    }\n    teams |o--o{ users : \"teams_id\"\n    users ||--o{ orders : \"users_id\"\n"
+            }
+        },
+        {
+            "name": "types, unique and not null",
+            "output": {
+                "PostgreSQL": "erDiagram\n    a-b {\n        integer x FK\n    }\n    \"t'q\" {\n        int4 id PK\n        numeric(10-2) price \"not null\"\n        character_varying(50) note\n        text u UK\n        Nullable(String)-_x w\n    }\n    \"t'q\" |o--o{ a-b : \"x\"\n",
+                "CockroachDB": "erDiagram\n    a-b {\n        integer x FK\n    }\n    \"t'q\" {\n        int4 id PK\n        numeric(10-2) price \"not null\"\n        character_varying(50) note\n        text u UK\n        Nullable(String)-_x w\n    }\n    \"t'q\" |o--o{ a-b : \"x\"\n",
+                "MySQL": "erDiagram\n    a-b {\n        integer x FK\n    }\n    \"t'q\" {\n        int4 id PK\n        numeric(10-2) price \"not null\"\n        character_varying(50) note\n        text u UK\n        Nullable(String)-_x w\n    }\n    \"t'q\" |o--o{ a-b : \"x\"\n",
+                "SQLite": "erDiagram\n    a-b {\n        integer x FK\n    }\n    \"t'q\" {\n        int4 id PK\n        numeric(10-2) price \"not null\"\n        character_varying(50) note\n        text u UK\n        Nullable(String)-_x w\n    }\n    \"t'q\" |o--o{ a-b : \"x\"\n",
+                "SqlServer": "erDiagram\n    a-b {\n        integer x FK\n    }\n    \"t'q\" {\n        int4 id PK\n        numeric(10-2) price \"not null\"\n        character_varying(50) note\n        text u UK\n        Nullable(String)-_x w\n    }\n    \"t'q\" |o--o{ a-b : \"x\"\n",
+                "ClickHouse": "erDiagram\n    a-b {\n        integer x FK\n    }\n    \"t'q\" {\n        int4 id PK\n        numeric(10-2) price \"not null\"\n        character_varying(50) note\n        text u UK\n        Nullable(String)-_x w\n    }\n    \"t'q\" |o--o{ a-b : \"x\"\n",
+                "DuckDB": "erDiagram\n    a-b {\n        integer x FK\n    }\n    \"t'q\" {\n        int4 id PK\n        numeric(10-2) price \"not null\"\n        character_varying(50) note\n        text u UK\n        Nullable(String)-_x w\n    }\n    \"t'q\" |o--o{ a-b : \"x\"\n",
+                "H2": "erDiagram\n    a-b {\n        integer x FK\n    }\n    \"t'q\" {\n        int4 id PK\n        numeric(10-2) price \"not null\"\n        character_varying(50) note\n        text u UK\n        Nullable(String)-_x w\n    }\n    \"t'q\" |o--o{ a-b : \"x\"\n"
+            }
+        }
+    ]
+}

@@ -120,7 +120,7 @@ object ConnectionString {
             port = host?.second,
             user = uri.user,
             password = uri.password,
-            properties = if (scheme.endsWith("s")) mapOf("ssl" to "true") else emptyMap(),
+            properties = if (scheme == "rediss" || scheme == "valkeys") mapOf("ssl" to "true") else emptyMap(),
             warnings = warnings,
         )
     }

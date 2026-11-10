@@ -1,0 +1,879 @@
+{
+    "subject": "chart-values",
+    "cases": [
+        {
+            "name": "number '1.5'",
+            "output": {
+                "number": 1.5,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "number ' 2 '",
+            "output": {
+                "number": 2.0,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "number '1e3'",
+            "output": {
+                "number": 1000.0,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "number '-0'",
+            "output": {
+                "number": -0.0,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "number '0'",
+            "output": {
+                "number": 0.0,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "number '+7'",
+            "output": {
+                "number": 7.0,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "number '.5'",
+            "output": {
+                "number": 0.5,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "number '5.'",
+            "output": {
+                "number": 5.0,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "number '1,5'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "number '1_000'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "number ''",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "number '  '",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "number 'abc'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "number 'NaN'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "number 'Infinity'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "number '-Infinity'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "number '1.5f'",
+            "output": {
+                "number": 1.5,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "number '2d'",
+            "output": {
+                "number": 2.0,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "number '0x10'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "number '0x1p3'",
+            "output": {
+                "number": 8.0,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "number '1e400'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "number '12abc'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "number '9007199254740993'",
+            "output": {
+                "number": 9.007199254740992E15,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "number '-12.75'",
+            "output": {
+                "number": -12.75,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "number '1E-3'",
+            "output": {
+                "number": 0.001,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "number null",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "date '2024-03-05'",
+            "output": {
+                "number": null,
+                "epochMillis": 1.7095968E12
+            }
+        },
+        {
+            "name": "date '2024-03-05 12:00:00'",
+            "output": {
+                "number": null,
+                "epochMillis": 1.70964E12
+            }
+        },
+        {
+            "name": "date '2024-03-05T12:00'",
+            "output": {
+                "number": null,
+                "epochMillis": 1.70964E12
+            }
+        },
+        {
+            "name": "date '2024-03-05T12:00:00'",
+            "output": {
+                "number": null,
+                "epochMillis": 1.70964E12
+            }
+        },
+        {
+            "name": "date '2024-03-05 12:00'",
+            "output": {
+                "number": null,
+                "epochMillis": 1.70964E12
+            }
+        },
+        {
+            "name": "date '2024-03-05 12:00:00.25'",
+            "output": {
+                "number": null,
+                "epochMillis": 1.70964000025E12
+            }
+        },
+        {
+            "name": "date '2024-03-05 12:00:00.123456789'",
+            "output": {
+                "number": null,
+                "epochMillis": 1.709640000123E12
+            }
+        },
+        {
+            "name": "date '2024-03-05 12:00:00+07'",
+            "output": {
+                "number": null,
+                "epochMillis": 1.70964E12
+            }
+        },
+        {
+            "name": "date '2024-03-05 12:00:00-08'",
+            "output": {
+                "number": null,
+                "epochMillis": 1.70964E12
+            }
+        },
+        {
+            "name": "date '2024-03-05T12:00:00Z'",
+            "output": {
+                "number": null,
+                "epochMillis": 1.70964E12
+            }
+        },
+        {
+            "name": "date '2024-03-05T12:00:00+07:00'",
+            "output": {
+                "number": null,
+                "epochMillis": 1.70964E12
+            }
+        },
+        {
+            "name": "date '2024-03-05 12:00:00 +07:00'",
+            "output": {
+                "number": null,
+                "epochMillis": 1.70964E12
+            }
+        },
+        {
+            "name": "date '2024-03-05 12:00:00+0700'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "date '2024-03-05T12:00:00.5Z'",
+            "output": {
+                "number": null,
+                "epochMillis": 1.7096400005E12
+            }
+        },
+        {
+            "name": "date '2024-03-05T12:00:00-05:30'",
+            "output": {
+                "number": null,
+                "epochMillis": 1.70964E12
+            }
+        },
+        {
+            "name": "date '2024-03-05 12:00:00.250+07'",
+            "output": {
+                "number": null,
+                "epochMillis": 1.70964000025E12
+            }
+        },
+        {
+            "name": "date '12:00:00'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "date 'hello world'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "date '2024-3-05'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "date '2024-03-5'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "date '2024-02-29'",
+            "output": {
+                "number": null,
+                "epochMillis": 1.7091648E12
+            }
+        },
+        {
+            "name": "date '2023-02-29'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "date '2024-02-30'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "date '2024-13-01'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "date '2024-03-05 24:00:00'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "date '2024-03-05 25:00:00'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "date '2024-03-05 12:60:00'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "date '2024-03-05T12:00:00[UTC]'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "date '2024/03/05'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "date '20240305'",
+            "output": {
+                "number": 2.0240305E7,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "date '  2024-03-05  '",
+            "output": {
+                "number": null,
+                "epochMillis": 1.7095968E12
+            }
+        },
+        {
+            "name": "date '0000-01-01'",
+            "output": {
+                "number": null,
+                "epochMillis": -6.21672192E13
+            }
+        },
+        {
+            "name": "date '1969-12-31 23:59:59'",
+            "output": {
+                "number": null,
+                "epochMillis": -1000.0
+            }
+        },
+        {
+            "name": "date '1900-01-01 00:00:00'",
+            "output": {
+                "number": null,
+                "epochMillis": -2.2089888E12
+            }
+        },
+        {
+            "name": "date '9999-12-31 23:59:59'",
+            "output": {
+                "number": null,
+                "epochMillis": 2.53402300799E14
+            }
+        },
+        {
+            "name": "date '2024-03-05 12'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "date '2024-03-05T'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "date '2024-03-05x'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "date '2024-03-05 12:00:00Z'",
+            "output": {
+                "number": null,
+                "epochMillis": 1.70964E12
+            }
+        },
+        {
+            "name": "date '2024-03-05 12:00:00 Z'",
+            "output": {
+                "number": null,
+                "epochMillis": 1.70964E12
+            }
+        },
+        {
+            "name": "date '+2024-03-05'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "date '2024-03-05 12:00:00.'",
+            "output": {
+                "number": null,
+                "epochMillis": 1.70964E12
+            }
+        },
+        {
+            "name": "date '2024-03-05 1:00:00'",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "date null",
+            "output": {
+                "number": null,
+                "epochMillis": null
+            }
+        },
+        {
+            "name": "truncate 2024-08-15 13:45:00 Hour",
+            "output": {
+                "number": null,
+                "epochMillis": 1.7237295E12,
+                "truncated": 1.7237268E12
+            }
+        },
+        {
+            "name": "truncate 2024-08-15 13:45:00 Day",
+            "output": {
+                "number": null,
+                "epochMillis": 1.7237295E12,
+                "truncated": 1.72368E12
+            }
+        },
+        {
+            "name": "truncate 2024-08-15 13:45:00 Week",
+            "output": {
+                "number": null,
+                "epochMillis": 1.7237295E12,
+                "truncated": 1.7234208E12
+            }
+        },
+        {
+            "name": "truncate 2024-08-15 13:45:00 Month",
+            "output": {
+                "number": null,
+                "epochMillis": 1.7237295E12,
+                "truncated": 1.7224704E12
+            }
+        },
+        {
+            "name": "truncate 2024-08-15 13:45:00 Quarter",
+            "output": {
+                "number": null,
+                "epochMillis": 1.7237295E12,
+                "truncated": 1.719792E12
+            }
+        },
+        {
+            "name": "truncate 2024-08-15 13:45:00 Year",
+            "output": {
+                "number": null,
+                "epochMillis": 1.7237295E12,
+                "truncated": 1.7040672E12
+            }
+        },
+        {
+            "name": "truncate 2024-01-01 00:00:00 Hour",
+            "output": {
+                "number": null,
+                "epochMillis": 1.7040672E12,
+                "truncated": 1.7040672E12
+            }
+        },
+        {
+            "name": "truncate 2024-01-01 00:00:00 Day",
+            "output": {
+                "number": null,
+                "epochMillis": 1.7040672E12,
+                "truncated": 1.7040672E12
+            }
+        },
+        {
+            "name": "truncate 2024-01-01 00:00:00 Week",
+            "output": {
+                "number": null,
+                "epochMillis": 1.7040672E12,
+                "truncated": 1.7040672E12
+            }
+        },
+        {
+            "name": "truncate 2024-01-01 00:00:00 Month",
+            "output": {
+                "number": null,
+                "epochMillis": 1.7040672E12,
+                "truncated": 1.7040672E12
+            }
+        },
+        {
+            "name": "truncate 2024-01-01 00:00:00 Quarter",
+            "output": {
+                "number": null,
+                "epochMillis": 1.7040672E12,
+                "truncated": 1.7040672E12
+            }
+        },
+        {
+            "name": "truncate 2024-01-01 00:00:00 Year",
+            "output": {
+                "number": null,
+                "epochMillis": 1.7040672E12,
+                "truncated": 1.7040672E12
+            }
+        },
+        {
+            "name": "truncate 2023-12-31 23:59:59 Hour",
+            "output": {
+                "number": null,
+                "epochMillis": 1.704067199E12,
+                "truncated": 1.7040636E12
+            }
+        },
+        {
+            "name": "truncate 2023-12-31 23:59:59 Day",
+            "output": {
+                "number": null,
+                "epochMillis": 1.704067199E12,
+                "truncated": 1.7039808E12
+            }
+        },
+        {
+            "name": "truncate 2023-12-31 23:59:59 Week",
+            "output": {
+                "number": null,
+                "epochMillis": 1.704067199E12,
+                "truncated": 1.7034624E12
+            }
+        },
+        {
+            "name": "truncate 2023-12-31 23:59:59 Month",
+            "output": {
+                "number": null,
+                "epochMillis": 1.704067199E12,
+                "truncated": 1.7013888E12
+            }
+        },
+        {
+            "name": "truncate 2023-12-31 23:59:59 Quarter",
+            "output": {
+                "number": null,
+                "epochMillis": 1.704067199E12,
+                "truncated": 1.6961184E12
+            }
+        },
+        {
+            "name": "truncate 2023-12-31 23:59:59 Year",
+            "output": {
+                "number": null,
+                "epochMillis": 1.704067199E12,
+                "truncated": 1.6725312E12
+            }
+        },
+        {
+            "name": "truncate 2024-05-31 18:30:15 Hour",
+            "output": {
+                "number": null,
+                "epochMillis": 1.717180215E12,
+                "truncated": 1.7171784E12
+            }
+        },
+        {
+            "name": "truncate 2024-05-31 18:30:15 Day",
+            "output": {
+                "number": null,
+                "epochMillis": 1.717180215E12,
+                "truncated": 1.7171136E12
+            }
+        },
+        {
+            "name": "truncate 2024-05-31 18:30:15 Week",
+            "output": {
+                "number": null,
+                "epochMillis": 1.717180215E12,
+                "truncated": 1.716768E12
+            }
+        },
+        {
+            "name": "truncate 2024-05-31 18:30:15 Month",
+            "output": {
+                "number": null,
+                "epochMillis": 1.717180215E12,
+                "truncated": 1.7145216E12
+            }
+        },
+        {
+            "name": "truncate 2024-05-31 18:30:15 Quarter",
+            "output": {
+                "number": null,
+                "epochMillis": 1.717180215E12,
+                "truncated": 1.7119296E12
+            }
+        },
+        {
+            "name": "truncate 2024-05-31 18:30:15 Year",
+            "output": {
+                "number": null,
+                "epochMillis": 1.717180215E12,
+                "truncated": 1.7040672E12
+            }
+        },
+        {
+            "name": "truncate 2024-02-29 00:00:01 Hour",
+            "output": {
+                "number": null,
+                "epochMillis": 1.709164801E12,
+                "truncated": 1.7091648E12
+            }
+        },
+        {
+            "name": "truncate 2024-02-29 00:00:01 Day",
+            "output": {
+                "number": null,
+                "epochMillis": 1.709164801E12,
+                "truncated": 1.7091648E12
+            }
+        },
+        {
+            "name": "truncate 2024-02-29 00:00:01 Week",
+            "output": {
+                "number": null,
+                "epochMillis": 1.709164801E12,
+                "truncated": 1.7089056E12
+            }
+        },
+        {
+            "name": "truncate 2024-02-29 00:00:01 Month",
+            "output": {
+                "number": null,
+                "epochMillis": 1.709164801E12,
+                "truncated": 1.7067456E12
+            }
+        },
+        {
+            "name": "truncate 2024-02-29 00:00:01 Quarter",
+            "output": {
+                "number": null,
+                "epochMillis": 1.709164801E12,
+                "truncated": 1.7040672E12
+            }
+        },
+        {
+            "name": "truncate 2024-02-29 00:00:01 Year",
+            "output": {
+                "number": null,
+                "epochMillis": 1.709164801E12,
+                "truncated": 1.7040672E12
+            }
+        },
+        {
+            "name": "truncate 2024-11-03 08:00:00 Hour",
+            "output": {
+                "number": null,
+                "epochMillis": 1.7306208E12,
+                "truncated": 1.7306208E12
+            }
+        },
+        {
+            "name": "truncate 2024-11-03 08:00:00 Day",
+            "output": {
+                "number": null,
+                "epochMillis": 1.7306208E12,
+                "truncated": 1.730592E12
+            }
+        },
+        {
+            "name": "truncate 2024-11-03 08:00:00 Week",
+            "output": {
+                "number": null,
+                "epochMillis": 1.7306208E12,
+                "truncated": 1.7300736E12
+            }
+        },
+        {
+            "name": "truncate 2024-11-03 08:00:00 Month",
+            "output": {
+                "number": null,
+                "epochMillis": 1.7306208E12,
+                "truncated": 1.7304192E12
+            }
+        },
+        {
+            "name": "truncate 2024-11-03 08:00:00 Quarter",
+            "output": {
+                "number": null,
+                "epochMillis": 1.7306208E12,
+                "truncated": 1.7277408E12
+            }
+        },
+        {
+            "name": "truncate 2024-11-03 08:00:00 Year",
+            "output": {
+                "number": null,
+                "epochMillis": 1.7306208E12,
+                "truncated": 1.7040672E12
+            }
+        },
+        {
+            "name": "truncate 2021-01-03 12:00:00 Hour",
+            "output": {
+                "number": null,
+                "epochMillis": 1.6096752E12,
+                "truncated": 1.6096752E12
+            }
+        },
+        {
+            "name": "truncate 2021-01-03 12:00:00 Day",
+            "output": {
+                "number": null,
+                "epochMillis": 1.6096752E12,
+                "truncated": 1.609632E12
+            }
+        },
+        {
+            "name": "truncate 2021-01-03 12:00:00 Week",
+            "output": {
+                "number": null,
+                "epochMillis": 1.6096752E12,
+                "truncated": 1.6091136E12
+            }
+        },
+        {
+            "name": "truncate 2021-01-03 12:00:00 Month",
+            "output": {
+                "number": null,
+                "epochMillis": 1.6096752E12,
+                "truncated": 1.6094592E12
+            }
+        },
+        {
+            "name": "truncate 2021-01-03 12:00:00 Quarter",
+            "output": {
+                "number": null,
+                "epochMillis": 1.6096752E12,
+                "truncated": 1.6094592E12
+            }
+        },
+        {
+            "name": "truncate 2021-01-03 12:00:00 Year",
+            "output": {
+                "number": null,
+                "epochMillis": 1.6096752E12,
+                "truncated": 1.6094592E12
+            }
+        },
+        {
+            "name": "truncate 2024-12-30 09:09:09 Hour",
+            "output": {
+                "number": null,
+                "epochMillis": 1.735549749E12,
+                "truncated": 1.7355492E12
+            }
+        },
+        {
+            "name": "truncate 2024-12-30 09:09:09 Day",
+            "output": {
+                "number": null,
+                "epochMillis": 1.735549749E12,
+                "truncated": 1.7355168E12
+            }
+        },
+        {
+            "name": "truncate 2024-12-30 09:09:09 Week",
+            "output": {
+                "number": null,
+                "epochMillis": 1.735549749E12,
+                "truncated": 1.7355168E12
+            }
+        },
+        {
+            "name": "truncate 2024-12-30 09:09:09 Month",
+            "output": {
+                "number": null,
+                "epochMillis": 1.735549749E12,
+                "truncated": 1.7330112E12
+            }
+        },
+        {
+            "name": "truncate 2024-12-30 09:09:09 Quarter",
+            "output": {
+                "number": null,
+                "epochMillis": 1.735549749E12,
+                "truncated": 1.7277408E12
+            }
+        },
+        {
+            "name": "truncate 2024-12-30 09:09:09 Year",
+            "output": {
+                "number": null,
+                "epochMillis": 1.735549749E12,
+                "truncated": 1.7040672E12
+            }
+        }
+    ]
+}

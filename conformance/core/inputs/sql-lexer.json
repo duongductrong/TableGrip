@@ -1,0 +1,110 @@
+{
+  "subject": "sql-lexer",
+  "cases": [
+    {
+      "name": "plain select",
+      "sql": "SELECT id, name FROM users WHERE id = 42;"
+    },
+    {
+      "name": "line and block comments",
+      "sql": "-- head\nSELECT /* inline */ 1"
+    },
+    {
+      "name": "unterminated string runs to end",
+      "sql": "SELECT 'abc"
+    },
+    {
+      "name": "postgres dollar quote",
+      "syntax": "PostgreSQL",
+      "sql": "SELECT $tag$ it's ; here $tag$, $1"
+    },
+    {
+      "name": "postgres cast and params",
+      "syntax": "PostgreSQL",
+      "sql": "SELECT x::int FROM t WHERE a = $2"
+    },
+    {
+      "name": "mysql backtick, hash, double-quoted string",
+      "syntax": "MySQL",
+      "sql": "SELECT `col` FROM t # note\nWHERE a = \"b\\\"c\""
+    },
+    {
+      "name": "tsql brackets",
+      "syntax": "TSql",
+      "sql": "SELECT [first name] FROM [dbo].[people]"
+    },
+    {
+      "name": "numbers",
+      "sql": "SELECT 1, 1.5, .5, 1e10, 0x1F"
+    },
+    {
+      "name": "named and positional parameters",
+      "sql": "SELECT * FROM t WHERE a = :name AND b = ? AND c = @v"
+    },
+    {
+      "name": "non-ascii text",
+      "sql": "SELECT 'Tiếng Việt 😀' AS chào"
+    },
+    {
+      "name": "empty",
+      "sql": ""
+    },
+    {
+      "name": "kotlin: classifies tokens",
+      "syntax": "PostgreSQL",
+      "sql": "select id, \"Name\", 1.5e3 FROM t WHERE x = :name -- done"
+    },
+    {
+      "name": "kotlin: casts are not parameters",
+      "syntax": "PostgreSQL",
+      "sql": "::text"
+    },
+    {
+      "name": "kotlin: mysql double quotes are strings",
+      "syntax": "MySQL",
+      "sql": "\"x\""
+    },
+    {
+      "name": "tsql doubled closing bracket",
+      "syntax": "TSql",
+      "sql": "SELECT [a]]b], [c;d] FROM t"
+    },
+    {
+      "name": "mysql backslash escape",
+      "syntax": "MySQL",
+      "sql": "SELECT 'a\\'b', 'c\\ồd'"
+    },
+    {
+      "name": "clickhouse backtick and escape",
+      "syntax": "ClickHouse",
+      "sql": "SELECT `x`, 'a\\'b' FROM t"
+    },
+    {
+      "name": "exponent signs",
+      "sql": "SELECT 1e+5, 2E-3, 3e, 4.5.6"
+    },
+    {
+      "name": "dollar tag starting with a digit",
+      "syntax": "PostgreSQL",
+      "sql": "SELECT $1$ x"
+    },
+    {
+      "name": "unterminated block comment",
+      "sql": "SELECT /* never closed"
+    },
+    {
+      "name": "identifier with dollar and digits",
+      "sql": "SELECT a$b, _x1, ö FROM t"
+    },
+    {
+      "name": "sqlite backtick",
+      "syntax": "SQLite",
+      "sql": "SELECT `a``b` FROM t"
+    },
+    {
+      "name": "hash is an operator outside mysql",
+      "syntax": "PostgreSQL",
+      "sql": "SELECT a # b"
+    }
+  ]
+}

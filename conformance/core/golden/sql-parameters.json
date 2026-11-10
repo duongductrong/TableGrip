@@ -1,0 +1,61 @@
+{
+    "subject": "sql-parameters",
+    "cases": [
+        {
+            "name": "kotlin: colon and dollar-brace once each",
+            "output": {
+                "find": [
+                    "user_id",
+                    "from"
+                ]
+            }
+        },
+        {
+            "name": "kotlin: ignores casts, strings and comments",
+            "output": {
+                "find": [
+                    "real"
+                ]
+            }
+        },
+        {
+            "name": "kotlin: substitutes values as written",
+            "output": {
+                "find": [
+                    "status",
+                    "ids",
+                    "missing"
+                ],
+                "substitute": "SELECT * FROM t WHERE status = 'paid' AND id IN (1, 2) AND x = :missing"
+            }
+        },
+        {
+            "name": "dotted and spaced dollar-brace names",
+            "output": {
+                "find": [
+                    "a.b"
+                ],
+                "substitute": "SELECT 1 , ${bad name}, ${}, ${x"
+            }
+        },
+        {
+            "name": "non-ascii names",
+            "output": {
+                "find": [
+                    "tên",
+                    "giá"
+                ],
+                "substitute": "SELECT 'x', 2"
+            }
+        },
+        {
+            "name": "mysql strings hide parameters",
+            "output": {
+                "find": [
+                    "c"
+                ],
+                "substitute": "SELECT \":a\", `:b`, 3"
+            }
+        }
+    ]
+}

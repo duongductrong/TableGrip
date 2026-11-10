@@ -1,0 +1,15 @@
+[package]
+name = "tg-chart"
+version = "0.0.0"
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+chrono.workspace = true
+tg-sql = { path = "../tg-sql" }
+
+[dev-dependencies]
+# Golden files hold doubles as the JDK prints them (shortest round trip); reading them back exactly needs this.
+serde_json = { workspace = true, features = ["float_roundtrip"] }

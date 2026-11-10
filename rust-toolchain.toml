@@ -1,0 +1,4 @@
+[toolchain]
+# Pinned so local and CI builds use the same compiler; bump it on purpose, together with Cargo.toml's rust-version.
+channel = "1.97.1"
+components = ["clippy", "rustfmt"]

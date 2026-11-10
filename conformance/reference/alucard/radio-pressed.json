@@ -1,0 +1,29 @@
+{
+    "specimen": "radio-pressed",
+    "theme": "Alucard",
+    "density": 2.0,
+    "width": 288,
+    "height": 88,
+    "regions": [
+        {
+            "tag": "icon:radio.pressed",
+            "kind": "icon",
+            "rect": [
+                32,
+                24,
+                48,
+                48
+            ]
+        },
+        {
+            "tag": "text:radio.pressed",
+            "kind": "text",
+            "rect": [
+                88,
+                33,
+                127,
+                31
+            ]
+        }
+    ]
+}

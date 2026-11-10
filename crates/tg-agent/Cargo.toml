@@ -1,0 +1,27 @@
+[package]
+name = "tg-agent"
+version = "0.0.0"
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+async-trait.workspace = true
+futures-util.workspace = true
+indexmap.workspace = true
+regex.workspace = true
+reqwest.workspace = true
+rustls.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tg-chart = { path = "../tg-chart" }
+tg-core = { path = "../tg-core" }
+tg-data = { path = "../tg-data" }
+tg-driver = { path = "../tg-driver", default-features = false }
+tg-sql = { path = "../tg-sql" }
+tokio = { workspace = true, features = ["rt", "sync", "time", "process", "io-util", "macros"] }
+
+[dev-dependencies]
+tempfile.workspace = true
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "net", "io-util"] }

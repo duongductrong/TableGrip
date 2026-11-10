@@ -1,0 +1,129 @@
+{
+    "specimen": "checkbox",
+    "theme": "Dracula",
+    "density": 2.0,
+    "width": 928,
+    "height": 216,
+    "regions": [
+        {
+            "tag": "text:checkbox.checked",
+            "kind": "text",
+            "rect": [
+                314,
+                33,
+                127,
+                31
+            ]
+        },
+        {
+            "tag": "text:checkbox.disabled",
+            "kind": "text",
+            "rect": [
+                90,
+                97,
+                127,
+                31
+            ]
+        },
+        {
+            "tag": "text:checkbox.disabled.checked",
+            "kind": "text",
+            "rect": [
+                314,
+                97,
+                127,
+                31
+            ]
+        },
+        {
+            "tag": "text:checkbox.error",
+            "kind": "text",
+            "rect": [
+                538,
+                97,
+                127,
+                31
+            ]
+        },
+        {
+            "tag": "text:checkbox.error.checked",
+            "kind": "text",
+            "rect": [
+                762,
+                97,
+                127,
+                31
+            ]
+        },
+        {
+            "tag": "text:checkbox.focused",
+            "kind": "text",
+            "rect": [
+                762,
+                33,
+                127,
+                31
+            ]
+        },
+        {
+            "tag": "text:checkbox.hovered",
+            "kind": "text",
+            "rect": [
+                538,
+                33,
+                127,
+                31
+            ]
+        },
+        {
+            "tag": "text:checkbox.rest",
+            "kind": "text",
+            "rect": [
+                90,
+                33,
+                127,
+                31
+            ]
+        },
+        {
+            "tag": "text:tri.indeterminate",
+            "kind": "text",
+            "rect": [
+                538,
+                161,
+                127,
+                31
+            ]
+        },
+        {
+            "tag": "text:tri.indeterminate.disabled",
+            "kind": "text",
+            "rect": [
+                762,
+                161,
+                127,
+                31
+            ]
+        },
+        {
+            "tag": "text:tri.off",
+            "kind": "text",
+            "rect": [
+                90,
+                161,
+                127,
+                31
+            ]
+        },
+        {
+            "tag": "text:tri.on",
+            "kind": "text",
+            "rect": [
+                314,
+                161,
+                127,
+                31
+            ]
+        }
+    ]
+}

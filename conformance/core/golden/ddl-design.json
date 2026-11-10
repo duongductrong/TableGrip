@@ -1,0 +1,1207 @@
+{
+    "subject": "ddl-design",
+    "cases": [
+        {
+            "name": "design from details",
+            "output": {
+                "PostgreSQL": {
+                    "table": {
+                        "catalog": null,
+                        "schema": "app",
+                        "name": "users"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "type": "int4",
+                            "nullable": false,
+                            "defaultValue": "nextval('users_id_seq'::regclass)",
+                            "autoIncrement": true,
+                            "originalName": "id"
+                        },
+                        {
+                            "name": "email",
+                            "type": "varchar(100)",
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "email"
+                        },
+                        {
+                            "name": "status",
+                            "type": "varchar(20)",
+                            "nullable": true,
+                            "defaultValue": "draft",
+                            "autoIncrement": false,
+                            "originalName": "status"
+                        },
+                        {
+                            "name": "n",
+                            "type": "int",
+                            "nullable": true,
+                            "defaultValue": "42",
+                            "autoIncrement": false,
+                            "originalName": "n"
+                        },
+                        {
+                            "name": "price",
+                            "type": "numeric(10,2)",
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "price"
+                        },
+                        {
+                            "name": "code",
+                            "type": "nvarchar",
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "code"
+                        },
+                        {
+                            "name": "k",
+                            "type": "int",
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": true,
+                            "originalName": "k"
+                        }
+                    ],
+                    "primaryKey": [
+                        "id"
+                    ],
+                    "indexes": [
+                        {
+                            "name": "users_status",
+                            "columns": [
+                                "status"
+                            ],
+                            "unique": false
+                        }
+                    ],
+                    "foreignKeys": [],
+                    "primaryKeyName": "users_pkey",
+                    "uniqueConstraints": [
+                        {
+                            "name": "users_email_key",
+                            "columns": [
+                                "email"
+                            ],
+                            "unique": true
+                        },
+                        {
+                            "name": "sqlite_autoindex_users_2",
+                            "columns": [
+                                "code"
+                            ],
+                            "unique": true
+                        }
+                    ],
+                    "checks": [
+                        "CHECK (n > 0)"
+                    ],
+                    "triggers": [
+                        "CREATE TRIGGER t AFTER INSERT ON users BEGIN SELECT 1; END"
+                    ]
+                },
+                "CockroachDB": {
+                    "table": {
+                        "catalog": null,
+                        "schema": "app",
+                        "name": "users"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "type": "int4",
+                            "nullable": false,
+                            "defaultValue": "nextval('users_id_seq'::regclass)",
+                            "autoIncrement": true,
+                            "originalName": "id"
+                        },
+                        {
+                            "name": "email",
+                            "type": "varchar(100)",
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "email"
+                        },
+                        {
+                            "name": "status",
+                            "type": "varchar(20)",
+                            "nullable": true,
+                            "defaultValue": "draft",
+                            "autoIncrement": false,
+                            "originalName": "status"
+                        },
+                        {
+                            "name": "n",
+                            "type": "int",
+                            "nullable": true,
+                            "defaultValue": "42",
+                            "autoIncrement": false,
+                            "originalName": "n"
+                        },
+                        {
+                            "name": "price",
+                            "type": "numeric(10,2)",
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "price"
+                        },
+                        {
+                            "name": "code",
+                            "type": "nvarchar",
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "code"
+                        },
+                        {
+                            "name": "k",
+                            "type": "int",
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": true,
+                            "originalName": "k"
+                        }
+                    ],
+                    "primaryKey": [
+                        "id"
+                    ],
+                    "indexes": [
+                        {
+                            "name": "users_status",
+                            "columns": [
+                                "status"
+                            ],
+                            "unique": false
+                        }
+                    ],
+                    "foreignKeys": [],
+                    "primaryKeyName": "users_pkey",
+                    "uniqueConstraints": [
+                        {
+                            "name": "users_email_key",
+                            "columns": [
+                                "email"
+                            ],
+                            "unique": true
+                        },
+                        {
+                            "name": "sqlite_autoindex_users_2",
+                            "columns": [
+                                "code"
+                            ],
+                            "unique": true
+                        }
+                    ],
+                    "checks": [
+                        "CHECK (n > 0)"
+                    ],
+                    "triggers": [
+                        "CREATE TRIGGER t AFTER INSERT ON users BEGIN SELECT 1; END"
+                    ]
+                },
+                "MySQL": {
+                    "table": {
+                        "catalog": null,
+                        "schema": "app",
+                        "name": "users"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "type": "int4",
+                            "nullable": false,
+                            "defaultValue": "nextval('users_id_seq'::regclass)",
+                            "autoIncrement": true,
+                            "originalName": "id"
+                        },
+                        {
+                            "name": "email",
+                            "type": "varchar(100)",
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "email"
+                        },
+                        {
+                            "name": "status",
+                            "type": "varchar(20)",
+                            "nullable": true,
+                            "defaultValue": "'draft'",
+                            "autoIncrement": false,
+                            "originalName": "status"
+                        },
+                        {
+                            "name": "n",
+                            "type": "int",
+                            "nullable": true,
+                            "defaultValue": "42",
+                            "autoIncrement": false,
+                            "originalName": "n"
+                        },
+                        {
+                            "name": "price",
+                            "type": "numeric(10,2)",
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "price"
+                        },
+                        {
+                            "name": "code",
+                            "type": "nvarchar",
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "code"
+                        },
+                        {
+                            "name": "k",
+                            "type": "int",
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": true,
+                            "originalName": "k"
+                        }
+                    ],
+                    "primaryKey": [
+                        "id"
+                    ],
+                    "indexes": [
+                        {
+                            "name": "users_status",
+                            "columns": [
+                                "status"
+                            ],
+                            "unique": false
+                        }
+                    ],
+                    "foreignKeys": [],
+                    "primaryKeyName": "users_pkey",
+                    "uniqueConstraints": [
+                        {
+                            "name": "users_email_key",
+                            "columns": [
+                                "email"
+                            ],
+                            "unique": true
+                        },
+                        {
+                            "name": "sqlite_autoindex_users_2",
+                            "columns": [
+                                "code"
+                            ],
+                            "unique": true
+                        }
+                    ],
+                    "checks": [
+                        "CHECK (n > 0)"
+                    ],
+                    "triggers": [
+                        "CREATE TRIGGER t AFTER INSERT ON users BEGIN SELECT 1; END"
+                    ]
+                },
+                "SQLite": {
+                    "table": {
+                        "catalog": null,
+                        "schema": "app",
+                        "name": "users"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "type": "int4",
+                            "nullable": false,
+                            "defaultValue": "nextval('users_id_seq'::regclass)",
+                            "autoIncrement": true,
+                            "originalName": "id"
+                        },
+                        {
+                            "name": "email",
+                            "type": "varchar(100)",
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "email"
+                        },
+                        {
+                            "name": "status",
+                            "type": "varchar(20)",
+                            "nullable": true,
+                            "defaultValue": "draft",
+                            "autoIncrement": false,
+                            "originalName": "status"
+                        },
+                        {
+                            "name": "n",
+                            "type": "int",
+                            "nullable": true,
+                            "defaultValue": "42",
+                            "autoIncrement": false,
+                            "originalName": "n"
+                        },
+                        {
+                            "name": "price",
+                            "type": "numeric(10,2)",
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "price"
+                        },
+                        {
+                            "name": "code",
+                            "type": "nvarchar",
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "code"
+                        },
+                        {
+                            "name": "k",
+                            "type": "int",
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": true,
+                            "originalName": "k"
+                        }
+                    ],
+                    "primaryKey": [
+                        "id"
+                    ],
+                    "indexes": [
+                        {
+                            "name": "users_status",
+                            "columns": [
+                                "status"
+                            ],
+                            "unique": false
+                        }
+                    ],
+                    "foreignKeys": [],
+                    "primaryKeyName": "users_pkey",
+                    "uniqueConstraints": [
+                        {
+                            "name": "users_email_key",
+                            "columns": [
+                                "email"
+                            ],
+                            "unique": true
+                        },
+                        {
+                            "name": "sqlite_autoindex_users_2",
+                            "columns": [
+                                "code"
+                            ],
+                            "unique": true
+                        }
+                    ],
+                    "checks": [
+                        "CHECK (n > 0)"
+                    ],
+                    "triggers": [
+                        "CREATE TRIGGER t AFTER INSERT ON users BEGIN SELECT 1; END"
+                    ]
+                },
+                "SqlServer": {
+                    "table": {
+                        "catalog": null,
+                        "schema": "app",
+                        "name": "users"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "type": "int4",
+                            "nullable": false,
+                            "defaultValue": "nextval('users_id_seq'::regclass)",
+                            "autoIncrement": true,
+                            "originalName": "id"
+                        },
+                        {
+                            "name": "email",
+                            "type": "varchar(100)",
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "email"
+                        },
+                        {
+                            "name": "status",
+                            "type": "varchar(20)",
+                            "nullable": true,
+                            "defaultValue": "draft",
+                            "autoIncrement": false,
+                            "originalName": "status"
+                        },
+                        {
+                            "name": "n",
+                            "type": "int",
+                            "nullable": true,
+                            "defaultValue": "42",
+                            "autoIncrement": false,
+                            "originalName": "n"
+                        },
+                        {
+                            "name": "price",
+                            "type": "numeric(10,2)",
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "price"
+                        },
+                        {
+                            "name": "code",
+                            "type": "nvarchar(max)",
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "code"
+                        },
+                        {
+                            "name": "k",
+                            "type": "int",
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": true,
+                            "originalName": "k"
+                        }
+                    ],
+                    "primaryKey": [
+                        "id"
+                    ],
+                    "indexes": [
+                        {
+                            "name": "users_status",
+                            "columns": [
+                                "status"
+                            ],
+                            "unique": false
+                        }
+                    ],
+                    "foreignKeys": [],
+                    "primaryKeyName": "users_pkey",
+                    "uniqueConstraints": [
+                        {
+                            "name": "users_email_key",
+                            "columns": [
+                                "email"
+                            ],
+                            "unique": true
+                        },
+                        {
+                            "name": "sqlite_autoindex_users_2",
+                            "columns": [
+                                "code"
+                            ],
+                            "unique": true
+                        }
+                    ],
+                    "checks": [
+                        "CHECK (n > 0)"
+                    ],
+                    "triggers": [
+                        "CREATE TRIGGER t AFTER INSERT ON users BEGIN SELECT 1; END"
+                    ]
+                },
+                "ClickHouse": {
+                    "table": {
+                        "catalog": null,
+                        "schema": "app",
+                        "name": "users"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "type": "int4",
+                            "nullable": false,
+                            "defaultValue": "nextval('users_id_seq'::regclass)",
+                            "autoIncrement": true,
+                            "originalName": "id"
+                        },
+                        {
+                            "name": "email",
+                            "type": "varchar(100)",
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "email"
+                        },
+                        {
+                            "name": "status",
+                            "type": "varchar(20)",
+                            "nullable": true,
+                            "defaultValue": "draft",
+                            "autoIncrement": false,
+                            "originalName": "status"
+                        },
+                        {
+                            "name": "n",
+                            "type": "int",
+                            "nullable": true,
+                            "defaultValue": "42",
+                            "autoIncrement": false,
+                            "originalName": "n"
+                        },
+                        {
+                            "name": "price",
+                            "type": "numeric(10,2)",
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "price"
+                        },
+                        {
+                            "name": "code",
+                            "type": "nvarchar",
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "code"
+                        },
+                        {
+                            "name": "k",
+                            "type": "int",
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": true,
+                            "originalName": "k"
+                        }
+                    ],
+                    "primaryKey": [
+                        "id"
+                    ],
+                    "indexes": [
+                        {
+                            "name": "users_status",
+                            "columns": [
+                                "status"
+                            ],
+                            "unique": false
+                        }
+                    ],
+                    "foreignKeys": [],
+                    "primaryKeyName": "users_pkey",
+                    "uniqueConstraints": [
+                        {
+                            "name": "users_email_key",
+                            "columns": [
+                                "email"
+                            ],
+                            "unique": true
+                        },
+                        {
+                            "name": "sqlite_autoindex_users_2",
+                            "columns": [
+                                "code"
+                            ],
+                            "unique": true
+                        }
+                    ],
+                    "checks": [
+                        "CHECK (n > 0)"
+                    ],
+                    "triggers": [
+                        "CREATE TRIGGER t AFTER INSERT ON users BEGIN SELECT 1; END"
+                    ]
+                },
+                "DuckDB": {
+                    "table": {
+                        "catalog": null,
+                        "schema": "app",
+                        "name": "users"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "type": "int4",
+                            "nullable": false,
+                            "defaultValue": "nextval('users_id_seq'::regclass)",
+                            "autoIncrement": true,
+                            "originalName": "id"
+                        },
+                        {
+                            "name": "email",
+                            "type": "varchar(100)",
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "email"
+                        },
+                        {
+                            "name": "status",
+                            "type": "varchar(20)",
+                            "nullable": true,
+                            "defaultValue": "draft",
+                            "autoIncrement": false,
+                            "originalName": "status"
+                        },
+                        {
+                            "name": "n",
+                            "type": "int",
+                            "nullable": true,
+                            "defaultValue": "42",
+                            "autoIncrement": false,
+                            "originalName": "n"
+                        },
+                        {
+                            "name": "price",
+                            "type": "numeric(10,2)",
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "price"
+                        },
+                        {
+                            "name": "code",
+                            "type": "nvarchar",
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "code"
+                        },
+                        {
+                            "name": "k",
+                            "type": "int",
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": true,
+                            "originalName": "k"
+                        }
+                    ],
+                    "primaryKey": [
+                        "id"
+                    ],
+                    "indexes": [
+                        {
+                            "name": "users_status",
+                            "columns": [
+                                "status"
+                            ],
+                            "unique": false
+                        }
+                    ],
+                    "foreignKeys": [],
+                    "primaryKeyName": "users_pkey",
+                    "uniqueConstraints": [
+                        {
+                            "name": "users_email_key",
+                            "columns": [
+                                "email"
+                            ],
+                            "unique": true
+                        },
+                        {
+                            "name": "sqlite_autoindex_users_2",
+                            "columns": [
+                                "code"
+                            ],
+                            "unique": true
+                        }
+                    ],
+                    "checks": [
+                        "CHECK (n > 0)"
+                    ],
+                    "triggers": [
+                        "CREATE TRIGGER t AFTER INSERT ON users BEGIN SELECT 1; END"
+                    ]
+                },
+                "H2": {
+                    "table": {
+                        "catalog": null,
+                        "schema": "app",
+                        "name": "users"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "type": "int4",
+                            "nullable": false,
+                            "defaultValue": "nextval('users_id_seq'::regclass)",
+                            "autoIncrement": true,
+                            "originalName": "id"
+                        },
+                        {
+                            "name": "email",
+                            "type": "varchar(100)",
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "email"
+                        },
+                        {
+                            "name": "status",
+                            "type": "varchar(20)",
+                            "nullable": true,
+                            "defaultValue": "draft",
+                            "autoIncrement": false,
+                            "originalName": "status"
+                        },
+                        {
+                            "name": "n",
+                            "type": "int",
+                            "nullable": true,
+                            "defaultValue": "42",
+                            "autoIncrement": false,
+                            "originalName": "n"
+                        },
+                        {
+                            "name": "price",
+                            "type": "numeric(10,2)",
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "price"
+                        },
+                        {
+                            "name": "code",
+                            "type": "nvarchar",
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "code"
+                        },
+                        {
+                            "name": "k",
+                            "type": "int",
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": true,
+                            "originalName": "k"
+                        }
+                    ],
+                    "primaryKey": [
+                        "id"
+                    ],
+                    "indexes": [
+                        {
+                            "name": "users_status",
+                            "columns": [
+                                "status"
+                            ],
+                            "unique": false
+                        }
+                    ],
+                    "foreignKeys": [],
+                    "primaryKeyName": "users_pkey",
+                    "uniqueConstraints": [
+                        {
+                            "name": "users_email_key",
+                            "columns": [
+                                "email"
+                            ],
+                            "unique": true
+                        },
+                        {
+                            "name": "sqlite_autoindex_users_2",
+                            "columns": [
+                                "code"
+                            ],
+                            "unique": true
+                        }
+                    ],
+                    "checks": [
+                        "CHECK (n > 0)"
+                    ],
+                    "triggers": [
+                        "CREATE TRIGGER t AFTER INSERT ON users BEGIN SELECT 1; END"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "primary key index names",
+            "output": {
+                "PostgreSQL": {
+                    "table": {
+                        "catalog": null,
+                        "schema": "app",
+                        "name": "t"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "type": "integer",
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "id"
+                        }
+                    ],
+                    "primaryKey": [
+                        "id"
+                    ],
+                    "indexes": [
+                        {
+                            "name": "SQL1",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": true
+                        },
+                        {
+                            "name": "t_pkey",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": false
+                        },
+                        {
+                            "name": "other",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": true
+                        }
+                    ],
+                    "foreignKeys": [],
+                    "primaryKeyName": null,
+                    "uniqueConstraints": [],
+                    "checks": [],
+                    "triggers": []
+                },
+                "CockroachDB": {
+                    "table": {
+                        "catalog": null,
+                        "schema": "app",
+                        "name": "t"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "type": "integer",
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "id"
+                        }
+                    ],
+                    "primaryKey": [
+                        "id"
+                    ],
+                    "indexes": [
+                        {
+                            "name": "SQL1",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": true
+                        },
+                        {
+                            "name": "t_pkey",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": false
+                        },
+                        {
+                            "name": "other",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": true
+                        }
+                    ],
+                    "foreignKeys": [],
+                    "primaryKeyName": null,
+                    "uniqueConstraints": [],
+                    "checks": [],
+                    "triggers": []
+                },
+                "MySQL": {
+                    "table": {
+                        "catalog": null,
+                        "schema": "app",
+                        "name": "t"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "type": "integer",
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "id"
+                        }
+                    ],
+                    "primaryKey": [
+                        "id"
+                    ],
+                    "indexes": [
+                        {
+                            "name": "SQL1",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": true
+                        },
+                        {
+                            "name": "t_pkey",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": false
+                        },
+                        {
+                            "name": "other",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": true
+                        }
+                    ],
+                    "foreignKeys": [],
+                    "primaryKeyName": null,
+                    "uniqueConstraints": [],
+                    "checks": [],
+                    "triggers": []
+                },
+                "SQLite": {
+                    "table": {
+                        "catalog": null,
+                        "schema": "app",
+                        "name": "t"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "type": "integer",
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "id"
+                        }
+                    ],
+                    "primaryKey": [
+                        "id"
+                    ],
+                    "indexes": [
+                        {
+                            "name": "SQL1",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": true
+                        },
+                        {
+                            "name": "t_pkey",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": false
+                        },
+                        {
+                            "name": "other",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": true
+                        }
+                    ],
+                    "foreignKeys": [],
+                    "primaryKeyName": null,
+                    "uniqueConstraints": [],
+                    "checks": [],
+                    "triggers": []
+                },
+                "SqlServer": {
+                    "table": {
+                        "catalog": null,
+                        "schema": "app",
+                        "name": "t"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "type": "integer",
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "id"
+                        }
+                    ],
+                    "primaryKey": [
+                        "id"
+                    ],
+                    "indexes": [
+                        {
+                            "name": "SQL1",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": true
+                        },
+                        {
+                            "name": "t_pkey",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": false
+                        },
+                        {
+                            "name": "other",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": true
+                        }
+                    ],
+                    "foreignKeys": [],
+                    "primaryKeyName": null,
+                    "uniqueConstraints": [],
+                    "checks": [],
+                    "triggers": []
+                },
+                "ClickHouse": {
+                    "table": {
+                        "catalog": null,
+                        "schema": "app",
+                        "name": "t"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "type": "integer",
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "id"
+                        }
+                    ],
+                    "primaryKey": [
+                        "id"
+                    ],
+                    "indexes": [
+                        {
+                            "name": "SQL1",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": true
+                        },
+                        {
+                            "name": "t_pkey",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": false
+                        },
+                        {
+                            "name": "other",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": true
+                        }
+                    ],
+                    "foreignKeys": [],
+                    "primaryKeyName": null,
+                    "uniqueConstraints": [],
+                    "checks": [],
+                    "triggers": []
+                },
+                "DuckDB": {
+                    "table": {
+                        "catalog": null,
+                        "schema": "app",
+                        "name": "t"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "type": "integer",
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "id"
+                        }
+                    ],
+                    "primaryKey": [
+                        "id"
+                    ],
+                    "indexes": [
+                        {
+                            "name": "SQL1",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": true
+                        },
+                        {
+                            "name": "t_pkey",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": false
+                        },
+                        {
+                            "name": "other",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": true
+                        }
+                    ],
+                    "foreignKeys": [],
+                    "primaryKeyName": null,
+                    "uniqueConstraints": [],
+                    "checks": [],
+                    "triggers": []
+                },
+                "H2": {
+                    "table": {
+                        "catalog": null,
+                        "schema": "app",
+                        "name": "t"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "type": "integer",
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "originalName": "id"
+                        }
+                    ],
+                    "primaryKey": [
+                        "id"
+                    ],
+                    "indexes": [
+                        {
+                            "name": "SQL1",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": true
+                        },
+                        {
+                            "name": "t_pkey",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": false
+                        },
+                        {
+                            "name": "other",
+                            "columns": [
+                                "id"
+                            ],
+                            "unique": true
+                        }
+                    ],
+                    "foreignKeys": [],
+                    "primaryKeyName": null,
+                    "uniqueConstraints": [],
+                    "checks": [],
+                    "triggers": []
+                }
+            }
+        }
+    ]
+}

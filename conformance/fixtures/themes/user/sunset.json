@@ -1,0 +1,21 @@
+// A hand-written user theme: comments and trailing commas are allowed, unknown keys are ignored.
+{
+  "name": "Sunset",
+  "author": "fixture",
+  "themes": [
+    {
+      "name": "Sunset",
+      "appearance": "dark",
+      "colors": {
+        "island.background": "#2A1E24",
+        "accent": "#E5733E",
+        "text.link": "#F2A65A",
+        "text": "#EADBD5",
+        /* half-transparent hover, alpha last */
+        "list.hover.background": "#FFFFFF1A",
+        "some.future.key": "#123456",
+      },
+      "syntax": { "keyword": { "color": "#F28C6A", "fontWeight": "bold" }, "comment": "#8A7A80" },
+    },
+  ],
+}

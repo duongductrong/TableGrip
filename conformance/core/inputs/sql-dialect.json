@@ -1,0 +1,603 @@
+{
+  "subject": "sql-dialect",
+  "cases": [
+    {
+      "name": "properties",
+      "op": "properties"
+    },
+    {
+      "name": "quote plain",
+      "op": "quoteIdentifier",
+      "value": "users"
+    },
+    {
+      "name": "quote awkward",
+      "op": "quoteIdentifier",
+      "value": "a\"b`c]d\\e f"
+    },
+    {
+      "name": "literal null",
+      "op": "literal",
+      "value": null,
+      "numeric": true
+    },
+    {
+      "name": "literal number",
+      "op": "literal",
+      "value": "12.5e3",
+      "numeric": true
+    },
+    {
+      "name": "literal non-number as numeric",
+      "op": "literal",
+      "value": "12a",
+      "numeric": true
+    },
+    {
+      "name": "literal text with quotes and backslashes",
+      "op": "literal",
+      "value": "it's a \\ test",
+      "numeric": false
+    },
+    {
+      "name": "literal number as text",
+      "op": "literal",
+      "value": "42",
+      "numeric": false
+    },
+    {
+      "name": "literal unicode",
+      "op": "literal",
+      "value": "chào ' 😀",
+      "numeric": false
+    },
+    {
+      "name": "literal param Text o'k",
+      "op": "literalParam",
+      "param": {
+        "type": "Text",
+        "value": "o'k",
+        "kind": "Text"
+      }
+    },
+    {
+      "name": "literal param Long -42",
+      "op": "literalParam",
+      "param": {
+        "type": "Long",
+        "value": "-42",
+        "kind": "Number"
+      }
+    },
+    {
+      "name": "literal param Decimal 1.50",
+      "op": "literalParam",
+      "param": {
+        "type": "Decimal",
+        "value": "1.50",
+        "kind": "Number"
+      }
+    },
+    {
+      "name": "literal param Decimal 1E+3",
+      "op": "literalParam",
+      "param": {
+        "type": "Decimal",
+        "value": "1E+3",
+        "kind": "Number"
+      }
+    },
+    {
+      "name": "literal param Bool true",
+      "op": "literalParam",
+      "param": {
+        "type": "Bool",
+        "value": "true",
+        "kind": "Boolean"
+      }
+    },
+    {
+      "name": "literal param Bool false",
+      "op": "literalParam",
+      "param": {
+        "type": "Bool",
+        "value": "false",
+        "kind": "Boolean"
+      }
+    },
+    {
+      "name": "literal param Uuid 123e4567-e89b-12d3-a456-426614174000",
+      "op": "literalParam",
+      "param": {
+        "type": "Uuid",
+        "value": "123e4567-e89b-12d3-a456-426614174000",
+        "kind": "Uuid"
+      }
+    },
+    {
+      "name": "literal param Date 2026-10-28",
+      "op": "literalParam",
+      "param": {
+        "type": "Date",
+        "value": "2026-10-28",
+        "kind": "Date"
+      }
+    },
+    {
+      "name": "literal param DateTime 2026-10-28T13:45:00",
+      "op": "literalParam",
+      "param": {
+        "type": "DateTime",
+        "value": "2026-10-28T13:45:00",
+        "kind": "DateTime"
+      }
+    },
+    {
+      "name": "literal param DateTime 2026-10-28T13:45:00.120",
+      "op": "literalParam",
+      "param": {
+        "type": "DateTime",
+        "value": "2026-10-28T13:45:00.120",
+        "kind": "DateTime"
+      }
+    },
+    {
+      "name": "literal param Time 13:45:00.000000001",
+      "op": "literalParam",
+      "param": {
+        "type": "Time",
+        "value": "13:45:00.000000001",
+        "kind": "Time"
+      }
+    },
+    {
+      "name": "literal param Time 00:00",
+      "op": "literalParam",
+      "param": {
+        "type": "Time",
+        "value": "00:00",
+        "kind": "Time"
+      }
+    },
+    {
+      "name": "text match cs=False neg=False",
+      "op": "textMatch",
+      "expression": "\"c\"",
+      "caseSensitive": false,
+      "negated": false
+    },
+    {
+      "name": "regex match cs=False neg=False",
+      "op": "regexMatch",
+      "expression": "\"c\"",
+      "caseSensitive": false,
+      "negated": false
+    },
+    {
+      "name": "text match cs=False neg=True",
+      "op": "textMatch",
+      "expression": "\"c\"",
+      "caseSensitive": false,
+      "negated": true
+    },
+    {
+      "name": "regex match cs=False neg=True",
+      "op": "regexMatch",
+      "expression": "\"c\"",
+      "caseSensitive": false,
+      "negated": true
+    },
+    {
+      "name": "text match cs=True neg=False",
+      "op": "textMatch",
+      "expression": "\"c\"",
+      "caseSensitive": true,
+      "negated": false
+    },
+    {
+      "name": "regex match cs=True neg=False",
+      "op": "regexMatch",
+      "expression": "\"c\"",
+      "caseSensitive": true,
+      "negated": false
+    },
+    {
+      "name": "text match cs=True neg=True",
+      "op": "textMatch",
+      "expression": "\"c\"",
+      "caseSensitive": true,
+      "negated": true
+    },
+    {
+      "name": "regex match cs=True neg=True",
+      "op": "regexMatch",
+      "expression": "\"c\"",
+      "caseSensitive": true,
+      "negated": true
+    },
+    {
+      "name": "text pattern '%a!_b_c!%' cs=False",
+      "op": "textPattern",
+      "value": "%a!_b_c!%",
+      "caseSensitive": false
+    },
+    {
+      "name": "text pattern '%a!_b_c!%' cs=True",
+      "op": "textPattern",
+      "value": "%a!_b_c!%",
+      "caseSensitive": true
+    },
+    {
+      "name": "text pattern 'x*y?[z]!!w\\\\' cs=False",
+      "op": "textPattern",
+      "value": "x*y?[z]!!w\\",
+      "caseSensitive": false
+    },
+    {
+      "name": "text pattern 'x*y?[z]!!w\\\\' cs=True",
+      "op": "textPattern",
+      "value": "x*y?[z]!!w\\",
+      "caseSensitive": true
+    },
+    {
+      "name": "text pattern 'trailing!' cs=False",
+      "op": "textPattern",
+      "value": "trailing!",
+      "caseSensitive": false
+    },
+    {
+      "name": "text pattern 'trailing!' cs=True",
+      "op": "textPattern",
+      "value": "trailing!",
+      "caseSensitive": true
+    },
+    {
+      "name": "text pattern 'plain' cs=False",
+      "op": "textPattern",
+      "value": "plain",
+      "caseSensitive": false
+    },
+    {
+      "name": "text pattern 'plain' cs=True",
+      "op": "textPattern",
+      "value": "plain",
+      "caseSensitive": true
+    },
+    {
+      "name": "text pattern '' cs=False",
+      "op": "textPattern",
+      "value": "",
+      "caseSensitive": false
+    },
+    {
+      "name": "text pattern '' cs=True",
+      "op": "textPattern",
+      "value": "",
+      "caseSensitive": true
+    },
+    {
+      "name": "default namespace pick",
+      "op": "defaultNamespace",
+      "names": [
+        "app",
+        "dbo",
+        "default",
+        "main",
+        "public",
+        "shop",
+        "APP"
+      ],
+      "database": "shop"
+    },
+    {
+      "name": "default namespace fallback",
+      "op": "defaultNamespace",
+      "names": [
+        "zeta",
+        "alpha"
+      ],
+      "database": "none"
+    },
+    {
+      "name": "default namespace generic public",
+      "op": "defaultNamespace",
+      "names": [
+        "x",
+        "Public",
+        "app"
+      ],
+      "database": ""
+    },
+    {
+      "name": "default namespace generic app",
+      "op": "defaultNamespace",
+      "names": [
+        "x",
+        "App"
+      ],
+      "database": ""
+    },
+    {
+      "name": "default namespace empty",
+      "op": "defaultNamespace",
+      "names": [],
+      "database": "db"
+    },
+    {
+      "name": "explain",
+      "op": "explain",
+      "sql": "SELECT 1"
+    },
+    {
+      "name": "plain identifiers",
+      "op": "plainIdentifier",
+      "names": [
+        "users",
+        "Users",
+        "_x$1",
+        "1abc",
+        "a-b",
+        "",
+        "ồ",
+        "snake_case"
+      ]
+    },
+    {
+      "name": "qualified schema",
+      "op": "qualifiedName",
+      "table": {
+        "schema": "public",
+        "name": "users"
+      }
+    },
+    {
+      "name": "qualified catalog and schema",
+      "op": "qualifiedName",
+      "table": {
+        "catalog": "db",
+        "schema": "dbo",
+        "name": "we\"ird]`na\\me"
+      }
+    },
+    {
+      "name": "qualified bare",
+      "op": "qualifiedName",
+      "table": {
+        "name": "plain"
+      }
+    },
+    {
+      "name": "select page plain",
+      "op": "selectPage",
+      "table": {
+        "schema": "public",
+        "name": "users"
+      },
+      "limit": 100,
+      "offset": 0
+    },
+    {
+      "name": "select page filtered and sorted",
+      "op": "selectPage",
+      "table": {
+        "schema": "public",
+        "name": "users"
+      },
+      "filter": "\"age\" > ?",
+      "orderBy": [
+        [
+          "name",
+          "Asc"
+        ],
+        [
+          "id",
+          "Desc"
+        ]
+      ],
+      "limit": 50,
+      "offset": 200
+    },
+    {
+      "name": "select page blank filter distinct",
+      "op": "selectPage",
+      "table": {
+        "catalog": "db",
+        "schema": "dbo",
+        "name": "we\"ird]`na\\me"
+      },
+      "filter": "  ",
+      "projection": {
+        "columns": "\"a\", \"b\"",
+        "distinct": true
+      },
+      "limit": 10,
+      "offset": 5
+    },
+    {
+      "name": "select page projection not distinct",
+      "op": "selectPage",
+      "table": {
+        "name": "plain"
+      },
+      "projection": {
+        "columns": "x",
+        "distinct": false
+      },
+      "limit": 1,
+      "offset": 3000000000
+    },
+    {
+      "name": "select all",
+      "op": "selectAll",
+      "table": {
+        "schema": "public",
+        "name": "users"
+      },
+      "filter": "a = 1",
+      "orderBy": [
+        [
+          "n",
+          "Desc"
+        ]
+      ],
+      "projection": {
+        "columns": "\"a\", \"b\"",
+        "distinct": true
+      }
+    },
+    {
+      "name": "count rows",
+      "op": "countRows",
+      "table": {
+        "schema": "public",
+        "name": "users"
+      },
+      "filter": "a = 1"
+    },
+    {
+      "name": "count rows distinct",
+      "op": "countRows",
+      "table": {
+        "schema": "public",
+        "name": "users"
+      },
+      "filter": "",
+      "projection": {
+        "columns": "\"a\", \"b\"",
+        "distinct": true
+      }
+    },
+    {
+      "name": "count rows not distinct",
+      "op": "countRows",
+      "table": {
+        "schema": "public",
+        "name": "users"
+      },
+      "projection": {
+        "columns": "x",
+        "distinct": false
+      }
+    },
+    {
+      "name": "cast to text",
+      "op": "castToText",
+      "expression": "\"c\""
+    },
+    {
+      "name": "sample pattern",
+      "op": "samplePattern",
+      "value": "a%b_c!d\\e"
+    },
+    {
+      "name": "sample values",
+      "op": "sampleValues",
+      "table": {
+        "schema": "public",
+        "name": "users"
+      },
+      "column": "name",
+      "limit": 20,
+      "scan": 10000
+    },
+    {
+      "name": "select functions",
+      "op": "selectFunction",
+      "expression": "\"c\"",
+      "arguments": {
+        "Substring": [
+          "1",
+          "10"
+        ],
+        "Round": [
+          "2"
+        ],
+        "Truncate": [
+          "month"
+        ],
+        "Coalesce": [
+          "'n/a'"
+        ]
+      }
+    },
+    {
+      "name": "select function truncate unknown bucket",
+      "op": "selectFunction",
+      "expression": "x",
+      "arguments": {
+        "Truncate": [
+          "fortnight"
+        ],
+        "Round": [
+          "0"
+        ],
+        "Coalesce": [
+          "0"
+        ]
+      }
+    },
+    {
+      "name": "time buckets",
+      "op": "timeBucket",
+      "expression": "\"created_at\""
+    },
+    {
+      "name": "namespaces typical",
+      "op": "listNamespaces",
+      "schemas": [
+        "public",
+        "pg_catalog",
+        "information_schema",
+        "pg_toast",
+        "pg_temp_1",
+        "app",
+        "sys",
+        "INFORMATION_SCHEMA",
+        "guest",
+        "db_owner",
+        "dbo",
+        "main",
+        "main",
+        "system",
+        "SYSIBM",
+        "NULLID",
+        "Zeta"
+      ],
+      "catalogs": [
+        "shop",
+        "mysql",
+        "sys",
+        "performance_schema",
+        "information_schema",
+        "default",
+        "system",
+        "alpha"
+      ]
+    },
+    {
+      "name": "namespaces no schemas",
+      "op": "listNamespaces",
+      "schemas": [],
+      "catalogs": [
+        "shop",
+        "SYSCAT",
+        "alpha"
+      ]
+    },
+    {
+      "name": "namespaces schemas fail",
+      "op": "listNamespaces",
+      "schemas": null,
+      "catalogs": [
+        "b",
+        "a"
+      ]
+    },
+    {
+      "name": "namespaces nothing",
+      "op": "listNamespaces",
+      "schemas": [],
+      "catalogs": []
+    }
+  ]
+}

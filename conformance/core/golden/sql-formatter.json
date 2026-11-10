@@ -1,0 +1,73 @@
+{
+    "subject": "sql-formatter",
+    "cases": [
+        {
+            "name": "kotlin: clauses, lists and conditions",
+            "output": "SELECT\n    u.id,\n    u.name,\n    count(*) AS orders\nFROM users u\nLEFT JOIN orders o ON o.user_id = u.id\nWHERE u.active = TRUE\n    AND o.total >= 10\n    OR u.vip\nGROUP BY\n    u.id,\n    u.name\nORDER BY orders DESC\nLIMIT 10"
+        },
+        {
+            "name": "kotlin: single items stay on the clause line",
+            "output": "SELECT *\nFROM t\nWHERE id = 1"
+        },
+        {
+            "name": "kotlin: subqueries, calls and IN lists",
+            "output": "SELECT name\nFROM users\nWHERE id IN (\n    SELECT user_id\n    FROM orders\n    WHERE total > coalesce(1, 2)\n)\n    AND status IN ('a', 'b')"
+        },
+        {
+            "name": "kotlin: strings, comments, quoted identifiers, casts",
+            "output": "SELECT\n    'select  from' AS \"Select\",\n    x::TEXT -- keep  me\nFROM t"
+        },
+        {
+            "name": "kotlin: between and separated statements",
+            "output": "SELECT *\nFROM t\nWHERE a BETWEEN 1 AND 5\n    AND b < -1;\n\nDELETE FROM t\nWHERE a = 2;"
+        },
+        {
+            "name": "kotlin: insert, update and set lists",
+            "output": "INSERT INTO t (a, b)\nVALUES (1, 'x');\n\nUPDATE t\nSET\n    a = 1,\n    b = 2\nWHERE id = 3"
+        },
+        {
+            "name": "kotlin: lower case with tab indent",
+            "output": "select\n\tid,\n\tname\nfrom users\nwhere active\n\tand vip"
+        },
+        {
+            "name": "kotlin: preserve case",
+            "output": "Select x\nFrom t"
+        },
+        {
+            "name": "empty",
+            "output": ""
+        },
+        {
+            "name": "union, joins and offsets",
+            "output": "SELECT a\nFROM t\nUNION ALL\nSELECT b\nFROM u\nINNER JOIN v ON u.id = v.id\n    AND v.x > 1\nORDER BY 1\nLIMIT 5\nOFFSET 10"
+        },
+        {
+            "name": "cte with nested subquery",
+            "output": "WITH RECURSIVE r AS (\n    SELECT 1\n    UNION\n    SELECT n + 1\n    FROM r\n    WHERE n < 3\n)\nSELECT *\nFROM r\nWHERE x IN (\n    WITH q AS (\n        SELECT 2\n    )\n    SELECT *\n    FROM q\n)"
+        },
+        {
+            "name": "comments and unary minus",
+            "output": "/* head */\nSELECT\n    -1,\n    a --2,\n    +3 -- tail\n,\n    b\nFROM t\nWHERE c = -d # x"
+        },
+        {
+            "name": "mysql hash comment",
+            "output": "SELECT a # note\nFROM t"
+        },
+        {
+            "name": "call-like keywords and table names",
+            "output": "INSERT INTO s.t (a)\nSELECT\n    CAST(x AS INT),\n    REPLACE(y, 'a', 'b'),\n    LEFT(z, 2),\n    EXISTS(\n    SELECT 1\n)\nFROM s.u\nJOIN w (q) ON TRUE\nRETURNING\n    a,\n    b"
+        },
+        {
+            "name": "delete with having",
+            "output": "DELETE FROM t\nWHERE a IN (\n    SELECT a\n    FROM u\n    GROUP BY a\n    HAVING count(*) > 1\n        OR max(b) < 2\n)"
+        },
+        {
+            "name": "non-ascii identifiers",
+            "output": "SELECT\n    chào,\n    'ồ 😀'\nFROM bảng"
+        },
+        {
+            "name": "parenthesised expressions",
+            "output": "SELECT\n    (a + b) * c,\n    f(x)\nFROM t\nWHERE (a = 1 OR b = 2)\n    AND c = 3"
+        }
+    ]
+}

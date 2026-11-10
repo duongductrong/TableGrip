@@ -1,0 +1,327 @@
+{
+  "component": "popup-menu",
+  "description": "PopupMenu opened from a (non-focusable) trigger: open, keys, selection, dismissal, disabled items, separators. A click on `menu` lands on the middle item of an odd-sized menu.",
+  "cases": [
+    {
+      "name": "closed until opened",
+      "setup": {},
+      "steps": [],
+      "expect": {
+        "shown:menu": false,
+        "open": false
+      }
+    },
+    {
+      "name": "a click on the trigger opens it",
+      "setup": {},
+      "steps": [
+        "click"
+      ],
+      "expect": {
+        "shown:menu": true,
+        "open": true
+      }
+    },
+    {
+      "name": "already open when set up so",
+      "setup": {
+        "open": true
+      },
+      "steps": [],
+      "expect": {
+        "shown:menu": true
+      }
+    },
+    {
+      "name": "Escape closes without choosing",
+      "setup": {},
+      "steps": [
+        "click",
+        {
+          "key": "Escape"
+        }
+      ],
+      "expect": {
+        "chosen": -1,
+        "open": false,
+        "shown:menu": false
+      }
+    },
+    {
+      "name": "a click outside closes it",
+      "setup": {},
+      "steps": [
+        "click",
+        {
+          "click": "away"
+        }
+      ],
+      "expect": {
+        "chosen": -1,
+        "open": false
+      }
+    },
+    {
+      "name": "clicking an item chooses it and closes",
+      "setup": {
+        "items": [
+          "A",
+          "B",
+          "C"
+        ]
+      },
+      "steps": [
+        "click",
+        {
+          "click": "menu"
+        }
+      ],
+      "expect": {
+        "chosen": 1,
+        "open": false,
+        "shown:menu": false
+      }
+    },
+    {
+      "name": "a disabled item ignores clicks",
+      "setup": {
+        "items": [
+          "A",
+          "B",
+          "C"
+        ],
+        "disabled": [
+          1
+        ]
+      },
+      "steps": [
+        "click",
+        {
+          "click": "menu"
+        }
+      ],
+      "expect": {
+        "chosen": -1,
+        "open": true
+      }
+    },
+    {
+      "name": "the first item is highlighted when it opens",
+      "setup": {},
+      "steps": [
+        "click",
+        {
+          "key": "Enter"
+        }
+      ],
+      "expect": {
+        "chosen": 0,
+        "open": false
+      }
+    },
+    {
+      "name": "the selected item is highlighted when it opens",
+      "setup": {
+        "selected": 2
+      },
+      "steps": [
+        "click",
+        {
+          "key": "Enter"
+        }
+      ],
+      "expect": {
+        "chosen": 2
+      }
+    },
+    {
+      "name": "Down moves to the next item",
+      "setup": {},
+      "steps": [
+        "click",
+        {
+          "key": "Down"
+        },
+        {
+          "key": "Enter"
+        }
+      ],
+      "expect": {
+        "chosen": 1
+      }
+    },
+    {
+      "name": "Down twice",
+      "setup": {},
+      "steps": [
+        "click",
+        {
+          "key": "Down"
+        },
+        {
+          "key": "Down"
+        },
+        {
+          "key": "Enter"
+        }
+      ],
+      "expect": {
+        "chosen": 2
+      }
+    },
+    {
+      "name": "Up from the first wraps to the last",
+      "setup": {},
+      "steps": [
+        "click",
+        {
+          "key": "Up"
+        },
+        {
+          "key": "Enter"
+        }
+      ],
+      "expect": {
+        "chosen": 3
+      }
+    },
+    {
+      "name": "Down from the last wraps to the first",
+      "setup": {},
+      "steps": [
+        "click",
+        {
+          "key": "Down"
+        },
+        {
+          "key": "Down"
+        },
+        {
+          "key": "Down"
+        },
+        {
+          "key": "Down"
+        },
+        {
+          "key": "Enter"
+        }
+      ],
+      "expect": {
+        "chosen": 0
+      }
+    },
+    {
+      "name": "Space chooses the highlighted item like Enter",
+      "setup": {},
+      "steps": [
+        "click",
+        {
+          "key": "Space"
+        }
+      ],
+      "expect": {
+        "chosen": 0,
+        "open": false
+      }
+    },
+    {
+      "name": "arrows skip a disabled item",
+      "setup": {
+        "disabled": [
+          1
+        ]
+      },
+      "steps": [
+        "click",
+        {
+          "key": "Down"
+        },
+        {
+          "key": "Enter"
+        }
+      ],
+      "expect": {
+        "chosen": 2
+      }
+    },
+    {
+      "name": "arrows pass over a separator",
+      "setup": {
+        "separatorsAfter": [
+          1
+        ]
+      },
+      "steps": [
+        "click",
+        {
+          "key": "Down"
+        },
+        {
+          "key": "Down"
+        },
+        {
+          "key": "Enter"
+        }
+      ],
+      "expect": {
+        "chosen": 2
+      }
+    },
+    {
+      "name": "Home does nothing",
+      "setup": {},
+      "steps": [
+        "click",
+        {
+          "key": "Down"
+        },
+        {
+          "key": "Down"
+        },
+        {
+          "key": "Home"
+        },
+        {
+          "key": "Enter"
+        }
+      ],
+      "expect": {
+        "chosen": 2
+      }
+    },
+    {
+      "name": "End does nothing",
+      "setup": {},
+      "steps": [
+        "click",
+        {
+          "key": "End"
+        },
+        {
+          "key": "Enter"
+        }
+      ],
+      "expect": {
+        "chosen": 0
+      }
+    },
+    {
+      "name": "Enter on a disabled highlighted item chooses nothing",
+      "setup": {
+        "disabled": [
+          0
+        ],
+        "selected": -1
+      },
+      "steps": [
+        "click",
+        {
+          "key": "Enter"
+        }
+      ],
+      "expect": {
+        "chosen": -1
+      }
+    }
+  ]
+}
