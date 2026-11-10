@@ -6,6 +6,7 @@
 //! the result formats and clipboard tables. They are held to the Kotlin output through `conformance/core` (subjects
 //! `data-*`).
 
+pub mod backup;
 pub mod clipboard;
 pub mod datafile;
 pub mod formats;
