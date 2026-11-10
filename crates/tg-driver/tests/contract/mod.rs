@@ -18,6 +18,8 @@ use tg_sql::{SortColumn, SortDirection};
 /// The engine's SQL types and abilities, as `RelationalContract`'s constructor took them.
 pub struct Options {
     pub int_type: &'static str,
+    /// The type of a nullable integer column, where it differs (ClickHouse's `Nullable(Int32)`).
+    pub nullable_int_type: Option<&'static str>,
     pub text_type: &'static str,
     /// Appended to each CREATE TABLE, e.g. an engine clause.
     pub table_suffix: &'static str,
@@ -33,6 +35,7 @@ impl Default for Options {
     fn default() -> Self {
         Self {
             int_type: "INTEGER",
+            nullable_int_type: None,
             text_type: "VARCHAR(100)",
             table_suffix: "",
             foreign_keys: true,
@@ -68,7 +71,7 @@ async fn seed(db: &dyn RelationalConnection, o: &Options) {
             q("name"),
             o.text_type,
             q("team_id"),
-            o.int_type,
+            o.nullable_int_type.unwrap_or(o.int_type),
             // Table-level: MySQL and TiDB parse a column's own REFERENCES clause but ignore it.
             if o.foreign_keys {
                 format!(

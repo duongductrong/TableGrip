@@ -43,6 +43,8 @@ rustls-native-certs = "=0.8.5"
 tokio-postgres = { version = "=0.7.18", default-features = false, features = ["runtime"] }
 tokio-postgres-rustls = "=0.14.0"
 tokio-util = { version = "=0.7.20", default-features = false }
+# ClickHouse over HTTP (tg-driver): rustls with the ring provider handed in, so no aws-lc build.
+reqwest = { version = "=0.13.5", default-features = false, features = ["rustls-no-provider", "query"] }
 # SQL Server (tg-driver): TDS 7.4 over rustls (ring, from the workspace rustls), values through chrono.
 tiberius = { version = "=0.13.0", default-features = false, features = ["tds73", "rustls", "chrono"] }
 # MySQL, MariaDB and TiDB (tg-driver). rustls with ring, as for PostgreSQL; `rustls-tls` also brings webpki-roots.

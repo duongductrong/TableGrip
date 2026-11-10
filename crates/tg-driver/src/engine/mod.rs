@@ -1,6 +1,8 @@
 //! Opening connections: the engine for a profile's family, its SSH tunnel, and "Test Connection".
 
-#[cfg(any(feature = "mysql", feature = "mssql"))]
+#[cfg(feature = "clickhouse")]
+pub mod clickhouse;
+#[cfg(any(feature = "mysql", feature = "mssql", feature = "clickhouse"))]
 pub(crate) mod inline;
 #[cfg(feature = "mssql")]
 pub mod mssql;
@@ -117,6 +119,8 @@ pub async fn connect_relational(
         EngineFamily::MySQL => mysql::connect(config, secrets, paths).await,
         #[cfg(feature = "mssql")]
         EngineFamily::SqlServer => mssql::connect(config, secrets, paths).await,
+        #[cfg(feature = "clickhouse")]
+        EngineFamily::ClickHouse => clickhouse::connect(config, secrets, paths).await,
         _ => Err(unsupported(&config.db_type)),
     }
 }
@@ -131,7 +135,7 @@ fn unsupported(db_type: &DatabaseType) -> DriverError {
 /// Makes ring rustls' process-wide crypto provider, unless one is set already. mysql_async builds its TLS config
 /// with the process default, which rustls can't pick by itself once a second provider is compiled in (tiberius
 /// brings aws-lc-rs); tiberius honours the default too, so every engine's TLS runs on ring.
-#[cfg(any(feature = "mysql", feature = "mssql"))]
+#[cfg(any(feature = "mysql", feature = "mssql", feature = "clickhouse"))]
 pub(crate) fn use_ring() {
     let _ = rustls::crypto::ring::default_provider().install_default();
 }

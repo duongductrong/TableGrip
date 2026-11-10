@@ -151,11 +151,17 @@ async fn tls() {
     let db = support::connect(&c, Some("pw")).await;
     let mut session = db.open_session().await.unwrap();
     let QueryResult::Rows(r) = session
-        .execute("SHOW SESSION STATUS LIKE 'Ssl_cipher'", ExecOptions::default())
+        .execute(
+            "SHOW SESSION STATUS LIKE 'Ssl_cipher'",
+            ExecOptions::default(),
+        )
         .await
         .unwrap()
     else {
         panic!()
     };
-    assert!(r.rows[0][1].as_deref().is_some_and(|c| !c.is_empty()), "{r:?}");
+    assert!(
+        r.rows[0][1].as_deref().is_some_and(|c| !c.is_empty()),
+        "{r:?}"
+    );
 }
