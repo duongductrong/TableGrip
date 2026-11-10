@@ -311,9 +311,10 @@ Còn dở:
 - `KeyringSecretStore::get` nuốt mọi lỗi thành None như Kotlin; nếu UI muốn phân biệt "chưa lưu" với "keychain từ chối" thì
   cần thêm `try_get`.
 
-### S3 (10/11/2026, đang làm)
+### S3 (10/11/2026)
 
-Nhánh `rust/drivers-core`. Bước 1 (thiết kế) viết trước khi code; hai điểm cuối mục cần người dùng chốt.
+Nhánh `rust/drivers-core`. Bước 1 (thiết kế) được viết trước khi code. Phần "Đã làm" ở cuối mục ghi những chỗ
+thực tế khác với thiết kế.
 
 #### Thiết kế `tg-driver`
 
@@ -452,3 +453,95 @@ Literal text inline không kèm kiểu, nên server tự suy kiểu y như khi p
 - **Đề xuất B1.** Định dạng text là việc của server nên khớp pgjdbc tuyệt đối, ít code hơn nhiều. Đổi lại, tham số
   không còn được server bind. `ChangeStatement` vẫn dùng `?` và chỉ tầng Postgres mới inline, nên sau này muốn đổi sang
   B2 thì không phải sửa API.
+
+#### Đã làm
+
+Contract pass trên SQLite (chạy mặc định), PostgreSQL 17, TimescaleDB (pg17) và CockroachDB 24.3 (chạy bằng Docker
+trên máy này). Introspection của SQLite và PostgreSQL khớp golden Kotlin.
+
+- **tg-sql**: thêm `tg_sql::edit` (port `ChangeSet.kt`) với golden mới `edit-changes`. `ResultColumn` chuyển về
+  `tg_sql::model`; `tg-data` dùng lại kiểu này, còn `ChartColumn` của `tg-chart` giờ là alias của nó.
+- **tg-driver**: các trait, `SqlDatabase` (mọi logic của `Database.kt` nằm trên hai trait engine là `SqlConn` và
+  `ConnSource`), `GuardedSession`, KV/Document (chỉ trait và guard), `ActivityMonitor` + `ActivityReader`.
+  Hướng dẫn thêm engine nằm ở đầu `crates/tg-driver/src/lib.rs`.
+- **Golden introspection**: `IntrospectionGoldenTest` (Kotlin, `src/test`) dump namespaces, tables, columnsOf,
+  details, columns, structure, relations, cùng kết quả vài câu SELECT (kiểu cột và text của ô), ghi ra
+  `conformance/core/golden/db/introspection-{sqlite,postgres}.json`.
+  - Schema SQLite là file mới `structure-it/sqlite.sql`.
+  - Golden Postgres cần `-Pit.postgres=host:port` và server đã seed `postgres.sql`.
+  - Phía Rust kiểm bằng `tests/introspection.rs`; phần Postgres chỉ chạy khi có `TG_IT_POSTGRES`.
+  - File nằm trong thư mục con `golden/db/`, để `CoreGoldenTest` không coi nó là golden mồ côi.
+- **Contract**: `tests/contract/mod.rs` gồm `RelationalContract.kt` cộng các ca không phụ thuộc engine của
+  `DatabaseTest.kt`: export, columnsOf, relations hai chiều, sample values có wildcard, change set bị stale,
+  `insert_rows` báo đúng dòng lỗi, manual commit, huỷ bằng drop, timeout, nhiều lần huỷ liên tiếp không làm cạn
+  pool, và read-only.
+  - Engine mới chỉ cần gọi `contract::run` và `contract::read_only`.
+  - Postgres: `TG_IT_POSTGRES` (mật khẩu `TG_IT_POSTGRES_PASSWORD`, mặc định `pw`), `TG_IT_TIMESCALE`,
+    `TG_IT_COCKROACH`. Lệnh docker ghi ở đầu `tests/postgres.rs`.
+- **Dependency mới** (ghim trong workspace, đều MIT/Apache): `async-trait`, `tokio-util`, `futures-util`, `rusqlite`
+  (bundled, tắt default features), `tokio-postgres`, `deadpool-postgres`, `tokio-postgres-rustls`, `rustls` (ring),
+  `rustls-native-certs`. Không có OpenSSL hay aws-lc, nên không phải sửa NOTICE.
+
+**SQLite.**
+- Mỗi kết nối chạy trên một thread worker; drop future thì gọi `sqlite3_interrupt`. Worker trả về pool sau khi
+  ROLLBACK những gì người mượn còn để mở.
+- `:memory:` dùng URI shared cache `tablegrip-<id>`, giữ sống bằng một kết nối neo, giống `JdbcUrls`.
+- Catalog chép đúng `DatabaseMetaData` của sqlite-jdbc 3.50, kể cả các quirk mà golden giữ:
+  - tên PK/FK lấy bằng regex trên câu CREATE;
+  - `getPrimaryKeys` sắp theo tên cột;
+  - FK không tên có tên `''`;
+  - `columnsOf` liệt kê cả `sqlite_schema` và `sqlite_sequence`.
+- Ô và kiểu cột theo `getString`/`getColumnType` của sqlite-jdbc, nên kiểu phụ thuộc giá trị của hàng đầu tiên như
+  bản Kotlin.
+- REAL in bằng `%!.15g` như SQLite 3.50 mà sqlite-jdbc nhúng. SQLite 3.54 nhúng trong rusqlite tự in tới 17 chữ số;
+  ta giữ cách hiển thị của Kotlin.
+- `relations`: Kotlin gom nhóm imported và exported riêng rồi mới bỏ trùng; ta làm y như vậy, nếu không FK tự tham
+  chiếu sẽ bị nhân đôi cột.
+
+**PostgreSQL** (B1).
+- Simple query cho text của server.
+- Kiểu cột lấy từ một `prepare` chạy pipeline song song, gần như không thêm round trip. Kiểu đặt theo
+  `ResultSetMetaData` của pgjdbc: cột identity hay `nextval` thành `serial`/`bigserial`; `bytea` thành `BINARY` và
+  hiện qua `BinaryText`.
+- Tham số inline:
+  - text đi dạng literal không kiểu (`'…'`, hoặc `E'…'` khi có `\`);
+  - Long, Decimal, UUID và ngày giờ có cast đúng kiểu pgjdbc bind;
+  - từ chối ký tự NUL.
+- Console giới hạn `max_rows` bằng cursor, nên không bao giờ phải huỷ transaction của người dùng:
+  - đang trong transaction thì dùng `SAVEPOINT` + `DECLARE`;
+  - ngoài transaction thì `BEGIN` / `DECLARE` / `COMMIT`;
+  - câu nào không DECLARE được thì chạy nguyên văn.
+- Export dùng `DECLARE` + `FETCH 1000` trong transaction, như fetch size của pgjdbc.
+- Drop future thì gửi cancel request. Nếu bị drop giữa một thao tác nhiều bước, lần gọi sau chạy SQL dọn dẹp trước.
+  Kết nối pool bị drop dở thì bị đóng, không trả về pool.
+- Lỗi được định dạng như `PSQLException`: `ERROR: …` kèm các dòng Detail/Hint/Position/Where, có SQLSTATE và
+  position đếm từ 0.
+- Catalog chép câu SQL và `TypeInfoCache` của pgjdbc 42.7.8. Hai đặc tả dùng để port (sqlite-jdbc, pgjdbc) được đọc
+  từ mã nguồn hoặc bytecode trong cache Gradle, không tải gì thêm.
+- Port xong StructureReader (Postgres và CockroachDB), ServerIdentity, activity monitor và
+  `server_major_version`.
+- TLS:
+  - `prefer`/`require` mã hoá nhưng không kiểm chứng chỉ, như pgjdbc;
+  - `verify-ca`/`verify-full` kiểm theo kho CA của hệ điều hành, và cả hai đều kiểm hostname (chặt hơn libpq ở
+    `verify-ca`).
+
+**Khác kế hoạch / khác Kotlin**
+- Không có `CancellationToken` trong API: huỷ bằng cách drop future, UI bọc ngoài bằng
+  `token.run_until_cancelled`. Timeout là `ExecOptions.timeout` và `PageRequest.timeout`.
+- `insert_rows` ghi theo lô `INSERT … VALUES (…),(…)` (tối đa 500 hàng hoặc 30k tham số). Khi một lô lỗi thì quay
+  về savepoint và chèn lại từng hàng để chỉ ra đúng hàng lỗi. Kotlin dùng JDBC batch.
+- **CockroachDB bỏ qua cancel request của pgwire** (đã thử: `pg_sleep(30)` vẫn chạy hết). Contract của CockroachDB
+  vì thế tắt phần huỷ (`Options.cancellation = false`). Muốn huỷ được thì phải chạy `CANCEL QUERY` theo
+  `session_id` từ một kết nối khác; để S4 hoặc S6 quyết.
+- `ColumnEdit.kt` (validate ô khi sửa) chưa port: nó là logic của cell editor, hợp với S7 hơn.
+- Data file (CSV/Excel/JSON) qua working copy SQLite trả `Unsupported` cho tới khi S5 có `DataFileStore`.
+- TimeZone của session Postgres: pgjdbc đặt theo múi giờ của JVM. Ta để mặc định của server, nên `timestamptz`
+  có thể hiện khác bản Kotlin nếu múi giờ server khác múi giờ máy. Golden không có cột `timestamptz` nào có dữ liệu.
+  Nên quyết khi làm S6.
+
+Còn dở / lưu ý cho S4–S5:
+- Chưa có test kết nối Postgres đi qua SSH tunnel: server russh dùng trong test của tg-core không được export.
+  `engine::open_tunnel` dùng cùng `SshTunnel` mà S2 đã test.
+- `ConnectionConfig.driver_jars` và `DriverId` không được dùng (D2).
+- Docker trên máy này đang có `dg-pg` (55432) và `dg-it-timescale` (55433) do S3 bật, và `dg-crdb` (56257) có sẵn từ
+  trước.
