@@ -310,3 +310,238 @@ Còn dở:
 - ChatStore (S5).
 - `KeyringSecretStore::get` nuốt mọi lỗi thành None như Kotlin; nếu UI muốn phân biệt "chưa lưu" với "keychain từ chối" thì
   cần thêm `try_get`.
+
+### S3 (10/11/2026)
+
+Nhánh `rust/drivers-core`. Bước 1 (thiết kế) được viết trước khi code. Phần "Đã làm" ở cuối mục ghi những chỗ
+thực tế khác với thiết kế.
+
+#### Thiết kế `tg-driver`
+
+**Crate và phụ thuộc.**
+- `tg-driver` phụ thuộc `tg-sql` (model, dialect, filter, DDL) và `tg-core` (ConnectionConfig, SshTunnel, activity
+  model). Không phụ thuộc `tg-data`.
+- `ResultColumn` chuyển về `tg_sql::model` (cùng `is_numeric`, `is_binary`). `tg-data` và `tg-chart` dùng lại kiểu
+  này, bỏ bản tạm `tg_data::ResultColumn`, còn `ChartColumn` thì tạo từ nó.
+- Port `edit/ChangeSet.kt` (`BoundValue`, `RowChange`, `ChangeStatement`, `ChangeSql`) và `edit/ColumnEdit.kt` vào
+  `tg_sql::edit`, vì chúng thuần và chỉ cần dialect. Phần này kèm golden.
+- Feature theo engine: `postgres`, `sqlite` (S3); `mysql`, `mssql`, `clickhouse`, `duckdb` (S4); `redis`, `mongodb`,
+  `etcd` (S5). Mặc định bật hết. `cargo test -p tg-driver --no-default-features --features sqlite` vẫn chạy được.
+
+**Bất đồng bộ và dispatch.**
+- API là `async`, chạy trên tokio. Trait là object-safe qua `#[async_trait]` (crate `async-trait`, MIT/Apache), vì UI
+  giữ `Arc<dyn RelationalConnection>` và mỗi engine thêm sau (S4/S5) chỉ là một struct mới, không phải sửa enum
+  trung tâm.
+- Một hàm vào duy nhất: `tg_driver::connect(&ConnectionConfig, Secrets) -> Result<Connection, DriverError>`, trong đó
+  `enum Connection { Relational(Arc<dyn RelationalConnection>), KeyValue(Arc<dyn KeyValueConnection>),
+  Document(Arc<dyn DocumentConnection>) }` (khớp `sealed interface DatabaseConnection`). Hàm này chọn engine theo
+  `config.db_type.family` qua bảng `ENGINES: &[EngineEntry]` gồm các mục bật bằng `#[cfg(feature)]`. Engine nào
+  không được build thì trả lỗi `DriverError::Unsupported`. `tg_driver::test(...)` trả về `ServerIdentity` gợi ý.
+- `Secrets { password: Option<String>, ssh: Option<String> }`; tunnel mở trong `connect` bằng
+  `tg_core::ssh::SshTunnel`, giữ trong connection, đóng khi drop.
+- Engine đồng bộ (rusqlite, sau này duckdb) chạy trên một thread riêng cho mỗi kết nối, nhận job qua channel
+  (`blocking::Worker`). Không dùng `spawn_blocking` cho từng lệnh, vì kết nối SQLite không `Sync` và phải giữ thứ tự.
+
+**Trait** (rút từ `DatabaseConnection.kt`, `QuerySession.kt`, `KeyValueConnection.kt`, `DocumentConnection.kt`; tên
+method giữ như Kotlin, viết theo snake_case):
+- `RelationalConnection`: `config()`, `dialect()`, `namespaces`, `tables`, `table_details`, `table_columns`,
+  `table_structure`, `columns_of`, `relations`, `sample_values`, `fetch_page(&PageRequest)`, `export_table`,
+  `count_rows`, `apply_changes`, `schema_snapshot`, `execute_script`, `insert_rows`, `open_session`. Method có
+  default "unsupported": `server_major_version`, `backup_into`, `open_activity_monitor`. Đầu vào dài như
+  `fetch_page(table, filter, order_by, limit, offset, timeout, projection)` gom thành struct `PageRequest`.
+- `QuerySession` là trait riêng, trả từ `open_session() -> Box<dyn QuerySession>`, gồm `execute(sql, ExecOptions)`,
+  `set_auto_commit`, `commit`, `rollback`, `is_valid`, `auto_commit()`, `uncommitted_statements()`, `read_only()`.
+  Kiểm read-only và đếm statement chưa commit nằm trong một wrapper chung, `GuardedSession`, dùng `SqlClassifier`,
+  nên engine chỉ cần cài phần chạy thật (`RawSession`).
+- `KeyValueConnection` và `DocumentConnection`: chép nguyên API Kotlin kèm các kiểu `KeyInfo`, `KeyValue`, `KeyEdit`,
+  `CollectionInfo`, `DocumentPage`… S3 chỉ định nghĩa trait, kiểu dữ liệu và wrapper read-only (`Guarded`, gồm
+  `split_arguments`, `READ_COMMANDS`, `is_etcd_read`, `DocumentStore::is_read`, có test port từ Kotlin). Engine thật
+  để S5 làm.
+- Export: `export_table(.., sink: &mut dyn RowSink, progress: &dyn Fn(u64))`, với `trait RowSink: Send { fn
+  begin(&mut self, &[ResultColumn]); fn write(&mut self, &[Cell]) -> io::Result<()>; fn finish(&mut self) }`.
+  `tg-data` có adapter từ `ResultWriter` (một module nhỏ, bật bằng feature `driver`).
+
+**QueryResult, ô, lỗi.**
+- `enum QueryResult { Rows(Rows), Update { affected_rows: u64, elapsed_ms: u64 } }`,
+  `Rows { columns: Vec<ResultColumn>, rows: Vec<Vec<Cell>>, truncated: bool, elapsed_ms }`.
+- `Cell`: xem điểm chốt A. Dù chọn phương án nào, giá trị binary trong grid đều hiện dạng `BinaryText` (hex, cắt ở
+  16 KiB, có đuôi `… (N bytes)`); khi export thì thay bằng `<binary N bytes>` như Kotlin. Port `BinaryText.kt` kèm test.
+- `QueryError { message, sql_state, vendor_code, position }` (position đếm từ 0, theo UTF-16 như Kotlin). Lỗi tổng là
+  `DriverError` (thiserror): `Query(QueryError)`, `ReadOnly { verb }`, `Script { message, statement, completed,
+  rolled_back }`, `Insert { message, row }`, `Cancelled`, `Timeout`, `Connect(String)`, `Tunnel(SshError)`,
+  `Unsupported(String)`, `Io`. Thông điệp người dùng thấy giữ đúng chữ của Kotlin (ví dụ "Expected 1 row(s) but…",
+  "This connection is read-only: …").
+
+**Huỷ và timeout.**
+- Huỷ bằng drop: mọi future đều an toàn khi bị drop. Khi đang có câu lệnh chạy trên server, một guard trong future
+  gửi lệnh huỷ phía server lúc drop: Postgres dùng `CancelToken::cancel_query` (đi qua cùng tunnel), SQLite dùng
+  `sqlite3_interrupt` (`InterruptHandle`). Kết nối pool đang dùng dở thì bị bỏ, không trả về pool, để không ai nhận
+  lại một kết nối còn đang huỷ. UI giữ `tokio_util::sync::CancellationToken` và chạy
+  `token.run_until_cancelled(fut)`. Như vậy API không phải thêm tham số token, giống cách coroutine Kotlin làm.
+- Timeout: `ExecOptions { max_rows, timeout: Option<Duration> }`. Postgres thì `SET LOCAL statement_timeout` không
+  dùng được ngoài transaction, nên bọc bằng `tokio::time::timeout`, hết giờ thì gửi cancel và trả `DriverError::Timeout`.
+  SQLite dùng `progress_handler` để ngắt. `sample_values` cố định 3 s như Kotlin.
+
+**Pool và session.**
+- Pool cố định 4 kết nối cho explorer và table (Kotlin dùng Hikari với min = max = 4), có keepalive 120 s, timeout lấy
+  kết nối 10 s. Postgres dùng `deadpool-postgres`. SQLite dùng pool riêng gồm 4 worker. Riêng `:memory:` và file tạm
+  dùng chung một worker để dữ liệu nằm ở một chỗ.
+- `open_session` mở một kết nối riêng, nằm ngoài pool. `open_activity_monitor` cũng vậy.
+- `schema_snapshot` đọc song song tối đa `POOL_SIZE - 1` bảng (semaphore), giống Kotlin.
+
+**Introspection (thay cho JDBC `DatabaseMetaData`).**
+- `trait Catalog` theo engine, gồm `namespaces`, `tables`, `columns`, `primary_key`, `indexes`, `imported_keys`,
+  `relations`, `structure`. Phần ghép kết quả (`Introspector.details`: sắp cột, nhóm index, gộp FK theo `KEY_SEQ`, tên
+  FK mặc định, referential action) là code chung, port từ `Introspector.kt`.
+- Golden được ghi từ JDBC, nên các field mà JDBC tự suy ra phải ra cùng giá trị: `type_name` và `jdbc_type`
+  (pgjdbc trả `serial`/`bigserial` khi default là `nextval`, `int4`, `varchar`…; sqlite-jdbc lấy kiểu khai báo và
+  map affinity), `size`, `scale`, `IS_AUTOINCREMENT`. Postgres chép logic từ câu catalog của pgjdbc
+  (`PgDatabaseMetaData.getColumns`/`getIndexInfo`/`getImportedKeys`) và bảng `TypeInfoCache`. SQLite chép từ
+  `JDBC3DatabaseMetaData` của xerial (PRAGMA `table_xinfo`, `index_list`, `foreign_key_list`).
+- `StructureReader` (constraint, trigger, DDL) vốn đã chạy bằng SQL thuần trên kết nối, nên port gần nguyên.
+- Golden: test Kotlin mới `IntrospectionGoldenTest` (ở `src/test`) kết nối vào Postgres đã seed `structure-it/postgres.sql`,
+  và vào một file SQLite seed bằng `structure-it/sqlite.sql` (file mới, tương đương bản Postgres). Test dump
+  `TableDetails` + `TableStructure` của mọi bảng ra `conformance/core/golden/introspection-{postgres,sqlite}.json`.
+  Test Rust so khớp sau khi seed cùng file. Golden SQLite chạy mặc định; golden Postgres chạy khi có `TG_IT_POSTGRES`.
+
+**Postgres.** `tokio-postgres` + `deadpool-postgres`, TLS bằng `tokio-postgres-rustls` + `rustls`.
+`sslmode` (`disable/allow/prefer/require/verify-ca/verify-full`) đọc từ `properties`/URL như `JdbcUrls`; với
+`require` thì mã hoá nhưng không kiểm chứng chỉ (như pgjdbc), còn `verify-*` dùng `rustls-platform-verifier` (kho CA
+của hệ điều hành). Đọc ô và bind tham số theo điểm chốt B. ServerIdentity, activity (`pg_stat_activity`,
+`pg_cancel_backend`/`pg_terminate_backend`), `server_major_version` (`server_version_num`), export qua `DECLARE
+CURSOR` + `FETCH 1000` trong transaction như pgjdbc.
+
+**SQLite.** `rusqlite` (bundled). Pragma, `VACUUM INTO` để backup, `PRAGMA foreign_keys` quanh script rebuild,
+read-only mở bằng `SQLITE_OPEN_READ_ONLY`. Ô ra text đúng như `sqlite3_column_text` mà sqlite-jdbc dùng (ví dụ REAL
+in `%!.15g`).
+
+**Contract.** `tests/contract/mod.rs` port `RelationalContract.kt`: `async fn run(conn, ContractOptions { int_type,
+text_type, table_suffix, foreign_keys, transactions })`, thêm các ca huỷ, timeout, read-only, binary/`BinaryText` và
+script rollback. `tests/sqlite.rs` chạy mặc định. `tests/postgres.rs` tạo database `dg_<ts>` khi có
+`TG_IT_POSTGRES=host:port` (user `postgres`, mật khẩu `TG_IT_POSTGRES_PASSWORD`, mặc định `pw`). Docker:
+`docker run -d --rm --name dg-pg -e POSTGRES_PASSWORD=pw -p 55432:5432 postgres:17-alpine`. S4 thêm
+`tests/<engine>.rs` gọi đúng hàm `run` đó.
+
+**Dependency dự kiến** (ghim ở workspace): `async-trait`, `tokio` (thêm `rt-multi-thread`, `sync`, `time`, `macros`,
+`net`), `tokio-util`, `tokio-postgres`, `deadpool-postgres`, `tokio-postgres-rustls`, `rustls`,
+`rustls-platform-verifier`, `rusqlite` (`bundled`), `futures-util`. Đều là MIT/Apache. `ring` đã có trong NOTICE.
+
+#### Đã chốt (10/11/2026): A1 + B1
+
+Người dùng chọn A1 (ô là `Option<String>`) và B1 (Postgres đọc bằng simple query, tham số inline thành literal).
+Literal text inline không kèm kiểu, nên server tự suy kiểu y như khi pgjdbc bind `setObject(…, Types.OTHER)`.
+
+#### Phương án đã cân nhắc
+
+**A. Kiểu giá trị ô.**
+- A1: `type Cell = Option<String>`, giống Kotlin (`List<String?>`). Driver tự đổi mọi giá trị ra text, binary ra
+  `BinaryText`. Grid, export, chart và tg-data (golden S1) đều đang nhận text, nên không phải đổi gì.
+- A2: enum có kiểu (`Null | Bool | Int(i64) | Float(f64) | Decimal(String) | Text | Bytes | Date… | Json`), còn việc
+  đổi ra text dời lên tầng hiển thị. Grid sắp xếp và căn số dễ hơn, nhưng mỗi engine phải định dạng giống nhau, và mọi
+  chỗ đang ăn text phải sửa.
+- **Đề xuất A1.** Parity dễ kiểm hơn, giá trị đã sửa thì ghi ngược lại bằng chính text đó, và S7 vẫn có `jdbc_type`
+  trên cột để căn số.
+
+**B. Lấy text từ Postgres.** tokio-postgres chỉ trả text ở simple query protocol; extended protocol luôn trả binary.
+- B1: dùng simple query cho mọi câu đọc. Tham số của filter và edit được inline thành literal, escape an toàn bằng
+  `E'…'` (nhân đôi `\` và `'`, từ chối NUL) cộng cast kiểu khi cần. Text giống hệt pgjdbc `getString` (cũng chính là
+  output của server). Console giới hạn `max_rows` bằng cách đọc dạng stream, đủ hàng thì gửi cancel. Cùng chính sách
+  này cho S4: MySQL dùng text protocol (`query_iter`) cho câu không có tham số.
+- B2: extended protocol, tham số bind thật (gửi dạng text), nhưng kết quả binary, nên phải tự định dạng từng kiểu
+  Postgres (numeric, timestamp/tz theo `TimeZone` của session, interval, mảng, range, kiểu extension như PostGIS…).
+  Kiểu không biết thì phải chạy lại với `::text`.
+- **Đề xuất B1.** Định dạng text là việc của server nên khớp pgjdbc tuyệt đối, ít code hơn nhiều. Đổi lại, tham số
+  không còn được server bind. `ChangeStatement` vẫn dùng `?` và chỉ tầng Postgres mới inline, nên sau này muốn đổi sang
+  B2 thì không phải sửa API.
+
+#### Đã làm
+
+Contract pass trên SQLite (chạy mặc định), PostgreSQL 17, TimescaleDB (pg17) và CockroachDB 24.3 (chạy bằng Docker
+trên máy này). Introspection của SQLite và PostgreSQL khớp golden Kotlin.
+
+- **tg-sql**: thêm `tg_sql::edit` (port `ChangeSet.kt`) với golden mới `edit-changes`. `ResultColumn` chuyển về
+  `tg_sql::model`; `tg-data` dùng lại kiểu này, còn `ChartColumn` của `tg-chart` giờ là alias của nó.
+- **tg-driver**: các trait, `SqlDatabase` (mọi logic của `Database.kt` nằm trên hai trait engine là `SqlConn` và
+  `ConnSource`), `GuardedSession`, KV/Document (chỉ trait và guard), `ActivityMonitor` + `ActivityReader`.
+  Hướng dẫn thêm engine nằm ở đầu `crates/tg-driver/src/lib.rs`.
+- **Golden introspection**: `IntrospectionGoldenTest` (Kotlin, `src/test`) dump namespaces, tables, columnsOf,
+  details, columns, structure, relations, cùng kết quả vài câu SELECT (kiểu cột và text của ô), ghi ra
+  `conformance/core/golden/db/introspection-{sqlite,postgres}.json`.
+  - Schema SQLite là file mới `structure-it/sqlite.sql`.
+  - Golden Postgres cần `-Pit.postgres=host:port` và server đã seed `postgres.sql`.
+  - Phía Rust kiểm bằng `tests/introspection.rs`; phần Postgres chỉ chạy khi có `TG_IT_POSTGRES`.
+  - File nằm trong thư mục con `golden/db/`, để `CoreGoldenTest` không coi nó là golden mồ côi.
+- **Contract**: `tests/contract/mod.rs` gồm `RelationalContract.kt` cộng các ca không phụ thuộc engine của
+  `DatabaseTest.kt`: export, columnsOf, relations hai chiều, sample values có wildcard, change set bị stale,
+  `insert_rows` báo đúng dòng lỗi, manual commit, huỷ bằng drop, timeout, nhiều lần huỷ liên tiếp không làm cạn
+  pool, và read-only.
+  - Engine mới chỉ cần gọi `contract::run` và `contract::read_only`.
+  - Postgres: `TG_IT_POSTGRES` (mật khẩu `TG_IT_POSTGRES_PASSWORD`, mặc định `pw`), `TG_IT_TIMESCALE`,
+    `TG_IT_COCKROACH`. Lệnh docker ghi ở đầu `tests/postgres.rs`.
+- **Dependency mới** (ghim trong workspace, đều MIT/Apache): `async-trait`, `tokio-util`, `futures-util`, `rusqlite`
+  (bundled, tắt default features), `tokio-postgres`, `deadpool-postgres`, `tokio-postgres-rustls`, `rustls` (ring),
+  `rustls-native-certs`. Không có OpenSSL hay aws-lc, nên không phải sửa NOTICE.
+
+**SQLite.**
+- Mỗi kết nối chạy trên một thread worker; drop future thì gọi `sqlite3_interrupt`. Worker trả về pool sau khi
+  ROLLBACK những gì người mượn còn để mở.
+- `:memory:` dùng URI shared cache `tablegrip-<id>`, giữ sống bằng một kết nối neo, giống `JdbcUrls`.
+- Catalog chép đúng `DatabaseMetaData` của sqlite-jdbc 3.50, kể cả các quirk mà golden giữ:
+  - tên PK/FK lấy bằng regex trên câu CREATE;
+  - `getPrimaryKeys` sắp theo tên cột;
+  - FK không tên có tên `''`;
+  - `columnsOf` liệt kê cả `sqlite_schema` và `sqlite_sequence`.
+- Ô và kiểu cột theo `getString`/`getColumnType` của sqlite-jdbc, nên kiểu phụ thuộc giá trị của hàng đầu tiên như
+  bản Kotlin.
+- REAL in bằng `%!.15g` như SQLite 3.50 mà sqlite-jdbc nhúng. SQLite 3.54 nhúng trong rusqlite tự in tới 17 chữ số;
+  ta giữ cách hiển thị của Kotlin.
+- `relations`: Kotlin gom nhóm imported và exported riêng rồi mới bỏ trùng; ta làm y như vậy, nếu không FK tự tham
+  chiếu sẽ bị nhân đôi cột.
+
+**PostgreSQL** (B1).
+- Simple query cho text của server.
+- Kiểu cột lấy từ một `prepare` chạy pipeline song song, gần như không thêm round trip. Kiểu đặt theo
+  `ResultSetMetaData` của pgjdbc: cột identity hay `nextval` thành `serial`/`bigserial`; `bytea` thành `BINARY` và
+  hiện qua `BinaryText`.
+- Tham số inline:
+  - text đi dạng literal không kiểu (`'…'`, hoặc `E'…'` khi có `\`);
+  - Long, Decimal, UUID và ngày giờ có cast đúng kiểu pgjdbc bind;
+  - từ chối ký tự NUL.
+- Console giới hạn `max_rows` bằng cursor, nên không bao giờ phải huỷ transaction của người dùng:
+  - đang trong transaction thì dùng `SAVEPOINT` + `DECLARE`;
+  - ngoài transaction thì `BEGIN` / `DECLARE` / `COMMIT`;
+  - câu nào không DECLARE được thì chạy nguyên văn.
+- Export dùng `DECLARE` + `FETCH 1000` trong transaction, như fetch size của pgjdbc.
+- Drop future thì gửi cancel request. Nếu bị drop giữa một thao tác nhiều bước, lần gọi sau chạy SQL dọn dẹp trước.
+  Kết nối pool bị drop dở thì bị đóng, không trả về pool.
+- Lỗi được định dạng như `PSQLException`: `ERROR: …` kèm các dòng Detail/Hint/Position/Where, có SQLSTATE và
+  position đếm từ 0.
+- Catalog chép câu SQL và `TypeInfoCache` của pgjdbc 42.7.8. Hai đặc tả dùng để port (sqlite-jdbc, pgjdbc) được đọc
+  từ mã nguồn hoặc bytecode trong cache Gradle, không tải gì thêm.
+- Port xong StructureReader (Postgres và CockroachDB), ServerIdentity, activity monitor và
+  `server_major_version`.
+- TLS:
+  - `prefer`/`require` mã hoá nhưng không kiểm chứng chỉ, như pgjdbc;
+  - `verify-ca`/`verify-full` kiểm theo kho CA của hệ điều hành, và cả hai đều kiểm hostname (chặt hơn libpq ở
+    `verify-ca`).
+
+**Khác kế hoạch / khác Kotlin**
+- Không có `CancellationToken` trong API: huỷ bằng cách drop future, UI bọc ngoài bằng
+  `token.run_until_cancelled`. Timeout là `ExecOptions.timeout` và `PageRequest.timeout`.
+- `insert_rows` ghi theo lô `INSERT … VALUES (…),(…)` (tối đa 500 hàng hoặc 30k tham số). Khi một lô lỗi thì quay
+  về savepoint và chèn lại từng hàng để chỉ ra đúng hàng lỗi. Kotlin dùng JDBC batch.
+- **CockroachDB bỏ qua cancel request của pgwire** (đã thử: `pg_sleep(30)` vẫn chạy hết). Contract của CockroachDB
+  vì thế tắt phần huỷ (`Options.cancellation = false`). Muốn huỷ được thì phải chạy `CANCEL QUERY` theo
+  `session_id` từ một kết nối khác; để S4 hoặc S6 quyết.
+- `ColumnEdit.kt` (validate ô khi sửa) chưa port: nó là logic của cell editor, hợp với S7 hơn.
+- Data file (CSV/Excel/JSON) qua working copy SQLite trả `Unsupported` cho tới khi S5 có `DataFileStore`.
+- TimeZone của session Postgres: pgjdbc đặt theo múi giờ của JVM. Ta để mặc định của server, nên `timestamptz`
+  có thể hiện khác bản Kotlin nếu múi giờ server khác múi giờ máy. Golden không có cột `timestamptz` nào có dữ liệu.
+  Nên quyết khi làm S6.
+
+Còn dở / lưu ý cho S4–S5:
+- Chưa có test kết nối Postgres đi qua SSH tunnel: server russh dùng trong test của tg-core không được export.
+  `engine::open_tunnel` dùng cùng `SshTunnel` mà S2 đã test.
+- `ConnectionConfig.driver_jars` và `DriverId` không được dùng (D2).
+- Docker trên máy này đang có `dg-pg` (55432) và `dg-it-timescale` (55433) do S3 bật, và `dg-crdb` (56257) có sẵn từ
+  trước.

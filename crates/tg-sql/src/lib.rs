@@ -10,6 +10,7 @@ pub mod completion;
 pub mod ddl;
 pub mod decimal;
 pub mod dialect;
+pub mod edit;
 pub mod filter;
 pub mod formatter;
 pub mod keywords;

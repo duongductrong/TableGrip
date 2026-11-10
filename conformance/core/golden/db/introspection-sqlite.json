@@ -1,0 +1,2639 @@
+{
+    "namespaces": [
+        {
+            "catalog": null,
+            "schema": null
+        }
+    ],
+    "objects": [
+        {
+            "namespace": {
+                "catalog": null,
+                "schema": null
+            },
+            "tables": [
+                {
+                    "ref": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "big_orders"
+                    },
+                    "isView": true,
+                    "remarks": null
+                },
+                {
+                    "ref": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "customers"
+                    },
+                    "isView": false,
+                    "remarks": null
+                },
+                {
+                    "ref": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "line_items"
+                    },
+                    "isView": false,
+                    "remarks": null
+                },
+                {
+                    "ref": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "Mixed Case"
+                    },
+                    "isView": false,
+                    "remarks": null
+                },
+                {
+                    "ref": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "orders"
+                    },
+                    "isView": false,
+                    "remarks": null
+                },
+                {
+                    "ref": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "products"
+                    },
+                    "isView": false,
+                    "remarks": null
+                },
+                {
+                    "ref": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "tree"
+                    },
+                    "isView": false,
+                    "remarks": null
+                },
+                {
+                    "ref": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "user_x"
+                    },
+                    "isView": false,
+                    "remarks": null
+                },
+                {
+                    "ref": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "userAx"
+                    },
+                    "isView": false,
+                    "remarks": null
+                }
+            ],
+            "columnsOf": {
+                "Mixed Case": [
+                    {
+                        "name": "Id",
+                        "typeName": "INT",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 4,
+                        "scale": 0
+                    },
+                    {
+                        "name": "a\"b",
+                        "typeName": "TEXT",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 12,
+                        "scale": 0
+                    },
+                    {
+                        "name": "odd col",
+                        "typeName": "VARCHAR",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 12,
+                        "scale": 0
+                    }
+                ],
+                "big_orders": [
+                    {
+                        "name": "id",
+                        "typeName": "INTEGER",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 4,
+                        "scale": 0
+                    },
+                    {
+                        "name": "total",
+                        "typeName": "NUMERIC",
+                        "size": 12,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 6,
+                        "scale": 2
+                    }
+                ],
+                "customers": [
+                    {
+                        "name": "id",
+                        "typeName": "INTEGER",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": true,
+                        "primaryKey": false,
+                        "jdbcType": 4,
+                        "scale": 0
+                    },
+                    {
+                        "name": "email",
+                        "typeName": "VARCHAR",
+                        "size": 120,
+                        "nullable": false,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 12,
+                        "scale": 0
+                    },
+                    {
+                        "name": "name",
+                        "typeName": "TEXT",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 12,
+                        "scale": 0
+                    }
+                ],
+                "line_items": [
+                    {
+                        "name": "order_id",
+                        "typeName": "INTEGER",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 4,
+                        "scale": 0
+                    },
+                    {
+                        "name": "line",
+                        "typeName": "INTEGER",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 4,
+                        "scale": 0
+                    },
+                    {
+                        "name": "sku",
+                        "typeName": "TEXT",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 12,
+                        "scale": 0
+                    }
+                ],
+                "orders": [
+                    {
+                        "name": "id",
+                        "typeName": "INTEGER",
+                        "size": 2000000000,
+                        "nullable": false,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 4,
+                        "scale": 0
+                    },
+                    {
+                        "name": "customer_id",
+                        "typeName": "INTEGER",
+                        "size": 2000000000,
+                        "nullable": false,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 4,
+                        "scale": 0
+                    },
+                    {
+                        "name": "total",
+                        "typeName": "NUMERIC",
+                        "size": 12,
+                        "nullable": false,
+                        "defaultValue": "0",
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 6,
+                        "scale": 2
+                    },
+                    {
+                        "name": "qty",
+                        "typeName": "INT",
+                        "size": 2000000000,
+                        "nullable": false,
+                        "defaultValue": "1",
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 4,
+                        "scale": 0
+                    },
+                    {
+                        "name": "total_with_tax",
+                        "typeName": "REAL",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 6,
+                        "scale": 10
+                    },
+                    {
+                        "name": "status",
+                        "typeName": "TEXT",
+                        "size": 2000000000,
+                        "nullable": false,
+                        "defaultValue": "'new'",
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 12,
+                        "scale": 0
+                    },
+                    {
+                        "name": "note",
+                        "typeName": "TEXT",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": "lower('X')",
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 12,
+                        "scale": 0
+                    },
+                    {
+                        "name": "created",
+                        "typeName": "TIMESTAMP",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": "CURRENT_TIMESTAMP",
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 12,
+                        "scale": 10
+                    },
+                    {
+                        "name": "payload",
+                        "typeName": "BLOB",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 12,
+                        "scale": 0
+                    },
+                    {
+                        "name": "flag",
+                        "typeName": "BOOLEAN",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 4,
+                        "scale": 0
+                    },
+                    {
+                        "name": "ratio",
+                        "typeName": "DOUBLE PRECISION",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 6,
+                        "scale": 10
+                    },
+                    {
+                        "name": "code",
+                        "typeName": "CHAR",
+                        "size": 3,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 12,
+                        "scale": 0
+                    }
+                ],
+                "products": [
+                    {
+                        "name": "sku",
+                        "typeName": "TEXT",
+                        "size": 2000000000,
+                        "nullable": false,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 12,
+                        "scale": 0
+                    },
+                    {
+                        "name": "name",
+                        "typeName": "TEXT",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 12,
+                        "scale": 0
+                    }
+                ],
+                "sqlite_schema": [
+                    {
+                        "name": "type",
+                        "typeName": "TEXT",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 12,
+                        "scale": 0
+                    },
+                    {
+                        "name": "name",
+                        "typeName": "TEXT",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 12,
+                        "scale": 0
+                    },
+                    {
+                        "name": "tbl_name",
+                        "typeName": "TEXT",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 12,
+                        "scale": 0
+                    },
+                    {
+                        "name": "rootpage",
+                        "typeName": "INT",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 4,
+                        "scale": 0
+                    },
+                    {
+                        "name": "sql",
+                        "typeName": "TEXT",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 12,
+                        "scale": 0
+                    }
+                ],
+                "sqlite_sequence": [
+                    {
+                        "name": "name",
+                        "typeName": "",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 12,
+                        "scale": 10
+                    },
+                    {
+                        "name": "seq",
+                        "typeName": "",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 12,
+                        "scale": 10
+                    }
+                ],
+                "tree": [
+                    {
+                        "name": "id",
+                        "typeName": "INTEGER",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 4,
+                        "scale": 0
+                    },
+                    {
+                        "name": "parent",
+                        "typeName": "INTEGER",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 4,
+                        "scale": 0
+                    }
+                ],
+                "userAx": [
+                    {
+                        "name": "id",
+                        "typeName": "INTEGER",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 4,
+                        "scale": 0
+                    }
+                ],
+                "user_x": [
+                    {
+                        "name": "id",
+                        "typeName": "INTEGER",
+                        "size": 2000000000,
+                        "nullable": true,
+                        "defaultValue": null,
+                        "autoIncrement": false,
+                        "primaryKey": false,
+                        "jdbcType": 4,
+                        "scale": 0
+                    }
+                ]
+            },
+            "details": [
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "big_orders"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "INTEGER",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "total",
+                            "typeName": "NUMERIC",
+                            "size": 12,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 6,
+                            "scale": 2
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [],
+                    "primaryKeyName": null
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "customers"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "INTEGER",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": true,
+                            "primaryKey": true,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "email",
+                            "typeName": "VARCHAR",
+                            "size": 120,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        },
+                        {
+                            "name": "name",
+                            "typeName": "TEXT",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        }
+                    ],
+                    "indexes": [
+                        {
+                            "name": "sqlite_autoindex_customers_1",
+                            "columns": [
+                                "email"
+                            ],
+                            "unique": true
+                        }
+                    ],
+                    "foreignKeys": [],
+                    "primaryKeyName": null
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "line_items"
+                    },
+                    "columns": [
+                        {
+                            "name": "order_id",
+                            "typeName": "INTEGER",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": true,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "line",
+                            "typeName": "INTEGER",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": true,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "sku",
+                            "typeName": "TEXT",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        }
+                    ],
+                    "indexes": [
+                        {
+                            "name": "sqlite_autoindex_line_items_1",
+                            "columns": [
+                                "order_id",
+                                "line"
+                            ],
+                            "unique": true
+                        }
+                    ],
+                    "foreignKeys": [
+                        {
+                            "name": "",
+                            "columns": [
+                                "order_id"
+                            ],
+                            "referencedTable": {
+                                "namespace": {
+                                    "catalog": null,
+                                    "schema": null
+                                },
+                                "name": "orders"
+                            },
+                            "referencedColumns": [
+                                "id"
+                            ],
+                            "onUpdate": null,
+                            "onDelete": null
+                        },
+                        {
+                            "name": "line_product",
+                            "columns": [
+                                "sku"
+                            ],
+                            "referencedTable": {
+                                "namespace": {
+                                    "catalog": null,
+                                    "schema": null
+                                },
+                                "name": "products"
+                            },
+                            "referencedColumns": [
+                                "sku"
+                            ],
+                            "onUpdate": null,
+                            "onDelete": "SET DEFAULT"
+                        }
+                    ],
+                    "primaryKeyName": null
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "Mixed Case"
+                    },
+                    "columns": [
+                        {
+                            "name": "Id",
+                            "typeName": "INT",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": true,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "a\"b",
+                            "typeName": "TEXT",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        },
+                        {
+                            "name": "odd col",
+                            "typeName": "VARCHAR",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        }
+                    ],
+                    "indexes": [
+                        {
+                            "name": "sqlite_autoindex_Mixed Case_1",
+                            "columns": [
+                                "Id"
+                            ],
+                            "unique": true
+                        }
+                    ],
+                    "foreignKeys": [],
+                    "primaryKeyName": null
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "orders"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "INTEGER",
+                            "size": 2000000000,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": true,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "customer_id",
+                            "typeName": "INTEGER",
+                            "size": 2000000000,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "total",
+                            "typeName": "NUMERIC",
+                            "size": 12,
+                            "nullable": false,
+                            "defaultValue": "0",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 6,
+                            "scale": 2
+                        },
+                        {
+                            "name": "qty",
+                            "typeName": "INT",
+                            "size": 2000000000,
+                            "nullable": false,
+                            "defaultValue": "1",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "total_with_tax",
+                            "typeName": "REAL",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 6,
+                            "scale": 10
+                        },
+                        {
+                            "name": "status",
+                            "typeName": "TEXT",
+                            "size": 2000000000,
+                            "nullable": false,
+                            "defaultValue": "'new'",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        },
+                        {
+                            "name": "note",
+                            "typeName": "TEXT",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": "lower('X')",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        },
+                        {
+                            "name": "created",
+                            "typeName": "TIMESTAMP",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": "CURRENT_TIMESTAMP",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 10
+                        },
+                        {
+                            "name": "payload",
+                            "typeName": "BLOB",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        },
+                        {
+                            "name": "flag",
+                            "typeName": "BOOLEAN",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "ratio",
+                            "typeName": "DOUBLE PRECISION",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 6,
+                            "scale": 10
+                        },
+                        {
+                            "name": "code",
+                            "typeName": "CHAR",
+                            "size": 3,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        }
+                    ],
+                    "indexes": [
+                        {
+                            "name": "orders_customer_status",
+                            "columns": [
+                                "customer_id",
+                                "status"
+                            ],
+                            "unique": true
+                        },
+                        {
+                            "name": "orders_lower",
+                            "columns": [],
+                            "unique": false
+                        },
+                        {
+                            "name": "orders_status",
+                            "columns": [
+                                "status"
+                            ],
+                            "unique": false
+                        }
+                    ],
+                    "foreignKeys": [
+                        {
+                            "name": "",
+                            "columns": [
+                                "customer_id"
+                            ],
+                            "referencedTable": {
+                                "namespace": {
+                                    "catalog": null,
+                                    "schema": null
+                                },
+                                "name": "customers"
+                            },
+                            "referencedColumns": [
+                                "id"
+                            ],
+                            "onUpdate": "SET NULL",
+                            "onDelete": "CASCADE"
+                        }
+                    ],
+                    "primaryKeyName": "orders_pk"
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "products"
+                    },
+                    "columns": [
+                        {
+                            "name": "sku",
+                            "typeName": "TEXT",
+                            "size": 2000000000,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": true,
+                            "jdbcType": 12,
+                            "scale": 0
+                        },
+                        {
+                            "name": "name",
+                            "typeName": "TEXT",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        }
+                    ],
+                    "indexes": [
+                        {
+                            "name": "sqlite_autoindex_products_1",
+                            "columns": [
+                                "sku"
+                            ],
+                            "unique": true
+                        }
+                    ],
+                    "foreignKeys": [],
+                    "primaryKeyName": null
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "tree"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "INTEGER",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": true,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "parent",
+                            "typeName": "INTEGER",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 4,
+                            "scale": 0
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [
+                        {
+                            "name": "",
+                            "columns": [
+                                "parent"
+                            ],
+                            "referencedTable": {
+                                "namespace": {
+                                    "catalog": null,
+                                    "schema": null
+                                },
+                                "name": "tree"
+                            },
+                            "referencedColumns": [
+                                "id"
+                            ],
+                            "onUpdate": null,
+                            "onDelete": null
+                        }
+                    ],
+                    "primaryKeyName": null
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "user_x"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "INTEGER",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 4,
+                            "scale": 0
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [],
+                    "primaryKeyName": null
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "userAx"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "INTEGER",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 4,
+                            "scale": 0
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [],
+                    "primaryKeyName": null
+                }
+            ],
+            "columns": [
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "big_orders"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "INTEGER",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "total",
+                            "typeName": "NUMERIC",
+                            "size": 12,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 6,
+                            "scale": 2
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [],
+                    "primaryKeyName": null
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "customers"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "INTEGER",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": true,
+                            "primaryKey": true,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "email",
+                            "typeName": "VARCHAR",
+                            "size": 120,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        },
+                        {
+                            "name": "name",
+                            "typeName": "TEXT",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [],
+                    "primaryKeyName": null
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "line_items"
+                    },
+                    "columns": [
+                        {
+                            "name": "order_id",
+                            "typeName": "INTEGER",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": true,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "line",
+                            "typeName": "INTEGER",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": true,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "sku",
+                            "typeName": "TEXT",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [],
+                    "primaryKeyName": null
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "Mixed Case"
+                    },
+                    "columns": [
+                        {
+                            "name": "Id",
+                            "typeName": "INT",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": true,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "a\"b",
+                            "typeName": "TEXT",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        },
+                        {
+                            "name": "odd col",
+                            "typeName": "VARCHAR",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [],
+                    "primaryKeyName": null
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "orders"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "INTEGER",
+                            "size": 2000000000,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": true,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "customer_id",
+                            "typeName": "INTEGER",
+                            "size": 2000000000,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "total",
+                            "typeName": "NUMERIC",
+                            "size": 12,
+                            "nullable": false,
+                            "defaultValue": "0",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 6,
+                            "scale": 2
+                        },
+                        {
+                            "name": "qty",
+                            "typeName": "INT",
+                            "size": 2000000000,
+                            "nullable": false,
+                            "defaultValue": "1",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "total_with_tax",
+                            "typeName": "REAL",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 6,
+                            "scale": 10
+                        },
+                        {
+                            "name": "status",
+                            "typeName": "TEXT",
+                            "size": 2000000000,
+                            "nullable": false,
+                            "defaultValue": "'new'",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        },
+                        {
+                            "name": "note",
+                            "typeName": "TEXT",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": "lower('X')",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        },
+                        {
+                            "name": "created",
+                            "typeName": "TIMESTAMP",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": "CURRENT_TIMESTAMP",
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 10
+                        },
+                        {
+                            "name": "payload",
+                            "typeName": "BLOB",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        },
+                        {
+                            "name": "flag",
+                            "typeName": "BOOLEAN",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "ratio",
+                            "typeName": "DOUBLE PRECISION",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 6,
+                            "scale": 10
+                        },
+                        {
+                            "name": "code",
+                            "typeName": "CHAR",
+                            "size": 3,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [],
+                    "primaryKeyName": "orders_pk"
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "products"
+                    },
+                    "columns": [
+                        {
+                            "name": "sku",
+                            "typeName": "TEXT",
+                            "size": 2000000000,
+                            "nullable": false,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": true,
+                            "jdbcType": 12,
+                            "scale": 0
+                        },
+                        {
+                            "name": "name",
+                            "typeName": "TEXT",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 12,
+                            "scale": 0
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [],
+                    "primaryKeyName": null
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "tree"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "INTEGER",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": true,
+                            "jdbcType": 4,
+                            "scale": 0
+                        },
+                        {
+                            "name": "parent",
+                            "typeName": "INTEGER",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 4,
+                            "scale": 0
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [],
+                    "primaryKeyName": null
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "user_x"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "INTEGER",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 4,
+                            "scale": 0
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [],
+                    "primaryKeyName": null
+                },
+                {
+                    "table": {
+                        "namespace": {
+                            "catalog": null,
+                            "schema": null
+                        },
+                        "name": "userAx"
+                    },
+                    "columns": [
+                        {
+                            "name": "id",
+                            "typeName": "INTEGER",
+                            "size": 2000000000,
+                            "nullable": true,
+                            "defaultValue": null,
+                            "autoIncrement": false,
+                            "primaryKey": false,
+                            "jdbcType": 4,
+                            "scale": 0
+                        }
+                    ],
+                    "indexes": [],
+                    "foreignKeys": [],
+                    "primaryKeyName": null
+                }
+            ],
+            "structures": [
+                {
+                    "details": {
+                        "table": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": null
+                            },
+                            "name": "big_orders"
+                        },
+                        "columns": [
+                            {
+                                "name": "id",
+                                "typeName": "INTEGER",
+                                "size": 2000000000,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 4,
+                                "scale": 0
+                            },
+                            {
+                                "name": "total",
+                                "typeName": "NUMERIC",
+                                "size": 12,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 6,
+                                "scale": 2
+                            }
+                        ],
+                        "indexes": [],
+                        "foreignKeys": [],
+                        "primaryKeyName": null
+                    },
+                    "constraints": [],
+                    "triggers": [],
+                    "ddl": "CREATE VIEW big_orders AS SELECT id, total FROM orders WHERE total > 100;"
+                },
+                {
+                    "details": {
+                        "table": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": null
+                            },
+                            "name": "customers"
+                        },
+                        "columns": [
+                            {
+                                "name": "id",
+                                "typeName": "INTEGER",
+                                "size": 2000000000,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": true,
+                                "primaryKey": true,
+                                "jdbcType": 4,
+                                "scale": 0
+                            },
+                            {
+                                "name": "email",
+                                "typeName": "VARCHAR",
+                                "size": 120,
+                                "nullable": false,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 12,
+                                "scale": 0
+                            },
+                            {
+                                "name": "name",
+                                "typeName": "TEXT",
+                                "size": 2000000000,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 12,
+                                "scale": 0
+                            }
+                        ],
+                        "indexes": [
+                            {
+                                "name": "sqlite_autoindex_customers_1",
+                                "columns": [
+                                    "email"
+                                ],
+                                "unique": true
+                            }
+                        ],
+                        "foreignKeys": [],
+                        "primaryKeyName": null
+                    },
+                    "constraints": [
+                        {
+                            "name": "",
+                            "kind": "PrimaryKey",
+                            "columns": [
+                                "id"
+                            ],
+                            "definition": "PRIMARY KEY (\"id\")"
+                        },
+                        {
+                            "name": "",
+                            "kind": "Unique",
+                            "columns": [
+                                "email"
+                            ],
+                            "definition": "UNIQUE (\"email\")"
+                        }
+                    ],
+                    "triggers": [],
+                    "ddl": "CREATE TABLE customers (id INTEGER PRIMARY KEY AUTOINCREMENT, email varchar(120) NOT NULL UNIQUE, name text);"
+                },
+                {
+                    "details": {
+                        "table": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": null
+                            },
+                            "name": "line_items"
+                        },
+                        "columns": [
+                            {
+                                "name": "order_id",
+                                "typeName": "INTEGER",
+                                "size": 2000000000,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": true,
+                                "jdbcType": 4,
+                                "scale": 0
+                            },
+                            {
+                                "name": "line",
+                                "typeName": "INTEGER",
+                                "size": 2000000000,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": true,
+                                "jdbcType": 4,
+                                "scale": 0
+                            },
+                            {
+                                "name": "sku",
+                                "typeName": "TEXT",
+                                "size": 2000000000,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 12,
+                                "scale": 0
+                            }
+                        ],
+                        "indexes": [
+                            {
+                                "name": "sqlite_autoindex_line_items_1",
+                                "columns": [
+                                    "order_id",
+                                    "line"
+                                ],
+                                "unique": true
+                            }
+                        ],
+                        "foreignKeys": [
+                            {
+                                "name": "",
+                                "columns": [
+                                    "order_id"
+                                ],
+                                "referencedTable": {
+                                    "namespace": {
+                                        "catalog": null,
+                                        "schema": null
+                                    },
+                                    "name": "orders"
+                                },
+                                "referencedColumns": [
+                                    "id"
+                                ],
+                                "onUpdate": null,
+                                "onDelete": null
+                            },
+                            {
+                                "name": "line_product",
+                                "columns": [
+                                    "sku"
+                                ],
+                                "referencedTable": {
+                                    "namespace": {
+                                        "catalog": null,
+                                        "schema": null
+                                    },
+                                    "name": "products"
+                                },
+                                "referencedColumns": [
+                                    "sku"
+                                ],
+                                "onUpdate": null,
+                                "onDelete": "SET DEFAULT"
+                            }
+                        ],
+                        "primaryKeyName": null
+                    },
+                    "constraints": [
+                        {
+                            "name": "",
+                            "kind": "PrimaryKey",
+                            "columns": [
+                                "order_id",
+                                "line"
+                            ],
+                            "definition": "PRIMARY KEY (\"order_id\", \"line\")"
+                        },
+                        {
+                            "name": "",
+                            "kind": "ForeignKey",
+                            "columns": [
+                                "order_id"
+                            ],
+                            "definition": "FOREIGN KEY (\"order_id\") REFERENCES \"orders\" (\"id\")"
+                        },
+                        {
+                            "name": "",
+                            "kind": "ForeignKey",
+                            "columns": [
+                                "sku"
+                            ],
+                            "definition": "FOREIGN KEY (\"sku\") REFERENCES \"products\" (\"sku\") ON DELETE SET DEFAULT"
+                        }
+                    ],
+                    "triggers": [],
+                    "ddl": "CREATE TABLE line_items (\n  order_id integer,\n  line integer,\n  sku text,\n  PRIMARY KEY (order_id, line),\n  FOREIGN KEY (order_id) REFERENCES orders(id),\n  CONSTRAINT line_product FOREIGN KEY (sku) REFERENCES products(sku) ON DELETE SET DEFAULT\n);"
+                },
+                {
+                    "details": {
+                        "table": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": null
+                            },
+                            "name": "Mixed Case"
+                        },
+                        "columns": [
+                            {
+                                "name": "Id",
+                                "typeName": "INT",
+                                "size": 2000000000,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": true,
+                                "jdbcType": 4,
+                                "scale": 0
+                            },
+                            {
+                                "name": "a\"b",
+                                "typeName": "TEXT",
+                                "size": 2000000000,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 12,
+                                "scale": 0
+                            },
+                            {
+                                "name": "odd col",
+                                "typeName": "VARCHAR",
+                                "size": 2000000000,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 12,
+                                "scale": 0
+                            }
+                        ],
+                        "indexes": [
+                            {
+                                "name": "sqlite_autoindex_Mixed Case_1",
+                                "columns": [
+                                    "Id"
+                                ],
+                                "unique": true
+                            }
+                        ],
+                        "foreignKeys": [],
+                        "primaryKeyName": null
+                    },
+                    "constraints": [
+                        {
+                            "name": "",
+                            "kind": "PrimaryKey",
+                            "columns": [
+                                "Id"
+                            ],
+                            "definition": "PRIMARY KEY (\"Id\")"
+                        }
+                    ],
+                    "triggers": [],
+                    "ddl": "CREATE TABLE \"Mixed Case\" (\"Id\" int PRIMARY KEY, \"a\"\"b\" text, [odd col] varchar);"
+                },
+                {
+                    "details": {
+                        "table": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": null
+                            },
+                            "name": "orders"
+                        },
+                        "columns": [
+                            {
+                                "name": "id",
+                                "typeName": "INTEGER",
+                                "size": 2000000000,
+                                "nullable": false,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": true,
+                                "jdbcType": 4,
+                                "scale": 0
+                            },
+                            {
+                                "name": "customer_id",
+                                "typeName": "INTEGER",
+                                "size": 2000000000,
+                                "nullable": false,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 4,
+                                "scale": 0
+                            },
+                            {
+                                "name": "total",
+                                "typeName": "NUMERIC",
+                                "size": 12,
+                                "nullable": false,
+                                "defaultValue": "0",
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 6,
+                                "scale": 2
+                            },
+                            {
+                                "name": "qty",
+                                "typeName": "INT",
+                                "size": 2000000000,
+                                "nullable": false,
+                                "defaultValue": "1",
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 4,
+                                "scale": 0
+                            },
+                            {
+                                "name": "total_with_tax",
+                                "typeName": "REAL",
+                                "size": 2000000000,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 6,
+                                "scale": 10
+                            },
+                            {
+                                "name": "status",
+                                "typeName": "TEXT",
+                                "size": 2000000000,
+                                "nullable": false,
+                                "defaultValue": "'new'",
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 12,
+                                "scale": 0
+                            },
+                            {
+                                "name": "note",
+                                "typeName": "TEXT",
+                                "size": 2000000000,
+                                "nullable": true,
+                                "defaultValue": "lower('X')",
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 12,
+                                "scale": 0
+                            },
+                            {
+                                "name": "created",
+                                "typeName": "TIMESTAMP",
+                                "size": 2000000000,
+                                "nullable": true,
+                                "defaultValue": "CURRENT_TIMESTAMP",
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 12,
+                                "scale": 10
+                            },
+                            {
+                                "name": "payload",
+                                "typeName": "BLOB",
+                                "size": 2000000000,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 12,
+                                "scale": 0
+                            },
+                            {
+                                "name": "flag",
+                                "typeName": "BOOLEAN",
+                                "size": 2000000000,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 4,
+                                "scale": 0
+                            },
+                            {
+                                "name": "ratio",
+                                "typeName": "DOUBLE PRECISION",
+                                "size": 2000000000,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 6,
+                                "scale": 10
+                            },
+                            {
+                                "name": "code",
+                                "typeName": "CHAR",
+                                "size": 3,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 12,
+                                "scale": 0
+                            }
+                        ],
+                        "indexes": [
+                            {
+                                "name": "orders_customer_status",
+                                "columns": [
+                                    "customer_id",
+                                    "status"
+                                ],
+                                "unique": true
+                            },
+                            {
+                                "name": "orders_lower",
+                                "columns": [],
+                                "unique": false
+                            },
+                            {
+                                "name": "orders_status",
+                                "columns": [
+                                    "status"
+                                ],
+                                "unique": false
+                            }
+                        ],
+                        "foreignKeys": [
+                            {
+                                "name": "",
+                                "columns": [
+                                    "customer_id"
+                                ],
+                                "referencedTable": {
+                                    "namespace": {
+                                        "catalog": null,
+                                        "schema": null
+                                    },
+                                    "name": "customers"
+                                },
+                                "referencedColumns": [
+                                    "id"
+                                ],
+                                "onUpdate": "SET NULL",
+                                "onDelete": "CASCADE"
+                            }
+                        ],
+                        "primaryKeyName": "orders_pk"
+                    },
+                    "constraints": [
+                        {
+                            "name": "",
+                            "kind": "PrimaryKey",
+                            "columns": [
+                                "id"
+                            ],
+                            "definition": "PRIMARY KEY (\"id\")"
+                        },
+                        {
+                            "name": "",
+                            "kind": "ForeignKey",
+                            "columns": [
+                                "customer_id"
+                            ],
+                            "definition": "FOREIGN KEY (\"customer_id\") REFERENCES \"customers\" (\"id\") ON UPDATE SET NULL ON DELETE CASCADE"
+                        },
+                        {
+                            "name": "positive_total",
+                            "kind": "Check",
+                            "columns": [],
+                            "definition": "CHECK (total >= 0)"
+                        },
+                        {
+                            "name": "",
+                            "kind": "Check",
+                            "columns": [],
+                            "definition": "CHECK (qty > 0)"
+                        }
+                    ],
+                    "triggers": [
+                        {
+                            "name": "orders_audit",
+                            "timing": "AFTER",
+                            "events": "DELETE",
+                            "enabled": true,
+                            "definition": "CREATE TRIGGER orders_audit AFTER DELETE ON orders BEGIN SELECT 1; END"
+                        },
+                        {
+                            "name": "orders_touch",
+                            "timing": "BEFORE",
+                            "events": "INSERT",
+                            "enabled": true,
+                            "definition": "CREATE TRIGGER orders_touch BEFORE INSERT ON orders FOR EACH ROW BEGIN SELECT 1; END"
+                        }
+                    ],
+                    "ddl": "CREATE TABLE orders (\n  id integer NOT NULL,\n  customer_id integer NOT NULL REFERENCES customers(id) ON DELETE CASCADE ON UPDATE SET NULL,\n  total numeric(10,2) NOT NULL DEFAULT 0,\n  qty int NOT NULL DEFAULT 1,\n  total_with_tax real GENERATED ALWAYS AS (total * 1.1) STORED,\n  status text NOT NULL DEFAULT 'new',\n  note TEXT DEFAULT (lower('X')),\n  created timestamp DEFAULT CURRENT_TIMESTAMP,\n  payload BLOB,\n  flag boolean,\n  ratio double precision,\n  code char(3),\n  CONSTRAINT orders_pk PRIMARY KEY (id),\n  CONSTRAINT positive_total CHECK (total >= 0),\n  CHECK (qty > 0)\n);\n\nCREATE UNIQUE INDEX orders_customer_status ON orders (customer_id, status);\n\nCREATE INDEX orders_lower ON orders (lower(status));\n\nCREATE INDEX orders_status ON orders (status) WHERE status <> 'done';\n\nCREATE TRIGGER orders_audit AFTER DELETE ON orders BEGIN SELECT 1; END;\n\nCREATE TRIGGER orders_touch BEFORE INSERT ON orders FOR EACH ROW BEGIN SELECT 1; END;"
+                },
+                {
+                    "details": {
+                        "table": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": null
+                            },
+                            "name": "products"
+                        },
+                        "columns": [
+                            {
+                                "name": "sku",
+                                "typeName": "TEXT",
+                                "size": 2000000000,
+                                "nullable": false,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": true,
+                                "jdbcType": 12,
+                                "scale": 0
+                            },
+                            {
+                                "name": "name",
+                                "typeName": "TEXT",
+                                "size": 2000000000,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 12,
+                                "scale": 0
+                            }
+                        ],
+                        "indexes": [
+                            {
+                                "name": "sqlite_autoindex_products_1",
+                                "columns": [
+                                    "sku"
+                                ],
+                                "unique": true
+                            }
+                        ],
+                        "foreignKeys": [],
+                        "primaryKeyName": null
+                    },
+                    "constraints": [
+                        {
+                            "name": "",
+                            "kind": "PrimaryKey",
+                            "columns": [
+                                "sku"
+                            ],
+                            "definition": "PRIMARY KEY (\"sku\")"
+                        }
+                    ],
+                    "triggers": [],
+                    "ddl": "CREATE TABLE products (sku text PRIMARY KEY, name text) WITHOUT ROWID;"
+                },
+                {
+                    "details": {
+                        "table": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": null
+                            },
+                            "name": "tree"
+                        },
+                        "columns": [
+                            {
+                                "name": "id",
+                                "typeName": "INTEGER",
+                                "size": 2000000000,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": true,
+                                "jdbcType": 4,
+                                "scale": 0
+                            },
+                            {
+                                "name": "parent",
+                                "typeName": "INTEGER",
+                                "size": 2000000000,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 4,
+                                "scale": 0
+                            }
+                        ],
+                        "indexes": [],
+                        "foreignKeys": [
+                            {
+                                "name": "",
+                                "columns": [
+                                    "parent"
+                                ],
+                                "referencedTable": {
+                                    "namespace": {
+                                        "catalog": null,
+                                        "schema": null
+                                    },
+                                    "name": "tree"
+                                },
+                                "referencedColumns": [
+                                    "id"
+                                ],
+                                "onUpdate": null,
+                                "onDelete": null
+                            }
+                        ],
+                        "primaryKeyName": null
+                    },
+                    "constraints": [
+                        {
+                            "name": "",
+                            "kind": "PrimaryKey",
+                            "columns": [
+                                "id"
+                            ],
+                            "definition": "PRIMARY KEY (\"id\")"
+                        },
+                        {
+                            "name": "",
+                            "kind": "ForeignKey",
+                            "columns": [
+                                "parent"
+                            ],
+                            "definition": "FOREIGN KEY (\"parent\") REFERENCES \"tree\" (\"id\")"
+                        }
+                    ],
+                    "triggers": [],
+                    "ddl": "CREATE TABLE tree (id integer PRIMARY KEY, parent integer REFERENCES tree(id));"
+                },
+                {
+                    "details": {
+                        "table": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": null
+                            },
+                            "name": "user_x"
+                        },
+                        "columns": [
+                            {
+                                "name": "id",
+                                "typeName": "INTEGER",
+                                "size": 2000000000,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 4,
+                                "scale": 0
+                            }
+                        ],
+                        "indexes": [],
+                        "foreignKeys": [],
+                        "primaryKeyName": null
+                    },
+                    "constraints": [],
+                    "triggers": [],
+                    "ddl": "CREATE TABLE user_x (id integer);"
+                },
+                {
+                    "details": {
+                        "table": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": null
+                            },
+                            "name": "userAx"
+                        },
+                        "columns": [
+                            {
+                                "name": "id",
+                                "typeName": "INTEGER",
+                                "size": 2000000000,
+                                "nullable": true,
+                                "defaultValue": null,
+                                "autoIncrement": false,
+                                "primaryKey": false,
+                                "jdbcType": 4,
+                                "scale": 0
+                            }
+                        ],
+                        "indexes": [],
+                        "foreignKeys": [],
+                        "primaryKeyName": null
+                    },
+                    "constraints": [],
+                    "triggers": [],
+                    "ddl": "CREATE TABLE userAx (id integer);"
+                }
+            ],
+            "relations": [
+                [],
+                [
+                    {
+                        "from": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": null
+                            },
+                            "name": "orders"
+                        },
+                        "fromColumns": [
+                            "customer_id"
+                        ],
+                        "to": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": null
+                            },
+                            "name": "customers"
+                        },
+                        "toColumns": [
+                            "id"
+                        ]
+                    }
+                ],
+                [
+                    {
+                        "from": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": null
+                            },
+                            "name": "line_items"
+                        },
+                        "fromColumns": [
+                            "order_id"
+                        ],
+                        "to": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": null
+                            },
+                            "name": "orders"
+                        },
+                        "toColumns": [
+                            "id"
+                        ]
+                    },
+                    {
+                        "from": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": null
+                            },
+                            "name": "line_items"
+                        },
+                        "fromColumns": [
+                            "sku"
+                        ],
+                        "to": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": null
+                            },
+                            "name": "products"
+                        },
+                        "toColumns": [
+                            "sku"
+                        ]
+                    }
+                ],
+                [],
+                [
+                    {
+                        "from": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": null
+                            },
+                            "name": "orders"
+                        },
+                        "fromColumns": [
+                            "customer_id"
+                        ],
+                        "to": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": null
+                            },
+                            "name": "customers"
+                        },
+                        "toColumns": [
+                            "id"
+                        ]
+                    },
+                    {
+                        "from": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": null
+                            },
+                            "name": "line_items"
+                        },
+                        "fromColumns": [
+                            "order_id"
+                        ],
+                        "to": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": null
+                            },
+                            "name": "orders"
+                        },
+                        "toColumns": [
+                            "id"
+                        ]
+                    }
+                ],
+                [
+                    {
+                        "from": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": null
+                            },
+                            "name": "line_items"
+                        },
+                        "fromColumns": [
+                            "sku"
+                        ],
+                        "to": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": null
+                            },
+                            "name": "products"
+                        },
+                        "toColumns": [
+                            "sku"
+                        ]
+                    }
+                ],
+                [
+                    {
+                        "from": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": null
+                            },
+                            "name": "tree"
+                        },
+                        "fromColumns": [
+                            "parent"
+                        ],
+                        "to": {
+                            "namespace": {
+                                "catalog": null,
+                                "schema": null
+                            },
+                            "name": "tree"
+                        },
+                        "toColumns": [
+                            "id"
+                        ]
+                    }
+                ],
+                [],
+                []
+            ]
+        }
+    ],
+    "queries": [
+        {
+            "sql": "SELECT * FROM orders ORDER BY id",
+            "columns": [
+                {
+                    "name": "id",
+                    "typeName": "INTEGER",
+                    "jdbcType": 4
+                },
+                {
+                    "name": "customer_id",
+                    "typeName": "INTEGER",
+                    "jdbcType": 4
+                },
+                {
+                    "name": "total",
+                    "typeName": "NUMERIC",
+                    "jdbcType": 2
+                },
+                {
+                    "name": "qty",
+                    "typeName": "INT",
+                    "jdbcType": 4
+                },
+                {
+                    "name": "total_with_tax",
+                    "typeName": "REAL",
+                    "jdbcType": 7
+                },
+                {
+                    "name": "status",
+                    "typeName": "TEXT",
+                    "jdbcType": 12
+                },
+                {
+                    "name": "note",
+                    "typeName": "TEXT",
+                    "jdbcType": 12
+                },
+                {
+                    "name": "created",
+                    "typeName": "TIMESTAMP",
+                    "jdbcType": 93
+                },
+                {
+                    "name": "payload",
+                    "typeName": "BLOB",
+                    "jdbcType": 2004
+                },
+                {
+                    "name": "flag",
+                    "typeName": "BOOLEAN",
+                    "jdbcType": 16
+                },
+                {
+                    "name": "ratio",
+                    "typeName": "DOUBLE PRECISION",
+                    "jdbcType": 8
+                },
+                {
+                    "name": "code",
+                    "typeName": "CHAR",
+                    "jdbcType": 1
+                }
+            ],
+            "rows": [
+                [
+                    "1",
+                    "1",
+                    "150.5",
+                    "2",
+                    "165.55",
+                    "new",
+                    "x",
+                    "2024-01-02 03:04:05",
+                    "0x00FF10",
+                    "1",
+                    "0.25",
+                    "abc"
+                ],
+                [
+                    "2",
+                    "2",
+                    "3000000000",
+                    "1",
+                    "3300000000.0",
+                    "done",
+                    "x",
+                    null,
+                    null,
+                    "0",
+                    "1.0e+300",
+                    null
+                ]
+            ]
+        },
+        {
+            "sql": "SELECT 1 AS i, 2.5 AS r, 'a' AS t, x'00ff' AS b, NULL AS n, cast(7 as text), 3000000000 AS big, 1.0 AS one, 0.25 AS q, COUNT(*) FROM orders",
+            "columns": [
+                {
+                    "name": "i",
+                    "typeName": "INTEGER",
+                    "jdbcType": 4
+                },
+                {
+                    "name": "r",
+                    "typeName": "FLOAT",
+                    "jdbcType": 6
+                },
+                {
+                    "name": "t",
+                    "typeName": "TEXT",
+                    "jdbcType": 12
+                },
+                {
+                    "name": "b",
+                    "typeName": "BLOB",
+                    "jdbcType": 2004
+                },
+                {
+                    "name": "n",
+                    "typeName": "NUMERIC",
+                    "jdbcType": 2
+                },
+                {
+                    "name": "cast(7 as text)",
+                    "typeName": "TEXT",
+                    "jdbcType": 12
+                },
+                {
+                    "name": "big",
+                    "typeName": "INTEGER",
+                    "jdbcType": -5
+                },
+                {
+                    "name": "one",
+                    "typeName": "FLOAT",
+                    "jdbcType": 6
+                },
+                {
+                    "name": "q",
+                    "typeName": "FLOAT",
+                    "jdbcType": 6
+                },
+                {
+                    "name": "COUNT(*)",
+                    "typeName": "INTEGER",
+                    "jdbcType": 4
+                }
+            ],
+            "rows": [
+                [
+                    "1",
+                    "2.5",
+                    "a",
+                    "0x00FF",
+                    null,
+                    "7",
+                    "3000000000",
+                    "1.0",
+                    "0.25",
+                    "2"
+                ]
+            ]
+        }
+    ]
+}

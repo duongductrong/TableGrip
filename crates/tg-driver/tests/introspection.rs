@@ -1,0 +1,65 @@
+//! Introspection and result reading held to what the Kotlin driver (JDBC) reported, recorded by
+//! `IntrospectionGoldenTest` into `conformance/core/golden/db/`. SQLite always runs; PostgreSQL needs
+//! `TG_IT_POSTGRES=host:port` and a server seeded with `structure-it/postgres.sql` (see that file).
+
+mod support;
+
+use serde_json::Value;
+use tg_core::connection::ConnectionConfig;
+use tg_sql::model::DatabaseType;
+
+fn golden(engine: &str) -> Value {
+    let path = support::repo_root().join(format!(
+        "conformance/core/golden/db/introspection-{engine}.json"
+    ));
+    serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap()
+}
+
+fn queries(golden: &Value) -> Vec<String> {
+    golden["queries"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|q| q["sql"].as_str().unwrap().to_owned())
+        .collect()
+}
+
+#[tokio::test]
+async fn sqlite_matches_kotlin() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut config = ConnectionConfig::new("golden", "golden", DatabaseType::SQLITE);
+    config.database = dir.path().join("golden.db").to_string_lossy().into_owned();
+    let db = support::connect(&config, None).await;
+    let script = std::fs::read_to_string(
+        support::repo_root().join("core/src/test/resources/structure-it/sqlite.sql"),
+    )
+    .unwrap();
+    support::seed(db.as_ref(), &script).await;
+    let expected = golden("sqlite");
+    let queries = queries(&expected);
+    let refs: Vec<&str> = queries.iter().map(String::as_str).collect();
+    let actual = support::dump(db.as_ref(), &refs, |_| true).await;
+    support::assert_json_eq(&expected, &actual);
+}
+
+#[tokio::test]
+async fn postgres_matches_kotlin() {
+    let Some((host, port)) = support::server("TG_IT_POSTGRES") else {
+        return;
+    };
+    let mut config = ConnectionConfig::new("golden", "golden", DatabaseType::POSTGRESQL);
+    config.host = host;
+    config.port = Some(port);
+    config.database = "postgres".into();
+    config.user = "postgres".into();
+    let password = std::env::var("TG_IT_POSTGRES_PASSWORD").unwrap_or_else(|_| "pw".into());
+    let db = support::connect(&config, Some(&password)).await;
+    let expected = golden("postgres");
+    let queries = queries(&expected);
+    let refs: Vec<&str> = queries.iter().map(String::as_str).collect();
+    let actual = support::dump(db.as_ref(), &refs, |n| {
+        matches!(n.schema.as_deref(), Some("shop" | "public"))
+    })
+    .await;
+    support::assert_json_eq(&expected, &actual);
+}

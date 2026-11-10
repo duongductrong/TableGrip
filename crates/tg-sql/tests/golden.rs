@@ -316,6 +316,70 @@ fn dialect(case: &Value) -> Value {
         .into()
 }
 
+fn edit_changes(case: &Value) -> Value {
+    use tg_sql::edit::{self, BoundValue, Columns, RowChange};
+    let columns = |c: &Value, key: &str| -> Columns {
+        c[key]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|e| {
+                let bound = BoundValue {
+                    value: e[1].as_str().map(str::to_owned),
+                    jdbc_type: e[2].as_i64().unwrap() as i32,
+                    numeric: e[3].as_bool().unwrap(),
+                    is_default: e.get(4).and_then(Value::as_bool).unwrap_or(false),
+                };
+                (e[0].as_str().unwrap().to_owned(), bound)
+            })
+            .collect()
+    };
+    let changes: Vec<RowChange> = case["changes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|c| match str(c, "op") {
+            "update" => RowChange::Update {
+                key: columns(c, "key"),
+                values: columns(c, "values"),
+            },
+            "insert" => RowChange::Insert {
+                values: columns(c, "values"),
+            },
+            "delete" => RowChange::Delete {
+                key: columns(c, "key"),
+            },
+            op => panic!("unknown op {op}"),
+        })
+        .collect();
+    let t = &case["table"];
+    let table = TableRef::new(
+        Namespace::new(opt_str(t, "catalog"), opt_str(t, "schema")),
+        str(t, "name"),
+    );
+    DatabaseType::ENTRIES
+        .iter()
+        .filter_map(|ty| {
+            let d = ty.dialect()?;
+            let out: Vec<Value> = edit::statements(d, &table, &changes)
+                .iter()
+                .map(|s| {
+                    json!({
+                        "sql": s.sql,
+                        "parameters": s.parameters.iter().map(|p| json!({
+                            "value": p.value, "jdbcType": p.jdbc_type, "numeric": p.numeric, "isDefault": p.is_default,
+                        })).collect::<Vec<_>>(),
+                        "expectedRows": s.expected_rows,
+                        "preview": s.preview(d),
+                    })
+                })
+                .collect();
+            Some((ty.id.to_owned(), Value::from(out)))
+        })
+        .collect::<serde_json::Map<_, _>>()
+        .into()
+}
+
 fn run(subject: &str, case: &Value) -> Option<Value> {
     Some(match subject {
         "sql-lexer" => lexer(case),
@@ -325,6 +389,7 @@ fn run(subject: &str, case: &Value) -> Option<Value> {
         "sql-parameters" => parameters(case),
         "sql-keywords" => keywords(case),
         "sql-dialect" => dialect(case),
+        "edit-changes" => edit_changes(case),
         "filter-values" => filter::values(case),
         "filter-operators" => filter::operators(case),
         "filter-compiler" => filter::compiler(case),
