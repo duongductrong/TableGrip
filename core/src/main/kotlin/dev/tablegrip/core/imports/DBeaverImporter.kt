@@ -131,6 +131,10 @@ internal object DBeaverImporter {
         return when {
             "cockroach" in d -> DatabaseType.CockroachDB
             "timescale" in d -> DatabaseType.TimescaleDB
+            "yugabyte" in d -> DatabaseType.YugabyteDB
+            "oracle" in d -> DatabaseType.Oracle
+            "firebird" in d || "jaybird" in d -> DatabaseType.Firebird
+            "trino" in d -> DatabaseType.Trino
             "mariadb" in d -> DatabaseType.MariaDB
             "tidb" in d -> DatabaseType.TiDB
             "duckdb" in d -> DatabaseType.DuckDB

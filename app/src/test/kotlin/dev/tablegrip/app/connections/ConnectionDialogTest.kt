@@ -49,12 +49,12 @@ class ConnectionDialogTest {
         setContent {
             TableGripTheme(isDark = true) { Box(Modifier.size(640.dp, 600.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
         }
-        onAllNodes(hasSetTextAction())[0].performTextInput("jdbc:firebirdsql://localhost:3050/employee?password=masterkey")
+        onAllNodes(hasSetTextAction())[0].performTextInput("jdbc:db2://localhost:50000/sample?password=masterkey")
         onNodeWithText("Parse").performClick()
         waitForIdle()
 
         onNodeWithText("Other (JDBC driver)").assertExists()
-        onNodeWithText("jdbc:firebirdsql://localhost:3050/employee").assertExists()
+        onNodeWithText("jdbc:db2://localhost:50000/sample").assertExists()
         onNodeWithText("Choose jars…").assertExists()
         // URL-only engines have nothing else to connect by.
         onAllNodesWithText("Host and port").assertCountEquals(0)

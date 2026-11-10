@@ -16,7 +16,13 @@ import kotlinx.coroutines.runBlocking
  * docker run -d --name dg-it-tidb -p 54000:4000 pingcap/tidb:v8.5.1
  * docker run -d --name dg-it-mssql --platform linux/amd64 -p 51433:1433 -e ACCEPT_EULA=Y -e 'MSSQL_SA_PASSWORD=TableGrip#2026' mcr.microsoft.com/mssql/server:2022-latest
  * docker run -d --name dg-it-clickhouse -p 58123:8123 -e CLICKHOUSE_PASSWORD=pw clickhouse/clickhouse-server:25.3
+ * docker run -d --name dg-it-oracle -p 51521:1521 -e ORACLE_PASSWORD=pw gvenzl/oracle-free:23-slim-faststart
+ * docker run -d --name dg-it-firebird -p 53050:3050 -e FIREBIRD_ROOT_PASSWORD=pw firebirdsql/firebird:5
+ * docker run -d --name dg-it-trino -p 58080:8080 trinodb/trino:476
+ * docker run -d --name dg-it-yugabyte -p 55434:5433 yugabytedb/yugabyte:2.25.2.0-b359 bin/yugabyted start --background=false
  * ```
+ *
+ * Oracle, Firebird and Trino have no CREATE DATABASE that fits: each run gets its own user, database file or schema.
  */
 class ServerEnginesIntegrationTest {
     private val run = "dg_${System.currentTimeMillis()}"
@@ -46,6 +52,7 @@ class ServerEnginesIntegrationTest {
             }
         at("it.cockroach", DatabaseType.PostgreSQL, "defaultdb", "root")?.let { kotlin.test.assertEquals(DatabaseType.CockroachDB, Database.test(it, null)) }
         at("it.timescale", DatabaseType.PostgreSQL, "postgres", "postgres")?.let { kotlin.test.assertEquals(DatabaseType.TimescaleDB, Database.test(it, "pw")) }
+        at("it.yugabyte", DatabaseType.PostgreSQL, "yugabyte", "yugabyte")?.let { kotlin.test.assertEquals(DatabaseType.YugabyteDB, Database.test(it, null)) }
         at("it.tidb", DatabaseType.MySQL, "test", "root")?.let { kotlin.test.assertEquals(DatabaseType.TiDB, Database.test(it, null)) }
         at("it.mysql", DatabaseType.MariaDB, "mysql", "root")?.let { kotlin.test.assertEquals(DatabaseType.MySQL, Database.test(it, "pw")) }
         at("it.postgres", DatabaseType.PostgreSQL, "postgres", "postgres")?.let { kotlin.test.assertEquals(null, Database.test(it, "pw")) }
@@ -84,4 +91,75 @@ class ServerEnginesIntegrationTest {
         server("it.clickhouse", DatabaseType.ClickHouse, "default", "default", "pw") {
             RelationalContract(it, intType = "Int32", textType = "String", tableSuffix = " ENGINE = MergeTree ORDER BY id", foreignKeys = false, transactions = false).run()
         }
+
+    @Test
+    fun yugabyte() = server("it.yugabyte", DatabaseType.YugabyteDB, "yugabyte", "yugabyte", null) {
+            RelationalContract(it).run()
+            DialectSmoke(it).run()
+        }
+
+    /** A user (that is, a schema) per run, made by SYSTEM in the default pluggable database. */
+    @Test
+    fun oracle() = runBlocking<Unit> {
+        val (host, port) = System.getProperty("it.oracle")?.split(":") ?: return@runBlocking
+        fun config(user: String) =
+            ConnectionConfig(id = "it.oracle-$user", name = "oracle", type = DatabaseType.Oracle, host = host, port = port.toInt(), database = "FREEPDB1", user = user)
+        val user = run.uppercase()
+        Database.connect(config("system"), "pw").use { admin ->
+            admin.openSession().use { session ->
+                session.execute("CREATE USER $user IDENTIFIED BY pw QUOTA UNLIMITED ON USERS")
+                session.execute("GRANT CREATE SESSION, CREATE TABLE, CREATE VIEW, CREATE TRIGGER TO $user")
+            }
+        }
+        Database.connect(config(user), "pw").use { db ->
+            RelationalContract(db, intType = "NUMBER(10)", textType = "VARCHAR2(100)").run()
+            DialectSmoke(db).run()
+            // The connected user's schema comes first, so it's the default; DBMS_METADATA writes the DDL.
+            val namespace = db.namespaces().first()
+            kotlin.test.assertEquals(user, namespace.displayName)
+            val structure = db.tableStructure(dev.tablegrip.core.metadata.TableRef(namespace, "users"))
+            kotlin.test.assertTrue("CREATE TABLE" in structure.ddl && "\"users\"" in structure.ddl, structure.ddl)
+            // EXPLAIN PLAN, then DBMS_XPLAN reads it back.
+            db.openSession().use { session ->
+                val results = db.dialect.explain("SELECT * FROM \"users\"").map { sql -> session.execute(sql) }
+                kotlin.test.assertTrue((results.last() as dev.tablegrip.core.driver.QueryResult.Rows).rows.isNotEmpty())
+            }
+        }
+    }
+
+    /** A database file per run, created by Jaybird on first connect. */
+    @Test
+    fun firebird() = runBlocking<Unit> {
+        val (host, port) = System.getProperty("it.firebird")?.split(":") ?: return@runBlocking
+        val config =
+            ConnectionConfig(
+                id = "it.firebird", name = "firebird", type = DatabaseType.Firebird, host = host, port = port.toInt(),
+                database = "/var/lib/firebird/data/$run.fdb", user = "SYSDBA", properties = mapOf("createDatabaseIfNotExist" to "true"),
+            )
+        Database.connect(config, "pw").use { db ->
+            RelationalContract(db).run()
+            DialectSmoke(db).run()
+            // Non-ASCII text survives the UTF8 connection character set TableGrip sets.
+            db.openSession().use { session ->
+                session.execute("CREATE TABLE \"notes\" (\"body\" VARCHAR(50))")
+                session.execute("INSERT INTO \"notes\" VALUES ('Tiếng Việt ✓')")
+                val rows = session.execute("SELECT \"body\" FROM \"notes\"") as dev.tablegrip.core.driver.QueryResult.Rows
+                kotlin.test.assertEquals("Tiếng Việt ✓", rows.rows.single().single())
+            }
+        }
+    }
+
+    /** A schema per run in the memory catalog; tables there have no keys or transactions. */
+    @Test
+    fun trino() = runBlocking<Unit> {
+        val (host, port) = System.getProperty("it.trino")?.split(":") ?: return@runBlocking
+        fun config(database: String) =
+            ConnectionConfig(id = "it.trino-$database", name = "trino", type = DatabaseType.Trino, host = host, port = port.toInt(), database = database, user = "it")
+        Database.connect(config("memory"), null).use { it.openSession().use { session -> session.execute("CREATE SCHEMA memory.$run") } }
+        Database.connect(config("memory/$run"), null).use { db ->
+            RelationalContract(db, keys = false, transactions = false).run()
+            DialectSmoke(db).run()
+            kotlin.test.assertTrue(db.namespaces().all { it.catalog == "memory" })
+        }
+    }
 }

@@ -27,6 +27,15 @@ enum class EngineFamily {
     /** In-process analytics on a file, Parquet or CSV. */
     DuckDB,
 
+    /** Oracle Database: schemas are users, unquoted names fold to upper case, paging with OFFSET/FETCH (12c and later). */
+    Oracle,
+
+    /** Firebird 3 and later: one database per file, no schemas, OFFSET/FETCH paging. */
+    Firebird,
+
+    /** Trino (and Starburst): federated queries over catalogs; no transactions, keys or row editing. */
+    Trino,
+
     /** Standard SQL read through JDBC metadata alone: embedded Java databases, and any driver the user brings. */
     Generic,
 
@@ -154,6 +163,24 @@ class DatabaseType(
         val ClickHouse =
             DatabaseType("ClickHouse", "ClickHouse", EngineFamily.ClickHouse, 8123, listOf(DriverId.ClickHouse), capabilities = setOf(Capability.Explain))
         val DuckDB = DatabaseType("DuckDB", "DuckDB", EngineFamily.DuckDB, null, listOf(DriverId.DuckDB), databaseHint = "/path/to/file.duckdb or :memory:")
+
+        /** PostgreSQL-compatible distributed SQL (YSQL); its default port is 5433. */
+        val YugabyteDB = DatabaseType("YugabyteDB", "YugabyteDB", EngineFamily.PostgreSQL, 5433, listOf(DriverId.PostgreSQL), databaseHint = "yugabyte")
+        val Oracle = DatabaseType("Oracle", "Oracle", EngineFamily.Oracle, 1521, listOf(DriverId.Oracle), databaseHint = "Service name, e.g. FREEPDB1 or ORCLPDB1")
+
+        /** No EXPLAIN statement: Firebird shows plans only through its own API. */
+        val Firebird =
+            DatabaseType(
+                "Firebird",
+                "Firebird",
+                EngineFamily.Firebird,
+                3050,
+                listOf(DriverId.Firebird),
+                capabilities = setOf(Capability.Transactions, Capability.EditRows),
+                databaseHint = "/path/on/server/app.fdb or an alias",
+            )
+        val Trino =
+            DatabaseType("Trino", "Trino", EngineFamily.Trino, 8080, listOf(DriverId.Trino), capabilities = setOf(Capability.Explain), databaseHint = "catalog or catalog/schema")
         val Redis = keyValue("Redis", "Redis")
         val Valkey = keyValue("Valkey", "Valkey")
         val KeyDB = keyValue("KeyDB", "KeyDB")
@@ -190,8 +217,8 @@ class DatabaseType(
         /** Every engine, in the order the connection dialog lists them. */
         val entries: List<DatabaseType> =
             listOf(
-                PostgreSQL, MySQL, MariaDB, SQLite, SqlServer, ClickHouse, DuckDB, MongoDB, Redis, Valkey,
-                CockroachDB, TimescaleDB, Neon, Supabase, TiDB, PlanetScale, AzureSql,
+                PostgreSQL, MySQL, MariaDB, SQLite, SqlServer, Oracle, ClickHouse, DuckDB, MongoDB, Redis, Valkey,
+                CockroachDB, TimescaleDB, YugabyteDB, Neon, Supabase, TiDB, PlanetScale, AzureSql, Firebird, Trino,
                 KeyDB, Dragonfly, Etcd, FerretDB, H2, HSQLDB, Derby, OtherJdbc,
                 CsvFile, ExcelFile, JsonFile,
             )

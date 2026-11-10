@@ -231,7 +231,8 @@ macOS Keychain, Windows Credential Manager, or the Secret Service (GNOME Keyring
 
 No JDBC driver ships with TableGrip. The connection dialog says what the chosen driver needs and offers it:
 
-- **Catalog drivers** (PostgreSQL, MariaDB Connector/J, SQLite, SQL Server, ClickHouse, DuckDB, H2, HSQLDB, Derby)
+- **Catalog drivers** (PostgreSQL, MariaDB Connector/J, SQLite, SQL Server, ClickHouse, DuckDB, H2, HSQLDB, Derby,
+  Jaybird for Firebird, Trino JDBC)
   download from Maven Central, or a mirror set in
   Settings → Drivers, into `~/.tablegrip/drivers/`. Every jar must match the SHA-256 pinned in
   `core/src/main/resources/dev/tablegrip/core/drivers/drivers.lock.json`, which `:core:lockDrivers` writes from the catalog
@@ -290,11 +291,14 @@ Paste any of these into **New Connection → Paste** and press Parse:
 | Advanced Connector/J, MariaDB | `jdbc:mysql:replication://…`, `address=(host=…)(port=…)` — kept as a raw JDBC URL |
 | SQLite | `jdbc:sqlite:/path/app.db` · `sqlite:///path/app.db` · `~/data/app.sqlite3` |
 | SQL Server, ClickHouse, DuckDB, H2, HSQLDB, Derby | `jdbc:sqlserver://db:1433;databaseName=shop` · `jdbc:clickhouse://ch:8123/default` · `jdbc:duckdb:/data/a.duckdb` |
+| Oracle | `jdbc:oracle:thin:@//db:1521/FREEPDB1`; in the form the database field is the service name. Bring `ojdbc11.jar` (Oracle's license) |
+| Firebird | `jdbc:firebird://db:3050//var/lib/firebird/data/app.fdb` · `jdbc:firebirdsql://db/employee` (an alias) |
+| Trino | `jdbc:trino://trino:8080/hive/sales`; in the form the database field is `catalog` or `catalog/schema` |
 | Redis, Valkey (URL) | `redis://:pass@cache:6379` · `rediss://` (TLS) · `valkey://host` |
 | MongoDB | `mongodb://user@host:27017/shop?authSource=admin` · `mongodb+srv://user@cluster0.example.net/shop` (password goes to the keychain) |
 | etcd | host and port (2379); user and password if auth is on; `ssl=true` for HTTPS. Built in: nothing to download |
 | Redis, Valkey, KeyDB, Dragonfly | host and port in the form; properties `mode=cluster` / `mode=sentinel` + `sentinelMaster=…`, `ssl=true` |
-| Any other JDBC driver | `jdbc:firebirdsql://…`, `jdbc:oracle:thin:@…` — becomes "Other (JDBC driver)"; choose the driver's jar |
+| Any other JDBC driver | `jdbc:db2://…`, `jdbc:snowflake://…` — becomes "Other (JDBC driver)"; choose the driver's jar |
 
 libpq parameters are translated to pgjdbc properties (`application_name` → `ApplicationName`, `connect_timeout` →
 `connectTimeout`, `target_session_attrs` → `targetServerType`, `ssl=true` → `sslmode=require`). Passwords found in a

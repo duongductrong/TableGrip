@@ -96,6 +96,7 @@ internal object IdeDataSourcesImporter {
                 "MARIADB" -> DatabaseType.MariaDB
                 "COCKROACH", "COCKROACHDB" -> DatabaseType.CockroachDB
                 "TIDB" -> DatabaseType.TiDB
+                "YUGABYTE", "YUGABYTEDB" -> DatabaseType.YugabyteDB
                 "AZURE", "AZURESQL" -> DatabaseType.AzureSql
                 "VALKEY" -> DatabaseType.Valkey
                 else -> null

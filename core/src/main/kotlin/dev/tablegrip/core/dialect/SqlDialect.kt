@@ -577,6 +577,175 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
                 .map { Namespace(catalog = null, schema = it) }
     }
 
+
+    /**
+     * Oracle 12c and later: schemas are users, unquoted names fold to upper case, OFFSET/FETCH paging, and no LIMIT. The
+     * connected user's schema is listed first, as that's where unqualified names resolve.
+     */
+    open class OracleDialect : SqlDialect(SqlSyntax.Standard) {
+        override fun toString() = "Oracle"
+
+        override val plainIdentifier = Regex("[A-Z][A-Z0-9_$#]*")
+
+        override val tableTypes = mapOf("TABLE" to false, "VIEW" to true, "MATERIALIZED VIEW" to true)
+
+        override fun quoteIdentifier(name: String) = "\"${name.replace("\"", "\"\"")}\""
+
+        override fun timeBucket(expression: String, bucket: TimeBucket) =
+            when (bucket) {
+                TimeBucket.Hour -> "TRUNC($expression, 'HH24')"
+                TimeBucket.Day -> "TRUNC($expression)"
+                // IW: the ISO week, which starts on Monday whatever NLS_TERRITORY says.
+                TimeBucket.Week -> "TRUNC($expression, 'IW')"
+                TimeBucket.Month -> "TRUNC($expression, 'MM')"
+                TimeBucket.Quarter -> "TRUNC($expression, 'Q')"
+                TimeBucket.Year -> "TRUNC($expression, 'YYYY')"
+            }
+
+        override fun selectPage(table: TableRef, filter: String?, orderBy: List<SortColumn>, limit: Int, offset: Long, projection: SqlProjection?): String =
+            selectAll(table, filter, orderBy, projection) + " OFFSET $offset ROWS FETCH NEXT $limit ROWS ONLY"
+
+        override fun sampleValues(table: TableRef, column: String, limit: Int, scan: Int): String {
+            val col = quoteIdentifier(column)
+            return "SELECT DISTINCT v FROM (SELECT $col AS v FROM ${qualifiedName(table)} WHERE $col IS NOT NULL AND " +
+                "${castToText(col)} LIKE ? ESCAPE '!' FETCH FIRST $scan ROWS ONLY) s ORDER BY v FETCH FIRST $limit ROWS ONLY"
+        }
+
+        /** TO_CHAR takes numbers, dates and CLOBs alike, where CAST to VARCHAR2 fails on long CLOBs. */
+        override fun castToText(expression: String) = "TO_CHAR($expression)"
+
+        override fun selectFunction(function: SelectFunction, expression: String, arguments: List<String>): String? =
+            when (function) {
+                SelectFunction.Substring -> "SUBSTR($expression, ${arguments.joinToString()})"
+                SelectFunction.Ceil -> "CEIL($expression)"
+                else -> super.selectFunction(function, expression, arguments)
+            }
+
+        /** BOOLEAN only arrived in 23ai; NUMBER(1) flags take 1 and 0 everywhere. */
+        override fun literal(param: SqlParam): String = (param.value as? Boolean)?.let { if (it) "1" else "0" } ?: super.literal(param)
+
+        override val regexHonoursCase = true
+
+        override fun regexMatch(expression: String, caseSensitive: Boolean, negated: Boolean): Pair<String, String> =
+            "${if (negated) "NOT " else ""}REGEXP_LIKE($expression, " to ", '${if (caseSensitive) "c" else "i"}')"
+
+        /** The plan goes to PLAN_TABLE; DBMS_XPLAN reads it back as rows. */
+        override fun explain(sql: String): List<String> = listOf("EXPLAIN PLAN FOR $sql", "SELECT PLAN_TABLE_OUTPUT FROM TABLE(DBMS_XPLAN.DISPLAY())")
+
+        override val functions = listOf("sysdate", "systimestamp", "to_char", "to_date", "nvl", "nvl2", "decode", "listagg", "regexp_like", "sys_guid", "trunc")
+
+        override fun listNamespaces(meta: DatabaseMetaData): List<Namespace> {
+            val connection = meta.connection
+            val current = runCatching { connection.scalar("SELECT SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA') FROM DUAL") }.getOrNull()
+            // ORACLE_MAINTAINED (12c+) is what tells SYS, MDSYS and friends apart from the application's schemas.
+            val schemas =
+                runCatching {
+                    connection.prepareStatement("SELECT USERNAME FROM ALL_USERS WHERE ORACLE_MAINTAINED = 'N' ORDER BY USERNAME").use { s ->
+                        s.executeQuery().use { rs -> buildList { while (rs.next()) add(rs.getString(1)) } }
+                    }
+                }.getOrElse { meta.schemas.use { rs -> buildList { while (rs.next()) add(rs.getString("TABLE_SCHEM")) } }.filterNot { it in SystemSchemas } }
+            return (listOfNotNull(current) + schemas.sorted()).distinct().map { Namespace(catalog = null, schema = it) }
+        }
+
+        private fun java.sql.Connection.scalar(sql: String): String? =
+            createStatement().use { s -> s.executeQuery(sql).use { rs -> if (rs.next()) rs.getString(1) else null } }
+
+        private companion object {
+            val SystemSchemas =
+                setOf(
+                    "SYS", "SYSTEM", "XDB", "MDSYS", "CTXSYS", "ORDSYS", "ORDDATA", "OLAPSYS", "WMSYS", "LBACSYS", "DVSYS", "AUDSYS", "GSMADMIN_INTERNAL",
+                    "OUTLN", "DBSNMP", "APPQOSSYS", "OJVMSYS", "DBSFWUSER", "GGSYS", "ANONYMOUS", "XS\$NULL", "REMOTE_SCHEDULER_AGENT", "SYSBACKUP", "SYSDG",
+                    "SYSKM", "SYSRAC", "SYS\$UMF", "DIP", "GSMCATUSER", "GSMUSER", "GSMROOTUSER", "ORACLE_OCM", "MDDATA", "DGPDB_INT", "VECSYS",
+                )
+        }
+    }
+
+    /**
+     * Firebird 3 and later: standard SQL with OFFSET/FETCH, one unnamed namespace (schemas only arrive in Firebird 6),
+     * and SIMILAR TO instead of POSIX regular expressions, which filters don't offer.
+     */
+    open class FirebirdDialect : GenericDialect() {
+        override fun toString() = "Firebird"
+
+        override val plainIdentifier = Regex("[A-Z][A-Z0-9_$]*")
+
+        /** Without DATE_TRUNC: dates rebuilt from their parts with DATEADD. EXTRACT(WEEKDAY) counts from Sunday = 0,
+         * YEARDAY from 1 January = 0. */
+        override fun timeBucket(expression: String, bucket: TimeBucket): String? {
+            val date = "CAST($expression AS DATE)"
+            return when (bucket) {
+                TimeBucket.Hour -> null
+                TimeBucket.Day -> date
+                TimeBucket.Week -> "DATEADD(-MOD(EXTRACT(WEEKDAY FROM $expression) + 6, 7) DAY TO $date)"
+                TimeBucket.Month -> "DATEADD(1 - EXTRACT(DAY FROM $expression) DAY TO $date)"
+                TimeBucket.Quarter -> "DATEADD(-MOD(EXTRACT(MONTH FROM $expression) - 1, 3) MONTH TO DATEADD(1 - EXTRACT(DAY FROM $expression) DAY TO $date))"
+                TimeBucket.Year -> "DATEADD(-EXTRACT(YEARDAY FROM $expression) DAY TO $date)"
+            }
+        }
+
+        /** LENGTH is CHAR_LENGTH here, SUBSTRING takes FROM/FOR, and CEILING is CEIL. */
+        override fun selectFunction(function: SelectFunction, expression: String, arguments: List<String>): String? =
+            when (function) {
+                SelectFunction.Length -> "CHAR_LENGTH($expression)"
+                SelectFunction.Substring -> "SUBSTRING($expression FROM ${arguments[0]}" + (arguments.getOrNull(1)?.let { " FOR $it" } ?: "") + ")"
+                SelectFunction.Ceil -> "CEIL($expression)"
+                else -> super.selectFunction(function, expression, arguments)
+            }
+
+        /** Plans come from Jaybird's statement API, not from SQL. */
+        override fun explain(sql: String): List<String> = throw UnsupportedOperationException("Firebird has no EXPLAIN statement")
+
+        override val functions = listOf("current_timestamp", "dateadd", "datediff", "list", "coalesce", "iif", "gen_uuid", "uuid_to_char", "gen_id")
+
+        override fun isSystem(name: String): Boolean = super.isSystem(name) || name.startsWith("RDB$", ignoreCase = true) || name.startsWith("MON$", ignoreCase = true)
+    }
+
+    /**
+     * Trino: one catalog per profile (the database field's `catalog`), its schemas as namespaces. Tables have no keys and,
+     * through most connectors, no transactions.
+     */
+    open class TrinoDialect : SqlDialect(SqlSyntax.Standard) {
+        override fun toString() = "Trino"
+
+        override val plainIdentifier = Regex("[a-z_][a-z0-9_]*")
+
+        override fun quoteIdentifier(name: String) = "\"${name.replace("\"", "\"\"")}\""
+
+        override fun timeBucket(expression: String, bucket: TimeBucket) = "date_trunc('${bucket.name.lowercase()}', $expression)"
+
+        override fun selectPage(table: TableRef, filter: String?, orderBy: List<SortColumn>, limit: Int, offset: Long, projection: SqlProjection?): String =
+            selectAll(table, filter, orderBy, projection) + " OFFSET $offset LIMIT $limit"
+
+        override fun castToText(expression: String) = "CAST($expression AS VARCHAR)"
+
+        override fun selectFunction(function: SelectFunction, expression: String, arguments: List<String>): String? =
+            when (function) {
+                SelectFunction.Substring -> "substr($expression, ${arguments.joinToString()})"
+                SelectFunction.Ceil -> "ceil($expression)"
+                else -> super.selectFunction(function, expression, arguments)
+            }
+
+        override val regexHonoursCase = true
+
+        override fun regexMatch(expression: String, caseSensitive: Boolean, negated: Boolean): Pair<String, String> =
+            "${if (negated) "NOT " else ""}regexp_like($expression, ${if (caseSensitive) "" else "concat('(?i)', "}" to (if (caseSensitive) ")" else "))")
+
+        override val functions = listOf("now", "current_timestamp", "date_trunc", "date_format", "approx_distinct", "array_agg", "json_extract_scalar", "try_cast", "regexp_like")
+
+        override fun defaultNamespace(names: List<String>, database: String): String? =
+            database.substringAfter('/', "").trim().takeIf { it in names } ?: "default".takeIf { it in names } ?: "public".takeIf { it in names } ?: names.firstOrNull()
+
+        override fun listNamespaces(meta: DatabaseMetaData): List<Namespace> {
+            val catalog = meta.connection.catalog?.takeIf { it.isNotEmpty() }
+            return meta.getSchemas(catalog, null).use { rs ->
+                buildList { while (rs.next()) add(rs.getString("TABLE_CATALOG") to rs.getString("TABLE_SCHEM")) }
+            }
+                .filter { (cat, schema) -> cat != "system" && schema != "information_schema" }
+                .sortedWith(compareBy({ it.first }, { it.second }))
+                .map { (cat, schema) -> Namespace(catalog = cat, schema = schema) }
+        }
+    }
+
     companion object {
         val PostgreSQL: PostgreSQLDialect = PostgreSQLDialect()
         val MySQL: MySQLDialect = MySQLDialect()
@@ -586,6 +755,9 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
         val ClickHouse: ClickHouseDialect = ClickHouseDialect()
         val DuckDB: DuckDBDialect = DuckDBDialect()
         val CockroachDB: CockroachDBDialect = CockroachDBDialect()
+        val Oracle: OracleDialect = OracleDialect()
+        val Firebird: FirebirdDialect = FirebirdDialect()
+        val Trino: TrinoDialect = TrinoDialect()
 
         fun of(family: EngineFamily): SqlDialect? =
             when (family) {
@@ -596,6 +768,9 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
                 EngineFamily.SqlServer -> SqlServer
                 EngineFamily.ClickHouse -> ClickHouse
                 EngineFamily.DuckDB -> DuckDB
+                EngineFamily.Oracle -> Oracle
+                EngineFamily.Firebird -> Firebird
+                EngineFamily.Trino -> Trino
                 EngineFamily.Redis,
                 EngineFamily.MongoDB,
                 EngineFamily.Etcd -> null
