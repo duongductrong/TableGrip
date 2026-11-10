@@ -14,6 +14,7 @@ pub mod imports;
 pub mod infer;
 mod kotlinx_json;
 pub mod testdata;
+pub mod tools;
 
 pub use clipboard::ClipboardTable;
 pub use formats::{CopyFormat, ResultColumn, ResultFormats, ResultWriter};

@@ -14,7 +14,9 @@ indexmap.workspace = true
 serde_json.workspace = true
 chrono.workspace = true
 regex.workspace = true
+reqwest.workspace = true
 rusqlite.workspace = true
+rustls.workspace = true
 sha2.workspace = true
 tg-core = { path = "../tg-core" }
 tg-driver = { path = "../tg-driver", default-features = false, features = ["sqlite"] }
