@@ -1,0 +1,1 @@
+{"multiTable":true,"readOnlyReason":null,"notes":["Sheet \"Summary\" has formulas: saving a change to it writes their current values instead."],"tables":[{"name":"Sales","columns":["item","sold","qty"],"rows":[["Pen & nib","2024-01-01","3"],["Ink","2024-01-02 12:00:00","10.25"]]},{"name":"Summary","columns":["total","true"],"rows":[["13.25",null]]}]}

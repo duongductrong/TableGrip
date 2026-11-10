@@ -1,0 +1,1 @@
+{"multiTable":false,"readOnlyReason":null,"notes":[],"tables":[{"name":"people","columns":["name","city","note","age"],"rows":[["René","Köln","line one\r\nline two","41"],["Zoë",null,"say \"hi\"",null]]}]}

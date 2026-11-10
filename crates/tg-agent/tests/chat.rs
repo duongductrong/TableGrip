@@ -346,3 +346,41 @@ fn a_removed_mention_is_not_sent_and_an_unknown_stand_in_is_dropped() {
     let text = MentionText::new(format!("just {B}this"), HashMap::from([(A, select())]));
     assert_eq!(text.prompt(), "just this");
 }
+
+/// The chats Kotlin's `ChatStore` wrote (`conformance/core/fixtures/chats`, recorded by `ChatAndDataFileFixtureTest`)
+/// load, and saving them again writes the same bytes.
+#[test]
+fn reads_and_rewrites_the_chats_kotlin_wrote() {
+    let fixture = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../conformance/core/fixtures/chats");
+    let store = ChatStore::new(&fixture);
+    let ids: Vec<String> = store.list().into_iter().map(|c| c.id).collect();
+    assert_eq!(vec!["7d0c-41aa", "chat-empty"], ids);
+    let chat = store.load("7d0c-41aa").unwrap();
+    assert_eq!("Orders per customer — “top 10”", chat.title);
+    assert_eq!(4, chat.messages.len());
+    let first = &chat.messages[0];
+    assert_eq!(
+        vec!["\u{e000}", "\u{e001}"],
+        first
+            .mentions
+            .keys()
+            .map(String::as_str)
+            .collect::<Vec<_>>()
+    );
+    assert_eq!("console 1:3-4", first.mentions["\u{e001}"].label);
+    assert_eq!(ActivityState::Failed, chat.messages[1].activities[1].state);
+    assert_eq!(Some(0), chat.messages[2].origin_block);
+
+    let out = tempfile::tempdir().unwrap();
+    let copy = ChatStore::new(out.path());
+    for id in ids {
+        copy.save(&store.load(&id).unwrap()).unwrap();
+        let name = format!("{id}.json");
+        assert_eq!(
+            std::fs::read_to_string(fixture.join(&name)).unwrap(),
+            std::fs::read_to_string(out.path().join(&name)).unwrap(),
+            "{name}"
+        );
+    }
+}
