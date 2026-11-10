@@ -1,7 +1,9 @@
 //! Opening connections: the engine for a profile's family, its SSH tunnel, and "Test Connection".
 
-#[cfg(feature = "mysql")]
+#[cfg(any(feature = "mysql", feature = "mssql"))]
 pub(crate) mod inline;
+#[cfg(feature = "mssql")]
+pub mod mssql;
 #[cfg(feature = "mysql")]
 pub mod mysql;
 #[cfg(feature = "postgres")]
@@ -113,6 +115,8 @@ pub async fn connect_relational(
         EngineFamily::SQLite => sqlite::connect(config).await,
         #[cfg(feature = "mysql")]
         EngineFamily::MySQL => mysql::connect(config, secrets, paths).await,
+        #[cfg(feature = "mssql")]
+        EngineFamily::SqlServer => mssql::connect(config, secrets, paths).await,
         _ => Err(unsupported(&config.db_type)),
     }
 }
