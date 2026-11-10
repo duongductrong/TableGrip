@@ -670,3 +670,94 @@ máy này. Introspection của MySQL và MariaDB khớp golden Kotlin.
   (51433), `dg-it-clickhouse` (58123), cùng các container của S3.
 - Mỗi commit engine dài hơn mức khoảng 600 dòng của quy ước (MySQL khoảng 1.500, kể cả golden), vì engine, catalog và
   test phải đi cùng nhau mới pass contract.
+
+### S5 (10/11/2026)
+
+Nhánh `rust/nosql-data-agent`, cắt từ `feat/rust-ui-kit-phase-0` sau khi S4 đã merge vào đó (33f163c). S5 chỉ thêm
+engine redis/mongodb/etcd vào `tg-driver`; trait không đổi. Phần còn lại nằm trong `tg-data` và `tg-agent`.
+
+#### Đã làm
+
+**M4: engine NoSQL** (`tg-driver`, feature `redis`, `mongodb`, `etcd`, mặc định bật).
+- **Redis** (redis-rs 1.7.1): key browser bằng SCAN theo trang, đủ kiểu (string, hash, list, set, zset, stream,
+  JSON khi có module), TTL, sửa và xoá key, console. Hỗ trợ cluster (INFO và lệnh không có key đi tới một primary bất
+  kỳ, SCAN đi qua từng node) và sentinel. Đã chạy với Redis 7.4, Valkey 8.1 và cluster 6 node (grokzen 7.0.10).
+- **MongoDB** (mongodb 3.9.1 + bson 3.1.0): duyệt document, query, sửa từng field, và một shell con không cần
+  JavaScript, như `Shell` của `MongoClient.kt` (`show dbs|collections`, `db.runCommand`, `db.<coll>.<method>(…)`
+  với `.sort/.limit/.skip/.projection`). Giá trị in theo `JsonWriter` relaxed của Java (giữ `$numberLong`). Đã chạy
+  với MongoDB (replica set `rs0`) và FerretDB.
+- **etcd**: gateway JSON v3 qua `reqwest`, có xác thực user/password lấy token, `ssl=true` và `verifyPeer=false`.
+  Đã chạy với etcd không auth và có auth.
+- Test tích hợp chỉ chạy khi có biến môi trường: `TG_IT_REDIS`, `TG_IT_VALKEY`, `TG_IT_KEYDB`, `TG_IT_DRAGONFLY`,
+  `TG_IT_REDISCLUSTER`, `TG_IT_SENTINEL`, `TG_IT_MONGO`, `TG_IT_FERRETDB`, `TG_IT_ETCD`, `TG_IT_ETCDAUTH`. Lệnh docker
+  ghi ở đầu mỗi `tests/<engine>.rs`.
+
+**M5: dữ liệu** (`tg-data`).
+- `importer`: đọc CSV (port thẳng parser Kotlin, kể cả dò encoding và delimiter), JSON (số giữ nguyên dạng text) và
+  XLSX (zip + quick-xml: shared strings, rich text, style ngày, công thức, 1904).
+- `datafile`: CSV/Excel/JSON mở như connection. `WorkingCopy` (rusqlite, khoá `_row`, fingerprint sha256),
+  `DataFileSync` (watch channel + thread polling), `DataFileStore` (connect/test/file_of/path_of/profile_for).
+  `DataFileConnection` cài `RelationalConnection` bằng cách bọc engine sqlite của `tg-driver` trên working copy và
+  ghi lại file sau `apply_changes`/`execute_script`/`insert_rows`. Ghi Excel giữ layout, style và sheet không đụng
+  tới, như Kotlin.
+- `imports`: DBeaver (kể cả giải mã `credentials-config.json`, AES-CBC), `.env`, data source của IDE JetBrains,
+  pgpass, plist (TablePlus, Sequel Ace…), ssh hosts.
+- `testdata`: bộ sinh dữ liệu thử, port `SplittableRandom` của Java để cùng seed ra cùng dữ liệu; `words.rs` sinh
+  từ `Words.kt`.
+- `tools`: tìm `pg_dump`/`mysqldump`… trên máy, chọn bản theo major version của server, tải bản chính thức (kiểm
+  sha256).
+- `backup`: `BackupSupport`, `BackupFormat`, `RestoreEntry::parse` (`pg_restore --list`), `ServerEndpoint`,
+  `commands::{pg_dump, pg_restore, psql_restore, mysql_dump, mysql_restore}` và `ToolRunner`. Mật khẩu không bao giờ
+  lên command line: libpq đọc từ biến môi trường, MySQL đọc option file chỉ chủ sở hữu đọc được (0600), xoá ngay sau
+  khi chạy, kể cả khi bị huỷ. Tool chạy trong process group riêng; drop future thì kill cả group. Lịch backup
+  (`BackupSchedule`, `is_due`, `prune`) đã có ở `tg_core::backup` từ S2, không làm lại.
+
+**M5: agent** (`tg-agent`).
+- `AgentRegistry` (standard/discover), `AgentAdapter`, `EventStream` (mpsc, abort khi drop).
+- `ChatStore` đọc/ghi đúng file của Kotlin (camelCase, bỏ giá trị mặc định như `encodeDefaults = false`).
+- `Mention`/`MentionText` (ký tự private-use thay cho mention, ngân sách độ dài tính theo UTF-16 như Kotlin).
+- CLI adapter (preset, danh sách model, decoder theo từng định dạng output, lấy `PATH` từ login shell), provider
+  adapter qua HTTP với SSE (`StreamDecoder`), assist (`SqlFix`, `ChartAssist`, `SchemaDigest`).
+
+**Fixture Kotlin** (chỉ thêm trong `src/test`): `ChatAndDataFileFixtureTest` ghi chat bằng `ChatStore` vào
+`conformance/core/fixtures/chats/`, và với mỗi file CSV (windows-1252, `;`, xuống dòng trong ô), JSON (mảng object,
+JSON lồng nên read-only) và XLSX, ghi những gì format Kotlin đọc được (`<file>.read.json`) và những gì nó ghi lại cho
+cùng một bản sửa (`<file>.written.<ext>`) vào `conformance/core/fixtures/datafiles/`. Lệnh ghi:
+`./gradlew :core:test --tests '*ChatAndDataFileFixtureTest' -Pconformance.record=true`. Phía Rust:
+`tg-agent/tests/chat.rs` đọc chat và ghi lại đúng từng byte; `tg-data/tests/fixture.rs` đọc ra đúng như Kotlin và ghi
+ra đúng từng byte (CSV, JSON) hoặc đúng từng part (XLSX, vì zip mang thời điểm ghi).
+
+**Dependency mới** (ghim trong workspace, MIT/Apache/BSD): `redis` 1.7.1 (BSD-3), `mongodb` 3.9.1, `bson` 3.1.0,
+`encoding_rs` 0.8.44, `zip` 9.5.0, `quick-xml` 0.41.0, `sha2` 0.10.9, `aes` 0.8.4, `cbc` 0.1.2,
+`unicode-normalization` 0.1.26, `libc` 0.2.189 (đã có sẵn trong lock). NOTICE ghi thêm redis-rs và mongodb/bson
+(cùng webpki-roots, hickory).
+
+#### Khác kế hoạch / khác Kotlin
+
+- CSV parser port thẳng từ Kotlin thay vì dùng crate `csv`, để giữ đúng cách dò delimiter, encoding và lỗi.
+- XLSX đọc và ghi bằng zip + quick-xml thay vì calamine/rust_xlsxwriter, để ghi lại workbook giữ nguyên layout như
+  Kotlin. Một sheet được đọc hết vào bộ nhớ.
+- JSON import parse chặt (serde_json); kotlinx lenient chấp nhận thêm vài dạng không chuẩn. Assist cũng vậy khi tách
+  JSON từ câu trả lời.
+- Data file store nằm ở `tg-data`, không phải `tg-driver`: `tg-driver::connect` vẫn từ chối profile data file,
+  app gọi `DataFileStore::connect`.
+- CLI agent: drop thì kill process nhưng chưa kill process con của nó (Kotlin kill cả `descendants()`). Backup thì đã
+  kill cả process group.
+- `QueryError.of` của test assist Kotlin không áp dụng được (lỗi trong Rust đã có kiểu).
+- `openTunnelFor` của backup không port: app mở `SshTunnel` rồi đưa cổng local vào `ServerEndpoint`.
+- Commit MongoDB (62a87ea) có `engine/mod.rs` tham chiếu module etcd, nên chỉ build được từ commit etcd kế tiếp.
+  Commit `tg-agent` là một commit lớn, quá mức khoảng 600 dòng của quy ước.
+- aws-lc vẫn được biên dịch vào do feature unification; TLS chạy trên ring nhờ `engine::use_ring` (như S4).
+
+#### Kotlin có mà Rust chưa có
+
+- Round trip PostgreSQL của `BackupTest` chưa chạy: máy này không có `pg_dump`/`pg_restore`/`psql`. Round trip MySQL
+  đã chạy với `mysqldump`/`mysql` của Homebrew (`TG_IT_MYSQL`).
+- KeyDB, Dragonfly và Redis Sentinel có test nhưng chưa chạy (không có container).
+
+#### Còn dở / lưu ý cho S6+
+
+- Docker trên máy này còn chạy thêm: `dg-redis` (56379), `dg-it-valkey` (56380), `dg-it-rcluster` (7100–7105),
+  `dg-mongo` (57017, replica set `rs0`), `dg-it-ferret` (57018), `dg-etcd` (52379), `dg-it-etcdauth` (52380,
+  root/`Secret-2026`).
+- Chưa có UI nào dùng `tg-data`/`tg-agent`; API được giữ gần Kotlin để các session UI nối vào.
