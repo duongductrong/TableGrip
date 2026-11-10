@@ -761,3 +761,137 @@ ra đúng từng byte (CSV, JSON) hoặc đúng từng part (XLSX, vì zip mang 
   `dg-mongo` (57017, replica set `rs0`), `dg-it-ferret` (57018), `dg-etcd` (52379), `dg-it-etcdauth` (52380,
   root/`Secret-2026`).
 - Chưa có UI nào dùng `tg-data`/`tg-agent`; API được giữ gần Kotlin để các session UI nối vào.
+
+### S6 (10/11/2026)
+
+Nhánh `rust/app-shell`, cắt từ `feat/rust-ui-kit-phase-0` (20f6a30, đã có S1–S5). `cargo run -p tg-app` mở được
+kết nối SQLite và PostgreSQL thật, duyệt cây tới cột, đóng rồi mở lại thì giữ nguyên tab.
+
+#### Kiến trúc app
+
+```
+                 main.rs: tokio runtime (4 worker) ──► Io(Handle) là global GPUI
+                                │
+ GPUI (luồng UI)                │                 tokio (I/O)
+ ┌──────────────────────────────┴──────────┐      ┌──────────────────────────────────┐
+ │ Shell (Entity, Render)                  │      │ Registry::connection(config)     │
+ │  ├ model: AppModel (tg-app-logic) ◄─────┼──────┤   spawn trên tokio, Shared future │
+ │  │   connections · explorer · workspace │      │   mọi caller dùng chung một lần   │
+ │  │   left_tool · dialog · status        │      │ explorer::load(live, job)        │
+ │  ├ registry (Status đọc đồng bộ) ───────┼─watch┤ ConnectionStore (blocking pool)  │
+ │  ├ views: tab key → AnyView (TabViews)  │      │ registry::test, imports::scan    │
+ │  └ dialogs: TextInput, ConnectionDialog │      └──────────────────────────────────┘
+ └─────────────────────────────────────────┘
+   sự kiện UI ─► AppModel (đồng bộ) ─► Vec<Effect> ─► Shell::run ─► io::spawn/blocking ─► this.update(...)
+```
+
+- **Cầu nối tokio ↔ GPUI** (`tg-app/src/io.rs`): việc I/O chạy trên runtime tokio tạo ở `main`. UI gọi
+  `io::spawn(&handle, fut)` hoặc `io::blocking(&handle, f)` và await `JoinHandle` trong `cx.spawn` của GPUI
+  (`JoinHandle` await được từ executor nào cũng được), xong thì `this.update(cx, …)`. Driver luôn chạy trong tokio
+  nên có reactor. Ngược chiều, `Registry` báo thay đổi trạng thái qua `tokio::sync::watch`; Shell có một task GPUI
+  chờ `changed()` rồi `cx.notify()`, không poll.
+- **State ở tg-app-logic, không phụ thuộc GPUI.** `AppModel` (= `AppState.kt`) gồm `Connections`, `Explorer`,
+  `Workspace` và trạng thái shell. Mọi hàm đều đồng bộ; việc cần I/O trả về `Effect` (`Load`, `SaveProfiles`,
+  `DeleteProfile`, `Disconnect`, `Zoom`, `Copy`, `CopyDdl`) để `Shell::run` thực thi. Phần async thuần
+  (`explorer::load`, `registry::test`) là `async fn` nên test headless chạy được trên tokio với SQLite thật.
+- **Registry** (`DatabaseRegistry.kt`): `connection(config)` spawn lần kết nối lên tokio, nên caller bị huỷ thì lần
+  kết nối vẫn chạy tiếp, và caller đến sau dùng chung qua `Shared` future. Mỗi lần kết nối có `generation`, nên nếu
+  disconnect giữa chừng thì kết quả cũ bị bỏ (và đóng lại). Data file đi qua `DataFileStore::connect` của S5.
+  Secret được đọc trên blocking pool, vì keychain có thể chặn hoặc hỏi quyền.
+- **Tab đăng ký với shell** (`tg-app/src/tabs.rs`): tab là `TabSpec` (`Console`, `Table`, `Keys`, `Collection`),
+  tức là dữ liệu. View của mỗi loại do `TabViews::register(cx, "table", |tab, shell, window, cx| …)` cung cấp. Shell
+  tạo view khi tab hiện lần đầu, giữ lại khi tab còn mở và bỏ khi tab đóng. View cập nhật spec của tab mình qua
+  `shell.model.workspace.tab_mut(key)` (text và caret của console, filter của bảng), nên session lưu đúng những gì
+  đang hiện. S6 chỉ có placeholder; **S7 đăng ký `table`, S8 đăng ký `console`, S9 đăng ký `keys`/`collection`**
+  (gọi `register` trong `main`, trước khi mở cửa sổ).
+- **Action/keymap**: `tg_app_logic::keymap::keymap(&settings, platform)` dựng `Keymap` của tg-ui-logic từ preset và
+  `keyBindings` (mã phím AWT → `Code`). `tg_ui::keymap::bind_keymap` gắn mọi phím tắt vào action `RunCommand { id }`;
+  root của cửa sổ bắt ở pha capture (`preview_commands`) và gọi `AppModel::window_command(id)`. Lệnh nào cửa sổ
+  không xử lý thì trả `None` và đi tiếp xuống phần tử đang focus. Tab của S7/S8 bắt `RunCommand` của mình bằng
+  `on_action` (ví dụ `RunStatement`, `Reload`). Hiện cửa sổ xử lý: NextTab/PreviousTab(+Alt), CloseTab, NewConsole,
+  Explorer/History/Queries, Agent, ToggleSidebar, Settings, ShowShortcuts, ZoomIn/ZoomInAlt/ZoomOut/ResetZoom, Esc.
+  ⌘Q/Ctrl+Q là action `Quit` riêng.
+
+#### Đã làm
+
+- **tg-ui**: `Tree` có thêm `label` (vẽ icon, nhãn, chi tiết và chấm trạng thái thay vì in key), `on_secondary`
+  (chuột phải chọn dòng rồi mở menu), bấm chevron để mở/đóng, và `open_close` (mở/đóng node từ ngoài). `LazyTree`
+  có thêm `close_nodes` và `flip`. `StatusWidget` có thêm `on_click`.
+- **tg-app-logic** (17 test, đều headless):
+  - `registry`: như mô tả ở trên. Test: hai caller cùng lúc chỉ đọc secret một lần; kết nối hỏng thì có `Failed`.
+  - `connections`: `Connections` (nhóm, yêu thích, đổi tên/bỏ nhóm, profile cho data file) và `ConnectionForm`
+    (port `ConnectionForm`: validate với đúng thông điệp Kotlin, `to_config` kèm tên mặc định, dán connection
+    string, chuyển mật khẩu trong URL sang keychain, properties, SSH key/password, data file). Danh sách engine bỏ
+    H2/HSQLDB/Derby/Generic (D1); profile cũ thuộc các engine đó vẫn mở để sửa được.
+  - `explorer`: cây lazy theo `ExplorerViewModel.kt`: Favorites → nhóm (sắp xếp không phân biệt hoa thường) →
+    kết nối, namespace → folder tables/views → bảng → columns/indexes/foreign keys; document database → collection;
+    keyspace. Có Loading/Failure (kích đúp vào dòng lỗi để thử lại), namespace duy nhất tự mở, refresh, forget khi
+    disconnect, tìm kiếm chỉ trong phần đã tải và tự mở đường dẫn tới chỗ khớp, nhóm tự mở lần đầu. Menu ngữ cảnh
+    theo `ExplorerPanel.contextMenu`, cùng menu của vùng trống (Collapse All, Disconnect All, New, Import).
+  - `workspace`: tab, đánh số console như Kotlin, bảng chỉ mở một lần, đóng thì chọn tab kế tiếp, kéo đổi chỗ,
+    chuyển tab vòng tròn.
+  - `session`: snapshot/restore theo `SessionKeeper.kt` (restoreTabs, startupTool, startupAgent,
+    rememberPanelSizes, rememberWindowBounds, giới hạn kích thước split và cửa sổ). **Test đọc
+    `conformance/core/fixtures/home/session.json` do Kotlin ghi, rồi ghi lại đúng từng byte.** `agentChat` được
+    giữ nguyên tới khi có agent panel (S10).
+  - `imports`: trạng thái dialog Import (bỏ tick những kết nối đã lưu hoặc trùng giữa các tool, chia mật khẩu giữa
+    các bản trùng, "Keep folders as groups"), đọc bằng importer của S5 kèm `.pgpass`.
+  - `appearance`: đọc `AppearanceSettings` từ `settings.json` (theme theo System/Light/Dark, accent, override,
+    `uiFontSize`, `zoom`, font editor), lưu zoom qua `SettingsStore` mà không đụng các key khác.
+  - `keymap`: preset và phím người dùng tự gán, từ settings.
+- **tg-app** (phần vẽ):
+  - `shell.rs`: title bar (kết nối hiện tại kèm chấm trạng thái, tiêu đề tab, nút console và settings), tool
+    stripe, split giữa sidebar và workspace (lưu tỉ lệ vào session), split của agent, status bar (breadcrumb, thông
+    báo, kết nối), autosave session mỗi 5 giây khi có thay đổi, lưu khi đóng cửa sổ hoặc quit. Theme đi theo
+    sáng/tối của hệ điều hành (`observe_window_appearance`).
+  - `explorer_view.rs`: header có nút +, ô tìm kiếm, cây, và empty state (New Connection, Import).
+  - `workspace_view.rs`: pill tab (chọn, đóng, kéo); khi không có tab thì hiện gợi ý phím tắt.
+  - `dialogs.rs`: dialog sửa kết nối (General/SSH/Options, đủ loại engine, Parse, Browse…, Test Connection gợi ý
+    engine thật, Save ghi mật khẩu vào keychain), xoá kết nối, nhóm, Import (quét máy và Add File…), Keyboard
+    Shortcuts.
+  - `script.rs`: chạy theo kịch bản (`TG_APP_SCRIPT`) để chụp màn hình và kiểm thử đầu-cuối mà không cần click. Chỉ
+    dùng cho dev, giống `--capture` của gallery.
+- **Kiểm tra thật** (Docker `dg-pg` 55432 với database `s6_shop` seed bằng `structure-it/postgres.sql`, và một file
+  SQLite seed bằng `structure-it/sqlite.sql`; home riêng qua `TABLEGRIP_HOME`):
+  1. Mở SQLite, tự mở `main`, mở `tables/orders`, mở tab bảng và console, quit. `session.json` có hai tab.
+  2. Chạy lại: hai tab trở lại. Mở Postgres (nhóm Docker), có hai schema `public` và `shop`, mở
+     `shop/tables/orders`, thêm tab `customers`, quit.
+  3. Chạy lại không thao tác gì: ba tab và kết nối hiện tại trở lại; `session.json` không đổi (trừ toạ độ cửa sổ).
+
+Ảnh chụp (`docs/plans/rust-migration/s6/`):
+
+| | |
+|---|---|
+| ![Mở lại app: tab được khôi phục](rust-migration/s6/reopen.png) | ![Cây Postgres và SQLite, menu ngữ cảnh](rust-migration/s6/menu.png) |
+| ![Sửa kết nối](rust-migration/s6/dialog.png) | |
+
+#### Khác kế hoạch / khác Kotlin
+
+- Dialog vẽ đè lên cửa sổ chính, trên một lớp scrim, chứ không phải cửa sổ riêng như Kotlin. Khung dialog vẫn là
+  `app_dialog`. Muốn tách thành cửa sổ thật thì chỉ cần mở `cx.open_window` với cùng view.
+- Mật khẩu Postgres trong lần chạy thử nằm ở `properties.password` (driver S3 đọc key này), để không ghi vào keychain
+  thật của máy. Đường keychain (Save trong dialog, `Registry` đọc secret) dùng đúng `ConnectionStore::with_keyring`
+  của S2, nhưng chưa được click thử bằng tay.
+- Màn hình Settings, History, Saved Queries và Agent là placeholder ghi rõ session nào sẽ port.
+
+#### Kotlin có mà Rust chưa có (sau S6)
+
+- Kéo kết nối vào nhóm (`ConnectionDrag.kt`); chip môi trường và badge chữ cái đầu; dropdown chọn kết nối trên title
+  bar; thời gian đang kết nối (`ConnectionProgress.kt`); trạng thái data file (`DataFileStatus.kt`); mở data file
+  bằng kéo-thả, Finder hoặc cửa sổ riêng (`files/`).
+- Trong dialog: chọn host từ `~/.ssh/config`, tuỳ chọn AI access. `DriverBanner`/`DriverDownloads`/
+  `MissingDriverDialog` bỏ có chủ đích (D2: driver biên dịch sẵn).
+- Theo dõi `settings.json` và thư mục theme khi app đang chạy (`ConfigFileWatcher`); pinch zoom; Go to Anything
+  (⇧⇧, ⌘P).
+- Hỏi trước khi đóng tab hay quit khi còn việc dở (`confirmClose`/`confirmQuit`): cần S7/S8 báo `has_unsaved_work`;
+  nên thêm vào `TabSpec`/view khi có tab thật.
+
+#### Còn dở / lưu ý cho S7–S11
+
+- Chưa click hay gõ phím tay để kiểm: mọi ảnh và lần chạy đều qua `TG_APP_SCRIPT`. Phím tắt, kéo tab, nút Test/Save
+  của dialog và Import mới chỉ được kiểm ở tầng logic.
+- Chưa có view test GPUI cho tg-app (chỉ có test headless ở tg-app-logic).
+- Font Inter và JetBrains Mono chưa được bundle: `--fonts DIR` hoặc `TG_UI_FONT_DIR` (như gallery), nếu không thì
+  dùng font hệ thống.
+- Keychain trên Linux vẫn là stub (quyết định còn mở từ S2). Múi giờ session Postgres (S3) vẫn chưa chốt.
+- Lệnh chạy thử: `TABLEGRIP_HOME=<dir> cargo run -p tg-app`; kịch bản mẫu nằm ở đầu `crates/tg-app/src/script.rs`.
