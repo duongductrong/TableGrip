@@ -7879,10 +7879,38 @@ dependencies = [
 [[package]]
 name = "tg-app"
 version = "0.0.0"
+dependencies = [
+ "gpui",
+ "objc",
+ "raw-window-handle",
+ "serde_json",
+ "tg-app-logic",
+ "tg-core",
+ "tg-data",
+ "tg-driver",
+ "tg-sql",
+ "tg-theme",
+ "tg-ui",
+ "tg-ui-logic",
+ "tokio",
+]
 
 [[package]]
 name = "tg-app-logic"
 version = "0.0.0"
+dependencies = [
+ "futures-util",
+ "indexmap",
+ "serde_json",
+ "tempfile",
+ "tg-core",
+ "tg-data",
+ "tg-driver",
+ "tg-sql",
+ "tg-theme",
+ "tg-ui-logic",
+ "tokio",
+]
 
 [[package]]
 name = "tg-chart"

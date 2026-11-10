@@ -1,4 +1,10 @@
-//! State for each screen, without GPUI: the grid model and edit history, filter and select builders, editor
-//! actions, workspace tabs and the rest of what `app/src/main/kotlin` decides outside of drawing.
-//!
-//! Filled in alongside the screens (milestones M6 and M7 of docs/plans/rust-migration.md).
+//! State for each screen, without GPUI (`app/src/main/kotlin`'s view models): what the shell shows, the connections
+//! and their dialog, the explorer tree, the workspace tabs and the session that brings them back. Everything is
+//! testable headless; work that needs I/O comes back as effects for the app to run, or is an `async fn` the app runs
+//! on tokio.
+
+pub mod connections;
+pub mod imports;
+pub mod registry;
+
+pub use registry::{Live, Registry, Status};
