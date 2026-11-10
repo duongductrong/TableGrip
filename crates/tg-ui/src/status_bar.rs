@@ -34,6 +34,8 @@ pub fn status_dot(cx: &App, color: Option<Rgba>) -> Div {
     }
 }
 
+type OnClick = std::rc::Rc<dyn Fn(&mut Window, &mut App)>;
+
 /// One widget: a row of children 5dp apart, 6dp padding either side.
 #[derive(IntoElement)]
 pub struct StatusWidget {
@@ -41,6 +43,7 @@ pub struct StatusWidget {
     children: Vec<AnyElement>,
     hovered: bool,
     clickable: bool,
+    on_click: Option<OnClick>,
 }
 
 pub fn status_widget(id: impl Into<SharedString>) -> StatusWidget {
@@ -49,12 +52,20 @@ pub fn status_widget(id: impl Into<SharedString>) -> StatusWidget {
         children: Vec::new(),
         hovered: false,
         clickable: false,
+        on_click: None,
     }
 }
 
 impl StatusWidget {
     pub fn clickable(mut self) -> Self {
         self.clickable = true;
+        self
+    }
+
+    /// A click on the widget; makes it clickable.
+    pub fn on_click(mut self, f: impl Fn(&mut Window, &mut App) + 'static) -> Self {
+        self.clickable = true;
+        self.on_click = Some(std::rc::Rc::new(f));
         self
     }
 
@@ -87,6 +98,9 @@ impl RenderOnce for StatusWidget {
             .when(self.clickable && self.hovered, |d| d.bg(chip))
             .when(self.clickable, |d| {
                 d.cursor_pointer().hover(move |s| s.bg(chip))
+            })
+            .when_some(self.on_click, |d, f| {
+                d.on_click(move |_, window, cx| f(window, cx))
             })
             .children(self.children)
     }
