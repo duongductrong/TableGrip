@@ -4,6 +4,8 @@
 pub mod clickhouse;
 #[cfg(feature = "duckdb")]
 pub mod duckdb;
+#[cfg(feature = "etcd")]
+pub mod etcd;
 #[cfg(any(
     feature = "mysql",
     feature = "mssql",
@@ -11,8 +13,10 @@ pub mod duckdb;
     feature = "duckdb"
 ))]
 pub(crate) mod inline;
-#[cfg(any(feature = "mssql", feature = "duckdb"))]
+#[cfg(any(feature = "mssql", feature = "duckdb", feature = "mongodb"))]
 pub(crate) mod java;
+#[cfg(feature = "mongodb")]
+pub mod mongodb;
 #[cfg(feature = "mssql")]
 pub mod mssql;
 #[cfg(feature = "mysql")]
@@ -76,6 +80,13 @@ pub async fn connect(
         Paradigm::KeyValue => connect_key_value(config, secrets, paths)
             .await
             .map(Connection::KeyValue),
+        Paradigm::Document => match config.db_type.family {
+            #[cfg(feature = "mongodb")]
+            EngineFamily::MongoDB => mongodb::connect(config, secrets, paths)
+                .await
+                .map(Connection::Document),
+            _ => Err(unsupported(&config.db_type)),
+        },
         _ => Err(unsupported(&config.db_type)),
     }
 }
@@ -151,6 +162,8 @@ pub async fn connect_key_value(
     match config.db_type.family {
         #[cfg(feature = "redis")]
         EngineFamily::Redis => redis::connect(config, secrets, paths).await,
+        #[cfg(feature = "etcd")]
+        EngineFamily::Etcd => etcd::connect(config, secrets, paths).await,
         _ => Err(unsupported(&config.db_type)),
     }
 }
@@ -169,7 +182,9 @@ fn unsupported(db_type: &DatabaseType) -> DriverError {
     feature = "mysql",
     feature = "mssql",
     feature = "clickhouse",
-    feature = "redis"
+    feature = "redis",
+    feature = "mongodb",
+    feature = "etcd"
 ))]
 pub(crate) fn use_ring() {
     let _ = rustls::crypto::ring::default_provider().install_default();
