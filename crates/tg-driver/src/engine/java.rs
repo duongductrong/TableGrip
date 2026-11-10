@@ -45,6 +45,7 @@ pub fn java_float(v: f32) -> String {
     format!("{mantissa}E{exponent}")
 }
 
+#[cfg(feature = "duckdb")]
 /// `java.sql.Timestamp.toString` from a date and the nanoseconds into that day: the fraction's trailing zeros dropped,
 /// at least one digit kept.
 pub fn timestamp(date: chrono::NaiveDate, nanos_of_day: i64) -> String {
@@ -76,6 +77,7 @@ mod tests {
         assert_eq!(java_float(0.1), "0.1");
     }
 
+    #[cfg(feature = "duckdb")]
     #[test]
     fn timestamps_print_as_java_does() {
         let day = chrono::NaiveDate::from_ymd_opt(2024, 2, 3).unwrap();

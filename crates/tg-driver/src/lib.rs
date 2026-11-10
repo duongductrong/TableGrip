@@ -18,7 +18,9 @@
 //! 1. Add a feature named after the engine in `Cargo.toml` (`mysql = ["dep:mysql_async"]`), add it to `default`,
 //!    and pin the client crate in the root `[workspace.dependencies]`.
 //! 2. Create `src/engine/<name>/mod.rs` behind `#[cfg(feature = "<name>")]` in [`engine`]. Look at
-//!    `engine/sqlite` (a blocking client on a worker thread) or `engine/postgres` (an async client and a pool).
+//!    `engine/sqlite` or `engine/duckdb` (a blocking client on a worker thread), `engine/postgres` (an async client
+//!    and a pool), `engine/mysql` and `engine/mssql` (a client owned by a task per statement, so a dropped future can
+//!    cancel on the server and keep the session), or `engine/clickhouse` (HTTP).
 //! 3. Implement [`sql::SqlConn`] for one connection:
 //!    - `run` for console statements (any kind, honours `max_rows`), and `query`, `execute` and `stream` for the SQL
 //!      the core generates. Bind [`sql::Param`]s the way the Kotlin dialect's `bind` did, and give cells as the
@@ -30,7 +32,12 @@
 //!      Record a golden with `IntrospectionGoldenTest` (Kotlin) and hold the engine to it (`tests/introspection.rs`).
 //!    - Dropping any future mid-statement cancels it on the server; `discard` marks the connection to be closed
 //!      rather than pooled. Map engine errors to [`QueryError`] with SQLSTATE, vendor code and position.
-//!    - `begin`/`commit`/`rollback` default to `BEGIN`/`COMMIT`/`ROLLBACK`; override where the engine differs.
+//!    - `begin`/`commit`/`rollback` default to `BEGIN`/`COMMIT`/`ROLLBACK`; override where the engine differs. The
+//!      shared insert path also sends `SAVEPOINT`/`ROLLBACK TO SAVEPOINT`/`RELEASE SAVEPOINT`; translate them in
+//!      `execute` where the engine spells them otherwise (SQL Server) or has none (DuckDB, ClickHouse).
+//!    - Shared helpers: `engine::inline` writes parameters as literals with the engine's quoting, `engine::java`
+//!      prints numbers and timestamps as Java did, and [`structure`] has `GenericStructure`'s rebuilt DDL. An engine
+//!      using rustls calls `engine::use_ring` first (two crypto providers are compiled in; see the S4 log).
 //! 4. Implement [`sql::ConnSource`]: `pooled()` from a fixed pool of 4, `dedicated()` for consoles and the activity
 //!    monitor, and optionally `backup_into` and `activity_monitor` (an [`activity::ActivityReader`] over a dedicated
 //!    connection).

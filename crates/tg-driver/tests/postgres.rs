@@ -8,6 +8,7 @@
 //!
 //! CockroachDB and TimescaleDB go through the same engine: `TG_IT_COCKROACH` and `TG_IT_TIMESCALE` run the contract
 //! on them (commands in `ServerEnginesIntegrationTest.kt`).
+#![cfg(feature = "postgres")]
 
 mod contract;
 mod support;

@@ -1,4 +1,5 @@
 //! The relational contract on DuckDB, which is built in: it runs by default, on a database file of its own.
+#![cfg(feature = "duckdb")]
 
 mod contract;
 mod support;

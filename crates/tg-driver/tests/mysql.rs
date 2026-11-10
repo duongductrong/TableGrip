@@ -9,6 +9,7 @@
 //! TG_IT_MYSQL=localhost:53306 TG_IT_MARIADB=localhost:53307 TG_IT_TIDB=localhost:54000 \
 //!   cargo test -p tg-driver --test mysql
 //! ```
+#![cfg(feature = "mysql")]
 
 mod contract;
 mod support;
@@ -61,6 +62,16 @@ async fn run_contract(admin: ConnectionConfig, password: Option<&str>) {
     let mut read_only = config.clone();
     read_only.read_only = true;
     contract::read_only(support::connect(&read_only, password).await).await;
+    // Databases are namespaces here: leave none behind for the introspection golden to list.
+    let db = support::connect(&admin, password).await;
+    let mut session = db.open_session().await.unwrap();
+    session
+        .execute(
+            &format!("DROP DATABASE {}", config.database),
+            ExecOptions::default(),
+        )
+        .await
+        .unwrap();
 }
 
 #[tokio::test(flavor = "multi_thread")]

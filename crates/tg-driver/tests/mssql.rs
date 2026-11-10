@@ -6,6 +6,7 @@
 //!   -e 'MSSQL_SA_PASSWORD=TableGrip#2026' mcr.microsoft.com/mssql/server:2022-latest
 //! TG_IT_MSSQL=localhost:51433 cargo test -p tg-driver --test mssql
 //! ```
+#![cfg(feature = "mssql")]
 
 mod contract;
 mod support;

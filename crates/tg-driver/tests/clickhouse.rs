@@ -6,6 +6,7 @@
 //! docker run -d --rm --name dg-it-clickhouse -p 58123:8123 -e CLICKHOUSE_PASSWORD=pw clickhouse/clickhouse-server:25.3
 //! TG_IT_CLICKHOUSE=localhost:58123 cargo test -p tg-driver --test clickhouse
 //! ```
+#![cfg(feature = "clickhouse")]
 
 mod contract;
 mod support;
