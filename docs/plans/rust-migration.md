@@ -70,6 +70,8 @@ server (pg cancel request, `KILL QUERY`, …), thay cho huỷ coroutine.
 
 Thời gian là ước lượng cho một người; nhiều mảng chạy song song được theo kiểu wave như UI kit.
 
+Cách chia M1–M9 thành session, kèm prompt dán sẵn cho từng session: [sessions.md](rust-migration/sessions.md).
+
 ### M0 — Khép UI kit và dựng khung (1 tuần)
 - Chạy Wave D của UI kit: so ảnh 6 theme, CI `ui-kit.yml` xanh trên macOS/Windows/Linux.
 - Chuyển theme JSON sang `resources/themes/` dùng chung (Kotlin đọc qua `sourceSets`, Rust `include_str!` đường mới).
