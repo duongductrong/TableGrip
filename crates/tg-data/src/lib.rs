@@ -8,6 +8,7 @@
 
 pub mod clipboard;
 pub mod formats;
+pub mod importer;
 pub mod infer;
 mod kotlinx_json;
 

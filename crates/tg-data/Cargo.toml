@@ -8,7 +8,11 @@ rust-version.workspace = true
 
 [dependencies]
 chrono.workspace = true
+encoding_rs.workspace = true
+quick-xml.workspace = true
+zip.workspace = true
 tg-sql = { path = "../tg-sql" }
 
 [dev-dependencies]
+tempfile.workspace = true
 serde_json.workspace = true
