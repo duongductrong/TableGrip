@@ -18,3 +18,7 @@ licence text ships in the third-party licence listing of the Rust build.
 The Rust MySQL driver (crates/tg-driver, feature `mysql`) uses mysql_async (MIT or Apache License, Version 2.0),
 whose TLS support bundles webpki-roots: Mozilla's list of root certificates, under the Community Data License
 Agreement – Permissive, Version 2.0; its licence text ships in the third-party licence listing of the Rust build.
+
+The Rust SQL Server driver (crates/tg-driver, feature `mssql`) uses tiberius (MIT or Apache License, Version 2.0),
+which links the aws-lc-rs crypto library (ISC, Apache License 2.0 and OpenSSL-style terms, copyright Amazon.com and
+the OpenSSL/BoringSSL authors); TableGrip makes rustls use ring at run time, but aws-lc is compiled in.

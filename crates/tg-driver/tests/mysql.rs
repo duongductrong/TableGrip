@@ -140,3 +140,22 @@ async fn cells_read_like_connector_j() {
         ]
     );
 }
+
+/// TLS through rustls: MySQL's Docker image serves a self-signed certificate, which `sslMode=trust` accepts.
+#[tokio::test(flavor = "multi_thread")]
+async fn tls() {
+    let Some(mut c) = config("TG_IT_MYSQL", DatabaseType::MYSQL, "mysql") else {
+        return;
+    };
+    c.properties.insert("sslMode".into(), "trust".into());
+    let db = support::connect(&c, Some("pw")).await;
+    let mut session = db.open_session().await.unwrap();
+    let QueryResult::Rows(r) = session
+        .execute("SHOW SESSION STATUS LIKE 'Ssl_cipher'", ExecOptions::default())
+        .await
+        .unwrap()
+    else {
+        panic!()
+    };
+    assert!(r.rows[0][1].as_deref().is_some_and(|c| !c.is_empty()), "{r:?}");
+}

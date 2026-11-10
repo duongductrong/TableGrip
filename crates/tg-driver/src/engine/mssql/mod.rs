@@ -83,6 +83,7 @@ fn tds_config(
             .find(|(key, _)| key.eq_ignore_ascii_case(k))
             .map(|(_, v)| v.as_str())
     };
+    crate::engine::use_ring();
     let mut tds = Config::new();
     tds.host(&endpoint.host);
     tds.port(endpoint.port);

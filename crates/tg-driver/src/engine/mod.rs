@@ -128,6 +128,14 @@ fn unsupported(db_type: &DatabaseType) -> DriverError {
     ))
 }
 
+/// Makes ring rustls' process-wide crypto provider, unless one is set already. mysql_async builds its TLS config
+/// with the process default, which rustls can't pick by itself once a second provider is compiled in (tiberius
+/// brings aws-lc-rs); tiberius honours the default too, so every engine's TLS runs on ring.
+#[cfg(any(feature = "mysql", feature = "mssql"))]
+pub(crate) fn use_ring() {
+    let _ = rustls::crypto::ring::default_provider().install_default();
+}
+
 /// Where to reach the server: the profile's own host and port, or the local end of its SSH tunnel.
 pub struct Endpoint {
     pub host: String,

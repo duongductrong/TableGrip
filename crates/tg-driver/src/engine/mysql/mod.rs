@@ -88,6 +88,9 @@ fn opts(config: &ConnectionConfig, endpoint: &Endpoint, password: Option<&str>) 
                 "disable".into()
             }
         });
+    if ssl_mode != "disable" {
+        crate::engine::use_ring();
+    }
     let ssl = match ssl_mode.as_str() {
         "disable" => None,
         "trust" | "allow" | "prefer" | "require" => Some(
