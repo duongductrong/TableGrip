@@ -7858,6 +7858,23 @@ dependencies = [
 [[package]]
 name = "tg-agent"
 version = "0.0.0"
+dependencies = [
+ "async-trait",
+ "futures-util",
+ "indexmap",
+ "regex",
+ "reqwest",
+ "rustls",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tg-chart",
+ "tg-core",
+ "tg-data",
+ "tg-driver",
+ "tg-sql",
+ "tokio",
+]
 
 [[package]]
 name = "tg-app"
