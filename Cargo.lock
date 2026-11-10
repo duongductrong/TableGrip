@@ -7899,9 +7899,12 @@ dependencies = [
 name = "tg-data"
 version = "0.0.0"
 dependencies = [
+ "aes 0.8.4",
  "async-trait",
+ "cbc 0.1.2",
  "chrono",
  "encoding_rs",
+ "indexmap",
  "quick-xml",
  "regex",
  "rusqlite",

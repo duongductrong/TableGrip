@@ -7,7 +7,11 @@ publish.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+aes.workspace = true
 async-trait.workspace = true
+cbc.workspace = true
+indexmap.workspace = true
+serde_json.workspace = true
 chrono.workspace = true
 regex.workspace = true
 rusqlite.workspace = true
