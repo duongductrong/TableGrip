@@ -52,12 +52,14 @@ internal class Introspector(private val dialect: SqlDialect) {
                 .map { it.second }
         if (!keysAndIndexes) return TableDetails(table, columns, emptyList(), emptyList(), primaryKeyName)
 
+        // Drivers without indexes or keys (Trino) say so by throwing rather than returning nothing.
         val indexes =
-            meta.getIndexInfo(catalog, schema, table.name, false, true)
-                .collect {
+            supported { meta.getIndexInfo(catalog, schema, table.name, false, true) }
+                ?.collect {
                     val name = getString("INDEX_NAME") ?: return@collect null
                     Triple(name, getShort("ORDINAL_POSITION") to getString("COLUMN_NAME"), !getBoolean("NON_UNIQUE"))
                 }
+                .orEmpty()
                 .filterNotNull()
                 .groupBy { it.first }
                 .map { (name, rows) ->
@@ -65,8 +67,8 @@ internal class Introspector(private val dialect: SqlDialect) {
                 }
 
         val foreignKeys =
-            meta.getImportedKeys(catalog, schema, table.name)
-                .collect {
+            supported { meta.getImportedKeys(catalog, schema, table.name) }
+                ?.collect {
                     val target =
                         TableRef(Namespace(getString("PKTABLE_CAT").takeIf { catalog != null }, getString("PKTABLE_SCHEM")), getString("PKTABLE_NAME"))
                     ForeignKeyRow(
@@ -79,6 +81,7 @@ internal class Introspector(private val dialect: SqlDialect) {
                         onDelete = referentialAction(getShort("DELETE_RULE").takeUnless { wasNull() }),
                     )
                 }
+                .orEmpty()
                 // SQLite names no foreign key: grouping by name alone would merge a table's keys to different tables.
                 .groupBy { it.name to it.target }
                 .map { (key, rows) ->
@@ -165,4 +168,12 @@ internal class Introspector(private val dialect: SqlDialect) {
     }
 
     private fun <T> ResultSet.collect(map: ResultSet.() -> T): List<T> = use { buildList { while (next()) add(map()) } }
+
+    /** A metadata call's rows, or null when the driver doesn't support it. */
+    private fun supported(call: () -> ResultSet): ResultSet? =
+        try {
+            call()
+        } catch (_: java.sql.SQLFeatureNotSupportedException) {
+            null
+        }
 }

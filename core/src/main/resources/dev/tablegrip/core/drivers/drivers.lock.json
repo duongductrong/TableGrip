@@ -185,6 +185,33 @@
       "artifacts": [
         {"coordinates": "org.duckdb:duckdb_jdbc:1.5.6.0", "path": "org/duckdb/duckdb_jdbc/1.5.6.0/duckdb_jdbc-1.5.6.0.jar", "sha256": "04ae3375d7c40dc88dc9bf0014b82ba5e66715564584af4e3abea39c7ba144d3", "size": 85178546, "license": "MIT"}
       ]
+    },
+    {
+      "id": "firebird",
+      "name": "Jaybird (Firebird JDBC)",
+      "version": "6.0.7",
+      "className": "org.firebirdsql.jdbc.FBDriver",
+      "license": "LGPL-2.1-or-later",
+      "tier": "WeakCopyleft",
+      "licenseUrl": "https://github.com/FirebirdSQL/jaybird/blob/master/LICENSE.md",
+      "sourceUrl": "https://github.com/FirebirdSQL/jaybird",
+      "artifacts": [
+        {"coordinates": "org.firebirdsql.jdbc:jaybird:6.0.7", "path": "org/firebirdsql/jdbc/jaybird/6.0.7/jaybird-6.0.7.jar", "sha256": "c0186747e4d56c6083095b722a6da2ae513735c9e6f53c17e48a42f4c4a12158", "size": 1603885, "license": "LGPL-2.1-or-later"},
+        {"coordinates": "org.jspecify:jspecify:1.0.0", "path": "org/jspecify/jspecify/1.0.0/jspecify-1.0.0.jar", "sha256": "1fad6e6be7557781e4d33729d49ae1cdc8fdda6fe477bb0cc68ce351eafdfbab", "size": 3819, "license": "Apache-2.0"}
+      ]
+    },
+    {
+      "id": "trino",
+      "name": "Trino JDBC",
+      "version": "484",
+      "className": "io.trino.jdbc.TrinoDriver",
+      "license": "Apache-2.0",
+      "tier": "Permissive",
+      "licenseUrl": "https://github.com/trinodb/trino/blob/master/LICENSE",
+      "sourceUrl": "https://github.com/trinodb/trino",
+      "artifacts": [
+        {"coordinates": "io.trino:trino-jdbc:484", "path": "io/trino/trino-jdbc/484/trino-jdbc-484.jar", "sha256": "46476af2968e6f3234e8b22d7e29c26e6d7213ce88ab546a29c4c318c921cd34", "size": 10586075, "license": "Apache-2.0"}
+      ]
     }
   ]
 }

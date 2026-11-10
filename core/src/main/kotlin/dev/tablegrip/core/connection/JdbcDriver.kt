@@ -40,6 +40,17 @@ enum class DriverId(
     ClickHouse("ClickHouse JDBC", "com.clickhouse.jdbc.Driver", "jdbc:clickhouse:", catalogId = "clickhouse"),
     DuckDB("DuckDB JDBC", "org.duckdb.DuckDBDriver", "jdbc:duckdb:", catalogId = "duckdb"),
 
+    /** Under Oracle's own license (FUTC), so the user brings ojdbc11.jar (or ojdbc8.jar) themselves. */
+    Oracle(
+        "Oracle JDBC (ojdbc)",
+        "oracle.jdbc.OracleDriver",
+        "jdbc:oracle:",
+        vendorUrl = "https://www.oracle.com/database/technologies/appdev/jdbc-downloads.html",
+        license = "Oracle Free Use Terms and Conditions",
+    ),
+    Firebird("Jaybird (Firebird JDBC)", "org.firebirdsql.jdbc.FBDriver", "jdbc:firebird:", catalogId = "firebird"),
+    Trino("Trino JDBC", "io.trino.jdbc.TrinoDriver", "jdbc:trino:", catalogId = "trino"),
+
     /**
      * Not JDBC: the Lettuce Redis client, driven by TableGrip's own adapter ([adapter], bundled with the app) loaded
      * together with it. [className] is the adapter's entry point.
@@ -87,6 +98,14 @@ object JdbcUrls {
         return when (driver) {
             // Attributes follow `;`; the database is one of them.
             DriverId.SqlServer -> "${driver.scheme}//$hosts" + (config.database.takeIf { it.isNotBlank() }?.let { ";databaseName=${it.replace(";", "{;}")}" } ?: "")
+            // EZConnect: the database is the service name. Several hosts would need a TNS descriptor, so only the first is used.
+            DriverId.Oracle -> "${driver.scheme}thin:@//${hosts.substringBefore(',')}/${config.database.trim()}"
+            // The database is a path on the server or an alias; a path keeps its slashes (`//host:port//var/db.fdb`).
+            DriverId.Firebird -> "${driver.scheme}//${hosts.substringBefore(',')}/${config.database.trim()}"
+            // `catalog` or `catalog/schema`, each a path segment.
+            DriverId.Trino ->
+                "${driver.scheme}//${hosts.substringBefore(',')}" +
+                    config.database.split('/').map { it.trim() }.filter { it.isNotEmpty() }.joinToString("") { "/" + encodePathSegment(it) }
             else -> "${driver.scheme}//$hosts/${encodePathSegment(config.database)}"
         }
     }
@@ -117,6 +136,21 @@ object JdbcUrls {
             }
             // Names TableGrip's sessions in pg_stat_activity, for DBAs and for the activity monitor.
             DriverId.PostgreSQL -> props.putIfAbsent("ApplicationName", "TableGrip")
+            DriverId.Oracle -> {
+                props.putIfAbsent("oracle.net.CONNECT_TIMEOUT", "10000")
+                // Shows as PROGRAM in v$session.
+                props.putIfAbsent("v\$session.program", "TableGrip")
+            }
+            // Without a character set Jaybird uses NONE, which mangles anything outside the JVM's default charset.
+            DriverId.Firebird -> {
+                if (props.getProperty("encoding") == null && props.getProperty("charSet") == null) props.setProperty("encoding", "UTF8")
+                props.putIfAbsent("connectTimeout", "10")
+            }
+            // Trino needs a user even without authentication; the OS user is what its CLI sends.
+            DriverId.Trino -> {
+                props.putIfAbsent("user", System.getProperty("user.name") ?: "tablegrip")
+                props.putIfAbsent("source", "TableGrip")
+            }
             else -> Unit
         }
         return props

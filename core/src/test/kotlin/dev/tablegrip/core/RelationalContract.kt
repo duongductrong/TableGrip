@@ -16,8 +16,8 @@ import kotlin.test.assertTrue
 
 /**
  * What every relational engine must do for the explorer, table viewer, structure view and consoles to work. Each engine
- * test seeds the same two tables in its own SQL types and runs this; [foreignKeys] and [transactions] are off for
- * engines that have none.
+ * test seeds the same two tables in its own SQL types and runs this; [keys], [foreignKeys] and [transactions] are off
+ * for engines that have none.
  */
 class RelationalContract(
     private val connection: RelationalConnection,
@@ -25,7 +25,9 @@ class RelationalContract(
     private val textType: String = "VARCHAR(100)",
     /** Appended to each CREATE TABLE, e.g. an engine clause. */
     private val tableSuffix: String = "",
-    private val foreignKeys: Boolean = true,
+    /** Primary keys and NOT NULL: engines without them (Trino) declare plain columns. */
+    private val keys: Boolean = true,
+    private val foreignKeys: Boolean = keys,
     private val transactions: Boolean = true,
 ) {
     private val dialect = connection.dialect
@@ -44,7 +46,7 @@ class RelationalContract(
 
         val details = connection.tableDetails(users)
         assertEquals(listOf("id", "name", "team_id"), details.columns.map { it.name })
-        assertEquals(listOf("id"), details.primaryKey)
+        assertEquals(if (keys) listOf("id") else emptyList(), details.primaryKey)
         if (foreignKeys) assertEquals("teams", details.foreignKeys.single().referencedTable.name)
 
         val byName = listOf(SortColumn("name", SortDirection.Asc))
@@ -60,7 +62,7 @@ class RelationalContract(
 
         val structure = connection.tableStructure(users)
         assertTrue(structure.ddl.isNotBlank())
-        assertTrue(ConstraintKind.PrimaryKey in structure.constraints.map { it.kind } || structure.details.primaryKey.isNotEmpty())
+        if (keys) assertTrue(ConstraintKind.PrimaryKey in structure.constraints.map { it.kind } || structure.details.primaryKey.isNotEmpty())
 
         if (transactions) {
             fun int(v: String) = BoundValue(v, Types.INTEGER, numeric = true)
@@ -84,11 +86,13 @@ class RelationalContract(
 
     private suspend fun seed() =
         connection.openSession().use { session ->
-            session.execute("CREATE TABLE ${q("teams")} (${q("id")} $intType NOT NULL PRIMARY KEY, ${q("name")} $textType)$tableSuffix")
+            val primaryKey = if (keys) " NOT NULL PRIMARY KEY" else ""
+            val notNull = if (keys) " NOT NULL" else ""
+            session.execute("CREATE TABLE ${q("teams")} (${q("id")} $intType$primaryKey, ${q("name")} $textType)$tableSuffix")
             // Table-level: MySQL and TiDB parse a column's own REFERENCES clause but ignore it.
             val reference = if (foreignKeys) ", FOREIGN KEY (${q("team_id")}) REFERENCES ${q("teams")} (${q("id")})" else ""
             session.execute(
-                "CREATE TABLE ${q("users")} (${q("id")} $intType NOT NULL PRIMARY KEY, ${q("name")} $textType NOT NULL, ${q("team_id")} $intType$reference)$tableSuffix"
+                "CREATE TABLE ${q("users")} (${q("id")} $intType$primaryKey, ${q("name")} $textType$notNull, ${q("team_id")} $intType$reference)$tableSuffix"
             )
             session.execute("INSERT INTO ${q("teams")} (${q("id")}, ${q("name")}) VALUES (1, 'red')")
             session.execute("INSERT INTO ${q("teams")} (${q("id")}, ${q("name")}) VALUES (2, 'blue')")

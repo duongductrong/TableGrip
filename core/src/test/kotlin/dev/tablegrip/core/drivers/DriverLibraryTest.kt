@@ -158,6 +158,12 @@ class DriverLibraryTest {
 
         library.forgetJars(DriverId.MySQL)
         assertIs<DriverResolution.BringYourOwn>(library.resolve(DriverId.MySQL))
+
+        // Oracle's JDBC driver is under Oracle's own license: the same, from ojdbc11.jar.
+        assertIs<DriverResolution.BringYourOwn>(library.resolve(DriverId.Oracle))
+        assertFailsWith<DriverDownloadException> { library.install(DriverId.Oracle) }
+        library.useJars(DriverId.Oracle, listOf(jarOf("oracle.jdbc.OracleDriver")))
+        assertTrue(library.load(DriverId.Oracle).acceptsURL("jdbc:oracle:thin:@//localhost:1521/FREEPDB1"))
     }
 
     @Test
@@ -194,6 +200,21 @@ class DriverLibraryTest {
         }
         assertTrue(library.load(DriverId.PostgreSQL).acceptsURL("jdbc:postgresql://localhost/db"))
         assertTrue(library.load(DriverId.MariaDB).acceptsURL("jdbc:mariadb://localhost/db"))
+        library.install(DriverId.Firebird)
+        library.install(DriverId.Trino)
+        assertTrue(library.load(DriverId.Firebird).acceptsURL("jdbc:firebird://localhost:3050/employee"))
+        assertTrue(library.load(DriverId.Trino).acceptsURL("jdbc:trino://localhost:8080/memory"))
+        // With a server at hand (-Pit.firebird / -Pit.trino), the downloaded drivers connect to it too.
+        System.getProperty("it.firebird")?.let { at ->
+            val props = java.util.Properties().apply { setProperty("user", "SYSDBA"); setProperty("password", "pw"); setProperty("encoding", "UTF8") }
+            library.load(DriverId.Firebird).connect("jdbc:firebird://$at/employee.fdb?createDatabaseIfNotExist=true", props)!!.use { assertTrue(it.isValid(5)) }
+        }
+        System.getProperty("it.trino")?.let { at ->
+            val props = java.util.Properties().apply { setProperty("user", "it") }
+            library.load(DriverId.Trino).connect("jdbc:trino://$at/memory", props)!!.use { c ->
+                c.createStatement().use { assertTrue(it.executeQuery("SELECT 1").next()) }
+            }
+        }
     }
 
     private fun jarOf(className: String): Path = Path.of(Class.forName(className).protectionDomain.codeSource.location.toURI())

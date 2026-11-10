@@ -56,6 +56,8 @@ internal sealed class StructureReader(protected val dialect: SqlDialect) {
                 is SqlDialect.SqlServerDialect -> SqlServerStructure
                 is SqlDialect.ClickHouseDialect -> ClickHouseStructure
                 is SqlDialect.DuckDBDialect -> DuckDBStructure
+                is SqlDialect.OracleDialect -> OracleStructure
+                is SqlDialect.TrinoDialect -> TrinoStructure
                 else -> GenericStructure(dialect)
             }
     }
@@ -439,5 +441,79 @@ private object DuckDBStructure : GenericStructure(SqlDialect.DuckDB) {
                 schema, name, schema, name, schema, name,
             ) { getString(1) }
         return if (objects.isEmpty()) super.ddl(connection, details, constraints, triggers) else statements(objects)
+    }
+}
+
+/**
+ * Oracle writes its own DDL through DBMS_METADATA; CHECK constraints (other than NOT NULL) and triggers come from the
+ * ALL_ views. DDL falls back to the metadata rebuild where DBMS_METADATA isn't granted.
+ */
+private object OracleStructure : GenericStructure(SqlDialect.Oracle) {
+    private fun owner(connection: Connection, table: TableRef): String =
+        table.namespace.schema ?: connection.createStatement().use { s ->
+            s.executeQuery("SELECT SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA') FROM DUAL").use { rs -> rs.next(); rs.getString(1) }
+        }
+
+    override fun constraints(connection: Connection, details: TableDetails): List<ConstraintInfo> {
+        // SEARCH_CONDITION_VC (12.2+) is the condition as VARCHAR2; NOT NULL columns show up here as generated checks.
+        val checks =
+            runCatching {
+                connection.query(
+                    """
+                    SELECT CONSTRAINT_NAME, SEARCH_CONDITION_VC FROM ALL_CONSTRAINTS
+                    WHERE OWNER = ? AND TABLE_NAME = ? AND CONSTRAINT_TYPE = 'C' AND GENERATED = 'USER NAME'
+                    ORDER BY CONSTRAINT_NAME
+                    """,
+                    owner(connection, details.table), details.table.name,
+                ) { ConstraintInfo(getString(1), ConstraintKind.Check, emptyList(), "CHECK (" + getString(2) + ")") }
+            }.getOrDefault(emptyList())
+        return super.constraints(connection, details) + checks
+    }
+
+    override fun triggers(connection: Connection, table: TableRef): List<TriggerInfo> =
+        runCatching {
+            connection.query(
+                """
+                SELECT TRIGGER_NAME, TRIGGER_TYPE, TRIGGERING_EVENT, STATUS FROM ALL_TRIGGERS
+                WHERE TABLE_OWNER = ? AND TABLE_NAME = ? ORDER BY TRIGGER_NAME
+                """,
+                owner(connection, table), table.name,
+            ) {
+                val type = getString(2).orEmpty()
+                val timing = when { type.startsWith("BEFORE") -> "BEFORE"; type.startsWith("INSTEAD OF") -> "INSTEAD OF"; else -> "AFTER" }
+                TriggerInfo(getString(1), timing, getString(3).orEmpty().trim(), getString(4) == "ENABLED", "")
+            }
+        }.getOrDefault(emptyList())
+
+    override fun ddl(connection: Connection, details: TableDetails, constraints: List<ConstraintInfo>, triggers: List<TriggerInfo>): String {
+        val owner = owner(connection, details.table)
+        val objectType =
+            connection.query("SELECT OBJECT_TYPE FROM ALL_OBJECTS WHERE OWNER = ? AND OBJECT_NAME = ? AND OBJECT_TYPE IN ('TABLE', 'VIEW', 'MATERIALIZED VIEW')", owner, details.table.name) {
+                getString(1)
+            }.firstOrNull() ?: "TABLE"
+        fun metadata(type: String, name: String) =
+            connection.query("SELECT DBMS_METADATA.GET_DDL(?, ?, ?) FROM DUAL", type.replace(' ', '_'), name, owner) { getString(1) }.single().trim()
+        return runCatching {
+            // Storage clauses are noise when reading a table's structure.
+            connection.createStatement().use {
+                it.execute("BEGIN DBMS_METADATA.SET_TRANSFORM_PARAM(DBMS_METADATA.SESSION_TRANSFORM, 'SEGMENT_ATTRIBUTES', FALSE); END;")
+            }
+            val main = metadata(objectType, details.table.name)
+            val triggerDdl = triggers.map { metadata("TRIGGER", it.name) }
+            statements(listOf(main), triggerDdl)
+        }.getOrElse { super.ddl(connection, details, constraints, triggers) }
+    }
+}
+
+/** Trino's connectors describe their own tables (properties included) with SHOW CREATE. */
+private object TrinoStructure : StructureReader(SqlDialect.Trino) {
+    override fun constraints(connection: Connection, details: TableDetails): List<ConstraintInfo> = emptyList()
+
+    override fun triggers(connection: Connection, table: TableRef): List<TriggerInfo> = emptyList()
+
+    override fun ddl(connection: Connection, details: TableDetails, constraints: List<ConstraintInfo>, triggers: List<TriggerInfo>): String {
+        val name = dialect.qualifiedName(details.table)
+        fun show(kind: String) = connection.createStatement().use { s -> s.executeQuery("SHOW CREATE $kind $name").use { rs -> rs.next(); rs.getString(1) } }
+        return (runCatching { show("TABLE") }.getOrNull() ?: show("VIEW")).trim().removeSuffix(";") + ";"
     }
 }

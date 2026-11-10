@@ -32,6 +32,9 @@ dependencies {
     testRuntimeOnly(libs.jdbc.mssql)
     testRuntimeOnly(libs.jdbc.clickhouse)
     testRuntimeOnly(libs.jdbc.duckdb)
+    testRuntimeOnly(libs.jdbc.firebird)
+    testRuntimeOnly(libs.jdbc.trino)
+    testRuntimeOnly(libs.jdbc.oracle)
     testImplementation(libs.apache.sshd.core)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
@@ -39,8 +42,12 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
     // Opt-in server tests: -Pit.postgres=localhost:55432 -Pit.mysql=localhost:53306 (and it.cockroach, it.timescale, it.tidb,
-    // it.mssql, it.clickhouse: see ServerEnginesIntegrationTest); -Pit.network=true downloads drivers.
-    listOf("it.postgres", "it.mysql", "it.network", "it.cockroach", "it.timescale", "it.tidb", "it.mssql", "it.clickhouse", "it.etcd", "it.etcdauth").forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
+    // it.mssql, it.clickhouse, it.oracle, it.firebird, it.trino, it.yugabyte: see ServerEnginesIntegrationTest); -Pit.network=true
+    // downloads drivers.
+    listOf(
+        "it.postgres", "it.mysql", "it.network", "it.cockroach", "it.timescale", "it.tidb", "it.mssql", "it.clickhouse", "it.etcd", "it.etcdauth",
+        "it.oracle", "it.firebird", "it.trino", "it.yugabyte",
+    ).forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
     testLogging { showStandardStreams = providers.gradleProperty("it.postgres").isPresent || providers.gradleProperty("it.mysql").isPresent }
 }
 
@@ -111,6 +118,14 @@ val driverCatalog =
             "duckdb", "DuckDB JDBC", libs.jdbc.duckdb, "org.duckdb.DuckDBDriver",
             "https://github.com/duckdb/duckdb-java/blob/main/LICENSE", "https://github.com/duckdb/duckdb-java",
         ),
+        CatalogDriver(
+            "firebird", "Jaybird (Firebird JDBC)", libs.jdbc.firebird, "org.firebirdsql.jdbc.FBDriver",
+            "https://github.com/FirebirdSQL/jaybird/blob/master/LICENSE.md", "https://github.com/FirebirdSQL/jaybird",
+        ),
+        CatalogDriver(
+            "trino", "Trino JDBC", libs.jdbc.trino, "io.trino.jdbc.TrinoDriver",
+            "https://github.com/trinodb/trino/blob/master/LICENSE", "https://github.com/trinodb/trino",
+        ),
     )
 
 /** Reviewed license of every jar a catalog driver resolves to, by `group:name`. */
@@ -128,6 +143,10 @@ val artifactLicenses =
         "org.apache.derby:derbyshared" to "Apache-2.0",
         "com.microsoft.sqlserver:mssql-jdbc" to "MIT",
         "org.duckdb:duckdb_jdbc" to "MIT",
+        // Jaybird is LGPL-2.1-or-later; its extension interfaces are BSD-3-Clause, which LGPL already covers here.
+        "org.firebirdsql.jdbc:jaybird" to "LGPL-2.1-or-later",
+        // One shaded jar; what it bundles is Apache-2.0 (see its NOTICE).
+        "io.trino:trino-jdbc" to "Apache-2.0",
         // ClickHouse JDBC and what it pulls in. Blank POMs were read from their parents (guava-parent, the ASF's
         // commons-parent and httpcomponents-parent, antlr4-master).
         "com.clickhouse:clickhouse-jdbc" to "Apache-2.0",

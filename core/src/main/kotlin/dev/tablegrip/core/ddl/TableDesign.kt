@@ -225,6 +225,18 @@ object ColumnTypes {
                 listOf("Int32", "Int64", "UInt32", "UInt64", "Float64", "Decimal(18, 2)", "String", "Bool", "UUID", "Date", "DateTime", "DateTime64(3)", "LowCardinality(String)")
             is SqlDialect.DuckDBDialect ->
                 listOf("INTEGER", "BIGINT", "SMALLINT", "DECIMAL(10,2)", "DOUBLE", "BOOLEAN", "VARCHAR", "UUID", "DATE", "TIMESTAMP", "TIMESTAMPTZ", "TIME", "JSON", "BLOB")
+            is SqlDialect.OracleDialect ->
+                listOf(
+                    "NUMBER(10)", "NUMBER(19)", "NUMBER(10,2)", "NUMBER(1)", "BINARY_DOUBLE", "VARCHAR2(255 CHAR)", "NVARCHAR2(255)", "CHAR(1)", "CLOB",
+                    "DATE", "TIMESTAMP", "TIMESTAMP WITH TIME ZONE", "RAW(16)", "BLOB", "JSON",
+                )
+            is SqlDialect.FirebirdDialect ->
+                listOf(
+                    "INTEGER", "BIGINT", "SMALLINT", "INT128", "DECIMAL(10,2)", "DOUBLE PRECISION", "BOOLEAN", "VARCHAR(255)", "CHAR(1)",
+                    "BLOB SUB_TYPE TEXT", "BLOB", "DATE", "TIMESTAMP", "TIMESTAMP WITH TIME ZONE", "TIME",
+                )
+            is SqlDialect.TrinoDialect ->
+                listOf("integer", "bigint", "smallint", "decimal(10,2)", "double", "boolean", "varchar", "uuid", "date", "timestamp(3)", "timestamp(3) with time zone", "json", "varbinary")
             else -> listOf("INTEGER", "BIGINT", "SMALLINT", "DECIMAL(10,2)", "DOUBLE", "BOOLEAN", "VARCHAR(255)", "CHAR(1)", "CLOB", "DATE", "TIMESTAMP", "TIME", "BLOB")
         }
 

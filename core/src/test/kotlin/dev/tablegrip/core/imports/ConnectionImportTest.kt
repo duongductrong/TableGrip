@@ -2,6 +2,7 @@ package dev.tablegrip.core.imports
 
 import dev.tablegrip.core.connection.ConnectionString
 import dev.tablegrip.core.connection.DatabaseType
+import dev.tablegrip.core.connection.DriverId
 import dev.tablegrip.core.connection.Environment
 import dev.tablegrip.core.connection.SshAuth
 import java.nio.file.Files
@@ -145,7 +146,8 @@ class ConnectionImportTest {
         assertEquals("/tmp/app.db", byName.getValue("Local file").config.database)
         assertEquals(DatabaseType.MariaDB, byName.getValue("Maria").config.type)
         assertEquals(3307, byName.getValue("Maria").config.port)
-        assertEquals(DatabaseType.OtherJdbc, byName.getValue("Ora").config.type)
+        assertEquals(DatabaseType.Oracle, byName.getValue("Ora").config.type)
+        assertEquals(DriverId.Oracle, byName.getValue("Ora").config.effectiveDriver)
         assertEquals(listOf("DBeaver: “Cass” (cassandra) isn't supported."), scan.skipped)
     }
 

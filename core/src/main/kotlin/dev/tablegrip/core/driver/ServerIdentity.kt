@@ -11,7 +11,7 @@ import java.sql.Connection
  */
 object ServerIdentity {
     private val identifiable =
-        setOf(DatabaseType.PostgreSQL, DatabaseType.CockroachDB, DatabaseType.TimescaleDB, DatabaseType.MySQL, DatabaseType.MariaDB, DatabaseType.TiDB)
+        setOf(DatabaseType.PostgreSQL, DatabaseType.CockroachDB, DatabaseType.TimescaleDB, DatabaseType.YugabyteDB, DatabaseType.MySQL, DatabaseType.MariaDB, DatabaseType.TiDB)
 
     /** The engine to suggest instead of [type], or null if [type] is right or can't be judged. */
     fun suggest(connection: Connection, type: DatabaseType): DatabaseType? {
@@ -26,6 +26,8 @@ object ServerIdentity {
                 val version = connection.createStatement().use { s -> s.executeQuery("SELECT version()").use { rs -> rs.next(); rs.getString(1) } }
                 when {
                     "CockroachDB" in version -> DatabaseType.CockroachDB
+                    // e.g. "PostgreSQL 15.12-YB-2.25.2.0-b0 on aarch64-unknown-linux-gnu".
+                    "-YB-" in version -> DatabaseType.YugabyteDB
                     timescale(connection) -> DatabaseType.TimescaleDB
                     else -> DatabaseType.PostgreSQL
                 }

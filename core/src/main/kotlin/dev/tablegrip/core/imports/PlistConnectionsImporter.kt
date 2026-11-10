@@ -100,6 +100,7 @@ internal object PlistConnectionsImporter {
             "cockroachdb", "cockroach" -> DatabaseType.CockroachDB
             "clickhouse" -> DatabaseType.ClickHouse
             "duckdb" -> DatabaseType.DuckDB
+            "oracle" -> DatabaseType.Oracle
             "redis" -> DatabaseType.Redis
             "mongodb", "mongo" -> DatabaseType.MongoDB
             else -> null
