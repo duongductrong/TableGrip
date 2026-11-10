@@ -1,4 +1,5 @@
 //! The relational contract on SQLite (always runs), plus SQLite's own cases from `DatabaseTest.kt`.
+#![cfg(feature = "sqlite")]
 
 mod contract;
 mod support;

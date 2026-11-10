@@ -545,3 +545,128 @@ Còn dở / lưu ý cho S4–S5:
 - `ConnectionConfig.driver_jars` và `DriverId` không được dùng (D2).
 - Docker trên máy này đang có `dg-pg` (55432) và `dg-it-timescale` (55433) do S3 bật, và `dg-crdb` (56257) có sẵn từ
   trước.
+
+### S4 (10/11/2026)
+
+Nhánh `rust/drivers-rest`. Lúc bắt đầu, S3 chưa được merge vào `feat/rust-ui-kit-phase-0`, nên nhánh này cắt từ
+`rust/drivers-core` (31fe610). Sau đó S3 đã được merge vào nhánh tích hợp (7d8d252); nhánh này merge vào đó không
+xung đột.
+
+#### Đã làm
+
+Bốn engine mới, mỗi engine sau một feature (`mysql`, `mssql`, `clickhouse`, `duckdb`), mặc định bật hết. Trait của
+`tg-driver` không đổi. Contract của S3 pass trên MySQL 8.4, MariaDB 11.4, TiDB 8.5, SQL Server 2022, ClickHouse 25.3,
+DuckDB 1.5.6, cùng PostgreSQL 17, CockroachDB 24.3 và TimescaleDB (pg17) như S3. Tất cả đã chạy thật bằng Docker trên
+máy này. Introspection của MySQL và MariaDB khớp golden Kotlin.
+
+- **Golden mới**: `IntrospectionGoldenTest.mysql` (Kotlin, `src/test`) đọc server MySQL hoặc MariaDB đã seed
+  `structure-it/mysql.sql` vào database `app`, qua driver mặc định của họ MySQL (MariaDB Connector/J). File golden mang
+  tên engine thật: `introspection-{mysql,mariadb}.json`. Lệnh ghi:
+  `./gradlew :core:test --tests '*IntrospectionGoldenTest.mysql' -Pit.mysql=localhost:53306 -Pconformance.record=true`.
+  Phía Rust: `TG_IT_MYSQL` / `TG_IT_MARIADB` trong `tests/introspection.rs`. Ba engine còn lại không có schema test
+  nên không có golden (đúng như prompt). Thay vào đó có test riêng kiểm cách in ô
+  (`cells_read_like_{mssql_jdbc,duckdb_jdbc,connector_j}`).
+- **Cách tìm đặc tả driver JDBC**: bật general log của MySQL/MariaDB và `system.query_log` của ClickHouse, rồi chạy
+  test Kotlin để thấy đúng câu SQL metadata mà driver gửi. Với DuckDB, câu SQL lấy từ hằng chuỗi trong jar
+  `duckdb_jdbc`. Kiểu cột và cách định dạng giá trị lấy từ bytecode của MariaDB Connector/J (`client.column.*`).
+  Không tải gì thêm.
+- **Ma trận contract**: `TG_IT_MYSQL`, `TG_IT_MARIADB` (root/`pw`), `TG_IT_TIDB` (root, không mật khẩu),
+  `TG_IT_MSSQL` (sa/`TableGrip#2026`), `TG_IT_CLICKHOUSE` (cổng HTTP, default/`pw`). Lệnh docker ghi ở đầu mỗi
+  `tests/<engine>.rs`. Cockroach và Timescale đã nằm trong ma trận từ S3 (`tests/postgres.rs`), lần này chạy lại cả hai.
+  DuckDB chạy mặc định, không cần Docker.
+- **Dùng chung** (không đụng trait): `engine::inline` (inline tham số thành literal theo cách quote của từng engine),
+  `engine::java` (`Double.toString`, `Timestamp.toString`), `structure::{generic_constraints, rebuilt_ddl}` (port
+  `GenericStructure`), `engine::use_ring`. Contract thêm `Options.nullable_int_type` (ClickHouse cần
+  `Nullable(Int32)`). Các file test gắn `#![cfg(feature = …)]`, nên mọi feature đơn lẻ đều build và test được.
+- **Dependency mới** (ghim trong workspace): `mysql_async` 0.37.1 (rustls, ring), `tiberius` 0.13.0 (rustls,
+  chrono), `reqwest` 0.13.5 (`rustls-no-provider`, `query`), `duckdb` 1.10506.1 (`bundled`, `parquet`, `json`). Tất
+  cả đều MIT/Apache. NOTICE ghi thêm webpki-roots (CDLA-Permissive-2.0, đi kèm TLS của mysql_async), aws-lc (đi kèm
+  tiberius) và các thư viện mà DuckDB bundle.
+
+**MySQL / MariaDB / TiDB** (`mysql_async`).
+- Đọc bằng text protocol như MariaDB Connector/J; tham số inline thành literal. Đây cũng là thứ client-side prepared
+  statement của Connector/J gửi đi; `\` được nhân đôi trừ khi session bật `NO_BACKSLASH_ESCAPES`.
+- Catalog: chép nguyên câu `information_schema` của driver. Kiểu cột theo `client.column.*Column`.
+- Ô giữ quirk của driver:
+  - BIT ra `b'101'` (BIT(1) ra `true`/`false`);
+  - DATETIME in micro giây với độ rộng tối thiểu bằng số chữ số thập phân của cột, nên `.5` trong DATETIME(1) ra
+    `.500000`. Golden giữ cách in này.
+- Mỗi câu lệnh chạy trong một task giữ connection. Drop future thì gửi `KILL QUERY <CONNECTION_ID()>` từ một kết nối
+  phụ. Câu lệnh kế tiếp chờ lệnh kill đi xong rồi mới chạy, để kill đến muộn không trúng nó. Session (transaction,
+  biến) vẫn còn nguyên, giống `Statement.cancel()`.
+- Đủ hàng thì đọc nốt phần còn lại thay vì kill, như `maxRows` của JDBC.
+- Pool tự viết, 4 kết nối, ping trước khi cho mượn. Activity monitor port từ `MySqlActivity`, chỉ cho MySQL và
+  MariaDB như Kotlin. ServerIdentity nhận ra TiDB và MariaDB.
+- `sslMode` hiểu cả từ vựng MariaDB lẫn MySQL. Đã thử TLS với chứng chỉ tự ký của image MySQL.
+
+**SQL Server** (`tiberius`).
+- Giá trị TDS có kiểu, nên tự in theo `getString` của mssql-jdbc: số theo kiểu Java, `bit` ra `1`/`0`, `money` 4 chữ
+  số, temporal theo đúng scale, GUID viết hoa.
+- Tham số inline thành `N'…'`, nhờ vậy insert lớn không chạm giới hạn 2.100 tham số.
+- Catalog gọi đúng các thủ tục mà mssql-jdbc gọi (`sp_columns_100`, `sp_pkeys`, `sp_statistics_100`, `sp_fkeys`),
+  cùng bảng đổi mã ODBC sang JDBC của driver. `SqlServerStructure` đã port.
+- Drop future thì gửi TDS attention (`cancel_query`), session vẫn còn.
+- DML đi qua `execute` (`sp_executesql`) để có số dòng. Mọi câu khác chạy dạng batch thường, vì `BEGIN TRANSACTION`
+  bên trong `sp_executesql` gây lỗi 266, còn `CREATE VIEW` phải mở đầu một batch.
+- `SAVEPOINT` đổi thành `SAVE TRANSACTION`. Test EXPLAIN (SHOWPLAN) và script có `GO` port từ
+  `ServerEnginesIntegrationTest`.
+
+**ClickHouse** (HTTP, `reqwest`).
+- Kết quả dạng `TabSeparatedWithNamesAndTypes`: ô là text của chính server, tên kiểu là tên của ClickHouse, và
+  `java.sql.Types` map như JDBC v2.
+- Mỗi console là một HTTP session (`session_id`).
+- Mỗi request có `query_id`; drop thì `KILL QUERY` theo id đó. Request kế tiếp chờ lệnh kill xong và thử lại khi
+  session còn bị khoá (lỗi 373).
+- Catalog đọc `system.tables` và `system.columns`. Khoá chính lấy từ `system.tables.primary_key`, như
+  `getPrimaryKeys` của driver. Không có index hay khoá ngoại. DDL là `SHOW CREATE TABLE`.
+- Hồ sơ read-only gửi `readonly=2`.
+
+**DuckDB** (`duckdb`, bundled 1.5.6, cùng phiên bản engine với JDBC 1.5.6.0 của bản Kotlin, nên file vẫn mở qua lại
+được).
+- Mỗi profile một database; mọi kết nối là clone của một kết nối gốc giữ database mở (in-memory sống cùng profile).
+  Mỗi kết nối chạy trên một worker thread như SQLite; drop thì `interrupt`.
+- Catalog chạy đúng câu SQL metadata của driver. Giống driver, index info chỉ liệt kê index unique và không có cột.
+- `DuckDBStructure` đã port. Backup dùng `EXPORT DATABASE … (FORMAT PARQUET)`.
+
+#### Khác kế hoạch / khác Kotlin
+
+- **aws-lc-rs**: tiberius 0.13 buộc tokio-rustls bật aws-lc-rs, nên feature `mssql` kéo aws-lc vào (phải build C;
+  trên macOS chỉ cần trình biên dịch C). Khi đã có hai crypto provider, rustls không tự chọn được, và mysql_async
+  panic lúc mở TLS. Vì vậy `engine::use_ring()` cài ring làm provider mặc định của process (nếu chưa có ai cài) trước
+  khi MySQL, SQL Server hay ClickHouse mở kết nối. Kết quả là mọi TLS chạy trên ring, aws-lc chỉ được biên dịch vào
+  chứ không dùng.
+  - Hướng khác: dùng tiberius `native-tls` (OpenSSL trên Linux), hoặc fork tiberius. Nên chốt lại ở S11 (đóng gói).
+- **SQL Server**:
+  - Metadata TDS không phân biệt `int` với `bigint` trong cột nullable (`intn`), tương tự `float`/`real` và
+    `datetime`/`smalldatetime`. Tên kiểu của các cột này đoán theo giá trị đầu tiên; cột toàn NULL thì ra `int`.
+  - `getString` cho `time` và `datetime2` in đúng scale của cột. Chưa so được với mssql-jdbc vì không có golden.
+- **DuckDB**:
+  - Giá trị lồng nhau in theo Arrow: `{a: 1}`, trong khi JDBC in `{a=1}`.
+  - `TIMESTAMP WITH TIME ZONE` in như `OffsetDateTime` ở UTC; JDBC có thể dùng múi giờ của JVM.
+  - DuckDB không có savepoint. `ROLLBACK TO SAVEPOINT` của luồng insert được đổi thành bắt đầu lại transaction. Nếu
+    hàng lỗi trùng với một lô trước đó, thông báo chỉ nêu khoảng hàng thay vì đúng một hàng.
+  - Catalog lọc theo database hiện tại; driver thì không lọc, nên có thể liệt kê trùng khi attach nhiều database.
+- **ClickHouse**: không có giao thức native TCP. HTTPS bật bằng `ssl=true` hoặc cổng 8443; `sslmode=none` bỏ qua kiểm
+  chứng chỉ. JDBC v2 có thể đặt tên kiểu hoặc `COLUMN_SIZE` khác đôi chút (không có golden).
+- **MySQL**: `SET SESSION TRANSACTION READ ONLY` chỉ là lớp phòng thủ thêm, vì TiDB từ chối câu này. Console vẫn chặn
+  câu ghi trước khi gửi.
+
+#### Kotlin có mà Rust chưa có
+
+- **Bỏ có chủ đích (D1)**: H2, HSQLDB, Derby và Generic JDBC (driver người dùng tự mang theo). Không có driver Rust;
+  `connect` trả `Unsupported`. Profile cũ vẫn đọc được.
+- Chọn driver theo profile (Connector/J hay MariaDB Connector/J, `driver_jars`): Rust chỉ có một bản cho mỗi họ (D2).
+  Thuộc tính riêng của từng driver JDBC bị bỏ qua, trừ `sslMode`/`useSSL`, `encrypt`, `trustServerCertificate`,
+  `hostNameInCertificate`, `applicationIntent`, `ssl`/`sslmode` (ClickHouse) và `user`/`password`.
+- SQL Server: Windows/Kerberos/Azure AD auth; named instance qua SQL Browser (`host\instance` giờ chỉ lấy phần host,
+  cần ghi cổng).
+- ClickHouse: giao thức native, nén LZ4.
+- CockroachDB: huỷ query vẫn chưa làm được (đã ghi ở S3).
+- Activity monitor cho TiDB, PlanetScale, SQL Server, ClickHouse, DuckDB: Kotlin cũng chưa có.
+
+#### Còn dở / lưu ý cho S5–S6
+
+- Docker trên máy này còn chạy: `dg-it-mysql` (53306), `dg-it-mariadb` (53307), `dg-it-tidb` (54000), `dg-it-mssql`
+  (51433), `dg-it-clickhouse` (58123), cùng các container của S3.
+- Mỗi commit engine dài hơn mức khoảng 600 dòng của quy ước (MySQL khoảng 1.500, kể cả golden), vì engine, catalog và
+  test phải đi cùng nhau mới pass contract.

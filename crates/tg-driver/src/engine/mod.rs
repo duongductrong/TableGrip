@@ -1,5 +1,22 @@
 //! Opening connections: the engine for a profile's family, its SSH tunnel, and "Test Connection".
 
+#[cfg(feature = "clickhouse")]
+pub mod clickhouse;
+#[cfg(feature = "duckdb")]
+pub mod duckdb;
+#[cfg(any(
+    feature = "mysql",
+    feature = "mssql",
+    feature = "clickhouse",
+    feature = "duckdb"
+))]
+pub(crate) mod inline;
+#[cfg(any(feature = "mssql", feature = "duckdb"))]
+pub(crate) mod java;
+#[cfg(feature = "mssql")]
+pub mod mssql;
+#[cfg(feature = "mysql")]
+pub mod mysql;
 #[cfg(feature = "postgres")]
 pub mod postgres;
 #[cfg(feature = "sqlite")]
@@ -70,6 +87,11 @@ pub async fn test(
             suggested_type: postgres::test(config, secrets, paths).await?,
             server: None,
         }),
+        #[cfg(feature = "mysql")]
+        EngineFamily::MySQL => Ok(TestOutcome {
+            suggested_type: mysql::test(config, secrets, paths).await?,
+            server: None,
+        }),
         _ => match connect(config, secrets, paths).await? {
             Connection::Relational(c) => {
                 c.namespaces().await?;
@@ -102,6 +124,14 @@ pub async fn connect_relational(
         EngineFamily::PostgreSQL => postgres::connect(config, secrets, paths).await,
         #[cfg(feature = "sqlite")]
         EngineFamily::SQLite => sqlite::connect(config).await,
+        #[cfg(feature = "mysql")]
+        EngineFamily::MySQL => mysql::connect(config, secrets, paths).await,
+        #[cfg(feature = "mssql")]
+        EngineFamily::SqlServer => mssql::connect(config, secrets, paths).await,
+        #[cfg(feature = "clickhouse")]
+        EngineFamily::ClickHouse => clickhouse::connect(config, secrets, paths).await,
+        #[cfg(feature = "duckdb")]
+        EngineFamily::DuckDB => duckdb::connect(config).await,
         _ => Err(unsupported(&config.db_type)),
     }
 }
@@ -111,6 +141,14 @@ fn unsupported(db_type: &DatabaseType) -> DriverError {
         "This build of TableGrip has no driver for {}.",
         db_type.display_name
     ))
+}
+
+/// Makes ring rustls' process-wide crypto provider, unless one is set already. mysql_async builds its TLS config
+/// with the process default, which rustls can't pick by itself once a second provider is compiled in (tiberius
+/// brings aws-lc-rs); tiberius honours the default too, so every engine's TLS runs on ring.
+#[cfg(any(feature = "mysql", feature = "mssql", feature = "clickhouse"))]
+pub(crate) fn use_ring() {
+    let _ = rustls::crypto::ring::default_provider().install_default();
 }
 
 /// Where to reach the server: the profile's own host and port, or the local end of its SSH tunnel.
