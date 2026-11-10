@@ -6,4 +6,31 @@ license.workspace = true
 publish.workspace = true
 rust-version.workspace = true
 
+[features]
+default = []
+postgres = ["dep:tokio-postgres", "dep:deadpool-postgres", "dep:tokio-postgres-rustls", "dep:rustls", "dep:rustls-native-certs"]
+sqlite = ["dep:rusqlite"]
+
 [dependencies]
+async-trait.workspace = true
+chrono.workspace = true
+futures-util.workspace = true
+regex.workspace = true
+serde_json.workspace = true
+tg-core = { path = "../tg-core" }
+tg-sql = { path = "../tg-sql" }
+thiserror.workspace = true
+tokio = { workspace = true, features = ["rt", "sync", "time", "net", "macros"] }
+tokio-util.workspace = true
+
+deadpool-postgres = { workspace = true, optional = true }
+rusqlite = { workspace = true, optional = true }
+rustls = { workspace = true, optional = true }
+rustls-native-certs = { workspace = true, optional = true }
+tokio-postgres = { workspace = true, optional = true }
+tokio-postgres-rustls = { workspace = true, optional = true }
+
+[dev-dependencies]
+serde_json.workspace = true
+tempfile.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

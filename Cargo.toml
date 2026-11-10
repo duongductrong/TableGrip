@@ -33,5 +33,15 @@ thiserror = "=2.0.21"
 # which older `openssl`/`ssh-keygen -m PKCS8` use to encrypt keys (SSHJ reads those). Kept in sync with russh's pkcs5.
 pkcs5 = { version = "=0.8.1", default-features = false, features = ["sha1-insecure"] }
 tokio = { version = "=1.54.1", default-features = false }
+# Database drivers (tg-driver). Pure-Rust TLS on `ring`, like russh, so no C toolchain beyond SQLite's own.
+async-trait = "=0.1.92"
+deadpool-postgres = { version = "=0.14.2", default-features = false, features = ["rt_tokio_1"] }
+futures-util = { version = "=0.3.34", default-features = false, features = ["std"] }
+rusqlite = { version = "=0.41.1", default-features = false, features = ["bundled", "column_decltype"] }
+rustls = { version = "=0.23.46", default-features = false, features = ["ring", "std", "logging", "tls12"] }
+rustls-native-certs = "=0.8.5"
+tokio-postgres = { version = "=0.7.18", default-features = false, features = ["runtime"] }
+tokio-postgres-rustls = "=0.14.0"
+tokio-util = { version = "=0.7.20", default-features = false }
 # Test-only (tg-core dev-dependencies).
 rand = "=0.10.3"
