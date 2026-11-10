@@ -128,6 +128,22 @@ impl<K: Clone + Eq + Hash> LazyTree<K> {
             .collect()
     }
 
+    /// Closes nodes from outside (a connection was disconnected), forgetting what was open inside them.
+    pub fn close_nodes(&mut self, items: &[Item<K>], keys: impl IntoIterator<Item = K>) {
+        for key in keys {
+            if self.open.remove(&key)
+                && let Some(item) = find(items, &key)
+            {
+                forget(item, &mut self.open);
+            }
+        }
+    }
+
+    /// Flips a node, as a click on its chevron does.
+    pub fn flip(&mut self, items: &[Item<K>], key: &K) -> TreeEvent<K> {
+        self.toggle(items, key)
+    }
+
     /// "Collapse All".
     pub fn close_all(&mut self) {
         self.open.clear();
@@ -325,6 +341,18 @@ mod tests {
         let mut v: Vec<_> = t.selected().copied().collect();
         v.sort();
         v
+    }
+
+    #[test]
+    fn closing_from_outside_forgets_whats_open_inside_and_a_chevron_flips() {
+        let items = tree();
+        let mut t = LazyTree::new(5);
+        t.open_nodes(["a", "a2", "b"]);
+        t.close_nodes(&items, ["a"]);
+        assert!(!t.is_open(&"a") && !t.is_open(&"a2") && t.is_open(&"b"));
+        assert_eq!(t.flip(&items, &"a"), TreeEvent::Opened("a"));
+        assert!(!t.is_open(&"a2"), "reopening doesn't bring back what was open inside");
+        assert_eq!(t.flip(&items, &"a"), TreeEvent::Closed("a"));
     }
 
     #[test]

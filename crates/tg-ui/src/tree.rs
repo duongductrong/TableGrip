@@ -14,9 +14,9 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use gpui::{
-    App, ElementId, Entity, FocusHandle, InteractiveElement, IntoElement, KeyDownEvent,
-    MouseButton, MouseDownEvent, ParentElement, RenderOnce, ScrollStrategy, SharedString, Styled,
-    UniformListScrollHandle, Window, div, point, prelude::*, uniform_list,
+    AnyElement, App, ElementId, Entity, FocusHandle, InteractiveElement, IntoElement, KeyDownEvent,
+    MouseButton, MouseDownEvent, ParentElement, Pixels, Point, RenderOnce, ScrollStrategy,
+    SharedString, Styled, UniformListScrollHandle, Window, div, point, prelude::*, uniform_list,
 };
 use tg_theme::{Rgba, Theme};
 use tg_ui_logic::input::{Key, Modifiers};
@@ -61,6 +61,10 @@ pub fn tree_colors(theme: &Theme) -> TreeColors {
 
 pub type Items = Rc<Vec<Item<SharedString>>>;
 pub type OnTreeEvent = Rc<dyn Fn(TreeEvent<SharedString>, &mut Window, &mut App)>;
+/// Draws a row's content after its chevron: its icon and label.
+pub type RowLabel = Rc<dyn Fn(&SharedString, &mut App) -> AnyElement>;
+/// A right click on a row (already selected), with where it happened, for a context menu.
+pub type OnSecondary = Rc<dyn Fn(SharedString, Point<Pixels>, &mut Window, &mut App)>;
 
 #[derive(IntoElement)]
 pub struct Tree {
@@ -71,6 +75,10 @@ pub struct Tree {
     selected: Option<SharedString>,
     focused_look: Option<bool>,
     on_event: Option<OnTreeEvent>,
+    label: Option<RowLabel>,
+    on_secondary: Option<OnSecondary>,
+    open_now: Vec<SharedString>,
+    close_now: Vec<SharedString>,
 }
 
 /// A tree over `items`, which the owner replaces (a new `Rc`) when lazy children arrive.
@@ -83,6 +91,10 @@ pub fn tree(id: impl Into<SharedString>, items: Items) -> Tree {
         selected: None,
         focused_look: None,
         on_event: None,
+        label: None,
+        on_secondary: None,
+        open_now: Vec::new(),
+        close_now: Vec::new(),
     }
 }
 
@@ -108,6 +120,29 @@ impl Tree {
     /// Draw the selection as focused or not regardless of real focus, for a static specimen.
     pub fn focused_look(mut self, focused: bool) -> Self {
         self.focused_look = Some(focused);
+        self
+    }
+
+    /// Draws each row's content (after the chevron) instead of the key as text.
+    pub fn label(mut self, f: impl Fn(&SharedString, &mut App) -> AnyElement + 'static) -> Self {
+        self.label = Some(Rc::new(f));
+        self
+    }
+
+    /// A right click on a row: the row is selected first, then `f` gets its key and the pointer's position.
+    pub fn on_secondary(
+        mut self,
+        f: impl Fn(SharedString, Point<Pixels>, &mut Window, &mut App) + 'static,
+    ) -> Self {
+        self.on_secondary = Some(Rc::new(f));
+        self
+    }
+
+    /// Opens these nodes now (the owner loads their children itself) and closes those; for revealing a connection
+    /// or collapsing one that disconnected. Pass each request once.
+    pub fn open_close(mut self, open: Vec<SharedString>, close: Vec<SharedString>) -> Self {
+        self.open_now = open;
+        self.close_now = close;
         self
     }
 
@@ -244,8 +279,16 @@ impl RenderOnce for Tree {
         let focused = self
             .focused_look
             .unwrap_or_else(|| focus.is_focused(window));
+        let (open_now, close_now) = (self.open_now, self.close_now);
         let (rows, scroll, viewport) = state.update(cx, |s, _| {
             s.set_items(&self.items);
+            if !open_now.is_empty() || !close_now.is_empty() {
+                s.act(|tree, items| {
+                    tree.open_nodes(open_now);
+                    tree.close_nodes(items, close_now);
+                });
+                s.stale = true;
+            }
             // Focus with nothing selected selects the first row.
             if focused && s.tree.selected().next().is_none() && s.tree.active().is_none() {
                 s.act(|tree, items| tree.focus(items));
@@ -259,6 +302,7 @@ impl RenderOnce for Tree {
         });
         let leaf_inset = self.leaf_inset;
         let on_event = self.on_event.clone();
+        let (row_label, on_secondary) = (self.label.clone(), self.on_secondary.clone());
         let id = self.id.clone();
         let list_state = state.clone();
         let list_focus = focus.clone();
@@ -268,8 +312,8 @@ impl RenderOnce for Tree {
             rows.len(),
             move |range, _, cx| {
                 let t = cx.theme().clone();
-                let tree_state = list_state.read(cx);
-                let selected: HashSet<&SharedString> = tree_state.tree.selected().collect();
+                let selected: HashSet<SharedString> =
+                    list_state.read(cx).tree.selected().cloned().collect();
                 range
                     .map(|ix| {
                         let row = &list_rows[ix];
@@ -277,6 +321,18 @@ impl RenderOnce for Tree {
                         let key = row.key.clone();
                         let (click_state, click_focus, on_event) =
                             (list_state.clone(), list_focus.clone(), on_event.clone());
+                        let (menu_state, menu_focus, menu_key, on_secondary) = (
+                            list_state.clone(),
+                            list_focus.clone(),
+                            key.clone(),
+                            on_secondary.clone(),
+                        );
+                        let (chevron_state, chevron_key, chevron_event) =
+                            (list_state.clone(), key.clone(), on_event.clone());
+                        let content = match &row_label {
+                            Some(f) => f(&row.key, cx),
+                            None => text(row.key.clone()).into_any_element(),
+                        };
                         let label_inset = if !row.node && leaf_inset {
                             CHEVRON + CHEVRON_GAP
                         } else {
@@ -309,6 +365,21 @@ impl RenderOnce for Tree {
                                     window.refresh();
                                 },
                             )
+                            .on_mouse_down(
+                                MouseButton::Right,
+                                move |e: &MouseDownEvent, window, cx| {
+                                    window.focus(&menu_focus);
+                                    menu_state.update(cx, |s, _| {
+                                        if !s.tree.is_selected(&menu_key) {
+                                            s.act(|tree, _| tree.click(&menu_key));
+                                        }
+                                    });
+                                    if let Some(f) = &on_secondary {
+                                        f(menu_key.clone(), e.position, window, cx);
+                                    }
+                                    window.refresh();
+                                },
+                            )
                             .child(
                                 div()
                                     .flex()
@@ -320,21 +391,53 @@ impl RenderOnce for Tree {
                                     .pr(t.dp(CONTENT_PAD))
                                     .when(row.node, |d| {
                                         d.child(
-                                            div().flex_none().mr(t.dp(CHEVRON_GAP)).child(
-                                                icon(if row.open {
-                                                    "General.ChevronDown"
-                                                } else {
-                                                    "General.ChevronRight"
-                                                })
-                                                .size(CHEVRON),
-                                            ),
+                                            div()
+                                                .id(ElementId::Name(
+                                                    format!("{id}.chevron.{ix}").into(),
+                                                ))
+                                                .flex_none()
+                                                .mr(t.dp(CHEVRON_GAP))
+                                                .on_mouse_down(
+                                                    MouseButton::Left,
+                                                    move |e: &MouseDownEvent, window, cx| {
+                                                        if e.click_count != 1 {
+                                                            return;
+                                                        }
+                                                        cx.stop_propagation();
+                                                        let event =
+                                                            chevron_state.update(cx, |s, _| {
+                                                                s.act(|tree, items| {
+                                                                    tree.click(&chevron_key);
+                                                                    tree.flip(items, &chevron_key)
+                                                                })
+                                                            });
+                                                        emit(
+                                                            &chevron_event,
+                                                            vec![event],
+                                                            window,
+                                                            cx,
+                                                        );
+                                                        window.refresh();
+                                                    },
+                                                )
+                                                .child(
+                                                    icon(if row.open {
+                                                        "General.ChevronDown"
+                                                    } else {
+                                                        "General.ChevronRight"
+                                                    })
+                                                    .size(CHEVRON),
+                                                ),
                                         )
                                     })
                                     .child(
                                         div()
                                             .ml(t.dp(label_inset))
+                                            .flex_1()
+                                            .min_w_0()
+                                            .overflow_hidden()
                                             .whitespace_nowrap()
-                                            .child(text(row.key.clone())),
+                                            .child(content),
                                     ),
                             )
                     })
