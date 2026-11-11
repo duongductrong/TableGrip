@@ -417,6 +417,10 @@ val thirdPartyNotices by tasks.registering {
             appendLine("Native components, MIT (https://spdx.org/licenses/MIT.html):")
             appendLine("  Sparkle $sparkle (macOS updater), https://github.com/sparkle-project/Sparkle")
             appendLine("  WinSparkle $winSparkle (Windows updater), https://github.com/vslavik/winsparkle")
+            appendLine()
+            appendLine("Artwork, CC0-1.0 (https://spdx.org/licenses/CC0-1.0.html):")
+            appendLine("  Simple Icons 16.37.0 (database logos), https://simpleicons.org")
+            appendLine("  The logos are trademarks of their owners; see NOTICE.")
             byLicense.toSortedMap().forEach { (license, items) ->
                 appendLine()
                 appendLine("$license (https://spdx.org/licenses/$license.html)")
