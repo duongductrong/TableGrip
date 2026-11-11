@@ -144,7 +144,10 @@ class MoreEnginesTest {
         val config = ConnectionConfig(id = "i3", name = "i3", type = DatabaseType.InfluxDB3, host = host, port = port.toInt())
         val now = System.currentTimeMillis() / 1000
         val lines = (0 until 30).joinToString("\n") { "tg_home,room=r${it % 3} temp=${20 + it}.5,hum=${it}i ${now - it * 60}" }
-        RestClient("InfluxDB", config, host, port.toInt()).send("POST", "/api/v3/write_lp?db=tg_sensors&precision=second", lines, "text/plain").also { assertTrue(it.ok, it.body) }
+        val api = RestClient("InfluxDB", config, host, port.toInt())
+        // An earlier run's table goes first, so the counts below hold however often this runs.
+        api.send("DELETE", "/api/v3/configure/table?db=tg_sensors&table=tg_home")
+        api.send("POST", "/api/v3/write_lp?db=tg_sensors&precision=second", lines, "text/plain").also { assertTrue(it.ok, it.body) }
         RecordStore.connect(config, null, drivers = drivers).use { influx ->
             assertTrue(influx.server().startsWith("InfluxDB 3 Core 3."), influx.server())
             assertTrue(influx.containers().any { it.name == "tg_sensors" })

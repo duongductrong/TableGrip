@@ -42,7 +42,8 @@ class RecordBrowserTab(
     initialQuery: String = "",
 ) : WorkspaceTab {
     override val connectionId = config.id
-    override val title = container.path.joinToString(".")
+    /** `shop.orders`; a tree whose root is `/` (ZooKeeper, Consul) reads as a path: `/services/api`. */
+    override val title = if (container.path.firstOrNull() == "/") "/" + container.path.drop(1).joinToString("/") else container.path.joinToString(".")
 
     val path: List<String> = container.path
 

@@ -72,7 +72,7 @@ class KafkaClientTest {
                     put("headers", buildJsonObject { put("source", "test") })
                 })
             }
-            kafka.put(path, null, buildJsonObject { put("value", "plain text 7") })
+            kafka.put(path, null, buildJsonObject { put("value", "plain text 7"); put("partition", 0) })
             val topic = kafka.containers().single { it.name == "tg_orders" }
             assertEquals(46L, topic.count)
             assertTrue("\"partitions\"" in kafka.definition(path))
