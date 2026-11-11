@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.input.KeyboardActionHandler
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.ui.text.AnnotatedString
+import dev.tablegrip.app.ui.ReviewChangesPopup
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -82,7 +84,6 @@ import org.jetbrains.jewel.ui.component.Link
 import org.jetbrains.jewel.ui.component.ListComboBox
 import org.jetbrains.jewel.ui.component.OutlinedButton
 import org.jetbrains.jewel.ui.component.Text
-import org.jetbrains.jewel.ui.component.TextArea
 import org.jetbrains.jewel.ui.component.TextField
 import org.jetbrains.jewel.ui.icons.AllIconsKeys
 
@@ -95,7 +96,6 @@ internal fun DocumentBrowserView(tab: DocumentBrowserTab) {
         FieldDragGhost(tab.fieldDrag, origin)
     }
     tab.pendingDiscard?.let { DiscardDialog(tab) }
-    tab.preview?.let { PreviewDialog(tab, it) }
     RecordEditorHost(tab.model, tab.grid, "${tab.database}.${tab.collection}")
 }
 
@@ -336,7 +336,10 @@ private fun Toolbar(tab: DocumentBrowserTab) {
         UndoRedoButtons(tab.grid, model)
         ToolButton(AllIconsKeys.Actions.Rollback, tr("Revert all changes"), enabled = tab.hasChanges) { tab.revert() }
         ToolButton(AllIconsKeys.Actions.Preview, tr("Preview pending writes"), enabled = tab.hasChanges) { tab.openPreview() }
-        ToolButton(AllIconsKeys.Actions.Commit, tr("Submit changes ({0})", Shortcuts.Submit), enabled = tab.hasChanges && !tab.submitting) { tab.submit() }
+        Box {
+            ToolButton(AllIconsKeys.Actions.Commit, tr("Submit changes ({0})", Shortcuts.Submit), enabled = tab.hasChanges && !tab.submitting) { tab.submit() }
+            tab.preview?.let { ReviewPopup(tab, it) }
+        }
         if (tab.hasChanges) Text(tr("{0} pending", model.changeCount), Modifier.padding(start = 4.dp), color = JewelTheme.globalColors.text.info)
 
         Box(Modifier.weight(1f))
@@ -423,25 +426,18 @@ private fun DiscardDialog(tab: DocumentBrowserTab) {
     }
 }
 
+/** The pending writes under the Submit button, to check before they run. */
 @Composable
-private fun PreviewDialog(tab: DocumentBrowserTab, commands: String) {
-    AppDialog(
-        onCloseRequest = tab::closePreview,
-        size = DpSize(760.dp, 420.dp),
-        title = tr("Pending Changes"),
-    ) {
-        Column(Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            val text = remember(commands) { TextFieldState(commands) }
-            TextArea(text, Modifier.weight(1f).fillMaxWidth(), readOnly = true, textStyle = JewelTheme.editorTextStyle)
-            Text(
-                tr("Each document is written on its own. An update only applies while the fields still hold the values they had when loaded; ") +
-                    tr("one that doesn't stays pending."),
-                color = JewelTheme.globalColors.text.info,
-            )
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                OutlinedButton(onClick = tab::closePreview) { Text(tr("Close")) }
-                DefaultButton(onClick = tab::submitNow) { Text(tr("Submit")) }
-            }
-        }
-    }
+private fun ReviewPopup(tab: DocumentBrowserTab, commands: String) {
+    ReviewChangesPopup(
+        changeCount = tab.model.changeCount,
+        target = "${tab.collection} · ${tab.config.name}",
+        statements = AnnotatedString(commands),
+        note =
+            tr("Each document is written on its own. An update only applies while the fields still hold the values they had when loaded; ") +
+                tr("one that doesn't stays pending."),
+        canSkip = tab.canSkipReview,
+        onCancel = tab::closePreview,
+        onSubmit = tab::submitReviewed,
+    )
 }

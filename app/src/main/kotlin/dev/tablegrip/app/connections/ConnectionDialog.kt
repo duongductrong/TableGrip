@@ -36,6 +36,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import dev.tablegrip.app.ui.AppDialog
+import dev.tablegrip.app.ui.AppIcons
+import org.jetbrains.jewel.foundation.ExperimentalJewelApi
+import org.jetbrains.jewel.ui.component.SimpleListItem
+import org.jetbrains.jewel.ui.icons.AllIconsKeys
 import dev.tablegrip.core.connection.AgentWrites
 import dev.tablegrip.core.connection.AiAccess
 import dev.tablegrip.core.connection.ConnectionConfig
@@ -450,12 +454,7 @@ private fun GeneralTab(form: ConnectionForm, drivers: DriverDownloads, onMessage
     FormRow(tr("Name")) { TextField(form.name, Modifier.fillMaxWidth(), placeholder = { Text(tr("Optional")) }) }
     FormRow(tr("Type")) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            ListComboBox(
-                items = DatabaseType.entries.map { it.displayName },
-                selectedIndex = DatabaseType.entries.indexOf(form.type),
-                onSelectedItemChange = { form.changeType(DatabaseType.entries[it]) },
-                modifier = Modifier.width(180.dp),
-            )
+            EngineComboBox(form.type, onChange = form::changeType, modifier = Modifier.width(180.dp))
             val choices = form.type.drivers
             ListComboBox(
                 items = choices.map { it.displayName },
@@ -864,5 +863,27 @@ internal fun GroupDialog(state: ConnectionsViewModel, request: GroupRequest) {
                 DefaultButton(onClick = ::submit) { Text(if (renaming != null) tr("Rename") else if (request.newGroup) tr("Create") else tr("Move")) }
             }
         }
+    }
+}
+
+/** The engine picker: each engine with its logo, or a plain database icon for those without one. */
+@OptIn(ExperimentalJewelApi::class)
+@Composable
+private fun EngineComboBox(selected: DatabaseType, onChange: (DatabaseType) -> Unit, modifier: Modifier = Modifier) {
+    val engines = DatabaseType.entries
+    ListComboBox(
+        items = engines,
+        selectedIndex = engines.indexOf(selected),
+        onSelectedItemChange = { onChange(engines[it]) },
+        itemKeys = { _, type -> type.id },
+        modifier = modifier,
+    ) { type, isSelected, isActive ->
+        SimpleListItem(
+            text = type.displayName,
+            selected = isSelected,
+            active = isActive,
+            icon = AppIcons.engineLogo(type) ?: AllIconsKeys.Nodes.DataSchema,
+            iconContentDescription = null,
+        )
     }
 }

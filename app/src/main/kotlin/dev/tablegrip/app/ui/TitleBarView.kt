@@ -105,9 +105,17 @@ private fun ConnectionWidget(app: AppState, current: ConnectionConfig?) {
     }
 }
 
-/** Rounded square with the connection's initials, like a project badge. */
+/**
+ * The engine's logo, as its owner draws it; for engines without one, a rounded square in the connection's colour with
+ * its initials, like a project badge.
+ */
 @Composable
 internal fun Badge(config: ConnectionConfig, size: Int) {
+    val logo = AppIcons.engineLogo(config.type)
+    if (logo != null) {
+        Icon(logo, contentDescription = config.type.displayName, modifier = Modifier.size(size.dp))
+        return
+    }
     Box(
         Modifier.size(size.dp).clip(RoundedCornerShape((size / 4).dp)).background(connectionColor(config)),
         contentAlignment = Alignment.Center,
