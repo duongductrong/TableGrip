@@ -25,7 +25,8 @@ import kotlinx.serialization.json.jsonPrimitive
  *   -e DOCKER_INFLUXDB_INIT_PASSWORD=tablegrip123 -e DOCKER_INFLUXDB_INIT_ORG=tg -e DOCKER_INFLUXDB_INIT_BUCKET=metrics \
  *   -e DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=tablegrip-token influxdb:2.7.11
  * docker run -d --name dg-it-vm -p 58428:8428 victoriametrics/victoria-metrics:v1.108.1 -retentionPeriod=1y
- * -Pit.influxdb=localhost:58086 -Pit.victoriametrics=localhost:58428
+ * docker run -d --name dg-it-prom -p 59090:9090 prom/prometheus:v3.1.0
+ * -Pit.influxdb=localhost:58086 -Pit.victoriametrics=localhost:58428 -Pit.prometheus=localhost:59090
  * ```
  */
 class TimeSeriesEnginesTest {
@@ -131,6 +132,20 @@ class TimeSeriesEnginesTest {
             assertFailsWith<IOException> { vm.execute("sum(") }
             assertTrue(vm.isRead("anything"))
             assertFalse(vm.canWrite(path))
+        }
+    }
+
+    @Test
+    fun `prometheus lists its metrics and evaluates promql`() = runBlocking<Unit> {
+        val (host, port) = System.getProperty("it.prometheus")?.split(":") ?: return@runBlocking
+        val config = ConnectionConfig(id = "prom", name = "prom", type = DatabaseType.Prometheus, host = host, port = port.toInt())
+        RecordStore.connect(config, null, drivers = drivers).use { prom ->
+            assertTrue(prom.server().startsWith("Prometheus (3."), prom.server())
+            assertTrue(prom.containers().any { it.name == "prometheus_build_info" })
+            val up = prom.page(listOf("up"), "up", null, 10).records
+            assertEquals("prometheus", up.single().document["job"]!!.jsonPrimitive.content)
+            assertTrue(prom.page(listOf("up"), "", null, 10).records.isNotEmpty(), "the last hour's raw samples")
+            assertTrue(prom.execute("count(up)") is ConsoleReply.Table)
         }
     }
 }

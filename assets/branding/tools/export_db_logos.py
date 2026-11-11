@@ -59,6 +59,11 @@ ENGINES = {
     "InfluxDB": "influxdb",
     "VictoriaMetrics": "victoriametrics",
     "Neo4j": "neo4j",
+    "Prometheus": "prometheus",
+    "InfluxDB3": "influxdb",
+    "Solr": "apachesolr",
+    "Qdrant": "qdrant",
+    "RabbitMQ": "rabbitmq",
 }
 
 # The website lists engines by display name.
@@ -75,6 +80,8 @@ WWW_NAMES = {
     "Cassandra": "Apache Cassandra",
     "CouchDB": "Apache CouchDB",
     "InfluxDB": "InfluxDB 2",
+    "InfluxDB3": "InfluxDB 3",
+    "Solr": "Apache Solr",
 }
 
 LIGHT_BG = "FFFFFF"

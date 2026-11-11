@@ -146,6 +146,10 @@ enum class DriverId(
     InfluxDB(tr("InfluxDB 2 HTTP API (built in)"), "dev.tablegrip.core.driver.timeseries.InfluxClient", "http:", builtIn = true),
     Prometheus(tr("Prometheus query API (built in)"), "dev.tablegrip.core.driver.timeseries.PromClient", "http:", builtIn = true),
     Neo4j(tr("Neo4j HTTP API (built in)"), "dev.tablegrip.core.driver.graph.Neo4jClient", "http:", builtIn = true),
+    InfluxDB3(tr("InfluxDB 3 HTTP API (built in)"), "dev.tablegrip.core.driver.timeseries.Influx3Client", "http:", builtIn = true),
+    Solr(tr("Solr HTTP API (built in)"), "dev.tablegrip.core.driver.search.SolrClient", "http:", builtIn = true),
+    Qdrant(tr("Qdrant REST API (built in)"), "dev.tablegrip.core.driver.vector.QdrantClient", "http:", builtIn = true),
+    RabbitMQ(tr("RabbitMQ management API (built in)"), "dev.tablegrip.core.driver.stream.RabbitClient", "http:", builtIn = true),
 
     /** Whatever driver the profile's own jars contain; its class is found in them. */
     Generic(tr("JDBC driver from your jars"), "", "jdbc:");

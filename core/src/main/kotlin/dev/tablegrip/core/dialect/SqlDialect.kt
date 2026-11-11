@@ -910,7 +910,11 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
                 EngineFamily.DynamoDB,
                 EngineFamily.InfluxDB,
                 EngineFamily.Prometheus,
-                EngineFamily.Neo4j -> null
+                EngineFamily.Neo4j,
+                EngineFamily.InfluxDB3,
+                EngineFamily.Solr,
+                EngineFamily.Qdrant,
+                EngineFamily.RabbitMQ -> null
             }
 
         fun of(type: DatabaseType): SqlDialect = type.dialect ?: throw IllegalArgumentException(tr("{0} has no SQL dialect", type.displayName))

@@ -79,6 +79,18 @@ enum class EngineFamily {
 
     /** Neo4j's HTTP API and Cypher. */
     Neo4j,
+
+    /** InfluxDB 3's HTTP API: SQL and InfluxQL. */
+    InfluxDB3,
+
+    /** Solr's HTTP API. */
+    Solr,
+
+    /** Qdrant's REST API. */
+    Qdrant,
+
+    /** RabbitMQ's management HTTP API. */
+    RabbitMQ,
 }
 
 /** How a profile reaches its database, which decides the fields the connection dialog asks for. */
@@ -100,7 +112,7 @@ enum class ConnectionKind {
 }
 
 /** How an engine's data is shaped, which decides the screens that browse it and the connection interface it has. */
-enum class Paradigm { Relational, KeyValue, Document, WideColumn, Search, Stream, Graph, TimeSeries }
+enum class Paradigm { Relational, KeyValue, Document, WideColumn, Search, Stream, Graph, TimeSeries, Vector }
 
 /**
  * The connection interface an engine's client speaks, which decides the screens that browse it: tables and SQL, the key
@@ -120,7 +132,7 @@ enum class ClientApi {
                 Paradigm.Relational -> Relational
                 Paradigm.KeyValue -> KeyValue
                 Paradigm.Document -> Document
-                Paradigm.WideColumn, Paradigm.Search, Paradigm.Stream, Paradigm.Graph, Paradigm.TimeSeries -> Records
+                Paradigm.WideColumn, Paradigm.Search, Paradigm.Stream, Paradigm.Graph, Paradigm.TimeSeries, Paradigm.Vector -> Records
             }
     }
 }
@@ -500,6 +512,23 @@ class DatabaseType(
         val Neo4j =
             DatabaseType("Neo4j", "Neo4j", EngineFamily.Neo4j, 7474, listOf(DriverId.Neo4j), paradigm = Paradigm.Graph, capabilities = emptySet(), databaseHint = "neo4j")
 
+        /** Prometheus itself, through the same query API; read-only. */
+        val Prometheus =
+            DatabaseType("Prometheus", "Prometheus", EngineFamily.Prometheus, 9090, listOf(DriverId.Prometheus), paradigm = Paradigm.TimeSeries, capabilities = emptySet())
+
+        /** InfluxDB 3 Core and Enterprise over their HTTP API, built in; read-only. The password is a token. */
+        val InfluxDB3 =
+            DatabaseType("InfluxDB3", "InfluxDB 3", EngineFamily.InfluxDB3, 8181, listOf(DriverId.InfluxDB3), paradigm = Paradigm.TimeSeries, capabilities = emptySet())
+
+        /** Apache Solr over its HTTP API, built in: cores, or SolrCloud collections. */
+        val Solr = search("Solr", "Apache Solr", EngineFamily.Solr, 8983, DriverId.Solr)
+
+        /** Qdrant over its REST API, built in; the password is the API key. */
+        val Qdrant = DatabaseType("Qdrant", "Qdrant", EngineFamily.Qdrant, 6333, listOf(DriverId.Qdrant), paradigm = Paradigm.Vector, capabilities = emptySet())
+
+        /** RabbitMQ over its management API (the management plugin's port), built in. */
+        val RabbitMQ = DatabaseType("RabbitMQ", "RabbitMQ", EngineFamily.RabbitMQ, 15672, listOf(DriverId.RabbitMQ), paradigm = Paradigm.Stream, capabilities = emptySet())
+
         private fun wideColumn(id: String, name: String) =
             DatabaseType(
                 id, name, EngineFamily.Cassandra, 9042, listOf(DriverId.Cassandra), paradigm = Paradigm.WideColumn, capabilities = emptySet(),
@@ -538,7 +567,7 @@ class DatabaseType(
                 Doris, StarRocks, AzureSql, Firebird, Trino, Presto,
                 Snowflake, Databricks, BigQuery, Spanner, Db2, Hana, Vertica, Exasol, Informix, Iris,
                 Hive, SparkSql, Impala, Kyuubi,
-                KeyDB, Dragonfly, Etcd, FerretDB, Elasticsearch, OpenSearch, Meilisearch, Cassandra, ScyllaDB, CouchDB, DynamoDB, InfluxDB, VictoriaMetrics, Neo4j, H2, HSQLDB, Derby, Access, OtherJdbc,
+                KeyDB, Dragonfly, Etcd, FerretDB, Elasticsearch, OpenSearch, Meilisearch, Cassandra, ScyllaDB, CouchDB, DynamoDB, InfluxDB, InfluxDB3, VictoriaMetrics, Prometheus, Neo4j, Solr, Qdrant, RabbitMQ, H2, HSQLDB, Derby, Access, OtherJdbc,
                 CsvFile, ExcelFile, JsonFile,
             )
 

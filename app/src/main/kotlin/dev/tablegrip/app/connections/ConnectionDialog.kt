@@ -529,7 +529,7 @@ private fun GeneralTab(form: ConnectionForm, drivers: DriverDownloads, onMessage
         if (form.type.family == EngineFamily.InfluxDB) FormRow(tr("Organization")) { TextField(form.database, Modifier.fillMaxWidth()) }
         if (form.document) FormRow(tr("Database")) { TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text(tr("Optional: opened first, and the default auth source")) }) }
         // Meilisearch and InfluxDB sign in with a key or token alone, DynamoDB with an AWS access key.
-        val keyOnly = form.type.family == EngineFamily.Meilisearch || form.type.family == EngineFamily.InfluxDB
+        val keyOnly = form.type.family in setOf(EngineFamily.Meilisearch, EngineFamily.InfluxDB, EngineFamily.InfluxDB3, EngineFamily.Qdrant)
         val aws = form.type.family == EngineFamily.DynamoDB
         if (!keyOnly) FormRow(if (aws) tr("Access key ID") else tr("User")) { TextField(form.user, Modifier.fillMaxWidth()) }
         FormRow(if (keyOnly) tr("API key") else if (aws) tr("Secret access key") else tr("Password")) {

@@ -4,11 +4,12 @@ description: Every database TableGrip connects to, grouped by family, with what 
 ---
 
 TableGrip speaks to relational databases through JDBC, to Redis, MongoDB and Cassandra through their own clients, and to
-etcd, Elasticsearch, OpenSearch, Meilisearch, CouchDB, DynamoDB, InfluxDB, VictoriaMetrics and Neo4j over their HTTP APIs. Hosted
+etcd, Elasticsearch, OpenSearch, Meilisearch, Solr, CouchDB, DynamoDB, InfluxDB, VictoriaMetrics, Prometheus, Qdrant,
+RabbitMQ and Neo4j over their HTTP APIs. Hosted
 services that are compatible with a family (Neon, Supabase, PlanetScale, Azure SQL…) have their own presets, which set
 sensible defaults such as TLS.
 
-In all, TableGrip connects to **59 databases** and opens **3 kinds of data file** out of the box, and to any other
+In all, TableGrip connects to **64 databases** and opens **3 kinds of data file** out of the box, and to any other
 database you have a JDBC driver for.
 
 ## At a glance
@@ -25,9 +26,11 @@ database you have a JDBC driver for.
 | **Embedded** | SQLite · H2 · HSQLDB · Apache Derby · Microsoft Access | Open a file, or an in-memory database for H2 and HSQLDB. SQLite backs up with `VACUUM INTO`. Access `.accdb` and `.mdb` files open through UCanAccess, without Access or Windows. |
 | **Key-value** | Redis · Valkey · KeyDB · Dragonfly · etcd | Redis standalone, Cluster and Sentinel, TLS. etcd needs no download. |
 | **Document** | MongoDB · FerretDB · Apache CouchDB · Amazon DynamoDB | `mongodb://` and `mongodb+srv://` URLs. CouchDB browses with Mango queries and writes by revision; DynamoDB with PartiQL, signed with your AWS keys. Both need no download. |
-| **Search** | Elasticsearch · OpenSearch · Meilisearch | Indices, aliases and mappings; documents by query string or query DSL; a Dev Tools console. Edits check the version they were read at. No download. |
+| **Search** | Elasticsearch · OpenSearch · Meilisearch · Apache Solr | Indices, aliases and mappings; documents by query string or query DSL; a Dev Tools console. Edits check the version they were read at. No download. |
 | **Wide-column** | Apache Cassandra · ScyllaDB | Keyspaces and tables, paged rows by `WHERE`, a CQL console. Rows round-trip as Cassandra's own JSON. |
-| **Time series** | InfluxDB 2 · VictoriaMetrics | Buckets and measurements with Flux; metrics with PromQL. Read-only. No download. |
+| **Time series** | InfluxDB 2 · InfluxDB 3 · VictoriaMetrics · Prometheus | Buckets and measurements with Flux, InfluxDB 3 tables with SQL; metrics with PromQL. Read-only. No download. |
+| **Vector** | Qdrant | Collections and points by filter; payloads edited, points added with their vector. No download. |
+| **Messaging** | RabbitMQ | Virtual hosts, queues and exchanges through the management API; messages peeked (and requeued) and published. No download. |
 | **Graph** | Neo4j | Labels and relationship types, a Cypher console. Edits set only the properties that changed. No download. |
 | **Data files** | CSV / TSV · Excel `.xlsx` · JSON / NDJSON | Opened as tables. Committed changes are written back to the file. |
 | **Anything else** | Any other JDBC database | Bring the driver's jar. |

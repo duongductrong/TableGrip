@@ -95,5 +95,20 @@ object JsonTables {
             elapsedMillis = elapsedMillis,
         )
 
+    /**
+     * A short hash of [value] with object keys sorted: a record's version, for engines without one of their own, so a
+     * write can tell whether the record changed since it was read.
+     */
+    fun version(value: JsonElement): String =
+        java.security.MessageDigest.getInstance("SHA-256").digest(canonical(value).toByteArray()).take(12).joinToString("") { "%02x".format(it) }
+
+    private fun canonical(value: JsonElement): String =
+        when (value) {
+            is JsonObject -> value.entries.sortedBy { it.key }.joinToString(",", "{", "}") { "${JsonPrimitive(it.key)}:${canonical(it.value)}" }
+            is JsonArray -> value.joinToString(",", "[", "]") { canonical(it) }
+            is JsonPrimitive -> if (value.isString) value.toString() else value.content.toBigDecimalOrNull()?.stripTrailingZeros()?.toPlainString() ?: value.content
+            JsonNull -> "null"
+        }
+
     private val NumericNames = setOf("long", "integer", "short", "byte", "double", "float", "half_float", "scaled_float", "unsigned_long", "number", "int", "bigint", "decimal")
 }
