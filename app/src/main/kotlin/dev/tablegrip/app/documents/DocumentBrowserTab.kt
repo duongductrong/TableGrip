@@ -273,10 +273,22 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
 
     // region Grid edits
 
-    /** Saves the grid's edits, after showing them first on connections that confirm writes. */
+    /** Whether Submit shows the writes first: the user's choice, unless the connection confirms writes. */
+    val reviewsChanges: Boolean get() = config.confirmWrites || app.settings.reviewChanges
+
+    /** The review can be turned off from itself only where the connection doesn't insist on it. */
+    val canSkipReview: Boolean get() = !config.confirmWrites
+
+    /** Saves the grid's edits, after showing them first when [reviewsChanges]. */
     fun submit() {
         if (!hasChanges || submitting || !readyToSave()) return
-        if (config.confirmWrites && preview == null) openPreview() else submitNow()
+        if (reviewsChanges && preview == null) openPreview() else submitNow()
+    }
+
+    /** Submit from the review, which stops asking from now on when the user ticked [skipReviewNextTime]. */
+    fun submitReviewed(skipReviewNextTime: Boolean) {
+        if (skipReviewNextTime && canSkipReview) app.updateSettings { it.copy(reviewChanges = false) }
+        submitNow()
     }
 
     fun openPreview() {

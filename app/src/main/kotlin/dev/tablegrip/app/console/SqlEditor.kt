@@ -66,6 +66,8 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -728,17 +730,33 @@ private class SqlHighlighter(syntax: SqlSyntax, private val palette: SqlPalette)
 
     override fun TextFieldBuffer.transformOutput() {
         for (token in lexer.tokenize(asCharSequence())) {
-            val style =
-                when (token.type) {
-                    TokenType.Keyword -> palette.keyword
-                    TokenType.String -> palette.string
-                    TokenType.Number -> palette.number
-                    TokenType.Comment -> palette.comment
-                    TokenType.QuotedIdentifier -> palette.quotedIdentifier
-                    TokenType.Parameter -> palette.parameter
-                    else -> null
-                }
-            if (style != null) addStyle(style, token.start, token.end)
+            palette.styleOf(token.type)?.let { addStyle(it, token.start, token.end) }
+        }
+    }
+}
+
+private fun SqlPalette.styleOf(type: TokenType): SpanStyle? =
+    when (type) {
+        TokenType.Keyword -> keyword
+        TokenType.String -> string
+        TokenType.Number -> number
+        TokenType.Comment -> comment
+        TokenType.QuotedIdentifier -> quotedIdentifier
+        TokenType.Parameter -> parameter
+        else -> null
+    }
+
+/** [sql] coloured as the editor colours it, for read-only text shown outside an editor. */
+@Composable
+internal fun rememberHighlightedSql(sql: String, syntax: SqlSyntax): AnnotatedString {
+    val settings = LocalSettings.current
+    val accent = LocalIslands.current.accent
+    val colorTheme = LocalColorTheme.current
+    val palette = remember(colorTheme, settings.syntaxScheme, settings.syntaxColors, accent) { sqlPalette(colorTheme, settings, accent) }
+    return remember(sql, syntax, palette) {
+        buildAnnotatedString {
+            append(sql)
+            for (token in SqlLexer(syntax).tokenize(sql)) palette.styleOf(token.type)?.let { addStyle(it, token.start, token.end) }
         }
     }
 }
