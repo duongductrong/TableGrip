@@ -43,7 +43,8 @@ class RestClient(
 ) {
     private val tls = config.properties["ssl"]?.toBoolean() ?: defaultTls
     private val http: HttpClient =
-        HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NORMAL).apply {
+        // HTTP/1.1: some servers (libSQL's) hang on the client's h2c upgrade request.
+        HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NORMAL).apply {
             if (tls && config.properties["verifyPeer"]?.toBoolean() == false) sslContext(trustingEverything())
         }.build()
 

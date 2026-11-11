@@ -3,7 +3,7 @@ package dev.tablegrip.mcp
 import dev.tablegrip.core.agent.AgentCapability
 import dev.tablegrip.core.agent.AgentPolicy
 import dev.tablegrip.core.assist.SchemaDigest
-import dev.tablegrip.core.connection.Paradigm
+import dev.tablegrip.core.connection.ClientApi
 import dev.tablegrip.core.driver.RelationalConnection
 import dev.tablegrip.mcp.tools.connectionTools
 import dev.tablegrip.mcp.tools.describeConnection
@@ -106,7 +106,7 @@ class McpServer(private val session: McpSession, private val version: String) : 
         val resources = buildJsonArray {
             if (!policy.enabled) return@buildJsonArray
             add(resource(ConnectionsUri, "connections", "Connections shared with agents", "application/json"))
-            workspace.visible().filter { it.type.paradigm == Paradigm.Relational }.forEach { config ->
+            workspace.visible().filter { it.type.api == ClientApi.Relational }.forEach { config ->
                 add(resource(schemaUri(config.id), "${config.name} schema", "Tables and columns of ${config.name}'s default schema", "text/plain"))
             }
             workspace.savedQueries().forEach { query ->

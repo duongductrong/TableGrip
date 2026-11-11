@@ -9,7 +9,6 @@ import dev.tablegrip.app.AppState
 import dev.tablegrip.core.connection.ConnectionConfig
 import dev.tablegrip.core.connection.ConnectionStore
 import dev.tablegrip.core.connection.DatabaseType
-import dev.tablegrip.core.connection.Paradigm
 import dev.tablegrip.core.datafile.DataFileFormats
 import dev.tablegrip.core.datafile.DataFileStore
 import dev.tablegrip.core.driver.DocumentStore

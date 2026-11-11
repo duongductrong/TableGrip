@@ -7,7 +7,7 @@ import dev.tablegrip.core.connection.ConnectionConfig
 import dev.tablegrip.core.connection.ConnectionString
 import dev.tablegrip.core.connection.DatabaseType
 import dev.tablegrip.core.connection.EngineFamily
-import dev.tablegrip.core.connection.Paradigm
+import dev.tablegrip.core.connection.ClientApi
 import dev.tablegrip.core.connection.SshTunnel
 import dev.tablegrip.core.dialect.SqlDialect
 import dev.tablegrip.core.tools.Tool
@@ -43,7 +43,7 @@ sealed interface BackupSupport {
     companion object {
         fun of(type: DatabaseType): BackupSupport =
             when {
-                type.paradigm != Paradigm.Relational -> NotApplicable
+                type.api != ClientApi.Relational -> NotApplicable
                 // The file is the data; its working copy is scratch.
                 type.isDataFile -> NotApplicable
                 type == DatabaseType.SQLite -> Native(BackupFormat.SqliteCopy)

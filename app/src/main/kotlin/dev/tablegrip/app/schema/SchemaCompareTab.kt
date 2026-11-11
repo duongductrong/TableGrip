@@ -9,7 +9,7 @@ import androidx.compose.runtime.setValue
 import dev.tablegrip.app.AppState
 import dev.tablegrip.app.workspace.WorkspaceTab
 import dev.tablegrip.core.connection.ConnectionConfig
-import dev.tablegrip.core.connection.Paradigm
+import dev.tablegrip.core.connection.ClientApi
 import dev.tablegrip.core.ddl.DdlGenerator
 import dev.tablegrip.core.ddl.DdlScript
 import dev.tablegrip.core.ddl.TableDesign
@@ -101,7 +101,7 @@ class SchemaCompareTab(private val app: AppState, sourceConfig: ConnectionConfig
     private var job: Job? = null
 
     val candidates: List<ConnectionConfig>
-        get() = app.connections.profiles.filter { it.type.paradigm == Paradigm.Relational }
+        get() = app.connections.profiles.filter { it.type.api == ClientApi.Relational }
 
     val canCompare: Boolean
         get() = !comparing && source.config != null && source.namespace != null && target.config != null && target.namespace != null &&

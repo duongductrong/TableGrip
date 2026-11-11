@@ -54,7 +54,6 @@ import dev.tablegrip.core.connection.DriverId
 import dev.tablegrip.core.connection.JdbcUrls
 import dev.tablegrip.core.connection.ClientApi
 import dev.tablegrip.core.connection.EngineFamily
-import dev.tablegrip.core.connection.Paradigm
 import dev.tablegrip.core.connection.ParsedConnection
 import dev.tablegrip.core.connection.Environment
 import dev.tablegrip.core.connection.SshAuth
@@ -130,7 +129,7 @@ private class ConnectionForm(existing: ConnectionConfig?, group: String = "") {
 
     /** Reached through JDBC; key-value and document stores have no database field, URL form or JDBC URL preview. */
     val relational: Boolean
-        get() = type.paradigm == Paradigm.Relational
+        get() = type.api == ClientApi.Relational
 
     /** MongoDB and the like: a database field and a connection string, but nothing JDBC. */
     val document: Boolean
@@ -529,7 +528,7 @@ private fun GeneralTab(form: ConnectionForm, drivers: DriverDownloads, onMessage
         if (form.type.family == EngineFamily.InfluxDB) FormRow(tr("Organization")) { TextField(form.database, Modifier.fillMaxWidth()) }
         if (form.document) FormRow(tr("Database")) { TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text(tr("Optional: opened first, and the default auth source")) }) }
         // Meilisearch and InfluxDB sign in with a key or token alone, DynamoDB with an AWS access key.
-        val keyOnly = form.type.family in setOf(EngineFamily.Meilisearch, EngineFamily.InfluxDB, EngineFamily.InfluxDB3, EngineFamily.Qdrant, EngineFamily.Consul)
+        val keyOnly = form.type.family in setOf(EngineFamily.Meilisearch, EngineFamily.InfluxDB, EngineFamily.InfluxDB3, EngineFamily.Qdrant, EngineFamily.Consul) || form.type == DatabaseType.Libsql
         val aws = form.type.family == EngineFamily.DynamoDB
         if (!keyOnly) FormRow(if (aws) tr("Access key ID") else tr("User")) { TextField(form.user, Modifier.fillMaxWidth()) }
         FormRow(if (keyOnly) tr("API key") else if (aws) tr("Secret access key") else tr("Password")) {
@@ -708,6 +707,7 @@ private val PropertyExamples =
         DriverId.Neo4j to "ssl=true\nverifyPeer=false  (self-signed certificates)",
         DriverId.Kafka to "ssl=true\nsasl.mechanism=SCRAM-SHA-512\nsecurity.protocol=SASL_SSL",
         DriverId.Consul to "datacenter=dc1\nssl=true",
+        DriverId.Libsql to "ssl=true  (Turso: port 443, the database's host, its token as the API key)",
         DriverId.Cassandra to "localDatacenter=datacenter1\nssl=true\nshowSystem=true  (system keyspaces)",
         DriverId.Lettuce to "ssl=true\nmode=cluster  (hosts are seed nodes)\nmode=sentinel + sentinelMaster=mymaster",
     )

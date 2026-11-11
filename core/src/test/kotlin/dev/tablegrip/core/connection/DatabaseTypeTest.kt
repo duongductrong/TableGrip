@@ -41,8 +41,8 @@ class DatabaseTypeTest {
     @Test
     fun `every relational engine has a dialect, and every engine a default driver it allows`() {
         DatabaseType.entries.forEach { type ->
-            // Relational engines have SQL; key-value stores don't.
-            assertEquals(type.paradigm == Paradigm.Relational, type.dialect != null, "$type")
+            // Engines reached through JDBC have a SQL dialect; the rest (SQLite over HTTP included) speak through their clients.
+            assertEquals(type.api == ClientApi.Relational, type.dialect != null, "$type")
             assertTrue(ConnectionConfig(id = "x", name = "x", type = type).effectiveDriver in type.drivers)
         }
         assertEquals(DriverId.MariaDB, DatabaseType.MySQL.drivers.first(), "MySQL's own driver is GPL; it must not be the default")

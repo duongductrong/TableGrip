@@ -66,6 +66,7 @@ ENGINES = {
     "RabbitMQ": "rabbitmq",
     "Kafka": "apachekafka",
     "Consul": "consul",
+    "Libsql": "turso",
 }
 
 # The website lists engines by display name.
@@ -85,6 +86,7 @@ WWW_NAMES = {
     "InfluxDB3": "InfluxDB 3",
     "Solr": "Apache Solr",
     "Kafka": "Apache Kafka",
+    "Libsql": "libSQL / Turso",
 }
 
 LIGHT_BG = "FFFFFF"

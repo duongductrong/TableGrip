@@ -8,7 +8,7 @@ import dev.tablegrip.app.table.TableDataTab
 import dev.tablegrip.core.agent.Mention
 import dev.tablegrip.core.assist.SchemaDigest
 import dev.tablegrip.core.connection.ConnectionConfig
-import dev.tablegrip.core.connection.Paradigm
+import dev.tablegrip.core.connection.ClientApi
 import dev.tablegrip.core.metadata.TableRef
 import org.slf4j.LoggerFactory
 
@@ -111,7 +111,7 @@ class MentionSources(private val app: AppState) {
      * composition updates as tables and columns load.
      */
     private fun relational(): ConnectionConfig? =
-        app.currentConnection?.takeIf { it.type.paradigm == Paradigm.Relational && shared(it) }?.also { app.schemaCache(it).version }
+        app.currentConnection?.takeIf { it.type.api == ClientApi.Relational && shared(it) }?.also { app.schemaCache(it).version }
 
     private fun table(config: ConnectionConfig, ref: TableRef) =
         Mention.Table(config.id, config.name, config.type.displayName, ref.namespace.displayName, ref.name)

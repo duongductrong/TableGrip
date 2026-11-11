@@ -2,7 +2,7 @@ package dev.tablegrip.core.activity
 
 import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.connection.DatabaseType
-import dev.tablegrip.core.connection.Paradigm
+import dev.tablegrip.core.connection.ClientApi
 import dev.tablegrip.core.dialect.SqlDialect
 import dev.tablegrip.core.driver.ReadOnlyViolationException
 import java.sql.Connection
@@ -66,7 +66,7 @@ sealed interface ActivitySupport {
     companion object {
         fun of(type: DatabaseType): ActivitySupport =
             when {
-                type.paradigm != Paradigm.Relational || !type.isServer -> NotApplicable
+                type.api != ClientApi.Relational || !type.isServer -> NotApplicable
                 ActivityReader.of(type) != null -> Supported
                 else -> NotYet(tr("The activity monitor doesn't support {0} yet. It supports PostgreSQL, MySQL and MariaDB.", type.displayName))
             }

@@ -58,7 +58,7 @@ import dev.tablegrip.app.ui.Shortcut
 import dev.tablegrip.app.ui.Shortcuts
 import dev.tablegrip.core.activity.ActivitySupport
 import dev.tablegrip.core.connection.ConnectionConfig
-import dev.tablegrip.core.connection.Paradigm
+import dev.tablegrip.core.connection.ClientApi
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.Orientation
 import org.jetbrains.jewel.ui.component.Divider
@@ -140,7 +140,7 @@ fun goToItems(app: AppState): List<GoToItem> = buildList {
     app.connections.profiles.forEach { config ->
         add(GoToItem(GoToKind.Connection, config.name, detail = config.type.displayName, connection = config) { app.pickConnection(config) })
         val connected = app.databases.status(config.id) is ConnectionStatus.Connected
-        if (connected && config.type.paradigm == Paradigm.Relational) {
+        if (connected && config.type.api == ClientApi.Relational) {
             app.schemaCache(config).allTables().forEach { (ref, isView) ->
                 val namespace = ref.namespace.displayName
                 add(

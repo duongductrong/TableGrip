@@ -26,7 +26,7 @@ import dev.tablegrip.core.agent.provider.ProviderConfig
 import dev.tablegrip.core.agent.provider.ProviderProtocol
 import dev.tablegrip.core.assist.AssistRunner
 import dev.tablegrip.core.connection.Environment
-import dev.tablegrip.core.connection.Paradigm
+import dev.tablegrip.core.connection.ClientApi
 import dev.tablegrip.core.dialect.SqlDialect
 import dev.tablegrip.core.settings.Settings
 import dev.tablegrip.core.sql.SqlClassifier
@@ -331,7 +331,7 @@ class AgentViewModel(private val app: AppState, private val registry: AgentRegis
 
     /** SQL blocks offer console actions only where a SQL console exists: not for key-value or document stores. */
     val canRunSql: Boolean
-        get() = app.currentConnection?.type?.paradigm == Paradigm.Relational
+        get() = app.currentConnection?.type?.api == ClientApi.Relational
 
     /** The selected tab, when it is a console of the current connection: suggestions go there rather than a new one. */
     private val currentConsole: ConsoleTab?

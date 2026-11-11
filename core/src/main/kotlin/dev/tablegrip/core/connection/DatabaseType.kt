@@ -100,6 +100,9 @@ enum class EngineFamily {
 
     /** Consul's HTTP API: its key-value store. */
     Consul,
+
+    /** SQLite served over HTTP: rqlite's API, libSQL's Hrana. Browsed as records, with SQL in the console. */
+    SqliteHttp,
 }
 
 /** How a profile reaches its database, which decides the fields the connection dialog asks for. */
@@ -547,6 +550,12 @@ class DatabaseType(
         /** Consul's key-value store over its HTTP API, built in; the password is an ACL token. */
         val Consul = DatabaseType("Consul", "Consul", EngineFamily.Consul, 8500, listOf(DriverId.Consul), paradigm = Paradigm.KeyValue, capabilities = emptySet(), api = ClientApi.Records)
 
+        /** rqlite, distributed SQLite, over its HTTP API (port 4001), built in. */
+        val Rqlite = DatabaseType("Rqlite", "rqlite", EngineFamily.SqliteHttp, 4001, listOf(DriverId.Rqlite), capabilities = emptySet(), api = ClientApi.Records, dialect = null)
+
+        /** libSQL server (sqld) and Turso over Hrana's HTTP API, built in; Turso's host takes port 443 with ssl=true. */
+        val Libsql = DatabaseType("Libsql", "libSQL / Turso", EngineFamily.SqliteHttp, 8080, listOf(DriverId.Libsql), capabilities = emptySet(), api = ClientApi.Records, dialect = null)
+
         private fun wideColumn(id: String, name: String) =
             DatabaseType(
                 id, name, EngineFamily.Cassandra, 9042, listOf(DriverId.Cassandra), paradigm = Paradigm.WideColumn, capabilities = emptySet(),
@@ -585,7 +594,7 @@ class DatabaseType(
                 Doris, StarRocks, AzureSql, Firebird, Trino, Presto,
                 Snowflake, Databricks, BigQuery, Spanner, Db2, Hana, Vertica, Exasol, Informix, Iris,
                 Hive, SparkSql, Impala, Kyuubi,
-                KeyDB, Dragonfly, Etcd, FerretDB, Elasticsearch, OpenSearch, Meilisearch, Cassandra, ScyllaDB, CouchDB, DynamoDB, InfluxDB, InfluxDB3, VictoriaMetrics, Prometheus, Neo4j, Solr, Qdrant, RabbitMQ, Kafka, ZooKeeper, Consul, H2, HSQLDB, Derby, Access, OtherJdbc,
+                KeyDB, Dragonfly, Etcd, FerretDB, Elasticsearch, OpenSearch, Meilisearch, Cassandra, ScyllaDB, CouchDB, DynamoDB, InfluxDB, InfluxDB3, VictoriaMetrics, Prometheus, Neo4j, Solr, Qdrant, RabbitMQ, Kafka, ZooKeeper, Consul, Libsql, Rqlite, H2, HSQLDB, Derby, Access, OtherJdbc,
                 CsvFile, ExcelFile, JsonFile,
             )
 

@@ -300,7 +300,7 @@ internal fun AppState.withDefaultNamespace(config: ConnectionConfig, action: (Na
 
 /** Schema tools on a connection's menu, working on its default namespace; none for engines without tables. */
 internal fun schemaTools(app: AppState, config: ConnectionConfig): List<androidx.compose.foundation.ContextMenuItem> {
-    if (config.type.paradigm != dev.tablegrip.core.connection.Paradigm.Relational) return emptyList()
+    if (config.type.api != dev.tablegrip.core.connection.ClientApi.Relational) return emptyList()
     return listOfNotNull(
         androidx.compose.foundation.ContextMenuItem(tr("New Table…")) { app.withDefaultNamespace(config) { app.workspace.openTableDesigner(config, it) } }.takeUnless { config.readOnly },
         androidx.compose.foundation.ContextMenuItem(tr("Import Data…")) { app.withDefaultNamespace(config) { app.openImport(config, it) } }.takeUnless { config.readOnly },

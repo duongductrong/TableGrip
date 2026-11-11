@@ -7,7 +7,7 @@ import dev.tablegrip.app.console.RunOutcome
 import dev.tablegrip.app.table.TableDataTab
 import dev.tablegrip.core.assist.SchemaDigest
 import dev.tablegrip.core.connection.ConnectionConfig
-import dev.tablegrip.core.connection.Paradigm
+import dev.tablegrip.core.connection.ClientApi
 import org.slf4j.LoggerFactory
 
 /**
@@ -57,7 +57,7 @@ internal class AgentContext(private val app: AppState) {
 
     private suspend fun schema(config: ConnectionConfig): String {
         schemas[config.id]?.let { return it }
-        if (config.type.paradigm != Paradigm.Relational) {
+        if (config.type.api != ClientApi.Relational) {
             return "${config.type.displayName} has no SQL schema; answer in its own command language."
         }
         val text =

@@ -153,6 +153,8 @@ enum class DriverId(
     Qdrant(tr("Qdrant REST API (built in)"), "dev.tablegrip.core.driver.vector.QdrantClient", "http:", builtIn = true),
     RabbitMQ(tr("RabbitMQ management API (built in)"), "dev.tablegrip.core.driver.stream.RabbitClient", "http:", builtIn = true),
     Consul(tr("Consul HTTP API (built in)"), "dev.tablegrip.core.driver.keyvalue.ConsulClient", "http:", builtIn = true),
+    Rqlite(tr("rqlite HTTP API (built in)"), "dev.tablegrip.core.driver.sqlite.RqliteClient", "http:", builtIn = true),
+    Libsql(tr("libSQL Hrana over HTTP (built in)"), "dev.tablegrip.core.driver.sqlite.LibsqlClient", "http:", builtIn = true),
 
     /** Whatever driver the profile's own jars contain; its class is found in them. */
     Generic(tr("JDBC driver from your jars"), "", "jdbc:");
