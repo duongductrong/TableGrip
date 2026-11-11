@@ -7,8 +7,11 @@ package dev.tablegrip.core.completion
  */
 data class DocumentField(val path: String, val types: List<String>, val values: List<String> = emptyList())
 
-/** Which `find()` argument is being completed. */
-enum class DocumentQuery { Filter, Sort, Projection }
+/**
+ * What the text being completed is: a `find()` argument (filter, sort, projection), an update (`{$set: {…}}`), an
+ * aggregation pipeline (`[{$match: …}, …]`), a document to insert or a list of them, or a database command.
+ */
+enum class DocumentQuery { Filter, Sort, Projection, Update, Pipeline, Document, Documents, Command }
 
 /**
  * Completion for a document browser's filter and sort, written in the shell's relaxed Extended JSON
@@ -52,6 +55,16 @@ object DocumentCompleter {
                 Role.Sort, Role.Projection -> under("", fields).map { (name, f) -> field(name, f) }
                 Role.Text -> operators(TextOperators)
                 Role.Expression -> operators(ExpressionOperators)
+                Role.Update -> operators(UpdateOperators)
+                is Role.UpdateFields -> under("", fields).map { (name, f) -> field(name, f) }
+                Role.Stage -> operators(StageOperators)
+                is Role.Group ->
+                    (if (role.grouping) listOf(CompletionItem("_id", keyText("_id", hasColon), CompletionKind.Keyword, "the group key")) else emptyList()) +
+                        under("", fields).filter { it.first != "_id" }.map { (name, f) -> field(name, f) }
+                Role.Accumulator -> operators(Accumulators)
+                Role.Lookup -> operators(LookupKeys)
+                is Role.Doc -> under(role.base, fields).filter { '.' !in it.first }.map { (name, f) -> field(name, f) }
+                Role.Command -> operators(Commands)
                 else -> emptyList()
             }
         return rank(all, typed)
@@ -80,12 +93,45 @@ object DocumentCompleter {
             Role.Sort -> rank(SortDirections, typed)
             Role.Projection -> rank(Inclusions, typed)
             Role.Text -> if (key == "\$caseSensitive" || key == "\$diacriticSensitive") rank(Booleans, typed) else emptyList()
+            Role.Update -> if (typed.isEmpty()) listOf(snippet("{}", "fields to change", 1)) else emptyList()
+            is Role.UpdateFields ->
+                when (role.operator) {
+                    "\$unset" -> rank(listOf(CompletionItem("''", "''", CompletionKind.Value, "remove the field")), typed)
+                    "\$inc", "\$mul" -> emptyList()
+                    "\$pop" -> rank(Ends, typed)
+                    "\$currentDate" -> rank(Booleans.take(1) + snippet("{\$type: 'date'}", "as a date", 15) + snippet("{\$type: 'timestamp'}", "as a timestamp", 20), typed)
+                    "\$rename" -> fieldNames(typed, fields)
+                    else -> fieldValues(key, typed, fields)
+                }
+            Role.Stage ->
+                when (key) {
+                    "\$limit", "\$skip", "\$sample" -> if (key == "\$sample" && typed.isEmpty()) listOf(snippet("{size: }", "random documents", 7)) else emptyList()
+                    "\$count" -> if (typed.isEmpty()) listOf(snippet("''", "name of the count field", 1)) else emptyList()
+                    "\$unwind", "\$sortByCount" -> fieldPaths(typed, fields)
+                    "\$unset" -> fieldNames(typed, fields)
+                    else -> if (typed.isEmpty()) listOf(snippet("{}", StageOperators.firstOrNull { it.name == key }?.detail ?: "", 1)) else emptyList()
+                }
+            is Role.Group ->
+                if (role.grouping && key == "_id") rank(listOf(CompletionItem("null", "null", CompletionKind.Value, "one group for everything")), typed) + fieldPaths(typed, fields)
+                else (if (typed.isEmpty()) AccumulatorSnippets else emptyList()) + fieldPaths(typed, fields)
+            Role.Accumulator -> fieldPaths(typed, fields) + if (key == "\$sum") rank(listOf(CompletionItem("1", "1", CompletionKind.Value, "count")), typed) else emptyList()
+            Role.Lookup ->
+                when (key) {
+                    "localField", "foreignField" -> fieldNames(typed, fields)
+                    "pipeline" -> if (typed.isEmpty()) listOf(snippet("[]", "stages run on the joined collection", 1)) else emptyList()
+                    else -> emptyList()
+                }
+            is Role.Doc -> fieldValues(join(role.base, key), typed, fields)
+            Role.Expression -> fieldPaths(typed, fields)
             else -> emptyList()
         }
 
     private fun elements(role: Role, typed: String, fields: List<DocumentField>): List<CompletionItem> =
         when (role) {
             is Role.Values -> fieldValues(role.field, typed, fields)
+            Role.Stages -> if (typed.isEmpty() || typed.startsWith("{")) StageOperators.map { it.wrapped() } else emptyList()
+            Role.Docs -> if (typed.isEmpty()) listOf(snippet("{}", "a document", 1)) else emptyList()
+            Role.Expression -> fieldPaths(typed, fields)
             else -> emptyList()
         }
 
@@ -98,6 +144,14 @@ object DocumentCompleter {
             .sortedBy { (_, plain) -> if (plain.startsWith(wanted)) 0 else 1 }
             .map { (literal, _) -> CompletionItem(literal, literal, CompletionKind.Value, "$path value") }
     }
+
+    /** Field paths as aggregation expressions take them: `'$address.city'`. */
+    private fun fieldPaths(typed: String, fields: List<DocumentField>): List<CompletionItem> =
+        rank(fields.map { CompletionItem("\$" + it.path, "'\$" + it.path.replace("'", "\\'") + "'", CompletionKind.Column, it.types.joinToString(" | ").ifEmpty { null }) }, typed)
+
+    /** Field names as strings: `'address.city'`. */
+    private fun fieldNames(typed: String, fields: List<DocumentField>): List<CompletionItem> =
+        rank(fields.map { CompletionItem(it.path, "'" + it.path.replace("'", "\\'") + "'", CompletionKind.Column, it.types.joinToString(" | ").ifEmpty { null }) }, typed)
 
     /** Fields under [base] (all for ""), named relative to it: `city` for `address.city` under `address`. */
     private fun under(base: String, fields: List<DocumentField>): List<Pair<String, DocumentField>> =
@@ -144,6 +198,12 @@ object DocumentCompleter {
             if (hasColon || value == null) return CompletionItem(name, name + if (hasColon) "" else ": ", CompletionKind.Operator, detail)
             val text = "$name: $value"
             return CompletionItem(name, text, CompletionKind.Operator, detail, "$name: ".length + (caret ?: value.length))
+        }
+
+        /** As a whole element of a list: `{$match: {}}`. */
+        fun wrapped(): CompletionItem {
+            val inner = "$name: " + (value ?: "")
+            return CompletionItem(name, "{$inner}", CompletionKind.Operator, detail, 1 + "$name: ".length + (caret ?: value?.length ?: 0))
         }
     }
 
@@ -204,6 +264,105 @@ object DocumentCompleter {
             "\$year" to "year of a date", "\$month" to "month of a date", "\$dayOfMonth" to "day of a date", "\$dateToString" to "format a date",
         ).map { (name, detail) -> Operator(name, detail, if (name in ExpressionTakesArray) "[]" else null, 1) }
 
+    private val UpdateOperators =
+        listOf(
+            Operator("\$set", "set fields", "{}", 1),
+            Operator("\$unset", "remove fields", "{}", 1),
+            Operator("\$inc", "add to numbers", "{}", 1),
+            Operator("\$mul", "multiply numbers", "{}", 1),
+            Operator("\$min", "keep the smaller value", "{}", 1),
+            Operator("\$max", "keep the larger value", "{}", 1),
+            Operator("\$rename", "rename fields", "{}", 1),
+            Operator("\$push", "append to arrays", "{}", 1),
+            Operator("\$addToSet", "add to arrays unless present", "{}", 1),
+            Operator("\$pull", "remove matching array elements", "{}", 1),
+            Operator("\$pullAll", "remove these array elements", "{}", 1),
+            Operator("\$pop", "remove an array's first or last element", "{}", 1),
+            Operator("\$currentDate", "set to the current date", "{}", 1),
+            Operator("\$setOnInsert", "set only when upserting", "{}", 1),
+        )
+
+    private val StageOperators =
+        listOf(
+            Operator("\$match", "filter documents", "{}", 1),
+            Operator("\$group", "group by a key", "{_id: }", 6),
+            Operator("\$sort", "order documents", "{}", 1),
+            Operator("\$project", "choose or compute fields", "{}", 1),
+            Operator("\$limit", "keep the first n"),
+            Operator("\$skip", "skip the first n"),
+            Operator("\$unwind", "one document per array element", "'\$'", 2),
+            Operator("\$lookup", "join another collection", "{from: '', localField: '', foreignField: '', as: ''}", 8),
+            Operator("\$addFields", "add computed fields", "{}", 1),
+            Operator("\$set", "add computed fields", "{}", 1),
+            Operator("\$unset", "remove fields", "''", 1),
+            Operator("\$count", "count documents into a field", "''", 1),
+            Operator("\$sortByCount", "group and count by a key", "'\$'", 2),
+            Operator("\$sample", "random documents", "{size: }", 7),
+            Operator("\$facet", "several pipelines at once", "{}", 1),
+            Operator("\$bucket", "group into ranges", "{groupBy: '\$', boundaries: [], default: 'other'}", 12),
+            Operator("\$replaceRoot", "promote an embedded document", "{newRoot: '\$'}", 12),
+            Operator("\$out", "write the results to a collection", "''", 1),
+            Operator("\$merge", "merge the results into a collection", "{into: ''}", 8),
+        )
+
+    private val Accumulators =
+        listOf(
+            "\$sum" to "total", "\$avg" to "average", "\$min" to "smallest", "\$max" to "largest", "\$first" to "first value",
+            "\$last" to "last value", "\$push" to "all values", "\$addToSet" to "distinct values", "\$count" to "number of documents",
+            "\$stdDevPop" to "standard deviation",
+        ).map { (name, detail) -> Operator(name, detail, if (name == "\$count") "{}" else "'\$'", if (name == "\$count") 2 else 2) }
+
+    private val AccumulatorSnippets =
+        listOf(
+            snippet("{\$sum: 1}", "count the documents", 9),
+            snippet("{\$sum: '\$'}", "total of a field", 9),
+            snippet("{\$avg: '\$'}", "average of a field", 9),
+            snippet("{\$max: '\$'}", "largest value", 9),
+            snippet("{\$push: '\$'}", "all the values", 10),
+        )
+
+    private val LookupKeys =
+        listOf(
+            Operator("from", "the collection to join", "''", 1),
+            Operator("localField", "field of these documents", "''", 1),
+            Operator("foreignField", "field of the joined documents", "''", 1),
+            Operator("as", "array field for the matches", "''", 1),
+            Operator("let", "variables for the pipeline", "{}", 1),
+            Operator("pipeline", "stages run on the joined collection", "[]", 1),
+        )
+
+    private val Commands =
+        listOf(
+            Operator("ping", "check the connection", "1"),
+            Operator("buildInfo", "server version and build", "1"),
+            Operator("serverStatus", "server metrics", "1"),
+            Operator("hello", "replica set role", "1"),
+            Operator("dbStats", "database size and counts", "1"),
+            Operator("collStats", "collection size and counts", "''", 1),
+            Operator("listCollections", "collections and views", "1"),
+            Operator("listDatabases", "databases (admin)", "1"),
+            Operator("listIndexes", "indexes of a collection", "''", 1),
+            Operator("count", "count documents", "''", 1),
+            Operator("distinct", "distinct values", "''", 1),
+            Operator("find", "find documents", "''", 1),
+            Operator("aggregate", "run a pipeline", "''", 1),
+            Operator("explain", "query plan", "{}", 1),
+            Operator("currentOp", "running operations", "1"),
+            Operator("killOp", "stop an operation"),
+            Operator("getParameter", "server parameters", "'*'"),
+            Operator("connectionStatus", "the signed-in user", "1"),
+            Operator("hostInfo", "host details", "1"),
+            Operator("create", "create a collection", "''", 1),
+            Operator("drop", "drop a collection", "''", 1),
+            Operator("renameCollection", "rename a collection (admin)", "''", 1),
+            Operator("createIndexes", "create indexes", "''", 1),
+            Operator("dropIndexes", "drop indexes", "''", 1),
+            Operator("compact", "defragment a collection", "''", 1),
+            Operator("validate", "check a collection", "''", 1),
+        )
+
+    private val Ends = listOf(CompletionItem("1", "1", CompletionKind.Value, "last element"), CompletionItem("-1", "-1", CompletionKind.Value, "first element"))
+
     private val Booleans = listOf("true", "false").map { CompletionItem(it, it, CompletionKind.Value) }
     private val SortDirections = listOf(CompletionItem("1", "1", CompletionKind.Value, "ascending"), CompletionItem("-1", "-1", CompletionKind.Value, "descending"))
     private val Inclusions = listOf(CompletionItem("1", "1", CompletionKind.Value, "include"), CompletionItem("0", "0", CompletionKind.Value, "exclude"))
@@ -255,6 +414,35 @@ object DocumentCompleter {
 
         data object Expression : Role
 
+        /** An update's keys: `$set`, `$inc`… */
+        data object Update : Role
+
+        /** `{$set: {|}}`: the fields an update [operator] changes. */
+        data class UpdateFields(val operator: String) : Role
+
+        /** A pipeline: each element is a stage. */
+        data object Stages : Role
+
+        /** `{|}` in a pipeline: the stage operator. */
+        data object Stage : Role
+
+        /** `$group`'s keys ([grouping]: `_id` first) or `$addFields`': names whose values are accumulators or expressions. */
+        data class Group(val grouping: Boolean) : Role
+
+        /** `{$sum: …}` and the other accumulators. */
+        data object Accumulator : Role
+
+        data object Lookup : Role
+
+        /** A document's own fields (under [base] for an embedded one), e.g. one being inserted. */
+        data class Doc(val base: String) : Role
+
+        /** A list of documents to insert. */
+        data object Docs : Role
+
+        /** `db.runCommand({|})`: the command name. */
+        data object Command : Role
+
         /** Anything else, e.g. a document value: nothing to suggest. */
         data object Literal : Role
     }
@@ -273,9 +461,15 @@ object DocumentCompleter {
                     DocumentQuery.Sort -> Role.Sort
                     DocumentQuery.Projection -> Role.Projection
                     DocumentQuery.Filter -> Role.Query("")
+                    DocumentQuery.Update -> Role.Update
+                    DocumentQuery.Pipeline -> Role.Stages
+                    DocumentQuery.Document -> Role.Doc("")
+                    DocumentQuery.Documents -> Role.Docs
+                    DocumentQuery.Command -> Role.Command
                 }
-            // Without outer braces, the text is the root document's content.
-            if (!text.substring(0, caret).trimStart().startsWith("{")) stack.addLast(Frame(true, rootRole))
+            val rootIsObject = query != DocumentQuery.Pipeline && query != DocumentQuery.Documents
+            // Without outer brackets, the text is the root's content.
+            if (!text.substring(0, caret).trimStart().startsWith(if (rootIsObject) "{" else "[")) stack.addLast(Frame(rootIsObject, rootRole))
             var i = 0
             var token: Token? = null
             while (i < caret) {
@@ -306,7 +500,7 @@ object DocumentCompleter {
                         val parent = stack.lastOrNull()
                         val role =
                             when {
-                                parent == null -> if (isObject) rootRole else Role.Literal
+                                parent == null -> if (isObject == rootIsObject) rootRole else Role.Literal
                                 parens > 0 -> Role.Literal
                                 else -> child(parent, isObject)
                             }
@@ -336,10 +530,10 @@ object DocumentCompleter {
                         i++
                     }
                     c == ',' -> {
-                        stack.lastOrNull()?.takeIf { it.isObject && parens == 0 }?.let { frame ->
+                        stack.lastOrNull()?.takeIf { parens == 0 }?.let { frame ->
                             frame.key = null
                             frame.last = null
-                            frame.expectingKey = true
+                            frame.expectingKey = frame.isObject
                         }
                         i++
                     }
@@ -358,6 +552,7 @@ object DocumentCompleter {
             // A word right before the caret is what's being typed; after a complete value, nothing is expected.
             if (token == null && frame.isObject && !frame.expectingKey && frame.last != null) return null
             if (token == null && frame.isObject && frame.expectingKey && frame.last != null) return null
+            if (token == null && !frame.isObject && frame.last != null) return null
             return Scan(frame, token)
         }
 
@@ -371,6 +566,8 @@ object DocumentCompleter {
                 return when (val role = parent.role) {
                     is Role.Clauses -> if (isObject) Role.Query(role.base) else Role.Literal
                     Role.Expression -> Role.Expression
+                    Role.Stages -> if (isObject) Role.Stage else Role.Literal
+                    Role.Docs -> if (isObject) Role.Doc("") else Role.Literal
                     else -> Role.Literal
                 }
             }
@@ -395,6 +592,21 @@ object DocumentCompleter {
                         else -> Role.Values(join(role.field, key))
                     }
                 Role.Expression -> Role.Expression
+                Role.Update -> if (isObject && UpdateOperators.any { it.name == key }) Role.UpdateFields(key) else Role.Literal
+                Role.Stage ->
+                    when (key) {
+                        "\$match" -> if (isObject) Role.Query("") else Role.Literal
+                        "\$sort" -> if (isObject) Role.Sort else Role.Literal
+                        "\$project" -> if (isObject) Role.Projection else Role.Literal
+                        "\$group" -> if (isObject) Role.Group(grouping = true) else Role.Literal
+                        "\$addFields", "\$set" -> if (isObject) Role.Group(grouping = false) else Role.Literal
+                        "\$lookup" -> if (isObject) Role.Lookup else Role.Literal
+                        else -> Role.Literal
+                    }
+                is Role.Group -> if (isObject) Role.Accumulator else Role.Expression
+                Role.Accumulator -> Role.Expression
+                Role.Lookup -> if (key == "pipeline" && !isObject) Role.Stages else Role.Literal
+                is Role.Doc -> if (isObject) Role.Doc(join(role.base, key)) else Role.Literal
                 else -> Role.Literal
             }
         }

@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,9 +29,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
 import dev.tablegrip.core.completion.CompletionKind
 import org.jetbrains.jewel.foundation.theme.JewelTheme
@@ -40,15 +45,17 @@ import org.jetbrains.jewel.ui.icons.AllIconsKeys
 import org.jetbrains.jewel.ui.theme.treeStyle
 
 /**
- * The suggestion list, anchored at [offset] within its parent. Doesn't take focus: the text field keeps it, and its
- * key handler drives the list through [CompletionController].
+ * The suggestion list, anchored at [offset] (just below the caret) within its parent. Doesn't take focus: the text
+ * field keeps it, and its key handler drives the list through [CompletionController]. Where it doesn't fit below, it
+ * opens above the caret's line, [lineHeight] pixels up.
  */
 @Composable
-fun CompletionPopup(controller: CompletionController, offset: IntOffset, onAccept: (Int) -> Unit) {
+fun CompletionPopup(controller: CompletionController, offset: IntOffset, lineHeight: Int = 0, onAccept: (Int) -> Unit) {
     if (!controller.isOpen) return
     val items = controller.items
     val prefix = controller.result?.prefix?.trimStart('"', '`', '\'').orEmpty()
-    Popup(offset = offset, properties = PopupProperties(focusable = false)) {
+    val position = remember(offset, lineHeight) { BelowOrAbove(offset, lineHeight) }
+    Popup(popupPositionProvider = position, properties = PopupProperties(focusable = false)) {
         val shape = RoundedCornerShape(8.dp)
         val listState = rememberLazyListState()
         LaunchedEffect(controller.selected, items) {
@@ -81,6 +88,17 @@ fun CompletionPopup(controller: CompletionController, offset: IntOffset, onAccep
                 }
             }
         }
+    }
+}
+
+/** At [offset] from the anchor's corner, or above the caret's line when the window has no room below. */
+private class BelowOrAbove(private val offset: IntOffset, private val lineHeight: Int) : PopupPositionProvider {
+    override fun calculatePosition(anchorBounds: IntRect, windowSize: IntSize, layoutDirection: LayoutDirection, popupContentSize: IntSize): IntOffset {
+        val x = (anchorBounds.left + offset.x).coerceAtMost(windowSize.width - popupContentSize.width).coerceAtLeast(0)
+        val below = anchorBounds.top + offset.y
+        val above = below - lineHeight - popupContentSize.height
+        val y = if (below + popupContentSize.height <= windowSize.height || above < 0) below else above
+        return IntOffset(x, y)
     }
 }
 

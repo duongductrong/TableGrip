@@ -117,6 +117,8 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
 
     /** Shows the page's documents as JSON instead of the grid. */
     var showJson by mutableStateOf(false)
+    /** With [showJson], the documents as a tree rather than text. */
+    var showTree by mutableStateOf(false)
     var showValuePanel by mutableStateOf(false)
 
     /** The query fields differ from what the documents show. */
@@ -326,38 +328,12 @@ class DocumentBrowserTab(private val app: AppState, val config: ConnectionConfig
         launch {
             submitting = true
             try {
-                val mongo = connection()
-                val failed = linkedMapOf<Int, String>()
-                for (change in changes) {
-                    try {
-                        when (change) {
-                            is DocumentEditModel.Change.Delete -> if (mongo.delete(database, collection, listOf(change.id)) == 0L) failed[change.row] = tr("already deleted")
-                            is DocumentEditModel.Change.Update ->
-                                if (!mongo.update(database, collection, change.id, change.set, change.unset, change.expected)) {
-                                    failed[change.row] = tr("changed or deleted by someone else since it was loaded")
-                                }
-                            is DocumentEditModel.Change.Insert -> mongo.insert(database, collection, change.document)
-                        }
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (e: Exception) {
-                        failed[change.row] = e.message ?: e.toString()
-                    }
-                }
-                val saved = changes.size - failed.size
-                // A deletion that found nothing has nothing left to retry.
-                val retry = failed.filterValues { it != tr("already deleted") }.keys
-                carry = current.pending(retry).takeIf { !it.isEmpty }
+                val outcome = writeDocumentChanges(connection(), database, collection, changes)
+                carry = current.pending(outcome.retry).takeIf { !it.isEmpty }
                 total = null
-                message =
-                    if (failed.isEmpty()) Message(tr("Saved {0} {1}.", saved, if (saved == 1) tr("change") else tr("changes")), isError = false)
-                    else Message(
-                        tr("Saved {0} of {1}. ", saved, changes.size) + failed.entries.take(3).joinToString("; ") { (row, why) -> tr("Row {0}: {1}", skip + row + 1, why) } +
-                            (if (failed.size > 3) "; …" else "") + if (retry.isNotEmpty()) tr(". Those edits are still pending, over the current values.") else "",
-                        isError = true,
-                    )
-                app.status = tr("Saved {0} change(s) to {1}.{2}", saved, database, collection)
-                val next = afterSubmit.takeIf { failed.isEmpty() }
+                message = outcome.message(firstRow = skip + 1).let { (text, isError) -> Message(text, isError) }
+                app.status = tr("Saved {0} change(s) to {1}.{2}", outcome.saved, database, collection)
+                val next = afterSubmit.takeIf { outcome.failed.isEmpty() }
                 afterSubmit = null
                 if (next != null) {
                     carry = null

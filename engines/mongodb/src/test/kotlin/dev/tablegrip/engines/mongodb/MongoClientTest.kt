@@ -141,6 +141,25 @@ class MongoClientTest {
     }
 
     @Test
+    fun `console replies carry their documents, and the collection they can be edited in`() = server { mongo ->
+        mongo.command(db, "db.items.insertMany(" + (1..60).joinToString(", ", "[", "]") { "{_id: $it, n: NumberLong($it)}" } + ")")
+        val found = mongo.shell(db, "db.items.find({}).sort({_id: 1})")
+        assertEquals(50, found.documents?.size)
+        assertEquals("items", found.collection)
+        assertTrue(found.hasMore && !found.isError)
+        assertTrue("\$numberLong" in found.documents!!.first(), found.documents!!.first())
+        val one = mongo.shell(db, "db.getCollection('items').findOne({_id: 3})")
+        assertEquals(listOf("items"), listOfNotNull(one.collection))
+        assertEquals(1, one.documents?.size)
+        val grouped = mongo.shell(db, "db.items.aggregate([{\$count: 'n'}])")
+        assertEquals(null, grouped.collection)
+        assertEquals(1, grouped.documents?.size)
+        assertEquals(null, mongo.shell(db, "db.items.countDocuments({})").documents)
+        assertTrue(mongo.shell(db, "db.items.find({\$bad: 1})").isError)
+        mongo.command(db, "db.dropDatabase()")
+    }
+
+    @Test
     fun `read-only profiles refuse writes, also from the console`() = server(readOnly = true) { mongo ->
         assertFailsWith<ReadOnlyViolationException> { mongo.insert(db, "x", "{a: 1}") }
         assertFailsWith<ReadOnlyViolationException> { mongo.command(db, "db.x.insertOne({a: 1})") }

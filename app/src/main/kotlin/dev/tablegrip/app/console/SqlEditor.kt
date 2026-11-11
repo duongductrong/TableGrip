@@ -91,6 +91,7 @@ import dev.tablegrip.core.sql.SqlFormatter
 import dev.tablegrip.core.sql.SqlLexer
 import dev.tablegrip.core.sql.SqlSplitter
 import dev.tablegrip.core.sql.SqlSyntax
+import dev.tablegrip.core.sql.Token
 import dev.tablegrip.core.sql.TokenType
 import kotlin.math.roundToInt
 import org.jetbrains.jewel.foundation.theme.JewelTheme
@@ -140,14 +141,15 @@ internal fun SqlEditor(
     onShortcut: (KeyEvent) -> Boolean = { false },
     /** Selection, copy and find still work; nothing edits the text. */
     readOnly: Boolean = false,
+    language: EditorLanguage = EditorLanguage.Sql,
 ) {
     val isDark = JewelTheme.isDark
     val settings = LocalSettings.current
     val accent = LocalIslands.current.accent
     val colorTheme = LocalColorTheme.current
     val palette = remember(colorTheme, settings.syntaxScheme, settings.syntaxColors, accent) { sqlPalette(colorTheme, settings, accent) }
-    val highlighter = remember(syntax, palette) { SqlHighlighter(syntax, palette) }
-    val autoPair = remember(syntax) { AutoPair(syntax) }
+    val highlighter = remember(syntax, palette, language) { SqlHighlighter(language.tokenize ?: SqlLexer(syntax)::tokenize, palette) }
+    val autoPair = remember(syntax, language) { AutoPair(syntax, language.pairBraces) }
     val splitter = remember(syntax) { SqlSplitter(syntax) }
     val indentUnit = if (settings.indentWithTabs) "\t" else " ".repeat(settings.tabSize.coerceIn(1, 16))
     val formatter = remember(syntax, indentUnit, settings.formatKeywordCase) { SqlFormatter(syntax, indentUnit, KeywordCase.of(settings.formatKeywordCase)) }
@@ -179,6 +181,11 @@ internal fun SqlEditor(
     val controller = remember { CompletionController(scope) }
     var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
     var triggerCompletion by remember { mutableStateOf(false) }
+    // Opens the list even with nothing typed: set by an accepted item that something follows, like `find({|})`.
+    var explicitCompletion by remember { mutableStateOf(false) }
+    // Whether ↑/↓ moved through the list since the text last changed: only then does Enter pick from a list that opened
+    // with nothing typed (after a bracket or a space), rather than break the line.
+    var navigated by remember { mutableStateOf(false) }
     val find = remember { FindState() }
 
     fun apply(edit: EditorText) = state.applyMinimal(edit)
@@ -198,16 +205,35 @@ internal fun SqlEditor(
 
     // Recompute suggestions as the text or caret changes while the popup is open (or typing asked for it), and when
     // schema metadata arrives.
-    LaunchedEffect(state, completion) {
-        snapshotFlow { state.text.toString() to state.selection }.collect {
+    val whileTyping = settings.completionWhileTyping
+    LaunchedEffect(state, completion, language, whileTyping) {
+        var previous = state.text.toString()
+        snapshotFlow { state.text.toString() to state.selection }.collect { (text, selection) ->
+            // The character typed, read from the text rather than the key so input methods count too.
+            // (Two characters for an auto-paired bracket or quote.)
+            val typed = if (text.length - previous.length in 1..2 && selection.collapsed) text.getOrNull(selection.start - 1) else null
+            if (text != previous) navigated = false
+            previous = text
             val source = completion ?: return@collect
-            if (triggerCompletion || controller.isActive) controller.update(state, source, explicit = false)
+            val opens =
+                explicitCompletion ||
+                    whileTyping && typed != null && typed in language.completeAfter &&
+                    // Not for indenting.
+                    !(typed == ' ' && text.getOrNull(selection.start - 2)?.isWhitespace() != false)
+            if (opens) controller.update(state, source, explicit = true)
+            else if (triggerCompletion || controller.isActive || whileTyping && typed != null && (typed.isLetterOrDigit() || typed in "_.$'")) {
+                controller.update(state, source, explicit = false)
+            }
             triggerCompletion = false
+            explicitCompletion = false
         }
     }
-    LaunchedEffect(completionVersion) { if (controller.isActive && completion != null) controller.update(state, completion, explicit = false) }
+    // Explicitly, so a list opened with nothing typed yet (`find({|`) stays open as what it offers arrives.
+    LaunchedEffect(completionVersion) { if (controller.isActive && completion != null) controller.update(state, completion, explicit = true) }
     fun accept(index: Int = controller.selected) {
-        if (controller.accept(state, index)) triggerCompletion = true
+        val more = controller.accept(state, index)
+        val before = state.text.getOrNull(state.selection.start - 1)
+        if (before != null && before in language.completeAfter) explicitCompletion = true else if (more) triggerCompletion = true
     }
 
     // Keep the current find match on screen.
@@ -228,8 +254,19 @@ internal fun SqlEditor(
             val viewportWidth = maxWidth
             val text = state.text.toString()
             val caret = state.selection.start
-            val statement = remember(text, caret) { if (text.isBlank()) null else splitter.statementAt(text, caret) }
-            val brackets = remember(text, caret) { if (state.selection.collapsed) EditorActions.matchingBracket(text, caret, syntax) else null }
+            val statement =
+                remember(text, caret, language) {
+                    when {
+                        text.isBlank() -> null
+                        language.statementAt != null -> language.statementAt(text, caret)
+                        else -> splitter.statementAt(text, caret)?.let { it.start..it.end }
+                    }
+                }
+            val brackets =
+                remember(text, caret, language) {
+                    if (!state.selection.collapsed) null
+                    else EditorActions.matchingBracket(text, caret, syntax, language.tokenize?.invoke(text) ?: SqlLexer(syntax).tokenize(text))
+                }
             val lineCount = text.count { it == '\n' } + 1
             val caretLine = lineIndexAt(text, caret)
             // The gutter grows with the digit count (min. two), so short scripts don't waste width.
@@ -237,7 +274,7 @@ internal fun SqlEditor(
             val digitWidth = remember(textStyle, digits) { if (digits == 0) 0.dp else with(density) { measurer.measure("0".repeat(digits), textStyle).size.width.toDp() } }
             val gutterWidth = GutterPaddingStart + digitWidth + GutterNumberGap + StatementBarWidth
             // From the text itself (no soft wrap), so the bar never blinks out while the layout catches up.
-            val statementLines = if (statement != null) lineIndexAt(text, statement.start)..lineIndexAt(text, statement.end) else IntRange.EMPTY
+            val statementLines = if (statement != null) lineIndexAt(text, statement.first)..lineIndexAt(text, statement.last) else IntRange.EMPTY
 
             Row(Modifier.fillMaxSize().verticalScroll(verticalScroll)) {
                 LineNumbers(
@@ -264,12 +301,17 @@ internal fun SqlEditor(
                                 .onFocusChanged { focused = it.isFocused }
                                 .onPreviewKeyEvent { event ->
                                     if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
-                                    if (handleCompletionKey(controller, event.key) { accept() }) return@onPreviewKeyEvent true
-                                    if (onShortcut(event)) return@onPreviewKeyEvent true
+                                    val enter = event.key == Key.Enter || event.key == Key.NumPadEnter
+                                    if (enter && controller.isOpen && language.completeAfter.isNotEmpty() && controller.result?.prefix.isNullOrEmpty() && !navigated) controller.close()
+                                    if (controller.isOpen && event.key in NavigationKeys) navigated = true
+                                    // ⌘⏎ and other shortcuts go to the host even while the list is open.
+                                    val modified = event.isMetaPressed || event.isCtrlPressed
+                                    if (!modified && handleCompletionKey(controller, event.key) { accept() }) return@onPreviewKeyEvent true
+                                    if (onShortcut(event)) return@onPreviewKeyEvent true.also { controller.close() }
                                     if (readOnly) return@onPreviewKeyEvent handleReadOnlyKey(event, state, find)
                                     // Before the edit lands, so the change it makes is completed (also for an auto-paired quote).
                                     if (settings.completionWhileTyping && isCompletionTrigger(event)) triggerCompletion = true
-                                    handleEditorKey(event, state, syntax, ::current, ::apply, ::format, find, controller, completion, indentUnit)
+                                    handleEditorKey(event, state, syntax, language, ::current, ::apply, ::format, find, controller, completion, indentUnit)
                                 },
                         textStyle = textStyle,
                         // The field's own caret is as tall as the line pitch; [Caret] draws one sized to the text instead.
@@ -339,7 +381,7 @@ internal fun SqlEditor(
                     if (cursor != null) {
                         val offset =
                             with(density) { IntOffset((cursor.left + TextPaddingStart.toPx()).toInt(), (cursor.bottom + TextPaddingTop.toPx() + 2).toInt()) }
-                        CompletionPopup(controller, offset) { index -> accept(index) }
+                        CompletionPopup(controller, offset, lineHeight = cursor.height.toInt() + 4) { index -> accept(index) }
                     }
                 }
             }
@@ -412,6 +454,7 @@ private fun handleEditorKey(
     event: KeyEvent,
     state: TextFieldState,
     syntax: SqlSyntax,
+    language: EditorLanguage,
     current: () -> EditorText,
     apply: (EditorText) -> Unit,
     format: () -> Unit,
@@ -428,11 +471,11 @@ private fun handleEditorKey(
     return when {
         // ⌃Space opens completion explicitly (also on macOS, like IntelliJ).
         Shortcuts.Completion.matches(event) -> done { completion?.let { controller.update(state, it, explicit = true) } }
-        Shortcuts.Comment.matches(event) -> done { apply(EditorActions.toggleLineComment(current())) }
+        Shortcuts.Comment.matches(event) -> done { apply(EditorActions.toggleLineComment(current(), language.lineComment)) }
         Shortcuts.Duplicate.matches(event) -> done { apply(EditorActions.duplicate(current())) }
         Shortcuts.Find.matches(event) -> done { find.open(state, replace = false) }
         Shortcuts.Replace.matches(event) -> done { find.open(state, replace = true) }
-        Shortcuts.Format.matches(event) -> done(format)
+        Shortcuts.Format.matches(event) -> language.formats && done(format)
         Shortcuts.DeleteLine.matches(event) -> done { apply(EditorActions.deleteLines(current())) }
         Shortcuts.MoveLineUp.matches(event) -> done { apply(EditorActions.moveLines(current(), up = true)) }
         Shortcuts.MoveLineDown.matches(event) -> done { apply(EditorActions.moveLines(current(), up = false)) }
@@ -453,7 +496,7 @@ private fun handleEditorKey(
             val lineStart = text.lastIndexOf('\n', caret - 1) + 1
             val indent = text.subSequence(lineStart, caret).takeWhile { it == ' ' || it == '\t' }
             // Between brackets, open an indented line: (\n    |\n)
-            val between = text.getOrNull(caret - 1) == '(' && text.getOrNull(caret) == ')'
+            val between = text.getOrNull(caret - 1)?.let { "([{".indexOf(it) }?.takeIf { it >= 0 }?.let { text.getOrNull(caret) == ")]}"[it] } == true
             state.edit {
                 if (between) {
                     replaceSelectionWith("\n$indent$indentUnit\n$indent")
@@ -474,7 +517,7 @@ private fun handleEditorKey(
  * itself rather than the key press means a character committed by an input method (Telex, dead keys, …) is handled
  * once, instead of being paired on the key and then inserted again by the input method.
  */
-private class AutoPair(private val syntax: SqlSyntax) : InputTransformation {
+private class AutoPair(private val syntax: SqlSyntax, private val braces: Boolean) : InputTransformation {
     override fun TextFieldBuffer.transformInput() {
         if (changes.changeCount != 1) return
         val inserted = changes.getRange(0)
@@ -483,7 +526,7 @@ private class AutoPair(private val syntax: SqlSyntax) : InputTransformation {
         if (inserted.length != 1 || replaced.min != originalSelection.min || replaced.max != originalSelection.max) return
         if (!selection.collapsed || selection.start != inserted.end) return
         val char = asCharSequence()[inserted.start]
-        if (char !in "()[]'\"`") return
+        if (char !in "()[]'\"`" && !(braces && (char == '{' || char == '}'))) return
         val edit = EditorActions.typeChar(EditorText(originalText.toString(), originalSelection), char, syntax) ?: return
         replaceMinimal(edit.text)
         selection = edit.selection
@@ -725,11 +768,9 @@ private fun sqlPalette(theme: ColorTheme, settings: Settings, accent: Color): Sq
 }
 
 /** Colours tokens on the displayed text only; the underlying state stays plain. */
-private class SqlHighlighter(syntax: SqlSyntax, private val palette: SqlPalette) : OutputTransformation {
-    private val lexer = SqlLexer(syntax)
-
+private class SqlHighlighter(private val tokenize: (CharSequence) -> List<Token>, private val palette: SqlPalette) : OutputTransformation {
     override fun TextFieldBuffer.transformOutput() {
-        for (token in lexer.tokenize(asCharSequence())) {
+        for (token in tokenize(asCharSequence())) {
             palette.styleOf(token.type)?.let { addStyle(it, token.start, token.end) }
         }
     }
@@ -761,3 +802,4 @@ internal fun rememberHighlightedSql(sql: String, syntax: SqlSyntax): AnnotatedSt
     }
 }
 
+private val NavigationKeys = setOf(Key.DirectionUp, Key.DirectionDown, Key.PageUp, Key.PageDown)

@@ -242,6 +242,13 @@ class WorkspaceViewModel(private val app: AppState) {
         open(RecordConsoleTab(app, config, name, saved.text), reveal = false)
     }
 
+    /** Reopens a document store's shell console from the last session, in the database it was in. */
+    fun restoreShellConsole(config: ConnectionConfig, saved: SessionTab.ShellConsole) {
+        consoleCount++
+        val name = if (consoleCount == 1) config.name else "${config.name} ($consoleCount)"
+        open(CommandConsoleTab(app, config, name, database = saved.database, initial = saved.text), reveal = false)
+    }
+
     fun close(tab: WorkspaceTab) {
         val index = tabs.indexOf(tab)
         if (index < 0) return

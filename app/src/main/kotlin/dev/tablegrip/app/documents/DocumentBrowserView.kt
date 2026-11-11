@@ -119,7 +119,7 @@ private fun Content(tab: DocumentBrowserTab) {
             when {
                 tab.loading && tab.documents.isEmpty() ->
                     ConnectionLoadingPlaceholder(tab.config, tab.connectionStatus, tr("Loading {0}…", tab.collection), Modifier.align(Alignment.Center))
-                tab.showJson -> ResultJsonView(model, tab.grid)
+                tab.showJson -> ResultJsonView(model, tab.grid, asTree = tab.showTree)
                 model.rowCount == 0 -> Text(tr("No documents match."), Modifier.padding(10.dp), color = JewelTheme.globalColors.text.info)
                 else -> {
                     val grid =
@@ -345,8 +345,15 @@ private fun Toolbar(tab: DocumentBrowserTab) {
         Box(Modifier.weight(1f))
         if (tab.loading || tab.submitting) Text(if (tab.submitting) tr("Saving…") else tr("Loading…"), Modifier.padding(end = 8.dp), color = JewelTheme.globalColors.text.info)
         ViewChipGroup {
-            ViewChip(tr("Grid"), !tab.showJson) { tab.showJson = false }
-            ViewChip(tr("JSON"), tab.showJson) { tab.showJson = true }
+            ViewChip(DocumentView.Grid.label, !tab.showJson) { tab.showJson = false }
+            ViewChip(DocumentView.Json.label, tab.showJson && !tab.showTree) {
+                tab.showJson = true
+                tab.showTree = false
+            }
+            ViewChip(DocumentView.Tree.label, tab.showJson && tab.showTree) {
+                tab.showJson = true
+                tab.showTree = true
+            }
         }
         Separator()
         ToolButton(

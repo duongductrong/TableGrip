@@ -83,6 +83,9 @@ object DocumentStore {
         override suspend fun command(database: String, line: String): String =
             if (readOnly && !isRead(line)) refuse(tr("this command")) else inner.command(database, line)
 
+        override suspend fun shell(database: String, line: String): ShellReply =
+            if (readOnly && !isRead(line)) refuse(tr("this command")) else inner.shell(database, line)
+
         override fun close() {
             try {
                 inner.close()

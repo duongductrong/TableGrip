@@ -60,6 +60,7 @@ class SessionKeeper(private val app: AppState, private val store: SessionStore =
                     is SessionTab.Table -> workspace.restoreTable(config, saved)
                     is SessionTab.Records -> workspace.restoreRecords(config, saved)
                     is SessionTab.RecordConsole -> workspace.restoreRecordConsole(config, saved)
+                    is SessionTab.ShellConsole -> workspace.restoreShellConsole(config, saved)
                 }
                 workspace.tabs.lastOrNull()
             }

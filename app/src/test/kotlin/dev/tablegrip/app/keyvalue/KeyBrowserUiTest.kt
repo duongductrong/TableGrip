@@ -8,6 +8,12 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.isRoot
+import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.onNodeWithText
@@ -33,6 +39,7 @@ import javax.imageio.ImageIO
 import kotlin.io.path.createTempDirectory
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 
 /** The key browser and console against a real Redis. Opt-in: `-Pit.redis=localhost:56379`. */
@@ -144,6 +151,43 @@ class KeyBrowserUiTest {
         tab.run()
         waitUntil(timeoutMillis = 10_000) { !tab.running && tab.keyspace == 0 }
         onNodeWithText("db0>").assertExists()
+        app.dispose()
+    }
+
+    @Test
+    fun `the console completes commands, options and the database's keys`() = runComposeUiTest {
+        if (server == null) return@runComposeUiTest
+        val (app, config) = app()
+        val tab = CommandConsoleTab(app, config, "cache", Db)
+        setContent { TableGripTheme(isDark = true) { Box(Modifier.size(900.dp, 420.dp)) { CommandConsoleView(tab) } } }
+        val field = onAllNodes(hasSetTextAction())[0]
+        field.performClick()
+        field.performTextInput("hgeta")
+        waitUntil(timeoutMillis = 5_000) { onAllNodesWithText("hgetall").fetchSemanticsNodes().isNotEmpty() }
+        field.performKeyInput { pressKey(Key.Tab) }
+        assertEquals("hgetall ", tab.input.text.toString())
+        // The syntax shows while the arguments are typed.
+        onNodeWithText("HGETALL key — all fields and values").assertExists()
+        // Keys come from the database once typing settles.
+        field.performTextInput("us")
+        waitUntil(timeoutMillis = 5_000) { onAllNodesWithText("user:2").fetchSemanticsNodes().isNotEmpty() }
+        onNodeWithText("session:abc").assertDoesNotExist()
+        System.getProperty("snapshot.dir")?.let { ImageIO.write(onAllNodes(isRoot()).onLast().captureToImage().toAwtImage(), "png", File(it, "redis-console-completion.png")) }
+        field.performTextInput("er:1")
+        // What's typed is a key already: Enter runs the line instead of picking.
+        field.performKeyInput { pressKey(Key.Enter) }
+        waitUntil(timeoutMillis = 10_000) { tab.entries.size == 1 && !tab.running }
+        assertEquals("hgetall user:1", tab.entries[0].command)
+
+        // Options after the arguments a command needs, and their values.
+        field.performTextInput("SCAN 0 TYPE ")
+        waitUntil(timeoutMillis = 5_000) { onAllNodesWithText("zset").fetchSemanticsNodes().isNotEmpty() }
+        field.performTextInput("z")
+        field.performKeyInput { pressKey(Key.Tab) }
+        assertEquals("SCAN 0 TYPE zset ", tab.input.text.toString())
+        field.performKeyInput { pressKey(Key.Enter) }
+        waitUntil(timeoutMillis = 10_000) { tab.entries.size == 2 && !tab.running }
+        assertTrue("leaders" in tab.entries[1].reply, tab.entries[1].reply)
         app.dispose()
     }
 

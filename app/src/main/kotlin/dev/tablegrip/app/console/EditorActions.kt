@@ -3,6 +3,7 @@ package dev.tablegrip.app.console
 import androidx.compose.ui.text.TextRange
 import dev.tablegrip.core.sql.SqlLexer
 import dev.tablegrip.core.sql.SqlSyntax
+import dev.tablegrip.core.sql.Token
 import dev.tablegrip.core.sql.TokenType
 
 /** Editor text plus selection, before or after an action. */
@@ -17,12 +18,12 @@ data class EditorText(val text: String, val selection: TextRange) {
 object EditorActions {
     private const val Indent = "    "
 
-    /** ⌘/ — comments the lines out with `-- `, or uncomments them if they all are. */
-    fun toggleLineComment(state: EditorText): EditorText {
+    /** ⌘/ — comments the lines out with [prefix] (`-- `), or uncomments them if they all are. */
+    fun toggleLineComment(state: EditorText, prefix: String = "--"): EditorText {
         val (from, to) = lineRange(state)
         val lines = state.text.substring(from, to).split('\n')
         val code = lines.filter { it.isNotBlank() }
-        val uncomment = code.isNotEmpty() && code.all { it.trimStart().startsWith("--") }
+        val uncomment = code.isNotEmpty() && code.all { it.trimStart().startsWith(prefix) }
         val minIndent = code.minOfOrNull { line -> line.takeWhile { it == ' ' || it == '\t' }.length } ?: 0
         var delta = 0
         val changed =
@@ -30,14 +31,14 @@ object EditorActions {
                 when {
                     line.isBlank() -> line
                     uncomment -> {
-                        val at = line.indexOf("--")
-                        val remove = if (line.startsWith("-- ", at)) 3 else 2
+                        val at = line.indexOf(prefix)
+                        val remove = if (line.startsWith("$prefix ", at)) prefix.length + 1 else prefix.length
                         delta -= remove
                         line.removeRange(at, at + remove)
                     }
                     else -> {
-                        delta += 3
-                        line.substring(0, minIndent) + "-- " + line.substring(minIndent)
+                        delta += prefix.length + 1
+                        line.substring(0, minIndent) + "$prefix " + line.substring(minIndent)
                     }
                 }
             }
@@ -119,7 +120,7 @@ object EditorActions {
         else EditorText(text, TextRange(if (sel.min == from) from else (sel.min + firstDelta).coerceAtLeast(from), sel.max + total))
     }
 
-    private val Pairs = mapOf('(' to ')', '[' to ']', '\'' to '\'', '"' to '"', '`' to '`')
+    private val Pairs = mapOf('(' to ')', '[' to ']', '{' to '}', '\'' to '\'', '"' to '"', '`' to '`')
 
     /**
      * Auto-pairing for a typed [char]: wraps a selection, inserts the closing character, or steps over a closing
@@ -159,17 +160,25 @@ object EditorActions {
         return EditorText(state.text.removeRange(sel.start - 1, sel.start + 1), TextRange(sel.start - 1))
     }
 
-    /** The bracket next to the caret and its partner as (opening, closing), ignoring strings and comments. */
-    fun matchingBracket(text: String, caret: Int, syntax: SqlSyntax): Pair<Int, Int>? {
-        val tokens = SqlLexer(syntax).tokenize(text).filter { it.type == TokenType.Operator && (text[it.start] == '(' || text[it.start] == ')') }
-        val at = tokens.firstOrNull { it.start == caret - 1 } ?: tokens.firstOrNull { it.start == caret } ?: return null
-        val index = tokens.indexOf(at)
-        val opening = text[at.start] == '('
+    /**
+     * The bracket next to the caret and its partner as (opening, closing), ignoring strings and comments: `()`, and `[]`
+     * and `{}` too where [tokens] (SQL's by default) has them as operators.
+     */
+    fun matchingBracket(text: String, caret: Int, syntax: SqlSyntax, tokens: List<Token> = SqlLexer(syntax).tokenize(text)): Pair<Int, Int>? {
+        val brackets = tokens.filter { it.type == TokenType.Operator && it.end == it.start + 1 && text[it.start] in "()[]{}" }
+        val at = brackets.firstOrNull { it.start == caret - 1 } ?: brackets.firstOrNull { it.start == caret } ?: return null
+        val char = text[at.start]
+        val opening = char in "([{"
+        val open = if (opening) char else "([{"[")]}".indexOf(char)]
+        val close = Pairs.getValue(open)
+        val index = brackets.indexOf(at)
         var depth = 0
-        val range = if (opening) index until tokens.size else index downTo 0
+        val range = if (opening) index until brackets.size else index downTo 0
         for (i in range) {
-            depth += if (text[tokens[i].start] == '(') 1 else -1
-            if (depth == 0) return minOf(at.start, tokens[i].start) to maxOf(at.start, tokens[i].start)
+            val c = text[brackets[i].start]
+            if (c != open && c != close) continue
+            depth += if (c == open) 1 else -1
+            if (depth == 0) return minOf(at.start, brackets[i].start) to maxOf(at.start, brackets[i].start)
         }
         return null
     }

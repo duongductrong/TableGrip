@@ -15,6 +15,7 @@ import dev.tablegrip.core.driver.CollectionInfo
 import dev.tablegrip.core.driver.DocumentClient
 import dev.tablegrip.core.driver.DocumentConnection
 import dev.tablegrip.core.driver.DocumentPage
+import dev.tablegrip.core.driver.ShellReply
 import dev.tablegrip.core.driver.withContextClassLoader
 import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
@@ -171,16 +172,18 @@ class MongoClient : DocumentClient {
         override suspend fun indexes(database: String, collection: String): List<String> =
             io { db(database).getCollection(collection, BsonDocument::class.java).listIndexes(BsonDocument::class.java).map { it.toJson(Json) }.toList() }
 
-        override suspend fun command(database: String, line: String): String =
+        override suspend fun command(database: String, line: String): String = shell(database, line).text
+
+        override suspend fun shell(database: String, line: String): ShellReply =
             io {
                 try {
                     Shell.run(client, db(database), line)
                 } catch (e: MongoCommandException) {
-                    "Error: ${e.errorMessage} (${e.errorCodeName})"
+                    ShellReply("Error: ${e.errorMessage} (${e.errorCodeName})", isError = true)
                 } catch (e: MongoException) {
-                    "Error: ${e.message}"
+                    ShellReply("Error: ${e.message}", isError = true)
                 } catch (e: IllegalArgumentException) {
-                    "Error: ${e.message}"
+                    ShellReply("Error: ${e.message}", isError = true)
                 }
             }
 
@@ -259,14 +262,30 @@ internal object Shell {
 
     private data class Call(val name: String, val arguments: List<String>)
 
-    fun run(client: com.mongodb.client.MongoClient, db: MongoDatabase, line: String): String {
+    /**
+     * A reply of documents: printed as the shell would, one after another, and kept as Extended JSON for the grid.
+     * [collection] marks them as that collection's stored documents, which the console may edit.
+     */
+    private fun documents(documents: List<BsonDocument>, collection: String? = null, more: String? = null): ShellReply =
+        ShellReply(
+            text = documents.joinToString("\n", transform = ::pretty).ifEmpty { "(no documents)" } + more?.let { "\n$it" }.orEmpty(),
+            documents = documents.map { it.toJson(MongoClient.Json) },
+            collection = collection,
+            hasMore = more != null,
+        )
+
+    private fun text(text: String) = ShellReply(text)
+
+    fun run(client: com.mongodb.client.MongoClient, db: MongoDatabase, line: String): ShellReply {
         val text = line.trim().removeSuffix(";").trim()
         Regex("""^show\s+(\w+)$""", RegexOption.IGNORE_CASE).matchEntire(text)?.let { match ->
-            return when (match.groupValues[1].lowercase()) {
-                "dbs", "databases" -> client.listDatabaseNames().joinToString("\n")
-                "collections", "tables" -> db.listCollectionNames().sorted().joinToString("\n")
-                else -> throw IllegalArgumentException(tr("Unknown: show {0}", match.groupValues[1]))
-            }
+            return text(
+                when (match.groupValues[1].lowercase()) {
+                    "dbs", "databases" -> client.listDatabaseNames().joinToString("\n")
+                    "collections", "tables" -> db.listCollectionNames().sorted().joinToString("\n")
+                    else -> throw IllegalArgumentException(tr("Unknown: show {0}", match.groupValues[1]))
+                }
+            )
         }
         require(text.startsWith("db.") || text.startsWith("db ")) { tr("Commands start with db. or show; this console runs no JavaScript.") }
         var rest = text.removePrefix("db").trimStart().removePrefix(".").trimStart()
@@ -296,23 +315,23 @@ internal object Shell {
         return if (collection == null) database(client, db, calls.single()) else collection(db, collection, calls)
     }
 
-    private fun database(client: com.mongodb.client.MongoClient, db: MongoDatabase, call: Call): String {
+    private fun database(client: com.mongodb.client.MongoClient, db: MongoDatabase, call: Call): ShellReply {
         val args = call.arguments
         return when (call.name) {
-            "runCommand" -> pretty(db.runCommand(document(args.single()), BsonDocument::class.java))
-            "adminCommand" -> pretty(client.getDatabase("admin").runCommand(document(args.single()), BsonDocument::class.java))
-            "getCollectionNames" -> db.listCollectionNames().sorted().joinToString("\n")
-            "stats" -> pretty(db.runCommand(BsonDocument("dbStats", BsonInt32(1)), BsonDocument::class.java))
+            "runCommand" -> documents(listOf(db.runCommand(document(args.single()), BsonDocument::class.java)))
+            "adminCommand" -> documents(listOf(client.getDatabase("admin").runCommand(document(args.single()), BsonDocument::class.java)))
+            "getCollectionNames" -> text(db.listCollectionNames().sorted().joinToString("\n"))
+            "stats" -> documents(listOf(db.runCommand(BsonDocument("dbStats", BsonInt32(1)), BsonDocument::class.java)))
             "createCollection" -> {
                 db.createCollection(string(args.first()))
-                "{ ok: 1 }"
+                text("{ ok: 1 }")
             }
-            "dropDatabase" -> pretty(db.runCommand(BsonDocument("dropDatabase", BsonInt32(1)), BsonDocument::class.java))
+            "dropDatabase" -> documents(listOf(db.runCommand(BsonDocument("dropDatabase", BsonInt32(1)), BsonDocument::class.java)))
             else -> throw IllegalArgumentException(tr("db.{0}() isn't supported here; db.runCommand({...}) runs any command.", call.name))
         }
     }
 
-    private fun collection(db: MongoDatabase, name: String, calls: List<Call>): String {
+    private fun collection(db: MongoDatabase, name: String, calls: List<Call>): ShellReply {
         val coll = db.getCollection(name, BsonDocument::class.java)
         val first = calls.first()
         val args = first.arguments
@@ -336,47 +355,46 @@ internal object Shell {
                         else -> throw IllegalArgumentException(tr(".{0}() isn't supported after find()", modifier.name))
                     }
                 }
-                val documents = cursor.limit(if (limited) limit else limit + 1).toList()
-                val shown = documents.take(limit)
-                shown.joinToString("\n", transform = ::pretty).ifEmpty { "(no documents)" } +
-                    if (!limited && documents.size > limit) "\n… more documents; add .limit(n) or .skip($limit)" else ""
+                val found = cursor.limit(if (limited) limit else limit + 1).toList()
+                val more = !limited && found.size > limit
+                documents(found.take(limit), name, if (more) "… more documents; add .limit(n) or .skip($limit)" else null)
             }
-            "findOne" -> coll.find(arg(0)).let { c -> args.getOrNull(1)?.let { c.projection(document(it)) } ?: c }.first()?.let(::pretty) ?: "null"
-            "countDocuments", "count" -> coll.countDocuments(arg(0)).toString()
-            "estimatedDocumentCount" -> coll.estimatedDocumentCount().toString()
-            "distinct" -> coll.distinct(string(args.first()), arg(1), BsonValue::class.java).toList().let { BsonArray(it) }.let(::prettyValue)
+            "findOne" -> coll.find(arg(0)).let { c -> args.getOrNull(1)?.let { c.projection(document(it)) } ?: c }.first()?.let { documents(listOf(it), name) } ?: text("null")
+            "countDocuments", "count" -> text(coll.countDocuments(arg(0)).toString())
+            "estimatedDocumentCount" -> text(coll.estimatedDocumentCount().toString())
+            "distinct" -> text(coll.distinct(string(args.first()), arg(1), BsonValue::class.java).toList().let { BsonArray(it) }.let(::prettyValue))
             "aggregate" -> {
                 val pipeline = (value(args.single()) as? BsonArray ?: throw IllegalArgumentException(tr("aggregate takes an array of stages"))).map { it.asDocument() }
-                coll.aggregate(pipeline).toList().joinToString("\n", transform = ::pretty).ifEmpty { "(no documents)" }
+                documents(coll.aggregate(pipeline).toList())
             }
-            "insertOne" -> "{ acknowledged: true, insertedId: ${coll.insertOne(arg(0)).insertedId?.let(MongoClient::idJson)} }"
+            "insertOne" -> text("{ acknowledged: true, insertedId: ${coll.insertOne(arg(0)).insertedId?.let(MongoClient::idJson)} }")
             "insertMany" -> {
                 val documents = (value(args.single()) as? BsonArray ?: throw IllegalArgumentException(tr("insertMany takes an array"))).map { it.asDocument() }
-                "{ acknowledged: true, insertedCount: ${coll.insertMany(documents).insertedIds.size} }"
+                text("{ acknowledged: true, insertedCount: ${coll.insertMany(documents).insertedIds.size} }")
             }
-            "updateOne" -> coll.updateOne(arg(0), arg(1)).let { "{ matchedCount: ${it.matchedCount}, modifiedCount: ${it.modifiedCount} }" }
-            "updateMany" -> coll.updateMany(arg(0), arg(1)).let { "{ matchedCount: ${it.matchedCount}, modifiedCount: ${it.modifiedCount} }" }
-            "replaceOne" -> coll.replaceOne(arg(0), arg(1)).let { "{ matchedCount: ${it.matchedCount}, modifiedCount: ${it.modifiedCount} }" }
-            "deleteOne" -> "{ deletedCount: ${coll.deleteOne(arg(0)).deletedCount} }"
-            "deleteMany" -> "{ deletedCount: ${coll.deleteMany(arg(0)).deletedCount} }"
-            "getIndexes" -> coll.listIndexes(BsonDocument::class.java).toList().joinToString("\n", transform = ::pretty)
+            "updateOne" -> coll.updateOne(arg(0), arg(1)).let { text("{ matchedCount: ${it.matchedCount}, modifiedCount: ${it.modifiedCount} }") }
+            "updateMany" -> coll.updateMany(arg(0), arg(1)).let { text("{ matchedCount: ${it.matchedCount}, modifiedCount: ${it.modifiedCount} }") }
+            "replaceOne" -> coll.replaceOne(arg(0), arg(1)).let { text("{ matchedCount: ${it.matchedCount}, modifiedCount: ${it.modifiedCount} }") }
+            "deleteOne" -> text("{ deletedCount: ${coll.deleteOne(arg(0)).deletedCount} }")
+            "deleteMany" -> text("{ deletedCount: ${coll.deleteMany(arg(0)).deletedCount} }")
+            "getIndexes" -> documents(coll.listIndexes(BsonDocument::class.java).toList())
             "createIndex" -> {
                 val options = IndexOptions()
                 args.getOrNull(1)?.let(::document)?.let { o ->
                     o["name"]?.let { options.name(it.asString().value) }
                     o["unique"]?.let { options.unique(it.asBoolean().value) }
                 }
-                coll.createIndex(arg(0), options)
+                text(coll.createIndex(arg(0), options))
             }
             "dropIndex" -> {
                 coll.dropIndex(string(args.single()))
-                "{ ok: 1 }"
+                text("{ ok: 1 }")
             }
             "drop" -> {
                 coll.drop()
-                "true"
+                text("true")
             }
-            "stats" -> pretty(db.runCommand(BsonDocument("collStats", BsonString(name)), BsonDocument::class.java))
+            "stats" -> documents(listOf(db.runCommand(BsonDocument("collStats", BsonString(name)), BsonDocument::class.java)))
             else -> throw IllegalArgumentException(tr("db.{0}.{1}() isn't supported here.", name, first.name))
         }
     }

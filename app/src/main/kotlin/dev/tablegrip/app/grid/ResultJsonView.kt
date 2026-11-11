@@ -93,10 +93,11 @@ private const val MaxLineChars = 1000
 
 /**
  * The grid's rows as JSON, in its column order and without hidden columns, as text or a tree. Where the model takes
- * edits, each record has an edit button that opens it in the JSON record editor, and new records can be added.
+ * edits, each record has an edit button that opens it in the JSON record editor, and new records can be added. With
+ * [asTree] set, the caller picks text or tree (e.g. from its own Grid · JSON · Tree switch) and the view has no switch.
  */
 @Composable
-fun ResultJsonView(model: GridModel, state: DataGridState, modifier: Modifier = Modifier) {
+fun ResultJsonView(model: GridModel, state: DataGridState, modifier: Modifier = Modifier, asTree: Boolean? = null) {
     // Rows are captured on the UI thread (cheap), then parsed and encoded in the background; edits and column changes rebuild.
     val content by produceState<JsonContent?>(null, model, state) {
         snapshotFlow {
@@ -118,7 +119,8 @@ fun ResultJsonView(model: GridModel, state: DataGridState, modifier: Modifier = 
                 content?.rows?.getOrNull(index)?.let { row -> RecordEditButton(editor, row) { state.editRecord(model, row) } }
             }
         }
-    var tree by remember { mutableStateOf(false) }
+    var chosenTree by remember { mutableStateOf(false) }
+    val tree = asTree ?: chosenTree
     val info = JewelTheme.globalColors.text.info
     Column(modifier.fillMaxSize()) {
         Row(
@@ -126,9 +128,11 @@ fun ResultJsonView(model: GridModel, state: DataGridState, modifier: Modifier = 
             horizontalArrangement = Arrangement.spacedBy(2.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            ViewChipGroup {
-                ViewChip(tr("Text"), !tree) { tree = false }
-                ViewChip(tr("Tree"), tree) { tree = true }
+            if (asTree == null) {
+                ViewChipGroup {
+                    ViewChip(tr("Text"), !tree) { chosenTree = false }
+                    ViewChip(tr("Tree"), tree) { chosenTree = true }
+                }
             }
             Box(Modifier.weight(1f))
             content?.let { current ->

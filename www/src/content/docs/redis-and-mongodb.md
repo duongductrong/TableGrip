@@ -41,9 +41,32 @@ Other key types are shown, and can be changed from the console.
 **New key** asks for the type, the first value and an optional TTL. For anything the browser doesn't cover, use the
 **command console**. On read-only connections only commands that read are allowed.
 
+The console completes as you type, like the SQL editor: command names and subcommands (`CONFIG GET`), the options a
+command takes where its syntax allows them (`SET key value EX …`, `SCAN 0 MATCH … TYPE hash`), and existing key names
+wherever a key goes, read from the database. The line above the prompt shows the command's syntax. <kbd>Tab</kbd> or
+<kbd>↩</kbd> picks a suggestion, <kbd>⌃</kbd> <kbd>Space</kbd> opens the list and <kbd>Esc</kbd> closes it; <kbd>↩</kbd>
+runs the line once there's nothing to pick, and <kbd>⌘</kbd> <kbd>↩</kbd> always runs it. etcd's console completes
+etcdctl's commands, flags and keys the same way. Read-only connections only suggest commands that read.
+
 ## Document browser (MongoDB, FerretDB)
 
 Right-click a collection → **Open Documents**, or **New Console with find()** to write a query by hand.
+
+### Shell console
+
+The console is a script editor like the SQL console's, with the replies below it. It runs Mongo shell commands without
+JavaScript (`db.orders.find({status: 'A'}).sort({total: -1})`, `db.orders.aggregate([...])`, `db.runCommand({...})`,
+`show collections`, `use <db>`). A command can span lines, and a line starting with `.` (`.sort(...)`) continues the
+one above; `;` or the end of a finished line ends it, and `//` and `/* */` are comments. Press <kbd>⌘</kbd> <kbd>⏎</kbd>
+to run the command at the caret or the selected ones, and <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>⏎</kbd> to run the whole
+script, which stops at the first command that fails. The script is kept with your session.
+
+The editor colours the shell's syntax, pairs brackets and quotes, and completes as you type: collections after `db.`, a
+collection's methods with their brackets (`find({})`, `aggregate([])`), `.sort()` and `.limit()` after `find()`, and
+inside the arguments whatever that argument takes: the collection's fields and their values, query operators, update
+operators (`$set`, `$inc`…), pipeline stages and accumulators with `'$field'` paths, and command names in `runCommand`.
+Fields are learnt from a sample of the collection's documents. The signature of the method being called shows under the
+editor, and read-only connections don't suggest methods that write.
 
 ### Querying
 

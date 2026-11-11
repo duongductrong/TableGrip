@@ -9,6 +9,21 @@ data class CollectionInfo(val name: String, val kind: String, val documents: Lon
 data class DocumentPage(val documents: List<String>, val hasMore: Boolean)
 
 /**
+ * A console command's reply: [text] as the shell prints it, and, for a command that returns documents (`find`,
+ * `findOne`, `aggregate`, `runCommand`…), the [documents] themselves as relaxed Extended JSON (64-bit integers keep
+ * their `$numberLong`), so the console can show them in a grid. [collection] is set when they are that collection's
+ * documents as stored (`find`, `findOne`), which is what lets the console edit them; [hasMore] when more matched than
+ * were returned.
+ */
+data class ShellReply(
+    val text: String,
+    val isError: Boolean = false,
+    val documents: List<String>? = null,
+    val collection: String? = null,
+    val hasMore: Boolean = false,
+)
+
+/**
  * Databases, collections and documents: what the document browser and the shell console work with. Filters, sorts and
  * documents are Extended JSON, in the shell's relaxed syntax too (`{status: 'A', _id: ObjectId('…')}`).
  */
@@ -56,6 +71,9 @@ interface DocumentConnection : DatabaseConnection {
      * collections`… and returns the reply as the shell would print it. `use` is the console's own business.
      */
     suspend fun command(database: String, line: String): String
+
+    /** [command], with the documents the reply holds, when there are any. */
+    suspend fun shell(database: String, line: String): ShellReply = command(database, line).let { ShellReply(it, isError = it.startsWith("Error:")) }
 }
 
 /** Implemented by an engine adapter; see [KeyValueClient]. [host] and [port] point through any SSH tunnel. */

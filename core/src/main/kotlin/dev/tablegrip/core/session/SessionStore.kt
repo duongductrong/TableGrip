@@ -57,6 +57,11 @@ sealed interface SessionTab {
     @Serializable
     @SerialName("recordConsole")
     data class RecordConsole(override val connectionId: String, val text: String) : SessionTab
+
+    /** A document store's shell console: its database and script. */
+    @Serializable
+    @SerialName("shellConsole")
+    data class ShellConsole(override val connectionId: String, val database: String, val text: String) : SessionTab
 }
 
 /** The workspace as the user left it. */

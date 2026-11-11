@@ -1,5 +1,6 @@
 package dev.tablegrip.app.documents
 
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
@@ -20,6 +21,8 @@ import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.withKeyDown
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.text.TextRange
+import dev.tablegrip.app.grid.isMac
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
@@ -305,25 +308,137 @@ class DocumentBrowserUiTest {
     }
 
     @Test
-    fun `the console runs shell commands and follows use`() = runComposeUiTest {
+    fun `the console runs a script's commands and follows use`() = runComposeUiTest {
         if (server == null) return@runComposeUiTest
         val (app, config) = app()
-        val tab = CommandConsoleTab(app, config, "shop", database = db)
-        setContent { TableGripTheme(isDark = true) { Box(Modifier.size(900.dp, 460.dp)) { CommandConsoleView(tab) } } }
-        listOf("db.orders.find({status: 'A'}, {customer: 1, total: 1}).sort({total: -1})", "db.orders.countDocuments({})", "db.orders.foo()").forEach { line ->
-            tab.input.setTextAndPlaceCursorAtEnd(line)
-            tab.run()
-            waitUntil(timeoutMillis = 10_000) { !tab.running }
-        }
-        waitUntil(timeoutMillis = 10_000) { tab.entries.size == 3 }
-        assertTrue(tab.entries[0].reply.indexOf("grace") < tab.entries[0].reply.indexOf("ada"))
+        val script =
+            """
+            // Orders, biggest first.
+            db.orders.find({status: 'A'}, {customer: 1, total: 1})
+              .sort({total: -1})
+
+            db.orders.countDocuments({});
+            db.orders.foo()
+            db.orders.countDocuments({status: 'A'})
+            """.trimIndent()
+        val tab = CommandConsoleTab(app, config, "shop", database = db, initial = script)
+        setContent { TableGripTheme(isDark = true) { Box(Modifier.size(900.dp, 520.dp)) { CommandConsoleView(tab) } } }
+        // Everything, stopping at the command that fails.
+        tab.runScript(all = true)
+        waitUntil(timeoutMillis = 10_000) { tab.entries.size == 3 && !tab.running }
+        assertTrue(tab.entries[0].reply.indexOf("grace") < tab.entries[0].reply.indexOf("ada"), tab.entries[0].reply)
         assertEquals("3", tab.entries[1].reply)
         assertTrue(tab.entries[2].isError)
         System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "mongo-console.png")) }
+        // The command at the caret.
+        tab.script.edit { selection = TextRange(script.indexOf("{status: 'A'})") + 3) }
+        tab.runScript()
+        waitUntil(timeoutMillis = 10_000) { tab.entries.size == 4 && !tab.running }
+        assertEquals("db.orders.countDocuments({status: 'A'})", tab.entries[3].command)
+        assertEquals("2", tab.entries[3].reply)
 
-        tab.input.setTextAndPlaceCursorAtEnd("use admin")
-        tab.run()
-        onNodeWithText("admin>").assertExists()
+        tab.script.setTextAndPlaceCursorAtEnd("use admin")
+        tab.runScript()
+        waitUntil(timeoutMillis = 5_000) { onAllNodesWithText("admin").fetchSemanticsNodes().isNotEmpty() }
+        assertEquals("admin>", tab.prompt)
+        runBlocking { DocumentStore.connect(config, null).use { it.command(db, "db.dropDatabase()") } }
+        app.dispose()
+    }
+
+    @Test
+    fun `console results show as a grid, JSON or tree, and their edits are written back`() = runComposeUiTest {
+        if (server == null) return@runComposeUiTest
+        val (app, config) = app()
+        app.updateSettings { it.copy(reviewChanges = false) }
+        val script = "db.getCollection('orders').find({}).sort({_id: 1})\ndb.orders.aggregate([{\$group: {_id: '\$status', n: {\$sum: 1}}}])\ndb.runCommand({ping: 1})"
+        val tab = CommandConsoleTab(app, config, "shop", database = db, initial = script)
+        setContent { TableGripTheme(isDark = true) { Box(Modifier.size(1100.dp, 620.dp)) { CommandConsoleView(tab) } } }
+        tab.script.edit { selection = TextRange(0) }
+        tab.runScript()
+        waitUntil(timeoutMillis = 10_000) { tab.results.size == 1 && !tab.running }
+        val result = tab.results.single()
+        // The documents open in a tab of their own, as a grid; the log just counts them.
+        assertEquals(1, tab.selectedOutput)
+        assertEquals("orders", result.title)
+        assertTrue(result.editable)
+        assertEquals(listOf("_id", "customer", "status", "total", "items", "placed", "address", "vip"), result.model.columns.map { it.name })
+        waitUntil(timeoutMillis = 5_000) { onAllNodesWithText("grace").fetchSemanticsNodes().isNotEmpty() }
+        System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "mongo-console-grid.png")) }
+        onNodeWithText("Tree").performClick()
+        waitUntil(timeoutMillis = 5_000) { onAllNodesWithText("Expand All").fetchSemanticsNodes().isNotEmpty() }
+        System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "mongo-console-tree.png")) }
+        onNodeWithText("JSON").performClick()
+        waitUntil(timeoutMillis = 5_000) { onAllNodesWithText("\"ada\"", substring = true).fetchSemanticsNodes().isNotEmpty() }
+        onNodeWithText("Grid").performClick()
+
+        // Edit one, delete one, add one: submitted, then read back by running the command again.
+        val model = result.model
+        model.setValue(0, model.fields.indexOf("total"), "35")
+        model.deleteRows(listOf(1))
+        val added = model.addRow()
+        model.setValue(added, model.fields.indexOf("_id"), "4")
+        model.setValue(added, model.fields.indexOf("customer"), "edsger")
+        assertTrue(tab.hasUnsavedWork)
+        result.submit()
+        waitUntil(timeoutMillis = 10_000) { !result.submitting && !result.loading && !result.hasChanges && result.documents.size == 3 }
+        assertEquals(listOf("ada", "grace", "edsger"), result.documents.map { it["customer"]!!.toString().trim('"') })
+        assertEquals("35", result.documents[0]["total"].toString())
+        runBlocking {
+            DocumentStore.connect(config, null).use { mongo ->
+                assertEquals("1", mongo.command(db, "db.orders.countDocuments({_id: 1, total: 35})"))
+                assertEquals("0", mongo.command(db, "db.orders.countDocuments({_id: 2})"))
+                assertEquals("1", mongo.command(db, "db.orders.countDocuments({_id: 4, customer: 'edsger'})"))
+            }
+        }
+
+        // Pinned, it stays when the console runs again; computed documents can't be edited, and one reply reads as a tree.
+        result.pinned = true
+        tab.runScript(all = true)
+        waitUntil(timeoutMillis = 10_000) { tab.results.size == 4 && !tab.running }
+        assertTrue(result in tab.results)
+        val (grouped, ping) = tab.results.takeLast(2)
+        assertTrue(!grouped.editable && grouped.whyReadOnly != null)
+        assertEquals(DocumentView.Tree, ping.view)
+        assertEquals(4, tab.selectedOutput)
+        tab.closeResult(ping)
+        assertEquals(3, tab.selectedOutput)
+        runBlocking { DocumentStore.connect(config, null).use { it.command(db, "db.dropDatabase()") } }
+        app.dispose()
+    }
+
+    @Test
+    fun `the console completes collections, methods and the collection's fields`() = runComposeUiTest {
+        if (server == null) return@runComposeUiTest
+        val (app, config) = app()
+        val tab = CommandConsoleTab(app, config, "shop", database = db, initial = "// Open orders\n")
+        setContent { TableGripTheme(isDark = true) { Box(Modifier.size(900.dp, 520.dp)) { CommandConsoleView(tab) } } }
+        val field = onAllNodes(hasSetTextAction())[0]
+        field.performClick()
+        tab.script.edit { selection = TextRange(length) }
+        "db.ord".forEach { field.performTextInput(it.toString()) }
+        waitUntil(timeoutMillis = 10_000) { onAllNodesWithText("orders").fetchSemanticsNodes().isNotEmpty() }
+        field.performKeyInput { pressKey(Key.Tab) }
+        ".fi".forEach { field.performTextInput(it.toString()) }
+        waitUntil(timeoutMillis = 5_000) { onAllNodesWithText("findOne").fetchSemanticsNodes().isNotEmpty() }
+        field.performKeyInput { pressKey(Key.Tab) }
+        assertEquals("// Open orders\ndb.orders.find({})", tab.script.text.toString())
+        onNodeWithText("find(filter, projection) — documents matching the filter").assertExists()
+        // The collection's fields, learnt from a sample, then the field's values.
+        waitUntil(timeoutMillis = 10_000) { onAllNodesWithText("customer").fetchSemanticsNodes().isNotEmpty() }
+        "sta".forEach { field.performTextInput(it.toString()) }
+        waitUntil(timeoutMillis = 5_000) { onAllNodesWithText("status").fetchSemanticsNodes().isNotEmpty() }
+        field.performKeyInput { pressKey(Key.Tab) }
+        assertEquals("// Open orders\ndb.orders.find({status: })", tab.script.text.toString())
+        waitUntil(timeoutMillis = 5_000) { onAllNodesWithText("'B'").fetchSemanticsNodes().isNotEmpty() }
+        System.getProperty("snapshot.dir")?.let { ImageIO.write(onAllNodes(isRoot()).onLast().captureToImage().toAwtImage(), "png", File(it, "mongo-console-completion.png")) }
+        "'B".forEach { field.performTextInput(it.toString()) }
+        waitUntil(timeoutMillis = 5_000) { onAllNodesWithText("'B'").fetchSemanticsNodes().isNotEmpty() }
+        field.performKeyInput { pressKey(Key.Tab) }
+        assertEquals("// Open orders\ndb.orders.find({status: 'B'})", tab.script.text.toString())
+        // ⌘⏎ runs the command at the caret.
+        field.performKeyInput { withKeyDown(if (isMac) Key.MetaLeft else Key.CtrlLeft) { pressKey(Key.Enter) } }
+        waitUntil(timeoutMillis = 10_000) { tab.entries.size == 1 && !tab.running }
+        assertTrue("linus" in tab.entries[0].reply, tab.entries[0].reply)
         runBlocking { DocumentStore.connect(config, null).use { it.command(db, "db.dropDatabase()") } }
         app.dispose()
     }
