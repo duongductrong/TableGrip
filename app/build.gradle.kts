@@ -206,6 +206,7 @@ dependencies {
     engineAdapters(projects.engines.redis)
     engineAdapters(projects.engines.mongodb)
     implementation(projects.core)
+    implementation(projects.mcp)
 
     implementation(libs.jewel.intUi.standalone)
     implementation(libs.jewel.intUi.decoratedWindow)
@@ -423,6 +424,42 @@ val thirdPartyNotices by tasks.registering {
             }
         }
         output.get().asFile.apply { parentFile.mkdirs() }.writeText(text)
+    }
+}
+
+// endregion
+
+// region Command line from source
+//
+// `scripts/tablegrip` runs the app's main class from here, so `tablegrip mcp` works without packaging: the app's jar and
+// runtime classpath in lib/, and bin/tablegrip, which starts them on the build's JDK. Installed apps get their
+// `tablegrip` command from Settings › MCP instead.
+
+val cliDir = layout.buildDirectory.dir("cli")
+
+val installCli by tasks.registering(Sync::class) {
+    group = "distribution"
+    description = "Puts the app's classpath and a tablegrip launcher in build/cli, for scripts/tablegrip."
+    val java = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(jdkLevel) }.map { it.executablePath.asFile.absolutePath }
+    inputs.property("java", java)
+    val output = cliDir
+    from(tasks.named("jar")) { into("lib") }
+    from(configurations.runtimeClasspath) { into("lib") }
+    into(output)
+    // Compose publishes some artifacts under two groups with the same file name; one copy is enough.
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    doLast {
+        val bin = output.get().dir("bin").asFile.apply { mkdirs() }
+        bin.resolve("tablegrip").apply {
+            writeText(
+                "#!/bin/sh\n" +
+                    "# Runs TableGrip from this build (see scripts/tablegrip). Profile: \$TABLEGRIP_HOME, else ~/.tablegrip-dev.\n" +
+                    "lib=\"\$(cd \"\$(dirname \"\$0\")/../lib\" && pwd)\"\n" +
+                    "exec \"${java.get()}\" --enable-native-access=ALL-UNNAMED -Dtablegrip.home=\"\${TABLEGRIP_HOME:-\$HOME/.tablegrip-dev}\" " +
+                    "-cp \"\$lib/*\" dev.tablegrip.app.MainKt \"\$@\"\n",
+            )
+            setExecutable(true)
+        }
     }
 }
 

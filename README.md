@@ -19,6 +19,7 @@ the IntelliJ look & feel for Compose.
 
 [Download](https://github.com/duongductrong/TableGrip/releases) ·
 [User guide](docs/guide.md) ·
+[MCP server](docs/mcp.md) ·
 [Build from source](#build-from-source) ·
 [Contributing](CONTRIBUTING.md)
 
@@ -41,6 +42,10 @@ the IntelliJ look & feel for Compose.
   scheduled backups.
 - **Safe by default.** Environment colours, read-only connections, confirmations on Production, warnings before
   `DELETE` without `WHERE`, and AI agents that see your schema only, never your data, unless you allow it.
+- **Your connections, in any AI app.** A built-in MCP server lets Claude, Cursor and VS Code read schemas and run
+  queries through the connections you already saved: run `tablegrip mcp`, or add it to an app from Settings › MCP. It
+  is off until you turn it on, and follows the same read-only, environment and data-sharing rules as the app.
+  [Set it up →](docs/mcp.md)
 - **Moving in is easy.** Import connections from DBeaver, IDE data sources (`.idea/dataSources.xml`), `Connections.plist`, `~/.pgpass` and `.env` files, or paste
   any connection URL.
 - **Go to anything** (⌘P) for tables, tabs, saved queries and actions, and sessions that come back after a restart.

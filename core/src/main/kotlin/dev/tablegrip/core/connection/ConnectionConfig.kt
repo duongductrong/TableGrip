@@ -77,6 +77,8 @@ data class ConnectionConfig(
     val favorite: Boolean = false,
     /** What may be sent to an AI agent; null follows the app-wide setting (see [AiAccess.effective]). */
     val aiAccess: AiAccess? = null,
+    /** What agents connected over MCP may change; see [AgentWrites]. Ignored when [readOnly]. */
+    val agentWrites: AgentWrites = AgentWrites.None,
     /** How a data file profile reads its file; null takes the defaults. The file itself is [database]. */
     val dataFile: DataFileOptions? = null,
 ) {

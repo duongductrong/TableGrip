@@ -129,7 +129,7 @@ jobs:
           MAC_NOTARIZATION_TEAM_ID: ${{ secrets.MAC_NOTARIZATION_TEAM_ID }}
         run: |
           set -euo pipefail
-          args=(-Ptablegrip.build="$BUILD" :app:check :app:packageDmg)
+          args=(-Ptablegrip.build="$BUILD" :app:check :mcp:check :app:packageDmg)
           if [[ "$SIGNED" == true ]]; then
             args+=(
               -Pcompose.desktop.mac.sign=true
@@ -167,6 +167,10 @@ jobs:
             [[ $attempt == 6 ]] && { echo "::error::stapler couldn't fetch the ticket for submission $id."; exit 1; }
             sleep 30
           done
+
+      # AI apps start the installed app with `mcp` and talk to it over stdin/stdout.
+      - name: Check the MCP server
+        run: python3 scripts/mcp-smoke.py app/build/compose/binaries/main/app/TableGrip.app/Contents/MacOS/TableGrip
 
       - name: Check the signature, notarization and version
         if: needs.version.outputs.signed == 'true'
@@ -244,7 +248,12 @@ jobs:
 
       - name: Build the app image
         shell: bash
-        run: ./gradlew --no-configuration-cache -Ptablegrip.build="$BUILD" :app:check :app:createDistributable
+        run: ./gradlew --no-configuration-cache -Ptablegrip.build="$BUILD" :app:check :mcp:check :app:createDistributable
+
+      # The launcher is a GUI-subsystem exe: this proves AI apps' stdin/stdout still reach `TableGrip.exe mcp`.
+      - name: Check the MCP server
+        shell: bash
+        run: python scripts/mcp-smoke.py app/build/compose/binaries/main/app/TableGrip/TableGrip.exe
 
       - name: Sign in to Azure
         if: env.AUTHENTICODE == 'true'
@@ -373,7 +382,8 @@ jobs:
         run: |
           set -euo pipefail
           # The clipboard tests need an X display: AWT's clipboard throws HeadlessException without one.
-          xvfb-run -a ./gradlew --no-configuration-cache -Ptablegrip.build="$BUILD" :app:check :app:packageDeb
+          xvfb-run -a ./gradlew --no-configuration-cache -Ptablegrip.build="$BUILD" :app:check :mcp:check :app:createDistributable :app:packageDeb
+          python3 scripts/mcp-smoke.py app/build/compose/binaries/main/app/TableGrip/bin/TableGrip
           mkdir -p dist
           cp app/build/compose/binaries/main/deb/*.deb "dist/TableGrip-$VERSION-linux-x64.deb"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

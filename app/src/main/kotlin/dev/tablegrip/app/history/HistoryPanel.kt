@@ -109,6 +109,16 @@ private fun HistoryRow(app: AppState, entry: HistoryEntry) {
                 maxLines = 1,
                 softWrap = false,
             )
+            // Statements an AI app ran through `tablegrip mcp`, named after the app.
+            entry.source?.takeIf { it.startsWith("mcp:") }?.let { source ->
+                Text(
+                    tr("· MCP: {0}", source.removePrefix("mcp:")),
+                    color = JewelTheme.globalColors.text.warning,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }

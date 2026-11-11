@@ -50,6 +50,14 @@ data class Settings(
      * name. Missing or unknown means `SchemaOnly`, so no data leaves without the user choosing it.
      */
     val aiAccess: String = "SchemaOnly",
+    /** Lets AI apps outside TableGrip use its connections through `tablegrip mcp`. Off unless the user turns it on. */
+    val mcpEnabled: Boolean = false,
+    /** Rows an MCP tool returns at most per call (capped at 5,000). */
+    val mcpMaxRows: Int = 200,
+    /** Seconds a statement run over MCP may take; 0 means no limit. */
+    val mcpTimeoutSeconds: Int = 30,
+    /** Characters of results sent to an MCP client per call, after which rows are cut off. */
+    val mcpResultBudget: Int = 60_000,
     /** Client tools the user chose by hand in Settings → Tools, by [dev.tablegrip.core.tools.Tool] name. */
     val toolPaths: Map<String, String> = emptyMap(),
     /** Runs [backupSchedules] while TableGrip is open. Off unless the user turns it on. */

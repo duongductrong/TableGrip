@@ -6,6 +6,7 @@ import dev.tablegrip.core.sql.StatementKind
 import java.sql.Connection
 import java.sql.SQLException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 
 /** Thrown before a statement reaches the server when the connection is read-only. */
@@ -60,6 +61,34 @@ class QuerySession internal constructor(
             if (!connection.autoCommit) connection.rollback()
             uncommittedStatements = 0
         }
+
+    /**
+     * Runs [block] in a transaction of its own, then commits it if [commit] and rolls it back otherwise (always on
+     * failure). With [readOnly] the transaction is also read-only on the server where the driver supports it, so a
+     * SELECT calling a function that writes still changes nothing. Leaves the session in auto-commit.
+     */
+    suspend fun <T> isolated(readOnly: Boolean, commit: Boolean, block: suspend QuerySession.() -> T): T {
+        withContext(Dispatchers.IO) {
+            connection.autoCommit = false
+            if (readOnly) runCatching { connection.isReadOnly = true }
+        }
+        autoCommit = false
+        try {
+            val result = block()
+            if (commit) commit() else rollback()
+            return result
+        } catch (e: Throwable) {
+            withContext(NonCancellable) { runCatching { rollback() } }
+            throw e
+        } finally {
+            withContext(NonCancellable + Dispatchers.IO) {
+                runCatching { connection.autoCommit = true }
+                if (readOnly && !this@QuerySession.readOnly) runCatching { connection.isReadOnly = false }
+            }
+            autoCommit = true
+            uncommittedStatements = 0
+        }
+    }
 
     suspend fun isValid(): Boolean = withContext(Dispatchers.IO) { runCatching { connection.isValid(2) }.getOrDefault(false) }
 

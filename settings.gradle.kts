@@ -27,4 +27,4 @@ dependencyResolutionManagement {
     }
 }
 
-include(":core", ":app", ":engines:redis", ":engines:mongodb")
+include(":core", ":mcp", ":app", ":engines:redis", ":engines:mongodb")

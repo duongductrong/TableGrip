@@ -19,6 +19,7 @@ Shortcuts are written for macOS; on Windows and Linux use Ctrl instead of ⌘.
 - [Importing connections](#importing-connections)
 - [Connecting](#connecting)
 - [Safety](#safety)
+- [MCP server](#mcp-server)
 
 ## Language
 
@@ -331,4 +332,17 @@ manual commit to review changes and Commit/Roll back, and closing a console with
 
 **AI agents** only get what Settings › Agent › *Data shared with agents* allows: *Schema only* by default (names, types,
 DDL, your SQL and error messages, never values), *Schema and sample data*, or *Off*. A connection can override it under
-Options; production connections never share data unless their own Options say so.
+Options; production connections never share data unless their own Options say so. The same rules apply to AI apps
+connected through the [MCP server](#mcp-server), which may also change data only where a connection's *Agent writes*
+option allows it.
+
+## MCP server
+
+AI apps such as Claude Desktop, Claude Code, Cursor and VS Code can use your saved connections through TableGrip's
+MCP server, `tablegrip mcp`. Turn it on in **Settings › MCP**, install the `tablegrip` command and add TableGrip to
+your apps from the same page. Each connection's **Options › AI agents** decides whether apps see its schema only or
+its data too, and **Options › Agent writes** whether they may change anything. Writes on production connections and
+risky statements ask you first. Calls are listed under **Settings › MCP › Recent activity**, and the statements they
+run appear in Query History marked *MCP*.
+
+Setup for each app, every tool, and troubleshooting: **[MCP server guide](mcp.md)**.

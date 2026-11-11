@@ -642,6 +642,44 @@ object SettingsPages {
                         ),
                     ),
             ),
+            SettingsPage(
+                id = "mcp",
+                group = tr("Tools"),
+                title = tr("MCP"),
+                description = tr("Lets AI apps such as Claude, Cursor and VS Code use your connections through tablegrip mcp, under the same rules as the agent chat."),
+                sections =
+                    listOf(
+                        SettingsSection(
+                            tr("Access"),
+                            listOf(
+                                BooleanField(
+                                    tr("Share connections with AI apps (MCP)"),
+                                    Settings::mcpEnabled,
+                                    { s, v -> s.copy(mcpEnabled = v) },
+                                    hint =
+                                        tr("Apps see the connections whose AI agents option isn't Off: their schema, and their data only where it is shared. ") +
+                                            tr("They can change data only on connections whose Agent writes option allows it, and production asks first."),
+                                ),
+                            ),
+                            keywords = listOf("MCP", "Model Context Protocol", "Claude", "Cursor", "VS Code", "AI"),
+                        ),
+                        SettingsSection(
+                            tr("Limits"),
+                            listOf(
+                                IntField(tr("Rows per result"), 1..5_000, Settings::mcpMaxRows, { s, v -> s.copy(mcpMaxRows = v) }, hint = tr("Larger results are cut off, and the app is told so.")),
+                                IntField(tr("Statement timeout"), 0..3_600, Settings::mcpTimeoutSeconds, { s, v -> s.copy(mcpTimeoutSeconds = v) }, unit = tr("seconds"), hint = tr("0 means no limit.")),
+                                IntField(tr("Result size"), 4_000..1_000_000, Settings::mcpResultBudget, { s, v -> s.copy(mcpResultBudget = v) }, unit = tr("characters")),
+                            ),
+                        ),
+                        SettingsSection(
+                            tr("Connect an app"),
+                            emptyList(),
+                            panel = { app -> McpSetupPanel(app) },
+                            keywords = listOf("tablegrip mcp", "command line", "PATH", "Claude Desktop", "Claude Code", "Windsurf"),
+                        ),
+                        SettingsSection(tr("Recent activity"), emptyList(), panel = { app -> McpActivityPanel(app) }, keywords = listOf("log", "audit")),
+                    ),
+            ),
         )
 
     fun byId(id: String): SettingsPage? = all.firstOrNull { it.id == id }

@@ -6,6 +6,7 @@ How to build, run and test TableGrip from source. For how to report issues and s
 - [Requirements](#requirements)
 - [Running the app](#running-the-app)
 - [Tests](#tests)
+- [MCP server](#mcp-server)
 - [Packaging](#packaging)
 - [Editor setup](#editor-setup)
 - [Project layout](#project-layout)
@@ -44,6 +45,28 @@ so your own connections and settings stay untouched.
 
 The integration tests against real servers seed them from `core/src/test/resources/structure-it`.
 
+## MCP server
+
+`tablegrip mcp` is the app's own `main` with the `mcp` argument: it hands over to `McpMain` in the `mcp` module before
+any window code runs. From source:
+
+```bash
+scripts/tablegrip mcp --help                         # builds :app:installCli, then runs it
+scripts/tablegrip mcp                                # serves the dev profile (~/.tablegrip-dev) on stdin/stdout
+scripts/tablegrip mcp --home ~/.tablegrip            # ... or your real one
+python3 scripts/mcp-smoke.py scripts/tablegrip       # initialize, tools/list, list_connections, clean exit
+./gradlew :mcp:test                                  # protocol tests against SQLite, and the setup helpers
+```
+
+To try it in an app, point the app at `scripts/tablegrip` with the argument `mcp`, or use the
+[MCP Inspector](https://github.com/modelcontextprotocol/inspector):
+`npx @modelcontextprotocol/inspector scripts/tablegrip mcp`.
+
+stdout carries the protocol, so nothing in `core`, `mcp` or the engines may print to it: `McpMain` sends stray output
+to stderr, and logging goes to stderr and `logs/mcp.log` (`logback-mcp.xml`). The rules for what agents may do live in
+`AgentPolicy` and `StatementGuard` in `core`; tools only call them. The design is in
+[plans/mcp-server.md](plans/mcp-server.md), the user guide in [mcp.md](mcp.md).
+
 ## Packaging
 
 ```bash
@@ -63,6 +86,7 @@ The integration tests against real servers seed them from `core/src/test/resourc
 | Module | Purpose |
 | --- | --- |
 | `core` | UI-free domain: connection profiles and keychain, `Database` (pooled, introspection, paging) and per-console `QuerySession`s with cancellation, SQL dialects, lexer and statement splitter, settings, query history. |
+| `mcp` | The MCP server behind `tablegrip mcp`: JSON-RPC over stdio, tools, resources and prompts on top of `core`. No UI. |
 | `app` | Compose Desktop + Jewel UI, one package per feature: `connections`, `explorer`, `workspace`, `console`, `table`. |
 | `engines` | Adapters for non-JDBC databases (`redis`, `mongodb`), shipped as `engines/<name>.jar` off the classpath and loaded together with their client's jars. |
 | `assets/branding` | App icon sources and export scripts ([details](../assets/branding/README.md)). |

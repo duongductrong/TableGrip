@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Runs TableGrip from source, like the installed `tablegrip` command does for the app.
+#
+#   scripts/tablegrip mcp                    # the MCP server on stdin/stdout, with the dev profile (~/.tablegrip-dev)
+#   scripts/tablegrip mcp --home ~/.tablegrip  # ... with your real profile
+#   scripts/tablegrip mcp --help
+#
+# Builds what changed first; the build's output goes to stderr, so stdout stays the protocol's.
+set -euo pipefail
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+(cd "$root" && ./gradlew -q :app:installCli) >&2
+exec "$root/app/build/cli/bin/tablegrip" "$@"

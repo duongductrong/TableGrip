@@ -34,7 +34,9 @@ import dev.tablegrip.app.ui.PinchZoom
 import dev.tablegrip.app.ui.TitleBarView
 import dev.tablegrip.app.ui.Zoomed
 import dev.tablegrip.app.ui.handleZoomShortcut
+import dev.tablegrip.mcp.McpMain
 import java.awt.Desktop
+import kotlin.system.exitProcess
 import kotlinx.coroutines.delay
 import org.jetbrains.jewel.window.DecoratedWindow
 
@@ -45,6 +47,9 @@ import org.jetbrains.jewel.window.DecoratedWindow
 private const val LaunchFileGrace = 400L
 
 fun main(args: Array<String>) {
+    // `tablegrip mcp`: the MCP server for AI apps, on stdin/stdout. Before anything else, so no window, Dock icon or
+    // console output appears.
+    if (args.firstOrNull() == "mcp") exitProcess(McpMain.run(args.drop(1)))
     // First, so every text the app builds from here on is in the chosen language.
     I18n.install(Language.resolve(SettingsStore().load().language))
     // Before the UI, so the file the app was launched to open (from Finder or a file association) isn't missed.

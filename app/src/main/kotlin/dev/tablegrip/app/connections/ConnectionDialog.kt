@@ -36,6 +36,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import dev.tablegrip.app.ui.AppDialog
+import dev.tablegrip.core.connection.AgentWrites
 import dev.tablegrip.core.connection.AiAccess
 import dev.tablegrip.core.connection.ConnectionConfig
 import dev.tablegrip.core.connection.ConnectionKind
@@ -102,6 +103,7 @@ private class ConnectionForm(existing: ConnectionConfig?, group: String = "") {
     var confirmWrites by mutableStateOf(existing?.confirmWrites ?: false)
     /** Null follows the app-wide setting. */
     var aiAccess by mutableStateOf(existing?.aiAccess)
+    var agentWrites by mutableStateOf(existing?.agentWrites ?: AgentWrites.None)
 
     /** How a data file is read; null fields are detected. */
     var delimiter by mutableStateOf(existing?.dataFile?.delimiter)
@@ -276,6 +278,7 @@ private class ConnectionForm(existing: ConnectionConfig?, group: String = "") {
             readOnly = readOnly,
             confirmWrites = confirmWrites,
             aiAccess = aiAccess,
+            agentWrites = agentWrites,
             ssh =
                 if (!ssh) null
                 else
@@ -630,6 +633,25 @@ private fun OptionsTab(form: ConnectionForm) {
     )
     if (form.aiAccess == AiAccess.SchemaAndSamples && form.environment == Environment.Production) {
         Text(tr("Values from this production database may be sent to the agent's provider."), color = JewelTheme.globalColors.text.warning)
+    }
+    if (!form.dataFile) {
+        FormRow(tr("Agent writes")) {
+            ListComboBox(
+                items = AgentWrites.entries.map { it.label },
+                selectedIndex = form.agentWrites.ordinal,
+                onSelectedItemChange = { form.agentWrites = AgentWrites.entries[it] },
+                enabled = !form.readOnly,
+                modifier = Modifier.width(240.dp),
+            )
+        }
+        Text(
+            if (form.readOnly) tr("Read-only connections never let agents write.")
+            else tr("What AI apps connected over MCP may change. They also need the data shared above.") + " " + form.agentWrites.description,
+            color = JewelTheme.globalColors.text.info,
+        )
+        if (!form.readOnly && form.agentWrites.allowsData && form.environment == Environment.Production) {
+            Text(tr("Every write an agent makes on this production connection asks first."), color = JewelTheme.globalColors.text.warning)
+        }
     }
     if (form.dataFile) {
         Text(tr("Data files are read into a working copy; every committed change is written back to the file."), color = JewelTheme.globalColors.text.info)

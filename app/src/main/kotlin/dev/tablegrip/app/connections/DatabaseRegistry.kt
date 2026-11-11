@@ -3,15 +3,11 @@ package dev.tablegrip.app.connections
 import dev.tablegrip.core.i18n.tr
 import androidx.compose.runtime.mutableStateMapOf
 import dev.tablegrip.core.connection.ConnectionConfig
+import dev.tablegrip.core.connection.ConnectionOpener
 import dev.tablegrip.core.datafile.DataFileConnection
-import dev.tablegrip.core.datafile.DataFileStore
-import dev.tablegrip.core.driver.Database
-import dev.tablegrip.core.connection.Paradigm
 import dev.tablegrip.core.driver.DatabaseConnection
 import dev.tablegrip.core.driver.DocumentConnection
-import dev.tablegrip.core.driver.DocumentStore
 import dev.tablegrip.core.driver.KeyValueConnection
-import dev.tablegrip.core.driver.KeyValueStore
 import dev.tablegrip.core.driver.RelationalConnection
 import dev.tablegrip.core.drivers.DriverNotInstalledException
 import kotlinx.coroutines.CoroutineScope
@@ -84,14 +80,8 @@ class DatabaseRegistry(
                     try {
                         drivers.ensure(config)
                         statuses[config.id] = ConnectionStatus.Connecting(ConnectionStatus.Connecting.Step.Server, since)
-                        val secret = if (config.ssh != null) sshSecret(config.id) else null
-                        val connection: DatabaseConnection =
-                            when {
-                                config.type.isDataFile -> DataFileStore.connect(config, drivers.library).also(::watch)
-                                config.type.paradigm == Paradigm.KeyValue -> KeyValueStore.connect(config, password(config.id), secret, drivers.library)
-                                config.type.paradigm == Paradigm.Document -> DocumentStore.connect(config, password(config.id), secret, drivers.library)
-                                else -> Database.connect(config, password(config.id), secret, drivers.library)
-                            }
+                        val connection = ConnectionOpener.open(config, { password(config.id) }, { sshSecret(config.id) }, drivers.library)
+                        (connection as? DataFileConnection)?.let(::watch)
                         connection.also {
                             statuses[config.id] = ConnectionStatus.Connected(it)
                             log.info("Connected to {} ({})", config.name, config.type)

@@ -18,6 +18,8 @@ data class HistoryEntry(
     val executedAt: Long,
     val elapsedMillis: Long,
     val error: String? = null,
+    /** Who ran it when not the user in the app, e.g. `mcp:Claude Desktop` for an AI app connected over MCP. */
+    val source: String? = null,
 )
 
 /** Append-only log of executed statements, one JSON object per line. */
