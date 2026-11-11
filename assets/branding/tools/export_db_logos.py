@@ -64,6 +64,7 @@ ENGINES = {
     "Solr": "apachesolr",
     "Qdrant": "qdrant",
     "RabbitMQ": "rabbitmq",
+    "Kafka": "apachekafka",
 }
 
 # The website lists engines by display name.
@@ -82,6 +83,7 @@ WWW_NAMES = {
     "InfluxDB": "InfluxDB 2",
     "InfluxDB3": "InfluxDB 3",
     "Solr": "Apache Solr",
+    "Kafka": "Apache Kafka",
 }
 
 LIGHT_BG = "FFFFFF"

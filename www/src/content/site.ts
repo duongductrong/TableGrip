@@ -37,7 +37,7 @@ export const databaseFamilies: { family: string; engines: string[]; kind: 'datab
   { family: 'Wide-column', kind: 'database', engines: ['Apache Cassandra', 'ScyllaDB'], note: 'Keyspaces and tables, paged rows, a CQL console.' },
   { family: 'Time series', kind: 'database', engines: ['InfluxDB 2', 'InfluxDB 3', 'VictoriaMetrics', 'Prometheus'], note: 'Flux, SQL and PromQL, read-only.' },
   { family: 'Vector', kind: 'database', engines: ['Qdrant'], note: 'Collections, points by filter, payload editing.' },
-  { family: 'Messaging', kind: 'database', engines: ['RabbitMQ'], note: 'Queues through the management API: peek and publish.' },
+  { family: 'Messaging', kind: 'database', engines: ['Apache Kafka', 'RabbitMQ'], note: 'Topics by partition and offset, queues peeked; publish messages.' },
   { family: 'Graph', kind: 'database', engines: ['Neo4j'], note: 'Labels and relationships, a Cypher console.' },
   { family: 'Data files', kind: 'file', engines: ['CSV / TSV', 'Excel .xlsx', 'JSON / NDJSON'], note: 'Opened as tables; commits are written back to the file.' },
   { family: 'Anything else', kind: 'database', engines: ['Any JDBC database'], note: 'Bring the driver’s jar.' },

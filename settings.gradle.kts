@@ -27,4 +27,4 @@ dependencyResolutionManagement {
     }
 }
 
-include(":core", ":mcp", ":app", ":engines:redis", ":engines:mongodb", ":engines:cassandra")
+include(":core", ":mcp", ":app", ":engines:redis", ":engines:mongodb", ":engines:cassandra", ":engines:kafka", ":engines:zookeeper")

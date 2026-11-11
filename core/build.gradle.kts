@@ -161,6 +161,10 @@ val driverCatalog =
             excludes = listOf("com.github.jnr"),
         ),
         CatalogDriver(
+            "kafka", "Apache Kafka client", libs.kafka.clients, "dev.tablegrip.engines.kafka.KafkaClient",
+            "https://github.com/apache/kafka/blob/trunk/LICENSE", "https://github.com/apache/kafka",
+        ),
+        CatalogDriver(
             "duckdb", "DuckDB JDBC", libs.jdbc.duckdb, "org.duckdb.DuckDBDriver",
             "https://github.com/duckdb/duckdb-java/blob/main/LICENSE", "https://github.com/duckdb/duckdb-java",
         ),
@@ -300,6 +304,11 @@ val artifactLicenses =
         "com.fasterxml.jackson.core:jackson-databind" to "Apache-2.0",
         "com.fasterxml.jackson.core:jackson-annotations" to "Apache-2.0",
         "io.netty:netty-codec" to "Apache-2.0",
+        // The Apache Kafka client, and its compression codecs: zstd-jni is BSD-2-Clause, lz4-java and snappy-java
+        // Apache-2.0 (each with its native libraries, under the same licenses).
+        "org.apache.kafka:kafka-clients" to "Apache-2.0",
+        "org.lz4:lz4-java" to "Apache-2.0",
+        "org.xerial.snappy:snappy-java" to "Apache-2.0",
     )
 
 val driverConfigurations =

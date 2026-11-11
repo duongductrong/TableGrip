@@ -706,6 +706,7 @@ private val PropertyExamples =
         DriverId.InfluxDB to "ssl=true\nshowSystem=true  (_monitoring, _tasks)",
         DriverId.Prometheus to "bearerToken=…\nssl=true\npathPrefix=/select/0/prometheus  (cluster vmselect)",
         DriverId.Neo4j to "ssl=true\nverifyPeer=false  (self-signed certificates)",
+        DriverId.Kafka to "ssl=true\nsasl.mechanism=SCRAM-SHA-512\nsecurity.protocol=SASL_SSL",
         DriverId.Cassandra to "localDatacenter=datacenter1\nssl=true\nshowSystem=true  (system keyspaces)",
         DriverId.Lettuce to "ssl=true\nmode=cluster  (hosts are seed nodes)\nmode=sentinel + sentinelMaster=mymaster",
     )

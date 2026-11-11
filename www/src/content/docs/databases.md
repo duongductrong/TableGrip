@@ -3,13 +3,13 @@ title: Supported databases
 description: Every database TableGrip connects to, grouped by family, with what each one supports.
 ---
 
-TableGrip speaks to relational databases through JDBC, to Redis, MongoDB and Cassandra through their own clients, and to
+TableGrip speaks to relational databases through JDBC, to Redis, MongoDB and Cassandra through their own clients (Kafka too), and to
 etcd, Elasticsearch, OpenSearch, Meilisearch, Solr, CouchDB, DynamoDB, InfluxDB, VictoriaMetrics, Prometheus, Qdrant,
 RabbitMQ and Neo4j over their HTTP APIs. Hosted
 services that are compatible with a family (Neon, Supabase, PlanetScale, Azure SQL…) have their own presets, which set
 sensible defaults such as TLS.
 
-In all, TableGrip connects to **64 databases** and opens **3 kinds of data file** out of the box, and to any other
+In all, TableGrip connects to **65 databases** and opens **3 kinds of data file** out of the box, and to any other
 database you have a JDBC driver for.
 
 ## At a glance
@@ -30,7 +30,7 @@ database you have a JDBC driver for.
 | **Wide-column** | Apache Cassandra · ScyllaDB | Keyspaces and tables, paged rows by `WHERE`, a CQL console. Rows round-trip as Cassandra's own JSON. |
 | **Time series** | InfluxDB 2 · InfluxDB 3 · VictoriaMetrics · Prometheus | Buckets and measurements with Flux, InfluxDB 3 tables with SQL; metrics with PromQL. Read-only. No download. |
 | **Vector** | Qdrant | Collections and points by filter; payloads edited, points added with their vector. No download. |
-| **Messaging** | RabbitMQ | Virtual hosts, queues and exchanges through the management API; messages peeked (and requeued) and published. No download. |
+| **Messaging** | Apache Kafka · RabbitMQ | Kafka topics paged by partition and offset without a consumer group, messages produced, consumer group lag in the console. RabbitMQ queues through the management API: messages peeked (and requeued) and published, no download. |
 | **Graph** | Neo4j | Labels and relationship types, a Cypher console. Edits set only the properties that changed. No download. |
 | **Data files** | CSV / TSV · Excel `.xlsx` · JSON / NDJSON | Opened as tables. Committed changes are written back to the file. |
 | **Anything else** | Any other JDBC database | Bring the driver's jar. |

@@ -37,6 +37,8 @@ ojdbc = "23.26.4.0.0"
 lettuce = "7.9.0.RELEASE"
 mongodb = "5.14.0"
 cassandra = "4.19.0"
+kafka = "3.9.0"
+zookeeper = "3.9.3"
 hikari = "7.0.2"
 javaKeyring = "1.0.4"
 sshj = "0.41.2"
@@ -89,6 +91,8 @@ lettuce = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 mongodb-driver-sync = { module = "org.mongodb:mongodb-driver-sync", version.ref = "mongodb" }
 # The Apache Cassandra Java driver (formerly DataStax's), for Cassandra and ScyllaDB.
 cassandra-driver = { module = "org.apache.cassandra:java-driver-core", version.ref = "cassandra" }
+kafka-clients = { module = "org.apache.kafka:kafka-clients", version.ref = "kafka" }
+zookeeper = { module = "org.apache.zookeeper:zookeeper", version.ref = "zookeeper" }
 java-keyring = { module = "com.github.javakeyring:java-keyring", version.ref = "javaKeyring" }
 sshj = { module = "com.hierynomus:sshj", version.ref = "sshj" }
 apache-sshd-core = { module = "org.apache.sshd:sshd-core", version.ref = "apacheSshd" }

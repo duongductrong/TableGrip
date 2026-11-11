@@ -206,6 +206,7 @@ dependencies {
     engineAdapters(projects.engines.redis)
     engineAdapters(projects.engines.mongodb)
     engineAdapters(projects.engines.cassandra)
+    engineAdapters(projects.engines.kafka)
     implementation(projects.core)
     implementation(projects.mcp)
 
@@ -231,6 +232,8 @@ dependencies {
     testRuntimeOnly(libs.mongodb.driver.sync)
     testImplementation(projects.engines.cassandra)
     testRuntimeOnly(libs.cassandra.driver)
+    testImplementation(projects.engines.kafka)
+    testRuntimeOnly(libs.kafka.clients)
 }
 
 compose.desktop {

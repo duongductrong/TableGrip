@@ -134,6 +134,7 @@ enum class DriverId(
     Lettuce("Lettuce (Redis client)", "dev.tablegrip.engines.redis.RedisClient", "redis:", catalogId = "lettuce", adapter = "redis"),
     MongoDB("MongoDB Java Driver", "dev.tablegrip.engines.mongodb.MongoClient", "mongodb:", catalogId = "mongodb", adapter = "mongodb"),
     Cassandra("Apache Cassandra Java Driver", "dev.tablegrip.engines.cassandra.CassandraClient", "cassandra:", catalogId = "cassandra", adapter = "cassandra"),
+    Kafka("Apache Kafka client", "dev.tablegrip.engines.kafka.KafkaClient", "kafka:", catalogId = "kafka", adapter = "kafka"),
 
     /** Built in: TableGrip talks to etcd's v3 HTTP/JSON API itself, so there's nothing to download. */
     Etcd(tr("etcd v3 API (built in)"), "dev.tablegrip.core.driver.etcd.EtcdClient", "http:", builtIn = true),

@@ -251,8 +251,9 @@ No JDBC driver ships with TableGrip. The connection dialog says what the chosen 
   `core/src/main/resources/dev/tablegrip/core/drivers/drivers.lock.json`, which `:core:lockDrivers` writes from the catalog
   in `core/build.gradle.kts`. The catalog only takes jars whose license a person reviewed and the allowlist accepts
   (permissive, or LGPL as a separate user download); `check` fails when the lockfile is stale.
-- **Non-JDBC clients** (Lettuce for Redis, the MongoDB Java driver, the Apache Cassandra Java driver) download the same
-  way; TableGrip's own adapter for each (`engines/redis`, `engines/mongodb`, `engines/cassandra`) ships
+- **Non-JDBC clients** (Lettuce for Redis, the MongoDB Java driver, the Apache Cassandra Java driver, the Apache Kafka
+  client) download the same way; TableGrip's own adapter for each (`engines/redis`, `engines/mongodb`, `engines/cassandra`,
+  `engines/kafka`) ships
   inside the app as `engines/<name>.jar`, off the classpath, and loads together with the client's jars.
 - **Your own jars** for drivers TableGrip can't distribute (MySQL Connector/J is GPL; Oracle, Db2, SAP HANA, Vertica,
   Exasol, Informix and IRIS are under their vendors' licenses; Snowflake, Databricks and BigQuery bundle code

@@ -204,6 +204,23 @@
       ]
     },
     {
+      "id": "kafka",
+      "name": "Apache Kafka client",
+      "version": "3.9.0",
+      "className": "dev.tablegrip.engines.kafka.KafkaClient",
+      "license": "Apache-2.0",
+      "tier": "Permissive",
+      "licenseUrl": "https://github.com/apache/kafka/blob/trunk/LICENSE",
+      "sourceUrl": "https://github.com/apache/kafka",
+      "artifacts": [
+        {"coordinates": "org.apache.kafka:kafka-clients:3.9.0", "path": "org/apache/kafka/kafka-clients/3.9.0/kafka-clients-3.9.0.jar", "sha256": "15c1e137f2c2c94398e27abc4060a03b6bde10bf9fac15e8f70c02320b202f18", "size": 9204801, "license": "Apache-2.0"},
+        {"coordinates": "com.github.luben:zstd-jni:1.5.6-4", "path": "com/github/luben/zstd-jni/1.5.6-4/zstd-jni-1.5.6-4.jar", "sha256": "793ca8734aa15687e7e64564eab8b6ae9ee2720eae27aa663074682144b1c386", "size": 6687870, "license": "BSD-2-Clause"},
+        {"coordinates": "org.lz4:lz4-java:1.8.0", "path": "org/lz4/lz4-java/1.8.0/lz4-java-1.8.0.jar", "sha256": "d74a3334fb35195009b338a951f918203d6bbca3d1d359033dc33edd1cadc9ef", "size": 682804, "license": "Apache-2.0"},
+        {"coordinates": "org.xerial.snappy:snappy-java:1.1.10.5", "path": "org/xerial/snappy/snappy-java/1.1.10.5/snappy-java-1.1.10.5.jar", "sha256": "0f3f1857ed33116583f480b4df5c0218836c47bfbc9c6221c0d73f356decf37b", "size": 2299797, "license": "Apache-2.0"},
+        {"coordinates": "org.slf4j:slf4j-api:1.7.36", "path": "org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar", "sha256": "d3ef575e3e4979678dc01bf1dcce51021493b4d11fb7f1be8ad982877c16a1c0", "size": 41125, "license": "MIT"}
+      ]
+    },
+    {
       "id": "duckdb",
       "name": "DuckDB JDBC",
       "version": "1.5.6.0",
