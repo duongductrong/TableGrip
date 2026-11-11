@@ -80,7 +80,7 @@ tasks.test {
         "it.oracle", "it.firebird", "it.trino", "it.yugabyte", "it.questdb", "it.starrocks", "it.oceanbase", "it.presto",
         "it.db2", "it.informix", "it.iris", "it.hive", "it.spark", "it.spanner",
         // Engines browsed as records: see SearchEnginesTest, DocumentEnginesTest, TimeSeriesEnginesTest and GraphEnginesTest.
-        "it.elasticsearch", "it.opensearch", "it.meilisearch", "it.couchdb", "it.dynamodb", "it.influxdb", "it.victoriametrics", "it.prometheus", "it.neo4j", "it.solr", "it.qdrant", "it.rabbitmq", "it.influxdb3", "it.consul", "it.rqlite", "it.libsql", "it.weaviate", "it.chroma", "it.milvus", "it.nacos", "it.tdengine",
+        "it.elasticsearch", "it.opensearch", "it.meilisearch", "it.couchdb", "it.dynamodb", "it.influxdb", "it.victoriametrics", "it.prometheus", "it.neo4j", "it.solr", "it.qdrant", "it.rabbitmq", "it.influxdb3", "it.consul", "it.rqlite", "it.libsql", "it.weaviate", "it.chroma", "it.milvus", "it.nacos", "it.tdengine", "it.hbase",
     ).forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
     testLogging { showStandardStreams = providers.gradleProperty("it.postgres").isPresent || providers.gradleProperty("it.mysql").isPresent }
 }

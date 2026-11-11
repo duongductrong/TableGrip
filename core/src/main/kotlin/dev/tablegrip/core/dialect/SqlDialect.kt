@@ -923,7 +923,8 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
                 EngineFamily.Chroma,
                 EngineFamily.Milvus,
                 EngineFamily.Nacos,
-                EngineFamily.TDengine -> null
+                EngineFamily.TDengine,
+                EngineFamily.HBase -> null
             }
 
         fun of(type: DatabaseType): SqlDialect = type.dialect ?: throw IllegalArgumentException(tr("{0} has no SQL dialect", type.displayName))

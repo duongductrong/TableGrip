@@ -19,11 +19,12 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
 /**
- * Nacos and TDengine over their HTTP APIs. The server tests are skipped unless the properties are passed:
+ * Nacos, TDengine and HBase over their HTTP APIs. The server tests are skipped unless the properties are passed:
  * ```
  * docker run -d --name dg-it-nacos -p 58848:8848 -e MODE=standalone nacos/nacos-server:v2.4.3
  * docker run -d --name dg-it-tdengine -p 56041:6041 tdengine/tdengine:3.3.5.0
- * -Pit.nacos=localhost:58848 -Pit.tdengine=localhost:56041
+ * docker run -d --name dg-it-hbase -p 58085:8080 harisekhon/hbase:2.1   (HBase 2.1.3, its REST server on 8080)
+ * -Pit.nacos=localhost:58848 -Pit.tdengine=localhost:56041 -Pit.hbase=localhost:58085
  * ```
  */
 class ConfigAndIotEnginesTest {
@@ -91,5 +92,34 @@ class ConfigAndIotEnginesTest {
         assertEquals("31", count.rows.rows.single().single())
         assertFalse(td.canWrite(path))
         td.execute("DROP DATABASE tg_power")
+    }
+
+    @Test
+    fun `hbase pages rows by key and writes cells`() = server("it.hbase", DatabaseType.HBase) { hbase ->
+        assertTrue(hbase.server().startsWith("Apache HBase 2."), hbase.server())
+        runCatching { hbase.execute("DELETE /tg_users/schema") }
+        hbase.execute("PUT /tg_users/schema\n{\"name\": \"tg_users\", \"ColumnSchema\": [{\"name\": \"info\"}, {\"name\": \"stats\"}]}")
+        val path = listOf("tg_users")
+        repeat(25) { hbase.put(path, null, buildJsonObject { put("row", "user#%02d".format(it)); put("info:name", "User $it"); put("stats:visits", "$it") }) }
+        assertTrue(hbase.containers().any { it.name == "tg_users" })
+        assertTrue("\"info\"" in hbase.definition(path))
+        val first = hbase.page(path, "", null, 20)
+        assertEquals(20, first.records.size)
+        assertEquals("user#00", first.records.first().document["row"]!!.jsonPrimitive.content)
+        assertEquals(5, hbase.page(path, "", first.cursor, 20).records.size)
+        assertEquals(10, hbase.page(path, "user#1", null, 50).records.size)
+
+        val record = hbase.page(path, "user#03", null, 5).records.single()
+        hbase.put(path, record.key, JsonObject(record.document + ("info:name" to JsonPrimitive("Renamed")) - "stats:visits"))
+        val after = hbase.page(path, "user#03", null, 5).records.single().document
+        assertEquals("Renamed", after["info:name"]!!.jsonPrimitive.content)
+        assertTrue("stats:visits" !in after, "a removed cell is deleted")
+        assertFailsWith<IOException>("a stale edit is refused") { hbase.put(path, record.key, record.document) }
+        assertFailsWith<IOException> { hbase.put(path, null, buildJsonObject { put("row", "user#01"); put("info:name", "x") }) }
+        val doomed = hbase.page(path, "user#2", null, 50).records.map { it.key!! }
+        assertEquals(5L, hbase.delete(path, doomed))
+        assertEquals(0L, hbase.delete(path, doomed))
+        assertTrue(hbase.execute("GET /tg_users/schema") is ConsoleReply)
+        hbase.execute("DELETE /tg_users/schema")
     }
 }

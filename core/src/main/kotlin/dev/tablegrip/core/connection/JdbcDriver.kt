@@ -160,6 +160,7 @@ enum class DriverId(
     Milvus(tr("Milvus RESTful API (built in)"), "dev.tablegrip.core.driver.vector.MilvusClient", "http:", builtIn = true),
     Nacos(tr("Nacos open API (built in)"), "dev.tablegrip.core.driver.keyvalue.NacosClient", "http:", builtIn = true),
     TDengine(tr("TDengine REST API (built in)"), "dev.tablegrip.core.driver.timeseries.TdengineClient", "http:", builtIn = true),
+    HBase(tr("HBase REST server (built in)"), "dev.tablegrip.core.driver.widecolumn.HbaseClient", "http:", builtIn = true),
 
     /** Whatever driver the profile's own jars contain; its class is found in them. */
     Generic(tr("JDBC driver from your jars"), "", "jdbc:");

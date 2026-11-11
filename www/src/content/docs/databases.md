@@ -4,12 +4,12 @@ description: Every database TableGrip connects to, grouped by family, with what 
 ---
 
 TableGrip speaks to relational databases through JDBC, to Redis, MongoDB and Cassandra through their own clients (Kafka and ZooKeeper too), and to
-etcd, Consul, Nacos, TDengine, rqlite, libSQL, Elasticsearch, OpenSearch, Meilisearch, Solr, CouchDB, DynamoDB, InfluxDB, VictoriaMetrics, Prometheus, Qdrant, Weaviate, Milvus, Chroma,
+etcd, Consul, Nacos, TDengine, HBase, rqlite, libSQL, Elasticsearch, OpenSearch, Meilisearch, Solr, CouchDB, DynamoDB, InfluxDB, VictoriaMetrics, Prometheus, Qdrant, Weaviate, Milvus, Chroma,
 RabbitMQ and Neo4j over their HTTP APIs. Hosted
 services that are compatible with a family (Neon, Supabase, PlanetScale, Azure SQL…) have their own presets, which set
 sensible defaults such as TLS.
 
-In all, TableGrip connects to **74 databases** and opens **3 kinds of data file** out of the box, and to any other
+In all, TableGrip connects to **75 databases** and opens **3 kinds of data file** out of the box, and to any other
 database you have a JDBC driver for.
 
 ## At a glance
@@ -28,7 +28,7 @@ database you have a JDBC driver for.
 | **Key-value & config** | Redis · Valkey · KeyDB · Dragonfly · etcd · Consul · Apache ZooKeeper · Nacos | Redis standalone, Cluster and Sentinel, TLS. etcd, Consul and Nacos need no download. Consul keys and ZooKeeper znodes are browsed by folder and written with check-and-set; Nacos configurations by namespace, checked by MD5. |
 | **Document** | MongoDB · FerretDB · Apache CouchDB · Amazon DynamoDB | `mongodb://` and `mongodb+srv://` URLs. CouchDB browses with Mango queries and writes by revision; DynamoDB with PartiQL, signed with your AWS keys. Both need no download. |
 | **Search** | Elasticsearch · OpenSearch · Meilisearch · Apache Solr | Indices, aliases and mappings; documents by query string or query DSL; a Dev Tools console. Edits check the version they were read at. No download. |
-| **Wide-column** | Apache Cassandra · ScyllaDB | Keyspaces and tables, paged rows by `WHERE`, a CQL console. Rows round-trip as Cassandra's own JSON. |
+| **Wide-column** | Apache Cassandra · ScyllaDB · Apache HBase | Keyspaces and tables, paged rows by `WHERE`, a CQL console; rows round-trip as Cassandra's own JSON. HBase rows by key prefix through its REST server, cells edited after a check that the row is unchanged, no download. |
 | **Time series** | InfluxDB 2 · InfluxDB 3 · VictoriaMetrics · Prometheus · TDengine | Buckets and measurements with Flux, InfluxDB 3 and TDengine tables with SQL; metrics with PromQL. Read-only. No download. |
 | **Vector** | Qdrant · Weaviate · Milvus · Chroma | Collections, records by each one's filter (Weaviate's through GraphQL, with a GraphQL console); metadata and payloads edited after a check that they're unchanged, records added with their vector. No download. |
 | **Messaging** | Apache Kafka · RabbitMQ | Kafka topics paged by partition and offset without a consumer group, messages produced, consumer group lag in the console. RabbitMQ queues through the management API: messages peeked (and requeued) and published, no download. |

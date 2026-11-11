@@ -35,7 +35,7 @@ export const databaseFamilies: { family: string; engines: string[]; kind: 'datab
   { family: 'Key-value', kind: 'database', engines: ['Redis', 'Valkey', 'KeyDB', 'Dragonfly', 'etcd', 'Consul', 'Apache ZooKeeper', 'Nacos'], note: 'Standalone, Cluster and Sentinel, with TLS.' },
   { family: 'Document', kind: 'database', engines: ['MongoDB', 'FerretDB', 'Apache CouchDB', 'Amazon DynamoDB'], note: 'mongodb:// URLs; Mango queries for CouchDB, PartiQL for DynamoDB.' },
   { family: 'Search', kind: 'database', engines: ['Elasticsearch', 'OpenSearch', 'Meilisearch', 'Apache Solr'], note: 'Indices and mappings, query DSL, a Dev Tools console.' },
-  { family: 'Wide-column', kind: 'database', engines: ['Apache Cassandra', 'ScyllaDB'], note: 'Keyspaces and tables, paged rows, a CQL console.' },
+  { family: 'Wide-column', kind: 'database', engines: ['Apache Cassandra', 'ScyllaDB', 'Apache HBase'], note: 'Keyspaces and tables, paged rows, a CQL console.' },
   { family: 'Time series', kind: 'database', engines: ['InfluxDB 2', 'InfluxDB 3', 'VictoriaMetrics', 'Prometheus', 'TDengine'], note: 'Flux, SQL and PromQL, read-only.' },
   { family: 'Vector', kind: 'database', engines: ['Qdrant', 'Weaviate', 'Milvus', 'Chroma'], note: 'Collections, records by filter, metadata editing.' },
   { family: 'Messaging', kind: 'database', engines: ['Apache Kafka', 'RabbitMQ'], note: 'Topics by partition and offset, queues peeked; publish messages.' },

@@ -68,6 +68,7 @@ ENGINES = {
     "Consul": "consul",
     "Libsql": "turso",
     "Milvus": "milvus",
+    "HBase": "apachehbase",
 }
 
 # The website lists engines by display name.
@@ -88,6 +89,7 @@ WWW_NAMES = {
     "Solr": "Apache Solr",
     "Kafka": "Apache Kafka",
     "Libsql": "libSQL / Turso",
+    "HBase": "Apache HBase",
 }
 
 LIGHT_BG = "FFFFFF"
