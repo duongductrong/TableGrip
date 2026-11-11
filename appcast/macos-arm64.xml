@@ -4,6 +4,42 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
   <channel>
     <title>TableGrip</title>
     <item>
+      <title>TableGrip 1.0.0-beta.3</title>
+      <pubDate>Wed, 11 Nov 2026 15:10:20 +0000</pubDate>
+      <sparkle:version>34</sparkle:version>
+      <sparkle:shortVersionString>1.0.0-beta.3</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>10.13</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/duongductrong/TableGrip/releases/tag/v1.0.0-beta.3</sparkle:fullReleaseNotesLink>
+      <sparkle:channel>beta</sparkle:channel>
+      <description sparkle:format="markdown"><![CDATA[### ✨ Features
+- Browse Apache HBase through its REST server
+- Browse Nacos configurations and TDengine
+- Browse Weaviate, Milvus and Chroma
+- Browse rqlite and libSQL / Turso, SQLite over HTTP
+- Browse Consul's key-value store and ZooKeeper znodes
+- Browse Apache Kafka topics
+- Add Solr, Qdrant, RabbitMQ, InfluxDB 3 and Prometheus
+- Browse search, wide-column, document, time-series and graph engines
+- Support 15 more databases through their own JDBC drivers
+- Support Redshift, QuestDB, OceanBase, Doris, StarRocks and Presto
+- **www:** Show how many databases TableGrip supports
+- Review pending changes before submitting, and show database logos
+- Introduce the MCP server on the website, with its docs
+- **mcp:** Let AI apps use your connections over MCP
+- **updates:** Open the updater window as soon as Check for Updates is clicked
+- Translate the interface into Vietnamese and Chinese
+- **www:** Replace hero screenshot with an animated product demo
+- **www:** Refresh landing page sections, header and theme toggle
+- Support Oracle, Firebird, Trino and YugabyteDB
+- Introduce custom AppIcons and replace existing icons in ChartView and FixView
+
+### 🐛 Bug Fixes
+- Name ZooKeeper and Consul tabs by path, and make re-runs of the server tests repeatable
+- Size SQL editor caret to the glyphs and centre it in the line
+]]></description>
+      <enclosure url="https://github.com/duongductrong/TableGrip/releases/download/v1.0.0-beta.3/TableGrip-1.0.0-beta.3-macos-arm64.dmg" length="113872934" type="application/octet-stream" sparkle:edSignature="f+qzGuZjQgwaUoEJiCQroTQ4IhjYP9sT4sFLm327yi/A/AI9jD5mwD9vczgQyWPci4lCwwnSvyXcj6YVjsAoAQ=="></enclosure>
+    </item>
+    <item>
       <title>TableGrip 1.0.0-beta.2</title>
       <pubDate>Thu, 05 Nov 2026 13:30:23 +0000</pubDate>
       <sparkle:version>3</sparkle:version>
@@ -18,6 +54,6 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
     </item>
   </channel>
 </rss><!-- sparkle-signatures:
-edSignature: 3Kxn+e0NiyAVCCoZr7AwgwXopUfsPuMH1rnczfk0aB0pIMme5CVrfj4WJybQhhfYQwVE0mJxSS2jvNCi8JNeBA==
-length: 1378
+edSignature: Y/VgH+kJcbBFA9OwBk3/6k2yjBkeKpTgLFSbEbOPXoYszcr89fwuYmpgrO416kF67UP8u96RQVADNSPhCUiaBw==
+length: 3594
 -->

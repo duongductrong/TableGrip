@@ -29,5 +29,36 @@
         "url": "https://github.com/duongductrong/TableGrip/releases/download/v1.0.0-beta.2/TableGrip-1.0.0-beta.2-windows-x64.msi"
       }
     }
+  },
+  {
+    "version": "1.0.0-beta.3",
+    "build": 34,
+    "channel": "beta",
+    "date": "Wed, 11 Nov 2026 15:10:20 +0000",
+    "notesUrl": "https://github.com/duongductrong/TableGrip/releases/tag/v1.0.0-beta.3",
+    "notes": "### \u2728 Features\n- Browse Apache HBase through its REST server\n- Browse Nacos configurations and TDengine\n- Browse Weaviate, Milvus and Chroma\n- Browse rqlite and libSQL / Turso, SQLite over HTTP\n- Browse Consul's key-value store and ZooKeeper znodes\n- Browse Apache Kafka topics\n- Add Solr, Qdrant, RabbitMQ, InfluxDB 3 and Prometheus\n- Browse search, wide-column, document, time-series and graph engines\n- Support 15 more databases through their own JDBC drivers\n- Support Redshift, QuestDB, OceanBase, Doris, StarRocks and Presto\n- **www:** Show how many databases TableGrip supports\n- Review pending changes before submitting, and show database logos\n- Introduce the MCP server on the website, with its docs\n- **mcp:** Let AI apps use your connections over MCP\n- **updates:** Open the updater window as soon as Check for Updates is clicked\n- Translate the interface into Vietnamese and Chinese\n- **www:** Replace hero screenshot with an animated product demo\n- **www:** Refresh landing page sections, header and theme toggle\n- Support Oracle, Firebird, Trino and YugabyteDB\n- Introduce custom AppIcons and replace existing icons in ChartView and FixView\n\n### \ud83d\udc1b Bug Fixes\n- Name ZooKeeper and Consul tabs by path, and make re-runs of the server tests repeatable\n- Size SQL editor caret to the glyphs and centre it in the line\n",
+    "targets": {
+      "macos-arm64": {
+        "length": 113872934,
+        "edSignature": "f+qzGuZjQgwaUoEJiCQroTQ4IhjYP9sT4sFLm327yi/A/AI9jD5mwD9vczgQyWPci4lCwwnSvyXcj6YVjsAoAQ==",
+        "minimumSystemVersion": "10.13",
+        "build": 34,
+        "url": "https://github.com/duongductrong/TableGrip/releases/download/v1.0.0-beta.3/TableGrip-1.0.0-beta.3-macos-arm64.dmg"
+      },
+      "macos-x64": {
+        "length": 115328341,
+        "edSignature": "+sB0qTVUe5mZiutIdn/QiYZGFpF4dG8t4wFmCW8nXz0XcsCdLE0LtBMQ9nsFe8gPFA3u9SqAoT7D90KSLK2sDg==",
+        "minimumSystemVersion": "10.13",
+        "build": 34,
+        "url": "https://github.com/duongductrong/TableGrip/releases/download/v1.0.0-beta.3/TableGrip-1.0.0-beta.3-macos-x64.dmg"
+      },
+      "windows-x64": {
+        "length": 99901948,
+        "edSignature": "ZsUsGz9vSWQDwwND3M9pXngY2eGsCrM8mQoHUCZ7fQc9p9DcVcyg/kKNcmrFpOkE4qgGWMjR+pdUkGEs9h8cBQ==",
+        "minimumSystemVersion": "10.0",
+        "build": 34,
+        "url": "https://github.com/duongductrong/TableGrip/releases/download/v1.0.0-beta.3/TableGrip-1.0.0-beta.3-windows-x64.msi"
+      }
+    }
   }
 ]
