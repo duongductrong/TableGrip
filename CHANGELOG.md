@@ -3,6 +3,19 @@
 All notable changes to TableGrip are listed here, newest first. Each entry is written from the Conventional Commits
 of its release and can be edited in the release PR before it is merged.
 
+## [1.0.0-beta.4] - 2026-11-11
+
+### ✨ Features
+- Complete in the record console's language (#9) (27a4d61)
+- Script console with completion, and results as an editable grid, JSON or tree (b4a2888)
+- Add macOS menu bar support with settings and functionality (2c06a64)
+- Enhance UpdatesPanel with improved UI and functionality (a4bdb86)
+
+### Contributors
+[@duongductrong](https://github.com/duongductrong)
+
+**Full Changelog**: https://github.com/duongductrong/TableGrip/compare/v1.0.0-beta.3...v1.0.0-beta.4
+
 ## [1.0.0-beta.3] - 2026-11-11
 
 ### ✨ Features
