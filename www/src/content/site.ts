@@ -18,6 +18,32 @@ export const links = {
   paypal: 'https://www.paypal.me/duongductrong',
 }
 
+/**
+ * Every engine the app's connection dialog offers (core/.../connection/DatabaseType.kt), grouped by family. Keep the
+ * two in step: the counts on the site are worked out from this list.
+ */
+export const databaseFamilies: { family: string; engines: string[]; kind: 'database' | 'file'; note: string }[] = [
+  { family: 'PostgreSQL', kind: 'database', engines: ['PostgreSQL', 'CockroachDB', 'TimescaleDB', 'YugabyteDB', 'Neon', 'Supabase'], note: 'Server activity with lock trees, pg_dump backups, all-or-nothing DDL.' },
+  { family: 'MySQL', kind: 'database', engines: ['MySQL', 'MariaDB', 'TiDB', 'PlanetScale'], note: 'Server activity, mysqldump backups and restore.' },
+  { family: 'SQL Server & Oracle', kind: 'database', engines: ['SQL Server', 'Azure SQL', 'Oracle', 'Firebird'], note: 'All-or-nothing DDL on SQL Server. Azure SQL comes with encryption on.' },
+  { family: 'Analytics', kind: 'database', engines: ['ClickHouse', 'DuckDB', 'Trino'], note: 'DuckDB opens a file or :memory:. Trino queries across catalogs.' },
+  { family: 'Embedded', kind: 'database', engines: ['SQLite', 'H2', 'HSQLDB', 'Apache Derby'], note: 'Open a file, or an in-memory database.' },
+  { family: 'Key-value', kind: 'database', engines: ['Redis', 'Valkey', 'KeyDB', 'Dragonfly', 'etcd'], note: 'Standalone, Cluster and Sentinel, with TLS.' },
+  { family: 'Document', kind: 'database', engines: ['MongoDB', 'FerretDB'], note: 'mongodb:// and mongodb+srv:// URLs.' },
+  { family: 'Data files', kind: 'file', engines: ['CSV / TSV', 'Excel .xlsx', 'JSON / NDJSON'], note: 'Opened as tables; commits are written back to the file.' },
+  { family: 'Anything else', kind: 'database', engines: ['Any JDBC database'], note: 'Bring the driver’s jar.' },
+]
+
+const countEngines = (kind: 'database' | 'file') =>
+  databaseFamilies.filter((f) => f.kind === kind && f.family !== 'Anything else').reduce((n, f) => n + f.engines.length, 0)
+
+/** How many databases and data-file formats TableGrip connects to out of the box, not counting “any JDBC driver”. */
+export const supportedCounts = {
+  databases: countEngines('database'),
+  files: countEngines('file'),
+  families: databaseFamilies.filter((f) => f.kind === 'database' && f.family !== 'Anything else').length,
+}
+
 export type FeatureMenuIcon = 'editor' | 'grid' | 'schema' | 'agent' | 'mcp' | 'databases'
 
 /** What the Features menu in the header lists: one line each, pointing at its section on the home page. */
@@ -27,7 +53,7 @@ export const featureMenu: { label: string; description: string; href: string; ic
   { label: 'Schema tools', description: 'Table designer, schema compare and ER diagrams.', href: '/#schema', icon: 'schema' },
   { label: 'AI agent', description: 'Bring Claude Code, Codex or Gemini CLI. Schema, not rows.', href: '/#agent', icon: 'agent' },
   { label: 'MCP server', description: 'Your saved connections in Claude, Cursor and VS Code.', href: '/#mcp', icon: 'mcp' },
-  { label: 'Databases', description: 'PostgreSQL, MySQL, SQL Server, Redis, MongoDB and more.', href: '/#databases', icon: 'databases' },
+  { label: 'Databases', description: `${supportedCounts.databases} databases and ${supportedCounts.files} file formats, from PostgreSQL to Redis.`, href: '/#databases', icon: 'databases' },
 ]
 
 export type NavItem = { label: string; href: string }
@@ -48,18 +74,6 @@ export const featuredDatabases = [
   { name: 'Redis', mono: 'RD', color: '#D82C20' },
   { name: 'ClickHouse', mono: 'CH', color: '#B59A1C' },
   { name: 'DuckDB', mono: 'DK', color: '#C9A100' },
-]
-
-export const databaseFamilies = [
-  { family: 'PostgreSQL', engines: 'PostgreSQL · CockroachDB · TimescaleDB · Neon · Supabase', note: 'Server activity with lock trees, pg_dump backups, all-or-nothing DDL.' },
-  { family: 'MySQL', engines: 'MySQL · MariaDB · TiDB · PlanetScale', note: 'Server activity, mysqldump backups and restore.' },
-  { family: 'SQL Server', engines: 'SQL Server · Azure SQL', note: 'All-or-nothing DDL. Azure SQL comes with encryption on.' },
-  { family: 'Analytics', engines: 'ClickHouse · DuckDB', note: 'DuckDB opens a file or :memory:.' },
-  { family: 'Embedded', engines: 'SQLite · H2 · HSQLDB · Apache Derby', note: 'Open a file, or an in-memory database.' },
-  { family: 'Key-value', engines: 'Redis · Valkey · KeyDB · Dragonfly · etcd', note: 'Standalone, Cluster and Sentinel, with TLS.' },
-  { family: 'Document', engines: 'MongoDB · FerretDB', note: 'mongodb:// and mongodb+srv:// URLs.' },
-  { family: 'Data files', engines: 'CSV / TSV · Excel .xlsx · JSON / NDJSON', note: 'Opened as tables; commits are written back to the file.' },
-  { family: 'Anything else', engines: 'Oracle, Firebird and any JDBC database', note: 'Bring the driver’s jar.' },
 ]
 
 export type Feature = {

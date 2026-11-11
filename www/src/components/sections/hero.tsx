@@ -6,7 +6,7 @@ import { GridPattern, Section } from '#/components/site/frame'
 import { GithubIcon } from '#/components/site/github-icon'
 import { SiteLink } from '#/components/site/site-link'
 import { Button } from '#/components/ui/button'
-import { links } from '#/content/site'
+import { links, supportedCounts } from '#/content/site'
 import { latestVersion, targetInfo, type DownloadOs } from '#/lib/download'
 
 const osName: Record<DownloadOs, string> = { macos: 'macOS', windows: 'Windows', linux: 'Linux' }
@@ -49,7 +49,7 @@ export function Hero() {
             Write SQL with completion that knows your schema, edit rows in a grid that waits for you to commit, and work
             with PostgreSQL, MySQL, SQL Server, SQLite, MongoDB, Redis{' '}
             <a href="#databases" className="text-foreground underline decoration-rule-strong underline-offset-4 hover:decoration-foreground">
-              and more
+              and {supportedCounts.databases - 6} more
             </a>
             .
           </p>
