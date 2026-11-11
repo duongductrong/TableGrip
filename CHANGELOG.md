@@ -7,8 +7,6 @@ of its release and can be edited in the release PR before it is merged.
 
 ### ✨ Features
 - Review pending changes before submitting, and show database logos (#7) (e9f4c56)
-- Show database logos in the app and on the website (df610ab)
-- **grid:** Review pending changes before submitting (7a349cb)
 - Introduce the MCP server on the website, with its docs (f939bf4)
 - **mcp:** Let AI apps use your connections over MCP (d0f2c41)
 - **updates:** Open the updater window as soon as Check for Updates is clicked (2a27842)
