@@ -50,6 +50,8 @@ internal sealed class StructureReader(protected val dialect: SqlDialect) {
         fun of(dialect: SqlDialect): StructureReader =
             when (dialect) {
                 is SqlDialect.CockroachDBDialect -> CockroachDBStructure
+                // Only the wire protocol: what JDBC metadata reports is all there is to go on.
+                is SqlDialect.PostgreSQLDialect if !dialect.hasPostgresCatalog -> GenericStructure(dialect)
                 is SqlDialect.PostgreSQLDialect -> PostgreSQLStructure
                 is SqlDialect.MySQLDialect -> MySQLStructure
                 is SqlDialect.SQLiteDialect -> SQLiteStructure

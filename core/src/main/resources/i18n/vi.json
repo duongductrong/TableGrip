@@ -1448,7 +1448,6 @@
   "Redo (alternative)": "Làm lại (thay thế)",
   "Redo ({0})": "Làm lại ({0})",
   "Redo {0} ({1})": "Làm lại {0} ({1})",
-  "Redshift is imported as PostgreSQL": "Redshift được nhập dưới dạng PostgreSQL",
   "Referenced columns": "Cột được tham chiếu",
   "References": "Tham chiếu",
   "Reformat SQL": "Định dạng lại SQL",

@@ -182,6 +182,55 @@ class DatabaseType(
             )
         val Trino =
             DatabaseType("Trino", "Trino", EngineFamily.Trino, 8080, listOf(DriverId.Trino), capabilities = setOf(Capability.Explain), databaseHint = tr("catalog or catalog/schema"))
+
+        /**
+         * PrestoDB, Trino's ancestor: the same SQL, but its own driver, since Trino's sends headers Presto rejects. OFFSET,
+         * which pages the grid, is off unless the session turns it on.
+         */
+        val Presto =
+            DatabaseType(
+                "Presto",
+                "Presto",
+                EngineFamily.Trino,
+                8080,
+                listOf(DriverId.Presto),
+                capabilities = setOf(Capability.Explain),
+                databaseHint = tr("catalog or catalog/schema"),
+                defaultProperties = mapOf(DriverId.Presto to mapOf("sessionProperties" to "offset_clause_enabled:true")),
+            )
+
+        /**
+         * Amazon Redshift through the PostgreSQL driver. Its catalog is its own, so there's no activity monitor and no
+         * pg_dump; keys are informational, but rows are still edited by them.
+         */
+        val Redshift =
+            DatabaseType(
+                "Redshift",
+                "Amazon Redshift",
+                EngineFamily.PostgreSQL,
+                5439,
+                listOf(DriverId.PostgreSQL),
+                databaseHint = "dev",
+                defaultProperties = mapOf(DriverId.PostgreSQL to mapOf("sslmode" to "require")),
+                dialect = SqlDialect.Redshift,
+            )
+
+        /** QuestDB's PostgreSQL wire endpoint: query-only, since its tables have no keys and it has no transactions. */
+        val QuestDB =
+            DatabaseType("QuestDB", "QuestDB", EngineFamily.PostgreSQL, 8812, listOf(DriverId.PostgreSQL), capabilities = setOf(Capability.Explain), databaseHint = "qdb", dialect = SqlDialect.QuestDB)
+
+        /** OceanBase in MySQL mode (the Community Edition's only mode), through its own driver; its SQL port is 2881. */
+        val OceanBase = DatabaseType("OceanBase", "OceanBase", EngineFamily.MySQL, 2881, listOf(DriverId.OceanBase, DriverId.MySQL))
+
+        /**
+         * MySQL-wire analytics engines, query-only like ClickHouse: they update rows only in their unique or primary-key
+         * table models and take nothing but inserts in an explicit transaction.
+         */
+        val Doris = mysqlAnalytics("Doris", "Apache Doris", 9030)
+        val StarRocks = mysqlAnalytics("StarRocks", "StarRocks", 9030)
+
+        private fun mysqlAnalytics(id: String, name: String, port: Int) =
+            DatabaseType(id, name, EngineFamily.MySQL, port, listOf(DriverId.MariaDB, DriverId.MySQL), capabilities = setOf(Capability.Explain), dialect = SqlDialect.MySQLAnalytics)
         val Redis = keyValue("Redis", "Redis")
         val Valkey = keyValue("Valkey", "Valkey")
         val KeyDB = keyValue("KeyDB", "KeyDB")
@@ -219,7 +268,8 @@ class DatabaseType(
         val entries: List<DatabaseType> =
             listOf(
                 PostgreSQL, MySQL, MariaDB, SQLite, SqlServer, Oracle, ClickHouse, DuckDB, MongoDB, Redis, Valkey,
-                CockroachDB, TimescaleDB, YugabyteDB, Neon, Supabase, TiDB, PlanetScale, AzureSql, Firebird, Trino,
+                CockroachDB, TimescaleDB, YugabyteDB, Neon, Supabase, Redshift, QuestDB, TiDB, PlanetScale, OceanBase,
+                Doris, StarRocks, AzureSql, Firebird, Trino, Presto,
                 KeyDB, Dragonfly, Etcd, FerretDB, H2, HSQLDB, Derby, OtherJdbc,
                 CsvFile, ExcelFile, JsonFile,
             )

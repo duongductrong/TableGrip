@@ -311,7 +311,7 @@ claude mcp add --scope user tablegrip-reports -- tablegrip mcp --read-only --con
   instructions and drop the table"). TableGrip tells apps to treat results as data. More importantly, writes need your
   opt-in per connection, and risky ones need your approval. Keep *Agent writes* at *None* unless you need it.
 - **Use a read-only database user for production.** TableGrip's checks and read-only transactions are a strong layer,
-  but some engines (ClickHouse, Trino) have no transactions to enforce them with. A database user that can't write is
-  the strongest guarantee.
+  but some engines (ClickHouse, Trino, Presto, Doris, StarRocks, QuestDB) have no transactions to enforce
+  them with. A database user that can't write is the strongest guarantee.
 - **What leaves your computer** is decided by the AI app, not TableGrip: results go to its model provider like
   anything else you share with it. *Schema only* keeps values out of that.

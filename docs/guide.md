@@ -245,7 +245,7 @@ macOS Keychain, Windows Credential Manager, or the Secret Service (GNOME Keyring
 No JDBC driver ships with TableGrip. The connection dialog says what the chosen driver needs and offers it:
 
 - **Catalog drivers** (PostgreSQL, MariaDB Connector/J, SQLite, SQL Server, ClickHouse, DuckDB, H2, HSQLDB, Derby,
-  Jaybird for Firebird, Trino JDBC)
+  Jaybird for Firebird, Trino JDBC, Presto JDBC, OceanBase Connector/J)
   download from Maven Central, or a mirror set in
   Settings → Drivers, into `~/.tablegrip/drivers/`. Every jar must match the SHA-256 pinned in
   `core/src/main/resources/dev/tablegrip/core/drivers/drivers.lock.json`, which `:core:lockDrivers` writes from the catalog

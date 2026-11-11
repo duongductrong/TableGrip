@@ -23,10 +23,10 @@ export const links = {
  * two in step: the counts on the site are worked out from this list.
  */
 export const databaseFamilies: { family: string; engines: string[]; kind: 'database' | 'file'; note: string }[] = [
-  { family: 'PostgreSQL', kind: 'database', engines: ['PostgreSQL', 'CockroachDB', 'TimescaleDB', 'YugabyteDB', 'Neon', 'Supabase'], note: 'Server activity with lock trees, pg_dump backups, all-or-nothing DDL.' },
-  { family: 'MySQL', kind: 'database', engines: ['MySQL', 'MariaDB', 'TiDB', 'PlanetScale'], note: 'Server activity, mysqldump backups and restore.' },
+  { family: 'PostgreSQL', kind: 'database', engines: ['PostgreSQL', 'CockroachDB', 'TimescaleDB', 'YugabyteDB', 'Neon', 'Supabase', 'Amazon Redshift'], note: 'Server activity with lock trees, pg_dump backups, all-or-nothing DDL.' },
+  { family: 'MySQL', kind: 'database', engines: ['MySQL', 'MariaDB', 'TiDB', 'PlanetScale', 'OceanBase'], note: 'Server activity, mysqldump backups and restore.' },
   { family: 'SQL Server & Oracle', kind: 'database', engines: ['SQL Server', 'Azure SQL', 'Oracle', 'Firebird'], note: 'All-or-nothing DDL on SQL Server. Azure SQL comes with encryption on.' },
-  { family: 'Analytics', kind: 'database', engines: ['ClickHouse', 'DuckDB', 'Trino'], note: 'DuckDB opens a file or :memory:. Trino queries across catalogs.' },
+  { family: 'Analytics', kind: 'database', engines: ['ClickHouse', 'DuckDB', 'Trino', 'Presto', 'Apache Doris', 'StarRocks', 'QuestDB'], note: 'DuckDB opens a file or :memory:. Trino and Presto query across catalogs.' },
   { family: 'Embedded', kind: 'database', engines: ['SQLite', 'H2', 'HSQLDB', 'Apache Derby'], note: 'Open a file, or an in-memory database.' },
   { family: 'Key-value', kind: 'database', engines: ['Redis', 'Valkey', 'KeyDB', 'Dragonfly', 'etcd'], note: 'Standalone, Cluster and Sentinel, with TLS.' },
   { family: 'Document', kind: 'database', engines: ['MongoDB', 'FerretDB'], note: 'mongodb:// and mongodb+srv:// URLs.' },

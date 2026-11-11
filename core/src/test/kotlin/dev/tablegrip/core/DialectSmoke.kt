@@ -11,7 +11,11 @@ import kotlin.test.assertTrue
  * Runs the SQL a dialect writes for filters, charts and the select builder on a real server, after [RelationalContract]
  * seeded `users`: string comparisons alone don't prove the engine accepts it.
  */
-class DialectSmoke(private val connection: RelationalConnection) {
+class DialectSmoke(
+    private val connection: RelationalConnection,
+    /** Wednesday 15 May 2024, 13:45, as the engine writes a timestamp literal. */
+    private val at: String = "TIMESTAMP '2024-05-15 13:45:00'",
+) {
     private val d = connection.dialect
 
     private fun q(name: String) = d.quoteIdentifier(name)
@@ -32,8 +36,6 @@ class DialectSmoke(private val connection: RelationalConnection) {
                 assertEquals(listOf("bob"), rows("SELECT ${q("name")} FROM $users WHERE $rb'^B'$ra").map { it[0] })
             }
 
-            // Wednesday 15 May 2024, 13:45.
-            val at = "TIMESTAMP '2024-05-15 13:45:00'"
             val expected =
                 mapOf(
                     TimeBucket.Day to "2024-05-15", TimeBucket.Week to "2024-05-13", TimeBucket.Month to "2024-05-01",

@@ -136,6 +136,12 @@ internal object DBeaverImporter {
             "oracle" in d -> DatabaseType.Oracle
             "firebird" in d || "jaybird" in d -> DatabaseType.Firebird
             "trino" in d -> DatabaseType.Trino
+            "presto" in d -> DatabaseType.Presto
+            "redshift" in d -> DatabaseType.Redshift
+            "questdb" in d -> DatabaseType.QuestDB
+            "oceanbase" in d -> DatabaseType.OceanBase
+            "doris" in d -> DatabaseType.Doris
+            "starrocks" in d -> DatabaseType.StarRocks
             "mariadb" in d -> DatabaseType.MariaDB
             "tidb" in d -> DatabaseType.TiDB
             "duckdb" in d -> DatabaseType.DuckDB

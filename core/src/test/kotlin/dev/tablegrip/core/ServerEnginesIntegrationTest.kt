@@ -20,9 +20,14 @@ import kotlinx.coroutines.runBlocking
  * docker run -d --name dg-it-firebird -p 53050:3050 -e FIREBIRD_ROOT_PASSWORD=pw firebirdsql/firebird:5
  * docker run -d --name dg-it-trino -p 58080:8080 trinodb/trino:476
  * docker run -d --name dg-it-yugabyte -p 55434:5433 yugabytedb/yugabyte:2.25.2.0-b359 bin/yugabyted start --background=false
+ * docker run -d --name dg-it-questdb -p 58812:8812 questdb/questdb:10.2.0
+ * docker run -d --name dg-it-starrocks -p 59030:9030 starrocks/allin1-ubuntu:4.1.7
+ * docker run -d --name dg-it-oceanbase -p 52881:2881 -e MODE=mini oceanbase/oceanbase-ce:4.4.2-lts
+ * docker run -d --name dg-it-presto -p 58081:8080 prestodb/presto:0.300
  * ```
  *
- * Oracle, Firebird and Trino have no CREATE DATABASE that fits: each run gets its own user, database file or schema.
+ * Oracle, Firebird, Trino, Presto and QuestDB have no CREATE DATABASE that fits: each run gets its own user, database file
+ * or schema, or (QuestDB) starts from no tables.
  */
 class ServerEnginesIntegrationTest {
     private val run = "dg_${System.currentTimeMillis()}"
@@ -54,6 +59,10 @@ class ServerEnginesIntegrationTest {
         at("it.timescale", DatabaseType.PostgreSQL, "postgres", "postgres")?.let { kotlin.test.assertEquals(DatabaseType.TimescaleDB, Database.test(it, "pw")) }
         at("it.yugabyte", DatabaseType.PostgreSQL, "yugabyte", "yugabyte")?.let { kotlin.test.assertEquals(DatabaseType.YugabyteDB, Database.test(it, null)) }
         at("it.tidb", DatabaseType.MySQL, "test", "root")?.let { kotlin.test.assertEquals(DatabaseType.TiDB, Database.test(it, null)) }
+        at("it.questdb", DatabaseType.PostgreSQL, "qdb", "admin")?.let { kotlin.test.assertEquals(DatabaseType.QuestDB, Database.test(it, "quest")) }
+        at("it.starrocks", DatabaseType.MySQL, "", "root")?.let { kotlin.test.assertEquals(DatabaseType.StarRocks, Database.test(it, null)) }
+        // MariaDB Connector/J can't connect to OceanBase at all; MySQL's own driver can.
+        at("it.oceanbase", DatabaseType.MySQL, "test", "root")?.let { kotlin.test.assertEquals(DatabaseType.OceanBase, Database.test(it.copy(driver = dev.tablegrip.core.connection.DriverId.MySQL), null)) }
         at("it.mysql", DatabaseType.MariaDB, "mysql", "root")?.let { kotlin.test.assertEquals(DatabaseType.MySQL, Database.test(it, "pw")) }
         at("it.postgres", DatabaseType.PostgreSQL, "postgres", "postgres")?.let { kotlin.test.assertEquals(null, Database.test(it, "pw")) }
         // Hosted variants are taken at their word.
@@ -160,6 +169,48 @@ class ServerEnginesIntegrationTest {
             RelationalContract(db, keys = false, transactions = false).run()
             DialectSmoke(db).run()
             kotlin.test.assertTrue(db.namespaces().all { it.catalog == "memory" })
+        }
+    }
+
+    /** One database, `qdb`, emptied first. No keys, no transactions, no VARCHAR length. */
+    @Test
+    fun questdb() = runBlocking<Unit> {
+        val (host, port) = System.getProperty("it.questdb")?.split(":") ?: return@runBlocking
+        val config = ConnectionConfig(id = "it.questdb", name = "questdb", type = DatabaseType.QuestDB, host = host, port = port.toInt(), database = "qdb", user = "admin")
+        Database.connect(config, "quest").use { db ->
+            // One database for every run: start from no tables.
+            db.openSession().use { session -> listOf("users", "teams").forEach { session.execute("DROP TABLE IF EXISTS $it") } }
+            RelationalContract(db, intType = "INT", textType = "VARCHAR", keys = false, transactions = false).run()
+            DialectSmoke(db).run()
+        }
+    }
+
+
+    @Test
+    fun starrocks() =
+        server("it.starrocks", DatabaseType.StarRocks, "", "root", null) {
+            RelationalContract(it, intType = "INT", tableSuffix = " PROPERTIES (\"replication_num\" = \"1\")", keys = false, transactions = false).run()
+            // No TIMESTAMP '…' literal here.
+            DialectSmoke(it, at = "CAST('2024-05-15 13:45:00' AS DATETIME)").run()
+        }
+
+    @Test
+    fun oceanbase() =
+        server("it.oceanbase", DatabaseType.OceanBase, "test", "root", null) {
+            RelationalContract(it).run()
+            DialectSmoke(it).run()
+        }
+
+    /** A schema per run in the memory catalog, as for Trino, through Presto's own driver. */
+    @Test
+    fun presto() = runBlocking<Unit> {
+        val (host, port) = System.getProperty("it.presto")?.split(":") ?: return@runBlocking
+        fun config(database: String) =
+            ConnectionConfig(id = "it.presto-$database", name = "presto", type = DatabaseType.Presto, host = host, port = port.toInt(), database = database, user = "it")
+        Database.connect(config("memory"), null).use { it.openSession().use { session -> session.execute("CREATE SCHEMA memory.$run") } }
+        Database.connect(config("memory/$run"), null).use { db ->
+            RelationalContract(db, keys = false, transactions = false).run()
+            DialectSmoke(db).run()
         }
     }
 }

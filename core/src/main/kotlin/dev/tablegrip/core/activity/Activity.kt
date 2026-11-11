@@ -90,9 +90,9 @@ abstract class ActivityReader {
     companion object {
         fun of(type: DatabaseType): ActivityReader? =
             when (type.dialect) {
-                // CockroachDB speaks the protocol but has neither pg_stat_activity's columns nor pg_blocking_pids.
-                is SqlDialect.CockroachDBDialect -> null
-                is SqlDialect.PostgreSQLDialect -> PostgresActivity
+                // CockroachDB, Redshift and QuestDB speak the protocol but have neither pg_stat_activity's columns nor
+                // pg_blocking_pids.
+                is SqlDialect.PostgreSQLDialect -> PostgresActivity.takeIf { type.dialect.hasPostgresCatalog }
                 // TiDB and PlanetScale (Vitess) speak the protocol but list and kill sessions their own way.
                 is SqlDialect.MySQLDialect -> MySqlActivity.takeIf { type == DatabaseType.MySQL || type == DatabaseType.MariaDB }
                 else -> null

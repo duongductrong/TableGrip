@@ -48,8 +48,9 @@ sealed interface BackupSupport {
                 type.isDataFile -> NotApplicable
                 type == DatabaseType.SQLite -> Native(BackupFormat.SqliteCopy)
                 type == DatabaseType.DuckDB -> Native(BackupFormat.DuckDbExport)
-                // pg_dump can't read CockroachDB's catalog; TiDB and PlanetScale have their own dump tools.
-                type.family == EngineFamily.PostgreSQL && type.dialect !is SqlDialect.CockroachDBDialect -> WithTools(ToolFamily.PostgreSQL)
+                // pg_dump can't read CockroachDB's, Redshift's or QuestDB's catalog; TiDB, PlanetScale and the MySQL-wire
+                // analytics engines have their own dump tools.
+                type.dialect.let { it is SqlDialect.PostgreSQLDialect && it.hasPostgresCatalog } -> WithTools(ToolFamily.PostgreSQL)
                 type == DatabaseType.MySQL || type == DatabaseType.MariaDB -> WithTools(ToolFamily.MySQL)
                 else -> NotYet(tr("Backups don't support {0} yet. They support PostgreSQL, MySQL, MariaDB, SQLite and DuckDB.", type.displayName))
             }

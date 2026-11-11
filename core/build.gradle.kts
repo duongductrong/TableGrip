@@ -34,6 +34,8 @@ dependencies {
     testRuntimeOnly(libs.jdbc.duckdb)
     testRuntimeOnly(libs.jdbc.firebird)
     testRuntimeOnly(libs.jdbc.trino)
+    testRuntimeOnly(libs.jdbc.presto)
+    testRuntimeOnly(libs.jdbc.oceanbase)
     testRuntimeOnly(libs.jdbc.oracle)
     testImplementation(libs.apache.sshd.core)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -42,11 +44,12 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
     // Opt-in server tests: -Pit.postgres=localhost:55432 -Pit.mysql=localhost:53306 (and it.cockroach, it.timescale, it.tidb,
-    // it.mssql, it.clickhouse, it.oracle, it.firebird, it.trino, it.yugabyte: see ServerEnginesIntegrationTest); -Pit.network=true
+    // it.mssql, it.clickhouse, it.oracle, it.firebird, it.trino, it.yugabyte, it.questdb, it.starrocks, it.oceanbase,
+    // it.presto: see ServerEnginesIntegrationTest); -Pit.network=true
     // downloads drivers.
     listOf(
         "it.postgres", "it.mysql", "it.network", "it.cockroach", "it.timescale", "it.tidb", "it.mssql", "it.clickhouse", "it.etcd", "it.etcdauth",
-        "it.oracle", "it.firebird", "it.trino", "it.yugabyte",
+        "it.oracle", "it.firebird", "it.trino", "it.yugabyte", "it.questdb", "it.starrocks", "it.oceanbase", "it.presto",
     ).forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
     testLogging { showStandardStreams = providers.gradleProperty("it.postgres").isPresent || providers.gradleProperty("it.mysql").isPresent }
 }
@@ -126,6 +129,14 @@ val driverCatalog =
             "trino", "Trino JDBC", libs.jdbc.trino, "io.trino.jdbc.TrinoDriver",
             "https://github.com/trinodb/trino/blob/master/LICENSE", "https://github.com/trinodb/trino",
         ),
+        CatalogDriver(
+            "oceanbase", "OceanBase Connector/J", libs.jdbc.oceanbase, "com.oceanbase.jdbc.Driver",
+            "https://github.com/oceanbase/obconnector-j/blob/master/LICENSE", "https://github.com/oceanbase/obconnector-j",
+        ),
+        CatalogDriver(
+            "presto", "Presto JDBC", libs.jdbc.presto, "com.facebook.presto.jdbc.PrestoDriver",
+            "https://github.com/prestodb/presto/blob/master/LICENSE", "https://github.com/prestodb/presto",
+        ),
     )
 
 /** Reviewed license of every jar a catalog driver resolves to, by `group:name`. */
@@ -147,6 +158,12 @@ val artifactLicenses =
         "org.firebirdsql.jdbc:jaybird" to "LGPL-2.1-or-later",
         // One shaded jar; what it bundles is Apache-2.0 (see its NOTICE).
         "io.trino:trino-jdbc" to "Apache-2.0",
+        // A fork of MariaDB Connector/J; its sources keep MariaDB's "2.1 or (at your option) any later version" grant.
+        "com.oceanbase:oceanbase-client" to "LGPL-2.1-or-later",
+        // One shaded jar with no dependencies of its own. Presto is Apache-2.0; it bundles Guava, Jackson, OkHttp, Apache
+        // HttpClient, Joda-Time, Kotlin, gRPC and OpenCensus (Apache-2.0), google-auth-library (BSD-3-Clause) and
+        // FastDoubleParser (MIT). Its LICENSE.jol.txt (GPL-2.0 with the Classpath exception) is a leftover: no JOL class is in the jar.
+        "com.facebook.presto:presto-jdbc" to "Apache-2.0",
         // ClickHouse JDBC and what it pulls in. Blank POMs were read from their parents (guava-parent, the ASF's
         // commons-parent and httpcomponents-parent, antlr4-master).
         "com.clickhouse:clickhouse-jdbc" to "Apache-2.0",

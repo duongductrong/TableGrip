@@ -69,7 +69,6 @@ internal object PlistConnectionsImporter {
                     ssh = ssh(entry),
                 )
             val notes = buildList {
-                if (driver.equals("Redshift", ignoreCase = true)) add(tr("Redshift is imported as PostgreSQL"))
                 if (tls && parsed.properties.isEmpty()) add(tr("TLS was on in the source: turn it on under Options › Driver properties"))
             }
             candidates += ImportCandidate(config, origin = file.toString(), notes = notes)
@@ -93,7 +92,8 @@ internal object PlistConnectionsImporter {
 
     private fun typeOf(driver: String): DatabaseType? =
         when (driver.lowercase()) {
-            "postgresql", "postgres", "redshift" -> DatabaseType.PostgreSQL
+            "postgresql", "postgres" -> DatabaseType.PostgreSQL
+            "redshift" -> DatabaseType.Redshift
             "mysql" -> DatabaseType.MySQL
             "mariadb" -> DatabaseType.MariaDB
             "sqlite" -> DatabaseType.SQLite

@@ -27,7 +27,8 @@ internal class Introspector(private val dialect: SqlDialect) {
     fun details(meta: DatabaseMetaData, table: TableRef, keysAndIndexes: Boolean = true): TableDetails {
         val catalog = table.namespace.catalog
         val schema = table.namespace.schema
-        val primaryKeyRows = meta.getPrimaryKeys(catalog, schema, table.name).collect { getString("COLUMN_NAME") to getString("PK_NAME") }
+        // Presto's driver throws where Trino's returns no rows.
+        val primaryKeyRows = supported { meta.getPrimaryKeys(catalog, schema, table.name) }?.collect { getString("COLUMN_NAME") to getString("PK_NAME") }.orEmpty()
         val primaryKey = primaryKeyRows.map { it.first }.toSet()
         val primaryKeyName = primaryKeyRows.firstNotNullOfOrNull { it.second }
 
@@ -52,7 +53,7 @@ internal class Introspector(private val dialect: SqlDialect) {
                 .map { it.second }
         if (!keysAndIndexes) return TableDetails(table, columns, emptyList(), emptyList(), primaryKeyName)
 
-        // Drivers without indexes or keys (Trino) say so by throwing rather than returning nothing.
+        // Drivers without indexes or keys (Trino, QuestDB) say so by throwing rather than returning nothing.
         val indexes =
             supported { meta.getIndexInfo(catalog, schema, table.name, false, true) }
                 ?.collect {
@@ -169,11 +170,15 @@ internal class Introspector(private val dialect: SqlDialect) {
 
     private fun <T> ResultSet.collect(map: ResultSet.() -> T): List<T> = use { buildList { while (next()) add(map()) } }
 
-    /** A metadata call's rows, or null when the driver doesn't support it. */
+    /**
+     * A metadata call's rows, or null when the driver or server doesn't support it: drivers say so with
+     * [java.sql.SQLFeatureNotSupportedException], but a wire-compatible server (QuestDB behind pgjdbc) fails the
+     * catalog query the driver sends instead. Indexes and keys are extras, so the table opens without them.
+     */
     private fun supported(call: () -> ResultSet): ResultSet? =
         try {
             call()
-        } catch (_: java.sql.SQLFeatureNotSupportedException) {
+        } catch (_: java.sql.SQLException) {
             null
         }
 }

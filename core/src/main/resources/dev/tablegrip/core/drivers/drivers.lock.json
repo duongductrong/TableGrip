@@ -212,6 +212,32 @@
       "artifacts": [
         {"coordinates": "io.trino:trino-jdbc:484", "path": "io/trino/trino-jdbc/484/trino-jdbc-484.jar", "sha256": "46476af2968e6f3234e8b22d7e29c26e6d7213ce88ab546a29c4c318c921cd34", "size": 10586075, "license": "Apache-2.0"}
       ]
+    },
+    {
+      "id": "oceanbase",
+      "name": "OceanBase Connector/J",
+      "version": "2.4.19",
+      "className": "com.oceanbase.jdbc.Driver",
+      "license": "LGPL-2.1-or-later",
+      "tier": "WeakCopyleft",
+      "licenseUrl": "https://github.com/oceanbase/obconnector-j/blob/master/LICENSE",
+      "sourceUrl": "https://github.com/oceanbase/obconnector-j",
+      "artifacts": [
+        {"coordinates": "com.oceanbase:oceanbase-client:2.4.19", "path": "com/oceanbase/oceanbase-client/2.4.19/oceanbase-client-2.4.19.jar", "sha256": "d7c1511600b3e82e4c0dc5d426ec43aa39be9501fc6550713cb1c1a964d2ba60", "size": 1179679, "license": "LGPL-2.1-or-later"}
+      ]
+    },
+    {
+      "id": "presto",
+      "name": "Presto JDBC",
+      "version": "0.300",
+      "className": "com.facebook.presto.jdbc.PrestoDriver",
+      "license": "Apache-2.0",
+      "tier": "Permissive",
+      "licenseUrl": "https://github.com/prestodb/presto/blob/master/LICENSE",
+      "sourceUrl": "https://github.com/prestodb/presto",
+      "artifacts": [
+        {"coordinates": "com.facebook.presto:presto-jdbc:0.300", "path": "com/facebook/presto/presto-jdbc/0.300/presto-jdbc-0.300.jar", "sha256": "f1341eef07b50a8933c8ba72232bf08ec237a8b47086ca2bce698eea3247ae14", "size": 15546860, "license": "Apache-2.0"}
+      ]
     }
   ]
 }

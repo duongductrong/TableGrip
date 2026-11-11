@@ -1448,7 +1448,6 @@
   "Redo (alternative)": "重做(替代)",
   "Redo ({0})": "重做({0})",
   "Redo {0} ({1})": "重做{0}({1})",
-  "Redshift is imported as PostgreSQL": "Redshift 將作為 PostgreSQL 匯入",
   "Referenced columns": "被參照的欄",
   "References": "參照",
   "Reformat SQL": "格式化 SQL",

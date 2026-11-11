@@ -143,6 +143,34 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
             "${castToText(col)} LIKE ? ESCAPE '!' LIMIT $scan) s ORDER BY v LIMIT $limit"
     }
 
+    /** For engines whose LIKE has no ESCAPE clause: a [textMatch] pattern's `!` escapes as backslashes. */
+    protected fun backslashEscapes(likePattern: String): String {
+        val out = StringBuilder()
+        var i = 0
+        while (i < likePattern.length) {
+            val c = likePattern[i]
+            if (c == '!' && i + 1 < likePattern.length) {
+                out.append('\\').append(likePattern[i + 1])
+                i += 2
+            } else {
+                if (c == '\\') out.append('\\')
+                out.append(c)
+                i++
+            }
+        }
+        return out.toString()
+    }
+
+    /** [samplePattern] for engines whose LIKE has no ESCAPE clause. */
+    protected fun backslashSamplePattern(prefix: String): String = prefix.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+
+    /** [sampleValues] for engines whose LIKE has no ESCAPE clause. */
+    protected fun sampleValuesWithoutEscape(table: TableRef, column: String, limit: Int, scan: Int): String {
+        val col = quoteIdentifier(column)
+        return "SELECT DISTINCT v FROM (SELECT $col AS v FROM ${qualifiedName(table)} WHERE $col IS NOT NULL AND " +
+            "${castToText(col)} LIKE ? LIMIT $scan) s ORDER BY v LIMIT $limit"
+    }
+
     /** Rows [selectAll] returns; with DISTINCT, the distinct ones. */
     open fun countRows(table: TableRef, filter: String?, projection: SqlProjection? = null): String {
         val where = filter?.takeIf { it.isNotBlank() }?.let { " WHERE $it" } ?: ""
@@ -225,18 +253,82 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
         override fun regexMatch(expression: String, caseSensitive: Boolean, negated: Boolean): Pair<String, String> =
             "$expression ${if (negated) "!" else ""}~${if (caseSensitive) "" else "*"} " to ""
 
+        /**
+         * Whether the server has PostgreSQL's own catalog and tooling: `pg_stat_activity`, `pg_blocking_pids`, the
+         * `pg_get_*def` functions and a catalog `pg_dump` can read. Engines that only speak the wire protocol don't.
+         */
+        open val hasPostgresCatalog: Boolean = true
+
         override fun listNamespaces(meta: DatabaseMetaData): List<Namespace> =
             meta.schemas.use { rs ->
                 buildList { while (rs.next()) add(rs.getString("TABLE_SCHEM")) }
             }
-                .filterNot { it in systemSchemas || it.startsWith("pg_toast") || it.startsWith("pg_temp") }
+                .filterNot { it in systemSchemas || isSystemSchema(it) || it.startsWith("pg_toast") || it.startsWith("pg_temp") }
                 .sorted()
                 .map { Namespace(catalog = null, schema = it) }
+
+        protected open fun isSystemSchema(name: String): Boolean = false
+    }
+
+    /**
+     * Amazon Redshift: PostgreSQL 8's SQL and wire protocol over a catalog of its own. No `gen_random_uuid`, and its
+     * system schemas (`pg_internal`, `pg_automv`…) aren't the user's.
+     */
+    open class RedshiftDialect : PostgreSQLDialect() {
+        override fun toString() = "Redshift"
+
+        override val hasPostgresCatalog = false
+
+        override val functions =
+            listOf("getdate", "sysdate", "date_trunc", "dateadd", "datediff", "listagg", "json_extract_path_text", "approximate", "nvl")
+
+        override fun isSystemSchema(name: String) = name.startsWith("pg_")
+    }
+
+    /**
+     * QuestDB through its PostgreSQL wire endpoint: time-series SQL with no schemas beyond `public`, no keys and no
+     * transactions. `date_trunc` and ILIKE work as in PostgreSQL.
+     */
+    open class QuestDBDialect : PostgreSQLDialect() {
+        override fun toString() = "QuestDB"
+
+        override val hasPostgresCatalog = false
+
+        override val tableTypes = mapOf("TABLE" to false, "VIEW" to true, "MATERIALIZED VIEW" to true)
+
+        override val functions = listOf("now", "systimestamp", "date_trunc", "timestamp_floor", "dateadd", "datediff", "to_str", "count_distinct")
+
+        /** LIKE has no ESCAPE clause here, as on ClickHouse: a backslash escapes wildcards. */
+        override fun textMatch(expression: String, caseSensitive: Boolean, negated: Boolean): Pair<String, String> =
+            "$expression ${if (negated) "NOT " else ""}${if (caseSensitive) "LIKE" else "ILIKE"} " to ""
+
+        override fun textPattern(likePattern: String, caseSensitive: Boolean): String = backslashEscapes(likePattern)
+
+        override fun samplePattern(prefix: String): String = backslashSamplePattern(prefix)
+
+        override fun sampleValues(table: TableRef, column: String, limit: Int, scan: Int): String = sampleValuesWithoutEscape(table, column, limit, scan)
+
+        /** `~` and `!~` take Java regexes, but there's no `~*`: case is folded with an inline flag. */
+        override fun regexMatch(expression: String, caseSensitive: Boolean, negated: Boolean): Pair<String, String> =
+            "$expression ${if (negated) "!" else ""}~ ${if (caseSensitive) "" else "concat('(?i)', "}" to (if (caseSensitive) "" else ")")
+
+        /** No OFFSET: `LIMIT lo, hi` returns rows lo+1 to hi. */
+        override fun selectPage(table: TableRef, filter: String?, orderBy: List<SortColumn>, limit: Int, offset: Long, projection: SqlProjection?): String =
+            selectAll(table, filter, orderBy, projection) + " LIMIT $offset, ${offset + limit}"
+
+        /** `round(double, int)` is native here; there's no NUMERIC type to cast to. */
+        override fun selectFunction(function: SelectFunction, expression: String, arguments: List<String>): String? =
+            if (function == SelectFunction.Round) "round($expression, ${arguments.single()})"
+            else super.selectFunction(function, expression, arguments)
+
+        override fun castToText(expression: String) = "CAST($expression AS STRING)"
     }
 
     /** CockroachDB speaks PostgreSQL's SQL and catalog, mostly; what differs is in its structure reader. */
     open class CockroachDBDialect : PostgreSQLDialect() {
         override fun toString() = "CockroachDB"
+
+        override val hasPostgresCatalog = false
 
         override val functions = super.functions + listOf("unique_rowid", "gen_random_ulid", "crdb_internal.cluster_id")
     }
@@ -283,6 +375,37 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
                 .filterNot { it in systemDatabases }
                 .sorted()
                 .map { Namespace(catalog = it, schema = null) }
+    }
+
+    /**
+     * Doris and StarRocks: MySQL's SQL and protocol, but LIKE takes no ESCAPE clause (a backslash escapes, as MySQL's
+     * default) and BINARY casts don't exist, so case-sensitive matching relies on LIKE, which is case-sensitive here, as
+     * is REGEXP.
+     */
+    open class MySQLAnalyticsDialect : MySQLDialect() {
+        override fun toString() = "MySQL analytics"
+
+        override fun textMatch(expression: String, caseSensitive: Boolean, negated: Boolean): Pair<String, String> {
+            val not = if (negated) "NOT " else ""
+            return if (caseSensitive) "$expression ${not}LIKE " to "" else "LOWER($expression) ${not}LIKE LOWER(" to ")"
+        }
+
+        override fun textPattern(likePattern: String, caseSensitive: Boolean): String = backslashEscapes(likePattern)
+
+        override fun samplePattern(prefix: String): String = backslashSamplePattern(prefix)
+
+        override fun sampleValues(table: TableRef, column: String, limit: Int, scan: Int): String = sampleValuesWithoutEscape(table, column, limit, scan)
+
+        /** `INTERVAL n QUARTER` takes only a constant here, so the quarter's first day is spelled out. */
+        override fun timeBucket(expression: String, bucket: TimeBucket) =
+            if (bucket == TimeBucket.Quarter) "STR_TO_DATE(CONCAT(YEAR($expression), '-', (QUARTER($expression) - 1) * 3 + 1, '-01'), '%Y-%c-%d')"
+            else super.timeBucket(expression, bucket)
+
+        /** REGEXP is case-sensitive whatever the collation; an inline flag folds case. */
+        override val regexHonoursCase = true
+
+        override fun regexMatch(expression: String, caseSensitive: Boolean, negated: Boolean): Pair<String, String> =
+            "$expression ${if (negated) "NOT " else ""}REGEXP ${if (caseSensitive) "" else "concat('(?i)', "}" to (if (caseSensitive) "" else ")")
     }
 
     open class SQLiteDialect : SqlDialect(SqlSyntax.SQLite) {
@@ -502,35 +625,16 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
             "$expression ${if (negated) "NOT " else ""}${if (caseSensitive) "LIKE" else "ILIKE"} " to ""
 
         /** ClickHouse's LIKE has no ESCAPE clause: wildcards are escaped with a backslash. */
-        override fun textPattern(likePattern: String, caseSensitive: Boolean): String {
-            val out = StringBuilder()
-            var i = 0
-            while (i < likePattern.length) {
-                val c = likePattern[i]
-                if (c == '!' && i + 1 < likePattern.length) {
-                    out.append('\\').append(likePattern[i + 1])
-                    i += 2
-                } else {
-                    if (c == '\\') out.append('\\')
-                    out.append(c)
-                    i++
-                }
-            }
-            return out.toString()
-        }
+        override fun textPattern(likePattern: String, caseSensitive: Boolean): String = backslashEscapes(likePattern)
 
         override val regexHonoursCase = true
 
         override fun regexMatch(expression: String, caseSensitive: Boolean, negated: Boolean): Pair<String, String> =
             "${if (negated) "NOT " else ""}match($expression, ${if (caseSensitive) "" else "concat('(?i)', "}" to (if (caseSensitive) ")" else "))")
 
-        override fun sampleValues(table: TableRef, column: String, limit: Int, scan: Int): String {
-            val col = quoteIdentifier(column)
-            return "SELECT DISTINCT v FROM (SELECT $col AS v FROM ${qualifiedName(table)} WHERE $col IS NOT NULL AND " +
-                "${castToText(col)} LIKE ? LIMIT $scan) s ORDER BY v LIMIT $limit"
-        }
+        override fun sampleValues(table: TableRef, column: String, limit: Int, scan: Int): String = sampleValuesWithoutEscape(table, column, limit, scan)
 
-        override fun samplePattern(prefix: String): String = prefix.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+        override fun samplePattern(prefix: String): String = backslashSamplePattern(prefix)
 
         override val functions = listOf("now", "today", "toDate", "toStartOfDay", "formatDateTime", "uniq", "groupArray", "arrayJoin", "JSONExtractString", "countIf")
 
@@ -756,6 +860,9 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
         val ClickHouse: ClickHouseDialect = ClickHouseDialect()
         val DuckDB: DuckDBDialect = DuckDBDialect()
         val CockroachDB: CockroachDBDialect = CockroachDBDialect()
+        val Redshift: RedshiftDialect = RedshiftDialect()
+        val QuestDB: QuestDBDialect = QuestDBDialect()
+        val MySQLAnalytics: MySQLAnalyticsDialect = MySQLAnalyticsDialect()
         val Oracle: OracleDialect = OracleDialect()
         val Firebird: FirebirdDialect = FirebirdDialect()
         val Trino: TrinoDialect = TrinoDialect()

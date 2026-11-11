@@ -33,6 +33,9 @@ enum class DriverId(
         license = "GPL-2.0 with Universal FOSS Exception",
     ),
     MariaDB("MariaDB Connector/J", "org.mariadb.jdbc.Driver", "jdbc:mariadb:", catalogId = "mariadb"),
+
+    /** OceanBase's fork of MariaDB Connector/J: MariaDB's own 3.x driver rejects the character set OceanBase 4 reports. */
+    OceanBase("OceanBase Connector/J", "com.oceanbase.jdbc.Driver", "jdbc:oceanbase:", catalogId = "oceanbase"),
     SQLite("SQLite JDBC (Xerial)", "org.sqlite.JDBC", "jdbc:sqlite:", catalogId = "sqlite"),
     H2("H2 Database Engine", "org.h2.Driver", "jdbc:h2:", catalogId = "h2"),
     HSQLDB("HyperSQL (HSQLDB)", "org.hsqldb.jdbc.JDBCDriver", "jdbc:hsqldb:", catalogId = "hsqldb"),
@@ -51,6 +54,7 @@ enum class DriverId(
     ),
     Firebird("Jaybird (Firebird JDBC)", "org.firebirdsql.jdbc.FBDriver", "jdbc:firebird:", catalogId = "firebird"),
     Trino("Trino JDBC", "io.trino.jdbc.TrinoDriver", "jdbc:trino:", catalogId = "trino"),
+    Presto("Presto JDBC", "com.facebook.presto.jdbc.PrestoDriver", "jdbc:presto:", catalogId = "presto"),
 
     /**
      * Not JDBC: the Lettuce Redis client, driven by TableGrip's own adapter ([adapter], bundled with the app) loaded
@@ -104,7 +108,7 @@ object JdbcUrls {
             // The database is a path on the server or an alias; a path keeps its slashes (`//host:port//var/db.fdb`).
             DriverId.Firebird -> "${driver.scheme}//${hosts.substringBefore(',')}/${config.database.trim()}"
             // `catalog` or `catalog/schema`, each a path segment.
-            DriverId.Trino ->
+            DriverId.Trino, DriverId.Presto ->
                 "${driver.scheme}//${hosts.substringBefore(',')}" +
                     config.database.split('/').map { it.trim() }.filter { it.isNotEmpty() }.joinToString("") { "/" + encodePathSegment(it) }
             else -> "${driver.scheme}//$hosts/${encodePathSegment(config.database)}"
@@ -135,6 +139,7 @@ object JdbcUrls {
                 props.putIfAbsent("connectionAttributes", "program_name:TableGrip")
                 props.getProperty("sslMode")?.let { props.setProperty("sslMode", mysqlToMariaSslMode[it.uppercase()] ?: it) }
             }
+            DriverId.OceanBase -> props.putIfAbsent("connectTimeout", "10000")
             // Names TableGrip's sessions in pg_stat_activity, for DBAs and for the activity monitor.
             DriverId.PostgreSQL -> props.putIfAbsent("ApplicationName", "TableGrip")
             DriverId.Oracle -> {
@@ -147,10 +152,11 @@ object JdbcUrls {
                 if (props.getProperty("encoding") == null && props.getProperty("charSet") == null) props.setProperty("encoding", "UTF8")
                 props.putIfAbsent("connectTimeout", "10")
             }
-            // Trino needs a user even without authentication; the OS user is what its CLI sends.
-            DriverId.Trino -> {
+            // Trino and Presto need a user even without authentication; the OS user is what their CLIs send.
+            DriverId.Trino, DriverId.Presto -> {
                 props.putIfAbsent("user", System.getProperty("user.name") ?: "tablegrip")
-                props.putIfAbsent("source", "TableGrip")
+                // Presto's driver takes `applicationNamePrefix`, not `source`, and rejects properties it doesn't know.
+                props.putIfAbsent(if (driver == DriverId.Trino) "source" else "applicationNamePrefix", "TableGrip")
             }
             else -> Unit
         }

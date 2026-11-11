@@ -23,7 +23,7 @@ with each other.
 
 | Kind | Used for | Where it comes from |
 | --- | --- | --- |
-| **Catalog drivers** | PostgreSQL, MariaDB Connector/J (also for MySQL), SQLite, SQL Server, ClickHouse, DuckDB, H2, HSQLDB, Derby | Downloaded from Maven Central and verified |
+| **Catalog drivers** | PostgreSQL, MariaDB Connector/J (also for MySQL), SQLite, SQL Server, ClickHouse, DuckDB, H2, HSQLDB, Derby, Jaybird (Firebird), Trino JDBC, Presto JDBC, OceanBase Connector/J | Downloaded from Maven Central and verified |
 | **Non-JDBC clients** | Redis (Lettuce), MongoDB (the MongoDB Java driver) | Downloaded the same way; TableGrip's own adapter for each ships inside the app |
 | **Built in** | etcd | Nothing to download |
 | **Your own jars** | MySQL Connector/J, Oracle, Firebird, any other JDBC driver | You choose the `.jar` files in the connection dialog |

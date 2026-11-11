@@ -69,6 +69,8 @@ object ConnectionString {
             // Jaybird takes jdbc:firebirdsql: too.
             lower.startsWith("jdbc:firebird:") || lower.startsWith("jdbc:firebirdsql:") -> rawJdbc(text, DatabaseType.Firebird, DriverId.Firebird)
             lower.startsWith("jdbc:trino:") -> rawJdbc(text, DatabaseType.Trino, DriverId.Trino)
+            lower.startsWith("jdbc:oceanbase:") -> rawJdbc(text, DatabaseType.OceanBase, DriverId.OceanBase)
+            lower.startsWith("jdbc:presto:") -> rawJdbc(text, DatabaseType.Presto, DriverId.Presto)
             // Any other driver works too, from the user's own jar.
             lower.startsWith("jdbc:") -> rawJdbc(text, DatabaseType.OtherJdbc, DriverId.Generic)
             else -> throw ConnectionStringException(tr("Unrecognized connection string. Try postgres://, mysql://, jdbc:… or a file path."))

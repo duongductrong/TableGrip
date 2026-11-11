@@ -36,6 +36,9 @@ ENGINES = {
     "TiDB": "tidb",
     "PlanetScale": "planetscale",
     "Trino": "trino",
+    "Presto": "presto",
+    "Doris": "apachedoris",
+    "OceanBase": "oceanbase",
     "Etcd": "etcd",
     "FerretDB": "ferretdb",
     "H2": "h2database",
@@ -43,7 +46,7 @@ ENGINES = {
 }
 
 # The website lists engines by display name.
-WWW_NAMES = {"Etcd": "etcd", "H2": "H2", "JsonFile": "JSON"}
+WWW_NAMES = {"Etcd": "etcd", "H2": "H2", "JsonFile": "JSON", "Doris": "Apache Doris"}
 
 LIGHT_BG = "FFFFFF"
 DARK_BG = "2B2D30"
