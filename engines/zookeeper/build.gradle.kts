@@ -26,3 +26,9 @@ tasks.test {
     // Opt-in server test: -Pit.zookeeper=localhost:port (see ZooKeeperClientTest).
     listOf("it.zookeeper").forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
 }
+
+// The tests run on the jars the catalog downloads, which leave these out (see core's driver catalog).
+configurations.testRuntimeClasspath {
+    listOf("io.dropwizard.metrics", "commons-io", "commons-cli", "org.xerial.snappy").forEach { exclude(group = it) }
+    listOf("netty-tcnative-boringssl-static", "netty-tcnative-classes").forEach { exclude(group = "io.netty", module = it) }
+}

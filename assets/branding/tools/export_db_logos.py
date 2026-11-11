@@ -65,6 +65,7 @@ ENGINES = {
     "Qdrant": "qdrant",
     "RabbitMQ": "rabbitmq",
     "Kafka": "apachekafka",
+    "Consul": "consul",
 }
 
 # The website lists engines by display name.

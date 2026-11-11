@@ -14,10 +14,10 @@ object HttpConsole {
      * Sends [statement] and shows the reply: the first list of objects [rows] finds in it as rows, else the JSON itself.
      * An error status fails with the server's reply.
      */
-    fun run(rest: RestClient, statement: String, rows: (JsonElement) -> List<JsonObject>? = ::firstList): ConsoleReply {
+    fun run(rest: RestClient, statement: String, headers: Map<String, String> = emptyMap(), rows: (JsonElement) -> List<JsonObject>? = ::firstList): ConsoleReply {
         val request = HttpStatement.parse(statement)
         val started = System.currentTimeMillis()
-        val response = rest.send(request.method, request.path, request.body)
+        val response = rest.send(request.method, request.path, request.body, headers = headers)
         val elapsed = System.currentTimeMillis() - started
         if (!response.ok) throw IOException("${response.status}: " + runCatching { JsonTables.pretty(response.json()) }.getOrDefault(response.body))
         val json = runCatching { Json.parseToJsonElement(response.body) }.getOrNull() ?: return ConsoleReply.Text(response.body.ifEmpty { "${response.status}" }, elapsed)

@@ -207,6 +207,7 @@ dependencies {
     engineAdapters(projects.engines.mongodb)
     engineAdapters(projects.engines.cassandra)
     engineAdapters(projects.engines.kafka)
+    engineAdapters(projects.engines.zookeeper)
     implementation(projects.core)
     implementation(projects.mcp)
 

@@ -916,7 +916,8 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
                 EngineFamily.Qdrant,
                 EngineFamily.RabbitMQ,
                 EngineFamily.Kafka,
-                EngineFamily.ZooKeeper -> null
+                EngineFamily.ZooKeeper,
+                EngineFamily.Consul -> null
             }
 
         fun of(type: DatabaseType): SqlDialect = type.dialect ?: throw IllegalArgumentException(tr("{0} has no SQL dialect", type.displayName))

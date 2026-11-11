@@ -66,7 +66,7 @@ Every feature is described in the **[user guide](docs/guide.md)**.
 | **Enterprise** | IBM Db2 · SAP HANA · Vertica · Exasol · IBM Informix · InterSystems IRIS | Row editing and transactions. Bring the vendor's JDBC jar: their licenses don't allow TableGrip to download them. |
 | **Hadoop & Spark** | Apache Hive · Spark SQL (Thrift server) · Apache Impala · Apache Kyuubi | Query-only, through Apache Kyuubi's Hive JDBC driver, which TableGrip downloads. |
 | **Embedded** | SQLite · H2 · HSQLDB · Apache Derby · Microsoft Access | Open a file, or an in-memory database for H2 and HSQLDB. SQLite backs up with `VACUUM INTO`. Access `.accdb` and `.mdb` files open through UCanAccess, without Access or Windows. |
-| **Key-value** | Redis · Valkey · KeyDB · Dragonfly · etcd | Redis standalone, Cluster and Sentinel, TLS. etcd needs no download. |
+| **Key-value** | Redis · Valkey · KeyDB · Dragonfly · etcd · Consul · Apache ZooKeeper | Redis standalone, Cluster and Sentinel, TLS. etcd and Consul need no download. Consul keys and ZooKeeper znodes are browsed by folder and written with check-and-set. |
 | **Document** | MongoDB · FerretDB · Apache CouchDB · Amazon DynamoDB | `mongodb://` and `mongodb+srv://` URLs. CouchDB browses with Mango queries and writes by revision; DynamoDB with PartiQL, signed with your AWS keys. Both need no download. |
 | **Search** | Elasticsearch · OpenSearch · Meilisearch · Apache Solr | Indices, aliases and mappings; documents by query string or query DSL; a Dev Tools console. Edits check the version they were read at. No download. |
 | **Wide-column** | Apache Cassandra · ScyllaDB | Keyspaces and tables, paged rows by `WHERE`, a CQL console. Rows round-trip as Cassandra's own JSON. |

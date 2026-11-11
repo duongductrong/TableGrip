@@ -135,6 +135,7 @@ enum class DriverId(
     MongoDB("MongoDB Java Driver", "dev.tablegrip.engines.mongodb.MongoClient", "mongodb:", catalogId = "mongodb", adapter = "mongodb"),
     Cassandra("Apache Cassandra Java Driver", "dev.tablegrip.engines.cassandra.CassandraClient", "cassandra:", catalogId = "cassandra", adapter = "cassandra"),
     Kafka("Apache Kafka client", "dev.tablegrip.engines.kafka.KafkaClient", "kafka:", catalogId = "kafka", adapter = "kafka"),
+    ZooKeeper("Apache ZooKeeper client", "dev.tablegrip.engines.zookeeper.ZooKeeperClient", "zookeeper:", catalogId = "zookeeper", adapter = "zookeeper"),
 
     /** Built in: TableGrip talks to etcd's v3 HTTP/JSON API itself, so there's nothing to download. */
     Etcd(tr("etcd v3 API (built in)"), "dev.tablegrip.core.driver.etcd.EtcdClient", "http:", builtIn = true),
@@ -151,6 +152,7 @@ enum class DriverId(
     Solr(tr("Solr HTTP API (built in)"), "dev.tablegrip.core.driver.search.SolrClient", "http:", builtIn = true),
     Qdrant(tr("Qdrant REST API (built in)"), "dev.tablegrip.core.driver.vector.QdrantClient", "http:", builtIn = true),
     RabbitMQ(tr("RabbitMQ management API (built in)"), "dev.tablegrip.core.driver.stream.RabbitClient", "http:", builtIn = true),
+    Consul(tr("Consul HTTP API (built in)"), "dev.tablegrip.core.driver.keyvalue.ConsulClient", "http:", builtIn = true),
 
     /** Whatever driver the profile's own jars contain; its class is found in them. */
     Generic(tr("JDBC driver from your jars"), "", "jdbc:");

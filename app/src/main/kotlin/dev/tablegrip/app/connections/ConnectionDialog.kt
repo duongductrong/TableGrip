@@ -529,7 +529,7 @@ private fun GeneralTab(form: ConnectionForm, drivers: DriverDownloads, onMessage
         if (form.type.family == EngineFamily.InfluxDB) FormRow(tr("Organization")) { TextField(form.database, Modifier.fillMaxWidth()) }
         if (form.document) FormRow(tr("Database")) { TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text(tr("Optional: opened first, and the default auth source")) }) }
         // Meilisearch and InfluxDB sign in with a key or token alone, DynamoDB with an AWS access key.
-        val keyOnly = form.type.family in setOf(EngineFamily.Meilisearch, EngineFamily.InfluxDB, EngineFamily.InfluxDB3, EngineFamily.Qdrant)
+        val keyOnly = form.type.family in setOf(EngineFamily.Meilisearch, EngineFamily.InfluxDB, EngineFamily.InfluxDB3, EngineFamily.Qdrant, EngineFamily.Consul)
         val aws = form.type.family == EngineFamily.DynamoDB
         if (!keyOnly) FormRow(if (aws) tr("Access key ID") else tr("User")) { TextField(form.user, Modifier.fillMaxWidth()) }
         FormRow(if (keyOnly) tr("API key") else if (aws) tr("Secret access key") else tr("Password")) {
@@ -707,6 +707,7 @@ private val PropertyExamples =
         DriverId.Prometheus to "bearerToken=…\nssl=true\npathPrefix=/select/0/prometheus  (cluster vmselect)",
         DriverId.Neo4j to "ssl=true\nverifyPeer=false  (self-signed certificates)",
         DriverId.Kafka to "ssl=true\nsasl.mechanism=SCRAM-SHA-512\nsecurity.protocol=SASL_SSL",
+        DriverId.Consul to "datacenter=dc1\nssl=true",
         DriverId.Cassandra to "localDatacenter=datacenter1\nssl=true\nshowSystem=true  (system keyspaces)",
         DriverId.Lettuce to "ssl=true\nmode=cluster  (hosts are seed nodes)\nmode=sentinel + sentinelMaster=mymaster",
     )

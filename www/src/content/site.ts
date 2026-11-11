@@ -31,7 +31,7 @@ export const databaseFamilies: { family: string; engines: string[]; kind: 'datab
   { family: 'Enterprise', kind: 'database', engines: ['IBM Db2', 'SAP HANA', 'Vertica', 'Exasol', 'IBM Informix', 'InterSystems IRIS'], note: 'Row editing and transactions, with the vendor’s own JDBC jar.' },
   { family: 'Hadoop & Spark', kind: 'database', engines: ['Apache Hive', 'Spark SQL', 'Apache Impala', 'Apache Kyuubi'], note: 'Query-only, through Kyuubi’s Hive JDBC driver.' },
   { family: 'Embedded', kind: 'database', engines: ['SQLite', 'H2', 'HSQLDB', 'Apache Derby', 'Microsoft Access'], note: 'Open a file, or an in-memory database. Access files open without Access.' },
-  { family: 'Key-value', kind: 'database', engines: ['Redis', 'Valkey', 'KeyDB', 'Dragonfly', 'etcd'], note: 'Standalone, Cluster and Sentinel, with TLS.' },
+  { family: 'Key-value', kind: 'database', engines: ['Redis', 'Valkey', 'KeyDB', 'Dragonfly', 'etcd', 'Consul', 'Apache ZooKeeper'], note: 'Standalone, Cluster and Sentinel, with TLS.' },
   { family: 'Document', kind: 'database', engines: ['MongoDB', 'FerretDB', 'Apache CouchDB', 'Amazon DynamoDB'], note: 'mongodb:// URLs; Mango queries for CouchDB, PartiQL for DynamoDB.' },
   { family: 'Search', kind: 'database', engines: ['Elasticsearch', 'OpenSearch', 'Meilisearch', 'Apache Solr'], note: 'Indices and mappings, query DSL, a Dev Tools console.' },
   { family: 'Wide-column', kind: 'database', engines: ['Apache Cassandra', 'ScyllaDB'], note: 'Keyspaces and tables, paged rows, a CQL console.' },

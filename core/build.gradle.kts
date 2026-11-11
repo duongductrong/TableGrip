@@ -80,7 +80,7 @@ tasks.test {
         "it.oracle", "it.firebird", "it.trino", "it.yugabyte", "it.questdb", "it.starrocks", "it.oceanbase", "it.presto",
         "it.db2", "it.informix", "it.iris", "it.hive", "it.spark", "it.spanner",
         // Engines browsed as records: see SearchEnginesTest, DocumentEnginesTest, TimeSeriesEnginesTest and GraphEnginesTest.
-        "it.elasticsearch", "it.opensearch", "it.meilisearch", "it.couchdb", "it.dynamodb", "it.influxdb", "it.victoriametrics", "it.prometheus", "it.neo4j", "it.solr", "it.qdrant", "it.rabbitmq", "it.influxdb3",
+        "it.elasticsearch", "it.opensearch", "it.meilisearch", "it.couchdb", "it.dynamodb", "it.influxdb", "it.victoriametrics", "it.prometheus", "it.neo4j", "it.solr", "it.qdrant", "it.rabbitmq", "it.influxdb3", "it.consul",
     ).forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
     testLogging { showStandardStreams = providers.gradleProperty("it.postgres").isPresent || providers.gradleProperty("it.mysql").isPresent }
 }
@@ -163,6 +163,17 @@ val driverCatalog =
         CatalogDriver(
             "kafka", "Apache Kafka client", libs.kafka.clients, "dev.tablegrip.engines.kafka.KafkaClient",
             "https://github.com/apache/kafka/blob/trunk/LICENSE", "https://github.com/apache/kafka",
+        ),
+        // ZooKeeper's client without Logback (the app logs through SLF4J already) and the server's metrics, command line
+        // and compression libraries, which the client doesn't load.
+        CatalogDriver(
+            "zookeeper", "Apache ZooKeeper client", libs.zookeeper, "dev.tablegrip.engines.zookeeper.ZooKeeperClient",
+            "https://github.com/apache/zookeeper/blob/master/LICENSE.txt", "https://github.com/apache/zookeeper",
+            excludes = listOf(
+                "ch.qos.logback", "io.dropwizard.metrics", "commons-io", "commons-cli", "org.xerial.snappy",
+                // netty-tcnative is only for OpenSSL TLS; the client uses the JDK's.
+                "io.netty:netty-tcnative-boringssl-static", "io.netty:netty-tcnative-classes",
+            ),
         ),
         CatalogDriver(
             "duckdb", "DuckDB JDBC", libs.jdbc.duckdb, "org.duckdb.DuckDBDriver",
@@ -309,6 +320,12 @@ val artifactLicenses =
         "org.apache.kafka:kafka-clients" to "Apache-2.0",
         "org.lz4:lz4-java" to "Apache-2.0",
         "org.xerial.snappy:snappy-java" to "Apache-2.0",
+        // The Apache ZooKeeper client, its jute records and Yetus' audience annotations: all Apache-2.0.
+        "org.apache.zookeeper:zookeeper" to "Apache-2.0",
+        "org.apache.zookeeper:zookeeper-jute" to "Apache-2.0",
+        "org.apache.yetus:audience-annotations" to "Apache-2.0",
+        "io.netty:netty-transport-native-epoll" to "Apache-2.0",
+        "io.netty:netty-transport-classes-epoll" to "Apache-2.0",
     )
 
 val driverConfigurations =

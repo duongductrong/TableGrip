@@ -29,7 +29,8 @@ import kotlinx.serialization.json.put
  * docker run -d --name dg-it-qdrant -p 56333:6333 qdrant/qdrant:v1.12.5
  * docker run -d --name dg-it-rabbit -p 55673:15672 -e RABBITMQ_DEFAULT_USER=tg -e RABBITMQ_DEFAULT_PASS=tablegrip rabbitmq:4.0.5-management
  * docker run -d --name dg-it-influx3 -p 58181:8181 influxdb:3-core influxdb3 serve --node-id n1 --object-store memory --without-auth   (3.12.2)
- * -Pit.solr=localhost:58983 -Pit.qdrant=localhost:56333 -Pit.rabbitmq=localhost:55673 -Pit.influxdb3=localhost:58181
+ * docker run -d --name dg-it-consul -p 58500:8500 hashicorp/consul:1.20.2 agent -dev -client=0.0.0.0
+ * -Pit.consul=localhost:58500 -Pit.solr=localhost:58983 -Pit.qdrant=localhost:56333 -Pit.rabbitmq=localhost:55673 -Pit.influxdb3=localhost:58181
  * ```
  */
 class MoreEnginesTest {
@@ -161,5 +162,33 @@ class MoreEnginesTest {
             assertFailsWith<IOException> { influx.execute("SELECT 1") }
             assertFalse(influx.canWrite(path))
         }
+    }
+
+    @Test
+    fun `consul browses folders and writes with check-and-set`() = server("it.consul", DatabaseType.Consul) { consul ->
+        assertTrue(consul.server().startsWith("Consul 1."), consul.server())
+        consul.execute("DELETE /v1/kv/tg_app?recurse")
+        val path = listOf("/", "tg_app", "config")
+        repeat(25) { consul.put(path, null, buildJsonObject { put("key", "tg_app/config/key$it"); put("value", "value $it") }) }
+        consul.put(listOf("/", "tg_app"), null, buildJsonObject { put("key", "tg_app/name"); put("value", "demo") })
+        assertEquals(listOf("/"), consul.containers().map { it.name })
+        assertTrue(consul.containers(listOf("/")).any { it.name == "tg_app" && it.hasChildren })
+        assertEquals(listOf("config"), consul.containers(listOf("/", "tg_app")).map { it.name })
+
+        val first = consul.page(path, "", null, 20)
+        assertEquals(25L, first.total)
+        assertEquals(5, consul.page(path, "", first.cursor, 20).records.size)
+        assertEquals(1, consul.page(listOf("/", "tg_app"), "", null, 20).records.size, "only the keys directly in the folder")
+        assertEquals(11, consul.page(path, "key1", null, 50).records.size)
+
+        val record = consul.page(path, "key0", null, 1).records.single()
+        consul.put(path, record.key, JsonObject(record.document + ("value" to JsonPrimitive("changed"))))
+        assertFailsWith<IOException>("a stale index is refused") { consul.put(path, record.key, record.document) }
+        assertFailsWith<IOException> { consul.put(path, null, buildJsonObject { put("key", "tg_app/config/key1"); put("value", "x") }) }
+        val doomed = consul.page(path, "key2", null, 50).records.map { it.key!! }
+        assertEquals(doomed.size.toLong(), consul.delete(path, doomed))
+        assertEquals(0L, consul.delete(path, doomed))
+        assertTrue(consul.execute("GET /v1/kv/tg_app/?recurse") is ConsoleReply.Table)
+        consul.execute("DELETE /v1/kv/tg_app?recurse")
     }
 }

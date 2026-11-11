@@ -221,6 +221,31 @@
       ]
     },
     {
+      "id": "zookeeper",
+      "name": "Apache ZooKeeper client",
+      "version": "3.9.3",
+      "className": "dev.tablegrip.engines.zookeeper.ZooKeeperClient",
+      "license": "Apache-2.0",
+      "tier": "Permissive",
+      "licenseUrl": "https://github.com/apache/zookeeper/blob/master/LICENSE.txt",
+      "sourceUrl": "https://github.com/apache/zookeeper",
+      "artifacts": [
+        {"coordinates": "org.apache.zookeeper:zookeeper:3.9.3", "path": "org/apache/zookeeper/zookeeper/3.9.3/zookeeper-3.9.3.jar", "sha256": "ad6570105768d18382a762325b4460368b7089a5a77c053e682b17942e0e72b5", "size": 1362969, "license": "Apache-2.0"},
+        {"coordinates": "org.apache.zookeeper:zookeeper-jute:3.9.3", "path": "org/apache/zookeeper/zookeeper-jute/3.9.3/zookeeper-jute-3.9.3.jar", "sha256": "be72e2c9099413a9878ce830b65bb22e0be755dc2a22b290550ab9e03b5b4cfa", "size": 255803, "license": "Apache-2.0"},
+        {"coordinates": "org.apache.yetus:audience-annotations:0.12.0", "path": "org/apache/yetus/audience-annotations/0.12.0/audience-annotations-0.12.0.jar", "sha256": "ffb101fc066360ff3c77457c927fd7967fb096a6ee9e046ab7071447d8208efc", "size": 20891, "license": "Apache-2.0"},
+        {"coordinates": "io.netty:netty-handler:4.1.113.Final", "path": "io/netty/netty-handler/4.1.113.Final/netty-handler-4.1.113.Final.jar", "sha256": "7a583c4fe5880504d1257a4a6bfe6a635cd34ffe18aab0e4caabbf17d104f172", "size": 571373, "license": "Apache-2.0"},
+        {"coordinates": "io.netty:netty-transport-native-epoll:4.1.113.Final", "path": "io/netty/netty-transport-native-epoll/4.1.113.Final/netty-transport-native-epoll-4.1.113.Final-linux-x86_64.jar", "sha256": "22088d3b18f11463496de7c252302e0c9587638333e7e1bf3968d6619db89287", "size": 39865, "license": "Apache-2.0"},
+        {"coordinates": "org.slf4j:slf4j-api:1.7.30", "path": "org/slf4j/slf4j-api/1.7.30/slf4j-api-1.7.30.jar", "sha256": "cdba07964d1bb40a0761485c6b1e8c2f8fd9eb1d19c53928ac0d7f9510105c57", "size": 41472, "license": "MIT"},
+        {"coordinates": "io.netty:netty-transport-classes-epoll:4.1.113.Final", "path": "io/netty/netty-transport-classes-epoll/4.1.113.Final/netty-transport-classes-epoll-4.1.113.Final.jar", "sha256": "f236c66542bbe8c0eeeb464851e190b9432e8ec419ddf6d12d01bcc06f723e5c", "size": 147616, "license": "Apache-2.0"},
+        {"coordinates": "io.netty:netty-transport-native-unix-common:4.1.113.Final", "path": "io/netty/netty-transport-native-unix-common/4.1.113.Final/netty-transport-native-unix-common-4.1.113.Final.jar", "sha256": "804640095390c1284a1ad537207c6d5b391cfb798a7ef976e5b238fcd9c08ea3", "size": 44155, "license": "Apache-2.0"},
+        {"coordinates": "io.netty:netty-codec:4.1.113.Final", "path": "io/netty/netty-codec/4.1.113.Final/netty-codec-4.1.113.Final.jar", "sha256": "c7669cbeda2b5c6284627b7ffafd6f1014a96639013b26ebb9d6bcb828f76542", "size": 352121, "license": "Apache-2.0"},
+        {"coordinates": "io.netty:netty-transport:4.1.113.Final", "path": "io/netty/netty-transport/4.1.113.Final/netty-transport-4.1.113.Final.jar", "sha256": "cb8b97ff77d7c5f1c591c84d2dee3389a0eaa63a3137b7b8c0c64e1dbada6688", "size": 521367, "license": "Apache-2.0"},
+        {"coordinates": "io.netty:netty-resolver:4.1.113.Final", "path": "io/netty/netty-resolver/4.1.113.Final/netty-resolver-4.1.113.Final.jar", "sha256": "b2c110a547e7dc6e2b27017ea4ef98416d7d832d2cf40625d0273b90e61df8ab", "size": 37839, "license": "Apache-2.0"},
+        {"coordinates": "io.netty:netty-buffer:4.1.113.Final", "path": "io/netty/netty-buffer/4.1.113.Final/netty-buffer-4.1.113.Final.jar", "sha256": "a85c198180a8de997e8f64a62e054946a39af0708466c1bd67747d393d2feee1", "size": 336774, "license": "Apache-2.0"},
+        {"coordinates": "io.netty:netty-common:4.1.113.Final", "path": "io/netty/netty-common/4.1.113.Final/netty-common-4.1.113.Final.jar", "sha256": "c0fb22d47111cb06aac2af67fe55e2e216a49fd00e767f4acb7488b280f8c327", "size": 694524, "license": "Apache-2.0"}
+      ]
+    },
+    {
       "id": "duckdb",
       "name": "DuckDB JDBC",
       "version": "1.5.6.0",

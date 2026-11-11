@@ -97,6 +97,9 @@ enum class EngineFamily {
 
     /** ZooKeeper's protocol, through the Apache ZooKeeper client. */
     ZooKeeper,
+
+    /** Consul's HTTP API: its key-value store. */
+    Consul,
 }
 
 /** How a profile reaches its database, which decides the fields the connection dialog asks for. */
@@ -538,6 +541,12 @@ class DatabaseType(
         /** Apache Kafka through the Kafka client: the host field takes the bootstrap servers. */
         val Kafka = DatabaseType("Kafka", "Apache Kafka", EngineFamily.Kafka, 9092, listOf(DriverId.Kafka), paradigm = Paradigm.Stream, capabilities = emptySet())
 
+        /** Apache ZooKeeper through its client: the host field takes the connect string. */
+        val ZooKeeper = DatabaseType("ZooKeeper", "Apache ZooKeeper", EngineFamily.ZooKeeper, 2181, listOf(DriverId.ZooKeeper), paradigm = Paradigm.KeyValue, capabilities = emptySet(), api = ClientApi.Records)
+
+        /** Consul's key-value store over its HTTP API, built in; the password is an ACL token. */
+        val Consul = DatabaseType("Consul", "Consul", EngineFamily.Consul, 8500, listOf(DriverId.Consul), paradigm = Paradigm.KeyValue, capabilities = emptySet(), api = ClientApi.Records)
+
         private fun wideColumn(id: String, name: String) =
             DatabaseType(
                 id, name, EngineFamily.Cassandra, 9042, listOf(DriverId.Cassandra), paradigm = Paradigm.WideColumn, capabilities = emptySet(),
@@ -576,7 +585,7 @@ class DatabaseType(
                 Doris, StarRocks, AzureSql, Firebird, Trino, Presto,
                 Snowflake, Databricks, BigQuery, Spanner, Db2, Hana, Vertica, Exasol, Informix, Iris,
                 Hive, SparkSql, Impala, Kyuubi,
-                KeyDB, Dragonfly, Etcd, FerretDB, Elasticsearch, OpenSearch, Meilisearch, Cassandra, ScyllaDB, CouchDB, DynamoDB, InfluxDB, InfluxDB3, VictoriaMetrics, Prometheus, Neo4j, Solr, Qdrant, RabbitMQ, Kafka, H2, HSQLDB, Derby, Access, OtherJdbc,
+                KeyDB, Dragonfly, Etcd, FerretDB, Elasticsearch, OpenSearch, Meilisearch, Cassandra, ScyllaDB, CouchDB, DynamoDB, InfluxDB, InfluxDB3, VictoriaMetrics, Prometheus, Neo4j, Solr, Qdrant, RabbitMQ, Kafka, ZooKeeper, Consul, H2, HSQLDB, Derby, Access, OtherJdbc,
                 CsvFile, ExcelFile, JsonFile,
             )
 
