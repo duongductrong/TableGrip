@@ -25,6 +25,8 @@ Kotlin, Compose for Desktop and [Jewel](https://jewel-ui.dev), so it looks and f
   `mysqldump`, and scheduled backups. → [Server activity](/docs/activity), [Backup & restore](/docs/backup-and-restore)
 - **Ask an AI agent.** Use Claude Code, Codex, Gemini CLI or any compatible API. By default the agent sees your schema,
   never your data. → [AI agent](/docs/ai-agent)
+- **Use your connections from any AI app.** `tablegrip mcp` lets Claude, Cursor and VS Code read schemas and run
+  queries through the connections you saved, under the same rules. → [MCP server](/docs/mcp-server)
 - **Move in quickly.** Import connections from DBeaver, IDE data sources (`.idea/dataSources.xml`), `Connections.plist`, `~/.pgpass` and `.env` files, or
   paste any connection URL. → [Move from another tool](/docs/moving-in)
 
@@ -48,6 +50,7 @@ TableGrip is built around a few promises that show up everywhere in the app:
 | Bring your connections from another app | [Move from another tool](/docs/moving-in) |
 | Learn the editor, the grid and filters | [Query & edit](/docs/sql-editor) |
 | Use the AI agent and understand what it sees | [AI agent](/docs/ai-agent), [What the agent can see](/docs/agent-privacy) |
+| Use your connections from Claude, Cursor or VS Code | [MCP server](/docs/mcp-server) |
 | Work faster with the keyboard | [Keyboard shortcuts](/docs/keyboard-shortcuts) |
 | Fix a problem | [Troubleshooting & FAQ](/docs/troubleshooting) |
 | Build the app or contribute | [Build from source](/docs/build-from-source), [Contributing](/docs/contributing) |

@@ -11,7 +11,7 @@ export function Databases() {
   return (
     <Section id="databases">
       <SectionHeader
-        index="03"
+        index="04"
         eyebrow="Databases"
         title="One client for every store you run."
         description="Relational, analytical, key-value and document databases, plus the files you keep data in."

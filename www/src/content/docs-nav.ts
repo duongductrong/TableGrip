@@ -20,8 +20,8 @@ export const docsNav: { title: string; items: string[] }[] = [
     items: ['table-structure', 'schema-tools', 'activity', 'backup-and-restore'],
   },
   {
-    title: 'AI agent',
-    items: ['ai-agent', 'agent-privacy'],
+    title: 'AI & MCP',
+    items: ['ai-agent', 'agent-privacy', 'mcp-server', 'mcp-tools'],
   },
   {
     title: 'Make it yours',

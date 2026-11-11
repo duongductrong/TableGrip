@@ -66,3 +66,6 @@ Whatever the connection's options, these always need a confirmation:
 Agents only see your schema by default, never your data, and production connections never share data unless their own
 options say so. Queries an agent proposes that would change data are only opened for you to review. See
 [What the agent can see](/docs/agent-privacy).
+
+AI apps connected through the [MCP server](/docs/mcp-server) follow the same rules, and may change data only where a
+connection's **Options → Agent writes** allows it. Writes on Production, and risky statements, ask you first.

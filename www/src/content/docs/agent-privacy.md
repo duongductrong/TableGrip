@@ -51,3 +51,10 @@ Raising the default to "Schema and sample data" doesn't silently include product
 CLI agents are started in their read-only or ask modes, with no tools to edit files or run commands. Every query is run
 by TableGrip, after you click **Run**, and anything that would change data is only opened for you to review. See
 [AI agent → When the agent wants to run a query](/docs/ai-agent#when-the-agent-wants-to-run-a-query).
+
+## AI apps over MCP
+
+The same levels decide what AI apps such as Claude Desktop, Cursor and VS Code get through the
+[MCP server](/docs/mcp-server): **Off** hides a connection from them, **Schema only** gives them its schema, and
+**Schema and sample data** lets them run read-only queries. Changing data takes one more option,
+**Options → Agent writes**, which is **None** by default.

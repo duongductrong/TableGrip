@@ -5,6 +5,7 @@ import { Databases } from '#/components/sections/databases'
 import { DownloadSection } from '#/components/sections/download'
 import { Features } from '#/components/sections/features'
 import { Hero } from '#/components/sections/hero'
+import { Mcp } from '#/components/sections/mcp'
 import { MoveIn } from '#/components/sections/move-in'
 import { ShotThemeProvider } from '#/components/site/product-shot'
 
@@ -16,6 +17,7 @@ function Home() {
       <Hero />
       <Features />
       <Agent />
+      <Mcp />
       <Databases />
       <MoveIn />
       <DownloadSection />

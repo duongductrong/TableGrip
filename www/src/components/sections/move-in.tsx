@@ -8,7 +8,7 @@ export function MoveIn() {
     <Section>
       <div className="grid md:grid-cols-2">
         <div className="px-5 pt-16 pb-12 sm:px-8 sm:pt-20">
-          <Eyebrow index="04" className="mb-4">
+          <Eyebrow index="05" className="mb-4">
             Move in
           </Eyebrow>
           <h2 className="text-[30px] leading-[1.12] sm:text-[38px]">Bring your connections with you.</h2>

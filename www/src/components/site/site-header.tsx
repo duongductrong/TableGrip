@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Bot, ChevronDown, Code2, Database, Download, Network, Table2, type LucideIcon } from 'lucide-react'
+import { Bot, ChevronDown, Code2, Database, Download, Network, Plug, Table2, type LucideIcon } from 'lucide-react'
 import { NavigationMenu } from 'radix-ui'
 
 import { DownloadLink } from '#/components/site/download-dialog'
@@ -15,6 +15,7 @@ const featureIcons: Record<FeatureMenuIcon, LucideIcon> = {
   grid: Table2,
   schema: Network,
   agent: Bot,
+  mcp: Plug,
   databases: Database,
 }
 

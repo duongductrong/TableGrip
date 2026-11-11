@@ -137,6 +137,18 @@ Turn scheduled backups on and manage the schedules. See
 
 See [AI agent](/docs/ai-agent) and [What the agent can see](/docs/agent-privacy).
 
+### MCP
+
+| Option | Default |
+| --- | --- |
+| **Share connections with AI apps (MCP)** | Off |
+| **Rows per result** | 200 (at most 5,000) |
+| **Statement timeout** | 30 seconds (0 means no limit) |
+| **Result size** | 60,000 characters |
+
+Below them: **Connect an app**, to install the `tablegrip` command and add TableGrip to Claude Desktop, Cursor, VS Code
+or Windsurf, and **Recent activity**. See [MCP server](/docs/mcp-server).
+
 ## settings.json
 
 Everything above is stored in `~/.tablegrip/settings.json`. **Open settings.json** on the Appearance page opens it in

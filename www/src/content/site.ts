@@ -9,6 +9,7 @@ export const links = {
   guide: '/docs/sql-editor',
   drivers: '/docs/drivers',
   agentDocs: '/docs/ai-agent',
+  mcpDocs: '/docs/mcp-server',
   development: '/docs/build-from-source',
   contributing: '/docs/contributing',
   license: 'https://github.com/duongductrong/TableGrip/blob/master/LICENSE',
@@ -17,7 +18,7 @@ export const links = {
   paypal: 'https://www.paypal.me/duongductrong',
 }
 
-export type FeatureMenuIcon = 'editor' | 'grid' | 'schema' | 'agent' | 'databases'
+export type FeatureMenuIcon = 'editor' | 'grid' | 'schema' | 'agent' | 'mcp' | 'databases'
 
 /** What the Features menu in the header lists: one line each, pointing at its section on the home page. */
 export const featureMenu: { label: string; description: string; href: string; icon: FeatureMenuIcon }[] = [
@@ -25,6 +26,7 @@ export const featureMenu: { label: string; description: string; href: string; ic
   { label: 'Data grid', description: 'Inline edits submitted in one transaction, typed filters.', href: '/#grid', icon: 'grid' },
   { label: 'Schema tools', description: 'Table designer, schema compare and ER diagrams.', href: '/#schema', icon: 'schema' },
   { label: 'AI agent', description: 'Bring Claude Code, Codex or Gemini CLI. Schema, not rows.', href: '/#agent', icon: 'agent' },
+  { label: 'MCP server', description: 'Your saved connections in Claude, Cursor and VS Code.', href: '/#mcp', icon: 'mcp' },
   { label: 'Databases', description: 'PostgreSQL, MySQL, SQL Server, Redis, MongoDB and more.', href: '/#databases', icon: 'databases' },
 ]
 
@@ -135,5 +137,36 @@ export const agentPoints = [
   {
     title: 'Fix with AI',
     body: 'A failed statement gets a fix shown as a diff, applied only when you choose. @ mentions bring in tables, tabs and saved queries.',
+  },
+]
+
+/** AI apps Settings › MCP can add TableGrip to (mcp/McpSetup.kt), plus Claude Code by command. */
+export const mcpClients = ['Claude Desktop', 'Claude Code', 'Cursor', 'VS Code', 'Windsurf']
+
+/** The command a terminal (and Claude Code) uses to start the server. */
+export const mcpCommand = 'claude mcp add --scope user tablegrip -- tablegrip mcp'
+
+export const mcpSteps = [
+  { title: 'Turn it on', body: 'Settings › MCP. Off until you do.' },
+  { title: 'Install the command', body: 'One click puts tablegrip on your PATH.' },
+  { title: 'Add it to your app', body: 'TableGrip writes the config, or copy the command.' },
+]
+
+export const mcpPoints = [
+  {
+    title: 'The same rules as the app',
+    body: 'Each connection decides: hidden, schema only, or schema and data. Production never shares data unless its own options say so.',
+  },
+  {
+    title: 'Read-only unless you say so',
+    body: 'Writes need a per-connection opt-in. Read-only connections and data files are never written to, and production asks first.',
+  },
+  {
+    title: 'Every statement is checked',
+    body: 'One statement per call, each one classified. Reads run in a transaction that is always rolled back. Results are capped.',
+  },
+  {
+    title: 'No secrets in any config',
+    body: 'The app config holds only "tablegrip mcp". Passwords stay in the system keychain, and every call is logged.',
   },
 ]
