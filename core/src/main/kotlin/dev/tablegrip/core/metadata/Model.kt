@@ -5,7 +5,8 @@ import java.sql.Types
 /** A schema (PostgreSQL), a database (MySQL), or the single `main` database (SQLite). */
 data class Namespace(val catalog: String?, val schema: String?) {
     val displayName: String
-        get() = schema ?: catalog ?: "main"
+        // Spanner's default schema has the empty name.
+        get() = schema?.ifEmpty { null } ?: catalog ?: "main"
 }
 
 data class TableRef(val namespace: Namespace, val name: String)

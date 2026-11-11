@@ -29,5 +29,14 @@ data class SqlSyntax(
         val Standard = SqlSyntax()
         val TSql = SqlSyntax(bracketIdentifiers = true, batchSeparator = true)
         val ClickHouse = SqlSyntax(backtickIdentifiers = true, backslashEscapes = true)
+
+        /** Spark SQL, Hive and Impala: backtick identifiers, backslash escapes in strings. */
+        val SparkSql = SqlSyntax(backtickIdentifiers = true, backslashEscapes = true)
+
+        /** BigQuery's and Spanner's GoogleSQL: backticks, backslash escapes, and `#` comments. */
+        val GoogleSql = SqlSyntax(backtickIdentifiers = true, backslashEscapes = true, hashComments = true)
+
+        /** Microsoft Access: `[bracketed]` names. */
+        val Access = SqlSyntax(bracketIdentifiers = true)
     }
 }

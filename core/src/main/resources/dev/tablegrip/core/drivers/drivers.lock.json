@@ -238,6 +238,47 @@
       "artifacts": [
         {"coordinates": "com.facebook.presto:presto-jdbc:0.300", "path": "com/facebook/presto/presto-jdbc/0.300/presto-jdbc-0.300.jar", "sha256": "f1341eef07b50a8933c8ba72232bf08ec237a8b47086ca2bce698eea3247ae14", "size": 15546860, "license": "Apache-2.0"}
       ]
+    },
+    {
+      "id": "hive",
+      "name": "Kyuubi Hive JDBC",
+      "version": "1.12.0",
+      "className": "org.apache.kyuubi.jdbc.KyuubiHiveDriver",
+      "license": "Apache-2.0",
+      "tier": "Permissive",
+      "licenseUrl": "https://github.com/apache/kyuubi/blob/master/LICENSE",
+      "sourceUrl": "https://github.com/apache/kyuubi",
+      "artifacts": [
+        {"coordinates": "org.apache.kyuubi:kyuubi-hive-jdbc-shaded:1.12.0", "path": "org/apache/kyuubi/kyuubi-hive-jdbc-shaded/1.12.0/kyuubi-hive-jdbc-shaded-1.12.0.jar", "sha256": "238fe11067d83eddf9d34b7ccbc509c044c3c6b75263fa2b64d739abff7a451f", "size": 20972590, "license": "Apache-2.0"}
+      ]
+    },
+    {
+      "id": "spanner",
+      "name": "Cloud Spanner JDBC",
+      "version": "2.49.0",
+      "className": "com.google.cloud.spanner.jdbc.JdbcDriver",
+      "license": "Apache-2.0",
+      "tier": "Permissive",
+      "licenseUrl": "https://github.com/googleapis/java-spanner-jdbc/blob/main/LICENSE",
+      "sourceUrl": "https://github.com/googleapis/java-spanner-jdbc",
+      "artifacts": [
+        {"coordinates": "com.google.cloud:google-cloud-spanner-jdbc:2.49.0", "path": "com/google/cloud/google-cloud-spanner-jdbc/2.49.0/google-cloud-spanner-jdbc-2.49.0-single-jar-with-dependencies.jar", "sha256": "7d03d5879b9c8ad30f34aece80b48f1f6cd49875942a2e657b3ec5650dfd3b5f", "size": 69085050, "license": "Apache-2.0"}
+      ]
+    },
+    {
+      "id": "ucanaccess",
+      "name": "UCanAccess",
+      "version": "5.3.0",
+      "className": "net.ucanaccess.jdbc.UcanaccessDriver",
+      "license": "Apache-2.0",
+      "tier": "Permissive",
+      "licenseUrl": "https://github.com/spannm/ucanaccess/blob/master/LICENSE",
+      "sourceUrl": "https://github.com/spannm/ucanaccess",
+      "artifacts": [
+        {"coordinates": "io.github.spannm:ucanaccess:5.3.0", "path": "io/github/spannm/ucanaccess/5.3.0/ucanaccess-5.3.0.jar", "sha256": "2293f6c968e18f26e572d1eb681b1faed6f64fcddb49537f822ff8170f739c2a", "size": 476419, "license": "Apache-2.0"},
+        {"coordinates": "org.hsqldb:hsqldb:2.7.4", "path": "org/hsqldb/hsqldb/2.7.4/hsqldb-2.7.4.jar", "sha256": "5fab2bb4384ac06b762638c8fa2740c944b8d080e4796c0c6c2af8b90dd4e5ad", "size": 1662185, "license": "BSD-3-Clause"},
+        {"coordinates": "io.github.spannm:jackcess:5.2.0", "path": "io/github/spannm/jackcess/5.2.0/jackcess-5.2.0.jar", "sha256": "9451d6f336cfaa82f5af178d5f6668b933cda4f27e261f29a1faa83630f95775", "size": 1359716, "license": "Apache-2.0"}
+      ]
     }
   ]
 }

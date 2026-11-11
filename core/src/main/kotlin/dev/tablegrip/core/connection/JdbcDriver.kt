@@ -56,6 +56,77 @@ enum class DriverId(
     Trino("Trino JDBC", "io.trino.jdbc.TrinoDriver", "jdbc:trino:", catalogId = "trino"),
     Presto("Presto JDBC", "com.facebook.presto.jdbc.PrestoDriver", "jdbc:presto:", catalogId = "presto"),
 
+    /** Apache Kyuubi's shaded Hive driver: HiveServer2's protocol, spoken by Hive, Spark's Thrift server, Impala and Kyuubi. */
+    Hive("Kyuubi Hive JDBC", "org.apache.kyuubi.jdbc.KyuubiHiveDriver", "jdbc:hive2:", catalogId = "hive"),
+    Spanner("Cloud Spanner JDBC", "com.google.cloud.spanner.jdbc.JdbcDriver", "jdbc:cloudspanner:", catalogId = "spanner"),
+    UCanAccess("UCanAccess (Microsoft Access)", "net.ucanaccess.jdbc.UcanaccessDriver", "jdbc:ucanaccess:", catalogId = "ucanaccess"),
+
+    // Drivers the user brings: under their vendors' own licenses, or bundling code the catalog doesn't take (see
+    // artifactLicenses in core/build.gradle.kts).
+    Snowflake(
+        "Snowflake JDBC",
+        "net.snowflake.client.api.driver.SnowflakeDriver",
+        "jdbc:snowflake:",
+        vendorUrl = "https://docs.snowflake.com/en/developer-guide/jdbc/jdbc-download",
+        license = "Apache-2.0, bundling CDDL-1.1 Java EE APIs",
+    ),
+    Databricks(
+        "Databricks JDBC",
+        "com.databricks.client.jdbc.Driver",
+        "jdbc:databricks:",
+        vendorUrl = "https://www.databricks.com/spark/jdbc-drivers-download",
+        license = "Apache-2.0, bundling public-domain org.json",
+    ),
+    BigQuery(
+        "Google BigQuery JDBC",
+        "com.google.cloud.bigquery.jdbc.BigQueryDriver",
+        "jdbc:bigquery:",
+        vendorUrl = "https://cloud.google.com/bigquery/docs/reference/odbc-jdbc-drivers",
+        license = "Apache-2.0, bundling public-domain org.json",
+    ),
+    Db2(
+        "IBM Db2 JDBC (JCC)",
+        "com.ibm.db2.jcc.DB2Driver",
+        "jdbc:db2:",
+        vendorUrl = "https://www.ibm.com/support/pages/db2-jdbc-driver-versions-and-downloads",
+        license = "IBM International Program License Agreement",
+    ),
+    Hana(
+        "SAP HANA JDBC (ngdbc)",
+        "com.sap.db.jdbc.Driver",
+        "jdbc:sap:",
+        vendorUrl = "https://tools.hana.ondemand.com/#hanatools",
+        license = "SAP Developer License Agreement",
+    ),
+    Vertica(
+        "Vertica JDBC",
+        "com.vertica.jdbc.Driver",
+        "jdbc:vertica:",
+        vendorUrl = "https://www.vertica.com/download/vertica/client-drivers/",
+        license = "Vertica Client License Agreement",
+    ),
+    Exasol(
+        "Exasol JDBC",
+        "com.exasol.jdbc.EXADriver",
+        "jdbc:exa:",
+        vendorUrl = "https://downloads.exasol.com/clients-and-drivers/jdbc",
+        license = "EXAClient License",
+    ),
+    Informix(
+        "IBM Informix JDBC",
+        "com.informix.jdbc.IfxDriver",
+        "jdbc:informix-sqli:",
+        vendorUrl = "https://central.sonatype.com/artifact/com.ibm.informix/jdbc",
+        license = "IBM Informix JDBC Software License Agreement",
+    ),
+    Iris(
+        "InterSystems IRIS JDBC",
+        "com.intersystems.jdbc.IRISDriver",
+        "jdbc:IRIS:",
+        vendorUrl = "https://central.sonatype.com/artifact/com.intersystems/intersystems-jdbc",
+        license = "InterSystems terms of use",
+    ),
+
     /**
      * Not JDBC: the Lettuce Redis client, driven by TableGrip's own adapter ([adapter], bundled with the app) loaded
      * together with it. [className] is the adapter's entry point.
@@ -111,6 +182,31 @@ object JdbcUrls {
             DriverId.Trino, DriverId.Presto ->
                 "${driver.scheme}//${hosts.substringBefore(',')}" +
                     config.database.split('/').map { it.trim() }.filter { it.isNotEmpty() }.joinToString("") { "/" + encodePathSegment(it) }
+            // `database` or `database/schema`, as query parameters.
+            DriverId.Snowflake -> {
+                val (database, schema) = pathParts(config.database)
+                "${driver.scheme}//${hosts.substringBefore(',')}/" +
+                    listOfNotNull(database?.let { "db=" + encodeQuery(it) }, schema?.let { "schema=" + encodeQuery(it) }).joinToString("&", prefix = "?").removeSuffix("?")
+            }
+            // The database field is the warehouse's or cluster's HTTP path; attributes follow `;`.
+            DriverId.Databricks -> "${driver.scheme}//${hosts.substringBefore(',')}/default;httpPath=${config.database.trim()}"
+            // The endpoint is the API's URL, with the port after its path; then the project and the default dataset.
+            DriverId.BigQuery -> {
+                val (project, dataset) = pathParts(config.database)
+                val (host, port) =
+                    via ?: (config.host.trim().removePrefix("https://").substringBefore(',').substringBefore(':').ifEmpty { "www.googleapis.com" } to (config.port ?: 443))
+                "${driver.scheme}//https://$host/bigquery/v2:$port" + (project?.let { ";ProjectId=$it" } ?: "") + (dataset?.let { ";DefaultDataset=$it" } ?: "")
+            }
+            // The tenant database, if any, is a parameter; HANA Cloud and single-container systems need none.
+            DriverId.Hana -> "${driver.scheme}//${hosts.substringBefore(',')}/" + (config.database.trim().takeIf { it.isNotEmpty() }?.let { "?databaseName=" + encodeQuery(it) } ?: "")
+            // No `//`; the schema to open is an attribute.
+            DriverId.Exasol -> "${driver.scheme}${hosts.substringBefore(',')}" + (config.database.trim().takeIf { it.isNotEmpty() }?.let { ";schema=$it" } ?: "")
+            // The database is the Spanner path, `projects/p/instances/i/databases/d`; without a host, Google's endpoint.
+            DriverId.Spanner -> {
+                val parts = config.database.trim().trim('/').split('/').filter { it.isNotBlank() }
+                val path = if (parts.size == 3) "projects/${parts[0]}/instances/${parts[1]}/databases/${parts[2]}" else parts.joinToString("/")
+                if (via == null && config.host.isBlank()) "${driver.scheme}/$path" else "${driver.scheme}//${hosts.substringBefore(',')}/$path"
+            }
             else -> "${driver.scheme}//$hosts/${encodePathSegment(config.database)}"
         }
     }
@@ -152,6 +248,20 @@ object JdbcUrls {
                 if (props.getProperty("encoding") == null && props.getProperty("charSet") == null) props.setProperty("encoding", "UTF8")
                 props.putIfAbsent("connectTimeout", "10")
             }
+            // The user is `token` for personal access tokens, which go as the password.
+            DriverId.Databricks -> {
+                props.putIfAbsent("UID", props.getProperty("user") ?: "token")
+                props.getProperty("password")?.let { props.putIfAbsent("PWD", it) }
+            }
+            DriverId.Db2 -> {
+                // Without it, errors read "DB2 SQL Error: SQLCODE=-204, SQLSTATE=42704…" instead of the server's message.
+                props.putIfAbsent("retrieveMessagesFromServerOnGetMessage", "true")
+                props.putIfAbsent("clientProgramName", "TableGrip")
+                props.putIfAbsent("loginTimeout", "10")
+            }
+            DriverId.Exasol -> props.putIfAbsent("clientname", "TableGrip")
+            // Double quotes delimit identifiers only with DELIMIDENT; otherwise they are strings.
+            DriverId.Informix -> props.putIfAbsent("DELIMIDENT", "y")
             // Trino and Presto need a user even without authentication; the OS user is what their CLIs send.
             DriverId.Trino, DriverId.Presto -> {
                 props.putIfAbsent("user", System.getProperty("user.name") ?: "tablegrip")
@@ -195,6 +305,7 @@ object JdbcUrls {
             DriverId.Derby -> if (memory) "jdbc:derby:memory:$memoryName;create=true" else "jdbc:derby:$path"
             // A named in-memory database is shared by every connection of the process, so the pool sees one database.
             DriverId.DuckDB -> if (memory) "jdbc:duckdb::memory:${memoryName.replace(Regex("[^A-Za-z0-9_]"), "_")}" else "jdbc:duckdb:$path"
+            DriverId.UCanAccess -> if (memory) throw SQLException(tr("Choose an Access database file (.accdb or .mdb).")) else "jdbc:ucanaccess://$path"
             else -> throw SQLException(tr("{0} has no file URL form; connect by JDBC URL.", driver.displayName))
         }
     }
@@ -208,6 +319,14 @@ object JdbcUrls {
         if (entry.startsWith("[")) entry.substringAfter(']').startsWith(":") else entry.count { it == ':' } == 1
 
     private fun encodePathSegment(value: String) = URLEncoder.encode(value, Charsets.UTF_8).replace("+", "%20")
+
+    private fun encodeQuery(value: String) = URLEncoder.encode(value, Charsets.UTF_8)
+
+    /** `first/second`, either part blank or missing. */
+    private fun pathParts(value: String): Pair<String?, String?> {
+        val parts = value.split('/', limit = 2).map { it.trim().ifEmpty { null } }
+        return parts[0] to parts.getOrNull(1)
+    }
 
     /** Points a `scheme//host[:port]/...` URL at another host and port; rejects multi-host and key-value forms. */
     fun redirect(url: String, host: String, port: Int): String {

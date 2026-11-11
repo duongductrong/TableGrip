@@ -91,8 +91,10 @@ class JdbcUrlsTest {
 
     @Test
     fun `every driver loads from the test classpath`() {
-        // Generic has no driver of its own: each profile brings its jars.
-        // Generic has no driver of its own (each profile brings its jars); adapters aren't JDBC drivers.
-        DriverId.entries.filter { it != DriverId.Generic && it.isJdbc }.forEach { drivers.load(it) }
+        // Generic has no driver of its own (each profile brings its jars); adapters aren't JDBC drivers. Drivers that
+        // can't share the classpath load from their own jars.
+        DriverId.entries.filter { it != DriverId.Generic && it.isJdbc }.forEach {
+            (if (it in dev.tablegrip.core.TestDrivers.isolated) dev.tablegrip.core.TestDrivers.library else drivers).load(it)
+        }
     }
 }

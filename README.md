@@ -62,11 +62,14 @@ Every feature is described in the **[user guide](docs/guide.md)**.
 | **Oracle** | Oracle Database 12c and later | DDL from `DBMS_METADATA`, `EXPLAIN PLAN`. Bring Oracle's JDBC jar (`ojdbc11.jar`): its license doesn't allow TableGrip to download it. |
 | **Firebird** | Firebird 3 and later | Connects with UTF-8 by default. |
 | **Analytics** | ClickHouse · DuckDB · Trino · Presto · Apache Doris · StarRocks · QuestDB | Query-only except DuckDB (no row editing or transactions). DuckDB opens a file or `:memory:`. Trino and Presto connect to one catalog. Doris and StarRocks speak the MySQL protocol, QuestDB the PostgreSQL one. |
-| **Embedded** | SQLite · H2 · HSQLDB · Apache Derby | Open a file, or an in-memory database for H2 and HSQLDB. SQLite backs up with `VACUUM INTO`. |
+| **Cloud warehouses** | Snowflake · Databricks · Google BigQuery · Cloud Spanner | Spanner edits rows in transactions and runs against its emulator too. Databricks is query-only; BigQuery has no row editing or `EXPLAIN`. Bring the Snowflake, Databricks and BigQuery JDBC jars: each bundles code under a license the catalog doesn't take. |
+| **Enterprise** | IBM Db2 · SAP HANA · Vertica · Exasol · IBM Informix · InterSystems IRIS | Row editing and transactions. Bring the vendor's JDBC jar: their licenses don't allow TableGrip to download them. |
+| **Hadoop & Spark** | Apache Hive · Spark SQL (Thrift server) · Apache Impala · Apache Kyuubi | Query-only, through Apache Kyuubi's Hive JDBC driver, which TableGrip downloads. |
+| **Embedded** | SQLite · H2 · HSQLDB · Apache Derby · Microsoft Access | Open a file, or an in-memory database for H2 and HSQLDB. SQLite backs up with `VACUUM INTO`. Access `.accdb` and `.mdb` files open through UCanAccess, without Access or Windows. |
 | **Key-value** | Redis · Valkey · KeyDB · Dragonfly · etcd | Redis standalone, Cluster and Sentinel, TLS. etcd needs no download. |
 | **Document** | MongoDB · FerretDB | `mongodb://` and `mongodb+srv://` URLs. |
 | **Data files** | CSV / TSV · Excel `.xlsx` · JSON / NDJSON | Opened as tables. Committed changes are written back to the file. |
-| **Anything else** | Db2, Snowflake and any other JDBC database | Bring the driver's jar. |
+| **Anything else** | Any other JDBC database | Bring the driver's jar. |
 
 > [!NOTE]
 > No driver ships inside the app. When you first connect, TableGrip downloads the one you need from Maven Central and

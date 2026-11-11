@@ -10,13 +10,17 @@ object DatabaseFiles {
     private val SqliteHeader = "SQLite format 3\u0000".toByteArray(Charsets.US_ASCII)
     private val DuckDBMagic = "DUCK".toByteArray(Charsets.US_ASCII)
 
+    /** After four bytes of version: `.mdb` files (Jet) and `.accdb` ones (ACE). */
+    private val AccessMagics = listOf("Standard Jet DB", "Standard ACE DB").map { it.toByteArray(Charsets.US_ASCII) }
+
     /** The engine whose file [path] is, or null if it's none TableGrip opens, is empty, or can't be read. */
     fun detect(path: Path): DatabaseType? {
-        val header = runCatching { if (path.isRegularFile()) path.inputStream().use { it.readNBytes(16) } else null }.getOrNull() ?: return null
+        val header = runCatching { if (path.isRegularFile()) path.inputStream().use { it.readNBytes(19) } else null }.getOrNull() ?: return null
         return when {
             header.size >= SqliteHeader.size && header.copyOf(SqliteHeader.size).contentEquals(SqliteHeader) -> DatabaseType.SQLite
             // DuckDB's main header: a checksum, then the magic bytes.
             header.size >= 12 && header.copyOfRange(8, 12).contentEquals(DuckDBMagic) -> DatabaseType.DuckDB
+            header.size >= 19 && AccessMagics.any { header.copyOfRange(4, 19).contentEquals(it) } -> DatabaseType.Access
             else -> null
         }
     }

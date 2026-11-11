@@ -49,12 +49,12 @@ class ConnectionDialogTest {
         setContent {
             TableGripTheme(isDark = true) { Box(Modifier.size(640.dp, 600.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
         }
-        onAllNodes(hasSetTextAction())[0].performTextInput("jdbc:db2://localhost:50000/sample?password=masterkey")
+        onAllNodes(hasSetTextAction())[0].performTextInput("jdbc:teradata://localhost/DATABASE=sales?password=masterkey")
         onNodeWithText("Parse").performClick()
         waitForIdle()
 
         onNodeWithText("Other (JDBC driver)").assertExists()
-        onNodeWithText("jdbc:db2://localhost:50000/sample").assertExists()
+        onNodeWithText("jdbc:teradata://localhost/DATABASE=sales").assertExists()
         onNodeWithText("Choose jars…").assertExists()
         // URL-only engines have nothing else to connect by.
         onAllNodesWithText("Host and port").assertCountEquals(0)

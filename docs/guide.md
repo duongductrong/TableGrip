@@ -245,7 +245,7 @@ macOS Keychain, Windows Credential Manager, or the Secret Service (GNOME Keyring
 No JDBC driver ships with TableGrip. The connection dialog says what the chosen driver needs and offers it:
 
 - **Catalog drivers** (PostgreSQL, MariaDB Connector/J, SQLite, SQL Server, ClickHouse, DuckDB, H2, HSQLDB, Derby,
-  Jaybird for Firebird, Trino JDBC, Presto JDBC, OceanBase Connector/J)
+  Jaybird for Firebird, Trino JDBC, Presto JDBC, OceanBase Connector/J, Kyuubi Hive JDBC, Cloud Spanner JDBC, UCanAccess)
   download from Maven Central, or a mirror set in
   Settings → Drivers, into `~/.tablegrip/drivers/`. Every jar must match the SHA-256 pinned in
   `core/src/main/resources/dev/tablegrip/core/drivers/drivers.lock.json`, which `:core:lockDrivers` writes from the catalog
@@ -254,7 +254,9 @@ No JDBC driver ships with TableGrip. The connection dialog says what the chosen 
 - **Non-JDBC clients** (Lettuce for Redis, the MongoDB Java driver) download the same way; TableGrip's own adapter for each
   (`engines/redis`, `engines/mongodb`) ships
   inside the app as `engines/<name>.jar`, off the classpath, and loads together with the client's jars.
-- **Your own jars** for drivers TableGrip can't distribute (MySQL Connector/J is GPL): choose them in the dialog.
+- **Your own jars** for drivers TableGrip can't distribute (MySQL Connector/J is GPL; Oracle, Db2, SAP HANA, Vertica,
+  Exasol, Informix and IRIS are under their vendors' licenses; Snowflake, Databricks and BigQuery bundle code
+  outside the catalog's allowlist): choose them in the dialog, which links to the vendor's download.
 - **Offline**: "Import from folder…" installs catalog drivers from jars already on disk, checked against the same hashes.
 
 MySQL connections use MariaDB Connector/J by default. Each driver loads in its own class loader; `:app:verifyNoBundledDrivers`

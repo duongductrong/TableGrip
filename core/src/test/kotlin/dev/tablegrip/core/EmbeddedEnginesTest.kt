@@ -37,6 +37,18 @@ class EmbeddedEnginesTest {
         assertEquals(DatabaseType.DuckDB, dev.tablegrip.core.connection.DatabaseFiles.detect(file))
     }
 
+    /** UCanAccess creates the file when asked to; Access writes timestamps as `#…#`. */
+    @Test
+    fun access() = runBlocking<Unit> {
+        val file = Files.createTempDirectory("access").resolve("shop.accdb")
+        val config = config(DatabaseType.Access, file.toString()).copy(properties = mapOf("newDatabaseVersion" to "V2010"))
+        Database.connect(config, password = null, drivers = DriverLibrary(Files.createTempDirectory("drivers"))).use {
+            RelationalContract(it).run()
+            DialectSmoke(it, at = "#2024-05-15 13:45:00#").run()
+        }
+        assertEquals(DatabaseType.Access, dev.tablegrip.core.connection.DatabaseFiles.detect(file))
+    }
+
     @Test
     fun `h2 file databases open from a path`() {
         val file = Files.createTempDirectory("h2").resolve("shop")

@@ -7,7 +7,7 @@ TableGrip speaks to relational databases through JDBC and to Redis, MongoDB and 
 services that are compatible with a family (Neon, Supabase, PlanetScale, Azure SQL…) have their own presets, which set
 sensible defaults such as TLS.
 
-In all, TableGrip connects to **34 databases** and opens **3 kinds of data file** out of the box, and to any other
+In all, TableGrip connects to **49 databases** and opens **3 kinds of data file** out of the box, and to any other
 database you have a JDBC driver for.
 
 ## At a glance
@@ -18,7 +18,10 @@ database you have a JDBC driver for.
 | **MySQL** | MySQL · MariaDB · TiDB · PlanetScale · OceanBase | Server activity, backup and restore with `mysqldump`. Uses MariaDB Connector/J, or your own MySQL Connector/J. OceanBase uses its own driver, OceanBase Connector/J. |
 | **SQL Server & Oracle** | SQL Server · Azure SQL · Oracle · Firebird | All-or-nothing DDL on SQL Server. Azure SQL comes with encryption on. |
 | **Analytics** | ClickHouse · DuckDB · Trino · Presto · Apache Doris · StarRocks · QuestDB | Query-only except DuckDB (no row editing or transactions). DuckDB opens a file or `:memory:`. Trino and Presto connect to one catalog. Doris and StarRocks speak the MySQL protocol, QuestDB the PostgreSQL one. |
-| **Embedded** | SQLite · H2 · HSQLDB · Apache Derby | Open a file, or an in-memory database for H2 and HSQLDB. SQLite backs up with `VACUUM INTO`. |
+| **Cloud warehouses** | Snowflake · Databricks · Google BigQuery · Cloud Spanner | Spanner edits rows in transactions and runs against its emulator too. Databricks is query-only; BigQuery has no row editing or `EXPLAIN`. Bring the Snowflake, Databricks and BigQuery JDBC jars: each bundles code under a license the catalog doesn't take. |
+| **Enterprise** | IBM Db2 · SAP HANA · Vertica · Exasol · IBM Informix · InterSystems IRIS | Row editing and transactions. Bring the vendor's JDBC jar: their licenses don't allow TableGrip to download them. |
+| **Hadoop & Spark** | Apache Hive · Spark SQL (Thrift server) · Apache Impala · Apache Kyuubi | Query-only, through Apache Kyuubi's Hive JDBC driver, which TableGrip downloads. |
+| **Embedded** | SQLite · H2 · HSQLDB · Apache Derby · Microsoft Access | Open a file, or an in-memory database for H2 and HSQLDB. SQLite backs up with `VACUUM INTO`. Access `.accdb` and `.mdb` files open through UCanAccess, without Access or Windows. |
 | **Key-value** | Redis · Valkey · KeyDB · Dragonfly · etcd | Redis standalone, Cluster and Sentinel, TLS. etcd needs no download. |
 | **Document** | MongoDB · FerretDB | `mongodb://` and `mongodb+srv://` URLs. |
 | **Data files** | CSV / TSV · Excel `.xlsx` · JSON / NDJSON | Opened as tables. Committed changes are written back to the file. |
@@ -45,5 +48,5 @@ run anything.
 ## Databases TableGrip doesn't list
 
 Any database with a JDBC driver works. Choose **Other (JDBC driver)**, or paste a `jdbc:` URL such as
-`jdbc:db2://…` or `jdbc:snowflake://…`, then pick the driver's `.jar` file. See
+`jdbc:teradata://…` or `jdbc:dm://…`, then pick the driver's `.jar` file. See
 [Drivers](/docs/drivers#your-own-jars).

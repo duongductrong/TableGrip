@@ -137,11 +137,18 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
         // '!' escapes LIKE wildcards: unlike '\\' it means the same in every dialect's string literals.
         prefix.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%"
 
-    open fun sampleValues(table: TableRef, column: String, limit: Int, scan: Int): String {
+    open fun sampleValues(table: TableRef, column: String, limit: Int, scan: Int): String = sampleValuesWithLimit(table, column, limit, scan)
+
+    /** [sampleValues] with LIMIT and LIKE's ESCAPE clause. */
+    protected fun sampleValuesWithLimit(table: TableRef, column: String, limit: Int, scan: Int): String {
         val col = quoteIdentifier(column)
         return "SELECT DISTINCT v FROM (SELECT $col AS v FROM ${qualifiedName(table)} WHERE $col IS NOT NULL AND " +
             "${castToText(col)} LIKE ? ESCAPE '!' LIMIT $scan) s ORDER BY v LIMIT $limit"
     }
+
+    /** [selectPage] with LIMIT and OFFSET, for engines that page that way outside their family's own syntax. */
+    protected fun limitOffset(table: TableRef, filter: String?, orderBy: List<SortColumn>, limit: Int, offset: Long, projection: SqlProjection?): String =
+        selectAll(table, filter, orderBy, projection) + " LIMIT $limit OFFSET $offset"
 
     /** For engines whose LIKE has no ESCAPE clause: a [textMatch] pattern's `!` escapes as backslashes. */
     protected fun backslashEscapes(likePattern: String): String {
@@ -477,7 +484,7 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
      * Standard SQL, with namespaces and keys from JDBC metadata: H2, HSQLDB, Derby, and drivers the user brings. Engines
      * that do better override what they do differently.
      */
-    open class GenericDialect : SqlDialect(SqlSyntax.Standard) {
+    open class GenericDialect(syntax: SqlSyntax = SqlSyntax.Standard) : SqlDialect(syntax) {
         override fun toString() = "Generic"
 
         override fun quoteIdentifier(name: String) = "\"${name.replace("\"", "\"\"")}\""
@@ -866,6 +873,19 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
         val Oracle: OracleDialect = OracleDialect()
         val Firebird: FirebirdDialect = FirebirdDialect()
         val Trino: TrinoDialect = TrinoDialect()
+        val Snowflake: SnowflakeDialect = SnowflakeDialect()
+        val SparkSql: SparkSqlDialect = SparkSqlDialect()
+        val Hive: HiveDialect = HiveDialect()
+        val Impala: ImpalaDialect = ImpalaDialect()
+        val BigQuery: BigQueryDialect = BigQueryDialect()
+        val Spanner: SpannerDialect = SpannerDialect()
+        val Db2: Db2Dialect = Db2Dialect()
+        val Hana: HanaDialect = HanaDialect()
+        val Vertica: VerticaDialect = VerticaDialect()
+        val Exasol: ExasolDialect = ExasolDialect()
+        val Informix: InformixDialect = InformixDialect()
+        val Iris: IrisDialect = IrisDialect()
+        val Access: AccessDialect = AccessDialect()
 
         fun of(family: EngineFamily): SqlDialect? =
             when (family) {
@@ -879,6 +899,7 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
                 EngineFamily.Oracle -> Oracle
                 EngineFamily.Firebird -> Firebird
                 EngineFamily.Trino -> Trino
+                EngineFamily.Hive -> Hive
                 EngineFamily.Redis,
                 EngineFamily.MongoDB,
                 EngineFamily.Etcd -> null

@@ -24,8 +24,8 @@ class DatabaseTypeTest {
 
     @Test
     fun `an unknown engine says so`() {
-        val error = assertFailsWith<SerializationException> { json.decodeFromString<ConnectionConfig>("""{"id":"1","name":"x","type":"Informix"}""") }
-        assertTrue("Informix" in error.message!!)
+        val error = assertFailsWith<SerializationException> { json.decodeFromString<ConnectionConfig>("""{"id":"1","name":"x","type":"Teradata"}""") }
+        assertTrue("Teradata" in error.message!!)
     }
 
     @Test

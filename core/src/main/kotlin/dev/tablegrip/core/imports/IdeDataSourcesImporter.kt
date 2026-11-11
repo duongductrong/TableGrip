@@ -101,6 +101,10 @@ internal object IdeDataSourcesImporter {
                 "OCEANBASE" -> DatabaseType.OceanBase
                 "DORIS" -> DatabaseType.Doris
                 "STARROCKS" -> DatabaseType.StarRocks
+                // HiveServer2's engines share a driver and a URL scheme.
+                "SPARK" -> DatabaseType.SparkSql
+                "IMPALA" -> DatabaseType.Impala
+                "KYUUBI" -> DatabaseType.Kyuubi
                 "AZURE", "AZURESQL" -> DatabaseType.AzureSql
                 "VALKEY" -> DatabaseType.Valkey
                 else -> null

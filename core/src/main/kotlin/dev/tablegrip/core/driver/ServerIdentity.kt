@@ -14,6 +14,8 @@ object ServerIdentity {
         setOf(
             DatabaseType.PostgreSQL, DatabaseType.CockroachDB, DatabaseType.TimescaleDB, DatabaseType.YugabyteDB, DatabaseType.Redshift, DatabaseType.QuestDB,
             DatabaseType.MySQL, DatabaseType.MariaDB, DatabaseType.TiDB, DatabaseType.OceanBase, DatabaseType.Doris, DatabaseType.StarRocks,
+            // Kyuubi answers as the engine behind it, so it's taken at its word.
+            DatabaseType.Hive, DatabaseType.SparkSql, DatabaseType.Impala,
         )
 
     /** The engine to suggest instead of [type], or null if [type] is right or can't be judged. */
@@ -51,6 +53,16 @@ object ServerIdentity {
                     scalar(connection, "SELECT current_version()") != null -> DatabaseType.StarRocks
                     "MariaDB" in version || connection.metaData.databaseProductName.orEmpty().contains("MariaDB") -> DatabaseType.MariaDB
                     else -> DatabaseType.MySQL
+                }
+            }
+            // What HiveServer2 reports as its DBMS name: "Apache Hive", "Spark SQL", "Impala".
+            EngineFamily.Hive -> {
+                val product = connection.metaData.databaseProductName.orEmpty()
+                when {
+                    "Spark" in product -> DatabaseType.SparkSql
+                    "Impala" in product -> DatabaseType.Impala
+                    "Hive" in product -> DatabaseType.Hive
+                    else -> null
                 }
             }
             else -> null

@@ -21,6 +21,18 @@ jaybird = "6.0.7"
 trino = "484"
 presto = "0.300"
 oceanbase = "2.4.19"
+kyuubi = "1.12.0"
+spannerJdbc = "2.49.0"
+ucanaccess = "5.3.0"
+snowflake = "4.4.1"
+databricks = "3.4.5"
+bigqueryJdbc = "1.9.0"
+db2 = "12.1.5.0"
+hana = "2.30.11"
+vertica = "25.3.0-0"
+exasol = "26.2.10"
+informix = "15.0.1.4"
+iris = "3.11.1"
 ojdbc = "23.26.4.0.0"
 lettuce = "7.9.0.RELEASE"
 mongodb = "5.14.0"
@@ -56,6 +68,20 @@ jdbc-firebird = { module = "org.firebirdsql.jdbc:jaybird", version.ref = "jaybir
 jdbc-trino = { module = "io.trino:trino-jdbc", version.ref = "trino" }
 jdbc-oceanbase = { module = "com.oceanbase:oceanbase-client", version.ref = "oceanbase" }
 jdbc-presto = { module = "com.facebook.presto:presto-jdbc", version.ref = "presto" }
+jdbc-hive = { module = "org.apache.kyuubi:kyuubi-hive-jdbc-shaded", version.ref = "kyuubi" }
+# Published as one jar with everything in it under the `single-jar-with-dependencies` classifier.
+jdbc-spanner = { module = "com.google.cloud:google-cloud-spanner-jdbc", version.ref = "spannerJdbc" }
+jdbc-ucanaccess = { module = "io.github.spannm:ucanaccess", version.ref = "ucanaccess" }
+# Bring-your-own drivers: tests only, never in the driver catalog (see artifactLicenses in core/build.gradle.kts).
+jdbc-snowflake = { module = "net.snowflake:snowflake-jdbc", version.ref = "snowflake" }
+jdbc-databricks = { module = "com.databricks:databricks-jdbc", version.ref = "databricks" }
+jdbc-bigquery = { module = "com.google.cloud:google-cloud-bigquery-jdbc", version.ref = "bigqueryJdbc" }
+jdbc-db2 = { module = "com.ibm.db2:jcc", version.ref = "db2" }
+jdbc-hana = { module = "com.sap.cloud.db.jdbc:ngdbc", version.ref = "hana" }
+jdbc-vertica = { module = "com.vertica.jdbc:vertica-jdbc", version.ref = "vertica" }
+jdbc-exasol = { module = "com.exasol:exasol-jdbc", version.ref = "exasol" }
+jdbc-informix = { module = "com.ibm.informix:jdbc", version.ref = "informix" }
+jdbc-iris = { module = "com.intersystems:intersystems-jdbc", version.ref = "iris" }
 # Oracle's own license (FUTC): tests only, never in the driver catalog.
 jdbc-oracle = { module = "com.oracle.database.jdbc:ojdbc11", version.ref = "ojdbc" }
 lettuce = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }

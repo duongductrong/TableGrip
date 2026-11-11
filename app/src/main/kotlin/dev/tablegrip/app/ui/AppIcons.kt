@@ -19,6 +19,7 @@ internal object AppIcons {
         setOf(
             "PostgreSQL", "MySQL", "MariaDB", "SQLite", "ClickHouse", "DuckDB", "MongoDB", "Redis", "CockroachDB",
             "TimescaleDB", "Neon", "Supabase", "TiDB", "PlanetScale", "Trino", "Presto", "Doris", "OceanBase", "Etcd", "FerretDB", "H2", "JsonFile",
+            "Snowflake", "Databricks", "BigQuery", "Spanner", "Hana", "Hive", "SparkSql",
         )
 
     private val engineLogoKeys = HashMap<String, IconKey>()

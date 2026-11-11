@@ -71,6 +71,20 @@ object ConnectionString {
             lower.startsWith("jdbc:trino:") -> rawJdbc(text, DatabaseType.Trino, DriverId.Trino)
             lower.startsWith("jdbc:oceanbase:") -> rawJdbc(text, DatabaseType.OceanBase, DriverId.OceanBase)
             lower.startsWith("jdbc:presto:") -> rawJdbc(text, DatabaseType.Presto, DriverId.Presto)
+            lower.startsWith("jdbc:snowflake:") -> rawJdbc(text, DatabaseType.Snowflake, DriverId.Snowflake)
+            lower.startsWith("jdbc:databricks:") -> rawJdbc(text, DatabaseType.Databricks, DriverId.Databricks)
+            lower.startsWith("jdbc:bigquery:") -> rawJdbc(text, DatabaseType.BigQuery, DriverId.BigQuery)
+            lower.startsWith("jdbc:cloudspanner:") -> rawJdbc(text, DatabaseType.Spanner, DriverId.Spanner)
+            lower.startsWith("jdbc:db2:") -> rawJdbc(text, DatabaseType.Db2, DriverId.Db2)
+            lower.startsWith("jdbc:sap:") -> rawJdbc(text, DatabaseType.Hana, DriverId.Hana)
+            lower.startsWith("jdbc:vertica:") -> rawJdbc(text, DatabaseType.Vertica, DriverId.Vertica)
+            lower.startsWith("jdbc:exa:") -> rawJdbc(text, DatabaseType.Exasol, DriverId.Exasol)
+            lower.startsWith("jdbc:informix-sqli:") -> rawJdbc(text, DatabaseType.Informix, DriverId.Informix)
+            lower.startsWith("jdbc:iris:") -> rawJdbc(text, DatabaseType.Iris, DriverId.Iris)
+            lower.startsWith("jdbc:ucanaccess:") -> rawJdbc(text, DatabaseType.Access, DriverId.UCanAccess)
+            // Kyuubi's driver, which TableGrip uses for every HiveServer2 engine, takes both schemes.
+            lower.startsWith("jdbc:hive2:") -> rawJdbc(text, DatabaseType.Hive, DriverId.Hive)
+            lower.startsWith("jdbc:kyuubi:") -> rawJdbc(text, DatabaseType.Kyuubi, DriverId.Hive)
             // Any other driver works too, from the user's own jar.
             lower.startsWith("jdbc:") -> rawJdbc(text, DatabaseType.OtherJdbc, DriverId.Generic)
             else -> throw ConnectionStringException(tr("Unrecognized connection string. Try postgres://, mysql://, jdbc:… or a file path."))
@@ -90,7 +104,8 @@ object ConnectionString {
     fun stripSecrets(url: String): Pair<String, String?> {
         var password: String? = null
         var result = url
-        Regex(""";\s*password\s*=\s*([^;]*)""", RegexOption.IGNORE_CASE).find(result)?.let { match ->
+        // PWD: Databricks' and Simba's name for it.
+        Regex(""";\s*(?:password|pwd)\s*=\s*([^;]*)""", RegexOption.IGNORE_CASE).find(result)?.let { match ->
             password = match.groupValues[1]
             result = result.removeRange(match.range)
         }

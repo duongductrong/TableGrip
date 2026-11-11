@@ -37,19 +37,48 @@ dependencies {
     testRuntimeOnly(libs.jdbc.presto)
     testRuntimeOnly(libs.jdbc.oceanbase)
     testRuntimeOnly(libs.jdbc.oracle)
+    testRuntimeOnly(libs.jdbc.hive)
+    testRuntimeOnly(libs.jdbc.ucanaccess)
+    // Bring-your-own drivers, outside the catalog's licenses (see artifactLicenses): tests aren't distributed.
+    testRuntimeOnly(libs.jdbc.snowflake)
+    testRuntimeOnly(libs.jdbc.databricks)
+    testRuntimeOnly(libs.jdbc.db2)
+    testRuntimeOnly(libs.jdbc.hana)
+    testRuntimeOnly(libs.jdbc.vertica)
+    testRuntimeOnly(libs.jdbc.exasol)
+    testRuntimeOnly(libs.jdbc.informix)
+    testRuntimeOnly(libs.jdbc.iris)
     testImplementation(libs.apache.sshd.core)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
+/**
+ * Drivers whose one jar carries unrelocated copies of libraries the tests use too (Kotlin, Guava, gRPC): tests load them
+ * through DriverLibrary, in a class loader of their own, as the app does. See TestDrivers.
+ */
+val isolatedTestDrivers: Configuration by configurations.creating {
+    isCanBeConsumed = false
+    isTransitive = false
+}
+
+dependencies {
+    isolatedTestDrivers(variantOf(libs.jdbc.spanner) { classifier("single-jar-with-dependencies") })
+    isolatedTestDrivers(variantOf(libs.jdbc.bigquery) { classifier("all") })
+}
+
 tasks.test {
     useJUnitPlatform()
+    val isolated: FileCollection = isolatedTestDrivers.incoming.files
+    inputs.files(isolated)
+    jvmArgumentProviders += CommandLineArgumentProvider { listOf("-Dtablegrip.test.isolatedDrivers=" + isolated.files.joinToString(File.pathSeparator)) }
     // Opt-in server tests: -Pit.postgres=localhost:55432 -Pit.mysql=localhost:53306 (and it.cockroach, it.timescale, it.tidb,
     // it.mssql, it.clickhouse, it.oracle, it.firebird, it.trino, it.yugabyte, it.questdb, it.starrocks, it.oceanbase,
-    // it.presto: see ServerEnginesIntegrationTest); -Pit.network=true
-    // downloads drivers.
+    // it.presto, it.db2, it.informix, it.iris, it.hive, it.spark, it.spanner: see
+    // ServerEnginesIntegrationTest and JdbcEnginesIntegrationTest); -Pit.network=true downloads drivers.
     listOf(
         "it.postgres", "it.mysql", "it.network", "it.cockroach", "it.timescale", "it.tidb", "it.mssql", "it.clickhouse", "it.etcd", "it.etcdauth",
         "it.oracle", "it.firebird", "it.trino", "it.yugabyte", "it.questdb", "it.starrocks", "it.oceanbase", "it.presto",
+        "it.db2", "it.informix", "it.iris", "it.hive", "it.spark", "it.spanner",
     ).forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
     testLogging { showStandardStreams = providers.gradleProperty("it.postgres").isPresent || providers.gradleProperty("it.mysql").isPresent }
 }
@@ -72,6 +101,8 @@ data class CatalogDriver(
     val className: String,
     val licenseUrl: String,
     val sourceUrl: String,
+    /** A published jar with every dependency inside, used alone instead of the main jar and its dependencies. */
+    val classifier: String? = null,
 )
 
 val driverCatalog =
@@ -137,6 +168,20 @@ val driverCatalog =
             "presto", "Presto JDBC", libs.jdbc.presto, "com.facebook.presto.jdbc.PrestoDriver",
             "https://github.com/prestodb/presto/blob/master/LICENSE", "https://github.com/prestodb/presto",
         ),
+        // Apache Kyuubi's shaded Hive JDBC driver: HiveServer2's protocol, for Hive, Spark's Thrift server, Impala and Kyuubi.
+        CatalogDriver(
+            "hive", "Kyuubi Hive JDBC", libs.jdbc.hive, "org.apache.kyuubi.jdbc.KyuubiHiveDriver",
+            "https://github.com/apache/kyuubi/blob/master/LICENSE", "https://github.com/apache/kyuubi",
+        ),
+        CatalogDriver(
+            "spanner", "Cloud Spanner JDBC", libs.jdbc.spanner, "com.google.cloud.spanner.jdbc.JdbcDriver",
+            "https://github.com/googleapis/java-spanner-jdbc/blob/main/LICENSE", "https://github.com/googleapis/java-spanner-jdbc",
+            classifier = "single-jar-with-dependencies",
+        ),
+        CatalogDriver(
+            "ucanaccess", "UCanAccess", libs.jdbc.ucanaccess, "net.ucanaccess.jdbc.UcanaccessDriver",
+            "https://github.com/spannm/ucanaccess/blob/master/LICENSE", "https://github.com/spannm/ucanaccess",
+        ),
     )
 
 /** Reviewed license of every jar a catalog driver resolves to, by `group:name`. */
@@ -164,6 +209,27 @@ val artifactLicenses =
         // HttpClient, Joda-Time, Kotlin, gRPC and OpenCensus (Apache-2.0), google-auth-library (BSD-3-Clause) and
         // FastDoubleParser (MIT). Its LICENSE.jol.txt (GPL-2.0 with the Classpath exception) is a leftover: no JOL class is in the jar.
         "com.facebook.presto:presto-jdbc" to "Apache-2.0",
+        // One shaded jar with no dependencies of its own; its LICENSE and NOTICE list Hive's RPC classes, Thrift, Guava,
+        // Commons, Curator, ZooKeeper, HttpClient, Netty, Arrow and Jackson (Apache-2.0), SLF4J and jcl-over-slf4j and
+        // checker-qual (MIT). Jackson's FastDoubleParser is MIT, with a few routines ported from fast_float under the
+        // Boost license, as in Presto JDBC. No native libraries.
+        "org.apache.kyuubi:kyuubi-hive-jdbc-shaded" to "Apache-2.0",
+        // The single-jar-with-dependencies build, with nothing relocated. Every bundled POM was read: the Google Cloud
+        // client libraries, gax, gRPC, Netty, protobuf, Guava, Gson, Jackson, Tink, OpenTelemetry, OpenCensus, conscrypt,
+        // CEL and HttpClient are Apache-2.0; Bouncy Castle and animal-sniffer MIT; threeten, re2j and jsr305 BSD-3-Clause.
+        // conscrypt's and netty-tcnative's native libraries link BoringSSL, whose bundled LICENSE is Apache-2.0 (the old
+        // OpenSSL/SSLeay terms are gone from it); FastDoubleParser as in Kyuubi's jar.
+        "com.google.cloud:google-cloud-spanner-jdbc" to "Apache-2.0",
+        // UCanAccess, and Jackcess (its maintainer's fork) under it; HSQLDB is listed above.
+        "io.github.spannm:ucanaccess" to "Apache-2.0",
+        "io.github.spannm:jackcess" to "Apache-2.0",
+        // Not here, and brought by the user instead (DriverId.vendorUrl):
+        // - Snowflake JDBC 4.4 (Apache-2.0) bundles javax.servlet-api and javax.annotation-api, under CDDL-1.1 or
+        //   GPL-2.0 with the Classpath exception (internal/javax/servlet/LocalStrings.properties, internal/javax/annotation).
+        // - Databricks JDBC 3.4 and Google's BigQuery JDBC 1.9 (both Apache-2.0) bundle org.json, which is "Public Domain"
+        //   since 20231013 (META-INF/maven/org.json/json/pom.xml in Databricks', relocated classes in BigQuery's).
+        // - IBM Db2 (IPLA), SAP HANA (SAP Developer License), Vertica (Vertica Client License), Exasol (EXAClient
+        //   License), IBM Informix (IBM Informix JDBC License) and InterSystems IRIS (its IERTU terms) are proprietary.
         // ClickHouse JDBC and what it pulls in. Blank POMs were read from their parents (guava-parent, the ASF's
         // commons-parent and httpcomponents-parent, antlr4-master).
         "com.clickhouse:clickhouse-jdbc" to "Apache-2.0",
@@ -213,11 +279,13 @@ val artifactLicenses =
 
 val driverConfigurations =
     driverCatalog.associate { driver ->
+        val classifier = driver.classifier
         val configuration = configurations.create("driver-${driver.id}") {
             isCanBeConsumed = false
-            isTransitive = true
+            // A jar with its dependencies inside is the whole driver.
+            isTransitive = classifier == null
         }
-        dependencies.add(configuration.name, driver.library)
+        dependencies.add(configuration.name, if (classifier == null) driver.library else dependencies.variantOf(driver.library) { classifier(classifier) })
         driver.id to configuration
     }
 

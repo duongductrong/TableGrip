@@ -142,6 +142,20 @@ internal object DBeaverImporter {
             "oceanbase" in d -> DatabaseType.OceanBase
             "doris" in d -> DatabaseType.Doris
             "starrocks" in d -> DatabaseType.StarRocks
+            // Where host, port and database mean what they do in TableGrip; Databricks, BigQuery, Spanner and Access come
+            // from their JDBC URLs instead.
+            "snowflake" in d -> DatabaseType.Snowflake
+            // Db2 for i and for z/OS are other databases.
+            "db2" in d && "iseries" !in d && "zos" !in d && "as400" !in d -> DatabaseType.Db2
+            "hana" in d -> DatabaseType.Hana
+            "vertica" in d -> DatabaseType.Vertica
+            "exasol" in d -> DatabaseType.Exasol
+            "informix" in d -> DatabaseType.Informix
+            "iris" in d -> DatabaseType.Iris
+            "kyuubi" in d -> DatabaseType.Kyuubi
+            "impala" in d -> DatabaseType.Impala
+            "spark" in d && "databricks" !in d -> DatabaseType.SparkSql
+            "hive" in d -> DatabaseType.Hive
             "mariadb" in d -> DatabaseType.MariaDB
             "tidb" in d -> DatabaseType.TiDB
             "duckdb" in d -> DatabaseType.DuckDB

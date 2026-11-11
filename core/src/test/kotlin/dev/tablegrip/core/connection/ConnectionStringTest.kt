@@ -136,9 +136,9 @@ class ConnectionStringTest {
 
     @Test
     fun `other JDBC URLs become profiles for the user's own driver, and known ones get their engine`() {
-        val db2 = parse("jdbc:db2://host:50000/sample")
-        assertEquals(DatabaseType.OtherJdbc to DriverId.Generic, db2.type to db2.driver)
-        assertEquals("jdbc:db2://host:50000/sample", db2.url)
+        val teradata = parse("jdbc:teradata://host/DATABASE=sales")
+        assertEquals(DatabaseType.OtherJdbc to DriverId.Generic, teradata.type to teradata.driver)
+        assertEquals("jdbc:teradata://host/DATABASE=sales", teradata.url)
         val oracle = parse("jdbc:oracle:thin:@host:1521:orcl")
         assertEquals(DatabaseType.Oracle to DriverId.Oracle, oracle.type to oracle.driver)
         assertEquals("jdbc:oracle:thin:@host:1521:orcl", oracle.url)

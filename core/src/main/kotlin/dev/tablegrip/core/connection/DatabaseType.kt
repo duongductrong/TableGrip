@@ -37,7 +37,14 @@ enum class EngineFamily {
     /** Trino (and Starburst): federated queries over catalogs; no transactions, keys or row editing. */
     Trino,
 
-    /** Standard SQL read through JDBC metadata alone: embedded Java databases, and any driver the user brings. */
+    /** HiveServer2's Thrift protocol: Hive, Spark's Thrift server, Impala and Kyuubi; query-only. */
+    Hive,
+
+    /**
+     * Engines with a JDBC driver of their own and nothing else in common (Db2, Snowflake, BigQuery…), the embedded Java
+     * databases, and any driver the user brings: structure comes from JDBC metadata, and each engine's SQL from its
+     * dialect.
+     */
     Generic,
 
     /** The Redis protocol: Redis, Valkey, KeyDB, Dragonfly. */
@@ -231,6 +238,167 @@ class DatabaseType(
 
         private fun mysqlAnalytics(id: String, name: String, port: Int) =
             DatabaseType(id, name, EngineFamily.MySQL, port, listOf(DriverId.MariaDB, DriverId.MySQL), capabilities = setOf(Capability.Explain), dialect = SqlDialect.MySQLAnalytics)
+
+        // Engines with a JDBC driver of their own. Cloud warehouses take the account's host (or none, for Google's).
+
+        /** Snowflake: the host is the account's (`<account>.snowflakecomputing.com`); the database field `DATABASE/SCHEMA`. */
+        val Snowflake =
+            DatabaseType(
+                "Snowflake",
+                "Snowflake",
+                EngineFamily.Generic,
+                443,
+                listOf(DriverId.Snowflake),
+                databaseHint = tr("DATABASE or DATABASE/SCHEMA"),
+                defaultProperties =
+                    mapOf(
+                        DriverId.Snowflake to
+                            mapOf(
+                                // Arrow results need --add-opens on Java 17 and later; JSON results don't.
+                                "JDBC_QUERY_RESULT_FORMAT" to "JSON",
+                                // Metadata calls list the profile's database only, not every one the role can see.
+                                "CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX" to "true",
+                            ),
+                    ),
+                dialect = SqlDialect.Snowflake,
+            )
+
+        /**
+         * Databricks SQL warehouses and clusters: the host is the workspace's, the database field the HTTP path, and a
+         * personal access token the password. Query-only: Delta tables update, but not in transactions.
+         */
+        val Databricks =
+            DatabaseType(
+                "Databricks",
+                "Databricks",
+                EngineFamily.Generic,
+                443,
+                listOf(DriverId.Databricks),
+                capabilities = setOf(Capability.Explain),
+                databaseHint = tr("HTTP path, e.g. /sql/1.0/warehouses/…"),
+                defaultProperties = mapOf(DriverId.Databricks to mapOf("transportMode" to "http", "ssl" to "1", "AuthMech" to "3")),
+                dialect = SqlDialect.SparkSql,
+            )
+
+        /**
+         * Google BigQuery: the database field is the project (and default dataset); credentials are Application Default
+         * Credentials unless the driver properties name a service account key. No EXPLAIN, no row editing.
+         */
+        val BigQuery =
+            DatabaseType(
+                "BigQuery",
+                "Google BigQuery",
+                EngineFamily.Generic,
+                443,
+                listOf(DriverId.BigQuery),
+                capabilities = emptySet(),
+                databaseHint = tr("project or project/dataset"),
+                defaultProperties = mapOf(DriverId.BigQuery to mapOf("OAuthType" to "3")),
+                dialect = SqlDialect.BigQuery,
+            )
+
+        /** Cloud Spanner (GoogleSQL): no host for Google's endpoint, or the emulator's with `autoConfigEmulator=true`. */
+        val Spanner =
+            DatabaseType(
+                "Spanner",
+                "Cloud Spanner",
+                EngineFamily.Generic,
+                443,
+                listOf(DriverId.Spanner),
+                capabilities = setOf(Capability.Transactions, Capability.EditRows),
+                databaseHint = tr("project/instance/database"),
+                dialect = SqlDialect.Spanner,
+            )
+
+        /** IBM Db2 for Linux, Unix and Windows; plans need explain tables, so there's no EXPLAIN. */
+        val Db2 =
+            DatabaseType(
+                "Db2",
+                "IBM Db2",
+                EngineFamily.Generic,
+                50000,
+                listOf(DriverId.Db2),
+                capabilities = setOf(Capability.Transactions, Capability.EditRows),
+                databaseHint = tr("Database, e.g. SAMPLE"),
+                dialect = SqlDialect.Db2,
+            )
+
+        /** SAP HANA: 3<instance>15 on-premises (30015 for instance 00), 443 with `encrypt=true` on HANA Cloud. */
+        val Hana =
+            DatabaseType(
+                "Hana",
+                "SAP HANA",
+                EngineFamily.Generic,
+                30015,
+                listOf(DriverId.Hana),
+                capabilities = setOf(Capability.Transactions, Capability.EditRows),
+                databaseHint = tr("Tenant database (optional)"),
+                dialect = SqlDialect.Hana,
+            )
+        val Vertica = DatabaseType("Vertica", "Vertica", EngineFamily.Generic, 5433, listOf(DriverId.Vertica), dialect = SqlDialect.Vertica)
+
+        /** Exasol: the database field is the schema to open. Self-signed certificates need a `fingerprint` property. */
+        val Exasol =
+            DatabaseType(
+                "Exasol",
+                "Exasol",
+                EngineFamily.Generic,
+                8563,
+                listOf(DriverId.Exasol),
+                capabilities = setOf(Capability.Transactions, Capability.EditRows),
+                databaseHint = tr("Schema (optional)"),
+                dialect = SqlDialect.Exasol,
+            )
+
+        /** IBM Informix; the server name, if the driver needs one, is the `INFORMIXSERVER` property. */
+        val Informix =
+            DatabaseType(
+                "Informix",
+                "IBM Informix",
+                EngineFamily.Generic,
+                9088,
+                listOf(DriverId.Informix),
+                capabilities = setOf(Capability.Transactions, Capability.EditRows),
+                dialect = SqlDialect.Informix,
+            )
+
+        /** InterSystems IRIS; the database field is the namespace. */
+        val Iris =
+            DatabaseType(
+                "Iris",
+                "InterSystems IRIS",
+                EngineFamily.Generic,
+                1972,
+                listOf(DriverId.Iris),
+                capabilities = setOf(Capability.Transactions, Capability.EditRows),
+                databaseHint = tr("Namespace, e.g. USER"),
+                dialect = SqlDialect.Iris,
+            )
+
+        /** Microsoft Access files, through UCanAccess (no Access or Windows needed). */
+        val Access =
+            DatabaseType(
+                "Access",
+                "Microsoft Access",
+                EngineFamily.Generic,
+                null,
+                listOf(DriverId.UCanAccess),
+                capabilities = setOf(Capability.Transactions, Capability.EditRows),
+                databaseHint = tr("/path/to/database.accdb"),
+                dialect = SqlDialect.Access,
+            )
+
+        /** HiveServer2 engines: query-only, through Kyuubi's Hive driver. The database field is the database to open. */
+        val Hive = hiveServer("Hive", "Apache Hive", 10000, SqlDialect.Hive)
+        val SparkSql = hiveServer("SparkSql", tr("Spark SQL (Thrift server)"), 10000, SqlDialect.SparkSql)
+        val Kyuubi = hiveServer("Kyuubi", "Apache Kyuubi", 10009, SqlDialect.SparkSql)
+
+        /** Impala's HiveServer2 port; without authentication the driver needs `auth=noSasl`. */
+        val Impala = hiveServer("Impala", "Apache Impala", 21050, SqlDialect.Impala)
+
+        private fun hiveServer(id: String, name: String, port: Int, dialect: SqlDialect) =
+            DatabaseType(id, name, EngineFamily.Hive, port, listOf(DriverId.Hive), capabilities = setOf(Capability.Explain), databaseHint = "default", dialect = dialect)
+
         val Redis = keyValue("Redis", "Redis")
         val Valkey = keyValue("Valkey", "Valkey")
         val KeyDB = keyValue("KeyDB", "KeyDB")
@@ -270,7 +438,9 @@ class DatabaseType(
                 PostgreSQL, MySQL, MariaDB, SQLite, SqlServer, Oracle, ClickHouse, DuckDB, MongoDB, Redis, Valkey,
                 CockroachDB, TimescaleDB, YugabyteDB, Neon, Supabase, Redshift, QuestDB, TiDB, PlanetScale, OceanBase,
                 Doris, StarRocks, AzureSql, Firebird, Trino, Presto,
-                KeyDB, Dragonfly, Etcd, FerretDB, H2, HSQLDB, Derby, OtherJdbc,
+                Snowflake, Databricks, BigQuery, Spanner, Db2, Hana, Vertica, Exasol, Informix, Iris,
+                Hive, SparkSql, Impala, Kyuubi,
+                KeyDB, Dragonfly, Etcd, FerretDB, H2, HSQLDB, Derby, Access, OtherJdbc,
                 CsvFile, ExcelFile, JsonFile,
             )
 
