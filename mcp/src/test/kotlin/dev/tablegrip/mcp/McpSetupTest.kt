@@ -1,5 +1,6 @@
 package dev.tablegrip.mcp
 
+import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
@@ -38,7 +39,7 @@ class McpSetupTest {
         assertTrue("exec \"$launcher\" \"\$@\"" in command.readText())
         assertEquals(command, setup.installedCommand())
         assertTrue(setup.commandIsCurrent())
-        assertTrue(setup.isOnPath(home.resolve(".local/bin"), "/usr/bin:${home.resolve(".local/bin")}"))
+        assertTrue(setup.isOnPath(home.resolve(".local/bin"), "/usr/bin${File.pathSeparator}${home.resolve(".local/bin")}"))
         assertEquals(command, setup.removeCommand())
         assertFalse(command.exists())
     }
