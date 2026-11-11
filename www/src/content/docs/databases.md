@@ -54,6 +54,29 @@ run anything.
 > Rows of a table without a primary key can be inserted, but not updated or deleted from the grid, because TableGrip
 > could not tell which row you meant.
 
+## Completion in the other consoles
+
+The console of a search, wide-column, graph or time-series database completes in that engine's own language, the way
+the [SQL editor](/docs/sql-editor) does. Suggestions appear as you type, or with <kbd>⌃</kbd> <kbd>Space</kbd>.
+<kbd>Tab</kbd> or <kbd>Enter</kbd> picks one and <kbd>Esc</kbd> closes the list. When the list opens on its own after a
+space or a bracket, <kbd>Enter</kbd> still starts a new line unless you've moved through the list.
+<kbd>⌘</kbd> <kbd>⏎</kbd> runs the statement.
+
+| Console | What it completes |
+| --- | --- |
+| **CQL** (Cassandra, ScyllaDB) | Statements and their clauses. Keyspaces after `USE`. Tables after `FROM`, `INTO` and `UPDATE`, in the keyspace of the last `USE` or after `keyspace.`. The columns of the statement's table in the select list, `WHERE`, `SET` and `INSERT INTO t (…)`. CQL functions. |
+| **Cypher** (Neo4j) | Clauses. Labels after `:` in a node pattern, relationship types in `[:…]`, and property keys after `n.` and in `{…}`. The statement's variables and functions in expressions, and procedures after `CALL`. |
+| **HTTP** (Elasticsearch, OpenSearch, Solr, Meilisearch, CouchDB, HBase, Consul, Qdrant, Weaviate, Milvus, RabbitMQ, Chroma, Nacos) | The method, then the path one segment at a time from the engine's known endpoints, with index, database or collection names where the path takes one. In the JSON body: Elasticsearch's query DSL and aggregations, Solr's JSON request, Meilisearch's search and settings parameters, CouchDB's `_find` and Mango selectors, and Qdrant's filters. Field names come from the index's mapping or from sampled documents. |
+| **GraphQL** (Weaviate) | `Get`, `Aggregate` and `Explore`, the classes under them, a class's properties and `_additional`, and the search arguments. |
+| **Flux** (InfluxDB 2) | `from()` and the other sources, the functions after `\|>`, buckets in `bucket: "…"`, a bucket's measurements and fields in a `filter`, and a row's columns after `r.`. |
+| **PromQL** (Prometheus, VictoriaMetrics) | Metric names, functions and aggregations. A metric's labels inside `{…}` and in `by (…)`, and durations inside `[…]`. |
+| **SQL** (TDengine, InfluxDB 3, SQLite over HTTP, DynamoDB PartiQL) | As in the SQL editor: databases, tables and columns. |
+
+Names load in the background the first time they're needed, and reload after a statement runs, in case it created or
+dropped something. A read-only profile isn't offered what would write: no `INSERT` or `CREATE` in CQL, no `CREATE`,
+`MERGE`, `SET` or `DELETE` in Cypher, and only the methods and endpoints that read on HTTP consoles. These are the
+same checks the console applies when a statement runs.
+
 ## Databases TableGrip doesn't list
 
 Any database with a JDBC driver works. Choose **Other (JDBC driver)**, or paste a `jdbc:` URL such as

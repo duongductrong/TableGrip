@@ -575,7 +575,7 @@ tasks {
         providers.gradleProperty("snapshot.dir").orNull?.let { systemProperty("snapshot.dir", it) }
         providers.gradleProperty("snapshot.db").orNull?.let { systemProperty("snapshot.db", it) }
         providers.gradleProperty("snapshot.lang").orNull?.let { systemProperty("snapshot.lang", it) }
-        listOf("it.network", "it.postgres", "it.redis", "it.mongo", "it.etcd").forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
+        listOf("it.network", "it.postgres", "it.redis", "it.mongo", "it.etcd", "it.elasticsearch", "it.neo4j").forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
     }
 
     withType<JavaExec> {

@@ -5,12 +5,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import dev.tablegrip.app.AppState
+import dev.tablegrip.app.completion.CompletionSource
 import dev.tablegrip.app.grid.DataGridState
 import dev.tablegrip.app.grid.GridModel
 import dev.tablegrip.app.grid.ResultGridModel
 import dev.tablegrip.app.workspace.WorkspaceTab
+import dev.tablegrip.core.completion.CompletionResult
+import dev.tablegrip.core.completion.StatementCompleter
 import dev.tablegrip.core.connection.ConnectionConfig
+import dev.tablegrip.core.dialect.SqlDialect
 import dev.tablegrip.core.driver.ConsoleReply
+import dev.tablegrip.core.driver.RecordConnection
 import dev.tablegrip.core.driver.RecordLanguage
 import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.session.SessionTab
@@ -50,9 +55,34 @@ class RecordConsoleTab(private val app: AppState, val config: ConnectionConfig, 
 
     private var job: Job? = null
 
+    /** The connected store, once it is: read-only profiles complete only what it says reads. */
+    private var store: RecordConnection? = null
+
+    /** Keyspaces, tables, fields, labels… for completion, loaded as they're asked for. */
+    internal val catalog = RecordCatalogCache(app.scope, config.type.family) { app.databases.records(config) }
+
+    private val completer = StatementCompleter.of(config.type.family)
+
+    /** Completion in the console's language, or null for an engine whose console has none. */
+    internal val completion: CompletionSource? =
+        completer?.let { completer ->
+            CompletionSource(
+                complete = { text, caret ->
+                    val isRead = if (config.readOnly) { statement: String -> store?.isRead(statement) ?: false } else null
+                    runCatching { completer.complete(text, caret, catalog, isRead) }.getOrElse { CompletionResult.empty(caret) }
+                },
+                dialect = SqlDialect.Generic,
+                cache = null,
+            )
+        }
+
     init {
         app.scope.launch {
-            runCatching { language = app.databases.records(config).consoleLanguage }
+            runCatching {
+                val connected = app.databases.records(config)
+                store = connected
+                language = connected.consoleLanguage
+            }
         }
     }
 
@@ -83,6 +113,8 @@ class RecordConsoleTab(private val app: AppState, val config: ConnectionConfig, 
                     model = null
                 } finally {
                     running = false
+                    // The statement may have made or dropped keyspaces, tables, labels or fields.
+                    catalog.statementRan()
                 }
             }
     }
@@ -102,5 +134,6 @@ class RecordConsoleTab(private val app: AppState, val config: ConnectionConfig, 
 
     override fun dispose() {
         job?.cancel()
+        catalog.dispose()
     }
 }
