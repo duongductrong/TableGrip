@@ -573,6 +573,17 @@ object SettingsPages {
                                 BooleanField(tr("Group thousands"), Settings::numberGrouping, { s, v -> s.copy(numberGrouping = v) }, hint = tr("1234567.5 reads 1,234,567.5.")),
                             ),
                         ),
+                        SettingsSection(
+                            tr("Saving"),
+                            listOf(
+                                BooleanField(
+                                    tr("Review changes before submitting"),
+                                    Settings::reviewChanges,
+                                    { s, v -> s.copy(reviewChanges = v) },
+                                    hint = tr("Shows the statements Submit will run, so you can check them first. Connections set to confirm writes always show them."),
+                                ),
+                            ),
+                        ),
                     ),
             ),
             SettingsPage(
