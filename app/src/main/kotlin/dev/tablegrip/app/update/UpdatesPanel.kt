@@ -50,8 +50,12 @@ internal fun UpdatesContent(updater: Updater, onRestartToUpdate: () -> Unit) {
         Text(tr("TableGrip {0}", AppVersion.current))
         val reason = updater.unavailableReason
         if (reason != null) {
+            // The button stays where it always is, so it can be found; it just can't run here.
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = {}, enabled = false) { Text(tr("Check for Updates…")) }
+                Link(tr("Releases page"), onClick = { browse(ReleasesPage) })
+            }
             Text(reason, color = info, fontSize = 12.sp)
-            Link(tr("Releases page"), onClick = { browse(ReleasesPage) })
             return@Column
         }
         StatusLine(status, lastCheck, info)
@@ -61,8 +65,10 @@ internal fun UpdatesContent(updater: Updater, onRestartToUpdate: () -> Unit) {
                 is UpdateStatus.Available -> DefaultButton(onClick = updater::install) { Text(tr("Download and Install…")) }
                 else -> {}
             }
-            OutlinedButton(onClick = updater::check, enabled = status != UpdateStatus.Checking) {
-                Text(if (status == UpdateStatus.Checking) tr("Checking…") else tr("Check for Updates"))
+            // Opens the updater's own window at once: it shows the check's progress, then the next version with its
+            // release notes and Install / Skip / Remind Me Later, or says TableGrip is up to date.
+            OutlinedButton(onClick = updater::checkNow, enabled = status != UpdateStatus.Checking) {
+                Text(if (status == UpdateStatus.Checking) tr("Checking…") else tr("Check for Updates…"))
             }
             val version = (status as? UpdateStatus.Available)?.version ?: (status as? UpdateStatus.Ready)?.version
             if (version != null) Link(tr("What's new"), onClick = { browse("$ReleasesPage/tag/v$version") })

@@ -70,7 +70,10 @@ interface Updater {
     /** Applies changed update settings. */
     fun configure(settings: Settings)
 
-    /** "Check for Updates…": the updater's own window shows the result, also when there's nothing new. */
+    /**
+     * "Check for Updates…": the updater's own window opens at once with the check's progress, then offers the next
+     * version with its release notes, or says there's nothing new. [status] follows along.
+     */
     fun checkNow()
 
     /** What the last [check] found. */

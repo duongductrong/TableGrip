@@ -61,6 +61,10 @@ static void setState(int newState, NSString *newDetail) {
 }
 
 - (void)updater:(SPUUpdater *)updater didFinishUpdateCycleForUpdateCheck:(SPUUpdateCheck)updateCheck error:(nullable NSError *)error {
+    // A check the user cancelled in Sparkle's window reports nothing else.
+    @synchronized([DGUpdaterDelegate class]) {
+        if (state == DGChecking) state = DGIdle;
+    }
     NSDate *date = updater.lastUpdateCheckDate;
     if (date != nil) atomic_store(&lastCheck, date.timeIntervalSince1970);
 }
@@ -117,9 +121,15 @@ void dg_updater_configure(const char *feed, int automaticChecks, int automaticDo
     });
 }
 
-/** "Check for Updates…": shows Sparkle's window, also to say there's nothing new. */
+/**
+ * "Check for Updates…": shows Sparkle's window at once with the check's progress, then the update it found (version,
+ * release notes, Install / Skip / Remind Me Later), or that there's nothing new. dg_updater_status follows along.
+ */
 void dg_updater_check(void) {
     dispatch_async(dispatch_get_main_queue(), ^{
+        if (controller == nil) return;
+        // A session already in progress (e.g. an update waiting in its window) is brought to the front as it is.
+        if (!controller.updater.sessionInProgress) setState(DGChecking, nil);
         [controller checkForUpdates:nil];
     });
 }

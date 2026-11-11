@@ -23,13 +23,17 @@ class UpdatesPanelTest {
         override val quitting = false
         @Volatile override var status: UpdateStatus = UpdateStatus.Idle
         var checks = 0
+        var windowChecks = 0
         var installs = 0
 
         override fun start(settings: Settings) {}
 
         override fun configure(settings: Settings) {}
 
-        override fun checkNow() {}
+        override fun checkNow() {
+            windowChecks++
+            status = UpdateStatus.Checking
+        }
 
         override fun check() {
             checks++
@@ -50,8 +54,9 @@ class UpdatesPanelTest {
         setContent { TableGripTheme(isDark = true) { Box(Modifier.size(700.dp, 300.dp)) { UpdatesContent(updater) { restarts++ } } } }
 
         onNodeWithText("Not checked yet.").assertExists()
-        onNodeWithText("Check for Updates").performClick()
-        assertEquals(1, updater.checks)
+        onNodeWithText("Check for Updates…").performClick()
+        assertEquals(1, updater.windowChecks, "the button opens the updater's window right away")
+        assertEquals(0, updater.checks)
         mainClock.advanceTimeBy(1_100)
         onNodeWithText("Checking for updates…").assertExists()
         onNodeWithText("Checking…").assertIsNotEnabled()
@@ -72,6 +77,17 @@ class UpdatesPanelTest {
         updater.status = UpdateStatus.Failed("The feed couldn't be read.")
         mainClock.advanceTimeBy(1_100)
         onNodeWithText("Couldn't check for updates: The feed couldn't be read.").assertExists()
+    }
+
+    @Test
+    fun `the check button stays visible but disabled where the app can't update itself`() = runComposeUiTest {
+        val updater = object : Updater by FakeUpdater() {
+            override val unavailableReason = "This copy runs from source, not an installed app."
+        }
+        setContent { TableGripTheme(isDark = true) { Box(Modifier.size(700.dp, 300.dp)) { UpdatesContent(updater) {} } } }
+
+        onNodeWithText("Check for Updates…").assertIsNotEnabled()
+        onNodeWithText("This copy runs from source, not an installed app.").assertExists()
     }
 
     @Test

@@ -128,7 +128,9 @@ internal class WinSparkleUpdater(
     }
 
     override fun checkNow() {
-        if (started) native.win_sparkle_check_update_with_ui()
+        if (!started) return
+        status = UpdateStatus.Checking
+        native.win_sparkle_check_update_with_ui()
     }
 
     override fun check() {
