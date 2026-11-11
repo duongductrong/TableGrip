@@ -112,6 +112,12 @@ enum class EngineFamily {
 
     /** Milvus' RESTful API v2. */
     Milvus,
+
+    /** Nacos' open API: its configuration center. */
+    Nacos,
+
+    /** TDengine's REST API and SQL. */
+    TDengine,
 }
 
 /** How a profile reaches its database, which decides the fields the connection dialog asks for. */
@@ -573,6 +579,13 @@ class DatabaseType(
         private fun vector(id: String, name: String, family: EngineFamily, port: Int, driver: DriverId) =
             DatabaseType(id, name, family, port, listOf(driver), paradigm = Paradigm.Vector, capabilities = emptySet())
 
+        /** Nacos' configuration center over its open API, built in. */
+        val Nacos = DatabaseType("Nacos", "Nacos", EngineFamily.Nacos, 8848, listOf(DriverId.Nacos), paradigm = Paradigm.KeyValue, capabilities = emptySet(), api = ClientApi.Records)
+
+        /** TDengine over its REST API (taosAdapter), built in; read-only in the browser. */
+        val TDengine =
+            DatabaseType("TDengine", "TDengine", EngineFamily.TDengine, 6041, listOf(DriverId.TDengine), paradigm = Paradigm.TimeSeries, capabilities = emptySet())
+
         private fun wideColumn(id: String, name: String) =
             DatabaseType(
                 id, name, EngineFamily.Cassandra, 9042, listOf(DriverId.Cassandra), paradigm = Paradigm.WideColumn, capabilities = emptySet(),
@@ -611,7 +624,7 @@ class DatabaseType(
                 Doris, StarRocks, AzureSql, Firebird, Trino, Presto,
                 Snowflake, Databricks, BigQuery, Spanner, Db2, Hana, Vertica, Exasol, Informix, Iris,
                 Hive, SparkSql, Impala, Kyuubi,
-                KeyDB, Dragonfly, Etcd, FerretDB, Elasticsearch, OpenSearch, Meilisearch, Cassandra, ScyllaDB, CouchDB, DynamoDB, InfluxDB, InfluxDB3, VictoriaMetrics, Prometheus, Neo4j, Solr, Qdrant, Weaviate, Milvus, Chroma, RabbitMQ, Kafka, ZooKeeper, Consul, Libsql, Rqlite, H2, HSQLDB, Derby, Access, OtherJdbc,
+                KeyDB, Dragonfly, Etcd, FerretDB, Elasticsearch, OpenSearch, Meilisearch, Cassandra, ScyllaDB, CouchDB, DynamoDB, InfluxDB, InfluxDB3, VictoriaMetrics, Prometheus, TDengine, Neo4j, Solr, Qdrant, Weaviate, Milvus, Chroma, RabbitMQ, Kafka, ZooKeeper, Consul, Nacos, Libsql, Rqlite, H2, HSQLDB, Derby, Access, OtherJdbc,
                 CsvFile, ExcelFile, JsonFile,
             )
 

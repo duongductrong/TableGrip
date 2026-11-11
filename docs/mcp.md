@@ -231,7 +231,7 @@ Values come back as text, exactly as the database returns them, so large numbers
 ### Search, wide-column, time-series and graph engines
 
 Elasticsearch, OpenSearch, Meilisearch, Solr, Cassandra, ScyllaDB, CouchDB, DynamoDB, InfluxDB 2 and 3, VictoriaMetrics,
-Prometheus, Qdrant, Weaviate, Milvus, Chroma, Kafka, RabbitMQ, Consul, ZooKeeper, rqlite, libSQL and Neo4j.
+Prometheus, Qdrant, Weaviate, Milvus, Chroma, Kafka, RabbitMQ, Consul, ZooKeeper, Nacos, TDengine, rqlite, libSQL and Neo4j.
 Containers (indices, keyspaces and tables, buckets and measurements, labels) are named by their path, e.g.
 `["shop", "orders"]`.
 
