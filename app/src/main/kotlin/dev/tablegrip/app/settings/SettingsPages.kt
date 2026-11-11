@@ -20,6 +20,7 @@ import dev.tablegrip.core.i18n.Language
 import dev.tablegrip.core.i18n.tr
 import java.util.Locale
 import dev.tablegrip.app.LeftTool
+import dev.tablegrip.app.grid.isMac
 import dev.tablegrip.app.console.SyntaxPreview
 import dev.tablegrip.app.console.SyntaxScheme
 import dev.tablegrip.app.console.SyntaxToken
@@ -293,6 +294,18 @@ object SettingsPages {
                                 BooleanField(tr("Remember window size"), Settings::rememberWindowBounds, { s, v -> s.copy(rememberWindowBounds = v) }),
                                 BooleanField(tr("Remember panel widths"), Settings::rememberPanelSizes, { s, v -> s.copy(rememberPanelSizes = v) }, hint = tr("The tool window's and the agent chat's.")),
                             ),
+                        ),
+                        SettingsSection(
+                            if (isMac) tr("Menu bar") else tr("System tray"),
+                            listOf(
+                                BooleanField(
+                                    if (isMac) tr("Show in menu bar") else tr("Show in system tray"),
+                                    Settings::showInMenuBar,
+                                    { s, v -> s.copy(showInMenuBar = v) },
+                                    hint = tr("An icon with a menu to open TableGrip, a connection, a new console or Settings from any app, and to quit."),
+                                ),
+                            ),
+                            keywords = listOf("menu bar", "menubar", "tray", "status bar item", "icon"),
                         ),
                         SettingsSection(
                             tr("Status bar"),

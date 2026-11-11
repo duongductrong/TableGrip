@@ -140,6 +140,16 @@ class AppState(
      * window comes up when something opens in it, and hides rather than quits while file windows remain.
      */
     var mainWindowVisible by mutableStateOf(false)
+    /** Goes up each time something asks for the main window in front, e.g. the menu bar item; [Main] raises it. */
+    var mainWindowRaises by mutableStateOf(0)
+        private set
+
+    /** Shows the main window and brings TableGrip to the front, from wherever the user is. */
+    fun showMainWindow() {
+        mainWindowVisible = true
+        mainWindowRaises++
+        dev.tablegrip.app.ui.activateApp()
+    }
     /** Secrets kept out of settings.json, in the same store as connection passwords. */
     val secrets: SecretStore = connectionStore.secrets
     val agent = agentRegistry?.let { AgentViewModel(this, it) } ?: AgentViewModel(this)

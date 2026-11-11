@@ -136,6 +136,8 @@ data class Settings(
     val startupAgent: String = "Closed",
     val statusBreadcrumbs: Boolean = true,
     val statusSelectionStats: Boolean = true,
+    /** Shows TableGrip's icon and menu in the macOS menu bar (the system tray on Windows and Linux). */
+    val showInMenuBar: Boolean = true,
     /** Tool stripe buttons the user hid, by id. */
     val stripeHidden: List<String> = emptyList(),
     /** Tool stripe buttons in the user's order, by id; ids missing here keep their place after these. */

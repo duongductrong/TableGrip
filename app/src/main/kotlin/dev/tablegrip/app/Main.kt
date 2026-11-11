@@ -24,6 +24,7 @@ import dev.tablegrip.app.ui.AppIcon
 import dev.tablegrip.app.ui.TableGripTheme
 import dev.tablegrip.app.ui.FollowThemeAppearance
 import dev.tablegrip.app.ui.MacAboutPanel
+import dev.tablegrip.app.ui.MenuBarItem
 import dev.tablegrip.app.ui.Shortcuts
 import dev.tablegrip.core.activity.ActivitySupport
 import dev.tablegrip.core.agent.ChatStore
@@ -56,6 +57,9 @@ fun main(args: Array<String>) {
     // Before the UI, so the file the app was launched to open (from Finder or a file association) isn't missed.
     FileOpenRequests.install(args)
     MacAboutPanel.install()
+    // The menu bar item's glyph is a template image, which macOS tints for a light or dark menu bar. Read when the
+    // first tray icon is made, so before the UI.
+    System.setProperty("apple.awt.enableTemplateImages", "true")
     runApp()
 }
 
@@ -104,6 +108,7 @@ private fun runApp() = application {
     fun closedWindow() {
         if (appState.files.windows.isEmpty() && !appState.mainWindowVisible) appState.requestExit(::exit)
     }
+    MenuBarItem(appState)
     TableGripTheme(isDark = appState.theme.isDark(), settings = appState.settings) {
         appState.files.windows.forEach { file ->
             key(file) { DataFileWindowView(appState, file, onClosed = ::closedWindow) }
@@ -125,6 +130,14 @@ private fun runApp() = application {
             onKeyEvent = { handleWindowShortcut(appState, it) },
         ) {
             FollowThemeAppearance(window)
+            // The menu bar item asked for the window: bring it up even when it's minimized or behind other apps.
+            LaunchedEffect(appState.mainWindowRaises) {
+                if (appState.mainWindowRaises > 0) {
+                    if (window.isMinimized) window.isMinimized = false
+                    window.toFront()
+                    window.requestFocus()
+                }
+            }
             DisposableEffect(window) {
                 val stop = PinchZoom.install(window.rootPane)
                 onDispose { stop?.invoke() }
