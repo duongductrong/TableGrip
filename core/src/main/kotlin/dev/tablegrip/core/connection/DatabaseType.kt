@@ -103,6 +103,15 @@ enum class EngineFamily {
 
     /** SQLite served over HTTP: rqlite's API, libSQL's Hrana. Browsed as records, with SQL in the console. */
     SqliteHttp,
+
+    /** Weaviate's REST and GraphQL APIs. */
+    Weaviate,
+
+    /** Chroma's v2 HTTP API. */
+    Chroma,
+
+    /** Milvus' RESTful API v2. */
+    Milvus,
 }
 
 /** How a profile reaches its database, which decides the fields the connection dialog asks for. */
@@ -556,6 +565,14 @@ class DatabaseType(
         /** libSQL server (sqld) and Turso over Hrana's HTTP API, built in; Turso's host takes port 443 with ssl=true. */
         val Libsql = DatabaseType("Libsql", "libSQL / Turso", EngineFamily.SqliteHttp, 8080, listOf(DriverId.Libsql), capabilities = emptySet(), api = ClientApi.Records, dialect = null)
 
+        /** Vector databases over their HTTP APIs, built in. */
+        val Weaviate = vector("Weaviate", "Weaviate", EngineFamily.Weaviate, 8080, DriverId.Weaviate)
+        val Chroma = vector("Chroma", "Chroma", EngineFamily.Chroma, 8000, DriverId.Chroma)
+        val Milvus = vector("Milvus", "Milvus", EngineFamily.Milvus, 19530, DriverId.Milvus)
+
+        private fun vector(id: String, name: String, family: EngineFamily, port: Int, driver: DriverId) =
+            DatabaseType(id, name, family, port, listOf(driver), paradigm = Paradigm.Vector, capabilities = emptySet())
+
         private fun wideColumn(id: String, name: String) =
             DatabaseType(
                 id, name, EngineFamily.Cassandra, 9042, listOf(DriverId.Cassandra), paradigm = Paradigm.WideColumn, capabilities = emptySet(),
@@ -594,7 +611,7 @@ class DatabaseType(
                 Doris, StarRocks, AzureSql, Firebird, Trino, Presto,
                 Snowflake, Databricks, BigQuery, Spanner, Db2, Hana, Vertica, Exasol, Informix, Iris,
                 Hive, SparkSql, Impala, Kyuubi,
-                KeyDB, Dragonfly, Etcd, FerretDB, Elasticsearch, OpenSearch, Meilisearch, Cassandra, ScyllaDB, CouchDB, DynamoDB, InfluxDB, InfluxDB3, VictoriaMetrics, Prometheus, Neo4j, Solr, Qdrant, RabbitMQ, Kafka, ZooKeeper, Consul, Libsql, Rqlite, H2, HSQLDB, Derby, Access, OtherJdbc,
+                KeyDB, Dragonfly, Etcd, FerretDB, Elasticsearch, OpenSearch, Meilisearch, Cassandra, ScyllaDB, CouchDB, DynamoDB, InfluxDB, InfluxDB3, VictoriaMetrics, Prometheus, Neo4j, Solr, Qdrant, Weaviate, Milvus, Chroma, RabbitMQ, Kafka, ZooKeeper, Consul, Libsql, Rqlite, H2, HSQLDB, Derby, Access, OtherJdbc,
                 CsvFile, ExcelFile, JsonFile,
             )
 

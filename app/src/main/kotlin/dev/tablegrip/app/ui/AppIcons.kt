@@ -21,7 +21,7 @@ internal object AppIcons {
             "TimescaleDB", "Neon", "Supabase", "TiDB", "PlanetScale", "Trino", "Presto", "Doris", "OceanBase", "Etcd", "FerretDB", "H2", "JsonFile",
             "Snowflake", "Databricks", "BigQuery", "Spanner", "Hana", "Hive", "SparkSql",
             "Elasticsearch", "OpenSearch", "Meilisearch", "Cassandra", "ScyllaDB", "CouchDB", "InfluxDB", "VictoriaMetrics", "Neo4j",
-            "Prometheus", "InfluxDB3", "Solr", "Qdrant", "RabbitMQ", "Kafka", "Consul", "Libsql",
+            "Prometheus", "InfluxDB3", "Solr", "Qdrant", "RabbitMQ", "Kafka", "Consul", "Libsql", "Milvus",
         )
 
     private val engineLogoKeys = HashMap<String, IconKey>()

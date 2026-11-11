@@ -67,6 +67,7 @@ ENGINES = {
     "Kafka": "apachekafka",
     "Consul": "consul",
     "Libsql": "turso",
+    "Milvus": "milvus",
 }
 
 # The website lists engines by display name.

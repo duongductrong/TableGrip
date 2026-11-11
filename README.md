@@ -72,7 +72,7 @@ Every feature is described in the **[user guide](docs/guide.md)**.
 | **Search** | Elasticsearch · OpenSearch · Meilisearch · Apache Solr | Indices, aliases and mappings; documents by query string or query DSL; a Dev Tools console. Edits check the version they were read at. No download. |
 | **Wide-column** | Apache Cassandra · ScyllaDB | Keyspaces and tables, paged rows by `WHERE`, a CQL console. Rows round-trip as Cassandra's own JSON. |
 | **Time series** | InfluxDB 2 · InfluxDB 3 · VictoriaMetrics · Prometheus | Buckets and measurements with Flux, InfluxDB 3 tables with SQL; metrics with PromQL. Read-only. No download. |
-| **Vector** | Qdrant | Collections and points by filter; payloads edited, points added with their vector. No download. |
+| **Vector** | Qdrant · Weaviate · Milvus · Chroma | Collections, records by each one's filter (Weaviate's through GraphQL, with a GraphQL console); metadata and payloads edited after a check that they're unchanged, records added with their vector. No download. |
 | **Messaging** | Apache Kafka · RabbitMQ | Kafka topics paged by partition and offset without a consumer group, messages produced, consumer group lag in the console. RabbitMQ queues through the management API: messages peeked (and requeued) and published, no download. |
 | **Graph** | Neo4j | Labels and relationship types, a Cypher console. Edits set only the properties that changed. No download. |
 | **Data files** | CSV / TSV · Excel `.xlsx` · JSON / NDJSON | Opened as tables. Committed changes are written back to the file. |

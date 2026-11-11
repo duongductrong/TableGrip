@@ -25,7 +25,7 @@ with each other.
 | --- | --- | --- |
 | **Catalog drivers** | PostgreSQL, MariaDB Connector/J (also for MySQL), SQLite, SQL Server, ClickHouse, DuckDB, H2, HSQLDB, Derby, Jaybird (Firebird), Trino JDBC, Presto JDBC, OceanBase Connector/J, Kyuubi Hive JDBC (Hive, Spark SQL, Impala, Kyuubi), Cloud Spanner JDBC, UCanAccess (Microsoft Access) | Downloaded from Maven Central and verified |
 | **Non-JDBC clients** | Redis (Lettuce), MongoDB (the MongoDB Java driver), Cassandra and ScyllaDB (the Apache Cassandra Java driver), Kafka (the Apache Kafka client), ZooKeeper (the Apache ZooKeeper client) | Downloaded the same way; TableGrip's own adapter for each ships inside the app |
-| **Built in** | etcd, Consul, rqlite, libSQL / Turso, Elasticsearch, OpenSearch, Meilisearch, Solr, CouchDB, DynamoDB, InfluxDB 2 and 3, VictoriaMetrics, Prometheus, Qdrant, RabbitMQ, Neo4j | Nothing to download: TableGrip speaks their HTTP APIs itself |
+| **Built in** | etcd, Consul, rqlite, libSQL / Turso, Elasticsearch, OpenSearch, Meilisearch, Solr, CouchDB, DynamoDB, InfluxDB 2 and 3, VictoriaMetrics, Prometheus, Qdrant, Weaviate, Milvus, Chroma, RabbitMQ, Neo4j | Nothing to download: TableGrip speaks their HTTP APIs itself |
 | **Your own jars** | MySQL Connector/J, Oracle, Snowflake, Databricks, BigQuery, IBM Db2, SAP HANA, Vertica, Exasol, IBM Informix, InterSystems IRIS, any other JDBC driver | You choose the `.jar` files in the connection dialog; it links to each vendor's download page |
 
 ## MySQL and MariaDB

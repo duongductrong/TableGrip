@@ -155,6 +155,9 @@ enum class DriverId(
     Consul(tr("Consul HTTP API (built in)"), "dev.tablegrip.core.driver.keyvalue.ConsulClient", "http:", builtIn = true),
     Rqlite(tr("rqlite HTTP API (built in)"), "dev.tablegrip.core.driver.sqlite.RqliteClient", "http:", builtIn = true),
     Libsql(tr("libSQL Hrana over HTTP (built in)"), "dev.tablegrip.core.driver.sqlite.LibsqlClient", "http:", builtIn = true),
+    Weaviate(tr("Weaviate REST and GraphQL APIs (built in)"), "dev.tablegrip.core.driver.vector.WeaviateClient", "http:", builtIn = true),
+    Chroma(tr("Chroma HTTP API (built in)"), "dev.tablegrip.core.driver.vector.ChromaClient", "http:", builtIn = true),
+    Milvus(tr("Milvus RESTful API (built in)"), "dev.tablegrip.core.driver.vector.MilvusClient", "http:", builtIn = true),
 
     /** Whatever driver the profile's own jars contain; its class is found in them. */
     Generic(tr("JDBC driver from your jars"), "", "jdbc:");

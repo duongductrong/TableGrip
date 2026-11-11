@@ -524,11 +524,13 @@ private fun GeneralTab(form: ConnectionForm, drivers: DriverDownloads, onMessage
         }
         if (form.relational) FormRow(tr("Database")) { TextField(form.database, Modifier.fillMaxWidth()) }
         if (form.type.family == EngineFamily.Neo4j) FormRow(tr("Database")) { TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text("neo4j") }) }
+        if (form.type.family == EngineFamily.Milvus) FormRow(tr("Database")) { TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text("default") }) }
+        if (form.type.family == EngineFamily.Chroma) FormRow(tr("Database")) { TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text("default_tenant/default_database") }) }
         if (form.type.family == EngineFamily.Cassandra) FormRow(tr("Keyspace")) { TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text(tr("Optional: opened first")) }) }
         if (form.type.family == EngineFamily.InfluxDB) FormRow(tr("Organization")) { TextField(form.database, Modifier.fillMaxWidth()) }
         if (form.document) FormRow(tr("Database")) { TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text(tr("Optional: opened first, and the default auth source")) }) }
         // Meilisearch and InfluxDB sign in with a key or token alone, DynamoDB with an AWS access key.
-        val keyOnly = form.type.family in setOf(EngineFamily.Meilisearch, EngineFamily.InfluxDB, EngineFamily.InfluxDB3, EngineFamily.Qdrant, EngineFamily.Consul) || form.type == DatabaseType.Libsql
+        val keyOnly = form.type.family in setOf(EngineFamily.Meilisearch, EngineFamily.InfluxDB, EngineFamily.InfluxDB3, EngineFamily.Qdrant, EngineFamily.Consul, EngineFamily.Weaviate, EngineFamily.Chroma) || form.type == DatabaseType.Libsql
         val aws = form.type.family == EngineFamily.DynamoDB
         if (!keyOnly) FormRow(if (aws) tr("Access key ID") else tr("User")) { TextField(form.user, Modifier.fillMaxWidth()) }
         FormRow(if (keyOnly) tr("API key") else if (aws) tr("Secret access key") else tr("Password")) {
