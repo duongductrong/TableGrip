@@ -18,7 +18,12 @@ import dev.tablegrip.app.schema.ErDiagramTab
 import dev.tablegrip.app.schema.SchemaCompareTab
 import dev.tablegrip.app.schema.TableDesignerTab
 import dev.tablegrip.core.connection.ConnectionConfig
-import dev.tablegrip.core.connection.Paradigm
+import dev.tablegrip.core.connection.ClientApi
+import dev.tablegrip.core.driver.RecordContainer
+import dev.tablegrip.app.records.RecordBrowserTab
+import dev.tablegrip.app.records.RecordConsoleTab
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import kotlinx.coroutines.launch
 import dev.tablegrip.core.metadata.Namespace
 import dev.tablegrip.core.metadata.TableRef
 import dev.tablegrip.core.session.SessionTab
@@ -76,15 +81,24 @@ class WorkspaceViewModel(private val app: AppState) {
 
     /**
      * A SQL console, or a command console for engines without SQL: [keyspace] picks a key-value store's database,
-     * [database] a document store's; [initialSql] is the first command to show.
+     * [database] a document store's; [initialSql] is the first command to show. For engines browsed as records, [records]
+     * names the container whose sample statement the console starts with.
      */
-    fun openConsole(config: ConnectionConfig, initialSql: String = "", keyspace: Int = 0, database: String? = null, file: File? = null) {
+    fun openConsole(config: ConnectionConfig, initialSql: String = "", keyspace: Int = 0, database: String? = null, file: File? = null, records: List<String>? = null) {
         consoleCount++
         val name = if (consoleCount == 1) config.name else "${config.name} ($consoleCount)"
         open(
-            when (config.type.paradigm) {
-                Paradigm.KeyValue -> CommandConsoleTab(app, config, name, keyspace = keyspace)
-                Paradigm.Document -> CommandConsoleTab(app, config, name, database = database ?: config.database.ifBlank { "test" }, initial = initialSql)
+            when (config.type.api) {
+                ClientApi.KeyValue -> CommandConsoleTab(app, config, name, keyspace = keyspace)
+                ClientApi.Document -> CommandConsoleTab(app, config, name, database = database ?: config.database.ifBlank { "test" }, initial = initialSql)
+                ClientApi.Records -> RecordConsoleTab(app, config, name, initialSql).also { tab ->
+                    // The engine's sample statement, once connected, unless the caller gave one.
+                    if (initialSql.isEmpty()) app.scope.launch {
+                        runCatching { app.databases.records(config).sampleStatement(records.orEmpty()) }.onSuccess { sample ->
+                            if (tab.editor.text.isEmpty()) tab.editor.setTextAndPlaceCursorAtEnd(sample)
+                        }
+                    }
+                }
                 else -> ConsoleTab(app, config, name, initialSql, file)
             }
         )
@@ -97,6 +111,17 @@ class WorkspaceViewModel(private val app: AppState) {
             return
         }
         open(DocumentBrowserTab(app, config, database, collection))
+    }
+
+    /** Focuses the container's record browser if it is already open; [definition] switches it to the definition. */
+    fun openRecords(config: ConnectionConfig, container: RecordContainer, definition: Boolean = false) {
+        val existing = tabs.firstOrNull { it is RecordBrowserTab && it.connectionId == config.id && it.path == container.path } as RecordBrowserTab?
+        if (existing != null) {
+            bringToFront(existing)
+            if (definition) existing.showDefinition()
+            return
+        }
+        open(RecordBrowserTab(app, config, container, definitionFirst = definition))
     }
 
     /** Focuses the key browser of [keyspace] if it is already open. */
@@ -203,6 +228,18 @@ class WorkspaceViewModel(private val app: AppState) {
     fun restoreTable(config: ConnectionConfig, saved: SessionTab.Table) {
         val ref = TableRef(Namespace(saved.catalog, saved.schema), saved.name)
         open(TableDataTab(app, config, ref).also { it.restore(saved.structure, saved.filter) }, reveal = false)
+    }
+
+    /** Reopens a record browser from the last session, with its query. */
+    fun restoreRecords(config: ConnectionConfig, saved: SessionTab.Records) {
+        val container = RecordContainer(saved.path, saved.kind)
+        open(RecordBrowserTab(app, config, container, definitionFirst = saved.definition, initialQuery = saved.query), reveal = false)
+    }
+
+    fun restoreRecordConsole(config: ConnectionConfig, saved: SessionTab.RecordConsole) {
+        consoleCount++
+        val name = if (consoleCount == 1) config.name else "${config.name} ($consoleCount)"
+        open(RecordConsoleTab(app, config, name, saved.text), reveal = false)
     }
 
     fun close(tab: WorkspaceTab) {

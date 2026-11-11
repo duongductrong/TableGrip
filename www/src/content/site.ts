@@ -32,7 +32,11 @@ export const databaseFamilies: { family: string; engines: string[]; kind: 'datab
   { family: 'Hadoop & Spark', kind: 'database', engines: ['Apache Hive', 'Spark SQL', 'Apache Impala', 'Apache Kyuubi'], note: 'Query-only, through Kyuubi’s Hive JDBC driver.' },
   { family: 'Embedded', kind: 'database', engines: ['SQLite', 'H2', 'HSQLDB', 'Apache Derby', 'Microsoft Access'], note: 'Open a file, or an in-memory database. Access files open without Access.' },
   { family: 'Key-value', kind: 'database', engines: ['Redis', 'Valkey', 'KeyDB', 'Dragonfly', 'etcd'], note: 'Standalone, Cluster and Sentinel, with TLS.' },
-  { family: 'Document', kind: 'database', engines: ['MongoDB', 'FerretDB'], note: 'mongodb:// and mongodb+srv:// URLs.' },
+  { family: 'Document', kind: 'database', engines: ['MongoDB', 'FerretDB', 'Apache CouchDB', 'Amazon DynamoDB'], note: 'mongodb:// URLs; Mango queries for CouchDB, PartiQL for DynamoDB.' },
+  { family: 'Search', kind: 'database', engines: ['Elasticsearch', 'OpenSearch', 'Meilisearch'], note: 'Indices and mappings, query DSL, a Dev Tools console.' },
+  { family: 'Wide-column', kind: 'database', engines: ['Apache Cassandra', 'ScyllaDB'], note: 'Keyspaces and tables, paged rows, a CQL console.' },
+  { family: 'Time series', kind: 'database', engines: ['InfluxDB 2', 'VictoriaMetrics'], note: 'Flux and PromQL, read-only.' },
+  { family: 'Graph', kind: 'database', engines: ['Neo4j'], note: 'Labels and relationships, a Cypher console.' },
   { family: 'Data files', kind: 'file', engines: ['CSV / TSV', 'Excel .xlsx', 'JSON / NDJSON'], note: 'Opened as tables; commits are written back to the file.' },
   { family: 'Anything else', kind: 'database', engines: ['Any JDBC database'], note: 'Bring the driver’s jar.' },
 ]

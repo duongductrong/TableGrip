@@ -902,7 +902,15 @@ abstract class SqlDialect(val syntax: SqlSyntax) {
                 EngineFamily.Hive -> Hive
                 EngineFamily.Redis,
                 EngineFamily.MongoDB,
-                EngineFamily.Etcd -> null
+                EngineFamily.Etcd,
+                EngineFamily.Elasticsearch,
+                EngineFamily.Meilisearch,
+                EngineFamily.Cassandra,
+                EngineFamily.CouchDB,
+                EngineFamily.DynamoDB,
+                EngineFamily.InfluxDB,
+                EngineFamily.Prometheus,
+                EngineFamily.Neo4j -> null
             }
 
         fun of(type: DatabaseType): SqlDialect = type.dialect ?: throw IllegalArgumentException(tr("{0} has no SQL dialect", type.displayName))

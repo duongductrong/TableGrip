@@ -228,6 +228,20 @@ Values come back as text, exactly as the database returns them, so large numbers
 
 `database` defaults to the connection's own database when it has one.
 
+### Search, wide-column, time-series and graph engines
+
+Elasticsearch, OpenSearch, Meilisearch, Cassandra, ScyllaDB, CouchDB, DynamoDB, InfluxDB, VictoriaMetrics and Neo4j.
+Containers (indices, keyspaces and tables, buckets and measurements, labels) are named by their path, e.g.
+`["shop", "orders"]`.
+
+| Tool | Needs | What it does |
+| --- | --- | --- |
+| `rec_containers` | Schema | Containers at the top level, or inside a `parent`. |
+| `rec_definition` | Schema | A container's definition: an index's mappings and settings, a table's `CREATE TABLE`, a label's indexes and constraints. |
+| `rec_browse` | Data | A page of records matching a `query` in the engine's language, with each record's `key`; `cursor` reads the next page. |
+| `rec_execute` | Data or Writes | One statement in the console's language: a Dev Tools request, CQL, PartiQL, Flux, PromQL or Cypher. Statements that only read need data access; others need writes. |
+| `rec_write` | Writes | `put` a record (new without a `key`, else replacing the one `rec_browse` read) or `delete` records by `keys`. A record changed since it was read is refused. |
+
 ### Data files
 
 CSV, TSV, Excel and JSON files are served like SQL databases (each sheet or file is a table), always read-only.

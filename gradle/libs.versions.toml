@@ -36,6 +36,7 @@ iris = "3.11.1"
 ojdbc = "23.26.4.0.0"
 lettuce = "7.9.0.RELEASE"
 mongodb = "5.14.0"
+cassandra = "4.19.0"
 hikari = "7.0.2"
 javaKeyring = "1.0.4"
 sshj = "0.41.2"
@@ -86,6 +87,8 @@ jdbc-iris = { module = "com.intersystems:intersystems-jdbc", version.ref = "iris
 jdbc-oracle = { module = "com.oracle.database.jdbc:ojdbc11", version.ref = "ojdbc" }
 lettuce = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 mongodb-driver-sync = { module = "org.mongodb:mongodb-driver-sync", version.ref = "mongodb" }
+# The Apache Cassandra Java driver (formerly DataStax's), for Cassandra and ScyllaDB.
+cassandra-driver = { module = "org.apache.cassandra:java-driver-core", version.ref = "cassandra" }
 java-keyring = { module = "com.github.javakeyring:java-keyring", version.ref = "javaKeyring" }
 sshj = { module = "com.hierynomus:sshj", version.ref = "sshj" }
 apache-sshd-core = { module = "org.apache.sshd:sshd-core", version.ref = "apacheSshd" }

@@ -57,7 +57,7 @@ internal class AgentContext(private val app: AppState) {
 
     private suspend fun schema(config: ConnectionConfig): String {
         schemas[config.id]?.let { return it }
-        if (config.type.paradigm == Paradigm.KeyValue || config.type.paradigm == Paradigm.Document) {
+        if (config.type.paradigm != Paradigm.Relational) {
             return "${config.type.displayName} has no SQL schema; answer in its own command language."
         }
         val text =

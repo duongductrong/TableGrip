@@ -4,6 +4,10 @@ import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.app.documents.DocumentBrowserTab
 import dev.tablegrip.app.documents.DocumentBrowserView
 import dev.tablegrip.app.keyvalue.CommandConsoleTab
+import dev.tablegrip.app.records.RecordBrowserTab
+import dev.tablegrip.app.records.RecordBrowserView
+import dev.tablegrip.app.records.RecordConsoleTab
+import dev.tablegrip.app.records.RecordConsoleView
 import dev.tablegrip.app.keyvalue.CommandConsoleView
 import dev.tablegrip.app.keyvalue.KeyBrowserTab
 import dev.tablegrip.app.schema.ErDiagramTab
@@ -97,6 +101,8 @@ internal fun WorkspaceView(app: AppState) {
                 is KeyBrowserTab -> KeyBrowserView(selected)
                 is DocumentBrowserTab -> DocumentBrowserView(selected)
                 is CommandConsoleTab -> CommandConsoleView(selected)
+                is RecordBrowserTab -> RecordBrowserView(selected)
+                is RecordConsoleTab -> RecordConsoleView(selected)
                 is TableDesignerTab -> TableDesignerView(app, selected)
                 is SchemaCompareTab -> SchemaCompareView(app, selected)
                 is ErDiagramTab -> ErDiagramView(app, selected)
@@ -127,7 +133,7 @@ private fun TabStrip(workspace: WorkspaceViewModel, selected: WorkspaceTab) {
             val dragged = drag.draggedKey == key
             PillTab(
                 title = tab.title,
-                isConsole = tab is ConsoleTab || tab is CommandConsoleTab,
+                isConsole = tab is ConsoleTab || tab is CommandConsoleTab || tab is RecordConsoleTab,
                 dirty = tab.hasUnsavedWork,
                 selected = tab == selected,
                 lifted = dragged,

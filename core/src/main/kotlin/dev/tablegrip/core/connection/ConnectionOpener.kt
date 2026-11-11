@@ -5,6 +5,7 @@ import dev.tablegrip.core.driver.Database
 import dev.tablegrip.core.driver.DatabaseConnection
 import dev.tablegrip.core.driver.DocumentStore
 import dev.tablegrip.core.driver.KeyValueStore
+import dev.tablegrip.core.driver.RecordStore
 import dev.tablegrip.core.drivers.DriverLibrary
 
 /**
@@ -21,8 +22,9 @@ object ConnectionOpener {
         val ssh = if (config.ssh != null) sshSecret() else null
         return when {
             config.type.isDataFile -> DataFileStore.connect(config, drivers)
-            config.type.paradigm == Paradigm.KeyValue -> KeyValueStore.connect(config, password(), ssh, drivers)
-            config.type.paradigm == Paradigm.Document -> DocumentStore.connect(config, password(), ssh, drivers)
+            config.type.api == ClientApi.KeyValue -> KeyValueStore.connect(config, password(), ssh, drivers)
+            config.type.api == ClientApi.Document -> DocumentStore.connect(config, password(), ssh, drivers)
+            config.type.api == ClientApi.Records -> RecordStore.connect(config, password(), ssh, drivers)
             else -> Database.connect(config, password(), ssh, drivers)
         }
     }

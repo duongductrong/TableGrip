@@ -55,6 +55,30 @@ enum class EngineFamily {
 
     /** etcd's v3 key-value API. */
     Etcd,
+
+    /** Elasticsearch's REST API, which OpenSearch kept: indices of JSON documents, the query DSL. */
+    Elasticsearch,
+
+    /** Meilisearch's REST API. */
+    Meilisearch,
+
+    /** CQL over Cassandra's native protocol: Apache Cassandra and ScyllaDB. */
+    Cassandra,
+
+    /** CouchDB's HTTP API: databases of JSON documents with revisions, Mango queries. */
+    CouchDB,
+
+    /** DynamoDB's HTTP API, signed with AWS Signature Version 4; PartiQL. */
+    DynamoDB,
+
+    /** InfluxDB 2's HTTP API and Flux. */
+    InfluxDB,
+
+    /** The Prometheus query API and PromQL, as VictoriaMetrics serves it too. */
+    Prometheus,
+
+    /** Neo4j's HTTP API and Cypher. */
+    Neo4j,
 }
 
 /** How a profile reaches its database, which decides the fields the connection dialog asks for. */
@@ -76,7 +100,30 @@ enum class ConnectionKind {
 }
 
 /** How an engine's data is shaped, which decides the screens that browse it and the connection interface it has. */
-enum class Paradigm { Relational, KeyValue, Document, WideColumn, Search, Stream, Graph }
+enum class Paradigm { Relational, KeyValue, Document, WideColumn, Search, Stream, Graph, TimeSeries }
+
+/**
+ * The connection interface an engine's client speaks, which decides the screens that browse it: tables and SQL, the key
+ * browser, the MongoDB document browser, or the record browser that search, wide-column and graph engines share (see
+ * [dev.tablegrip.core.driver.RecordConnection]).
+ */
+enum class ClientApi {
+    Relational,
+    KeyValue,
+    Document,
+    Records,
+    ;
+
+    companion object {
+        fun of(paradigm: Paradigm): ClientApi =
+            when (paradigm) {
+                Paradigm.Relational -> Relational
+                Paradigm.KeyValue -> KeyValue
+                Paradigm.Document -> Document
+                Paradigm.WideColumn, Paradigm.Search, Paradigm.Stream, Paradigm.Graph, Paradigm.TimeSeries -> Records
+            }
+    }
+}
 
 /** Features the UI offers only where the engine has them. */
 enum class Capability {
@@ -119,6 +166,8 @@ class DatabaseType(
     val defaultProperties: Map<DriverId, Map<String, String>> = emptyMap(),
     /** The family's SQL dialect, unless the engine strays from it; null for engines without SQL. */
     val dialect: SqlDialect? = SqlDialect.of(family),
+    /** The connection interface its client speaks; documents other than MongoDB's are browsed as records. */
+    val api: ClientApi = ClientApi.of(paradigm),
 ) {
     init {
         require(drivers.isNotEmpty()) { "$id needs at least one driver" }
@@ -411,6 +460,55 @@ class DatabaseType(
         val MongoDB =
             DatabaseType("MongoDB", "MongoDB", EngineFamily.MongoDB, 27017, listOf(DriverId.MongoDB), paradigm = Paradigm.Document, capabilities = emptySet())
 
+        /** Elasticsearch and OpenSearch over their REST API, built in. The user and password are HTTP basic auth. */
+        val Elasticsearch = search("Elasticsearch", "Elasticsearch", EngineFamily.Elasticsearch, 9200, DriverId.ElasticRest)
+        val OpenSearch = search("OpenSearch", "OpenSearch", EngineFamily.Elasticsearch, 9200, DriverId.ElasticRest)
+
+        /** Meilisearch over its REST API, built in; the password is the API key. */
+        val Meilisearch = search("Meilisearch", "Meilisearch", EngineFamily.Meilisearch, 7700, DriverId.Meilisearch)
+
+        /** Wide-column stores over CQL; the database field is a keyspace to open first. */
+        val Cassandra = wideColumn("Cassandra", "Apache Cassandra")
+        val ScyllaDB = wideColumn("ScyllaDB", "ScyllaDB")
+
+        /** Apache CouchDB over its HTTP API, built in; browsed as records, not with the MongoDB shell. */
+        val CouchDB =
+            DatabaseType("CouchDB", "Apache CouchDB", EngineFamily.CouchDB, 5984, listOf(DriverId.CouchDB), paradigm = Paradigm.Document, capabilities = emptySet(), api = ClientApi.Records)
+
+        /**
+         * Amazon DynamoDB over its HTTP API, built in: the host is the endpoint (`dynamodb.<region>.amazonaws.com`, or
+         * DynamoDB Local's), the user the access key id and the password the secret key.
+         */
+        val DynamoDB =
+            DatabaseType(
+                "DynamoDB", "Amazon DynamoDB", EngineFamily.DynamoDB, 443, listOf(DriverId.DynamoDB), paradigm = Paradigm.Document, capabilities = emptySet(),
+                api = ClientApi.Records,
+            )
+
+        /** InfluxDB 2 over its HTTP API, built in: the password is an API token, the database field the organization. */
+        val InfluxDB =
+            DatabaseType(
+                "InfluxDB", "InfluxDB 2", EngineFamily.InfluxDB, 8086, listOf(DriverId.InfluxDB), paradigm = Paradigm.TimeSeries, capabilities = emptySet(),
+                databaseHint = tr("Organization"),
+            )
+
+        /** VictoriaMetrics over its Prometheus-compatible API, built in; read-only. */
+        val VictoriaMetrics =
+            DatabaseType("VictoriaMetrics", "VictoriaMetrics", EngineFamily.Prometheus, 8428, listOf(DriverId.Prometheus), paradigm = Paradigm.TimeSeries, capabilities = emptySet())
+
+        /** Neo4j over its HTTP API (port 7474), built in; the database field picks the database, `neo4j` when blank. */
+        val Neo4j =
+            DatabaseType("Neo4j", "Neo4j", EngineFamily.Neo4j, 7474, listOf(DriverId.Neo4j), paradigm = Paradigm.Graph, capabilities = emptySet(), databaseHint = "neo4j")
+
+        private fun wideColumn(id: String, name: String) =
+            DatabaseType(
+                id, name, EngineFamily.Cassandra, 9042, listOf(DriverId.Cassandra), paradigm = Paradigm.WideColumn, capabilities = emptySet(),
+                databaseHint = tr("Keyspace (optional)"),
+            )
+
+        private fun search(id: String, name: String, family: EngineFamily, port: Int, driver: DriverId) =
+            DatabaseType(id, name, family, port, listOf(driver), paradigm = Paradigm.Search, capabilities = emptySet())
+
         private fun keyValue(id: String, name: String) =
             DatabaseType(id, name, EngineFamily.Redis, 6379, listOf(DriverId.Lettuce), paradigm = Paradigm.KeyValue, capabilities = emptySet())
         val H2 = DatabaseType("H2", "H2", EngineFamily.Generic, null, listOf(DriverId.H2), databaseHint = tr("/path/to/data (without .mv.db) or mem:test"))
@@ -440,7 +538,7 @@ class DatabaseType(
                 Doris, StarRocks, AzureSql, Firebird, Trino, Presto,
                 Snowflake, Databricks, BigQuery, Spanner, Db2, Hana, Vertica, Exasol, Informix, Iris,
                 Hive, SparkSql, Impala, Kyuubi,
-                KeyDB, Dragonfly, Etcd, FerretDB, H2, HSQLDB, Derby, Access, OtherJdbc,
+                KeyDB, Dragonfly, Etcd, FerretDB, Elasticsearch, OpenSearch, Meilisearch, Cassandra, ScyllaDB, CouchDB, DynamoDB, InfluxDB, VictoriaMetrics, Neo4j, H2, HSQLDB, Derby, Access, OtherJdbc,
                 CsvFile, ExcelFile, JsonFile,
             )
 

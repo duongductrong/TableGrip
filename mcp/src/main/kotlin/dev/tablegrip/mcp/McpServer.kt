@@ -9,6 +9,7 @@ import dev.tablegrip.mcp.tools.connectionTools
 import dev.tablegrip.mcp.tools.describeConnection
 import dev.tablegrip.mcp.tools.documentTools
 import dev.tablegrip.mcp.tools.keyValueTools
+import dev.tablegrip.mcp.tools.recordTools
 import dev.tablegrip.mcp.tools.libraryTools
 import dev.tablegrip.mcp.tools.pathOf
 import dev.tablegrip.mcp.tools.relationalTools
@@ -30,7 +31,7 @@ import org.slf4j.LoggerFactory
 /** The MCP methods: lifecycle, tools, resources and prompts, served for one client [session]. */
 class McpServer(private val session: McpSession, private val version: String) : JsonRpcPeer.Handler {
     private val workspace = session.workspace
-    val tools: List<Tool> = connectionTools() + relationalTools() + keyValueTools() + documentTools() + libraryTools()
+    val tools: List<Tool> = connectionTools() + relationalTools() + keyValueTools() + documentTools() + recordTools() + libraryTools()
     private val byName = tools.associateBy { it.name }
 
     override suspend fun handle(method: String, params: JsonObject): JsonElement =

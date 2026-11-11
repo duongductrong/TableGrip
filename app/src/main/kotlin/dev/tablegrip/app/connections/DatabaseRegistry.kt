@@ -8,6 +8,7 @@ import dev.tablegrip.core.datafile.DataFileConnection
 import dev.tablegrip.core.driver.DatabaseConnection
 import dev.tablegrip.core.driver.DocumentConnection
 import dev.tablegrip.core.driver.KeyValueConnection
+import dev.tablegrip.core.driver.RecordConnection
 import dev.tablegrip.core.driver.RelationalConnection
 import dev.tablegrip.core.drivers.DriverNotInstalledException
 import kotlinx.coroutines.CoroutineScope
@@ -69,6 +70,10 @@ class DatabaseRegistry(
     /** The live document-store connection; fails for profiles of other kinds. */
     suspend fun documents(config: ConnectionConfig): DocumentConnection =
         connection(config) as? DocumentConnection ?: throw IllegalStateException(tr("{0} isn't a document store", config.type.displayName))
+
+    /** The live record-store connection (search, wide-column, graph…); fails for profiles of other kinds. */
+    suspend fun records(config: ConnectionConfig): RecordConnection =
+        connection(config) as? RecordConnection ?: throw IllegalStateException(tr("{0} isn't browsed as records", config.type.displayName))
 
     suspend fun connection(config: ConnectionConfig): DatabaseConnection {
         (statuses[config.id] as? ConnectionStatus.Connected)?.let { return it.database }

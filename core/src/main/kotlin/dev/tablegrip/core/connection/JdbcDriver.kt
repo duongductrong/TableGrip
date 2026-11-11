@@ -133,9 +133,19 @@ enum class DriverId(
      */
     Lettuce("Lettuce (Redis client)", "dev.tablegrip.engines.redis.RedisClient", "redis:", catalogId = "lettuce", adapter = "redis"),
     MongoDB("MongoDB Java Driver", "dev.tablegrip.engines.mongodb.MongoClient", "mongodb:", catalogId = "mongodb", adapter = "mongodb"),
+    Cassandra("Apache Cassandra Java Driver", "dev.tablegrip.engines.cassandra.CassandraClient", "cassandra:", catalogId = "cassandra", adapter = "cassandra"),
 
     /** Built in: TableGrip talks to etcd's v3 HTTP/JSON API itself, so there's nothing to download. */
     Etcd(tr("etcd v3 API (built in)"), "dev.tablegrip.core.driver.etcd.EtcdClient", "http:", builtIn = true),
+
+    /** Built in: the Elasticsearch REST API, which OpenSearch speaks too. */
+    ElasticRest(tr("Elasticsearch REST API (built in)"), "dev.tablegrip.core.driver.search.ElasticClient", "http:", builtIn = true),
+    Meilisearch(tr("Meilisearch REST API (built in)"), "dev.tablegrip.core.driver.search.MeiliClient", "http:", builtIn = true),
+    CouchDB(tr("CouchDB HTTP API (built in)"), "dev.tablegrip.core.driver.document.CouchClient", "http:", builtIn = true),
+    DynamoDB(tr("DynamoDB HTTP API (built in)"), "dev.tablegrip.core.driver.document.DynamoClient", "https:", builtIn = true),
+    InfluxDB(tr("InfluxDB 2 HTTP API (built in)"), "dev.tablegrip.core.driver.timeseries.InfluxClient", "http:", builtIn = true),
+    Prometheus(tr("Prometheus query API (built in)"), "dev.tablegrip.core.driver.timeseries.PromClient", "http:", builtIn = true),
+    Neo4j(tr("Neo4j HTTP API (built in)"), "dev.tablegrip.core.driver.graph.Neo4jClient", "http:", builtIn = true),
 
     /** Whatever driver the profile's own jars contain; its class is found in them. */
     Generic(tr("JDBC driver from your jars"), "", "jdbc:");

@@ -3,7 +3,8 @@ package dev.tablegrip.mcp.tools
 import dev.tablegrip.core.agent.AgentCapability
 import dev.tablegrip.core.agent.AgentPolicy
 import dev.tablegrip.core.connection.ConnectionConfig
-import dev.tablegrip.core.connection.Paradigm
+import dev.tablegrip.core.connection.ClientApi
+import dev.tablegrip.core.driver.RecordConnection
 import dev.tablegrip.core.driver.DocumentConnection
 import dev.tablegrip.core.driver.KeyValueConnection
 import dev.tablegrip.core.driver.RelationalConnection
@@ -18,8 +19,9 @@ import kotlinx.serialization.json.put
 /** Which tools fit a connection, so the agent doesn't have to guess from the engine's name. */
 internal fun toolsFor(config: ConnectionConfig): String =
     when {
-        config.type.paradigm == Paradigm.KeyValue -> "kv_*"
-        config.type.paradigm == Paradigm.Document -> "doc_*"
+        config.type.api == ClientApi.KeyValue -> "kv_*"
+        config.type.api == ClientApi.Document -> "doc_*"
+        config.type.api == ClientApi.Records -> "rec_*"
         else -> "SQL (list_tables, describe_table, query…)"
     }
 
@@ -96,6 +98,11 @@ internal fun connectionTools(): List<Tool> =
                         }
                         is KeyValueConnection -> put("server", connection.server())
                         is DocumentConnection -> put("server", connection.server())
+                        is RecordConnection -> {
+                            put("server", connection.server())
+                            put("queryLanguage", connection.queryLanguage.help)
+                            put("consoleLanguage", connection.consoleLanguage.help)
+                        }
                         else -> Unit
                     }
                 }

@@ -41,6 +41,22 @@ sealed interface SessionTab {
         val structure: Boolean = false,
         val filter: String? = null,
     ) : SessionTab
+
+    /** A record browser (an index, a wide-column table, a label): the container, its query and the view showing. */
+    @Serializable
+    @SerialName("records")
+    data class Records(
+        override val connectionId: String,
+        val path: List<String>,
+        val kind: String = "",
+        val query: String = "",
+        val definition: Boolean = false,
+    ) : SessionTab
+
+    /** A console of an engine browsed as records, with its text. */
+    @Serializable
+    @SerialName("recordConsole")
+    data class RecordConsole(override val connectionId: String, val text: String) : SessionTab
 }
 
 /** The workspace as the user left it. */

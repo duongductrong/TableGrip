@@ -174,6 +174,36 @@
       ]
     },
     {
+      "id": "cassandra",
+      "name": "Apache Cassandra Java Driver",
+      "version": "4.19.0",
+      "className": "dev.tablegrip.engines.cassandra.CassandraClient",
+      "license": "Apache-2.0",
+      "tier": "Permissive",
+      "licenseUrl": "https://github.com/apache/cassandra-java-driver/blob/4.x/LICENSE.txt",
+      "sourceUrl": "https://github.com/apache/cassandra-java-driver",
+      "artifacts": [
+        {"coordinates": "org.apache.cassandra:java-driver-core:4.19.0", "path": "org/apache/cassandra/java-driver-core/4.19.0/java-driver-core-4.19.0.jar", "sha256": "b77f8dcd1522d6a0cc1cc55a840d1166461972735f150ea981c4cf8b32a5a8f3", "size": 1878342, "license": "Apache-2.0"},
+        {"coordinates": "com.datastax.oss:native-protocol:1.5.1", "path": "com/datastax/oss/native-protocol/1.5.1/native-protocol-1.5.1.jar", "sha256": "955120805ddadd0771b36124679e337a20959c5639bc5de82bb8bce96b10441e", "size": 320153, "license": "Apache-2.0"},
+        {"coordinates": "io.netty:netty-handler:4.1.94.Final", "path": "io/netty/netty-handler/4.1.94.Final/netty-handler-4.1.94.Final.jar", "sha256": "8e50719a9ab89e33ef85c5f36d780e0d7056b3f768b07d261d87baed7094eb3c", "size": 554796, "license": "Apache-2.0"},
+        {"coordinates": "org.apache.cassandra:java-driver-guava-shaded:4.19.0", "path": "org/apache/cassandra/java-driver-guava-shaded/4.19.0/java-driver-guava-shaded-4.19.0.jar", "sha256": "a8315abe13a49f2378b7f2544734c3b04e4c2b68c92e64e7343469fcabcad392", "size": 3203047, "license": "Apache-2.0"},
+        {"coordinates": "com.typesafe:config:1.4.1", "path": "com/typesafe/config/1.4.1/config-1.4.1.jar", "sha256": "4c0aa7e223c75c8840c41fc183d4cd3118140a1ee503e3e08ce66ed2794c948f", "size": 295197, "license": "Apache-2.0"},
+        {"coordinates": "io.dropwizard.metrics:metrics-core:4.1.18", "path": "io/dropwizard/metrics/metrics-core/4.1.18/metrics-core-4.1.18.jar", "sha256": "a735eb5b62f425181efa53aefa5b7edad2b0e48cd0fa91105aa0ec1a45169e0b", "size": 116057, "license": "Apache-2.0"},
+        {"coordinates": "org.slf4j:slf4j-api:1.7.30", "path": "org/slf4j/slf4j-api/1.7.30/slf4j-api-1.7.30.jar", "sha256": "cdba07964d1bb40a0761485c6b1e8c2f8fd9eb1d19c53928ac0d7f9510105c57", "size": 41472, "license": "MIT"},
+        {"coordinates": "org.hdrhistogram:HdrHistogram:2.1.12", "path": "org/hdrhistogram/HdrHistogram/2.1.12/HdrHistogram-2.1.12.jar", "sha256": "9b47fbae444feaac4b7e04f0ea294569e4bc282bc69d8c2ce2ac3f23577281e2", "size": 173763, "license": "BSD-2-Clause"},
+        {"coordinates": "com.fasterxml.jackson.core:jackson-annotations:2.13.4", "path": "com/fasterxml/jackson/core/jackson-annotations/2.13.4/jackson-annotations-2.13.4.jar", "sha256": "ac5b27a634942391ca113850ee7db01df1499a240174021263501c05fc653b44", "size": 75717, "license": "Apache-2.0"},
+        {"coordinates": "com.fasterxml.jackson.core:jackson-databind:2.13.4.2", "path": "com/fasterxml/jackson/core/jackson-databind/2.13.4.2/jackson-databind-2.13.4.2.jar", "sha256": "ba1a368137f9b92f48dd07f299ff7a782a69487b853ef5578215426fcde8f08b", "size": 1531681, "license": "Apache-2.0"},
+        {"coordinates": "com.fasterxml.jackson.core:jackson-core:2.13.4", "path": "com/fasterxml/jackson/core/jackson-core/2.13.4/jackson-core-2.13.4.jar", "sha256": "4c2e043200edd9ee7ba6fc378bd5c17784a5bf2388e152d208068b51fd0839cf", "size": 374895, "license": "Apache-2.0"},
+        {"coordinates": "org.reactivestreams:reactive-streams:1.0.3", "path": "org/reactivestreams/reactive-streams/1.0.3/reactive-streams-1.0.3.jar", "sha256": "1dee0481072d19c929b623e155e14d2f6085dc011529a0a0dbefc84cf571d865", "size": 11369, "license": "MIT-0"},
+        {"coordinates": "io.netty:netty-transport-native-unix-common:4.1.94.Final", "path": "io/netty/netty-transport-native-unix-common/4.1.94.Final/netty-transport-native-unix-common-4.1.94.Final.jar", "sha256": "27d0dff1cd743190279becacfb372fe4d45b266edafad9f1c6c01b04d00280eb", "size": 43895, "license": "Apache-2.0"},
+        {"coordinates": "io.netty:netty-codec:4.1.94.Final", "path": "io/netty/netty-codec/4.1.94.Final/netty-codec-4.1.94.Final.jar", "sha256": "91243776ad68b4d8e39eafb9ec115e1b8fa9aecd147b12ef15bb691639498328", "size": 344670, "license": "Apache-2.0"},
+        {"coordinates": "io.netty:netty-transport:4.1.94.Final", "path": "io/netty/netty-transport/4.1.94.Final/netty-transport-4.1.94.Final.jar", "sha256": "a75afa84ca35a50225991b39e6b6278186e612f7a2a0c0e981de523aaac516a4", "size": 488739, "license": "Apache-2.0"},
+        {"coordinates": "io.netty:netty-resolver:4.1.94.Final", "path": "io/netty/netty-resolver/4.1.94.Final/netty-resolver-4.1.94.Final.jar", "sha256": "bd26e9bc5e94e2d3974a93fdf921658eff4f033bfd4c5208607760ab54298617", "size": 37791, "license": "Apache-2.0"},
+        {"coordinates": "io.netty:netty-buffer:4.1.94.Final", "path": "io/netty/netty-buffer/4.1.94.Final/netty-buffer-4.1.94.Final.jar", "sha256": "8066ee7c49f9f29da96ee62f7cb13bee022cb4b68e51437b33da3b6d01398f13", "size": 306563, "license": "Apache-2.0"},
+        {"coordinates": "io.netty:netty-common:4.1.94.Final", "path": "io/netty/netty-common/4.1.94.Final/netty-common-4.1.94.Final.jar", "sha256": "cb8d84a3e63aea90d0d7a333a02e50ac751d2b05db55745d981b5eff893f647b", "size": 659376, "license": "Apache-2.0"}
+      ]
+    },
+    {
       "id": "duckdb",
       "name": "DuckDB JDBC",
       "version": "1.5.6.0",

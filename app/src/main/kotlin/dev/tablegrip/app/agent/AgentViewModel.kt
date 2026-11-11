@@ -331,7 +331,7 @@ class AgentViewModel(private val app: AppState, private val registry: AgentRegis
 
     /** SQL blocks offer console actions only where a SQL console exists: not for key-value or document stores. */
     val canRunSql: Boolean
-        get() = app.currentConnection?.type?.paradigm?.let { it != Paradigm.KeyValue && it != Paradigm.Document } == true
+        get() = app.currentConnection?.type?.paradigm == Paradigm.Relational
 
     /** The selected tab, when it is a console of the current connection: suggestions go there rather than a new one. */
     private val currentConsole: ConsoleTab?

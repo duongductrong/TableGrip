@@ -205,6 +205,7 @@ val engineAdapters by configurations.creating {
 dependencies {
     engineAdapters(projects.engines.redis)
     engineAdapters(projects.engines.mongodb)
+    engineAdapters(projects.engines.cassandra)
     implementation(projects.core)
     implementation(projects.mcp)
 
@@ -228,6 +229,8 @@ dependencies {
     testRuntimeOnly(libs.lettuce)
     testImplementation(projects.engines.mongodb)
     testRuntimeOnly(libs.mongodb.driver.sync)
+    testImplementation(projects.engines.cassandra)
+    testRuntimeOnly(libs.cassandra.driver)
 }
 
 compose.desktop {

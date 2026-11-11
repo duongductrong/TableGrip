@@ -79,6 +79,8 @@ tasks.test {
         "it.postgres", "it.mysql", "it.network", "it.cockroach", "it.timescale", "it.tidb", "it.mssql", "it.clickhouse", "it.etcd", "it.etcdauth",
         "it.oracle", "it.firebird", "it.trino", "it.yugabyte", "it.questdb", "it.starrocks", "it.oceanbase", "it.presto",
         "it.db2", "it.informix", "it.iris", "it.hive", "it.spark", "it.spanner",
+        // Engines browsed as records: see SearchEnginesTest, DocumentEnginesTest, TimeSeriesEnginesTest and GraphEnginesTest.
+        "it.elasticsearch", "it.opensearch", "it.meilisearch", "it.couchdb", "it.dynamodb", "it.influxdb", "it.victoriametrics", "it.neo4j",
     ).forEach { name -> providers.gradleProperty(name).orNull?.let { systemProperty(name, it) } }
     testLogging { showStandardStreams = providers.gradleProperty("it.postgres").isPresent || providers.gradleProperty("it.mysql").isPresent }
 }
@@ -103,6 +105,8 @@ data class CatalogDriver(
     val sourceUrl: String,
     /** A published jar with every dependency inside, used alone instead of the main jar and its dependencies. */
     val classifier: String? = null,
+    /** Groups of optional dependencies left out of the download (`group` or `group:module`). */
+    val excludes: List<String> = emptyList(),
 )
 
 val driverCatalog =
@@ -147,6 +151,14 @@ val driverCatalog =
         CatalogDriver(
             "mongodb", "MongoDB Java Driver", libs.mongodb.driver.sync, "dev.tablegrip.engines.mongodb.MongoClient",
             "https://github.com/mongodb/mongo-java-driver/blob/main/LICENSE.txt", "https://github.com/mongodb/mongo-java-driver",
+        ),
+        // Not JDBC either: the Cassandra adapter (engines/cassandra), for Cassandra and ScyllaDB. JNR only gives the
+        // driver native clocks and the process id, which it does without; leaving it out keeps a tri-licensed jar and
+        // native code out of the download.
+        CatalogDriver(
+            "cassandra", "Apache Cassandra Java Driver", libs.cassandra.driver, "dev.tablegrip.engines.cassandra.CassandraClient",
+            "https://github.com/apache/cassandra-java-driver/blob/4.x/LICENSE.txt", "https://github.com/apache/cassandra-java-driver",
+            excludes = listOf("com.github.jnr"),
         ),
         CatalogDriver(
             "duckdb", "DuckDB JDBC", libs.jdbc.duckdb, "org.duckdb.DuckDBDriver",
@@ -275,6 +287,19 @@ val artifactLicenses =
         "org.mongodb:mongodb-driver-core" to "Apache-2.0",
         "org.mongodb:bson" to "Apache-2.0",
         "org.mongodb:bson-record-codec" to "Apache-2.0",
+        // The Apache Cassandra Java driver and what it pulls in (JNR left out, see the catalog). Its guava-shaded jar
+        // relocates Guava (Apache-2.0); native-protocol and typesafe config are Apache-2.0, as are Dropwizard Metrics and
+        // Jackson. HdrHistogram is dedicated to the public domain under CC0, or BSD-2-Clause where that isn't possible.
+        "org.apache.cassandra:java-driver-core" to "Apache-2.0",
+        "org.apache.cassandra:java-driver-guava-shaded" to "Apache-2.0",
+        "com.datastax.oss:native-protocol" to "Apache-2.0",
+        "com.typesafe:config" to "Apache-2.0",
+        "io.dropwizard.metrics:metrics-core" to "Apache-2.0",
+        "org.hdrhistogram:HdrHistogram" to "BSD-2-Clause",
+        "com.fasterxml.jackson.core:jackson-core" to "Apache-2.0",
+        "com.fasterxml.jackson.core:jackson-databind" to "Apache-2.0",
+        "com.fasterxml.jackson.core:jackson-annotations" to "Apache-2.0",
+        "io.netty:netty-codec" to "Apache-2.0",
     )
 
 val driverConfigurations =
@@ -284,6 +309,7 @@ val driverConfigurations =
             isCanBeConsumed = false
             // A jar with its dependencies inside is the whole driver.
             isTransitive = classifier == null
+            driver.excludes.forEach { exclude(mapOf("group" to it.substringBefore(':')) + (it.substringAfter(':', "").takeIf { m -> m.isNotEmpty() }?.let { m -> mapOf("module" to m) } ?: emptyMap())) }
         }
         dependencies.add(configuration.name, if (classifier == null) driver.library else dependencies.variantOf(driver.library) { classifier(classifier) })
         driver.id to configuration

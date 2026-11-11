@@ -14,6 +14,8 @@ import dev.tablegrip.core.datafile.DataFileFormats
 import dev.tablegrip.core.datafile.DataFileStore
 import dev.tablegrip.core.driver.DocumentStore
 import dev.tablegrip.core.driver.KeyValueStore
+import dev.tablegrip.core.driver.RecordStore
+import dev.tablegrip.core.connection.ClientApi
 import dev.tablegrip.core.driver.Database
 import dev.tablegrip.core.imports.ConnectionImport
 import java.io.File
@@ -217,9 +219,10 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
         // A data file is read without its working copy, so testing it needs no driver.
         if (config.type.isDataFile) return@runCatching TestOutcome(server = DataFileStore.test(config))
         app.drivers.ensure(config)
-        when (config.type.paradigm) {
-            Paradigm.KeyValue -> TestOutcome(server = KeyValueStore.test(config, password, sshSecret, app.drivers.library))
-            Paradigm.Document -> TestOutcome(server = DocumentStore.test(config, password, sshSecret, app.drivers.library))
+        when (config.type.api) {
+            ClientApi.KeyValue -> TestOutcome(server = KeyValueStore.test(config, password, sshSecret, app.drivers.library))
+            ClientApi.Document -> TestOutcome(server = DocumentStore.test(config, password, sshSecret, app.drivers.library))
+            ClientApi.Records -> TestOutcome(server = RecordStore.test(config, password, sshSecret, app.drivers.library))
             else -> TestOutcome(suggested = Database.test(config, password, sshSecret, app.drivers.library))
         }
     }

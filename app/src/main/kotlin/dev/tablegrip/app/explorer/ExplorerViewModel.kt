@@ -7,7 +7,8 @@ import androidx.compose.runtime.mutableStateMapOf
 import dev.tablegrip.app.AppState
 import dev.tablegrip.app.ui.copyToClipboard
 import dev.tablegrip.core.connection.ConnectionConfig
-import dev.tablegrip.core.connection.Paradigm
+import dev.tablegrip.core.connection.ClientApi
+import dev.tablegrip.core.driver.RecordContainer
 import dev.tablegrip.core.metadata.ColumnInfo
 import dev.tablegrip.core.metadata.ForeignKeyInfo
 import dev.tablegrip.core.metadata.IndexInfo
@@ -72,6 +73,11 @@ sealed interface ExplorerNode {
         override val key = connectionId to "collection:$database.${info.name}"
     }
 
+    /** An index, keyspace, table or label of an engine browsed as records; some expand, some open, some both. */
+    data class Records(val connectionId: String, val container: RecordContainer) : ExplorerNode {
+        override val key = RecordKey(connectionId, container.path)
+    }
+
     /** Stands in for [parent]'s children while they load, connecting first if need be. */
     data class Loading(val parent: Any) : ExplorerNode {
         override val key = parent to "loading"
@@ -88,6 +94,8 @@ data class ConnectionKey(val id: String)
 data class GroupKey(val name: String, val favorites: Boolean)
 
 data class TableKey(val connectionId: String, val ref: TableRef)
+
+data class RecordKey(val connectionId: String, val path: List<String>)
 
 private sealed interface Children {
     data object Loading : Children
@@ -137,6 +145,7 @@ class ExplorerViewModel(private val app: AppState) {
             is ExplorerNode.Column -> column.name
             is ExplorerNode.DocumentDatabase -> name
             is ExplorerNode.Collection -> info.name
+            is ExplorerNode.Records -> container.name
             else -> null
         }
 
@@ -192,8 +201,10 @@ class ExplorerViewModel(private val app: AppState) {
                 is ExplorerNode.Connection,
                 is ExplorerNode.Schema,
                 is ExplorerNode.DocumentDatabase,
-                is ExplorerNode.Table ->
-                    when (val loaded = snapshot[node.key]) {
+                is ExplorerNode.Table,
+                is ExplorerNode.Records ->
+                    if (node is ExplorerNode.Records && !node.container.hasChildren) null
+                    else when (val loaded = snapshot[node.key]) {
                         is Children.Loaded -> loaded.nodes
                         is Children.Failed -> listOf(ExplorerNode.Failure(node.key, loaded.message))
                         Children.Loading,
@@ -220,7 +231,15 @@ class ExplorerViewModel(private val app: AppState) {
     }
 
     private suspend fun load(config: ConnectionConfig, key: Any): List<ExplorerNode> {
-        if (config.type.paradigm == Paradigm.Document) {
+        if (config.type.api == ClientApi.Records) {
+            val store = app.databases.records(config)
+            return when (key) {
+                is ConnectionKey -> store.containers(emptyList())
+                is RecordKey -> store.containers(key.path)
+                else -> emptyList()
+            }.map { ExplorerNode.Records(config.id, it) }
+        }
+        if (config.type.api == ClientApi.Document) {
             val mongo = app.databases.documents(config)
             return when (key) {
                 is ConnectionKey -> mongo.databases().map { ExplorerNode.DocumentDatabase(config.id, it) }
@@ -228,7 +247,7 @@ class ExplorerViewModel(private val app: AppState) {
                 else -> emptyList()
             }
         }
-        if (config.type.paradigm == Paradigm.KeyValue) {
+        if (config.type.api == ClientApi.KeyValue) {
             // Empty databases past the first add nothing but noise; the console's SELECT still reaches them.
             val keyspaces = app.databases.keyValue(config).keyspaces()
             return keyspaces.filter { it.index == 0 || (it.keys ?: 0) > 0 }.map { ExplorerNode.Keyspace(config.id, it) }
@@ -308,6 +327,7 @@ class ExplorerViewModel(private val app: AppState) {
             is ExplorerNode.Schema -> key.connectionId
             is ExplorerNode.DocumentDatabase -> key.connectionId
             is TableKey -> key.connectionId
+            is RecordKey -> key.connectionId
             is Pair<*, *> -> key.first?.let(::connectionIdOf)
             else -> null
         }

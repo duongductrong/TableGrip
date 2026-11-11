@@ -223,6 +223,10 @@ private fun openNode(app: AppState, node: ExplorerNode) {
         app.connections.byId(node.connectionId)?.let { app.workspace.openCollection(it, node.database, node.info.name) }
         return
     }
+    if (node is ExplorerNode.Records) {
+        if (node.container.browsable) app.connections.byId(node.connectionId)?.let { app.workspace.openRecords(it, node.container) }
+        return
+    }
     val (table, section) =
         when (node) {
             is ExplorerNode.Table -> TableKey(node.connectionId, node.info.ref) to null
@@ -311,6 +315,17 @@ private fun contextMenu(app: AppState, node: ExplorerNode): List<ContextMenuItem
                     app.workspace.openConsole(config, database = node.database, initialSql = "db.getCollection('${node.info.name}').find({})")
                 },
                 ContextMenuItem(tr("Copy Name")) { copyToClipboard(node.info.name) },
+            )
+        }
+        is ExplorerNode.Records -> {
+            val config = app.connections.byId(node.connectionId) ?: return emptyList()
+            val container = node.container
+            listOfNotNull(
+                ContextMenuItem(tr("Open Records")) { app.workspace.openRecords(config, container) }.takeIf { container.browsable },
+                ContextMenuItem(tr("Show Definition")) { app.workspace.openRecords(config, container, definition = true) }.takeIf { container.browsable },
+                ContextMenuItem(tr("New Console")) { app.workspace.openConsole(config, records = container.path) },
+                ContextMenuItem(tr("Copy Name")) { copyToClipboard(container.name) },
+                ContextMenuItem(tr("Refresh")) { app.explorer.refresh(node.key) }.takeIf { container.hasChildren },
             )
         }
         is ExplorerNode.Keyspace -> {
@@ -435,6 +450,12 @@ private fun NodeRow(app: AppState, node: ExplorerNode, modifier: Modifier = Modi
                 val etcd = app.connections.byId(node.connectionId)?.type?.family == EngineFamily.Etcd
                 NameAndDetail(if (etcd) tr("keys") else "db${node.keyspace.index}", node.keyspace.keys?.let { if (it == 1L) tr("1 key") else tr("{0} keys", it) }.orEmpty(), Modifier.weight(1f))
             }
+            is ExplorerNode.Records -> {
+                val container = node.container
+                NodeIcon(if (container.hasChildren && !container.browsable) AllIconsKeys.Nodes.DataSchema else AllIconsKeys.Nodes.DataTables)
+                val detail = listOfNotNull(container.kind.takeIf { it !in PlainKinds }, container.count?.let { tr("~{0}", it) }, container.detail).joinToString(" · ")
+                NameAndDetail(container.name, detail, Modifier.weight(1f))
+            }
             is ExplorerNode.Loading -> LoadingRow(app, node.parent, Modifier.weight(1f))
             is ExplorerNode.Failure -> FailureRow(app, node, Modifier.weight(1f))
         }
@@ -443,6 +464,9 @@ private fun NodeRow(app: AppState, node: ExplorerNode, modifier: Modifier = Modi
 
 @Composable
 private fun NodeIcon(key: IconKey) = Icon(key, contentDescription = null)
+
+/** Container kinds too common to name beside each one. */
+private val PlainKinds = setOf("index", "table", "keyspace", "collection")
 
 /** The connection's badge with a dot in its corner once it's open (green) or has failed (red). */
 @Composable
@@ -489,6 +513,10 @@ private fun LoadingRow(app: AppState, parent: Any, modifier: Modifier = Modifier
                 when (config?.type?.paradigm) {
                     Paradigm.Document -> tr("Loading databases…")
                     Paradigm.KeyValue -> tr("Loading keys…")
+                    Paradigm.Search -> tr("Loading indices…")
+                    Paradigm.WideColumn -> tr("Loading keyspaces…")
+                    Paradigm.TimeSeries -> tr("Loading…")
+                    Paradigm.Graph -> tr("Loading labels…")
                     else -> tr("Loading schemas…")
                 }
             is ExplorerNode.Schema -> tr("Loading tables…")

@@ -17,6 +17,7 @@ import dev.tablegrip.app.files.FileDropTarget
 import dev.tablegrip.app.files.FileOpenRequests
 import dev.tablegrip.app.search.DoubleShiftDetector
 import dev.tablegrip.app.documents.DocumentBrowserTab
+import dev.tablegrip.app.records.RecordBrowserTab
 import dev.tablegrip.app.table.TableDataTab
 import dev.tablegrip.app.table.handleFilterShortcut
 import dev.tablegrip.app.ui.AppIcon
@@ -181,6 +182,7 @@ private fun handleWindowShortcut(app: AppState, event: KeyEvent): Boolean {
         selected is TableDataTab && Shortcuts.Undo.matches(event) -> selected.model?.let(selected.grid::undo) ?: false
         selected is TableDataTab && (Shortcuts.Redo.matches(event) || Shortcuts.RedoAlt.matches(event)) -> selected.model?.let(selected.grid::redo) ?: false
         selected is TableDataTab -> handleFilterShortcut(selected, event)
+        selected is RecordBrowserTab && Shortcuts.Reload.matches(event) -> done { selected.refresh() }
         selected is DocumentBrowserTab && Shortcuts.Reload.matches(event) -> done { selected.refresh() }
         selected is DocumentBrowserTab && Shortcuts.Save.matches(event) -> done { selected.submit() }
         selected is DocumentBrowserTab && Shortcuts.Undo.matches(event) -> selected.grid.undo(selected.model)

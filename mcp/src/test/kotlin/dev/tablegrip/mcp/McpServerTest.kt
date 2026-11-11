@@ -103,7 +103,7 @@ class McpServerTest {
     fun `initialize negotiates the version and lists every tool`() {
         val client = client()
         val tools = client.request("tools/list")["tools"]!!.jsonArray.map { it.jsonObject["name"]!!.jsonPrimitive.content }.toSet()
-        listOf("list_connections", "describe_table", "query", "execute", "kv_scan", "doc_find", "list_saved_queries").forEach { assertTrue(it in tools, it) }
+        listOf("list_connections", "describe_table", "query", "execute", "kv_scan", "doc_find", "rec_browse", "rec_execute", "list_saved_queries").forEach { assertTrue(it in tools, it) }
         assertEquals("2025-06-18", client.initialized["protocolVersion"]!!.jsonPrimitive.content)
         assertEquals("tablegrip", client.initialized["serverInfo"]!!.jsonObject["name"]!!.jsonPrimitive.content)
     }

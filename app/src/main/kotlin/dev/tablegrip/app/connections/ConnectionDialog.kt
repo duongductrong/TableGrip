@@ -52,6 +52,8 @@ import dev.tablegrip.core.datafile.DataFileStore
 import dev.tablegrip.core.connection.DatabaseType
 import dev.tablegrip.core.connection.DriverId
 import dev.tablegrip.core.connection.JdbcUrls
+import dev.tablegrip.core.connection.ClientApi
+import dev.tablegrip.core.connection.EngineFamily
 import dev.tablegrip.core.connection.Paradigm
 import dev.tablegrip.core.connection.ParsedConnection
 import dev.tablegrip.core.connection.Environment
@@ -132,7 +134,7 @@ private class ConnectionForm(existing: ConnectionConfig?, group: String = "") {
 
     /** MongoDB and the like: a database field and a connection string, but nothing JDBC. */
     val document: Boolean
-        get() = type.paradigm == Paradigm.Document
+        get() = type.api == ClientApi.Document
 
     /** The engine has no host/file form: only a JDBC URL. */
     val urlOnly: Boolean
@@ -224,6 +226,7 @@ private class ConnectionForm(existing: ConnectionConfig?, group: String = "") {
         }
         return when {
             relational && database.text.isBlank() -> if (isServer) tr("Database is required.") else tr("Database file is required.")
+            type.family == EngineFamily.InfluxDB && database.text.isBlank() -> tr("Organization is required.")
             fileMismatch() != null -> fileMismatch()
             isServer && host.text.isBlank() -> tr("Host is required.")
             ssh && ',' in host.text -> tr("SSH tunnels need a single host.")
@@ -521,9 +524,15 @@ private fun GeneralTab(form: ConnectionForm, drivers: DriverDownloads, onMessage
             }
         }
         if (form.relational) FormRow(tr("Database")) { TextField(form.database, Modifier.fillMaxWidth()) }
+        if (form.type.family == EngineFamily.Neo4j) FormRow(tr("Database")) { TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text("neo4j") }) }
+        if (form.type.family == EngineFamily.Cassandra) FormRow(tr("Keyspace")) { TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text(tr("Optional: opened first")) }) }
+        if (form.type.family == EngineFamily.InfluxDB) FormRow(tr("Organization")) { TextField(form.database, Modifier.fillMaxWidth()) }
         if (form.document) FormRow(tr("Database")) { TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text(tr("Optional: opened first, and the default auth source")) }) }
-        FormRow(tr("User")) { TextField(form.user, Modifier.fillMaxWidth()) }
-        FormRow(tr("Password")) {
+        // Meilisearch and InfluxDB sign in with a key or token alone, DynamoDB with an AWS access key.
+        val keyOnly = form.type.family == EngineFamily.Meilisearch || form.type.family == EngineFamily.InfluxDB
+        val aws = form.type.family == EngineFamily.DynamoDB
+        if (!keyOnly) FormRow(if (aws) tr("Access key ID") else tr("User")) { TextField(form.user, Modifier.fillMaxWidth()) }
+        FormRow(if (keyOnly) tr("API key") else if (aws) tr("Secret access key") else tr("Password")) {
             TextField(form.password, Modifier.fillMaxWidth(), outputTransformation = MaskPassword, placeholder = { Text(tr("Saved in the system keychain")) })
         }
     } else {
@@ -690,6 +699,14 @@ private val PropertyExamples =
         DriverId.UCanAccess to "memory=false  (large files)\nnewDatabaseVersion=V2010  (create the file)",
         DriverId.MongoDB to "authSource=admin\ntls=true\nreplicaSet=rs0",
         DriverId.Etcd to "ssl=true\nverifyPeer=false  (self-signed certificates)",
+        DriverId.ElasticRest to "ssl=true\nverifyPeer=false  (self-signed certificates)\napiKey=…  (instead of a user and password)\nshowHidden=true  (indices starting with a dot)",
+        DriverId.Meilisearch to "ssl=true\npathPrefix=/search  (behind a reverse proxy)",
+        DriverId.CouchDB to "ssl=true\nshowSystem=true  (_users, _replicator)",
+        DriverId.DynamoDB to "region=eu-west-1\nsessionToken=…  (temporary credentials)\nssl=false  (DynamoDB Local on port 443)",
+        DriverId.InfluxDB to "ssl=true\nshowSystem=true  (_monitoring, _tasks)",
+        DriverId.Prometheus to "bearerToken=…\nssl=true\npathPrefix=/select/0/prometheus  (cluster vmselect)",
+        DriverId.Neo4j to "ssl=true\nverifyPeer=false  (self-signed certificates)",
+        DriverId.Cassandra to "localDatacenter=datacenter1\nssl=true\nshowSystem=true  (system keyspaces)",
         DriverId.Lettuce to "ssl=true\nmode=cluster  (hosts are seed nodes)\nmode=sentinel + sentinelMaster=mymaster",
     )
 

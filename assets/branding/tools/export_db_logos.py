@@ -50,6 +50,15 @@ ENGINES = {
     "FerretDB": "ferretdb",
     "H2": "h2database",
     "JsonFile": "json",
+    "Elasticsearch": "elasticsearch",
+    "OpenSearch": "opensearch",
+    "Meilisearch": "meilisearch",
+    "Cassandra": "apachecassandra",
+    "ScyllaDB": "scylladb",
+    "CouchDB": "apachecouchdb",
+    "InfluxDB": "influxdb",
+    "VictoriaMetrics": "victoriametrics",
+    "Neo4j": "neo4j",
 }
 
 # The website lists engines by display name.
@@ -63,6 +72,9 @@ WWW_NAMES = {
     "Hana": "SAP HANA",
     "Hive": "Apache Hive",
     "SparkSql": "Spark SQL",
+    "Cassandra": "Apache Cassandra",
+    "CouchDB": "Apache CouchDB",
+    "InfluxDB": "InfluxDB 2",
 }
 
 LIGHT_BG = "FFFFFF"
