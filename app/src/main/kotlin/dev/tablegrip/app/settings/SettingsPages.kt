@@ -85,6 +85,8 @@ class BooleanField(
     val get: (Settings) -> Boolean,
     val set: (Settings, Boolean) -> Settings,
     override val hint: String? = null,
+    /** Whether it can be changed now, e.g. only while the setting it depends on is on. */
+    val enabled: (Settings) -> Boolean = { true },
 ) : SettingField
 
 /**
@@ -121,6 +123,8 @@ class SettingsSection(
     val keywords: List<String> = emptyList(),
     /** What "Reset to defaults" does for what [panel] edits, given the current and the default settings. */
     val reset: ((Settings, Settings) -> Settings)? = null,
+    /** Shows [fields] as a grouped card, label and hint on the left and the control on the right, as system settings do. */
+    val card: Boolean = false,
 )
 
 /** A page of the settings dialog; [group] is the sidebar heading it sits under. */
@@ -328,37 +332,6 @@ object SettingsPages {
                             panel = { app -> KeymapPanel(app) },
                             keywords = listOf("shortcut", "keyboard", "hotkey", "binding"),
                             reset = { s, d -> s.copy(keyBindings = d.keyBindings) },
-                        ),
-                    ),
-            ),
-            SettingsPage(
-                id = "updates",
-                group = tr("Appearance & Behavior"),
-                title = tr("Updates"),
-                description = tr("New versions of TableGrip, from its GitHub releases."),
-                sections =
-                    listOf(
-                        SettingsSection(
-                            null,
-                            listOf(
-                                BooleanField(tr("Check for updates automatically"), Settings::checkForUpdates, { s, v -> s.copy(checkForUpdates = v) }, hint = tr("Once a day.")),
-                                BooleanField(
-                                    tr("Download and install updates automatically"),
-                                    Settings::installUpdatesAutomatically,
-                                    { s, v -> s.copy(installUpdatesAutomatically = v) },
-                                    hint = tr("Downloads in the background and installs the next time you quit. Off: asks first, with the release notes. On Windows, TableGrip always asks before installing."),
-                                ),
-                                ChoiceField(
-                                    tr("Channel"),
-                                    UpdateChannel.entries,
-                                    UpdateChannel::label,
-                                    get = { s -> UpdateChannel.of(s.updateChannel) },
-                                    set = { s, channel -> s.copy(updateChannel = channel.name) },
-                                    hint = tr("Beta also offers pre-releases, which get new features first and may have rough edges."),
-                                ),
-                            ),
-                            panel = { app -> UpdatesPanel(app) },
-                            keywords = listOf("version", "upgrade", "release", "Sparkle", "beta"),
                         ),
                     ),
             ),
@@ -689,6 +662,46 @@ object SettingsPages {
                             keywords = listOf("tablegrip mcp", "command line", "PATH", "Claude Desktop", "Claude Code", "Windsurf"),
                         ),
                         SettingsSection(tr("Recent activity"), emptyList(), panel = { app -> McpActivityPanel(app) }, keywords = listOf("log", "audit")),
+                    ),
+            ),
+            SettingsPage(
+                id = "about",
+                // No group: it sits apart at the foot of the sidebar, where apps keep their About.
+                group = "",
+                title = tr("About"),
+                description = tr("Which TableGrip this is, and how it stays up to date."),
+                sections =
+                    listOf(
+                        SettingsSection(
+                            null,
+                            emptyList(),
+                            panel = { app -> UpdatesPanel(app) },
+                            keywords = listOf("updates", "version", "upgrade", "release", "Sparkle", "beta"),
+                        ),
+                        SettingsSection(
+                            tr("Automatic updates"),
+                            listOf(
+                                BooleanField(tr("Check for updates automatically"), Settings::checkForUpdates, { s, v -> s.copy(checkForUpdates = v) }, hint = tr("Once a day.")),
+                                BooleanField(
+                                    tr("Download and install updates automatically"),
+                                    Settings::installUpdatesAutomatically,
+                                    { s, v -> s.copy(installUpdatesAutomatically = v) },
+                                    hint = tr("Downloads in the background and installs the next time you quit. Off: asks first, with the release notes. On Windows, TableGrip always asks before installing."),
+                                    // The updaters only download on their own after a check of their own.
+                                    enabled = Settings::checkForUpdates,
+                                ),
+                                ChoiceField(
+                                    tr("Channel"),
+                                    UpdateChannel.entries,
+                                    UpdateChannel::label,
+                                    get = { s -> UpdateChannel.of(s.updateChannel) },
+                                    set = { s, channel -> s.copy(updateChannel = channel.name) },
+                                    hint = tr("Beta also offers pre-releases, which get new features first and may have rough edges."),
+                                ),
+                            ),
+                            keywords = listOf("upgrade", "release", "Sparkle", "beta", "channel"),
+                            card = true,
+                        ),
                     ),
             ),
         )

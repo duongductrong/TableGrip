@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.onAllNodesWithText
@@ -133,11 +135,26 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun `automatic installs can only be changed while automatic checks are on`() = runComposeUiTest {
+        val app = app()
+        app.settingsOpen = true
+        app.settingsPage = "about"
+        setContent { TableGripTheme(isDark = true, settings = app.settings) { Box(Modifier.size(1100.dp, 900.dp)) { MainScreen(app) } } }
+
+        onNodeWithContentDescription("Download and install updates automatically").assertIsEnabled()
+        onNodeWithContentDescription("Check for updates automatically").performClick()
+        waitForIdle()
+        assertFalse(app.settings.checkForUpdates)
+        onNodeWithContentDescription("Download and install updates automatically").assertIsNotEnabled()
+        app.dispose()
+    }
+
+    @Test
     fun `customization pages render and a shortcut can be recorded`() = runComposeUiTest {
         val app = app()
         app.settingsOpen = true
         setContent { TableGripTheme(isDark = true, settings = app.settings) { Box(Modifier.size(1100.dp, 900.dp)) { MainScreen(app) } } }
-        for (page in listOf("appearance", "color-scheme", "behavior", "editor", "data-editor", "keymap")) {
+        for (page in listOf("appearance", "color-scheme", "behavior", "editor", "data-editor", "about", "keymap")) {
             app.settingsPage = page
             waitForIdle()
             System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "settings-$page.png")) }

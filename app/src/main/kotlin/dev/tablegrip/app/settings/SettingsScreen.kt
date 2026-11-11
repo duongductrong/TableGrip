@@ -2,6 +2,18 @@ package dev.tablegrip.app.settings
 
 import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import dev.tablegrip.app.ui.Island
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -101,13 +113,18 @@ private fun Sidebar(
         VerticallyScrollableContainer(Modifier.weight(1f).fillMaxWidth()) {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 pages.groupBy { it.group }.forEach { (group, groupPages) ->
-                    Text(
-                        group,
-                        Modifier.padding(start = 8.dp, top = 8.dp, bottom = 2.dp),
-                        color = JewelTheme.globalColors.text.info,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    )
+                    if (group.isEmpty()) {
+                        // A page of its own, such as About: set apart by a hairline instead of a heading.
+                        Divider(Orientation.Horizontal, Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp), color = islands.divider)
+                    } else {
+                        Text(
+                            group,
+                            Modifier.padding(start = 8.dp, top = 8.dp, bottom = 2.dp),
+                            color = JewelTheme.globalColors.text.info,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
                     groupPages.forEach { page -> SidebarItem(page, page == selected, hasError = page in errorPages) { onSelect(page) } }
                 }
             }
@@ -137,7 +154,7 @@ private fun PageContent(page: SettingsPage, app: AppState, form: SettingsForm, q
     VerticallyScrollableContainer(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 18.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("${page.group}  ›  ", color = JewelTheme.globalColors.text.info)
+                if (page.group.isNotEmpty()) Text("${page.group}  ›  ", color = JewelTheme.globalColors.text.info)
                 Text(page.title, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                 Spacer(Modifier.weight(1f))
                 Link(tr("Reset to defaults"), onClick = { form.reset(page) })
@@ -146,11 +163,16 @@ private fun PageContent(page: SettingsPage, app: AppState, form: SettingsForm, q
             SettingsFileError(app)
             page.sections.forEach { section ->
                 Spacer(Modifier.height(10.dp))
-                section.title?.let {
-                    Text(it, fontWeight = FontWeight.SemiBold)
-                    Divider(Orientation.Horizontal, Modifier.fillMaxWidth().padding(bottom = 4.dp))
+                val highlighted = { field: SettingField -> query.isNotBlank() && field.label.contains(query.trim(), ignoreCase = true) }
+                if (section.card) {
+                    FieldCard(section, app, form, highlighted)
+                } else {
+                    section.title?.let {
+                        Text(it, fontWeight = FontWeight.SemiBold)
+                        Divider(Orientation.Horizontal, Modifier.fillMaxWidth().padding(bottom = 4.dp))
+                    }
+                    section.fields.forEach { field -> FieldRow(field, app, form, highlighted = highlighted(field)) }
                 }
-                section.fields.forEach { field -> FieldRow(field, app, form, highlighted = query.isNotBlank() && field.label.contains(query.trim(), ignoreCase = true)) }
                 section.panel?.invoke(app)
             }
         }
@@ -184,7 +206,7 @@ private fun FieldRow(field: SettingField, app: AppState, form: SettingsForm, hig
                     LaunchedEffect(field) { snapshotFlow { text.text.toString() }.drop(1).collect { form.commit(field) } }
                     TextField(text, Modifier.weight(1f), placeholder = { Text(field.placeholder) }, outline = if (error != null) Outline.Error else Outline.None)
                 }
-                is BooleanField -> Checkbox(field.get(app.settings), onCheckedChange = { form.toggle(field, it) })
+                is BooleanField -> Checkbox(field.get(app.settings), onCheckedChange = { form.toggle(field, it) }, enabled = field.enabled(app.settings))
                 is ColorField -> ColorControl(field, app, form, error != null)
             }
         }
@@ -197,6 +219,83 @@ private fun FieldRow(field: SettingField, app: AppState, form: SettingsForm, hig
                 fontSize = 12.sp,
             )
         }
+    }
+}
+
+/** A [SettingsSection.card] section: its title over one rounded card, a row per field with hairlines between them. */
+@Composable
+private fun FieldCard(section: SettingsSection, app: AppState, form: SettingsForm, highlighted: (SettingField) -> Boolean) {
+    val islands = LocalIslands.current
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        section.title?.let { Text(it, Modifier.padding(start = 4.dp), fontWeight = FontWeight.SemiBold) }
+        Island(Modifier.fillMaxWidth()) {
+            Column(Modifier.fillMaxWidth()) {
+                section.fields.forEachIndexed { index, field ->
+                    if (index > 0) Divider(Orientation.Horizontal, Modifier.fillMaxWidth().padding(horizontal = 16.dp), color = islands.divider)
+                    CardFieldRow(field, app, form, highlighted(field))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CardFieldRow(field: SettingField, app: AppState, form: SettingsForm, highlighted: Boolean) {
+    val islands = LocalIslands.current
+    val error = form.errors[field]
+    val note = error ?: field.hint
+    Row(
+        Modifier.fillMaxWidth()
+            .background(if (highlighted) islands.accent.copy(alpha = 0.12f) else Color.Transparent)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val enabled = (field as? BooleanField)?.enabled?.invoke(app.settings) ?: true
+        Column(Modifier.weight(1f).alpha(if (enabled) 1f else 0.5f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Text(field.label)
+            if (note != null) {
+                Text(note, color = if (error != null) JewelTheme.globalColors.text.error else JewelTheme.globalColors.text.info, fontSize = 12.sp)
+            }
+        }
+        Spacer(Modifier.width(24.dp))
+        when (field) {
+            is BooleanField -> Switch(field.get(app.settings), field.label, enabled = field.enabled(app.settings)) { form.toggle(field, it) }
+            is ChoiceField<*> -> ChoiceControl(field, app, form)
+            is IntField -> {
+                val text = form.text(field)
+                LaunchedEffect(field) { snapshotFlow { text.text.toString() }.drop(1).collect { form.commit(field) } }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    TextField(text, Modifier.width(90.dp), outline = if (error != null) Outline.Error else Outline.None)
+                    field.unit?.let { Text(it, Modifier.padding(start = 8.dp), color = JewelTheme.globalColors.text.info) }
+                }
+            }
+            is StringField -> {
+                val text = form.text(field)
+                LaunchedEffect(field) { snapshotFlow { text.text.toString() }.drop(1).collect { form.commit(field) } }
+                TextField(text, Modifier.width(220.dp), placeholder = { Text(field.placeholder) }, outline = if (error != null) Outline.Error else Outline.None)
+            }
+            is ColorField -> ColorControl(field, app, form, error != null)
+        }
+    }
+}
+
+/** An on/off switch in the system's manner; Jewel has only checkboxes. */
+@Composable
+private fun Switch(checked: Boolean, label: String, enabled: Boolean = true, onCheckedChange: (Boolean) -> Unit) {
+    val islands = LocalIslands.current
+    val offTrack = if (JewelTheme.isDark) Color.White.copy(alpha = 0.16f) else Color.Black.copy(alpha = 0.12f)
+    val track by animateColorAsState(if (checked) islands.accent else offTrack)
+    val knobOffset by animateDpAsState(if (checked) 14.dp else 0.dp)
+    Box(
+        Modifier.size(width = 34.dp, height = 20.dp)
+            .alpha(if (enabled) 1f else 0.4f)
+            .clip(CircleShape)
+            .background(track)
+            .toggleable(value = checked, enabled = enabled, role = Role.Switch, onValueChange = onCheckedChange)
+            .semantics { contentDescription = label }
+            .padding(2.dp),
+    ) {
+        Box(Modifier.offset(x = knobOffset).size(16.dp).shadow(1.dp, CircleShape).clip(CircleShape).background(Color.White))
     }
 }
 
