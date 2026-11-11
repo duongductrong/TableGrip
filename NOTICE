@@ -6,12 +6,3 @@ This product is licensed under the Apache License, Version 2.0 (see LICENSE).
 It includes open source libraries listed, with their licenses, in THIRD-PARTY-NOTICES.txt, which ships with the
 app. JDBC drivers and database clients are not included: they are downloaded separately at the user's request,
 under their own licenses.
-
-Database logos are drawn from Simple Icons (https://simpleicons.org), whose SVG data is released under CC0 1.0, and
-are shown in their owners' colours only to say which databases TableGrip connects to. They are trademarks of their
-respective owners: PostgreSQL is a registered trademark of the PostgreSQL Community Association of Canada; MySQL is a
-registered trademark of Oracle and/or its affiliates; MariaDB is a registered trademark of MariaDB plc; MongoDB is a
-registered trademark of MongoDB, Inc.; Redis is a registered trademark of Redis Ltd.; DuckDB is a trademark of the
-DuckDB Foundation; ClickHouse is a registered trademark of ClickHouse, Inc.; etcd is a trademark of The Linux
-Foundation; the other names and logos belong to their owners. TableGrip is not affiliated with, sponsored or endorsed
-by any of them. Microsoft SQL Server, Azure SQL and Oracle Database are shown by name only.

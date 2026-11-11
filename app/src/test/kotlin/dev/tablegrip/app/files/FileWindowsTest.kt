@@ -70,7 +70,7 @@ class FileWindowsTest {
             val tab = window.selected!!
             runOnUiThread {
                 tab.model!!.setValue(0, tab.model!!.columns.indexOfFirst { it.name == "age" }, "37")
-                tab.submitNow()
+                tab.submit()
             }
             waitUntil(timeoutMillis = 10_000) { !tab.hasChanges && csv.readText().contains("37") }
             assertEquals("name,age\nAda,37\nAlan,41\n", csv.readText())

@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.input.KeyboardActionHandler
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.LaunchedEffect
@@ -54,8 +55,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import dev.tablegrip.app.ui.AppDialog
-import dev.tablegrip.app.ui.ReviewChangesPopup
-import dev.tablegrip.app.console.rememberHighlightedSql
 import dev.tablegrip.app.grid.DataGrid
 import dev.tablegrip.app.grid.DataGridState
 import dev.tablegrip.app.grid.GridModel
@@ -77,6 +76,7 @@ import org.jetbrains.jewel.ui.component.Link
 import org.jetbrains.jewel.ui.component.ListComboBox
 import org.jetbrains.jewel.ui.component.OutlinedButton
 import org.jetbrains.jewel.ui.component.Text
+import org.jetbrains.jewel.ui.component.TextArea
 import org.jetbrains.jewel.ui.component.TextField
 import org.jetbrains.jewel.ui.component.Tooltip
 import org.jetbrains.jewel.ui.component.rememberSplitLayoutState
@@ -104,6 +104,7 @@ internal fun TableDataView(tab: TableDataTab) {
         DataView(tab)
     }
     tab.pendingDiscard?.let { DiscardDialog(tab) }
+    tab.preview?.let { PreviewDialog(tab, it) }
     tab.model?.let { RecordEditorHost(it, tab.grid, tab.dialect.qualifiedName(tab.table)) }
 }
 
@@ -275,10 +276,7 @@ private fun Toolbar(tab: TableDataTab) {
         UndoRedoButtons(tab.grid, model)
         ToolButton(AllIconsKeys.Actions.Rollback, tr("Revert all changes"), enabled = tab.hasChanges) { tab.revert() }
         ToolButton(AllIconsKeys.Actions.Preview, tr("Preview pending SQL"), enabled = tab.hasChanges) { tab.openPreview() }
-        Box {
-            ToolButton(AllIconsKeys.Actions.Commit, tr("Submit changes ({0})", Shortcuts.Submit), enabled = tab.hasChanges && !tab.submitting) { tab.submit() }
-            tab.preview?.let { ReviewPopup(tab, it) }
-        }
+        ToolButton(AllIconsKeys.Actions.Commit, tr("Submit changes ({0})", Shortcuts.Submit), enabled = tab.hasChanges && !tab.submitting) { tab.submit() }
         if (tab.hasChanges) Text(tr("{0} pending", model?.changeCount), Modifier.padding(start = 4.dp), color = JewelTheme.globalColors.text.info)
 
         Box(Modifier.weight(1f))
@@ -466,16 +464,21 @@ private fun DiscardDialog(tab: TableDataTab) {
     }
 }
 
-/** The pending SQL under the Submit button, to check before it runs. */
 @Composable
-private fun ReviewPopup(tab: TableDataTab, sql: String) {
-    ReviewChangesPopup(
-        changeCount = tab.model?.changeCount ?: 0,
-        target = "${tab.table.name} · ${tab.config.name}",
-        statements = rememberHighlightedSql(sql, tab.dialect.syntax),
-        note = tr("Runs in one transaction; nothing is saved if any statement fails or hits an unexpected number of rows."),
-        canSkip = tab.canSkipReview,
-        onCancel = tab::closePreview,
-        onSubmit = tab::submitReviewed,
-    )
+private fun PreviewDialog(tab: TableDataTab, sql: String) {
+    AppDialog(
+        onCloseRequest = tab::closePreview,
+        size = DpSize(720.dp, 420.dp),
+        title = tr("Pending Changes"),
+    ) {
+        Column(Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            val text = remember(sql) { TextFieldState(sql) }
+            TextArea(text, Modifier.weight(1f).fillMaxWidth(), readOnly = true, textStyle = JewelTheme.editorTextStyle)
+            Text(tr("Runs in one transaction; nothing is saved if any statement fails or hits an unexpected number of rows."), color = JewelTheme.globalColors.text.info)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
+                OutlinedButton(onClick = tab::closePreview) { Text(tr("Close")) }
+                DefaultButton(onClick = tab::submitNow) { Text(tr("Submit")) }
+            }
+        }
+    }
 }

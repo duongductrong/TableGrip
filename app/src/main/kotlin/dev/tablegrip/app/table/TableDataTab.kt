@@ -664,22 +664,10 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
         preview = ChangeSql.statements(dialect, table, model.toChanges()).joinToString(";\n", postfix = ";") { it.preview(dialect) }
     }
 
-    /** Whether Submit shows the SQL first: the user's choice, unless the connection confirms writes. */
-    val reviewsChanges: Boolean get() = config.confirmWrites || app.settings.reviewChanges
-
-    /** The review can be turned off from itself only where the connection doesn't insist on it. */
-    val canSkipReview: Boolean get() = !config.confirmWrites
-
-    /** Shows the SQL first when [reviewsChanges]; [submitNow] runs it. */
+    /** Connections that confirm writes show the SQL first; [submitNow] runs it. */
     fun submit() {
         if (!hasChanges || !readyToSave()) return
-        if (reviewsChanges && preview == null) openPreview() else submitNow()
-    }
-
-    /** Submit from the review, which stops asking from now on when the user ticked [skipReviewNextTime]. */
-    fun submitReviewed(skipReviewNextTime: Boolean) {
-        if (skipReviewNextTime && canSkipReview) app.updateSettings { it.copy(reviewChanges = false) }
-        submitNow()
+        if (config.confirmWrites && preview == null) openPreview() else submitNow()
     }
 
     /** Answers [pendingDiscard] with "submit": saves the edits, then carries on with the navigation that asked. */

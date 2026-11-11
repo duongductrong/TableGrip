@@ -38,16 +38,11 @@ export function Databases() {
           >
             <span
               aria-hidden
-              className={cn(
-                'inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-rule bg-raised text-foreground/75 shadow-xs transition-colors group-hover:text-foreground',
-                // Marks too pale for a light page sit on black, as their owners publish them.
-                dbLogos[db.name]?.light && 'border-black bg-black dark:border-rule dark:bg-raised',
-              )}
+              className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-rule bg-raised text-foreground/75 shadow-xs transition-colors group-hover:text-foreground"
             >
               {dbLogos[db.name] ? (
-                <svg viewBox="0 0 24 24" className="size-5">
-                  {/* The official colour; marks too dark for a dark page are drawn white there. */}
-                  <path d={dbLogos[db.name].path} fill={dbLogos[db.name].hex} className={cn(dbLogos[db.name].dark && 'dark:fill-white')} />
+                <svg viewBox="0 0 24 24" className="size-5" fill="currentColor">
+                  <path d={dbLogos[db.name].path} />
                 </svg>
               ) : (
                 <span className="font-mono text-[10.5px] font-semibold">{db.mono}</span>

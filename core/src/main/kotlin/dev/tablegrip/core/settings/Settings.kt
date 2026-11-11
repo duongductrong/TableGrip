@@ -112,11 +112,6 @@ data class Settings(
     val numberGrouping: Boolean = false,
     /** Tints every other row. */
     val zebraRows: Boolean = false,
-    /**
-     * Shows the statements a grid's Submit will run, to check before they're sent. Connections that confirm writes
-     * show them whatever this says.
-     */
-    val reviewChanges: Boolean = true,
 
     // Keymap
     /** A keymap preset's name; unknown names fall back to `Default`. */

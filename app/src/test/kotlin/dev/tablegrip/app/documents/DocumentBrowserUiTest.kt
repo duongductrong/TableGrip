@@ -107,7 +107,7 @@ class DocumentBrowserUiTest {
         assertTrue(onAllNodesWithText("\"${'$'}date\"", substring = true).fetchSemanticsNodes().isNotEmpty(), "dates stay Extended JSON")
         System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "documents-json.png")) }
         onNodeWithText("Grid").performClick()
-        tab.submitNow()
+        tab.submit()
         waitUntil(timeoutMillis = 10_000) { tab.documents.getOrNull(2)?.get("customer")?.toString() == "\"grace hopper\"" }
 
         val field = onAllNodes(hasSetTextAction())[0]
@@ -189,7 +189,7 @@ class DocumentBrowserUiTest {
         model.setValue(row, column("customer"), "new")
         model.setValue(row, column("total"), "5")
         System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "documents-edits.png")) }
-        tab.submitNow()
+        tab.submit()
         waitUntil(timeoutMillis = 10_000) { !tab.submitting && !tab.loading && tab.documents.size == 4 }
         assertEquals(false, tab.message?.isError, tab.message?.text)
         runBlocking {
@@ -204,7 +204,7 @@ class DocumentBrowserUiTest {
         val stale = tab.model
         stale.setValue(2, stale.fields.indexOf("total"), "51")
         stale.setValue(1, stale.fields.indexOf("status"), "C")
-        tab.submitNow()
+        tab.submit()
         waitUntil(timeoutMillis = 10_000) { !tab.submitting && !tab.loading && tab.model !== stale }
         assertEquals(true, tab.message?.isError)
         assertTrue("Row 3" in tab.message!!.text, tab.message!!.text)
