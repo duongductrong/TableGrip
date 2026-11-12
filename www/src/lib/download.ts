@@ -4,16 +4,19 @@ import { links } from '#/content/site'
 
 /**
  * Direct installer links for the newest release, read at build time from appcast/releases.json (the file the release
- * workflow appends every release to, newest first). The Linux .deb is not in that feed because it does not update
+ * workflow appends every release to, oldest first, so the newest is the highest build). The Linux .deb is not in that feed because it does not update
  * itself, so its URL follows the same asset naming the release workflow uses: TableGrip-<version>-<target>.<ext>.
  * The website workflow rebuilds when releases.json changes, so these links move to each new release on their own.
  */
 export type DownloadTarget = 'macos-arm64' | 'macos-x64' | 'windows-x64' | 'linux-x64'
 export type DownloadOs = 'macos' | 'windows' | 'linux'
 
-type Feed = { version: string; targets: Partial<Record<DownloadTarget, { url: string; length?: number }>> }[]
+type Feed = { version: string; build: number; targets: Partial<Record<DownloadTarget, { url: string; length?: number }>> }[]
 
-const latest = (releasesFeed as Feed)[0]
+const latest = (releasesFeed as Feed).reduce<Feed[number] | undefined>(
+  (best, release) => (!best || release.build > best.build ? release : best),
+  undefined,
+)
 
 export const latestVersion: string | undefined = latest?.version
 
