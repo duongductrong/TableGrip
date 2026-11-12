@@ -1,0 +1,134 @@
+{
+  "query_optimization": {
+    "r_total_time_ms": 0.326635449
+  },
+  "query_block": {
+    "union_result": {
+      "table_name": "<union1,4>",
+      "access_type": "ALL",
+      "r_loops": 1,
+      "r_rows": 2,
+      "query_specifications": [
+        {
+          "query_block": {
+            "select_id": 1,
+            "cost": 0.17351585,
+            "r_loops": 1,
+            "r_total_time_ms": 1.271427336,
+            "nested_loop": [
+              {
+                "duplicates_removal": [
+                  {
+                    "table": {
+                      "table_name": "orders",
+                      "access_type": "range",
+                      "possible_keys": ["PRIMARY", "orders_customer"],
+                      "key": "PRIMARY",
+                      "key_length": "4",
+                      "used_key_parts": ["id"],
+                      "loops": 1,
+                      "r_loops": 1,
+                      "rows": 49,
+                      "r_rows": 49,
+                      "cost": 0.01183867,
+                      "r_table_time_ms": 0.012191941,
+                      "r_other_time_ms": 0.013444537,
+                      "r_engine_stats": {
+                        "pages_accessed": 4
+                      },
+                      "filtered": 100,
+                      "r_filtered": 100,
+                      "attached_condition": "orders.`id` < 50 and orders.customer_id is not null"
+                    }
+                  },
+                  {
+                    "table": {
+                      "table_name": "c",
+                      "access_type": "eq_ref",
+                      "possible_keys": ["PRIMARY"],
+                      "key": "PRIMARY",
+                      "key_length": "4",
+                      "used_key_parts": ["id"],
+                      "ref": ["shop.orders.customer_id"],
+                      "loops": 49,
+                      "r_loops": 49,
+                      "rows": 1,
+                      "r_rows": 1,
+                      "cost": 0.05447716,
+                      "r_table_time_ms": 0.023173038,
+                      "r_other_time_ms": 0.016701288,
+                      "r_engine_stats": {
+                        "pages_accessed": 98
+                      },
+                      "filtered": 2.040816307,
+                      "r_filtered": 100
+                    }
+                  }
+                ]
+              },
+              {
+                "table": {
+                  "table_name": "o",
+                  "access_type": "ref",
+                  "possible_keys": ["orders_customer"],
+                  "key": "orders_customer",
+                  "key_length": "5",
+                  "used_key_parts": ["customer_id"],
+                  "ref": ["shop.orders.customer_id"],
+                  "loops": 1,
+                  "r_loops": 49,
+                  "rows": 40,
+                  "r_rows": 40,
+                  "cost": 0.07415152,
+                  "r_table_time_ms": 1.134643783,
+                  "r_other_time_ms": 0.06442522,
+                  "r_engine_stats": {
+                    "pages_accessed": 4021
+                  },
+                  "filtered": 2.5,
+                  "r_filtered": 0,
+                  "attached_condition": "o.total > 290",
+                  "first_match": "c"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "query_block": {
+            "select_id": 4,
+            "operation": "UNION",
+            "cost": 0.00282078,
+            "r_loops": 1,
+            "r_total_time_ms": 0.014446614,
+            "nested_loop": [
+              {
+                "table": {
+                  "table_name": "customers",
+                  "access_type": "range",
+                  "possible_keys": ["PRIMARY"],
+                  "key": "PRIMARY",
+                  "key_length": "4",
+                  "used_key_parts": ["id"],
+                  "loops": 1,
+                  "r_loops": 1,
+                  "rows": 2,
+                  "r_rows": 2,
+                  "cost": 0.00282078,
+                  "r_table_time_ms": 0.001127337,
+                  "r_other_time_ms": 0.011231616,
+                  "r_engine_stats": {
+                    "pages_accessed": 4
+                  },
+                  "filtered": 100,
+                  "r_filtered": 100,
+                  "attached_condition": "customers.`id` < 3"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

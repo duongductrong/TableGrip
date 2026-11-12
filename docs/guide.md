@@ -5,6 +5,7 @@ Shortcuts are written for macOS; on Windows and Linux use Ctrl instead of ⌘.
 
 - [Language](#language)
 - [SQL editor](#sql-editor)
+- [Query plans](#query-plans)
 - [Getting around](#getting-around)
 - [Saved queries](#saved-queries)
 - [Filtering table data](#filtering-table-data)
@@ -48,7 +49,8 @@ matching-bracket highlights, auto-paired brackets and quotes.
 | Find · replace | ⌘F · ⌘R (Enter / ⇧Enter for next / previous) |
 | Reformat SQL | ⌥⌘L |
 
-Toolbar: execute, execute script, cancel, **Explain** (plan for the statement at the caret), reformat, find.
+Toolbar: execute, execute script, cancel, **Explain** (plan for the statement at the caret, ⇧⌘E), **Explain Analyze**
+(⌥⇧⌘E, see [Query plans](#query-plans)), reformat, find.
 
 **Fixing errors**: under a failed statement in the output, **Quick fix** replaces a misspelt table or column with the one
 closest real name (from completion's schema, nothing leaves the machine); **Fix with AI** asks the agent picked in the chat
@@ -63,6 +65,31 @@ after `CALL` (or `EXEC` on SQL Server) it lists your procedures. After `JOIN` it
 clauses from foreign keys (`JOIN orders o ON o.user_id = u.id`). Matching is fuzzy by word starts (`uid` → `user_id`),
 and inside `col = '…'` or `col IN (…)` it suggests real values sampled from the column. Metadata loads lazily per
 connection and refreshes after DDL or an explorer refresh.
+
+## Query plans
+
+**Explain** (⇧⌘E) shows the planner's plan for the statement at the caret without running it. On PostgreSQL, MySQL and
+MariaDB the plan opens as a tree: each step with the table and index it uses, the rows it expects, and its share of the
+plan's cost. **Explain Analyze** (⌥⇧⌘E) runs the statement to measure it, adding rows returned, loops and time; shares
+are then of the time spent in each step. Other engines show EXPLAIN's output in the grid, as before.
+
+Steps worth a look are marked: **slow** takes 30% or more of the plan, **full scan** reads a whole table of 10,000 rows
+or more (on PostgreSQL only Explain Analyze knows how many rows a scan reads), and **rows ×N** returned N times more or fewer rows than the planner expected (stale statistics: ANALYZE the
+table). Click a step for everything the server reported about it; the chevrons fold a branch. **Text** shows the server's
+output (JSON indented) and **Grid** the raw result.
+
+Explain Analyze executes the statement, so:
+
+- A query runs in a read-only transaction that is rolled back.
+- A data change (INSERT, UPDATE, DELETE, MERGE, a CTE that writes) always asks first, then runs in a transaction that is
+  rolled back. Read-only connections refuse it, and so does a console in manual commit with uncommitted statements:
+  commit or roll back first. On MySQL and MariaDB, changes to non-transactional tables (MyISAM, MEMORY) aren't undone.
+- DDL and other statements aren't run.
+
+MySQL's plan under Explain Analyze comes from its `EXPLAIN ANALYZE` tree; Explain uses `EXPLAIN FORMAT=JSON` (version 1
+or 2). MariaDB uses `ANALYZE FORMAT=JSON`. CockroachDB, Redshift, TiDB and other compatible engines print plans their own
+way and show them in the grid. On PostgreSQL, **Explain** in an Activity session's details opens its query in a console
+with its plan; a prepared query's `$1` parameters get a generic plan (PostgreSQL 16+).
 
 ## Getting around
 
@@ -217,7 +244,7 @@ Right-click a server connection → **Activity** (⌥⌘A / Ctrl+Alt+A for the c
 and what blocks what: sessions waiting on a lock sit indented under the session holding it. Filter Running / Blocked /
 All, search by user, database or query, and refresh every 2, 5 or 10 s or pause; it only refreshes while the tab is in
 front, over a connection of its own so it still works when the pool is stuck. Select a session for its full query, then
-open it in a console, **Cancel Query** or **Terminate** it. Terminating always asks first, and so does cancelling on
+open it in a console, **Explain** it (PostgreSQL; see [Query plans](#query-plans)), **Cancel Query** or **Terminate** it. Terminating always asks first, and so does cancelling on
 Production or confirm-writes connections; read-only connections can't signal sessions at all. TableGrip's own sessions
 (named `TableGrip` in `pg_stat_activity`) are hidden unless you turn off Hide TableGrip. Supported on PostgreSQL (and
 PostgreSQL-compatible services), MySQL and MariaDB; on MySQL, lock waits come from `performance_schema.data_lock_waits`

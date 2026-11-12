@@ -1,0 +1,36 @@
+{
+  "query_block": {
+    "select_id": 1,
+    "cost": 204.2245988,
+    "nested_loop": [
+      {
+        "table": {
+          "table_name": "c",
+          "access_type": "ALL",
+          "possible_keys": ["PRIMARY"],
+          "loops": 1,
+          "rows": 5000,
+          "cost": 0.8361124,
+          "filtered": 100,
+          "attached_condition": "c.country = 'VN'"
+        }
+      },
+      {
+        "table": {
+          "table_name": "o",
+          "access_type": "ref",
+          "possible_keys": ["orders_customer"],
+          "key": "orders_customer",
+          "key_length": "5",
+          "used_key_parts": ["customer_id"],
+          "ref": ["shop.c.id"],
+          "loops": 5000,
+          "rows": 40,
+          "cost": 203.3884864,
+          "filtered": 100,
+          "attached_condition": "o.total > 100"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "query_optimization": {
+    "r_total_time_ms": 0.08789053
+  },
+  "query_block": {
+    "select_id": 1,
+    "cost": 204.2245988,
+    "r_loops": 1,
+    "r_total_time_ms": 14.76857359,
+    "nested_loop": [
+      {
+        "table": {
+          "table_name": "c",
+          "access_type": "ALL",
+          "possible_keys": ["PRIMARY"],
+          "loops": 1,
+          "r_loops": 1,
+          "rows": 5000,
+          "r_rows": 5000,
+          "cost": 0.8361124,
+          "r_table_time_ms": 0.456112187,
+          "r_other_time_ms": 0.212941428,
+          "r_engine_stats": {
+            "pages_accessed": 13
+          },
+          "filtered": 100,
+          "r_filtered": 10,
+          "attached_condition": "c.country = 'VN'"
+        }
+      },
+      {
+        "table": {
+          "table_name": "o",
+          "access_type": "ref",
+          "possible_keys": ["orders_customer"],
+          "key": "orders_customer",
+          "key_length": "5",
+          "used_key_parts": ["customer_id"],
+          "ref": ["shop.c.id"],
+          "loops": 5000,
+          "r_loops": 500,
+          "rows": 40,
+          "r_rows": 40,
+          "cost": 203.3884864,
+          "r_table_time_ms": 12.90725674,
+          "r_other_time_ms": 1.177399082,
+          "r_engine_stats": {
+            "pages_accessed": 41022
+          },
+          "filtered": 100,
+          "r_filtered": 66.65,
+          "attached_condition": "o.total > 100"
+        }
+      }
+    ]
+  }
+}

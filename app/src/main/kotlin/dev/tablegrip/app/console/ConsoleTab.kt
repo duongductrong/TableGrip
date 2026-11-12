@@ -34,6 +34,10 @@ import dev.tablegrip.core.dialect.SqlDialect
 import dev.tablegrip.core.driver.QueryError
 import dev.tablegrip.core.driver.QueryResult
 import dev.tablegrip.core.driver.QuerySession
+import dev.tablegrip.core.explain.ExplainPlans
+import dev.tablegrip.core.explain.PlanEngine
+import dev.tablegrip.core.explain.PlanNode
+import dev.tablegrip.core.explain.QueryPlan
 import dev.tablegrip.core.driver.ReadOnlyViolationException
 import dev.tablegrip.core.history.HistoryEntry
 import dev.tablegrip.core.session.SessionTab
@@ -52,6 +56,7 @@ import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
@@ -95,13 +100,30 @@ enum class ResultView(val label: String) {
     Grid(tr("Grid")),
     Json(tr("JSON")),
     Chart(tr("Chart")),
+    /** A query plan as a tree; only for EXPLAIN output TableGrip reads. */
+    Plan(tr("Plan")),
+    /** EXPLAIN's output as the server sent it. */
+    Text(tr("Text")),
 }
+
+/**
+ * An EXPLAIN to run: [statement] is what it explains. With [isolate] it runs in a transaction of its own that is rolled
+ * back, read-only when [readOnly]: Explain Analyze executes the statement.
+ */
+private class PlanRun(val statement: String, val analyze: Boolean, val isolate: Boolean, val readOnly: Boolean)
 
 /**
  * The grid and JSON views show one page of [rows] at a time, like table viewers, so big results stay light to render;
  * the chart draws all of them.
  */
-class ResultSetView(val title: String, val sql: String, val rows: QueryResult.Rows, pageSize: Int) {
+class ResultSetView(
+    val title: String,
+    val sql: String,
+    val rows: QueryResult.Rows,
+    pageSize: Int,
+    /** The plan read from [rows] when they are EXPLAIN's output in a format TableGrip reads. */
+    val plan: QueryPlan? = null,
+) {
     var pageSize by mutableIntStateOf(pageSize.coerceAtLeast(1))
         private set
     var page by mutableIntStateOf(0)
@@ -131,11 +153,20 @@ class ResultSetView(val title: String, val sql: String, val rows: QueryResult.Ro
 
     /** Pinned results survive the next run, to compare before and after. */
     var pinned by mutableStateOf(false)
-    var view by mutableStateOf(ResultView.Grid)
+    var view by mutableStateOf(if (plan != null) ResultView.Plan else ResultView.Grid)
     val chart = ChartState(rows)
+
+    /** The views this result offers: a plan's, or a result set's. */
+    val views: List<ResultView> = if (plan != null) listOf(ResultView.Plan, ResultView.Text, ResultView.Grid) else listOf(ResultView.Grid, ResultView.Json, ResultView.Chart)
+
+    /** The plan node whose details are shown. */
+    var selectedNode by mutableStateOf(plan?.root)
+    /** Plan nodes whose children are hidden. */
+    val collapsed = androidx.compose.runtime.mutableStateMapOf<PlanNode, Boolean>()
 
     /** Shows what [previous], the same statement's result from the last run, showed: its view and its chart. */
     fun continueFrom(previous: ResultSetView) {
+        if ((previous.plan != null) != (plan != null)) return
         view = previous.view
         previous.chart.spec?.let(chart::show)
     }
@@ -447,11 +478,71 @@ class ConsoleTab(
     /** Mentions the selection or the statement at the caret in the agent chat (⌘L); false when there is nothing to. */
     fun mentionInChat(): Boolean = mention()?.let { app.agent.mention(it) } != null
 
-    /** Runs the statement at the caret under EXPLAIN, in the dialect's syntax. */
+    /** The engine whose plans this console shows as a tree, and so offers Explain Analyze for; null when it doesn't. */
+    val planEngine: PlanEngine? = ExplainPlans.engine(config.type).takeIf { Capability.Explain in config.type.capabilities }
+
+    /** Runs the statement at the caret under EXPLAIN, in the dialect's syntax: as a plan tree where TableGrip reads it. */
     fun explain() {
         if (running || Capability.Explain !in config.type.capabilities) return
         val sql = statementsFor(RunMode.Current).firstOrNull() ?: return
-        start(dialect.explain(sql))
+        explain(sql, analyze = false)
+    }
+
+    /**
+     * Runs the statement at the caret under EXPLAIN ANALYZE, which executes it to measure it. A query runs in a read-only
+     * transaction that is rolled back; a data change only after confirming, never on a read-only connection, and is
+     * rolled back too. Other statements (DDL, transaction control) aren't run.
+     */
+    fun explainAnalyze() {
+        if (running || planEngine == null) return
+        val sql = statementsFor(RunMode.Current).firstOrNull() ?: return
+        explain(sql, analyze = true)
+    }
+
+    /** Explains [sql], e.g. a session's query from the activity monitor; [analyze] runs it too, with the checks above. */
+    fun explain(sql: String, analyze: Boolean) {
+        if (running) return
+        val names = parameters.find(sql)
+        if (names.isNotEmpty()) {
+            pendingParameters = ParameterRequest(names) { values ->
+                app.parameterValues.putAll(values)
+                explain(parameters.substitute(sql, values), analyze)
+            }
+            return
+        }
+        val engine = planEngine
+        if (engine == null) {
+            if (!analyze) start(dialect.explain(sql))
+            return
+        }
+        val statement = ExplainPlans.statement(engine, sql, analyze)
+        if (!analyze) {
+            start(listOf(statement), plan = PlanRun(sql, analyze = false, isolate = false, readOnly = false))
+            return
+        }
+        val info = classifier.classify(sql)
+        fun refuse(message: String) {
+            log(message, isError = true)
+            selectedResultTab = 0
+        }
+        when {
+            // With work pending in this console's transaction, a query runs inside it, as it would on its own.
+            info.kind == StatementKind.Read -> start(listOf(statement), plan = PlanRun(sql, analyze = true, isolate = !hasOpenTransaction, readOnly = true))
+            info.kind != StatementKind.Write -> refuse(tr("Explain Analyze runs queries and data changes only, not {0}.", info.verb))
+            config.readOnly -> refuse(tr("This connection is read-only: Explain Analyze would run {0}, so it was not run.", info.verb))
+            hasOpenTransaction -> refuse(tr("Commit or roll back first: Explain Analyze runs {0} in a transaction of its own and rolls it back.", info.verb))
+            else -> {
+                val reasons = buildList {
+                    info.danger?.let(::add)
+                    add(tr("Explain Analyze runs this {0} to measure it, then rolls it back", info.verb))
+                    if (engine != PlanEngine.PostgreSQL) add(tr("Changes to tables that can't roll back (MyISAM, MEMORY) stay"))
+                    if (config.confirmWrites) add(tr("{0} asks before changing data ({1} connection)", config.name, config.environment.label.lowercase()))
+                }
+                pendingConfirmation = WriteConfirmation(listOf(sql), reasons) {
+                    start(listOf(statement), plan = PlanRun(sql, analyze = true, isolate = true, readOnly = false))
+                }
+            }
+        }
     }
 
     fun run(mode: RunMode) = run(statementsFor(mode))
@@ -511,7 +602,7 @@ class ConsoleTab(
         confirmation.proceed()
     }
 
-    private fun start(statements: List<String>, onFinished: ((RunOutcome) -> Unit)? = null) {
+    private fun start(statements: List<String>, onFinished: ((RunOutcome) -> Unit)? = null, plan: PlanRun? = null) {
         cancelFix()
         job = app.scope.launch {
             running = true
@@ -519,7 +610,7 @@ class ConsoleTab(
             results.removeAll(replaced)
             val firstLine = output.size
             try {
-                execute(statements, replaced)
+                execute(statements, replaced, plan)
             } finally {
                 running = false
                 onFinished?.invoke(RunOutcome(results.toList(), output.drop(firstLine)))
@@ -642,7 +733,7 @@ class ConsoleTab(
     }
 
     /** The n-th result of [statements] shows what the n-th of [replaced] did, so re-running keeps a chart in place. */
-    private suspend fun execute(statements: List<String>, replaced: List<ResultSetView>) {
+    private suspend fun execute(statements: List<String>, replaced: List<ResultSetView>, plan: PlanRun? = null) {
         val session =
             try {
                 session()
@@ -655,7 +746,7 @@ class ConsoleTab(
         for (sql in statements) {
             val startedAt = System.currentTimeMillis()
             try {
-                val result = session.execute(sql, app.settings.maxResultRows, app.settings.queryTimeoutSeconds)
+                val result = if (plan != null) runPlan(session, sql, plan) else session.execute(sql, app.settings.maxResultRows, app.settings.queryTimeoutSeconds)
                 uncommitted = session.uncommittedStatements
                 // New or changed tables should show up in completion right away.
                 if (classifier.classify(sql).kind == StatementKind.Ddl) app.forgetSchema(config.id)
@@ -664,7 +755,9 @@ class ConsoleTab(
                     is QueryResult.Rows -> {
                         val suffix = if (result.truncated) tr(" (first {0} shown)", result.rows.size) else ""
                         log(tr("{0} row(s) retrieved in {1} ms{2}: {3}", result.rows.size, result.elapsedMillis, suffix, sql.preview()))
-                        val view = ResultSetView(tr("Result {0}", ++resultCount), sql, result, app.settings.pageSize)
+                        val parsed = plan?.let { ExplainPlans.parse(result) }
+                        val title = if (parsed != null) tr("Plan {0}", ++resultCount) else tr("Result {0}", ++resultCount)
+                        val view = ResultSetView(title, sql, result, app.settings.pageSize, parsed)
                         replaced.getOrNull(results.count { !it.pinned })?.let(view::continueFrom)
                         results += view
                     }
@@ -684,6 +777,24 @@ class ConsoleTab(
             }
         }
         selectedResultTab = if (results.isEmpty()) 0 else results.size
+    }
+
+    /**
+     * Runs [sql], [plan]'s EXPLAIN, checked as the statement it explains when that one runs. An isolated run leaves the
+     * session as it was: back in manual commit if it was.
+     */
+    private suspend fun runPlan(session: QuerySession, sql: String, plan: PlanRun): QueryResult {
+        val classifyAs = if (plan.analyze) plan.statement else sql
+        val run: suspend QuerySession.() -> QueryResult = { execute(sql, app.settings.maxResultRows, app.settings.queryTimeoutSeconds, classifyAs) }
+        if (!plan.isolate) return session.run()
+        val manual = !autoCommit
+        try {
+            return session.isolated(readOnly = plan.readOnly, commit = false, block = run).also {
+                if (!plan.readOnly) log(tr("Rolled back what Explain Analyze changed"))
+            }
+        } finally {
+            if (manual) withContext(NonCancellable) { runCatching { session.setAutoCommit(false) } }
+        }
     }
 
     private suspend fun record(sql: String, startedAt: Long, elapsed: Long, error: String?) {
