@@ -9,6 +9,7 @@ description: Jump to any table, tab, query or action from the keyboard, and pick
 Press <kbd>⌘</kbd> <kbd>P</kbd>, or <kbd>⇧</kbd> twice, and start typing. One field finds:
 
 - **Tables and views** of every connected connection
+- **Functions, procedures and sequences** of every connected connection
 - **Open tabs**
 - **Saved queries**
 - **Connections**

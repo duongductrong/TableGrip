@@ -24,6 +24,10 @@ import dev.tablegrip.core.ddl.DdlScript
 import dev.tablegrip.core.metadata.ColumnInfo
 import dev.tablegrip.core.metadata.Introspector
 import dev.tablegrip.core.metadata.Namespace
+import dev.tablegrip.core.metadata.SchemaObjectDefinition
+import dev.tablegrip.core.metadata.SchemaObjectInfo
+import dev.tablegrip.core.metadata.SchemaObjectReader
+import dev.tablegrip.core.metadata.SchemaObjectRef
 import dev.tablegrip.core.metadata.StructureReader
 import dev.tablegrip.core.metadata.TableDetails
 import dev.tablegrip.core.metadata.TableInfo
@@ -66,6 +70,12 @@ class Database private constructor(
     override suspend fun namespaces(): List<Namespace> = withMetadata { introspector.namespaces(it.metaData) }
 
     override suspend fun tables(namespace: Namespace): List<TableInfo> = withMetadata { introspector.tables(it.metaData, namespace) }
+
+    override suspend fun schemaObjects(namespace: Namespace): List<SchemaObjectInfo> =
+        withMetadata { SchemaObjectReader.of(dialect).list(it, namespace) }
+
+    override suspend fun schemaObjectDefinition(ref: SchemaObjectRef): SchemaObjectDefinition =
+        withMetadata { SchemaObjectReader.of(dialect).definition(it, ref) }
 
     override suspend fun tableDetails(table: TableRef): TableDetails = withMetadata { introspector.details(it.metaData, table) }
 

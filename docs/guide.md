@@ -10,6 +10,7 @@ Shortcuts are written for macOS; on Windows and Linux use Ctrl instead of ⌘.
 - [Filtering table data](#filtering-table-data)
 - [Data grid](#data-grid)
 - [Table structure](#table-structure)
+- [Functions, procedures and sequences](#functions-procedures-and-sequences)
 - [Schema tools](#schema-tools)
 - [Activity](#activity)
 - [Backup and restore](#backup-and-restore)
@@ -57,14 +58,15 @@ change data where the original only read is flagged and can't be run from the ca
 
 **Completion** understands the statement around the caret: tables, views and schemas after `FROM`/`JOIN`, columns of
 the tables and aliases in scope (qualified when several tables are joined), `alias.` / `schema.` members, CTE columns,
-`INSERT INTO t (` column lists, operators after a column, functions and keywords. After `JOIN` it proposes whole join
+`INSERT INTO t (` column lists, operators after a column, functions (your own too, with their signatures) and keywords;
+after `CALL` (or `EXEC` on SQL Server) it lists your procedures. After `JOIN` it proposes whole join
 clauses from foreign keys (`JOIN orders o ON o.user_id = u.id`). Matching is fuzzy by word starts (`uid` → `user_id`),
 and inside `col = '…'` or `col IN (…)` it suggests real values sampled from the column. Metadata loads lazily per
 connection and refreshes after DDL or an explorer refresh.
 
 ## Getting around
 
-**Go to anything** (⌘P, or Shift twice): one field that finds tables and views of connected connections, open tabs,
+**Go to anything** (⌘P, or Shift twice): one field that finds tables, views, functions, procedures and sequences of connected connections, open tabs,
 saved queries, connections, actions and recent queries of the current connection. Matching is fuzzy by word starts
 (`uo` → `user_orders`). ⏎ opens; ⇧⏎ opens a table's structure.
 
@@ -168,6 +170,21 @@ engine's own catalog: `pg_constraint` / `pg_trigger` / `pg_get_*def` on PostgreS
 `SHOW CREATE TABLE` and `information_schema` on MySQL/MariaDB, `sqlite_master` on SQLite. Copy the DDL or open it in a
 new console from the toolbar. In the explorer, right-click a table → Open Structure / Show DDL / Copy DDL, or
 double-click a column, index or foreign key to open its section. Rows only load once the Data view is shown.
+
+## Functions, procedures and sequences
+
+Under each schema the explorer lists **functions**, **procedures**, **sequences** and **materialized views** next to
+tables and views, loaded with the tables the first time the schema is opened. Each function shows its arguments and
+result type, so overloads are told apart. Opening one shows its properties (language, arguments, owner…; a sequence's
+current value, increment, minimum and maximum) above its source, read-only. **Copy source** copies it; **Open in new
+console** opens it as a statement that recreates it: `CREATE OR REPLACE` on PostgreSQL and MariaDB, `CREATE OR ALTER` on
+SQL Server, the plain `CREATE` on MySQL (drop the routine first there).
+
+They come from each engine's catalog: `pg_proc`, `pg_get_functiondef` and `pg_sequences` on PostgreSQL (functions that
+belong to an extension are left out), `information_schema.ROUTINES` and `SHOW CREATE` on MySQL/MariaDB (and MariaDB's
+sequences), `sys.objects`, `sys.sql_modules` and `sys.sequences` on SQL Server. Other JDBC engines list routines from
+the driver's metadata, with their source where the engine's `INFORMATION_SCHEMA` has it. SQLite, DuckDB, ClickHouse,
+Trino, Spark, BigQuery and engines that only speak the PostgreSQL wire protocol show none.
 
 ## Schema tools
 

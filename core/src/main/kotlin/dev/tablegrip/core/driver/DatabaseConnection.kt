@@ -12,6 +12,9 @@ import dev.tablegrip.core.filter.SqlFilter
 import dev.tablegrip.core.filter.SqlProjection
 import dev.tablegrip.core.metadata.ColumnInfo
 import dev.tablegrip.core.metadata.Namespace
+import dev.tablegrip.core.metadata.SchemaObjectDefinition
+import dev.tablegrip.core.metadata.SchemaObjectInfo
+import dev.tablegrip.core.metadata.SchemaObjectRef
 import dev.tablegrip.core.metadata.TableDetails
 import dev.tablegrip.core.metadata.TableInfo
 import dev.tablegrip.core.metadata.TableRef
@@ -35,6 +38,13 @@ interface RelationalConnection : DatabaseConnection {
     suspend fun namespaces(): List<Namespace>
 
     suspend fun tables(namespace: Namespace): List<TableInfo>
+
+    /** Functions, procedures and sequences of [namespace]; empty where the engine has none or doesn't say. */
+    suspend fun schemaObjects(namespace: Namespace): List<SchemaObjectInfo> = emptyList()
+
+    /** What opening one of [schemaObjects] shows: its properties and source. */
+    suspend fun schemaObjectDefinition(ref: SchemaObjectRef): SchemaObjectDefinition =
+        throw UnsupportedOperationException(tr("{0} has no functions, procedures or sequences", config.type.displayName))
 
     suspend fun tableDetails(table: TableRef): TableDetails
 

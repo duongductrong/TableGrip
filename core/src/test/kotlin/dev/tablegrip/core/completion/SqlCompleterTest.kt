@@ -40,6 +40,10 @@ class SqlCompleterTest {
                 )
 
             override fun relations(namespace: String?, table: String) = relations.filter { it.fromTable == table || it.toTable == table }
+
+            override fun routines(namespace: String?) =
+                if ((namespace ?: "public") == "public") listOf(RoutineEntry("order_total", procedure = false, "(customer integer) → numeric"), RoutineEntry("close_orders", procedure = true))
+                else emptyList()
         }
 
     private val completer = SqlCompleter(SqlDialect.PostgreSQL)
@@ -207,5 +211,23 @@ class SqlCompleterTest {
         assertTrue(labels("UPDATE users SET name = 'a', |").contains("email"))
         assertTrue(labels("INSERT INTO users (id, |").containsAll(listOf("name", "email")))
         assertTrue(complete("SELECT * FROM users WHERE name = :na|").items.isEmpty())
+    }
+
+    @Test
+    fun `user functions in expressions, procedures after CALL`() {
+        val function = complete("SELECT order_t|").items.first()
+        assertEquals("order_total()" to "(customer integer) → numeric", function.label to function.detail)
+        assertEquals("order_total(".length, function.caretOffset)
+        assertTrue("close_orders()" !in labels("SELECT |"))
+        assertEquals(listOf("close_orders()"), labels("CALL |"))
+        assertTrue(labels("CALL c|").isNotEmpty())
+    }
+
+    @Test
+    fun `procedures after EXEC on SQL Server, without parentheses`() {
+        val tsql = SqlCompleter(SqlDialect.SqlServer)
+        val items = tsql.complete("EXEC ", 5, schema).items
+        assertEquals(listOf("close_orders"), items.map { it.label })
+        assertEquals("close_orders ", items.single().insertText)
     }
 }

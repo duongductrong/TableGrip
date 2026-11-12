@@ -11,7 +11,8 @@ data class Namespace(val catalog: String?, val schema: String?) {
 
 data class TableRef(val namespace: Namespace, val name: String)
 
-data class TableInfo(val ref: TableRef, val isView: Boolean, val remarks: String?)
+/** [materialized] views are views ([isView]) whose rows are stored, refreshed on demand (PostgreSQL, Oracle). */
+data class TableInfo(val ref: TableRef, val isView: Boolean, val remarks: String?, val materialized: Boolean = false)
 
 data class ColumnInfo(
     val name: String,
@@ -74,4 +75,28 @@ data class TableStructure(
     val constraints: List<ConstraintInfo>,
     val triggers: List<TriggerInfo>,
     val ddl: String,
+)
+
+/** Schema objects besides tables and views that the explorer lists and opens. */
+enum class SchemaObjectKind { Function, Procedure, Sequence }
+
+/**
+ * A function, procedure or sequence. [id] tells overloads apart where an engine allows them (PostgreSQL's
+ * `name(integer, text)` identity arguments); otherwise it is the name.
+ */
+data class SchemaObjectRef(val namespace: Namespace, val name: String, val kind: SchemaObjectKind, val id: String = name)
+
+/** [detail] is what the explorer shows beside the name, e.g. a function's arguments and result type. */
+data class SchemaObjectInfo(val ref: SchemaObjectRef, val detail: String? = null)
+
+/**
+ * What opening a schema object shows: [properties] as label and value (a sequence's current value, increment…), and
+ * its [source], the DDL as the server keeps it. [replaceSql] recreates the object over the existing one where the
+ * engine can (`CREATE OR REPLACE`, `CREATE OR ALTER`); otherwise it is the plain source.
+ */
+data class SchemaObjectDefinition(
+    val ref: SchemaObjectRef,
+    val properties: List<Pair<String, String?>>,
+    val source: String,
+    val replaceSql: String = source,
 )

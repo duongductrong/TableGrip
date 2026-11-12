@@ -14,6 +14,8 @@ import dev.tablegrip.app.schema.ErDiagramTab
 import dev.tablegrip.app.schema.ErDiagramView
 import dev.tablegrip.app.schema.SchemaCompareTab
 import dev.tablegrip.app.schema.SchemaCompareView
+import dev.tablegrip.app.schema.SchemaObjectTab
+import dev.tablegrip.app.schema.SchemaObjectView
 import dev.tablegrip.app.schema.TableDesignerTab
 import dev.tablegrip.app.schema.TableDesignerView
 import dev.tablegrip.app.keyvalue.KeyBrowserView
@@ -106,6 +108,7 @@ internal fun WorkspaceView(app: AppState) {
                 is TableDesignerTab -> TableDesignerView(app, selected)
                 is SchemaCompareTab -> SchemaCompareView(app, selected)
                 is ErDiagramTab -> ErDiagramView(app, selected)
+                is SchemaObjectTab -> SchemaObjectView(selected)
                 is ActivityTab -> ActivityView(app, selected)
                 else -> Unit
             }
@@ -133,7 +136,12 @@ private fun TabStrip(workspace: WorkspaceViewModel, selected: WorkspaceTab) {
             val dragged = drag.draggedKey == key
             PillTab(
                 title = tab.title,
-                isConsole = tab is ConsoleTab || tab is CommandConsoleTab || tab is RecordConsoleTab,
+                icon =
+                    when (tab) {
+                        is ConsoleTab, is CommandConsoleTab, is RecordConsoleTab -> AllIconsKeys.Nodes.Console
+                        is SchemaObjectTab -> AllIconsKeys.Nodes.Function
+                        else -> AllIconsKeys.Nodes.DataTables
+                    },
                 dirty = tab.hasUnsavedWork,
                 selected = tab == selected,
                 lifted = dragged,
@@ -171,7 +179,7 @@ private fun TabStrip(workspace: WorkspaceViewModel, selected: WorkspaceTab) {
 @Composable
 private fun PillTab(
     title: String,
-    isConsole: Boolean,
+    icon: org.jetbrains.jewel.ui.icon.IconKey,
     dirty: Boolean,
     selected: Boolean,
     lifted: Boolean,
@@ -203,7 +211,7 @@ private fun PillTab(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(if (isConsole) AllIconsKeys.Nodes.Console else AllIconsKeys.Nodes.DataTables, null)
+        Icon(icon, null)
         Text(if (dirty) "$title •" else title, maxLines = 1)
         // Keeps the tab width stable: the close button only becomes visible on hover or selection.
         Box(

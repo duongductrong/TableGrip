@@ -45,6 +45,9 @@ data class TableEntry(val name: String, val isView: Boolean = false)
 
 data class ColumnEntry(val name: String, val type: String, val primaryKey: Boolean = false)
 
+/** A user-defined function or procedure; [detail] is its signature, e.g. `(id integer) → text`. */
+data class RoutineEntry(val name: String, val procedure: Boolean, val detail: String? = null)
+
 /** A foreign key: [fromTable].[fromColumns] references [toTable].[toColumns]. */
 data class Relation(val fromTable: String, val fromColumns: List<String>, val toTable: String, val toColumns: List<String>)
 
@@ -61,6 +64,9 @@ interface SchemaProvider {
 
     /** Foreign keys from and to [table]. */
     fun relations(namespace: String?, table: String): List<Relation>?
+
+    /** The user's functions and procedures in [namespace]; null while loading, empty where the engine has none. */
+    fun routines(namespace: String?): List<RoutineEntry>? = emptyList()
 
     object Empty : SchemaProvider {
         override val defaultNamespace: String? = null
@@ -140,11 +146,12 @@ class SqlCompleter(private val dialect: SqlDialect) {
                 Context.Table -> tableItems(schema, scope)
                 Context.Join -> joinItems(schema, scope, pending) + tableItems(schema, scope)
                 Context.AfterTable -> keywords(AfterTableKeywords)
+                is Context.Routine -> routineItems(schema, procedures = true, call = context.call)
                 Context.InsertColumns -> scope.tables.firstOrNull()?.let { columnItems(it, schema, pending, qualify = false) }.orEmpty()
                 Context.Expression ->
                     scope.tables.flatMap { columnItems(it, schema, pending, qualify = scope.tables.size > 1 && it.alias != null) } +
                         scope.tables.map { CompletionItem(it.alias ?: it.name, it.alias ?: quote(it.name), CompletionKind.Alias, it.name.takeIf { _ -> it.alias != null }) } +
-                        functions() + keywords(ExpressionKeywords)
+                        routineItems(schema, procedures = false, call = true) + functions() + keywords(ExpressionKeywords)
                 Context.AfterExpression ->
                     Operators.map { CompletionItem(it, "$it ", CompletionKind.Operator) } + keywords(OperatorKeywords + ClauseKeywords)
                 Context.AfterPredicate -> keywords(PredicateKeywords + ClauseKeywords)
@@ -170,6 +177,9 @@ class SqlCompleter(private val dialect: SqlDialect) {
 
         object AfterTable : Context
 
+        /** A procedure to run: `CALL name(…)` takes parentheses, T-SQL's `EXEC name @a = 1` doesn't. */
+        class Routine(val call: Boolean) : Context
+
         object InsertColumns : Context
 
         object Expression : Context
@@ -193,8 +203,10 @@ class SqlCompleter(private val dialect: SqlDialect) {
         val lastWord = last.upper(sql)
         val previous = before.getOrNull(before.size - 2)?.upper(sql)
 
+        if (before.size == 1 && lastWord in setOf("EXEC", "EXECUTE") && dialect is SqlDialect.SqlServerDialect) return Context.Routine(call = false)
         if (last.type == TokenType.Keyword) {
             return when (lastWord) {
+                "CALL" -> if (before.size == 1) Context.Routine(call = true) else Context.Other
                 "FROM", "INTO", "UPDATE", "DESCRIBE", "TRUNCATE" -> Context.Table
                 "TABLE" -> if (before.first().upper(sql) == "CREATE") Context.Keywords(listOf("IF NOT EXISTS")) else Context.Table
                 "JOIN" -> Context.Join
@@ -504,6 +516,15 @@ class SqlCompleter(private val dialect: SqlDialect) {
         used += alias
         return alias
     }
+
+    /** The user's own functions (or procedures) of the default namespace, with their signatures. */
+    private fun routineItems(schema: SchemaProvider, procedures: Boolean, call: Boolean): List<CompletionItem> =
+        schema.routines(schema.defaultNamespace).orEmpty().filter { it.procedure == procedures }.distinctBy { it.name.lowercase() }.map {
+            val name = quote(it.name)
+            val detail = it.detail ?: if (procedures) "procedure" else "function"
+            if (call) CompletionItem("${it.name}()", "$name()", CompletionKind.Function, detail, caretOffset = name.length + 1)
+            else CompletionItem(it.name, "$name ", CompletionKind.Function, detail)
+        }
 
     private fun functions(): List<CompletionItem> =
         (CommonFunctions + dialect.functions).map { CompletionItem("$it()", "$it()", CompletionKind.Function, "function", caretOffset = it.length + 1) }

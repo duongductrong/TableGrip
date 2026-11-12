@@ -40,6 +40,24 @@ Double-click a column, index or foreign key in the explorer to open the matching
 > [!TIP]
 > A table opened on Structure doesn't load any rows until you switch to Data, so it's cheap to inspect even huge tables.
 
+## Functions, procedures and sequences
+
+Under each schema the explorer also lists **functions**, **procedures**, **sequences** and **materialized views**, next
+to tables and views. A function shows its arguments and result type beside its name, so overloads are easy to tell
+apart. They're also in [Go to anything](/docs/navigation) (⌘P) once the connection is open.
+
+Opening one shows its properties above its source, read-only:
+
+- **Functions and procedures:** language, arguments, result, owner and the full `CREATE` statement.
+- **Sequences:** current value, increment, minimum, maximum, start, cache and cycle, and a `CREATE SEQUENCE` statement.
+
+**Copy source** copies the statement; **Open in new console** opens it ready to change and run: as `CREATE OR REPLACE` on
+PostgreSQL and MariaDB, and `CREATE OR ALTER` on SQL Server. MySQL has neither, so drop the routine before recreating it.
+
+PostgreSQL, MySQL, MariaDB and SQL Server are read from their own catalogs; PostgreSQL leaves out functions that belong
+to an extension. Other JDBC engines list routines from the driver's metadata, with their source where the engine
+provides it.
+
 ## Changing the structure
 
 The pencil in the Structure view (or **Edit Structure…**) opens the table designer, which previews every change as SQL

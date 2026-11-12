@@ -1,6 +1,7 @@
 package dev.tablegrip.app.explorer
 
 import dev.tablegrip.core.i18n.tr
+import dev.tablegrip.core.metadata.SchemaObjectKind
 import dev.tablegrip.core.activity.ActivitySupport
 import dev.tablegrip.core.backup.BackupSupport
 import dev.tablegrip.core.agent.Mention
@@ -223,6 +224,10 @@ private fun openNode(app: AppState, node: ExplorerNode) {
         app.connections.byId(node.connectionId)?.let { app.workspace.openCollection(it, node.database, node.info.name) }
         return
     }
+    if (node is ExplorerNode.SchemaObject) {
+        app.connections.byId(node.connectionId)?.let { app.workspace.openSchemaObject(it, node.info.ref) }
+        return
+    }
     if (node is ExplorerNode.Records) {
         if (node.container.browsable) app.connections.byId(node.connectionId)?.let { app.workspace.openRecords(it, node.container) }
         return
@@ -358,6 +363,16 @@ private fun contextMenu(app: AppState, node: ExplorerNode): List<ContextMenuItem
                 ContextMenuItem(tr("Refresh")) { app.explorer.refresh(node.key) },
             ).filterNotNull()
         }
+        is ExplorerNode.SchemaObject -> {
+            val config = app.connections.byId(node.connectionId) ?: return emptyList()
+            val ref = node.info.ref
+            listOf(
+                ContextMenuItem(if (ref.kind == SchemaObjectKind.Sequence) tr("Open") else tr("Show Source")) { app.workspace.openSchemaObject(config, ref) },
+                ContextMenuItem(tr("Copy Source")) { app.explorer.copySource(config, ref) },
+                ContextMenuItem(tr("Open in Console")) { app.explorer.openSourceInConsole(config, ref) },
+                ContextMenuItem(tr("Copy Name")) { copyToClipboard(ref.name) },
+            )
+        }
         is ExplorerNode.Column -> {
             val config = app.connections.byId(node.table.connectionId)
             listOfNotNull(
@@ -413,6 +428,17 @@ private fun NodeRow(app: AppState, node: ExplorerNode, modifier: Modifier = Modi
             is ExplorerNode.Table -> {
                 NodeIcon(AllIconsKeys.Nodes.DataTables)
                 Text(node.info.ref.name, Modifier.weight(1f, fill = false), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            is ExplorerNode.SchemaObject -> {
+                val ref = node.info.ref
+                NodeIcon(
+                    when (ref.kind) {
+                        SchemaObjectKind.Function -> AllIconsKeys.Nodes.Function
+                        SchemaObjectKind.Procedure -> AllIconsKeys.Nodes.Method
+                        SchemaObjectKind.Sequence -> AllIconsKeys.Nodes.Constant
+                    }
+                )
+                NameAndDetail(ref.name, node.info.detail.orEmpty(), Modifier.weight(1f))
             }
             is ExplorerNode.Column -> {
                 val column = node.column
