@@ -51,6 +51,7 @@ import kotlin.io.path.createTempDirectory
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 
 @OptIn(ExperimentalTestApi::class)
 class SettingsScreenTest {
@@ -127,10 +128,11 @@ class SettingsScreenTest {
         onNodeWithText("Remove").performClick()
         waitForIdle()
         onNodeWithText("Delete").performClick()
-        waitUntil(timeoutMillis = 5_000) { library.resolve(DriverId.SQLite) is DriverResolution.Download }
-        waitForIdle()
+        // The library reads the disk, so it reports the driver gone as soon as the manifest is deleted: before the
+        // rest of the folder is (slow on Windows) and before the page recomposes. Wait for the page instead.
+        waitUntil(timeoutMillis = 10_000) { onAllNodesWithText("Not downloaded").fetchSemanticsNodes().isNotEmpty() }
         assertEquals(emptyList(), library.installedVersions(DriverId.SQLite))
-        onNodeWithText("Not downloaded").assertExists()
+        assertIs<DriverResolution.Download>(library.resolve(DriverId.SQLite))
         app.dispose()
     }
 
