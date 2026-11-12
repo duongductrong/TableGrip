@@ -66,6 +66,7 @@ import dev.tablegrip.app.ui.Badge
 import dev.tablegrip.app.ui.EnvironmentChip
 import dev.tablegrip.app.ui.LocalIslands
 import dev.tablegrip.app.ui.copyToClipboard
+import dev.tablegrip.app.ui.hoverSubmenu
 import dev.tablegrip.app.ui.AppIcons
 import dev.tablegrip.core.connection.ConnectionConfig
 import dev.tablegrip.core.connection.DatabaseType
@@ -651,6 +652,8 @@ private fun AddConnectionMenu(app: AppState) {
                 app.connections.openNew(type = type)
             }
             // Like DataGrip's "+": pick the engine right here, the common ones flat and the rest one level down.
+            // The rest opens in hoverSubmenu, not Jewel's submenu: Jewel's takes the pointer while open, so hovering
+            // back over this menu did nothing until the submenu was dismissed.
             PopupMenu(
                 onDismissRequest = { open = false; true },
                 horizontalAlignment = Alignment.End,
@@ -659,7 +662,7 @@ private fun AddConnectionMenu(app: AppState) {
                 engines.take(PinnedEngines).forEach { type ->
                     selectableItem(selected = false, iconKey = engineIcon(type), onClick = { create(type) }) { Text(type.displayName) }
                 }
-                submenu(submenu = {
+                hoverSubmenu(submenu = {
                     engines.drop(PinnedEngines).forEach { type ->
                         selectableItem(selected = false, iconKey = engineIcon(type), onClick = { create(type) }) { Text(type.displayName) }
                     }

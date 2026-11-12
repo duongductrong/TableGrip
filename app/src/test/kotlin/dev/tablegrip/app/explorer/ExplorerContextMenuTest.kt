@@ -6,6 +6,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.isRoot
@@ -19,6 +21,8 @@ import androidx.compose.ui.test.rightClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import dev.tablegrip.app.AppState
+import org.jetbrains.jewel.foundation.InternalJewelApi
+import org.jetbrains.jewel.ui.component.IsHoveredKey
 import dev.tablegrip.app.ui.TableGripTheme
 import dev.tablegrip.core.connection.ConnectionConfig
 import dev.tablegrip.core.connection.ConnectionStore
@@ -93,6 +97,48 @@ class ExplorerContextMenuTest {
         onNodeWithText("MySQL").performClick()
         waitForIdle()
         assertEquals(DatabaseType.MySQL, app.connections.dialog?.type)
+        app.dispose()
+    }
+
+    @OptIn(InternalJewelApi::class)
+    @Test
+    fun `the more data sources submenu lets the pointer go back to the menu`() = runComposeUiTest {
+        val app = app(ConnectionConfig("c", "Analytics", DatabaseType.ClickHouse))
+        setContent { TableGripTheme(isDark = true) { Box(Modifier.size(320.dp, 800.dp)) { ExplorerPanel(app) } } }
+        waitForIdle()
+        // The first engine only the submenu lists.
+        val nested = DatabaseType.entries.filterNot { it.isDataFile }[10]
+        val hovered = SemanticsMatcher.expectValue(IsHoveredKey, true)
+
+        onNodeWithContentDescription("Add connection").performClick()
+        waitForIdle()
+        onAllNodesWithText(nested.displayName).assertCountEquals(0)
+
+        // Hovering the row opens the submenu, and the pointer can move into it.
+        onNodeWithText("More Data Sources").performMouseInput { moveTo(center) }
+        waitForIdle()
+        onNodeWithText(nested.displayName).performMouseInput { moveTo(center) }
+        mainClock.advanceTimeBy(1_000)
+        waitForIdle()
+        onAllNodesWithText(nested.displayName).assertCountEquals(1)
+
+        // With the submenu open, the parent menu's items still hover, and resting on one closes the submenu.
+        onNodeWithText("Open Data File…").performMouseInput { moveTo(center) }
+        waitForIdle()
+        onNode(hasText("Open Data File…") and hovered).assertExists()
+        mainClock.advanceTimeBy(1_000)
+        waitForIdle()
+        onAllNodesWithText(nested.displayName).assertCountEquals(0)
+
+        // Back on the row, it opens again and an engine in it starts a connection.
+        onNodeWithText("More Data Sources").performMouseInput { moveTo(center) }
+        waitForIdle()
+        onNodeWithText(nested.displayName).performMouseInput { moveTo(center) }
+        waitForIdle()
+        onNodeWithText(nested.displayName).performClick()
+        waitForIdle()
+        assertEquals(nested, app.connections.dialog?.type)
+        onAllNodesWithText("Open Data File…").assertCountEquals(0)
         app.dispose()
     }
 
