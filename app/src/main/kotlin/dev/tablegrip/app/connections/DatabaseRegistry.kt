@@ -48,6 +48,8 @@ class DatabaseRegistry(
     private val onMissingDriver: (ConnectionConfig) -> Unit = {},
     /** Called on the UI thread when a data file was read in again after it changed on disk, so views can refresh. */
     private val onDataFileReloaded: (ConnectionConfig) -> Unit = {},
+    /** Called on the UI thread each time a connection opens, e.g. to list it among the recent ones. */
+    private val onConnected: (ConnectionConfig) -> Unit = {},
 ) {
     private val statuses = mutableStateMapOf<String, ConnectionStatus>()
     private val pending = mutableMapOf<String, Deferred<DatabaseConnection>>()
@@ -90,6 +92,7 @@ class DatabaseRegistry(
                         connection.also {
                             statuses[config.id] = ConnectionStatus.Connected(it)
                             log.info("Connected to {} ({})", config.name, config.type)
+                            onConnected(config)
                         }
                     } catch (e: DriverNotInstalledException) {
                         statuses[config.id] = ConnectionStatus.Failed(e.message ?: e.toString())

@@ -40,6 +40,7 @@ class SessionKeeper(private val app: AppState, private val store: SessionStore =
             window = windowBounds(),
             sidebarSplit = app.sidebarSplit.dividerPosition,
             agentSplit = app.agentSplit.dividerPosition,
+            recentConnections = app.recentConnections.filterKeys { app.connections.byId(it) != null },
         )
     }
 
@@ -51,6 +52,7 @@ class SessionKeeper(private val app: AppState, private val store: SessionStore =
         val session = runCatching { store.load() }.getOrElse { Session() }
         last = session
         val settings = app.settings
+        app.recentConnections.putAll(session.recentConnections.filterKeys { app.connections.byId(it) != null })
         val workspace = app.workspace
         val reopened =
             session.tabs.takeIf { settings.restoreTabs }.orEmpty().map { saved ->

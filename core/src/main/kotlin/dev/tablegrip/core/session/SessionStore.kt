@@ -81,6 +81,8 @@ data class Session(
     /** Divider positions as fractions of their split: the left tool window's and the agent chat's. */
     val sidebarSplit: Float? = null,
     val agentSplit: Float? = null,
+    /** When each connection was last opened, in epoch millis by connection id; the Welcome window lists them by it. */
+    val recentConnections: Map<String, Long> = emptyMap(),
 )
 
 /** The main window's place and size in dp, or just [maximized]. */

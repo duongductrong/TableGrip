@@ -103,7 +103,7 @@ internal fun DataFileWindowView(app: AppState, file: DataFileWindow, onClosed: (
                 FileStatusBar(app, file)
             }
         }
-        if (!app.mainWindowVisible && app.files.dialogHost === file) AppDialogs(app)
+        if (!app.mainWindowVisible && !app.welcomeVisible && app.files.dialogHost === file) AppDialogs(app)
     }
 }
 

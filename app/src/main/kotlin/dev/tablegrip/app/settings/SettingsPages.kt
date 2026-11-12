@@ -276,6 +276,7 @@ object SettingsPages {
                         SettingsSection(
                             tr("On start"),
                             listOf(
+                                BooleanField(tr("Show Welcome window"), Settings::showWelcome, { s, v -> s.copy(showWelcome = v) }, hint = tr("Pick a recent connection before the main window opens.")),
                                 BooleanField(tr("Reopen tabs"), Settings::restoreTabs, { s, v -> s.copy(restoreTabs = v) }, hint = tr("Consoles (with unsaved text) and tables from the last session.")),
                                 ChoiceField(
                                     tr("Tool window"),

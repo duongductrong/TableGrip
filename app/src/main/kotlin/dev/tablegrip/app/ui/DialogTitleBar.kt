@@ -61,7 +61,7 @@ internal fun DialogTitleBarScope.DialogTitle(title: String) {
 
 /** Hands the top of [dialog] to Compose, keeping the native window buttons; null when that isn't supported. */
 @Composable
-internal fun rememberCustomTitleBar(dialog: ComposeDialog, height: Dp): WindowDecorations.CustomTitleBar? {
+internal fun rememberCustomTitleBar(dialog: java.awt.Window, height: Dp): WindowDecorations.CustomTitleBar? {
     val dark = JewelTheme.defaultTitleBarStyle.colors.background.luminance() < 0.5f
     return remember(dialog, height, dark) {
         val supported = (isMac || System.getProperty("os.name").startsWith("Windows")) && JBR.isAvailable() && JBR.isWindowDecorationsSupported()
@@ -71,7 +71,10 @@ internal fun rememberCustomTitleBar(dialog: ComposeDialog, height: Dp): WindowDe
             it.height = height.value
             // Windows draws its caption buttons itself; tell it which variant fits the background.
             it.putProperty("controls.dark", dark)
-            decorations.setCustomTitleBar(dialog, it)
+            when (dialog) {
+                is java.awt.Frame -> decorations.setCustomTitleBar(dialog, it)
+                is java.awt.Dialog -> decorations.setCustomTitleBar(dialog, it)
+            }
         }
     }
 }
@@ -99,7 +102,7 @@ internal fun DialogTitleBar(
  * Compose consumes every mouse event, so without this the runtime would treat the whole bar as content and never drag.
  */
 @Composable
-private fun TitleBarHitTestEffect(dialog: ComposeDialog, titleBar: WindowDecorations.CustomTitleBar, regions: TitleBarRegions) {
+internal fun TitleBarHitTestEffect(dialog: java.awt.Window, titleBar: WindowDecorations.CustomTitleBar, regions: TitleBarRegions) {
     DisposableEffect(dialog, dialog.graphicsConfiguration, titleBar) {
         val transform = dialog.graphicsConfiguration?.defaultTransform
         val scaleX = transform?.scaleX ?: 1.0

@@ -37,6 +37,7 @@ import dev.tablegrip.app.ui.TitleBarView
 import dev.tablegrip.app.ui.Zoomed
 import dev.tablegrip.app.ui.handleZoomShortcut
 import dev.tablegrip.mcp.McpMain
+import dev.tablegrip.app.welcome.WelcomeWindow
 import java.awt.Desktop
 import kotlin.system.exitProcess
 import kotlinx.coroutines.delay
@@ -99,23 +100,35 @@ private fun runApp() = application {
         FileOpenRequests.listen { appState.files.open(it) }
         onDispose { FileOpenRequests.listen(null) }
     }
-    // Opening a file from Finder shows just that file; a plain start shows the main window.
+    // Opening a file from Finder shows just that file; a plain start shows the Welcome window to pick a connection,
+    // or the main window when Settings → Startup & Layout turned the Welcome window off.
     LaunchedEffect(Unit) {
         if (!FileOpenRequests.launchedWithFiles) delay(LaunchFileGrace)
-        if (appState.files.windows.isEmpty()) appState.mainWindowVisible = true
+        if (appState.files.windows.isEmpty()) {
+            if (appState.settings.showWelcome) appState.welcomeVisible = true else appState.mainWindowVisible = true
+        }
     }
     // Quits once no window is left; the main window only hides while file windows remain.
     fun closedWindow() {
-        if (appState.files.windows.isEmpty() && !appState.mainWindowVisible) appState.requestExit(::exit)
+        if (appState.files.windows.isEmpty() && !appState.mainWindowVisible && !appState.welcomeVisible) appState.requestExit(::exit)
     }
     MenuBarItem(appState)
     TableGripTheme(isDark = appState.theme.isDark(), settings = appState.settings) {
         appState.files.windows.forEach { file ->
             key(file) { DataFileWindowView(appState, file, onClosed = ::closedWindow) }
         }
+        if (appState.welcomeVisible) {
+            WelcomeWindow(
+                appState,
+                onCloseRequest = {
+                    // The last window closing quits; otherwise the Welcome window just goes away.
+                    if (appState.files.windows.isEmpty() && !appState.mainWindowVisible) appState.requestExit(::exit) else appState.welcomeVisible = false
+                },
+            )
+        }
         DecoratedWindow(
             onCloseRequest = {
-                if (appState.files.windows.isEmpty()) appState.requestExit(::exit) else appState.mainWindowVisible = false
+                if (appState.files.windows.isEmpty() && !appState.welcomeVisible) appState.requestExit(::exit) else appState.mainWindowVisible = false
             },
             state = appState.windowState,
             visible = appState.mainWindowVisible,

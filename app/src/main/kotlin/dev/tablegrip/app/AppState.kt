@@ -9,6 +9,7 @@ import dev.tablegrip.core.TableGripPaths
 import java.nio.file.Path
 import kotlin.io.path.exists
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.setValue
 import dev.tablegrip.app.agent.AgentViewModel
 import dev.tablegrip.app.backup.BackupState
@@ -129,7 +130,7 @@ class AppState(
     val drivers = DriverDownloads(scope, driverLibrary) { settings }.also { it.library.repository = settings.driverRepository }
 
     val connections = ConnectionsViewModel(this, connectionStore)
-    val databases = DatabaseRegistry(scope, connections::storedPassword, connections::storedSshSecret, drivers, connections::askForDriver, ::dataFileReloaded)
+    val databases = DatabaseRegistry(scope, connections::storedPassword, connections::storedSshSecret, drivers, connections::askForDriver, ::dataFileReloaded, ::connectionOpened)
     val explorer = ExplorerViewModel(this)
     val workspace = WorkspaceViewModel(this)
     /** Data files open in windows of their own, e.g. from the file manager. */
@@ -143,6 +144,34 @@ class AppState(
     /** Goes up each time something asks for the main window in front, e.g. the menu bar item; [Main] raises it. */
     var mainWindowRaises by mutableStateOf(0)
         private set
+
+    /** Whether the Welcome window is shown: the connection picker TableGrip opens with (Settings → Startup & Layout). */
+    var welcomeVisible by mutableStateOf(false)
+
+    /** Goes up each time something asks for the Welcome window in front. */
+    var welcomeRaises by mutableStateOf(0)
+        private set
+
+    /** When each connection was last opened, in epoch millis by id; kept in the session for the Welcome window. */
+    val recentConnections = mutableStateMapOf<String, Long>()
+
+    private fun connectionOpened(config: ConnectionConfig) {
+        recentConnections[config.id] = System.currentTimeMillis()
+    }
+
+    /** Shows the Welcome window in front, e.g. from the menu bar item. */
+    fun showWelcome() {
+        welcomeVisible = true
+        welcomeRaises++
+        dev.tablegrip.app.ui.activateApp()
+    }
+
+    /** Leaves the Welcome window for the main window, opening [config] there when one was picked. */
+    fun openFromWelcome(config: ConnectionConfig? = null) {
+        showMainWindow()
+        welcomeVisible = false
+        config?.let(::pickConnection)
+    }
 
     /** Shows the main window and brings TableGrip to the front, from wherever the user is. */
     fun showMainWindow() {

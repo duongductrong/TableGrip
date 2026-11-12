@@ -32,6 +32,7 @@ fun ApplicationScope.MenuBarItem(app: AppState) {
     val current = app.currentConnection
     Tray(icon = icon, tooltip = "TableGrip", onAction = { app.showMainWindow() }) {
         Item(tr("Open TableGrip"), onClick = { app.showMainWindow() })
+        Item(tr("Welcome to TableGrip…"), onClick = { app.showWelcome() })
         Separator()
         Menu(tr("Connections")) {
             val profiles = app.connections.profiles

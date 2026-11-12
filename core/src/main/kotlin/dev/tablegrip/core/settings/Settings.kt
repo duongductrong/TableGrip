@@ -130,6 +130,8 @@ data class Settings(
     /** Keeps the widths of the tool window and the agent chat across restarts. */
     val rememberPanelSizes: Boolean = true,
     val restoreTabs: Boolean = true,
+    /** Opens the Welcome window at start, to pick a connection, instead of going straight to the main window. */
+    val showWelcome: Boolean = true,
     /** The tool window shown at start: `LastUsed`, `None` or a tool's name. */
     val startupTool: String = "LastUsed",
     /** Whether the agent chat is open at start: `Closed`, `Open` or `LastUsed`. */
