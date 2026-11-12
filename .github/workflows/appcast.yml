@@ -24,7 +24,8 @@ concurrency:
 
 jobs:
   appcast:
-    runs-on: macos-15
+    # Sparkle's tools are universal; arm64 runners can queue until the job is cancelled.
+    runs-on: macos-15-intel
     environment: release
     permissions:
       contents: write

@@ -317,7 +317,9 @@ jobs:
   windows-update-signature:
     needs: [version, windows]
     if: needs.version.outputs.signed == 'true'
-    runs-on: macos-15
+    # Sparkle's tools are universal; Intel runners are easier to get than arm64 ones, whose queue can outlast
+    # the 15 minutes before a job is cancelled.
+    runs-on: macos-15-intel
     environment: release
     env:
       VERSION: ${{ needs.version.outputs.version }}
