@@ -3,6 +3,19 @@
 All notable changes to TableGrip are listed here, newest first. Each entry is written from the Conventional Commits
 of its release and can be edited in the release PR before it is merged.
 
+## [1.0.0-beta.6] - 2026-11-12
+
+### ✨ Features
+- Implement ChartView and integrate with ConsoleTab and TableDataTab (71af32f)
+
+### 🐛 Bug Fixes
+- Run the update-signing jobs on Intel runners (#14) (c3210ff)
+
+### Contributors
+[@duongductrong](https://github.com/duongductrong)
+
+**Full Changelog**: https://github.com/duongductrong/TableGrip/compare/v1.0.0-beta.5...v1.0.0-beta.6
+
 ## [1.0.0-beta.5] - 2026-11-12
 
 ### ✨ Features
