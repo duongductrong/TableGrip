@@ -30,9 +30,13 @@ class QuerySession internal constructor(
     var uncommittedStatements: Int = 0
         private set
 
-    /** Executes one statement. Cancel the calling coroutine to cancel the query on the server. */
-    suspend fun execute(sql: String, maxRows: Int = 1_000, timeoutSeconds: Int = 0): QueryResult {
-        val info = classifier.classify(sql)
+    /**
+     * Executes one statement. Cancel the calling coroutine to cancel the query on the server. [classifyAs] is the
+     * statement [sql] stands for when it wraps one, e.g. the query an `EXPLAIN ANALYZE` runs: the read-only check and
+     * the uncommitted count go by what that one does.
+     */
+    suspend fun execute(sql: String, maxRows: Int = 1_000, timeoutSeconds: Int = 0, classifyAs: String = sql): QueryResult {
+        val info = classifier.classify(classifyAs)
         if (readOnly && info.changesData) throw ReadOnlyViolationException(info.verb)
         val result = connection.withStatement(timeoutSeconds) { it.executeForResult(sql, maxRows) }
         when {

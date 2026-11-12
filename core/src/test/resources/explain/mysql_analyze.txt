@@ -1,0 +1,7 @@
+-> Group aggregate: count(0), sum(o.total)  (cost=8368 rows=1) (actual time=26.7..26.7 rows=1 loops=1)
+    -> Nested loop inner join  (cost=7684 rows=6838) (actual time=0.899..25.7 rows=13330 loops=1)
+        -> Filter: (c.country = 'VN')  (cost=503 rows=500) (actual time=0.0856..1.27 rows=500 loops=1)
+            -> Table scan on c  (cost=503 rows=5000) (actual time=0.0813..0.871 rows=5000 loops=1)
+        -> Filter: (o.total > 100.00)  (cost=10.3 rows=13.7) (actual time=0.0401..0.0468 rows=26.7 loops=500)
+            -> Index lookup on o using orders_customer (customer_id=c.id)  (cost=10.3 rows=41) (actual time=0.0386..0.0422 rows=40 loops=500)
+

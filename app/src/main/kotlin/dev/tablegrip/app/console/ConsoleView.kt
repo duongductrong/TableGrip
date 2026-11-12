@@ -122,6 +122,7 @@ internal fun handleConsoleShortcut(tab: ConsoleTab, event: KeyEvent): Boolean {
         Shortcuts.RunScript.matches(event) -> done { tab.run(RunMode.All) }
         Shortcuts.Cancel.matches(event) -> done { if (tab.running) tab.cancel() }
         Shortcuts.Explain.matches(event) -> done { tab.explain() }
+        Shortcuts.ExplainAnalyze.matches(event) -> done { tab.explainAnalyze() }
         Shortcuts.Save.matches(event) -> done { tab.save() }
         Shortcuts.SaveAs.matches(event) -> done { tab.save(saveAs = true) }
         else -> false
@@ -147,6 +148,11 @@ private fun Toolbar(tab: ConsoleTab, editor: SqlEditorActions) {
         if (Capability.Explain in tab.config.type.capabilities) {
             Tooltip({ Text(tr("Explain plan for the statement at caret ({0})", Shortcuts.Explain)) }) {
                 IconButton(onClick = tab::explain, enabled = !tab.running) { Icon(AllIconsKeys.Actions.Preview, tr("Explain")) }
+            }
+        }
+        if (tab.planEngine != null) {
+            Tooltip({ Text(tr("Explain Analyze: run the statement at caret and show its actual plan; changes are rolled back ({0})", Shortcuts.ExplainAnalyze)) }) {
+                IconButton(onClick = tab::explainAnalyze, enabled = !tab.running) { Icon(AllIconsKeys.Actions.ProfileCPU, tr("Explain Analyze")) }
             }
         }
         Tooltip({ Text(tr("Reformat SQL ({0})", Shortcuts.Format)) }) {
@@ -307,6 +313,8 @@ private fun ResultPanel(app: AppState, tab: ConsoleTab) {
                 Column(Modifier.fillMaxSize()) {
                     LaunchedEffect(view, view.page) { view.grid.verticalScroll.scrollToItem(0) }
                     when (view.view) {
+                        ResultView.Plan -> PlanView(view, Modifier.weight(1f))
+                        ResultView.Text -> PlanTextView(view, Modifier.weight(1f))
                         ResultView.Json -> ResultJsonView(view.model, view.grid, Modifier.weight(1f))
                         ResultView.Chart -> ResultChartView(tab, view, Modifier.weight(1f))
                         ResultView.Grid -> DataGrid(
@@ -339,8 +347,11 @@ private fun ResultFooter(app: AppState, tab: ConsoleTab, view: ResultSetView) {
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (view.view == ResultView.Chart) Text(if (view.rows.truncated) tr("{0}+ rows", total) else tr("{0} rows", total), Modifier.padding(horizontal = 4.dp))
-        else Pager(app, view)
+        when (view.view) {
+            ResultView.Chart -> Text(if (view.rows.truncated) tr("{0}+ rows", total) else tr("{0} rows", total), Modifier.padding(horizontal = 4.dp))
+            ResultView.Plan, ResultView.Text -> Text(tr("{0} steps", view.plan?.root?.walk()?.count() ?: 0), Modifier.padding(horizontal = 4.dp))
+            else -> Pager(app, view)
+        }
         Separator()
         val limited =
             if (view.rows.truncated) tr(" · first {0} fetched (Settings → Max result rows)", total) else ""
@@ -352,7 +363,7 @@ private fun ResultFooter(app: AppState, tab: ConsoleTab, view: ResultSetView) {
             overflow = TextOverflow.Ellipsis,
         )
         ViewChipGroup {
-            ResultView.entries.forEach { mode -> ViewChip(mode.label, view.view == mode) { view.view = mode } }
+            view.views.forEach { mode -> ViewChip(mode.label, view.view == mode) { view.view = mode } }
         }
         Separator()
         ToolButton(

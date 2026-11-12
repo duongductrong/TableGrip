@@ -184,4 +184,5 @@ Open from: right-click a connection/database/schema → **Backup…**.
   only by hash and zip structure, and has not been run on Windows. Linux: there is no official zip package, so show
   instructions to install from the distro.
 - There is no restore for SQLite/DuckDB: the backup is a separate database, opened with a new connection.
-- The EXPLAIN item in the session details is not done yet.
+- The EXPLAIN item in the session details is PostgreSQL only: it opens the query in a console with its estimated plan
+  (generic for prepared `$1` queries). MySQL and MariaDB don't offer it yet.

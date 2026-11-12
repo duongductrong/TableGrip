@@ -228,6 +228,7 @@ object Shortcuts {
     val RunScript by action("Console", tr("Execute script"), Shortcut(Key.Enter, EnterLabel, primary = true, shift = true))
     val Cancel by action("Console", tr("Cancel running query"), if (isMac) Shortcut(Key.Period, ".", primary = true) else Shortcut(Key.F2, "F2", primary = true))
     val Explain by action("Console", tr("Explain plan"), Shortcut(Key.E, "E", primary = true, shift = true))
+    val ExplainAnalyze by action("Console", tr("Explain analyze: run the statement and show its actual plan"), Shortcut(Key.E, "E", primary = true, alt = true, shift = true))
     val Save by action("Console", tr("Save query / submit table changes"), Shortcut(Key.S, "S", primary = true))
     val SaveAs by action("Console", tr("Save script to a file"), Shortcut(Key.S, "S", primary = true, shift = true))
 
@@ -320,6 +321,7 @@ object Shortcuts {
                     entry(tr("Execute script"), RunScript),
                     entry(tr("Cancel running query"), Cancel),
                     entry(tr("Explain plan"), Explain),
+                    entry(tr("Explain analyze: run the statement and show its actual plan"), ExplainAnalyze),
                     entry(tr("Save query (the first time: name it in Saved Queries)"), Save),
                     entry(tr("Save script to a file…"), SaveAs),
                 ),

@@ -1,0 +1,163 @@
+{
+  "query_block": {
+    "union_result": {
+      "using_temporary_table": true,
+      "select_id": 5,
+      "table_name": "<union1,4>",
+      "access_type": "ALL",
+      "query_specifications": [
+        {
+          "dependent": false,
+          "cacheable": true,
+          "query_block": {
+            "select_id": 1,
+            "cost_info": {
+              "query_cost": "52.39"
+            },
+            "nested_loop": [
+              {
+                "table": {
+                  "table_name": "<subquery3>",
+                  "access_type": "ALL",
+                  "attached_condition": "(`<subquery3>`.`customer_id` is not null)",
+                  "materialized_from_subquery": {
+                    "using_temporary_table": true,
+                    "query_block": {
+                      "table": {
+                        "table_name": "orders",
+                        "access_type": "range",
+                        "possible_keys": [
+                          "PRIMARY",
+                          "orders_customer"
+                        ],
+                        "key": "PRIMARY",
+                        "used_key_parts": [
+                          "id"
+                        ],
+                        "key_length": "4",
+                        "rows_examined_per_scan": 49,
+                        "rows_produced_per_join": 49,
+                        "filtered": "100.00",
+                        "cost_info": {
+                          "read_cost": "5.18",
+                          "eval_cost": "4.90",
+                          "prefix_cost": "10.08",
+                          "data_read_per_join": "1K"
+                        },
+                        "used_columns": [
+                          "id",
+                          "customer_id"
+                        ],
+                        "attached_condition": "(`shop`.`orders`.`id` < 50)"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "table": {
+                  "table_name": "c",
+                  "access_type": "eq_ref",
+                  "possible_keys": [
+                    "PRIMARY"
+                  ],
+                  "key": "PRIMARY",
+                  "used_key_parts": [
+                    "id"
+                  ],
+                  "key_length": "4",
+                  "ref": [
+                    "<subquery3>.customer_id"
+                  ],
+                  "rows_examined_per_scan": 1,
+                  "rows_produced_per_join": 1,
+                  "filtered": "100.00",
+                  "cost_info": {
+                    "read_cost": "0.25",
+                    "eval_cost": "0.10",
+                    "prefix_cost": "38.03",
+                    "data_read_per_join": "232"
+                  },
+                  "used_columns": [
+                    "id",
+                    "name",
+                    "country"
+                  ]
+                }
+              },
+              {
+                "table": {
+                  "table_name": "o",
+                  "access_type": "ref",
+                  "possible_keys": [
+                    "orders_customer"
+                  ],
+                  "key": "orders_customer",
+                  "used_key_parts": [
+                    "customer_id"
+                  ],
+                  "key_length": "5",
+                  "ref": [
+                    "<subquery3>.customer_id"
+                  ],
+                  "rows_examined_per_scan": 41,
+                  "rows_produced_per_join": 1,
+                  "filtered": "33.33",
+                  "first_match": "c",
+                  "cost_info": {
+                    "read_cost": "10.26",
+                    "eval_cost": "0.10",
+                    "prefix_cost": "52.39",
+                    "data_read_per_join": "24"
+                  },
+                  "used_columns": [
+                    "customer_id",
+                    "total"
+                  ],
+                  "attached_condition": "(`shop`.`o`.`total` > 290.00)"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "dependent": false,
+          "cacheable": true,
+          "query_block": {
+            "select_id": 4,
+            "cost_info": {
+              "query_cost": "0.91"
+            },
+            "table": {
+              "table_name": "customers",
+              "access_type": "range",
+              "possible_keys": [
+                "PRIMARY"
+              ],
+              "key": "PRIMARY",
+              "used_key_parts": [
+                "id"
+              ],
+              "key_length": "4",
+              "rows_examined_per_scan": 2,
+              "rows_produced_per_join": 2,
+              "filtered": "100.00",
+              "cost_info": {
+                "read_cost": "0.71",
+                "eval_cost": "0.20",
+                "prefix_cost": "0.91",
+                "data_read_per_join": "464"
+              },
+              "used_columns": [
+                "id",
+                "name",
+                "country"
+              ],
+              "attached_condition": "(`shop`.`customers`.`id` < 3)"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

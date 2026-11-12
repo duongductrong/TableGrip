@@ -1,0 +1,70 @@
+{
+  "query_block": {
+    "select_id": 1,
+    "cost_info": {
+      "query_cost": "7683.78"
+    },
+    "ordering_operation": {
+      "using_filesort": false,
+      "grouping_operation": {
+        "using_filesort": false,
+        "nested_loop": [
+          {
+            "table": {
+              "table_name": "c",
+              "access_type": "ALL",
+              "possible_keys": [
+                "PRIMARY"
+              ],
+              "rows_examined_per_scan": 5000,
+              "rows_produced_per_join": 500,
+              "filtered": "10.00",
+              "cost_info": {
+                "read_cost": "453.25",
+                "eval_cost": "50.00",
+                "prefix_cost": "503.25",
+                "data_read_per_join": "113K"
+              },
+              "used_columns": [
+                "id",
+                "country"
+              ],
+              "attached_condition": "(`shop`.`c`.`country` = 'VN')"
+            }
+          },
+          {
+            "table": {
+              "table_name": "o",
+              "access_type": "ref",
+              "possible_keys": [
+                "orders_customer"
+              ],
+              "key": "orders_customer",
+              "used_key_parts": [
+                "customer_id"
+              ],
+              "key_length": "5",
+              "ref": [
+                "shop.c.id"
+              ],
+              "rows_examined_per_scan": 41,
+              "rows_produced_per_join": 6837,
+              "filtered": "33.33",
+              "cost_info": {
+                "read_cost": "5128.95",
+                "eval_cost": "683.79",
+                "prefix_cost": "7683.78",
+                "data_read_per_join": "160K"
+              },
+              "used_columns": [
+                "customer_id",
+                "total"
+              ],
+              "attached_condition": "(`shop`.`o`.`total` > 100.00)"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

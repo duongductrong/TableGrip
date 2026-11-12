@@ -253,6 +253,7 @@ private fun SessionRow(tab: ActivityTab, row: ActivityRow, columns: Set<ListColu
 private fun contextMenu(tab: ActivityTab, session: SessionActivity): List<ContextMenuItem> =
     listOfNotNull(
         ContextMenuItem(tr("Open Query in Console")) { tab.openInConsole(session) }.takeIf { session.query != null },
+        ContextMenuItem(tr("Explain Query")) { tab.explainInConsole(session) }.takeIf { tab.canExplain && !session.query.isNullOrBlank() },
         ContextMenuItem(tr("Copy Query")) { copyToClipboard(session.query.orEmpty()) }.takeIf { session.query != null },
         ContextMenuItem(tr("Copy PID")) { copyToClipboard(session.id) },
         ContextMenuItem(tr("Cancel Query")) { tab.requestSignal(session, terminate = false) }.takeIf { tab.signalsAllowed && !session.own },
@@ -287,6 +288,11 @@ private fun SessionDetails(tab: ActivityTab, modifier: Modifier) {
         TextArea(query, Modifier.weight(1f).fillMaxWidth(), readOnly = true, textStyle = JewelTheme.editorTextStyle)
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             OutlinedButton(onClick = { tab.openInConsole(session) }, enabled = session.query != null) { Text(tr("Open in Console")) }
+            if (tab.canExplain) {
+                Tooltip({ Text(tr("Open the query in a console with its estimated plan; the query isn't run")) }) {
+                    OutlinedButton(onClick = { tab.explainInConsole(session) }, enabled = !session.query.isNullOrBlank()) { Text(tr("Explain")) }
+                }
+            }
             OutlinedButton(onClick = { copyToClipboard(session.query.orEmpty()) }, enabled = session.query != null) { Text(tr("Copy")) }
         }
         val reason =

@@ -1,0 +1,73 @@
+{
+  "query": "/* select#1 */ select `c`.`country` AS `country`,count(0) AS `count(*)`,sum(`o`.`total`) AS `sum(o.total)` from `shop`.`orders` `o` join `shop`.`customers` `c` where ((`o`.`customer_id` = `c`.`id`) and (`c`.`country` = 'VN') and (`o`.`total` > 100.00)) group by `c`.`country` order by count(0) desc",
+  "inputs": [
+    {
+      "inputs": [
+        {
+          "inputs": [
+            {
+              "alias": "c",
+              "operation": "Table scan on c",
+              "table_name": "customers",
+              "access_type": "table",
+              "schema_name": "shop",
+              "used_columns": [
+                "id",
+                "country"
+              ],
+              "estimated_rows": 5000.0,
+              "estimated_total_cost": 503.25
+            }
+          ],
+          "condition": "(c.country = 'VN')",
+          "operation": "Filter: (c.country = 'VN')",
+          "access_type": "filter",
+          "estimated_rows": 500.0000074505806,
+          "estimated_total_cost": 503.25
+        },
+        {
+          "inputs": [
+            {
+              "alias": "o",
+              "covering": false,
+              "operation": "Index lookup on o using orders_customer (customer_id=c.id)",
+              "index_name": "orders_customer",
+              "table_name": "orders",
+              "access_type": "index",
+              "schema_name": "shop",
+              "used_columns": [
+                "customer_id",
+                "total"
+              ],
+              "estimated_rows": 41.03158187866211,
+              "lookup_condition": "customer_id=c.id",
+              "index_access_type": "index_lookup",
+              "estimated_total_cost": 10.26063063482741
+            }
+          ],
+          "condition": "(o.total > 100.00)",
+          "operation": "Filter: (o.total > 100.00)",
+          "access_type": "filter",
+          "estimated_rows": 13.67582601319964,
+          "estimated_total_cost": 10.26063063482741
+        }
+      ],
+      "join_type": "inner join",
+      "operation": "Nested loop inner join",
+      "access_type": "join",
+      "estimated_rows": 6837.913108492664,
+      "join_algorithm": "nested_loop",
+      "estimated_total_cost": 7683.776935764057
+    }
+  ],
+  "group_by": true,
+  "functions": [
+    "count(0)",
+    "sum(o.total)"
+  ],
+  "operation": "Group aggregate: count(0), sum(o.total)",
+  "query_type": "select",
+  "access_type": "aggregate",
+  "estimated_rows": 1.0,
+  "estimated_total_cost": 8367.568246613324
+}

@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import dev.tablegrip.app.AppState
+import dev.tablegrip.app.console.ConsoleTab
 import dev.tablegrip.app.workspace.WorkspaceTab
 import dev.tablegrip.core.activity.ActivityMonitor
 import dev.tablegrip.core.activity.ActivitySnapshot
@@ -14,6 +15,8 @@ import dev.tablegrip.core.activity.SessionActivity
 import dev.tablegrip.core.activity.SessionState
 import dev.tablegrip.core.connection.ConnectionConfig
 import dev.tablegrip.core.connection.Environment
+import dev.tablegrip.core.explain.ExplainPlans
+import dev.tablegrip.core.explain.PlanEngine
 import java.time.Duration
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -190,6 +193,16 @@ class ActivityTab(private val app: AppState, val config: ConnectionConfig) : Wor
 
     fun openInConsole(session: SessionActivity) {
         session.query?.let { app.workspace.openConsole(config, it) }
+    }
+
+    /** Whether the details offer EXPLAIN: on PostgreSQL, whose prepared queries' `$1` placeholders get a generic plan. */
+    val canExplain: Boolean = ExplainPlans.engine(config.type) == PlanEngine.PostgreSQL
+
+    /** Opens [session]'s query in a new console and shows its estimated plan there; it doesn't run the query. */
+    fun explainInConsole(session: SessionActivity) {
+        val query = session.query?.takeIf { it.isNotBlank() } ?: return
+        app.workspace.openConsole(config, query)
+        (app.workspace.selected as? ConsoleTab)?.explain(query, analyze = false)
     }
 
     private fun closeMonitor() {
