@@ -4,6 +4,29 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
   <channel>
     <title>TableGrip</title>
     <item>
+      <title>TableGrip 1.0.0-beta.5</title>
+      <pubDate>Thu, 12 Nov 2026 16:25:22 +0000</pubDate>
+      <sparkle:version>54</sparkle:version>
+      <sparkle:shortVersionString>1.0.0-beta.5</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>10.13</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/duongductrong/TableGrip/releases/tag/v1.0.0-beta.5</sparkle:fullReleaseNotesLink>
+      <sparkle:channel>beta</sparkle:channel>
+      <description sparkle:format="markdown"><![CDATA[### ✨ Features
+- Adjust ConnectionDialog size and improve driver selection layout
+- Implement password prompt for connections and add SSL options
+- Added functionality to navigate to the last page in TableDataTab
+- Website downloads follow the newest release in the feed
+- Introduce Welcome window with recent connections and enhance timeline structure
+- Refactor BrandBackdrop for improved visual consistency and clarity
+- Enhance session management and UI with recent connections and welcome window
+- Added hover submenu for improved menu navigation
+- Reopen closed tabs, and tree-wide actions beside the add menu
+- Visual EXPLAIN plans and Explain Analyze in the SQL console
+- Functions, procedures, sequences and materialized views in the explorer
+]]></description>
+      <enclosure url="https://github.com/duongductrong/TableGrip/releases/download/v1.0.0-beta.5/TableGrip-1.0.0-beta.5-macos-x64.dmg" length="116799502" type="application/octet-stream" sparkle:edSignature="zn1rWRwnHaefz51EbzSoYb11kJ741rHllwSFKxegNNcd8LMKIUTlVtiuhoRJCybYm6mbuO2xo2yatTOadBYECQ=="></enclosure>
+    </item>
+    <item>
       <title>TableGrip 1.0.0-beta.4</title>
       <pubDate>Thu, 12 Nov 2026 05:11:47 +0000</pubDate>
       <sparkle:version>40</sparkle:version>
@@ -70,6 +93,6 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
     </item>
   </channel>
 </rss><!-- sparkle-signatures:
-edSignature: JMY4cnvnKSzSudRsRALq1mLSvk+g3gVOnNRyzlLYv+247rRloXrdIN42vtSBH6+Z1Bd1VhTz/LLOu9yxLC1YBQ==
-length: 4732
+edSignature: J7z52TwjkWQtp9GO20imdFaPweWiw/MgxIhNeqSBddzwDkOOS8wYS1Ev2NQey1pBFVADoHJ+JhM7OwZxZDX4DA==
+length: 6368
 -->

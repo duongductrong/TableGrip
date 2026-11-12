@@ -4,6 +4,28 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
   <channel>
     <title>TableGrip</title>
     <item>
+      <title>TableGrip 1.0.0-beta.5</title>
+      <pubDate>Thu, 12 Nov 2026 16:25:22 +0000</pubDate>
+      <sparkle:version>54</sparkle:version>
+      <sparkle:shortVersionString>1.0.0-beta.5</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>10.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/duongductrong/TableGrip/releases/tag/v1.0.0-beta.5</sparkle:fullReleaseNotesLink>
+      <description sparkle:format="markdown"><![CDATA[### ✨ Features
+- Adjust ConnectionDialog size and improve driver selection layout
+- Implement password prompt for connections and add SSL options
+- Added functionality to navigate to the last page in TableDataTab
+- Website downloads follow the newest release in the feed
+- Introduce Welcome window with recent connections and enhance timeline structure
+- Refactor BrandBackdrop for improved visual consistency and clarity
+- Enhance session management and UI with recent connections and welcome window
+- Added hover submenu for improved menu navigation
+- Reopen closed tabs, and tree-wide actions beside the add menu
+- Visual EXPLAIN plans and Explain Analyze in the SQL console
+- Functions, procedures, sequences and materialized views in the explorer
+]]></description>
+      <enclosure url="https://github.com/duongductrong/TableGrip/releases/download/v1.0.0-beta.5/TableGrip-1.0.0-beta.5-windows-x64.msi" length="101323259" type="application/octet-stream" sparkle:edSignature="lpltUmFvC6VR/38rcEKNevNYaDH4Aci8TvQfM7CK+kLIASPg3sCPiyS0UWfexk57y8gamtcY5WbMgTBuazFiDA==" sparkle:os="windows-x64" sparkle:installerArguments="/passive"></enclosure>
+    </item>
+    <item>
       <title>TableGrip 1.0.0-beta.4</title>
       <pubDate>Thu, 12 Nov 2026 05:11:47 +0000</pubDate>
       <sparkle:version>40</sparkle:version>
@@ -67,6 +89,6 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
     </item>
   </channel>
 </rss><!-- sparkle-signatures:
-edSignature: 5y2mU2Uo/N6KpoCwre/PcfSNyv18cj09Ls5D44Y+tvuqehtakHOAkMvqzYGT711KMAqRwPta41d8FCRCIlMkDg==
-length: 4784
+edSignature: cfMUaaFC6mS0yi7js3ZkltAw+ByplnHrtiXR5rxfrMLiBTxHD8sSshCp3GAXjPeosvEbJ5PSazhOwuJac/iaDA==
+length: 6438
 -->

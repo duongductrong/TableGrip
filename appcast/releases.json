@@ -91,5 +91,36 @@
         "url": "https://github.com/duongductrong/TableGrip/releases/download/v1.0.0-beta.4/TableGrip-1.0.0-beta.4-windows-x64.msi"
       }
     }
+  },
+  {
+    "version": "1.0.0-beta.5",
+    "build": 54,
+    "channel": "beta",
+    "date": "Thu, 12 Nov 2026 16:25:22 +0000",
+    "notesUrl": "https://github.com/duongductrong/TableGrip/releases/tag/v1.0.0-beta.5",
+    "notes": "### \u2728 Features\n- Adjust ConnectionDialog size and improve driver selection layout\n- Implement password prompt for connections and add SSL options\n- Added functionality to navigate to the last page in TableDataTab\n- Website downloads follow the newest release in the feed\n- Introduce Welcome window with recent connections and enhance timeline structure\n- Refactor BrandBackdrop for improved visual consistency and clarity\n- Enhance session management and UI with recent connections and welcome window\n- Added hover submenu for improved menu navigation\n- Reopen closed tabs, and tree-wide actions beside the add menu\n- Visual EXPLAIN plans and Explain Analyze in the SQL console\n- Functions, procedures, sequences and materialized views in the explorer\n",
+    "targets": {
+      "macos-arm64": {
+        "length": 115334673,
+        "edSignature": "RszLJ2eXQwTRCSmYt/TdqbzlNl1dFrEf7RXEG0xBmZNMDshTjUs9kn4QeyF4k84KcbFlPL2p5dNvp23jwgGzCg==",
+        "minimumSystemVersion": "10.13",
+        "build": 54,
+        "url": "https://github.com/duongductrong/TableGrip/releases/download/v1.0.0-beta.5/TableGrip-1.0.0-beta.5-macos-arm64.dmg"
+      },
+      "macos-x64": {
+        "length": 116799502,
+        "edSignature": "zn1rWRwnHaefz51EbzSoYb11kJ741rHllwSFKxegNNcd8LMKIUTlVtiuhoRJCybYm6mbuO2xo2yatTOadBYECQ==",
+        "minimumSystemVersion": "10.13",
+        "build": 54,
+        "url": "https://github.com/duongductrong/TableGrip/releases/download/v1.0.0-beta.5/TableGrip-1.0.0-beta.5-macos-x64.dmg"
+      },
+      "windows-x64": {
+        "length": 101323259,
+        "edSignature": "lpltUmFvC6VR/38rcEKNevNYaDH4Aci8TvQfM7CK+kLIASPg3sCPiyS0UWfexk57y8gamtcY5WbMgTBuazFiDA==",
+        "minimumSystemVersion": "10.0",
+        "build": 54,
+        "url": "https://github.com/duongductrong/TableGrip/releases/download/v1.0.0-beta.5/TableGrip-1.0.0-beta.5-windows-x64.msi"
+      }
+    }
   }
 ]
