@@ -25,7 +25,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /** [group] is where a new connection goes, e.g. when created from a group's menu. */
-data class ConnectionDialogRequest(val existing: ConnectionConfig?, val group: String = "")
+/** Opens the connection dialog on [existing], or on a new connection in [group], starting on [type] when one was picked. */
+data class ConnectionDialogRequest(val existing: ConnectionConfig?, val group: String = "", val type: DatabaseType? = null)
 
 /**
  * Asks for a group name: one for [configs] to move into ([newGroup] when they were dropped on "New group"), or a new name
@@ -150,8 +151,8 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
 
     fun byId(id: String): ConnectionConfig? = profiles.firstOrNull { it.id == id }
 
-    fun openNew(group: String = "") {
-        dialog = ConnectionDialogRequest(existing = null, group = group)
+    fun openNew(group: String = "", type: DatabaseType? = null) {
+        dialog = ConnectionDialogRequest(existing = null, group = group, type = type)
     }
 
     fun openEdit(config: ConnectionConfig) {

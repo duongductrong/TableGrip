@@ -225,6 +225,7 @@ private fun actions(app: AppState): List<GoToItem> {
         app.updater.takeIf { it.unavailableReason == null }?.let { updater -> action(tr("Check for Updates…"), icon = AllIconsKeys.Actions.CheckOut) { updater.checkNow() } },
         (workspace.selected as? TableDataTab)?.let { tab -> action(tr("Reload Table"), Shortcuts.Reload, AllIconsKeys.Actions.Refresh) { tab.refresh() } },
         workspace.selected?.let { tab -> action(tr("Close Tab"), Shortcuts.CloseTab) { workspace.requestClose(tab) } },
+        if (workspace.canReopenClosedTab) action(tr("Reopen Closed Tab"), Shortcuts.ReopenTab) { workspace.reopenClosedTab() } else null,
     )
 }
 

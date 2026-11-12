@@ -54,15 +54,7 @@ class SessionKeeper(private val app: AppState, private val store: SessionStore =
         val workspace = app.workspace
         val reopened =
             session.tabs.takeIf { settings.restoreTabs }.orEmpty().map { saved ->
-                val config = app.connections.byId(saved.connectionId) ?: return@map null
-                when (saved) {
-                    is SessionTab.Console -> workspace.restoreConsole(config, saved)
-                    is SessionTab.Table -> workspace.restoreTable(config, saved)
-                    is SessionTab.Records -> workspace.restoreRecords(config, saved)
-                    is SessionTab.RecordConsole -> workspace.restoreRecordConsole(config, saved)
-                    is SessionTab.ShellConsole -> workspace.restoreShellConsole(config, saved)
-                }
-                workspace.tabs.lastOrNull()
+                workspace.restore(saved)
             }
         reopened.getOrNull(session.selected)?.let { workspace.selected = it }
         val tool = if (settings.startupTool == "LastUsed") session.leftTool else settings.startupTool

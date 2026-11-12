@@ -9,6 +9,9 @@ internal object AppIcons {
     /** The agent's chat: a little robot. */
     val Agent: IconKey = PathIconKey("icons/robot.svg", AppIcons::class.java)
 
+    /** Adding a connection: a database with a plus at its foot, drawn in the IntelliJ set's stroke style. */
+    val AddDataSource: IconKey = PathIconKey("icons/addDataSource.svg", AppIcons::class.java)
+
     /**
      * Engines with a logo under `icons/db`, by [DatabaseType.id]. The marks come from Simple Icons (CC0 SVG data) in
      * their official colours, exported by `assets/branding/tools/export_db_logos.py`; they are trademarks of their

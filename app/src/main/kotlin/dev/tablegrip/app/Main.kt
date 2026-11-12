@@ -173,6 +173,7 @@ private fun handleWindowShortcut(app: AppState, event: KeyEvent): Boolean {
         app.settingsOpen && (Shortcuts.CloseTab.matches(event) || (event.type == KeyEventType.KeyDown && event.key == Key.Escape)) ->
             done { app.settingsOpen = false }
         Shortcuts.CloseTab.matches(event) -> selected?.let { workspace.requestClose(it); true } ?: false
+        Shortcuts.ReopenTab.matches(event) -> workspace.reopenClosedTab()
         Shortcuts.GoToAnything.matches(event) -> done { app.goToOpen = true }
         Shortcuts.NewConsole.matches(event) -> app.currentConnection?.let { workspace.openConsole(it); true } ?: false
         Shortcuts.Explorer.matches(event) -> done { app.toggleTool(LeftTool.Explorer) }

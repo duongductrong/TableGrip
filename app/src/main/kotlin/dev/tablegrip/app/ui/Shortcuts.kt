@@ -200,6 +200,7 @@ object Shortcuts {
     // Window
     val NewConsole by action("General", tr("New console for the current connection"), Shortcut(Key.T, "T", primary = true))
     val CloseTab by action("General", tr("Close tab"), Shortcut(Key.W, "W", primary = true))
+    val ReopenTab by action("General", tr("Reopen closed tab"), Shortcut(Key.T, "T", primary = true, shift = true))
     val NextTab by action("General", tr("Next tab"), if (isMac) Shortcut(Key.RightBracket, "]", primary = true, shift = true) else Shortcut(Key.PageDown, "PgDn", primary = true))
     val PreviousTab by action("General", tr("Previous tab"), if (isMac) Shortcut(Key.LeftBracket, "[", primary = true, shift = true) else Shortcut(Key.PageUp, "PgUp", primary = true))
     val NextTabAlt by action("General", tr("Next tab (alternative)"), Shortcut(Key.Tab, "Tab", ctrl = true))
@@ -299,6 +300,7 @@ object Shortcuts {
                     Entry(tr("Go to anything: tables, tabs, queries, actions"), "${GoToAnything.label}  /  ${if (isMac) "⇧⇧" else "Shift Shift"}"),
                     entry(tr("New console for the current connection"), NewConsole),
                     entry(tr("Close tab"), CloseTab),
+                    entry(tr("Reopen closed tab"), ReopenTab),
                     entry(tr("Next tab"), NextTab, NextTabAlt),
                     entry(tr("Previous tab"), PreviousTab, PreviousTabAlt),
                     entry(tr("Connections"), Explorer),

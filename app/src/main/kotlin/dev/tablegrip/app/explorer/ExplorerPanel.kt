@@ -61,11 +61,14 @@ import dev.tablegrip.app.connections.ProgressLine
 import dev.tablegrip.app.connections.connectingText
 import dev.tablegrip.app.connections.friendlyError
 import dev.tablegrip.app.table.StructureSection
+import dev.tablegrip.app.table.ToolButton
 import dev.tablegrip.app.ui.Badge
 import dev.tablegrip.app.ui.EnvironmentChip
 import dev.tablegrip.app.ui.LocalIslands
 import dev.tablegrip.app.ui.copyToClipboard
+import dev.tablegrip.app.ui.AppIcons
 import dev.tablegrip.core.connection.ConnectionConfig
+import dev.tablegrip.core.connection.DatabaseType
 import dev.tablegrip.core.connection.EngineFamily
 import dev.tablegrip.core.connection.Paradigm
 import dev.tablegrip.core.dialect.SqlDialect
@@ -102,7 +105,7 @@ internal fun ExplorerPanel(app: AppState) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(tr("Connections"), Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
-            AddConnectionMenu(app)
+            SidebarActions(app)
         }
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
 
@@ -608,53 +611,80 @@ private fun NameAndDetail(name: String, detail: String, modifier: Modifier = Mod
  * The header's + button: a menu with a new connection first and, below it, importing from other tools — saying how many
  * connections they have, so the option explains itself.
  */
+/**
+ * The sidebar's toolbar, laid out like a database client's navigator: create, then the tree-wide actions.
+ * The tree-wide actions only appear once there is a connection to act on.
+ */
+@Composable
+private fun SidebarActions(app: AppState) {
+    val profiles = app.connections.profiles
+    val connected = profiles.map { it.id }.filter { app.databases.status(it) is ConnectionStatus.Connected }
+    val anyOpen = app.explorer.treeState.openNodes.isNotEmpty()
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        AddConnectionMenu(app)
+        if (profiles.isNotEmpty()) {
+            ToolButton(AllIconsKeys.Actions.Refresh, tr("Refresh all connections"), enabled = connected.isNotEmpty()) {
+                connected.forEach { app.explorer.refresh(ConnectionKey(it)) }
+            }
+            ToolButton(AllIconsKeys.Actions.Collapseall, tr("Collapse All"), enabled = anyOpen) {
+                app.explorer.treeState.openNodes = emptySet()
+            }
+            ToolButton(AllIconsKeys.Actions.Close, tr("Disconnect All"), enabled = connected.isNotEmpty()) {
+                app.confirmDataFiles(connected) { connected.forEach(app.explorer::disconnectNow) }
+            }
+        }
+    }
+}
+
 @Composable
 private fun AddConnectionMenu(app: AppState) {
     var open by remember { mutableStateOf(false) }
     LaunchedEffect(open) { if (open) app.connections.lookForImports() }
     Box {
         Tooltip({ Text(tr("New or imported connection")) }) {
-            IconButton(onClick = { open = !open }) {
-                Row(Modifier.padding(horizontal = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(AllIconsKeys.General.Add, tr("Add connection"))
-                    Icon(AllIconsKeys.General.ChevronDown, null, Modifier.size(10.dp))
-                }
-            }
+            IconButton(onClick = { open = !open }) { Icon(AppIcons.AddDataSource, tr("Add connection")) }
         }
         if (open) {
-            PopupMenu(onDismissRequest = { open = false; true }, horizontalAlignment = Alignment.End) {
-                selectableItem(selected = false, iconKey = AllIconsKeys.General.Add, onClick = {
-                    open = false
-                    app.connections.openNew()
-                }) { MenuEntry(tr("New Connection…"), tr("Connect to a database server")) }
+            val engines = DatabaseType.entries.filterNot { it.isDataFile }
+            val create = { type: DatabaseType ->
+                open = false
+                app.connections.openNew(type = type)
+            }
+            // Like DataGrip's "+": pick the engine right here, the common ones flat and the rest one level down.
+            PopupMenu(
+                onDismissRequest = { open = false; true },
+                horizontalAlignment = Alignment.End,
+                modifier = Modifier.widthIn(min = 220.dp),
+            ) {
+                engines.take(PinnedEngines).forEach { type ->
+                    selectableItem(selected = false, iconKey = engineIcon(type), onClick = { create(type) }) { Text(type.displayName) }
+                }
+                submenu(submenu = {
+                    engines.drop(PinnedEngines).forEach { type ->
+                        selectableItem(selected = false, iconKey = engineIcon(type), onClick = { create(type) }) { Text(type.displayName) }
+                    }
+                }) { Text(tr("More Data Sources")) }
+                separator()
                 selectableItem(selected = false, iconKey = AllIconsKeys.Actions.MenuOpen, onClick = {
                     open = false
                     app.connections.chooseDataFiles()
-                }) { MenuEntry(tr("Open Data File…"), tr("CSV, Excel, JSON — or drop files on the window")) }
-                separator()
+                }) { Text(tr("Open Data File…")) }
                 selectableItem(selected = false, iconKey = AllIconsKeys.ToolbarDecorator.Import, onClick = {
                     open = false
                     app.connections.openImport()
                 }) {
                     val hint = app.connections.importHint
-                    MenuEntry(
-                        if (hint == null) tr("Import from Other Tools…") else tr("Import {0} from {1}…", hint.count, hint.tools.joinToString(", ")),
-                        tr("DBeaver, IDE data sources, .pgpass, .env"),
-                    )
+                    Text(if (hint == null) tr("Import from Other Tools…") else tr("Import {0} from {1}…", hint.count, hint.tools.joinToString(", ")))
                 }
             }
         }
     }
 }
 
-/** A menu item's title over a one-line hint, padded so every entry in the menu has the same height. */
-@Composable
-private fun MenuEntry(title: String, detail: String) {
-    Column(Modifier.padding(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(title)
-        Text(detail, color = JewelTheme.globalColors.text.info, fontSize = 11.sp)
-    }
-}
+/** How many engines the add menu lists at its top level, in the connection dialog's order (the most used first). */
+private const val PinnedEngines = 10
+
+private fun engineIcon(type: DatabaseType): IconKey = AppIcons.engineLogo(type) ?: AllIconsKeys.Nodes.DataSchema
 
 @Composable
 private fun EmptyExplorer(app: AppState) {

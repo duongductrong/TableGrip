@@ -319,7 +319,7 @@ internal fun ConnectionDialog(state: ConnectionsViewModel, request: ConnectionDi
 /** The dialog body, separate from its window so it can be rendered in tests. */
 @Composable
 internal fun ConnectionDialogContent(state: ConnectionsViewModel, request: ConnectionDialogRequest) {
-    val form = remember(request) { ConnectionForm(request.existing, request.group) }
+    val form = remember(request) { ConnectionForm(request.existing, request.group).also { f -> request.type?.let(f::changeType) } }
     val scope = rememberCoroutineScope()
     var message by remember { mutableStateOf<Message?>(null) }
     var busy by remember { mutableStateOf(false) }

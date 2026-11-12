@@ -260,9 +260,47 @@ class WorkspaceViewModel(private val app: AppState) {
         open(CommandConsoleTab(app, config, name, database = saved.database, initial = saved.text), reveal = false)
     }
 
+    /** A closed tab as it was, and where it sat in the strip. */
+    private class ClosedTab(val saved: SessionTab, val index: Int)
+
+    private val closedTabs = ArrayDeque<ClosedTab>()
+
+    /** Whether [reopenClosedTab] has something to bring back. */
+    val canReopenClosedTab: Boolean
+        get() = closedTabs.isNotEmpty()
+
+    /** Reopens a tab from the last session, with its saved state. Returns the new tab, or null if its connection is gone. */
+    fun restore(saved: SessionTab): WorkspaceTab? {
+        val config = app.connections.byId(saved.connectionId) ?: return null
+        when (saved) {
+            is SessionTab.Console -> restoreConsole(config, saved)
+            is SessionTab.Table -> restoreTable(config, saved)
+            is SessionTab.Records -> restoreRecords(config, saved)
+            is SessionTab.RecordConsole -> restoreRecordConsole(config, saved)
+            is SessionTab.ShellConsole -> restoreShellConsole(config, saved)
+        }
+        return tabs.lastOrNull()
+    }
+
+    /** Brings back the most recently closed tab, at its old position and in front, like ⇧⌘T in a browser. */
+    fun reopenClosedTab(): Boolean {
+        while (closedTabs.isNotEmpty()) {
+            val closed = closedTabs.removeLast()
+            val tab = restore(closed.saved) ?: continue
+            move(tabs.lastIndex, closed.index.coerceAtMost(tabs.lastIndex))
+            bringToFront(tab)
+            return true
+        }
+        return false
+    }
+
     fun close(tab: WorkspaceTab) {
         val index = tabs.indexOf(tab)
         if (index < 0) return
+        tab.toSession()?.let {
+            closedTabs.addLast(ClosedTab(it, index))
+            if (closedTabs.size > MAX_CLOSED_TABS) closedTabs.removeFirst()
+        }
         tab.dispose()
         tabs.removeAt(index)
         keys -= tab
@@ -296,5 +334,9 @@ class WorkspaceViewModel(private val app: AppState) {
         tabs += tab
         selected = tab
         if (reveal) app.mainWindowVisible = true
+    }
+
+    private companion object {
+        const val MAX_CLOSED_TABS = 20
     }
 }

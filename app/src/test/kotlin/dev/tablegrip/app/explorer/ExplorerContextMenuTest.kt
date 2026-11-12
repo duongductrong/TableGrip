@@ -10,6 +10,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
@@ -30,6 +31,7 @@ import java.io.File
 import javax.imageio.ImageIO
 import kotlin.io.path.createTempDirectory
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -68,6 +70,29 @@ class ExplorerContextMenuTest {
         onNodeWithText("New Connection…").performClick()
         waitForIdle()
         assertNotNull(app.connections.dialog)
+        app.dispose()
+    }
+
+    @Test
+    fun `the add menu lists engines and opens the dialog on the one picked`() = runComposeUiTest {
+        val app = app(ConnectionConfig("c", "Analytics", DatabaseType.ClickHouse))
+        setContent { TableGripTheme(isDark = true) { Box(Modifier.size(320.dp, 800.dp)) { ExplorerPanel(app) } } }
+        waitForIdle()
+
+        onNodeWithContentDescription("Add connection").performClick()
+        waitForIdle()
+        onAllNodesWithText("More Data Sources").assertCountEquals(1)
+        onAllNodesWithText("Open Data File…").assertCountEquals(1)
+        System.getProperty("snapshot.dir")?.let { dir ->
+            // The popup is its own window root, so capture every root and keep the one that holds the menu.
+            onAllNodes(isRoot()).fetchSemanticsNodes().indices.forEach { i ->
+                ImageIO.write(onAllNodes(isRoot())[i].captureToImage().toAwtImage(), "png", File(dir, "explorer-add-menu-$i.png"))
+            }
+        }
+
+        onNodeWithText("MySQL").performClick()
+        waitForIdle()
+        assertEquals(DatabaseType.MySQL, app.connections.dialog?.type)
         app.dispose()
     }
 
