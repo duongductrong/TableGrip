@@ -36,9 +36,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // The server can't know the visitor's theme; the head script has already applied it, React catches up after mount.
   const [choice, setChoiceState] = React.useState<ThemeChoice>('system')
   const [system, setSystem] = React.useState<ResolvedTheme>('light')
+  const [mounted, setMounted] = React.useState(false)
 
   React.useEffect(() => {
     setChoiceState(readChoice())
+    setMounted(true)
     setSystem(systemTheme())
     const query = window.matchMedia('(prefers-color-scheme: dark)')
     const onChange = () => setSystem(query.matches ? 'dark' : 'light')
@@ -49,10 +51,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const resolved: ResolvedTheme = choice === 'system' ? system : choice
 
   React.useEffect(() => {
+    // Until the real choice is read, leave what the head script applied alone (the defaults here would force light).
+    if (!mounted) return
     const root = document.documentElement
     root.classList.toggle('dark', resolved === 'dark')
     root.dataset.themeChoice = choice
-  }, [choice, resolved])
+  }, [choice, resolved, mounted])
 
   const setChoice = React.useCallback((next: ThemeChoice) => {
     setChoiceState(next)
