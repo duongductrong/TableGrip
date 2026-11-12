@@ -225,7 +225,7 @@ private class Listing(val recent: List<ConnectionConfig>, val rest: List<Connect
 private fun BrandPanel(app: AppState, model: WelcomeModel, band: androidx.compose.ui.unit.Dp) {
     val islands = LocalIslands.current
     Box(Modifier.width(BrandWidth).fillMaxHeight().clipToBounds().background(islands.frame)) {
-        BrandBackdrop(islands.accent, islands.frame)
+        BrandBackdrop(islands.frame)
         Column(Modifier.fillMaxSize().padding(top = band, bottom = 14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Spacer(Modifier.weight(1f))
             AppMark()
@@ -259,22 +259,15 @@ private fun BrandPanel(app: AppState, model: WelcomeModel, band: androidx.compos
     }
 }
 
-/**
- * A faint table grid behind the mark, like the one on the app icon, glowing in the accent colour around the mark and
- * fading out towards the panel's edges.
- */
+/** A faint gray table grid behind the mark, as on the website, fading out towards the panel's edges. */
 @Composable
-private fun BrandBackdrop(accent: Color, frame: Color) {
+private fun BrandBackdrop(frame: Color) {
     val dark = JewelTheme.isDark
+    val rule = JewelTheme.globalColors.text.normal
     Canvas(Modifier.fillMaxSize()) {
         val center = Offset(size.width / 2, size.height * 0.36f)
-        drawCircle(
-            Brush.radialGradient(listOf(accent.copy(alpha = if (dark) 0.30f else 0.20f), Color.Transparent), center, size.width * 0.62f),
-            radius = size.width * 0.62f,
-            center = center,
-        )
-        val step = 26.dp.toPx()
-        val line = accent.copy(alpha = if (dark) 0.16f else 0.11f)
+        val step = 24.dp.toPx()
+        val line = rule.copy(alpha = if (dark) 0.08f else 0.07f)
         val stroke = 1.dp.toPx()
         var x = (size.width / 2) % step
         while (x < size.width) {
@@ -286,7 +279,7 @@ private fun BrandBackdrop(accent: Color, frame: Color) {
             drawLine(line, Offset(0f, y), Offset(size.width, y), stroke)
             y += step
         }
-        // Fades the grid out, so it reads as a glow around the mark rather than graph paper.
+        // Fades the grid out around the mark, so it reads as a backdrop rather than graph paper.
         drawRect(Brush.radialGradient(listOf(Color.Transparent, frame.copy(alpha = 0.85f), frame), center, size.height * 0.62f))
     }
 }
