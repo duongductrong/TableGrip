@@ -627,6 +627,17 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
         }
     }
 
+    /** Jumps to the final page; the total isn't known until counted, so an unknown one is counted first. */
+    fun goToLastPage() {
+        app.scope.launch {
+            val total = totalRows ?: runCatching {
+                app.databases.database(config).countRows(table, resolveFilter(), app.settings.queryTimeoutSeconds, resolveProjection())
+            }.onFailure { error = it.message }.getOrNull() ?: return@launch
+            totalRows = total
+            goToPage(((total - 1).coerceAtLeast(0) / pageSize).toInt())
+        }
+    }
+
     fun setPageSize(size: Int) = guard {
         app.updateSettings { it.copy(pageSize = size) }
         page = 0

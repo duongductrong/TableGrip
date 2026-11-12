@@ -255,6 +255,7 @@ private fun Toolbar(tab: TableDataTab) {
         val total = tab.totalRows
         if (total == null) Link("?", onClick = tab::countRows) else Text(total.toString())
         ToolButton(AllIconsKeys.Actions.Play_forward, tr("Next page"), enabled = tab.hasNextPage) { tab.goToPage(tab.page + 1) }
+        ToolButton(AllIconsKeys.Actions.Play_last, tr("Last page"), enabled = tab.hasNextPage) { tab.goToLastPage() }
         ListComboBox(
             items = PageSizes.map { tr("{0} rows", it) },
             selectedIndex = PageSizes.indexOf(tab.pageSize).coerceAtLeast(0),
