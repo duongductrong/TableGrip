@@ -23,6 +23,7 @@ import dev.tablegrip.app.connections.ConnectionDialog
 import dev.tablegrip.app.connections.DeleteConnectionDialog
 import dev.tablegrip.app.connections.ImportConnectionsDialog
 import dev.tablegrip.app.connections.MissingDriverDialog
+import dev.tablegrip.app.connections.PasswordPromptDialog
 import dev.tablegrip.app.connections.GroupDialog
 import dev.tablegrip.app.explorer.ExplorerPanel
 import dev.tablegrip.app.export.ExportDialog
@@ -94,6 +95,7 @@ internal fun AppDialogs(app: AppState) {
     app.connections.groupRequest?.let { GroupDialog(app.connections, it) }
     app.connections.importing?.let { ImportConnectionsDialog(app.connections, it) }
     app.connections.driverPrompt?.let { MissingDriverDialog(app.connections, it) }
+    app.connections.passwordPrompt?.let { PasswordPromptDialog(app.connections, it) }
     if (app.shortcutsOpen) ShortcutsDialog(app)
     app.exportRequest?.let { ExportDialog(app, it) }
     app.importWizard?.let { ImportDialog(app, it) }

@@ -2,6 +2,8 @@ package dev.tablegrip.app.connections
 
 import dev.tablegrip.core.i18n.tr
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -36,10 +38,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import dev.tablegrip.app.ui.AppDialog
-import dev.tablegrip.app.ui.AppIcons
-import org.jetbrains.jewel.foundation.ExperimentalJewelApi
-import org.jetbrains.jewel.ui.component.SimpleListItem
-import org.jetbrains.jewel.ui.icons.AllIconsKeys
 import dev.tablegrip.core.connection.AgentWrites
 import dev.tablegrip.core.connection.AiAccess
 import dev.tablegrip.core.connection.ConnectionConfig
@@ -68,6 +66,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.Orientation
+import org.jetbrains.jewel.ui.Outline
 import org.jetbrains.jewel.ui.component.CheckboxRow
 import org.jetbrains.jewel.ui.component.DefaultButton
 import org.jetbrains.jewel.ui.component.Divider
@@ -100,6 +99,52 @@ private class ConnectionForm(existing: ConnectionConfig?, group: String = "") {
     val url = TextFieldState(existing?.url.orEmpty())
     val properties = TextFieldState(existing?.properties.orEmpty().entries.joinToString("\n") { "${it.key}=${it.value}" })
     val connectionString = TextFieldState()
+    /** Asks for the password on every connect; the field then only serves Test Connection. */
+    var askPassword by mutableStateOf(existing?.askPassword ?: false)
+
+    /** TLS, for drivers with an [SslSpec]; its properties are taken out of [properties] and put back on save. */
+    var sslMode by mutableStateOf<SslMode?>(null)
+    val sslCa = TextFieldState()
+    val sslCert = TextFieldState()
+    val sslKey = TextFieldState()
+
+    val sslSpec: SslSpec?
+        get() = SslSpecs[driver].takeIf { isServer && !dataFile }
+
+    val ssl: SslSettings
+        get() = SslSettings(sslMode?.takeIf { sslSpec?.modes?.containsKey(it) == true }, sslCa.text.toString(), sslCert.text.toString(), sslKey.text.toString())
+
+    init {
+        absorbSsl()
+    }
+
+    fun stateOf(field: Field): TextFieldState =
+        when (field) {
+            Field.Url -> url
+            Field.Database -> database
+            Field.Host -> host
+            Field.Port -> port
+            Field.SshHost -> sshHost
+            Field.SshUser -> sshUser
+            Field.SshPort -> sshPort
+            Field.SslCa -> sslCa
+            Field.SslCert -> sslCert
+            Field.SslKey -> sslKey
+            Field.Properties -> properties
+        }
+
+    /** Moves the TLS properties the driver's [SslSpec] knows from the properties text to the SSL tab. */
+    fun absorbSsl() {
+        val spec = sslSpec ?: return
+        val all = parseProperties().getOrNull() ?: return
+        val (settings, rest) = SslSettings.extract(spec, all)
+        if (!settings.isSet) return
+        settings.mode?.let { sslMode = it }
+        if (settings.ca.isNotEmpty()) sslCa.setTextAndPlaceCursorAtEnd(settings.ca)
+        if (settings.cert.isNotEmpty()) sslCert.setTextAndPlaceCursorAtEnd(settings.cert)
+        if (settings.key.isNotEmpty()) sslKey.setTextAndPlaceCursorAtEnd(settings.key)
+        properties.setTextAndPlaceCursorAtEnd(rest.entries.joinToString("\n") { "${it.key}=${it.value}" })
+    }
 
     var environment by mutableStateOf(existing?.environment ?: Environment.None)
     val group = TextFieldState(existing?.group ?: group)
@@ -178,6 +223,7 @@ private class ConnectionForm(existing: ConnectionConfig?, group: String = "") {
         if (parsed.properties.isNotEmpty()) {
             val merged = parseProperties().getOrDefault(emptyMap()) + parsed.properties
             properties.setTextAndPlaceCursorAtEnd(merged.entries.joinToString("\n") { "${it.key}=${it.value}" })
+            absorbSsl()
         }
         return parsed.warnings
     }
@@ -198,54 +244,67 @@ private class ConnectionForm(existing: ConnectionConfig?, group: String = "") {
         }
     }
 
-    fun validate(drivers: DriverDownloads): String? {
+    fun validate(drivers: DriverDownloads): Invalid? {
         if (dataFile) return validateDataFile()
         val port = port.text.toString()
-        parseProperties().exceptionOrNull()?.let { return it.message }
+        parseProperties().exceptionOrNull()?.let { return Invalid(it.message.orEmpty(), Field.Properties) }
         if (useUrl && document) {
             val raw = url.text.toString().trim()
             return when {
-                raw.isEmpty() -> tr("Connection string is required.")
-                !raw.startsWith("mongodb://") && !raw.startsWith("mongodb+srv://") -> tr("A connection string starts with mongodb:// or mongodb+srv://.")
-                ssh -> tr("SSH tunnels need host and port, not a connection string.")
+                raw.isEmpty() -> Invalid(tr("Connection string is required."), Field.Url)
+                !raw.startsWith("mongodb://") && !raw.startsWith("mongodb+srv://") -> Invalid(tr("A connection string starts with mongodb:// or mongodb+srv://."), Field.Url)
+                ssh -> Invalid(tr("SSH tunnels need host and port, not a connection string."), Field.Url)
                 else -> null
             }
         }
         if (useUrl) {
             val raw = url.text.toString().trim()
             return when {
-                raw.isEmpty() -> tr("JDBC URL is required.")
-                !raw.startsWith("jdbc:") -> tr("A JDBC URL starts with jdbc: — paste other formats into Connection string.")
-                ssh && runCatching { JdbcUrls.build(toConfig(), via = "127.0.0.1" to 1) }.isFailure -> tr("SSH tunnels need a single-host URL.")
+                raw.isEmpty() -> Invalid(tr("JDBC URL is required."), Field.Url)
+                !raw.startsWith("jdbc:") -> Invalid(tr("A JDBC URL starts with jdbc: — paste other formats into Connection string."), Field.Url)
+                ssh && runCatching { JdbcUrls.build(toConfig(), via = "127.0.0.1" to 1) }.isFailure -> Invalid(tr("SSH tunnels need a single-host URL."), Field.Url)
                 // Only checkable once the driver is here; until then the driver banner asks for it.
                 drivers.library.resolve(toConfig()) is DriverResolution.Ready && !drivers.library.load(toConfig()).acceptsURL(JdbcUrls.build(toConfig())) ->
-                    tr("{0} doesn't accept this URL.", driver.displayName)
-                else -> null
+                    Invalid(tr("{0} doesn't accept this URL.", driver.displayName), Field.Url)
+                else -> validateSsl()
             }
         }
         return when {
-            relational && database.text.isBlank() -> if (isServer) tr("Database is required.") else tr("Database file is required.")
-            type.family == EngineFamily.InfluxDB && database.text.isBlank() -> tr("Organization is required.")
-            fileMismatch() != null -> fileMismatch()
-            isServer && host.text.isBlank() -> tr("Host is required.")
-            ssh && ',' in host.text -> tr("SSH tunnels need a single host.")
-            isServer && port.isNotEmpty() && port.toIntOrNull() !in 1..65535 -> tr("Port must be between 1 and 65535.")
-            ssh && sshHost.text.isBlank() -> tr("SSH host is required.")
-            ssh && sshUser.text.isBlank() -> tr("SSH user is required.")
-            ssh && sshPort.text.toString().toIntOrNull() !in 1..65535 -> tr("SSH port must be between 1 and 65535.")
+            relational && database.text.isBlank() -> Invalid(if (isServer) tr("Database is required.") else tr("Database file is required."), Field.Database)
+            type.family == EngineFamily.InfluxDB && database.text.isBlank() -> Invalid(tr("Organization is required."), Field.Database)
+            fileMismatch() != null -> Invalid(fileMismatch()!!, Field.Database)
+            isServer && host.text.isBlank() -> Invalid(tr("Host is required."), Field.Host)
+            ssh && ',' in host.text -> Invalid(tr("SSH tunnels need a single host."), Field.Host)
+            isServer && port.isNotEmpty() && port.toIntOrNull() !in 1..65535 -> Invalid(tr("Port must be between 1 and 65535."), Field.Port)
+            ssh && sshHost.text.isBlank() -> Invalid(tr("SSH host is required."), Field.SshHost)
+            ssh && sshUser.text.isBlank() -> Invalid(tr("SSH user is required."), Field.SshUser)
+            ssh && sshPort.text.toString().toIntOrNull() !in 1..65535 -> Invalid(tr("SSH port must be between 1 and 65535."), Field.SshPort)
+            else -> validateSsl()
+        }
+    }
+
+    /** Certificate files named on the SSL tab must be there, or the driver fails with a far vaguer message. */
+    private fun validateSsl(): Invalid? {
+        val spec = sslSpec ?: return null
+        fun missing(state: TextFieldState) = state.text.toString().trim().let { it.isNotEmpty() && !java.nio.file.Files.isRegularFile(runCatching { Path.of(it) }.getOrNull() ?: return true) }
+        return when {
+            spec.caKey != null && missing(sslCa) -> Invalid(tr("CA certificate {0} doesn't exist.", sslCa.text.toString().trim()), Field.SslCa)
+            spec.certKey != null && missing(sslCert) -> Invalid(tr("Client certificate {0} doesn't exist.", sslCert.text.toString().trim()), Field.SslCert)
+            spec.keyKey != null && missing(sslKey) -> Invalid(tr("Client key {0} doesn't exist.", sslKey.text.toString().trim()), Field.SslKey)
+            spec.certKey != null && sslCert.text.isNotBlank() != sslKey.text.isNotBlank() -> Invalid(tr("A client certificate needs its key, and a key its certificate."), if (sslCert.text.isBlank()) Field.SslCert else Field.SslKey)
             else -> null
         }
     }
 
-    private fun validateDataFile(): String? {
+    private fun validateDataFile(): Invalid? {
         val raw = database.text.toString().trim()
-        if (raw.isEmpty()) return tr("File is required.")
-        val path = runCatching { DataFileStore.pathOf(raw) }.getOrNull() ?: return tr("That isn't a valid path.")
-        if (!java.nio.file.Files.isRegularFile(path)) return tr("{0} doesn't exist or isn't a file.", path)
+        if (raw.isEmpty()) return Invalid(tr("File is required."), Field.Database)
+        val path = runCatching { DataFileStore.pathOf(raw) }.getOrNull() ?: return Invalid(tr("That isn't a valid path."), Field.Database)
+        if (!java.nio.file.Files.isRegularFile(path)) return Invalid(tr("{0} doesn't exist or isn't a file.", path), Field.Database)
         val format = DataFileFormats.detect(path)
         return when {
-            format != null && format.type != type -> tr("{0} looks like a {1}; choose that type, or rename the file.", path.fileName, format.type.displayName)
-            charset != null && runCatching { java.nio.charset.Charset.forName(charset) }.isFailure -> tr("Unknown encoding \"{0}\".", charset)
+            format != null && format.type != type -> Invalid(tr("{0} looks like a {1}; choose that type, or rename the file.", path.fileName, format.type.displayName), Field.Database)
+            charset != null && runCatching { java.nio.charset.Charset.forName(charset) }.isFailure -> Invalid(tr("Unknown encoding \"{0}\".", charset), null)
             else -> null
         }
     }
@@ -275,7 +334,7 @@ private class ConnectionForm(existing: ConnectionConfig?, group: String = "") {
             user = if (isServer) user.text.toString().trim() else "",
             driver = driver,
             driverJars = if (driver == DriverId.Generic) driverJars else emptyList(),
-            properties = if (dataFile) emptyMap() else parseProperties().getOrDefault(emptyMap()),
+            properties = if (dataFile) emptyMap() else parseProperties().getOrDefault(emptyMap()) + sslSpec?.let(ssl::toProperties).orEmpty(),
             url = url.text.toString().trim().takeIf { useUrl && it.isNotEmpty() && !dataFile },
             dataFile = if (dataFile) DataFileOptions(delimiter = delimiter, hasHeader = hasHeader, charset = charset) else null,
             environment = environment,
@@ -285,6 +344,7 @@ private class ConnectionForm(existing: ConnectionConfig?, group: String = "") {
             confirmWrites = confirmWrites,
             aiAccess = aiAccess,
             agentWrites = agentWrites,
+            askPassword = askPassword && isServer,
             ssh =
                 if (!ssh) null
                 else
@@ -302,7 +362,24 @@ private class ConnectionForm(existing: ConnectionConfig?, group: String = "") {
 /** Shows typed secrets as dots; the field still holds the real text. */
 internal val MaskPassword = OutputTransformation { replace(0, length, "•".repeat(length)) }
 
-private enum class DialogTab { General, Ssh, Options }
+private enum class DialogTab { General, Ssh, Ssl, Options }
+
+/** A form field a validation error can point at, and the tab it's on. */
+private enum class Field(val tab: DialogTab) {
+    Url(DialogTab.General), Database(DialogTab.General), Host(DialogTab.General), Port(DialogTab.General),
+    SshHost(DialogTab.Ssh), SshUser(DialogTab.Ssh), SshPort(DialogTab.Ssh),
+    SslCa(DialogTab.Ssl), SslCert(DialogTab.Ssl), SslKey(DialogTab.Ssl),
+    Properties(DialogTab.Options),
+}
+
+/** Why the form can't be saved, and the field to fix (null when it isn't a single field). */
+private data class Invalid(val message: String, val field: Field?)
+
+/** The field the last failed validation pointed at, outlined until it's edited; read by [outlineOf]. */
+private val LocalInvalidField = androidx.compose.runtime.compositionLocalOf<Field?> { null }
+
+@Composable
+private fun outlineOf(field: Field): Outline = if (LocalInvalidField.current == field) Outline.Error else Outline.None
 
 @Composable
 internal fun ConnectionDialog(state: ConnectionsViewModel, request: ConnectionDialogRequest) {
@@ -324,6 +401,8 @@ internal fun ConnectionDialogContent(state: ConnectionsViewModel, request: Conne
     var message by remember { mutableStateOf<Message?>(null) }
     var busy by remember { mutableStateOf(false) }
     var tab by remember { mutableStateOf(DialogTab.General) }
+    /** The field the last validation blamed, and its text then: outlined until the user changes it. */
+    var invalid by remember { mutableStateOf<Pair<Field, String>?>(null) }
 
     LaunchedEffect(request) {
         val id = request.existing?.id ?: return@LaunchedEffect
@@ -333,8 +412,14 @@ internal fun ConnectionDialogContent(state: ConnectionsViewModel, request: Conne
 
     fun submit(test: Boolean) {
         form.moveUrlPassword()
+        invalid = null
         form.validate(state.drivers)?.let {
-            message = Message(it, isError = true)
+            message = Message(it.message, isError = true)
+            // Take the user to the field: an SSH error found while on General would otherwise be hard to place.
+            it.field?.let { field ->
+                tab = field.tab
+                invalid = field to form.stateOf(field).text.toString()
+            }
             return
         }
         busy = true
@@ -368,7 +453,7 @@ internal fun ConnectionDialogContent(state: ConnectionsViewModel, request: Conne
         TabStrip(
             tabs =
                 DialogTab.entries
-                    .filter { it != DialogTab.Ssh || form.isServer }
+                    .filter { (it != DialogTab.Ssh || form.isServer) && (it != DialogTab.Ssl || form.sslSpec != null) }
                     .map { entry ->
                         TabData.Default(
                             selected = entry == tab,
@@ -377,6 +462,7 @@ internal fun ConnectionDialogContent(state: ConnectionsViewModel, request: Conne
                                     when (entry) {
                                         DialogTab.General -> tr("General")
                                         DialogTab.Ssh -> if (form.useSsh) tr("SSH ✓") else tr("SSH")
+                                        DialogTab.Ssl -> if (form.ssl.isSet) tr("SSL ✓") else tr("SSL")
                                         DialogTab.Options -> tr("Options")
                                     },
                                     tabState,
@@ -389,11 +475,22 @@ internal fun ConnectionDialogContent(state: ConnectionsViewModel, request: Conne
             style = JewelTheme.defaultTabStyle,
         )
         Divider(Orientation.Horizontal, Modifier.fillMaxWidth())
-        Column(Modifier.weight(1f).fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            when (if (tab == DialogTab.Ssh && !form.isServer) DialogTab.General else tab) {
-                DialogTab.General -> GeneralTab(form, state.drivers) { message = it }
-                DialogTab.Ssh -> SshTab(form)
-                DialogTab.Options -> OptionsTab(form)
+        // Scrolls when a tab holds more than fits, so nothing at the bottom (driver properties) is cut off.
+        Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            val invalidField = invalid?.let { (field, text) -> field.takeIf { form.stateOf(it).text.toString() == text } }
+            val shown =
+                when {
+                    tab == DialogTab.Ssh && !form.isServer -> DialogTab.General
+                    tab == DialogTab.Ssl && form.sslSpec == null -> DialogTab.General
+                    else -> tab
+                }
+            androidx.compose.runtime.CompositionLocalProvider(LocalInvalidField provides invalidField) {
+                when (shown) {
+                    DialogTab.General -> GeneralTab(form, state.drivers) { message = it }
+                    DialogTab.Ssh -> SshTab(form)
+                    DialogTab.Ssl -> SslTab(form)
+                    DialogTab.Options -> OptionsTab(form)
+                }
             }
         }
         Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -505,41 +602,35 @@ private fun GeneralTab(form: ConnectionForm, drivers: DriverDownloads, onMessage
                 form.urlOnly -> "jdbc:firebirdsql://host:3050/employee"
                 else -> "jdbc:mysql:replication://primary,replica/db"
             }
-        FormRow(tr("URL")) { TextField(form.url, Modifier.fillMaxWidth(), textStyle = JewelTheme.editorTextStyle, placeholder = { Text(example) }) }
+        FormRow(tr("URL")) { TextField(form.url, Modifier.fillMaxWidth(), textStyle = JewelTheme.editorTextStyle, outline = outlineOf(Field.Url), placeholder = { Text(example) }) }
         if (form.isServer || form.urlOnly) {
             FormRow(tr("User")) { TextField(form.user, Modifier.fillMaxWidth()) }
-            FormRow(tr("Password")) {
-                TextField(form.password, Modifier.fillMaxWidth(), outputTransformation = MaskPassword, placeholder = { Text(tr("Saved in the system keychain")) })
-            }
+            PasswordRows(form, tr("Password"))
         }
         return
     }
     if (form.isServer) {
         FormRow(tr("Host")) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                TextField(form.host, Modifier.weight(1f), placeholder = { Text(tr("host, or host1:port1,host2:port2")) })
+                TextField(form.host, Modifier.weight(1f), outline = outlineOf(Field.Host), placeholder = { Text(tr("host, or host1:port1,host2:port2")) })
                 Text(tr("Port"))
-                TextField(form.port, Modifier.width(80.dp), placeholder = { Text(form.type.defaultPort.toString()) })
+                TextField(form.port, Modifier.width(80.dp), outline = outlineOf(Field.Port), placeholder = { Text(form.type.defaultPort.toString()) })
             }
         }
-        if (form.relational) FormRow(tr("Database")) { TextField(form.database, Modifier.fillMaxWidth()) }
+        if (form.relational) FormRow(tr("Database")) { TextField(form.database, Modifier.fillMaxWidth(), outline = outlineOf(Field.Database)) }
         if (form.type.family == EngineFamily.Neo4j) FormRow(tr("Database")) { TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text("neo4j") }) }
         if (form.type.family == EngineFamily.Milvus) FormRow(tr("Database")) { TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text("default") }) }
         if (form.type.family == EngineFamily.Chroma) FormRow(tr("Database")) { TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text("default_tenant/default_database") }) }
         if (form.type.family == EngineFamily.Cassandra) FormRow(tr("Keyspace")) { TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text(tr("Optional: opened first")) }) }
-        if (form.type.family == EngineFamily.InfluxDB) FormRow(tr("Organization")) { TextField(form.database, Modifier.fillMaxWidth()) }
+        if (form.type.family == EngineFamily.InfluxDB) FormRow(tr("Organization")) { TextField(form.database, Modifier.fillMaxWidth(), outline = outlineOf(Field.Database)) }
         if (form.document) FormRow(tr("Database")) { TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text(tr("Optional: opened first, and the default auth source")) }) }
         // Meilisearch and InfluxDB sign in with a key or token alone, DynamoDB with an AWS access key.
         val keyOnly = form.type.family in setOf(EngineFamily.Meilisearch, EngineFamily.InfluxDB, EngineFamily.InfluxDB3, EngineFamily.Qdrant, EngineFamily.Consul, EngineFamily.Weaviate, EngineFamily.Chroma) || form.type == DatabaseType.Libsql
         val aws = form.type.family == EngineFamily.DynamoDB
         if (!keyOnly) FormRow(if (aws) tr("Access key ID") else tr("User")) { TextField(form.user, Modifier.fillMaxWidth()) }
-        FormRow(if (keyOnly) tr("API key") else if (aws) tr("Secret access key") else tr("Password")) {
-            TextField(form.password, Modifier.fillMaxWidth(), outputTransformation = MaskPassword, placeholder = { Text(tr("Saved in the system keychain")) })
-        }
+        PasswordRows(form, if (keyOnly) tr("API key") else if (aws) tr("Secret access key") else tr("Password"))
     } else {
-        FormRow(tr("File")) {
-            TextField(form.database, Modifier.fillMaxWidth(), placeholder = { Text(form.type.databaseHint ?: tr("/path/to/database.sqlite or :memory:")) })
-        }
+        DatabaseFileRow(form)
     }
     val preview = if (form.relational) runCatching { JdbcUrls.build(form.toConfig()) }.getOrNull() else null
     if (preview != null) {
@@ -570,12 +661,12 @@ private fun SshTab(form: ConnectionForm) {
     }
     FormRow(tr("Host")) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            TextField(form.sshHost, Modifier.weight(1f), placeholder = { Text("bastion.example.com") })
+            TextField(form.sshHost, Modifier.weight(1f), outline = outlineOf(Field.SshHost), placeholder = { Text("bastion.example.com") })
             Text(tr("Port"))
-            TextField(form.sshPort, Modifier.width(80.dp))
+            TextField(form.sshPort, Modifier.width(80.dp), outline = outlineOf(Field.SshPort))
         }
     }
-    FormRow(tr("User")) { TextField(form.sshUser, Modifier.fillMaxWidth()) }
+    FormRow(tr("User")) { TextField(form.sshUser, Modifier.fillMaxWidth(), outline = outlineOf(Field.SshUser)) }
     FormRow(tr("Auth")) {
         ListComboBox(
             items = listOf(tr("Key pair"), tr("Password")),
@@ -588,14 +679,12 @@ private fun SshTab(form: ConnectionForm) {
         FormRow(tr("Key file")) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 TextField(form.sshKeyPath, Modifier.weight(1f), placeholder = { Text(tr("Default keys in ~/.ssh")) })
-                OutlinedButton(onClick = { chooseFile(tr("Private key"))?.let { form.sshKeyPath.setTextAndPlaceCursorAtEnd(it) } }) { Text(tr("Browse…")) }
+                OutlinedButton(onClick = { chooseFile(tr("Private key"), directory = System.getProperty("user.home") + "/.ssh")?.let { form.sshKeyPath.setTextAndPlaceCursorAtEnd(it) } }) { Text(tr("Browse…")) }
             }
         }
-        FormRow(tr("Passphrase")) {
-            TextField(form.sshSecret, Modifier.fillMaxWidth(), outputTransformation = MaskPassword, placeholder = { Text(tr("If the key has one")) })
-        }
+        FormRow(tr("Passphrase")) { SecretField(form.sshSecret, Modifier.fillMaxWidth(), placeholder = tr("If the key has one")) }
     } else {
-        FormRow(tr("Password")) { TextField(form.sshSecret, Modifier.fillMaxWidth(), outputTransformation = MaskPassword) }
+        FormRow(tr("Password")) { SecretField(form.sshSecret, Modifier.fillMaxWidth()) }
     }
     Text(
         tr("The server's host key is trusted on first connect and pinned; a changed key is refused."),
@@ -669,20 +758,160 @@ private fun OptionsTab(form: ConnectionForm) {
     }
     Spacer(Modifier.height(4.dp))
     Text(tr("Driver properties ({0})", form.driver.displayName))
+    if (form.sslSpec != null) Text(tr("TLS has its own tab; what it sets wins over the same property here."), color = JewelTheme.globalColors.text.info)
     TextArea(
         form.properties,
         Modifier.fillMaxWidth().height(96.dp),
+        outline = outlineOf(Field.Properties),
         textStyle = JewelTheme.editorTextStyle,
         placeholder = { Text(PropertyExamples[form.driver].orEmpty()) },
     )
 }
 
+/**
+ * The password, with a way to see what was typed, and for servers the choice to be asked on every connect instead of
+ * keeping it in the keychain.
+ */
+@Composable
+private fun PasswordRows(form: ConnectionForm, label: String) {
+    FormRow(label) {
+        SecretField(
+            form.password,
+            Modifier.fillMaxWidth(),
+            placeholder = if (form.askPassword) tr("Only used by Test Connection; asked for on connect") else tr("Saved in the system keychain"),
+        )
+    }
+    if (form.isServer) {
+        FormRow("") {
+            CheckboxRow(tr("Ask for the password on every connect; don't save it"), form.askPassword, onCheckedChange = { form.askPassword = it })
+        }
+    }
+}
+
+/** A masked field with a Show/Hide toggle, for passwords, keys and passphrases. */
+@Composable
+internal fun SecretField(state: TextFieldState, modifier: Modifier = Modifier, placeholder: String? = null, onEnter: (() -> Unit)? = null) {
+    var visible by remember { mutableStateOf(false) }
+    TextField(
+        state,
+        modifier,
+        outputTransformation = if (visible) null else MaskPassword,
+        placeholder = placeholder?.let { { Text(it) } },
+        onKeyboardAction = onEnter?.let { KeyboardActionHandler { it() } },
+        trailingIcon = {
+            if (state.text.isNotEmpty()) {
+                Link(if (visible) tr("Hide") else tr("Show"), onClick = { visible = !visible }, Modifier.padding(start = 4.dp))
+            }
+        },
+    )
+}
+
+/** Engines that create their database file on first connect, so "New…" just picks where. */
+private val CreatesFile = setOf(DatabaseType.SQLite, DatabaseType.DuckDB, DatabaseType.H2, DatabaseType.HSQLDB)
+
+/** The database file of an embedded engine: typed, picked, or (for engines that create one) a new file. */
+@Composable
+private fun DatabaseFileRow(form: ConnectionForm) {
+    FormRow(tr("File")) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            TextField(
+                form.database,
+                Modifier.weight(1f),
+                outline = outlineOf(Field.Database),
+                placeholder = { Text(form.type.databaseHint ?: tr("/path/to/database.sqlite or :memory:")) },
+            )
+            OutlinedButton(onClick = { chooseDatabaseFile(form.type, create = false)?.let { form.database.setTextAndPlaceCursorAtEnd(it) } }) { Text(tr("Browse…")) }
+            if (form.type in CreatesFile) {
+                OutlinedButton(onClick = { chooseDatabaseFile(form.type, create = true)?.let { form.database.setTextAndPlaceCursorAtEnd(it) } }) { Text(tr("New…")) }
+            }
+        }
+    }
+    if (form.type in CreatesFile && form.database.text.isNotBlank() && !form.database.text.startsWith(":") && !form.database.text.startsWith("mem:")) {
+        val path = runCatching { Path.of(databaseFileOnDisk(form.type, form.database.text.toString().trim())) }.getOrNull()
+        if (path != null && !java.nio.file.Files.exists(path)) {
+            Text(tr("{0} doesn't exist yet; it's created on first connect.", path.fileName), color = JewelTheme.globalColors.text.info)
+        }
+    }
+}
+
+/** H2 and HSQLDB take the path without the extension their files get. */
+private fun databaseFileOnDisk(type: DatabaseType, path: String): String =
+    when (type) {
+        DatabaseType.H2 -> "$path.mv.db"
+        DatabaseType.HSQLDB -> "$path.script"
+        else -> path
+    }
+
+/** Native chooser for an embedded engine's database: a file to open, a new file's location, or Derby's directory. */
+private fun chooseDatabaseFile(type: DatabaseType, create: Boolean): String? {
+    val directories = type == DatabaseType.Derby
+    if (directories) System.setProperty("apple.awt.fileDialogForDirectories", "true")
+    try {
+        val dialog = java.awt.FileDialog(null as java.awt.Frame?, if (create) tr("New {0} Database", type.displayName) else tr("Choose a {0} Database", type.displayName), if (create) java.awt.FileDialog.SAVE else java.awt.FileDialog.LOAD)
+        if (create) dialog.file = when (type) {
+            DatabaseType.DuckDB -> "database.duckdb"
+            DatabaseType.SQLite -> "database.sqlite"
+            else -> "database"
+        }
+        dialog.isVisible = true
+        val picked = dialog.file?.let { java.io.File(dialog.directory, it).path } ?: return null
+        return when (type) {
+            DatabaseType.H2 -> picked.removeSuffix(".mv.db")
+            DatabaseType.HSQLDB -> picked.removeSuffix(".script").removeSuffix(".properties")
+            else -> picked
+        }
+    } finally {
+        if (directories) System.clearProperty("apple.awt.fileDialogForDirectories")
+    }
+}
+
+/** TLS for drivers with an [SslSpec]: the mode, and the PEM files it verifies with or presents. */
+@Composable
+private fun SslTab(form: ConnectionForm) {
+    val spec = form.sslSpec ?: return
+    FormRow(tr("Mode")) {
+        val choices = listOf<SslMode?>(null) + SslMode.entries.filter { it in spec.modes }
+        ListComboBox(
+            items = choices.map { it?.label?.invoke() ?: tr("Driver default") },
+            selectedIndex = choices.indexOf(form.ssl.mode).coerceAtLeast(0),
+            onSelectedItemChange = { form.sslMode = choices[it] },
+            modifier = Modifier.width(340.dp),
+        )
+    }
+    val defaults = form.type.defaultProperties[form.driver]?.get(spec.modeKey)
+    Text(
+        when {
+            form.ssl.mode == null && defaults != null -> tr("{0} sets {1}={2} unless you choose a mode.", form.type.displayName, spec.modeKey, defaults)
+            form.ssl.mode == null -> tr("The driver decides; choose Verify full for servers reached over the internet.")
+            form.ssl.mode == SslMode.Require || form.ssl.mode == SslMode.Prefer -> tr("Encrypted, but anyone in the middle can pretend to be the server.")
+            else -> tr("Sets {0}={1}.", spec.modeKey, spec.modes[form.ssl.mode].orEmpty())
+        },
+        color = JewelTheme.globalColors.text.info,
+    )
+    if (spec.caKey != null) PemRow(tr("CA certificate"), form.sslCa, Field.SslCa, tr("Trust this CA, e.g. the provider's root.pem"))
+    if (spec.certKey != null) PemRow(tr("Client cert"), form.sslCert, Field.SslCert, tr("For servers that check client certificates"))
+    if (spec.keyKey != null) PemRow(tr("Client key"), form.sslKey, Field.SslKey, tr("The client certificate's private key"))
+    if (spec.caKey == null) {
+        Text(tr("{0} reads certificates only from Java key stores; set them under Options › Driver properties.", form.driver.displayName), color = JewelTheme.globalColors.text.info)
+    }
+}
+
+@Composable
+private fun PemRow(label: String, state: TextFieldState, field: Field, hint: String) {
+    FormRow(label) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            TextField(state, Modifier.weight(1f), outline = outlineOf(field), placeholder = { Text(hint) })
+            OutlinedButton(onClick = { chooseFile(label, directory = null)?.let { state.setTextAndPlaceCursorAtEnd(it) } }) { Text(tr("Browse…")) }
+        }
+    }
+}
+
 /** Commonly needed properties per driver, using each driver's documented names. */
 private val PropertyExamples =
     mapOf(
-        DriverId.PostgreSQL to "sslmode=verify-full\ncurrentSchema=app\nApplicationName=TableGrip",
-        DriverId.MySQL to "sslMode=REQUIRED\nallowPublicKeyRetrieval=true\nserverTimezone=UTC",
-        DriverId.MariaDB to "sslMode=verify-full\nallowPublicKeyRetrieval=true",
+        DriverId.PostgreSQL to "currentSchema=app\nApplicationName=TableGrip\nprepareThreshold=0  (behind PgBouncer)",
+        DriverId.MySQL to "allowPublicKeyRetrieval=true\nserverTimezone=UTC",
+        DriverId.MariaDB to "allowPublicKeyRetrieval=true\nconnectTimeout=5000",
         DriverId.SQLite to "foreign_keys=true\nbusy_timeout=5000",
         DriverId.Oracle to "internal_logon=sysdba\noracle.net.ssl_server_dn_match=true\noracle.jdbc.timezoneAsRegion=false",
         DriverId.Firebird to "encoding=WIN1252  (the database's character set)\nwireCrypt=REQUIRED\ncreateDatabaseIfNotExist=true",
@@ -719,7 +948,7 @@ private val PropertyExamples =
 private fun DataFileFields(form: ConnectionForm) {
     FormRow(tr("File")) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            TextField(form.database, Modifier.weight(1f), placeholder = { Text(form.type.databaseHint.orEmpty()) })
+            TextField(form.database, Modifier.weight(1f), outline = outlineOf(Field.Database), placeholder = { Text(form.type.databaseHint.orEmpty()) })
             OutlinedButton(onClick = { chooseDataFile()?.let(form::useDataFile) }) { Text(tr("Browse…")) }
         }
     }
@@ -764,9 +993,9 @@ private fun chooseDataFile(): String? {
 }
 
 /** Native file chooser; returns the picked path or null. */
-private fun chooseFile(title: String): String? {
+private fun chooseFile(title: String, directory: String?): String? {
     val dialog = java.awt.FileDialog(null as java.awt.Frame?, title, java.awt.FileDialog.LOAD)
-    dialog.directory = System.getProperty("user.home") + "/.ssh"
+    directory?.let { dialog.directory = it }
     dialog.isVisible = true
     return dialog.file?.let { java.io.File(dialog.directory, it).path }
 }
@@ -854,6 +1083,31 @@ internal fun MissingDriverDialog(state: ConnectionsViewModel, config: Connection
     }
 }
 
+/** Asks for the password of a connection that doesn't keep it; Enter connects, closing cancels. */
+@Composable
+internal fun PasswordPromptDialog(state: ConnectionsViewModel, prompt: PasswordPrompt) {
+    val password = remember(prompt) { TextFieldState() }
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(prompt) { focus.requestFocus() }
+    val config = prompt.config
+    fun submit() = state.answerPassword(prompt, password.text.toString())
+    AppDialog(onCloseRequest = { state.answerPassword(prompt, null) }, size = DpSize(440.dp, 190.dp), title = tr("Password Needed"), resizable = false) {
+        Column(
+            Modifier.fillMaxSize().background(JewelTheme.globalColors.panelBackground).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            val target = if (config.user.isBlank()) config.host else "${config.user}@${config.host}"
+            Text(tr("“{0}” doesn't save its password. Enter it to connect to {1}.", config.name, target))
+            SecretField(password, Modifier.fillMaxWidth().focusRequester(focus), onEnter = ::submit)
+            Spacer(Modifier.weight(1f))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
+                OutlinedButton(onClick = { state.answerPassword(prompt, null) }) { Text(tr("Cancel")) }
+                DefaultButton(onClick = ::submit) { Text(tr("Connect")) }
+            }
+        }
+    }
+}
+
 /** Names a group: one to move connections into (blank takes them out of their group), or a group's new name. */
 @Composable
 internal fun GroupDialog(state: ConnectionsViewModel, request: GroupRequest) {
@@ -896,27 +1150,5 @@ internal fun GroupDialog(state: ConnectionsViewModel, request: GroupRequest) {
                 DefaultButton(onClick = ::submit) { Text(if (renaming != null) tr("Rename") else if (request.newGroup) tr("Create") else tr("Move")) }
             }
         }
-    }
-}
-
-/** The engine picker: each engine with its logo, or a plain database icon for those without one. */
-@OptIn(ExperimentalJewelApi::class)
-@Composable
-private fun EngineComboBox(selected: DatabaseType, onChange: (DatabaseType) -> Unit, modifier: Modifier = Modifier) {
-    val engines = DatabaseType.entries
-    ListComboBox(
-        items = engines,
-        selectedIndex = engines.indexOf(selected),
-        onSelectedItemChange = { onChange(engines[it]) },
-        itemKeys = { _, type -> type.id },
-        modifier = modifier,
-    ) { type, isSelected, isActive ->
-        SimpleListItem(
-            text = type.displayName,
-            selected = isSelected,
-            active = isActive,
-            icon = AppIcons.engineLogo(type) ?: AllIconsKeys.Nodes.DataSchema,
-            iconContentDescription = null,
-        )
     }
 }

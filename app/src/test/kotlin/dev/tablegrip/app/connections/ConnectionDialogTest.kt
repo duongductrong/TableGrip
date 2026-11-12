@@ -7,6 +7,10 @@ import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.isFocused
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
@@ -27,6 +31,9 @@ import java.io.File
 import javax.imageio.ImageIO
 import kotlin.io.path.createTempDirectory
 import kotlin.test.Test
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -150,6 +157,90 @@ class ConnectionDialogTest {
         onNodeWithText("Use default (Settings › Agent)").assertExists()
         onNodeWithText("Follows Settings › Agent.").assertExists()
         System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "connection-dialog-options.png")) }
+        app.dispose()
+    }
+
+    @Test
+    fun `the engine list is searched by name, id or a common alias`() {
+        val engines = dev.tablegrip.core.connection.DatabaseType.entries
+        kotlin.test.assertEquals(engines, engineMatches(engines, "  "))
+        kotlin.test.assertEquals("ClickHouse", engineMatches(engines, "click").first().displayName)
+        kotlin.test.assertTrue(engineMatches(engines, "pg").any { it.displayName == "PostgreSQL" })
+        kotlin.test.assertTrue(engineMatches(engines, "maria").first().displayName == "MariaDB")
+        kotlin.test.assertTrue(engineMatches(engines, "no such engine").isEmpty())
+        // Engines whose own name has the word outrank those found only through their family (Neon is PostgreSQL).
+        val sql = engineMatches(engines, "sql").map { it.displayName }
+        kotlin.test.assertTrue(sql.indexOf("MySQL") < sql.indexOf("Neon"))
+    }
+
+    @Test
+    fun `typing in the engine list and pressing Enter picks the match`() = runComposeUiTest {
+        val app = app()
+        setContent {
+            TableGripTheme(isDark = true) { Box(Modifier.size(640.dp, 600.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
+        }
+        onAllNodesWithText("PostgreSQL")[0].performClick()
+        waitForIdle()
+        onNode(isFocused() and hasSetTextAction()).performTextInput("clickh")
+        waitForIdle()
+        onNode(isFocused() and hasSetTextAction()).performKeyInput { pressKey(Key.Enter) }
+        waitForIdle()
+        onNodeWithText("ClickHouse").assertExists()
+        System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "connection-dialog-engine-search.png")) }
+        app.dispose()
+    }
+
+    @Test
+    fun `a pasted sslmode lands on the SSL tab, not among the driver properties`() = runComposeUiTest {
+        val app = app()
+        setContent {
+            TableGripTheme(isDark = true) { Box(Modifier.size(640.dp, 600.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
+        }
+        onAllNodes(hasSetTextAction())[0].performTextInput("postgresql://admin@db.example.com/shop?sslmode=verify-full")
+        onNodeWithText("Parse").performClick()
+        waitForIdle()
+        onNodeWithText("SSL ✓").performClick()
+        waitForIdle()
+        onNodeWithText("Verify full", substring = true).assertExists()
+        onNodeWithText("CA certificate").assertExists()
+        System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "connection-dialog-ssl.png")) }
+        onNodeWithText("Options").performClick()
+        waitForIdle()
+        onAllNodesWithText("sslmode=verify-full", substring = true).assertCountEquals(0)
+        app.dispose()
+    }
+
+    @Test
+    fun `an error on another tab takes the user there`() = runComposeUiTest {
+        val app = app()
+        setContent {
+            TableGripTheme(isDark = true) { Box(Modifier.size(640.dp, 600.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
+        }
+        onAllNodes(hasSetTextAction())[0].performTextInput("postgresql://admin@db.example.com/shop")
+        onNodeWithText("Parse").performClick()
+        onNodeWithText("SSH").performClick()
+        waitForIdle()
+        onNodeWithText("Connect through an SSH tunnel").performClick()
+        onNodeWithText("General").performClick()
+        waitForIdle()
+        onNodeWithText("Save").performClick()
+        waitForIdle()
+        onNodeWithText("SSH host is required.").assertExists()
+        onNodeWithText("bastion.example.com").assertExists()
+        System.getProperty("snapshot.dir")?.let { ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(it, "connection-dialog-error-tab.png")) }
+        app.dispose()
+    }
+
+    @Test
+    fun `a profile that asks for its password keeps none, and asks on connect`() = kotlinx.coroutines.runBlocking {
+        val app = app()
+        val config = dev.tablegrip.core.connection.ConnectionConfig("p1", "shop", dev.tablegrip.core.connection.DatabaseType.PostgreSQL, database = "shop", askPassword = true)
+        withContext(Dispatchers.Main) { app.connections.save(config, "s3cret", "") }.getOrThrow()
+        assertNull(app.connections.storedPassword("p1"))
+        val asked = async(Dispatchers.Main) { app.connections.connectPassword("p1") }
+        while (app.connections.passwordPrompt == null) kotlinx.coroutines.delay(10)
+        withContext(Dispatchers.Main) { app.connections.answerPassword(app.connections.passwordPrompt!!, "typed") }
+        kotlin.test.assertEquals("typed", asked.await())
         app.dispose()
     }
 }

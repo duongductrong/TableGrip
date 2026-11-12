@@ -130,7 +130,7 @@ class AppState(
     val drivers = DriverDownloads(scope, driverLibrary) { settings }.also { it.library.repository = settings.driverRepository }
 
     val connections = ConnectionsViewModel(this, connectionStore)
-    val databases = DatabaseRegistry(scope, connections::storedPassword, connections::storedSshSecret, drivers, connections::askForDriver, ::dataFileReloaded, ::connectionOpened)
+    val databases = DatabaseRegistry(scope, connections::connectPassword, connections::storedSshSecret, drivers, connections::askForDriver, ::dataFileReloaded, ::connectionOpened)
     val explorer = ExplorerViewModel(this)
     val workspace = WorkspaceViewModel(this)
     /** Data files open in windows of their own, e.g. from the file manager. */

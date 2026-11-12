@@ -20,7 +20,11 @@ import dev.tablegrip.core.imports.ConnectionImport
 import java.io.File
 import java.nio.file.Path
 import java.util.UUID
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -36,6 +40,9 @@ data class GroupRequest(val configs: List<ConnectionConfig>, val renaming: Strin
 
 /** What Test Connection learned: the server's own description, or a better-fitting engine in its family. */
 data class TestOutcome(val server: String? = null, val suggested: DatabaseType? = null)
+
+/** A connect waiting for the password of [config], which isn't kept in the keychain. */
+class PasswordPrompt(val config: ConnectionConfig, internal val answer: CompletableDeferred<String?>)
 
 /** Saved connection profiles and the dialogs that edit them. */
 class ConnectionsViewModel(private val app: AppState, private val store: ConnectionStore) {
@@ -65,6 +72,36 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
 
     fun askForDriver(config: ConnectionConfig) {
         if (driverPrompt == null && dialog == null) driverPrompt = config
+    }
+
+    /** Non-null while a connection that doesn't keep its password asks for it; answered with the password or null. */
+    var passwordPrompt by mutableStateOf<PasswordPrompt?>(null)
+        private set
+
+    /** One prompt at a time: two connections opening at once ask in turn. */
+    private val prompting = Mutex()
+
+    /**
+     * The password to connect [id] with: the keychain's, or for a profile set to [ConnectionConfig.askPassword], what the
+     * user types now. Cancelling the prompt fails the connect.
+     */
+    suspend fun connectPassword(id: String): String? {
+        val config = byId(id)
+        if (config?.askPassword != true) return storedPassword(id)
+        return prompting.withLock {
+            val prompt = PasswordPrompt(config, CompletableDeferred())
+            withContext(Dispatchers.Main) { passwordPrompt = prompt }
+            try {
+                prompt.answer.await() ?: throw IllegalStateException(tr("No password entered for {0}.", config.name))
+            } finally {
+                withContext(NonCancellable + Dispatchers.Main) { if (passwordPrompt === prompt) passwordPrompt = null }
+            }
+        }
+    }
+
+    fun answerPassword(prompt: PasswordPrompt, password: String?) {
+        prompt.answer.complete(password)
+        if (passwordPrompt === prompt) passwordPrompt = null
     }
 
     /** Groups in use, for the Move to Group dialog to offer. */
@@ -230,7 +267,8 @@ class ConnectionsViewModel(private val app: AppState, private val store: Connect
     /** A blank SSH secret removes the stored one, as does turning SSH off. */
     suspend fun save(config: ConnectionConfig, password: String, sshSecret: String): Result<Unit> = runCatching {
         val previous = byId(config.id)
-        val updated = withContext(writes) { store.save(config, password, if (config.ssh == null) "" else sshSecret) }
+        // A profile that asks every time keeps no password: an empty one removes what the keychain had.
+        val updated = withContext(writes) { store.save(config, if (config.askPassword) "" else password, if (config.ssh == null) "" else sshSecret) }
         replaceAll(updated)
         // Settings may have changed: drop the live connection so the next use reconnects with the new ones.
         if (previous != null) {

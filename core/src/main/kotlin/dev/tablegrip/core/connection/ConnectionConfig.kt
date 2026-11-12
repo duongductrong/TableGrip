@@ -81,6 +81,8 @@ data class ConnectionConfig(
     val agentWrites: AgentWrites = AgentWrites.None,
     /** How a data file profile reads its file; null takes the defaults. The file itself is [database]. */
     val dataFile: DataFileOptions? = null,
+    /** Asks for the password on every connect instead of keeping it in the keychain. */
+    val askPassword: Boolean = false,
 ) {
     val effectiveDriver: DriverId
         get() = driver?.takeIf { it in type.drivers } ?: type.drivers.first()
