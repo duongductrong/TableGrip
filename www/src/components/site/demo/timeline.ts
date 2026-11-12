@@ -9,19 +9,21 @@ export const H = 800
 
 /** When each chapter starts. */
 export const S = {
-  connect: 0,
-  filter: 5200,
-  edit: 10800,
-  sql: 17200,
-  agent: 29000,
-  goto: 38000,
-  end: 44000,
+  welcome: 0,
+  connect: 4000,
+  filter: 9200,
+  edit: 14800,
+  sql: 21200,
+  agent: 33000,
+  goto: 42000,
+  end: 48000,
 } as const
 
 export const LOOP = S.end
 
 export const chapters = [
-  { id: 'connect', start: S.connect, title: 'Connect', caption: 'Open a connection and browse its tables' },
+  { id: 'welcome', start: S.welcome, title: 'Welcome', caption: 'Start from a recent connection' },
+  { id: 'connect', start: S.connect, title: 'Browse', caption: 'Expand the connection and open a table' },
   { id: 'filter', start: S.filter, title: 'Filter', caption: 'Typed filters, no SQL required' },
   { id: 'edit', start: S.edit, title: 'Edit', caption: 'Edit inline, review, submit in one transaction' },
   { id: 'sql', start: S.sql, title: 'SQL', caption: 'Completion from your schema and your data' },
@@ -50,6 +52,7 @@ export const typingDone = (text: string, start: number, ms = 45) => start + text
 
 type Move = { at: number; to: string; dur: number }
 
+const C = S.connect
 const F = S.filter
 const E = S.edit
 const Q = S.sql
@@ -57,9 +60,12 @@ const A = S.agent
 const G = S.goto
 
 export const moves: Move[] = [
-  { at: 1200, to: 'conn-shop', dur: 800 },
-  { at: 2600, to: 'node-orders', dur: 700 },
-  { at: 4300, to: 'grid-rest', dur: 1000 },
+  { at: 1500, to: 'welcome-shop', dur: 900 },
+  { at: 2900, to: 'welcome-connect', dur: 800 },
+
+  { at: C + 1200, to: 'conn-shop', dur: 800 },
+  { at: C + 2600, to: 'node-orders', dur: 700 },
+  { at: C + 4300, to: 'grid-rest', dur: 1000 },
 
   { at: F + 600, to: 'add-condition', dur: 600 },
   { at: F + 1150, to: 'col-status', dur: 350 },
@@ -85,8 +91,10 @@ export const moves: Move[] = [
 ]
 
 export const clicks: { at: number; double?: boolean }[] = [
-  { at: 1300 },
-  { at: 2700, double: true },
+  { at: 1600 },
+  { at: 3000 },
+  { at: C + 1300 },
+  { at: C + 2700, double: true },
   { at: F + 700 },
   { at: F + 1300 },
   { at: F + 2350 },
@@ -121,14 +129,51 @@ export const keycaps: { at: number; dur: number; keys: string[]; label: string }
 ]
 
 export const toasts: { from: number; to: number; text: string }[] = [
-  { from: 3100, to: 4700, text: 'orders · 500 rows in 12 ms' },
+  { from: C + 3100, to: C + 4700, text: 'orders · 500 rows in 12 ms' },
   { from: F + 3900, to: F + 5300, text: 'Filter applied · 5 rows in 3 ms' },
   { from: E + 5150, to: E + 6400, text: '2 rows updated in one transaction' },
   { from: Q + 8700, to: Q + 10000, text: '50 rows in 5 ms' },
 ]
 
 // ---------------------------------------------------------------------------------------------------------------
-// Chapter 1: connect
+// Chapter 1: the Welcome window TableGrip opens with. A recent connection is picked and opened in the main window.
+
+export const WELCOME = {
+  in: [0, 350] as const,
+  select: 1600,
+  connect: 3000,
+  /** The Welcome window goes, and the main window comes up in its place. */
+  out: [3120, 3450] as const,
+  mainIn: [3300, 3800] as const,
+}
+
+export type WelcomeRow = {
+  id: string
+  name: string
+  engine: string
+  mono: string
+  color: string
+  env?: string
+  target: string
+  meta?: string
+  readOnly?: boolean
+  favorite?: boolean
+}
+
+export const welcomeRecent: WelcomeRow[] = [
+  { id: 'analytics', name: 'analytics', engine: 'PostgreSQL', mono: 'AN', color: '#d9822b', env: 'STG', target: 'analyst@pg.analytics.internal:5432/warehouse', meta: '2 min ago' },
+  { id: 'shop', name: 'shop (local)', engine: 'SQLite', mono: 'SL', color: '#6b7a8f', env: 'LOCAL', target: 'shop.db', meta: '1 h ago' },
+  { id: 'prod', name: 'shop-prod', engine: 'PostgreSQL', mono: 'SP', color: '#d64545', env: 'PROD', target: 'readonly@db.shop.internal:5432/shop', meta: 'yesterday', readOnly: true, favorite: true },
+]
+
+export const welcomeAll: WelcomeRow[] = [
+  { id: 'cache', name: 'sessions-cache', engine: 'Redis', mono: 'SC', color: '#3f9c55', env: 'DEV', target: '127.0.0.1:6379' },
+  { id: 'events', name: 'events', engine: 'ClickHouse', mono: 'EV', color: '#c9a227', target: 'reader@ch.events.internal:8123/events', meta: 'Analytics' },
+  { id: 'catalog', name: 'catalog', engine: 'MongoDB', mono: 'CA', color: '#3f9c55', env: 'DEV', target: 'svc@mongo.dev:27017/catalog', meta: 'Commerce' },
+]
+
+// ---------------------------------------------------------------------------------------------------------------
+// Chapter 2: browse
 
 export const connections = [
   { id: 'shop', mono: 'SL', name: 'shop (local)', env: 'LOCAL', engine: 'SQLite', color: '#6b7a8f' },
@@ -144,13 +189,13 @@ export const shopTables = [
   { name: 'products', rows: '86' },
 ]
 
-export const CONNECT_CLICK = 1300
-export const TABLES_SHOWN = 1550
-export const TABLE_OPEN = 2750
-export const ROWS_IN = 2850
+export const CONNECT_CLICK = S.connect + 1300
+export const TABLES_SHOWN = S.connect + 1550
+export const TABLE_OPEN = S.connect + 2750
+export const ROWS_IN = S.connect + 2850
 
 // ---------------------------------------------------------------------------------------------------------------
-// Chapters 2 and 3: the orders grid
+// Chapters 3 and 4: the orders grid
 
 export type Order = { id: number; customer: number; status: string; total: string; created: string }
 
@@ -220,7 +265,7 @@ export const EDIT = {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// Chapter 4: the SQL console. Typing is a script of runs and completion popups.
+// Chapter 5: the SQL console. Typing is a script of runs and completion popups.
 
 export type Suggestion = { label: string; hint: string }
 type Step =
@@ -312,7 +357,7 @@ export const revenue = [
 ]
 
 // ---------------------------------------------------------------------------------------------------------------
-// Chapter 5: the agent
+// Chapter 6: the agent
 
 export const AGENT = {
   open: A + 600,
@@ -349,7 +394,7 @@ export const agentSql = [
 ]
 
 // ---------------------------------------------------------------------------------------------------------------
-// Chapter 6: go to anything, then the end card
+// Chapter 7: go to anything, then the end card
 
 export const GOTO = {
   open: G + 250,

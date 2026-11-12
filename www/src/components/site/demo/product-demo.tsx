@@ -14,12 +14,15 @@ import {
   Eye,
   FastForward,
   Filter,
+  FolderOpen,
+  Import,
   GitCompare,
   History,
   Keyboard,
   Loader2,
   Minus,
   PanelRight,
+  Pencil,
   Pause,
   Pin,
   Play,
@@ -38,6 +41,8 @@ import {
   Zap,
 } from 'lucide-react'
 
+import { dbLogos } from '#/content/db-logos'
+import { latestVersion } from '#/lib/download'
 import { cn } from '#/lib/utils'
 
 import * as T from './timeline'
@@ -131,7 +136,7 @@ export function ProductDemo({ className }: { className?: string }) {
       <div
         ref={outerRef}
         role="img"
-        aria-label="An animated tour of TableGrip: connecting to a database, filtering and editing rows, writing SQL with schema-aware completion, asking the AI agent, and jumping anywhere with Command-P"
+        aria-label="An animated tour of TableGrip: picking a recent connection in the Welcome window, browsing its tables, filtering and editing rows, writing SQL with schema-aware completion, asking the AI agent, and jumping anywhere with Command-P"
         className="tg-demo relative w-full overflow-hidden"
         style={{ aspectRatio: `${T.W} / ${T.H}` }}
       >
@@ -142,6 +147,7 @@ export function ProductDemo({ className }: { className?: string }) {
           style={{ width: T.W, height: T.H, transform: `scale(${scale})`, visibility: scale ? 'visible' : 'hidden' }}
         >
           <AppWindow t={t} />
+          <WelcomeScene t={t} />
           <Keycaps t={t} />
           <Cursor ref={cursorRef} t={t} />
         </div>
@@ -157,7 +163,7 @@ export function ProductDemo({ className }: { className?: string }) {
         >
           {playing ? <Pause className="size-3.5" fill="currentColor" /> : <Play className="size-3.5" fill="currentColor" />}
         </button>
-        <div className="grid flex-1 grid-cols-6">
+        <div className="grid flex-1 grid-cols-7">
           {T.chapters.map((c, i) => {
             const end = T.chapters[i + 1]?.start ?? T.LOOP
             const fill = i < chapterIndex ? 1 : i === chapterIndex ? prog(t, c.start, end) : 0
@@ -272,10 +278,11 @@ function AppWindow({ t }: { t: number }) {
   const consoleOpen = t >= T.SQL.openConsole
   const tableOpen = t >= T.TABLE_OPEN
   const active: 'none' | 'orders' | 'console' = consoleOpen ? 'console' : tableOpen ? 'orders' : 'none'
-  const intro = prog(t, 0, 350)
+  // Comes up as the Welcome window goes.
+  const intro = easeOut(prog(t, T.WELCOME.mainIn[0], T.WELCOME.mainIn[1]))
 
   return (
-    <div className="absolute inset-0 flex flex-col bg-(--d-bg) font-sans text-[13px] text-(--d-fg)" style={{ opacity: 0.2 + 0.8 * intro }}>
+    <div className="absolute inset-0 flex flex-col bg-(--d-bg) font-sans text-[13px] text-(--d-fg)" style={{ opacity: intro, transform: `scale(${0.985 + 0.015 * intro})` }}>
       <TitleBar active={active} />
       <div className="flex min-h-0 flex-1">
         <LeftRail />
@@ -397,6 +404,172 @@ function StatusBar({ active }: { active: 'none' | 'orders' | 'console' }) {
         <span>Ready</span>
         <span>SQLite</span>
       </span>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// The Welcome window TableGrip opens with: the brand on the left, recent connections on the right.
+
+function WelcomeScene({ t }: { t: number }) {
+  const W = T.WELCOME
+  if (t >= W.out[1]) return null
+  const shown = easeOut(prog(t, W.in[0], W.in[1]))
+  const gone = ease(prog(t, W.out[0], W.out[1]))
+  const selected = t >= W.select ? 'shop' : 'analytics'
+  const pressed = t >= W.connect && t < W.connect + 140
+  return (
+    <div
+      className="absolute inset-0 z-30 flex items-center justify-center bg-(--d-bg) font-sans text-[13px] text-(--d-fg)"
+      style={{ opacity: 1 - gone }}
+    >
+      {/* A plain desktop with a soft light behind the window: the window's own panel carries the grid, so a second
+          one out here would cross it. */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_55%_at_50%_50%,var(--d-panel-2),transparent)] opacity-70" />
+      <div
+        className="relative flex h-[540px] w-[840px] overflow-hidden rounded-[12px] border border-(--d-rule) bg-(--d-panel) shadow-[0_0_0_1px_rgb(0_0_0/0.05),0_28px_70px_-18px_rgb(0_0_0/0.4)]"
+        style={{ opacity: shown, transform: `scale(${(0.97 + 0.03 * shown) * (1 - 0.03 * gone)})` }}
+      >
+        <WelcomeBrand />
+        <div className="flex min-w-0 flex-1 flex-col border-l border-(--d-rule)">
+          <div className="flex items-center px-[22px] pt-[14px] pb-2.5">
+            <div className="flex-1">
+              <div className="text-[16px] font-semibold">Connections</div>
+              <div className="text-[11px] text-(--d-muted)">{T.welcomeRecent.length + T.welcomeAll.length} saved</div>
+            </div>
+            <div className="flex h-8 w-[230px] items-center gap-2 rounded-md border border-(--d-rule) px-2.5 text-(--d-faint)">
+              <Search className="size-3.5" />
+              Search connections
+            </div>
+          </div>
+          <div className="min-h-0 flex-1 overflow-hidden px-2.5">
+            <WelcomeSection title="Recent" />
+            {T.welcomeRecent.map((row) => (
+              <WelcomeRowView key={row.id} row={row} selected={row.id === selected} />
+            ))}
+            <WelcomeSection title="All Connections" />
+            {T.welcomeAll.map((row) => (
+              <WelcomeRowView key={row.id} row={row} selected={false} />
+            ))}
+          </div>
+          <div className="flex items-center gap-2 border-t border-(--d-rule) px-4 py-3">
+            <span className="flex flex-1 items-center gap-1.5 text-[11px] text-(--d-muted)">
+              <Kbd>↑↓</Kbd> to pick
+              <span className="w-1" />
+              <Kbd>↩</Kbd> to connect
+            </span>
+            <span className="rounded-md border border-(--d-rule-strong) px-3.5 py-1">Open TableGrip</span>
+            <span
+              data-target="welcome-connect"
+              className="rounded-md bg-(--d-accent) px-3.5 py-1 font-medium text-white transition-transform"
+              style={{ transform: pressed ? 'scale(0.96)' : undefined }}
+            >
+              Connect
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** The faint grid of the website's own backdrops, fading out from the middle. */
+function WelcomeGrid({ className }: { className?: string }) {
+  return (
+    <div
+      aria-hidden
+      className={cn(
+        'pointer-events-none absolute inset-0 [background-image:linear-gradient(var(--d-rule)_1px,transparent_1px),linear-gradient(90deg,var(--d-rule)_1px,transparent_1px)] [background-size:24px_24px] [mask-image:radial-gradient(ellipse_at_center,black_15%,transparent_72%)]',
+        className,
+      )}
+    />
+  )
+}
+
+function WelcomeBrand() {
+  const actions: { icon: React.ReactNode; label: string; keys?: string }[] = [
+    { icon: <Database className="size-4" />, label: 'New Connection…', keys: '⌘N' },
+    { icon: <FolderOpen className="size-4" />, label: 'Open Data File…', keys: '⌘O' },
+    { icon: <Import className="size-4" />, label: 'Import Connections…' },
+  ]
+  return (
+    <div className="relative flex w-[300px] shrink-0 flex-col items-center bg-(--d-bg) pt-[44px] pb-3.5">
+      <WelcomeGrid className="[background-position:center_-4px] [mask-image:radial-gradient(circle_at_50%_36%,black_10%,transparent_62%)]" />
+      <div className="absolute top-[16px] left-[16px] flex gap-2">
+        <span className="size-3 rounded-full bg-[#ff5f57]" />
+        <span className="size-3 rounded-full bg-[#febc2e]" />
+        <span className="size-3 rounded-full bg-[#28c840]" />
+      </div>
+      <span className="flex-1" />
+      <img src="/logo.png" alt="" width={104} height={104} className="relative size-[104px] rounded-[23px]" />
+      <span className="relative mt-3.5 text-[26px] font-bold tracking-[-0.02em]">TableGrip</span>
+      <span className="relative mt-1 rounded-full bg-(--d-accent)/12 px-2.5 py-px text-[11px] font-medium text-(--d-accent)">
+        {latestVersion ? `Version ${latestVersion}` : 'Free and open source'}
+      </span>
+      <span className="relative mt-3 text-(--d-muted)">Every database, one grip.</span>
+      <span className="flex-1" />
+      <div className="relative w-full space-y-0.5 px-3.5">
+        {actions.map((a) => (
+          <div key={a.label} className="flex items-center gap-2.5 rounded-lg px-2.5 py-[7px]">
+            <span className="flex size-[26px] items-center justify-center rounded-[7px] bg-(--d-accent)/14 text-(--d-muted)">{a.icon}</span>
+            <span className="flex-1">{a.label}</span>
+            {a.keys && <Kbd>{a.keys}</Kbd>}
+          </div>
+        ))}
+      </div>
+      <div className="relative mt-2.5 flex w-full items-center gap-2 px-[22px] text-[12px] text-(--d-muted)">
+        <span className="flex size-4 items-center justify-center rounded-[4px] bg-(--d-accent) text-white">
+          <Check className="size-3" strokeWidth={3} />
+        </span>
+        Show this window on start
+      </div>
+    </div>
+  )
+}
+
+function WelcomeSection({ title }: { title: string }) {
+  return <div className="px-3 pt-2.5 pb-1 text-[10.5px] font-semibold tracking-[0.06em] text-(--d-muted) uppercase">{title}</div>
+}
+
+function WelcomeRowView({ row, selected }: { row: T.WelcomeRow; selected: boolean }) {
+  const logo = dbLogos[row.engine]
+  return (
+    <div
+      data-target={`welcome-${row.id}`}
+      className={cn(
+        'my-px flex h-[56px] items-center gap-3 rounded-[9px] border px-2.5',
+        selected ? 'border-(--d-sel-border) bg-(--d-sel)' : 'border-transparent',
+      )}
+    >
+      <span
+        className={cn(
+          'flex size-[38px] shrink-0 items-center justify-center rounded-[10px] border border-(--d-rule) bg-(--d-bg)',
+          logo?.light && 'border-black bg-black dark:border-(--d-rule) dark:bg-(--d-bg)',
+        )}
+      >
+        {logo ? (
+          <svg viewBox="0 0 24 24" className="size-[22px]">
+            <path d={logo.path} fill={logo.hex} className={cn(logo.dark && 'dark:fill-white')} />
+          </svg>
+        ) : (
+          <Mono c={row.mono} color={row.color} className="size-[22px]" />
+        )}
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="flex items-center gap-1.5">
+          <span className="truncate font-medium">{row.name}</span>
+          {row.favorite && <span className="text-[11px] text-[#e8b10e]">★</span>}
+          {row.env && <Env env={row.env} />}
+          {row.readOnly && <span className="text-[11px] text-(--d-muted)">read-only</span>}
+        </span>
+        <span className="truncate text-[11.5px] text-(--d-muted)">
+          {row.engine}
+          <span className="px-1.5">·</span>
+          {row.target}
+        </span>
+      </span>
+      {selected && <Pencil className="size-3.5 text-(--d-muted)" />}
+      {row.meta && <span className="shrink-0 text-[11px] text-(--d-muted)">{row.meta}</span>}
     </div>
   )
 }
