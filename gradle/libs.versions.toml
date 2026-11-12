@@ -108,3 +108,4 @@ kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 composeDesktop = { id = "org.jetbrains.compose", version.ref = "composeDesktop" }
+test-retry = { id = "org.gradle.test-retry", version = "1.6.4" }

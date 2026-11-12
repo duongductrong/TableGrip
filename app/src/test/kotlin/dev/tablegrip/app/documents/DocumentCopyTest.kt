@@ -6,6 +6,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -100,9 +102,10 @@ class DocumentCopyTest {
         waitForIdle()
         state.select(dev.tablegrip.app.grid.GridCell(row, 1))
         state.startEditing(dev.tablegrip.app.grid.GridCell(row, 1), "", initial = "", popup = dev.tablegrip.app.grid.EditPopup.None)
-        waitForIdle()
+        // The editor takes focus a frame after it opens; a key pressed before then goes nowhere.
+        waitUntil(timeoutMillis = 10_000) { onAllNodes(isFocused() and hasSetTextAction()).fetchSemanticsNodes().isNotEmpty() }
         onRoot().performKeyInput { withKeyDown(primary) { pressKey(Key.V) } }
-        waitForIdle()
+        waitUntil(timeoutMillis = 10_000) { state.editText.text.toString() == "pasted" }
         assertEquals("pasted", state.editText.text.toString())
     }
 

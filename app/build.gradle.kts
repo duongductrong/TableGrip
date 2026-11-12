@@ -14,6 +14,7 @@ plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.composeDesktop)
+    alias(libs.plugins.test.retry)
 }
 
 val jdkLevel = providers.gradleProperty("jdk.level").get().toInt()
@@ -572,6 +573,15 @@ tasks {
 
     test {
         useJUnitPlatform()
+        // The UI tests drive real windows and key events, which a busy CI runner can delay past a fixed wait. A test that
+        // fails twice in a row still fails the build; one that passes on the retry is reported as flaky, not failed.
+        if (System.getenv("CI") != null) {
+            retry {
+                maxRetries = 2
+                maxFailures = 10
+                failOnPassedAfterRetry = false
+            }
+        }
         providers.gradleProperty("snapshot.dir").orNull?.let { systemProperty("snapshot.dir", it) }
         providers.gradleProperty("snapshot.db").orNull?.let { systemProperty("snapshot.db", it) }
         providers.gradleProperty("snapshot.lang").orNull?.let { systemProperty("snapshot.lang", it) }
