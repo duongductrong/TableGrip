@@ -509,8 +509,9 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
             relationsRequested = true
             app.scope.launch { runCatching { app.databases.database(config).relations(table) }.onSuccess { relations = it } }
         }
+        // Set before launching: until the coroutine starts, a filter or page change would look finished with the old rows.
+        loading = true
         val job = app.scope.launch {
-            loading = true
             try {
                 val database = app.databases.database(config)
                 // Columns and key load alongside the first page instead of before it, a round trip apart on a remote
