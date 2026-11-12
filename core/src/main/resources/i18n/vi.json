@@ -749,6 +749,7 @@
   "Drag onto the filter, or double-click": "Kéo vào bộ lọc, hoặc bấm đúp",
   "Drag to arrange · scroll to pan · ⌘ scroll to zoom · double-click opens data": "Kéo để sắp xếp · cuộn để di chuyển · ⌘ cuộn để thu phóng · bấm đúp để mở dữ liệu",
   "Drawn from the first {0} rows fetched; the query returns more.": "Vẽ từ {0} hàng đầu đã lấy; truy vấn trả về nhiều hơn.",
+  "Driver": "Driver",
   "Driver Needed": "Cần driver",
   "Driver properties ({0})": "Thuộc tính driver ({0})",
   "Driver property \"{0}\" must look like key=value.": "Thuộc tính driver \"{0}\" phải có dạng key=value.",

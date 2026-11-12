@@ -749,6 +749,7 @@
   "Drag onto the filter, or double-click": "拖到筛选中,或双击",
   "Drag to arrange · scroll to pan · ⌘ scroll to zoom · double-click opens data": "拖动以排列 · 滚动以平移 · ⌘+滚动以缩放 · 双击打开数据",
   "Drawn from the first {0} rows fetched; the query returns more.": "基于已获取的前 {0} 行绘制;查询返回的行更多。",
+  "Driver": "驱动",
   "Driver Needed": "需要驱动",
   "Driver properties ({0})": "驱动属性({0})",
   "Driver property \"{0}\" must look like key=value.": "驱动属性“{0}”必须是 key=value 格式。",

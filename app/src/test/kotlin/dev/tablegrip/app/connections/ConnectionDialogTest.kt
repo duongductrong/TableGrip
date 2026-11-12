@@ -16,6 +16,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
@@ -54,7 +55,7 @@ class ConnectionDialogTest {
     fun `any other JDBC URL becomes a profile for the user's own driver jar`() = runComposeUiTest {
         val app = app()
         setContent {
-            TableGripTheme(isDark = true) { Box(Modifier.size(640.dp, 600.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
+            TableGripTheme(isDark = true) { Box(Modifier.size(640.dp, 680.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
         }
         onAllNodes(hasSetTextAction())[0].performTextInput("jdbc:teradata://localhost/DATABASE=sales?password=masterkey")
         onNodeWithText("Parse").performClick()
@@ -73,7 +74,7 @@ class ConnectionDialogTest {
     fun `mongodb connection strings connect by string, with the password moved out`() = runComposeUiTest {
         val app = app()
         setContent {
-            TableGripTheme(isDark = true) { Box(Modifier.size(640.dp, 600.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
+            TableGripTheme(isDark = true) { Box(Modifier.size(640.dp, 680.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
         }
         onAllNodes(hasSetTextAction())[0].performTextInput("mongodb+srv://app:s3cret@cluster0.example.net/shop?retryWrites=true")
         onNodeWithText("Parse").performClick()
@@ -91,14 +92,14 @@ class ConnectionDialogTest {
     fun `the driver banner acts on the driver now selected, not the first one`() = runComposeUiTest {
         val app = app()
         setContent {
-            TableGripTheme(isDark = false) { Box(Modifier.size(640.dp, 600.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
+            TableGripTheme(isDark = false) { Box(Modifier.size(640.dp, 680.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
         }
         onNodeWithText("PostgreSQL JDBC Driver 42", substring = true).assertExists()
         onAllNodes(hasSetTextAction())[0].performTextInput("mysql://root@localhost/shop")
         onNodeWithText("Parse").performClick()
         waitForIdle()
 
-        onNodeWithText("Download").performClick()
+        onNodeWithText("Download").performScrollTo().performClick()
         waitForIdle()
         assertNotNull(app.drivers.state(DriverId.MariaDB), "Download must fetch the MySQL profile's driver")
         assertNull(app.drivers.state(DriverId.PostgreSQL))
@@ -109,7 +110,7 @@ class ConnectionDialogTest {
     fun `pasting a libpq URI fills the form and previews the pgjdbc URL`() = runComposeUiTest {
         val app = app()
         setContent {
-            TableGripTheme(isDark = true) { Box(Modifier.size(640.dp, 600.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
+            TableGripTheme(isDark = true) { Box(Modifier.size(640.dp, 680.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
         }
         onAllNodes(hasSetTextAction())[0].performTextInput("postgresql://admin:p%40ss@db.example.com:6543/shop?sslmode=require&application_name=dg")
         onNodeWithText("Parse").performClick()
@@ -130,7 +131,7 @@ class ConnectionDialogTest {
     fun `advanced MySQL URLs switch to URL mode without the password`() = runComposeUiTest {
         val app = app()
         setContent {
-            TableGripTheme(isDark = false) { Box(Modifier.size(640.dp, 600.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
+            TableGripTheme(isDark = false) { Box(Modifier.size(640.dp, 680.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
         }
         onAllNodes(hasSetTextAction())[0].performTextInput("jdbc:mysql:replication://sandy:secret@primary:3306,replica:3306/db")
         onNodeWithText("Parse").performClick()
@@ -149,7 +150,7 @@ class ConnectionDialogTest {
     fun `options say what the connection shares with AI agents`() = runComposeUiTest {
         val app = app()
         setContent {
-            TableGripTheme(isDark = true) { Box(Modifier.size(640.dp, 600.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
+            TableGripTheme(isDark = true) { Box(Modifier.size(640.dp, 680.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
         }
         onNodeWithText("Options").performClick()
         waitForIdle()
@@ -177,7 +178,7 @@ class ConnectionDialogTest {
     fun `typing in the engine list and pressing Enter picks the match`() = runComposeUiTest {
         val app = app()
         setContent {
-            TableGripTheme(isDark = true) { Box(Modifier.size(640.dp, 600.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
+            TableGripTheme(isDark = true) { Box(Modifier.size(640.dp, 680.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
         }
         onAllNodesWithText("PostgreSQL")[0].performClick()
         waitForIdle()
@@ -194,7 +195,7 @@ class ConnectionDialogTest {
     fun `a pasted sslmode lands on the SSL tab, not among the driver properties`() = runComposeUiTest {
         val app = app()
         setContent {
-            TableGripTheme(isDark = true) { Box(Modifier.size(640.dp, 600.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
+            TableGripTheme(isDark = true) { Box(Modifier.size(640.dp, 680.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
         }
         onAllNodes(hasSetTextAction())[0].performTextInput("postgresql://admin@db.example.com/shop?sslmode=verify-full")
         onNodeWithText("Parse").performClick()
@@ -214,7 +215,7 @@ class ConnectionDialogTest {
     fun `an error on another tab takes the user there`() = runComposeUiTest {
         val app = app()
         setContent {
-            TableGripTheme(isDark = true) { Box(Modifier.size(640.dp, 600.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
+            TableGripTheme(isDark = true) { Box(Modifier.size(640.dp, 680.dp)) { ConnectionDialogContent(app.connections, ConnectionDialogRequest(null)) } }
         }
         onAllNodes(hasSetTextAction())[0].performTextInput("postgresql://admin@db.example.com/shop")
         onNodeWithText("Parse").performClick()

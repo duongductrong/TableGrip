@@ -385,7 +385,8 @@ private fun outlineOf(field: Field): Outline = if (LocalInvalidField.current == 
 internal fun ConnectionDialog(state: ConnectionsViewModel, request: ConnectionDialogRequest) {
     AppDialog(
         onCloseRequest = state::closeDialog,
-        size = DpSize(640.dp, 600.dp),
+        // Tall enough that the driver banner under the host-and-port fields shows whole, links included.
+        size = DpSize(640.dp, 680.dp),
         title = if (request.existing == null) tr("New Connection") else tr("Edit Connection"),
         resizable = false,
     ) {
@@ -551,29 +552,37 @@ private fun GeneralTab(form: ConnectionForm, drivers: DriverDownloads, onMessage
         }
     }
     FormRow(tr("Name")) { TextField(form.name, Modifier.fillMaxWidth(), placeholder = { Text(tr("Optional")) }) }
-    FormRow(tr("Type")) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            EngineComboBox(form.type, onChange = form::changeType, modifier = Modifier.width(180.dp))
-            val choices = form.type.drivers
-            ListComboBox(
-                items = choices.map { it.displayName },
-                selectedIndex = choices.indexOf(form.driver).coerceAtLeast(0),
-                onSelectedItemChange = { form.driver = choices[it] },
-                modifier = Modifier.weight(1f),
-                enabled = choices.size > 1,
-            )
-        }
+    FormRow(tr("Type")) { EngineComboBox(form.type, onChange = form::changeType, modifier = Modifier.width(180.dp)) }
+    FormRow(tr("Driver")) {
+        val choices = form.type.drivers
+        ListComboBox(
+            items = choices.map { it.displayName },
+            selectedIndex = choices.indexOf(form.driver).coerceAtLeast(0),
+            onSelectedItemChange = { form.driver = choices[it] },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = choices.size > 1,
+        )
     }
-    DriverBanner(
-        form.driver,
-        drivers,
-        Modifier.fillMaxWidth(),
-        // MariaDB Connector/J stands in for MySQL's own driver, except on engines it can't talk to (OceanBase).
-        onSwitch = { driver: DriverId -> form.driver = driver }.takeIf { DriverId.MariaDB in form.type.drivers },
-        onMessage = { onMessage(Message(it, isError = true)) },
-        profileJars = form.driverJars,
-        onProfileJars = { form.driverJars = it },
-    )
+    ConnectionFields(form)
+    // What the driver needs comes after the fields, so it doesn't split the form; it lines up with the fields column.
+    Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
+        Spacer(Modifier.width(FormLabelWidth))
+        DriverBanner(
+            form.driver,
+            drivers,
+            Modifier.weight(1f),
+            // MariaDB Connector/J stands in for MySQL's own driver, except on engines it can't talk to (OceanBase).
+            onSwitch = { driver: DriverId -> form.driver = driver }.takeIf { DriverId.MariaDB in form.type.drivers },
+            onMessage = { onMessage(Message(it, isError = true)) },
+            profileJars = form.driverJars,
+            onProfileJars = { form.driverJars = it },
+        )
+    }
+}
+
+/** Where and how to reach the database: a data file, a URL, host and port, or a database file. */
+@Composable
+private fun ConnectionFields(form: ConnectionForm) {
     if (form.dataFile) {
         DataFileFields(form)
         return
@@ -1002,10 +1011,12 @@ private fun chooseFile(title: String, directory: String?): String? {
 
 private data class Message(val text: String, val isError: Boolean, val action: Pair<String, () -> Unit>? = null)
 
+private val FormLabelWidth = 96.dp
+
 @Composable
 private fun FormRow(label: String, content: @Composable () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(label, Modifier.width(96.dp))
+        Text(label, Modifier.width(FormLabelWidth))
         Column(Modifier.weight(1f)) { content() }
     }
 }

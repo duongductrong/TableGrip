@@ -749,6 +749,7 @@
   "Drag onto the filter, or double-click": "拖曳到篩選中,或按兩下",
   "Drag to arrange · scroll to pan · ⌘ scroll to zoom · double-click opens data": "拖曳以排列 · 捲動以平移 · ⌘+捲動以縮放 · 按兩下開啟資料",
   "Drawn from the first {0} rows fetched; the query returns more.": "根據已擷取的前 {0} 列繪製;查詢傳回的列更多。",
+  "Driver": "驅動程式",
   "Driver Needed": "需要驅動程式",
   "Driver properties ({0})": "驅動程式屬性({0})",
   "Driver property \"{0}\" must look like key=value.": "驅動程式屬性「{0}」必須是 key=value 格式。",
