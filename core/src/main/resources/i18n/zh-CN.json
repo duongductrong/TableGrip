@@ -3021,5 +3021,11 @@
   "Require: encrypt, don't verify the server": "Require：加密，但不验证服务器",
   "Verify CA: the server's certificate is trusted": "Verify CA：服务器证书受信任",
   "Verify full: trusted, and names this host": "Verify full：受信任且与此主机名匹配",
-  "No password entered for {0}.": "未输入 {0} 的密码。"
+  "No password entered for {0}.": "未输入 {0} 的密码。",
+  "Couldn't group every row on the server, so this shows the rows fetched: {0}": "无法在服务器上对所有行分组,因此显示的是已获取的行:{0}",
+  "grouping every row on the server…": "正在服务器上对所有行分组…",
+  "grouped on the server; only the first groups are shown": "已在服务器上分组;仅显示前面的分组",
+  "grouped on the server from every row": "已在服务器上基于所有行分组",
+  "Drawn from the first {0} matching rows. Sum or count the measures to cover every row.": "基于前 {0} 个匹配行绘制。对度量求和或计数即可覆盖所有行。",
+  "Drawn from the first {0} matching rows.": "基于前 {0} 个匹配行绘制。"
 }

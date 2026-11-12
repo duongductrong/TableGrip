@@ -1,4 +1,4 @@
-package dev.tablegrip.app.console
+package dev.tablegrip.app.chart
 
 import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.app.ui.AppIcons
@@ -19,7 +19,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,9 +32,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import dev.tablegrip.app.chart.ChartAssistState
-import dev.tablegrip.app.chart.CanvasChartRenderer
-import dev.tablegrip.app.chart.ResultChartColors
 import dev.tablegrip.app.ui.LocalIslands
 import dev.tablegrip.core.chart.Aggregate
 import dev.tablegrip.core.chart.ChartSpec
@@ -60,17 +56,21 @@ import org.jetbrains.jewel.ui.component.Text
 import org.jetbrains.jewel.ui.component.TextField
 import org.jetbrains.jewel.ui.icons.AllIconsKeys
 
-/** A result drawn as a chart, with what was left out said above it and the axes chosen on the right. */
+/**
+ * Rows drawn as a chart, with what was left out said above it and the axes chosen on the right. [notice] leads the
+ * notes, for what the source knows about its rows (e.g. that only the first ones were fetched). [onAsk] sends a
+ * description to the agent; null hides the field.
+ */
 @Composable
-internal fun ResultChartView(tab: ConsoleTab, view: ResultSetView, modifier: Modifier = Modifier) {
-    val chart = view.chart
+internal fun ChartView(chart: ChartState, onAsk: ((String) -> Unit)?, modifier: Modifier = Modifier, notice: @Composable () -> Unit = {}) {
     LaunchedEffect(chart) { chart.prepare() }
-    LaunchedEffect(chart.spec, chart.profiles) { chart.rebuild() }
+    LaunchedEffect(chart, chart.spec, chart.profiles) { chart.rebuild() }
     val info = JewelTheme.globalColors.text.info
     val density = LocalDensity.current
     Row(modifier) {
         Column(Modifier.weight(1f).fillMaxHeight()) {
-            ChartNotices(tab, view)
+            notice()
+            ChartNotes(chart)
             Box(
                 Modifier.weight(1f).fillMaxWidth().onSizeChanged { size -> with(density) { chart.drawnSize = IntSize(size.width.toDp().value.toInt(), size.height.toDp().value.toInt()) } },
                 contentAlignment = Alignment.Center,
@@ -90,29 +90,30 @@ internal fun ResultChartView(tab: ConsoleTab, view: ResultSetView, modifier: Mod
             }
         }
         Divider(Orientation.Vertical, Modifier.fillMaxHeight())
-        ChartEditor(tab, view, Modifier.width(260.dp).fillMaxHeight())
+        ChartEditor(chart, onAsk, Modifier.width(260.dp).fillMaxHeight())
     }
 }
 
-/** What the chart doesn't show: rows not fetched, rows without values, categories and series left out, points thinned. */
+/** A warning line above the chart, e.g. that it covers only the rows fetched, with an optional action after it. */
 @Composable
-private fun ChartNotices(tab: ConsoleTab, view: ResultSetView) {
-    val info = JewelTheme.globalColors.text.info
-    val frame = view.chart.frame
-    // Splits and classifies the statement: once per spec, not on every recomposition.
-    val canAggregate = remember(view.chart.spec) { tab.canAggregateChart(view) }
-    if (view.rows.truncated) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(AllIconsKeys.General.Warning, null, Modifier.size(14.dp))
-            Text(tr("Drawn from the first {0} rows fetched; the query returns more.", view.rows.rows.size), Modifier.weight(1f, fill = false))
-            when {
-                canAggregate -> Link(tr("Aggregate on server"), onClick = { tab.aggregateChart(view) }, enabled = !tab.running)
-                view.chart.spec?.aggregates == false -> Text(tr("Sum or count the measures to aggregate on the server."), color = info)
-            }
-        }
+internal fun ChartWarning(text: String, action: @Composable () -> Unit = {}) {
+    Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(AllIconsKeys.General.Warning, null, Modifier.size(14.dp))
+        Text(text, Modifier.weight(1f, fill = false))
+        action()
     }
+}
+
+/** What the chart doesn't show (rows without values, categories and series left out, points thinned) and where it was grouped. */
+@Composable
+private fun ChartNotes(chart: ChartState) {
+    val info = JewelTheme.globalColors.text.info
+    val frame = chart.frame
+    chart.serverError?.let { ChartWarning(tr("Couldn't group every row on the server, so this shows the rows fetched: {0}", it)) }
     val notes =
         buildList {
+            if (chart.grouping) add(tr("grouping every row on the server…"))
+            else if (chart.onServer) add(if (chart.serverTruncated) tr("grouped on the server; only the first groups are shown") else tr("grouped on the server from every row"))
             if (frame == null) return@buildList
             if (frame.skippedRows > 0) add(tr("{0} rows without a value for x or y left out", frame.skippedRows))
             if (frame.omittedCategories > 0) add(tr("{0} smaller categories not shown", frame.omittedCategories))
@@ -120,17 +121,19 @@ private fun ChartNotices(tab: ConsoleTab, view: ResultSetView) {
             if (frame.downsampled) add(tr("thinned out to keep drawing fast, keeping the shape"))
         }
     if (notes.isNotEmpty()) {
-        Text(notes.joinToString(" · ").replaceFirstChar(Char::uppercase), Modifier.padding(horizontal = 10.dp, vertical = 4.dp), color = info)
+        Row(Modifier.padding(horizontal = 10.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (chart.grouping) CircularProgressIndicator(Modifier.size(12.dp))
+            Text(notes.joinToString(" · ").replaceFirstChar(Char::uppercase), color = info)
+        }
     }
 }
 
 /** The spec as fields: type, x, its date grouping, measures, series. Edits draw at once; the agent's answer is reviewed first. */
 @Composable
-private fun ChartEditor(tab: ConsoleTab, view: ResultSetView, modifier: Modifier) {
-    val chart = view.chart
+private fun ChartEditor(chart: ChartState, onAsk: ((String) -> Unit)?, modifier: Modifier) {
     val profiles = chart.profiles
     Column(modifier.verticalScroll(rememberScrollState()).padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        if (tab.canAskAgent && profiles != null) ChartAsk(tab, view)
+        if (onAsk != null && profiles != null) ChartAsk(chart, onAsk)
         val spec = chart.spec
         if (profiles == null || spec == null) {
             if (profiles != null) Text(tr("Pick a chart once the result has a number, a date or a few categories."), color = JewelTheme.globalColors.text.info)
@@ -191,15 +194,14 @@ private fun MeasureRow(measure: Measure, columns: List<String>, removable: Boole
 
 /** A description of a chart for the agent's request: typed, sent with Enter, its answer shown for review. */
 @Composable
-private fun ChartAsk(tab: ConsoleTab, view: ResultSetView) {
-    val chart = view.chart
+private fun ChartAsk(chart: ChartState, onAsk: (String) -> Unit) {
     val info = JewelTheme.globalColors.text.info
     val asking = chart.assist is ChartAssistState.Asking
     TextField(
         chart.request,
         Modifier.fillMaxWidth().onPreviewKeyEvent { event ->
             val enter = event.type == KeyEventType.KeyDown && (event.key == Key.Enter || event.key == Key.NumPadEnter)
-            if (enter && !asking) tab.askForChart(view, chart.request.text.toString())
+            if (enter && !asking) onAsk(chart.request.text.toString())
             enter
         },
         placeholder = { Text(tr("Describe a chart, e.g. revenue by month")) },
@@ -211,12 +213,12 @@ private fun ChartAsk(tab: ConsoleTab, view: ResultSetView) {
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                 CircularProgressIndicator(Modifier.size(12.dp))
                 Text(tr("Asking {0}…", assist.agent ?: tr("the agent")), Modifier.weight(1f), color = info)
-                Link(tr("Cancel"), onClick = { tab.dismissChartAssist(view) })
+                Link(tr("Cancel"), onClick = { chart.dismissAssist() })
             }
         is ChartAssistState.Failed ->
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(assist.message, color = JewelTheme.globalColors.text.error)
-                Link(tr("Dismiss"), onClick = { tab.dismissChartAssist(view) })
+                Link(tr("Dismiss"), onClick = { chart.dismissAssist() })
             }
         is ChartAssistState.Proposed -> {
             val islands = LocalIslands.current
@@ -230,8 +232,8 @@ private fun ChartAsk(tab: ConsoleTab, view: ResultSetView) {
                 assist.proposal.assumptions.forEach { Text("• $it", color = info) }
                 Text(tr("from {0}", assist.agent), color = info)
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.End)) {
-                    OutlinedButton(onClick = { tab.dismissChartAssist(view) }) { Text(tr("Discard")) }
-                    DefaultButton(onClick = { tab.applyChartProposal(view) }) { Text(tr("Apply")) }
+                    OutlinedButton(onClick = { chart.dismissAssist() }) { Text(tr("Discard")) }
+                    DefaultButton(onClick = { chart.applyProposal() }) { Text(tr("Apply")) }
                 }
             }
         }

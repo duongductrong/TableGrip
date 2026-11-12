@@ -3021,5 +3021,11 @@
   "Require: encrypt, don't verify the server": "Require: mã hóa, không xác minh máy chủ",
   "Verify CA: the server's certificate is trusted": "Verify CA: chứng chỉ máy chủ được tin cậy",
   "Verify full: trusted, and names this host": "Verify full: được tin cậy và đúng tên máy chủ này",
-  "No password entered for {0}.": "Chưa nhập mật khẩu cho {0}."
+  "No password entered for {0}.": "Chưa nhập mật khẩu cho {0}.",
+  "Couldn't group every row on the server, so this shows the rows fetched: {0}": "Không thể nhóm mọi hàng trên máy chủ, nên biểu đồ hiển thị các hàng đã lấy: {0}",
+  "grouping every row on the server…": "đang nhóm mọi hàng trên máy chủ…",
+  "grouped on the server; only the first groups are shown": "đã nhóm trên máy chủ; chỉ hiển thị các nhóm đầu tiên",
+  "grouped on the server from every row": "đã nhóm trên máy chủ từ mọi hàng",
+  "Drawn from the first {0} matching rows. Sum or count the measures to cover every row.": "Vẽ từ {0} hàng khớp đầu tiên. Tính tổng hoặc đếm các số đo để bao quát mọi hàng.",
+  "Drawn from the first {0} matching rows.": "Vẽ từ {0} hàng khớp đầu tiên."
 }

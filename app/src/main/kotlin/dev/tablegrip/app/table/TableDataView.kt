@@ -62,12 +62,15 @@ import dev.tablegrip.app.grid.GridModel
 import dev.tablegrip.app.grid.GridActions
 import dev.tablegrip.app.grid.RecordEditorHost
 import dev.tablegrip.app.grid.ResultJsonView
+import dev.tablegrip.app.chart.ChartView
+import dev.tablegrip.app.chart.ChartWarning
 import dev.tablegrip.app.grid.ValuePanel
 import dev.tablegrip.app.ui.LocalIslands
 import dev.tablegrip.app.ui.Shortcuts
 import dev.tablegrip.app.ui.copyToClipboard
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.Orientation
+import org.jetbrains.jewel.ui.component.CircularProgressIndicator
 import org.jetbrains.jewel.ui.component.DefaultButton
 import org.jetbrains.jewel.ui.component.Divider
 import org.jetbrains.jewel.ui.component.HorizontalSplitLayout
@@ -161,7 +164,9 @@ private fun DataContent(tab: TableDataTab) {
                             ),
                     )
                 }
-            if (tab.showJson) {
+            if (tab.display == DataDisplay.Chart) {
+                TableChart(tab)
+            } else if (tab.display == DataDisplay.Json) {
                 ResultJsonView(model, tab.grid)
             } else if (tab.showValuePanel) {
                 HorizontalSplitLayout(
@@ -177,6 +182,33 @@ private fun DataContent(tab: TableDataTab) {
             }
         }
         StatusLine(tab)
+    }
+}
+
+/**
+ * Every row matching the filter as a chart. The chart reads a sample of them, so it says when that's all it shows: when
+ * the spec aggregates, the server groups all of them instead.
+ */
+@Composable
+private fun TableChart(tab: TableDataTab) {
+    LaunchedEffect(tab.chartSource) { tab.ensureChart() }
+    val chart = tab.chart
+    if (chart == null) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            val error = tab.chartError
+            if (error != null) Text(error, Modifier.padding(16.dp), color = JewelTheme.globalColors.text.error) else CircularProgressIndicator()
+        }
+        return
+    }
+    ChartView(chart, onAsk = tab::askForChart.takeIf { tab.canAskForChart }, Modifier.fillMaxSize()) {
+        tab.chartError?.let { ChartWarning(it) }
+        if (chart.partial && !chart.grouping && chart.serverError == null) {
+            val sample = chart.rows.rows.size
+            ChartWarning(
+                if (chart.spec?.aggregates == false) tr("Drawn from the first {0} matching rows. Sum or count the measures to cover every row.", sample)
+                else tr("Drawn from the first {0} matching rows.", sample)
+            )
+        }
     }
 }
 
@@ -285,8 +317,9 @@ private fun Toolbar(tab: TableDataTab) {
         Box(Modifier.weight(1f))
         if (tab.loading || tab.submitting) Text(if (tab.submitting) tr("Saving…") else tr("Loading…"), Modifier.padding(end = 8.dp), color = JewelTheme.globalColors.text.info)
         ViewChipGroup {
-            ViewChip(tr("Grid"), !tab.showJson) { tab.showJson = false }
-            ViewChip(tr("JSON"), tab.showJson) { tab.showJson = true }
+            ViewChip(tr("Grid"), tab.display == DataDisplay.Grid) { tab.display = DataDisplay.Grid }
+            ViewChip(tr("JSON"), tab.display == DataDisplay.Json) { tab.display = DataDisplay.Json }
+            ViewChip(tr("Chart"), tab.display == DataDisplay.Chart) { tab.display = DataDisplay.Chart }
         }
         Separator()
         ToolButton(AllIconsKeys.Nodes.DataColumn, if (tab.showSelect) tr("Hide column editor") else tr("Choose columns and functions (SELECT)")) { tab.toggleSelect() }
@@ -294,7 +327,7 @@ private fun Toolbar(tab: TableDataTab) {
         ToolButton(
             AllIconsKeys.Actions.PreviewDetails,
             if (tab.showValuePanel) tr("Hide value panel") else tr("Show value panel"),
-            enabled = !tab.showJson,
+            enabled = tab.display == DataDisplay.Grid,
         ) {
             tab.showValuePanel = !tab.showValuePanel
         }

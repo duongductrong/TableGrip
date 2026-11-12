@@ -6,6 +6,8 @@ import com.zaxxer.hikari.HikariDataSource
 import com.zaxxer.hikari.pool.HikariPool
 import dev.tablegrip.core.activity.ActivityMonitor
 import dev.tablegrip.core.activity.ActivityReader
+import dev.tablegrip.core.chart.ChartQuery
+import dev.tablegrip.core.chart.ChartSpec
 import dev.tablegrip.core.connection.ConnectionConfig
 import dev.tablegrip.core.connection.ConnectionString
 import dev.tablegrip.core.connection.DatabaseType
@@ -161,6 +163,20 @@ class Database private constructor(
         withPooled { connection ->
             connection.query(dialect.countRows(table, filter?.sql, projection), filter, timeoutSeconds) { rs -> rs.next(); rs.getLong(1) }
         }
+
+    override suspend fun aggregateChart(
+        table: TableRef,
+        filter: SqlFilter?,
+        spec: ChartSpec,
+        maxRows: Int,
+        timeoutSeconds: Int,
+        projection: SqlProjection?,
+    ): ChartRows? {
+        val aggregate = ChartQuery.wrap(dialect, dialect.selectAll(table, filter?.sql, emptyList(), projection), spec) ?: return null
+        val start = System.nanoTime()
+        val rows = withPooled { connection -> connection.query(aggregate.sql, filter, timeoutSeconds) { rs -> rs.readRows(maxRows) { (System.nanoTime() - start) / 1_000_000 } } }
+        return ChartRows(rows, aggregate.spec)
+    }
 
     /**
      * Runs the query [sql], whose WHERE clause is [filter], and reads its results. Filters typed as SQL have no

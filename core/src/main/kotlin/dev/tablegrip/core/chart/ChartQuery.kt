@@ -20,6 +20,16 @@ object ChartQuery {
         val statement = statements.singleOrNull()?.text?.trim()?.removeSuffix(";")?.trim() ?: return null
         val info = SqlClassifier(dialect.syntax).classify(statement)
         if (info.kind != StatementKind.Read || info.verb != "SELECT") return null
+        return wrap(dialect, statement, spec)
+    }
+
+    /**
+     * Wraps [select], a single SELECT built by TableGrip rather than typed, in the GROUP BY [spec] describes. Adds no
+     * parameters, so any `?` in [select] keeps its position. Null when [spec] doesn't aggregate or dates can't be rounded.
+     */
+    fun wrap(dialect: SqlDialect, select: String, spec: ChartSpec): ChartAggregate? {
+        if (!spec.aggregates) return null
+        val statement = select
 
         fun column(name: String) = "t.${dialect.quoteIdentifier(name)}"
         val x = column(spec.x).let { if (spec.bucket == null) it else dialect.timeBucket(it, spec.bucket) ?: return null }

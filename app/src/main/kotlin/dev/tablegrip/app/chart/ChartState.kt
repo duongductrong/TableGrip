@@ -12,7 +12,10 @@ import dev.tablegrip.core.chart.ChartSpec
 import dev.tablegrip.core.chart.ChartSuggest
 import dev.tablegrip.core.chart.ColumnProfile
 import dev.tablegrip.core.chart.ColumnProfiler
+import dev.tablegrip.core.driver.ChartRows
 import dev.tablegrip.core.driver.QueryResult
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -43,7 +46,14 @@ sealed interface ChartAssistState {
  * frame drawn from it. A spec carried over from the previous run of the statement wins over the suggestion when it
  * still fits the columns.
  */
-class ChartState(val rows: QueryResult.Rows) {
+class ChartState(
+    val rows: QueryResult.Rows,
+    /**
+     * Groups a spec on the server over every row rather than [rows], which are only the first ones fetched; null when
+     * the source can't. Asked for only while [rows] are truncated and the spec aggregates.
+     */
+    private val server: (suspend (ChartSpec) -> ChartRows?)? = null,
+) {
     var profiles by mutableStateOf<List<ColumnProfile>?>(null)
         private set
     var suggestions by mutableStateOf(emptyList<ChartSpec>())
@@ -53,6 +63,23 @@ class ChartState(val rows: QueryResult.Rows) {
     /** Rebuilt from [spec] off the UI thread; null while there is none, or the spec is invalid. */
     var frame by mutableStateOf<ChartFrame?>(null)
         private set
+
+    /** Whether [frame] was grouped on the server from every row rather than drawn from [rows]. */
+    var onServer by mutableStateOf(false)
+        private set
+    /** The server is grouping the current spec; [frame] shows the rows fetched meanwhile. */
+    var grouping by mutableStateOf(false)
+        private set
+    /** Why grouping on the server failed; the chart falls back to [rows]. */
+    var serverError by mutableStateOf<String?>(null)
+        private set
+    /** The server returned more groups than were read, so the chart leaves the rest out. */
+    var serverTruncated by mutableStateOf(false)
+        private set
+
+    /** Whether the chart covers only the first rows fetched rather than all of them. */
+    val partial: Boolean
+        get() = rows.truncated && !onServer
 
     /** Problems with [spec] against the columns, which take the chart's place while there are any. */
     val problems: List<String>
@@ -85,13 +112,63 @@ class ChartState(val rows: QueryResult.Rows) {
         spec?.let { show(change(it)) }
     }
 
+    /**
+     * Draws [spec] from [rows] at once, then, when they are only the first rows and the spec aggregates, regroups it on
+     * the server once edits settle. Cancelled and restarted when the spec changes.
+     */
     suspend fun rebuild() {
         val profiles = profiles ?: return
         val spec = spec
-        frame = if (spec == null || spec.validate(profiles).isNotEmpty()) null else withContext(ChartDispatcher) { ChartData.build(rows.rows, profiles, spec, checkpoint()) }
+        if (spec == null || spec.validate(profiles).isNotEmpty()) {
+            frame = null
+            onServer = false
+            return
+        }
+        val server = server?.takeIf { rows.truncated && spec.aggregates }
+        frame = withContext(ChartDispatcher) { ChartData.build(rows.rows, profiles, spec, checkpoint()) }
+        onServer = false
+        if (server == null) {
+            serverError = null
+            return
+        }
+        grouping = true
+        try {
+            delay(ServerDelayMillis)
+            val grouped = server(spec)
+            if (grouped == null) return
+            frame =
+                withContext(ChartDispatcher) {
+                    val read = ColumnProfiler.profile(grouped.rows.columns, grouped.rows.rows, checkpoint())
+                    ChartData.build(grouped.rows.rows, read, grouped.spec, checkpoint())
+                }
+            onServer = true
+            serverTruncated = grouped.rows.truncated
+            serverError = null
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            serverError = e.message ?: e.toString()
+        } finally {
+            grouping = false
+        }
+    }
+
+    /** Draws the agent's proposal under review. */
+    fun applyProposal() {
+        val proposed = assist as? ChartAssistState.Proposed ?: return
+        show(proposed.proposal.spec)
+        dismissAssist()
+    }
+
+    fun dismissAssist() {
+        assistJob?.cancel()
+        assistJob = null
+        assist = null
     }
 
     private companion object {
         val DefaultSize = IntSize(800, 450)
+        /** Edits in a row (picking a column, then its aggregate) regroup on the server once, not per edit. */
+        const val ServerDelayMillis = 300L
     }
 }

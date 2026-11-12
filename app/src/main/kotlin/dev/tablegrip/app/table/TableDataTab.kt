@@ -12,6 +12,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.Dp
 import dev.tablegrip.app.AppState
+import dev.tablegrip.app.chart.ChartState
+import dev.tablegrip.app.chart.askAgentForChart
 import dev.tablegrip.app.export.ExportRequest
 import dev.tablegrip.app.grid.DataGridState
 import dev.tablegrip.app.grid.GridModel
@@ -44,6 +46,9 @@ import kotlinx.coroutines.launch
 import dev.tablegrip.app.connections.ConnectionStatus
 
 enum class TableView { Data, Structure }
+
+/** How the data view shows rows: the page as a grid or JSON, or every matching row as a chart. */
+enum class DataDisplay { Grid, Json, Chart }
 
 /** The pickers of a builder condition that a shortcut can open. */
 enum class FilterPicker { Column, Operator }
@@ -222,8 +227,23 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
     var totalRows by mutableStateOf<Long?>(null)
         private set
     var showValuePanel by mutableStateOf(false)
-    /** Shows the page's rows as JSON instead of the grid. */
-    var showJson by mutableStateOf(false)
+    var display by mutableStateOf(DataDisplay.Grid)
+
+    /**
+     * The chart of the rows matching the filter, not just the page: drawn from a sample of them, and grouped on the
+     * server over all of them when its spec aggregates. Loaded when first shown, and again when what it reads changes.
+     */
+    var chart by mutableStateOf<ChartState?>(null)
+        private set
+    var chartLoading by mutableStateOf(false)
+        private set
+    var chartError by mutableStateOf<String?>(null)
+
+    /** What the chart's rows depend on: the applied filter, select list and sort, but not the page. */
+    val chartSource: List<Any?>
+        get() = listOf(appliedTree, appliedSql, appliedProjection, sort)
+    private var chartLoadedFrom: List<Any?>? = null
+    private var chartJob: Job? = null
 
     var view by mutableStateOf(TableView.Data)
         private set
@@ -393,7 +413,55 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
 
     private var loadJob: Job? = null
 
-    fun reload() = guard { load() }
+    fun reload() = guard {
+        load()
+        if (display == DataDisplay.Chart) loadChart()
+    }
+
+    /** Loads the chart unless it already reads [chartSource] as it is now. */
+    fun ensureChart() {
+        if (chartSource == chartLoadedFrom && (chart != null || chartLoading)) return
+        loadChart()
+    }
+
+    /** Fetches the chart's sample, keeping the spec drawn so far when it still fits the columns. */
+    private fun loadChart() {
+        chartLoadedFrom = chartSource
+        chartJob?.cancel()
+        val job = app.scope.launch {
+            chartLoading = true
+            try {
+                val database = app.databases.database(config)
+                val filter = resolveFilter()
+                val projection = resolveProjection()
+                val timeout = app.settings.queryTimeoutSeconds
+                val rows = database.fetchPage(table, filter, sort, ChartSampleRows, 0, timeout, projection)
+                val previous = chart?.spec
+                chart =
+                    ChartState(rows) { spec -> database.aggregateChart(table, filter, spec, ChartMaxGroups, timeout, projection) }
+                        .also { next -> previous?.let(next::show) }
+                chartError = null
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                chartError = e.message ?: e.toString()
+            } finally {
+                if (chartJob == coroutineContext[Job]) chartLoading = false
+            }
+        }
+        chartJob = job
+    }
+
+    /** Whether the agent may be asked for a chart: it is told the table's columns. */
+    val canAskForChart: Boolean
+        get() = app.aiAccess(config).sharesSchema
+
+    fun askForChart(request: String) {
+        val chart = chart ?: return
+        if (!canAskForChart) return
+        val origin = runCatching { dialect.selectAll(table, resolveFilter()?.preview, sort, resolveProjection()) }.getOrElse { dialect.qualifiedName(table) }
+        app.askAgentForChart(config, chart, origin, request)
+    }
 
     /** Reloads whichever view is showing. */
     fun refresh() = if (view == TableView.Structure) loadStructure() else reload()
@@ -764,3 +832,9 @@ class TableDataTab(private val app: AppState, val config: ConnectionConfig, val 
         loadJob?.cancel()
     }
 }
+
+/** Rows a table's chart reads to profile its columns and draw what doesn't aggregate; aggregates cover every row. */
+private const val ChartSampleRows = 5_000
+
+/** Groups read back when a chart aggregates on the server; past this the chart says only the first are shown. */
+private const val ChartMaxGroups = 10_000

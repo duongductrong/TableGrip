@@ -2,6 +2,7 @@ package dev.tablegrip.core.driver
 
 import dev.tablegrip.core.i18n.tr
 import dev.tablegrip.core.activity.ActivityMonitor
+import dev.tablegrip.core.chart.ChartSpec
 import dev.tablegrip.core.connection.ConnectionConfig
 import dev.tablegrip.core.dialect.SortColumn
 import dev.tablegrip.core.dialect.SqlDialect
@@ -84,6 +85,20 @@ interface RelationalConnection : DatabaseConnection {
 
     suspend fun countRows(table: TableRef, filter: SqlFilter?, timeoutSeconds: Int = 0, projection: SqlProjection? = null): Long
 
+    /**
+     * Every row of [table] matching [filter], with [projection]'s columns, grouped on the server as [spec] groups: the
+     * rows of a chart over the whole table rather than one page. At most [maxRows] groups. Null when [spec] doesn't
+     * aggregate or the engine can't round dates to its bucket.
+     */
+    suspend fun aggregateChart(
+        table: TableRef,
+        filter: SqlFilter?,
+        spec: ChartSpec,
+        maxRows: Int,
+        timeoutSeconds: Int = 0,
+        projection: SqlProjection? = null,
+    ): ChartRows?
+
     /** Applies [statements] in one transaction, rolling back unless each hits the rows it expects. */
     suspend fun applyChanges(statements: List<ChangeStatement>): Int
 
@@ -133,6 +148,9 @@ interface RelationalConnection : DatabaseConnection {
         onProgress: (Long) -> Unit = {},
     ): Long
 }
+
+/** Rows grouped on the server for a chart, and the spec that draws them as they are. */
+data class ChartRows(val rows: QueryResult.Rows, val spec: ChartSpec)
 
 /** A script statement failed. [completed] statements ran before it; [rolledBack] says whether they were undone. */
 class ScriptException(message: String, val statement: String, val completed: Int, val rolledBack: Boolean, cause: Throwable?) :

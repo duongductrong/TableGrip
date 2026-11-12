@@ -14,14 +14,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.TextRange
 import dev.tablegrip.app.AppState
-import dev.tablegrip.app.chart.ChartAssistState
+import dev.tablegrip.app.chart.askAgentForChart
 import dev.tablegrip.app.chart.ChartState
 import dev.tablegrip.app.grid.DataGridState
 import dev.tablegrip.app.grid.GridModel
 import dev.tablegrip.app.grid.ResultGridModel
 import dev.tablegrip.app.workspace.WorkspaceTab
 import dev.tablegrip.core.assist.AssistResult
-import dev.tablegrip.core.assist.ChartSpecTask
 import dev.tablegrip.core.assist.SchemaDigest
 import dev.tablegrip.core.assist.SqlErrors
 import dev.tablegrip.core.assist.SqlFix
@@ -422,49 +421,9 @@ class ConsoleTab(
         }
     }
 
-    /**
-     * Asks the chat's agent for a chart of [view] matching [request]. It gets the statement and the columns' kinds; a few
-     * values per column only when the connection shares data. The answer is proposed, and only drawn once applied.
-     */
+    /** Asks the chat's agent for a chart of [view] matching [request]; see [askAgentForChart]. */
     fun askForChart(view: ResultSetView, request: String) {
-        val chart = view.chart
-        val profiles = chart.profiles ?: return
-        if (!canAskAgent || request.isBlank()) return
-        chart.assistJob?.cancel()
-        chart.assist = ChartAssistState.Asking(app.agent.selected?.descriptor?.name)
-        chart.assistJob =
-            app.scope.launch {
-                val agent = app.agent.assistAgent()
-                if (agent == null) {
-                    chart.assist = ChartAssistState.Failed(tr("No agent is available. Install a command-line agent or set up an API provider in Settings › Agent."))
-                    return@launch
-                }
-                chart.assist = ChartAssistState.Asking(agent.descriptor.name)
-                val samples =
-                    if (!app.aiAccess(config).sharesData) emptyMap()
-                    else profiles.associate { column ->
-                        column.name to view.rows.rows.asSequence().mapNotNull { it[column.index]?.take(SampleLength) }.distinct().take(ChartSamples).toList()
-                    }
-                val task = ChartSpecTask(request, config.type.displayName, view.sql, profiles, samples, view.rows.truncated)
-                chart.assist =
-                    when (val result = app.agent.assist.run(agent, task)) {
-                        is AssistResult.Ok -> ChartAssistState.Proposed(result.value, result.agent)
-                        is AssistResult.Invalid -> ChartAssistState.Failed(tr("{0} didn't return a usable chart: {1}", agent.descriptor.name, result.reasons.first()))
-                        is AssistResult.Failed -> ChartAssistState.Failed(result.message)
-                    }
-            }
-    }
-
-    fun applyChartProposal(view: ResultSetView) {
-        val proposed = view.chart.assist as? ChartAssistState.Proposed ?: return
-        view.chart.show(proposed.proposal.spec)
-        dismissChartAssist(view)
-    }
-
-    fun dismissChartAssist(view: ResultSetView) {
-        view.chart.assistJob?.cancel()
-        view.chart.assistJob = null
-        view.chart.assist = null
+        if (canAskAgent) app.askAgentForChart(config, view.chart, view.sql, request)
     }
 
     /** Cells selected in result [view] as a mention in the agent chat (⌘L), with the query; their values only when the connection shares data. */
@@ -837,9 +796,6 @@ class ConsoleTab(
         private val log = LoggerFactory.getLogger(ConsoleTab::class.java)
         /** Smaller than the chat's: a fix needs the statement's tables, which come first, more than the rest. */
         private const val FixSchemaBudget = 20_000
-        /** Values per column a chart request shows the agent, when the connection shares data, and their length. */
-        private const val ChartSamples = 5
-        private const val SampleLength = 40
         private val Whitespace = Regex("\\s+")
 
         private fun String.normalized(): String = trim().removeSuffix(";").replace(Whitespace, " ").trim()

@@ -3021,5 +3021,11 @@
   "Require: encrypt, don't verify the server": "Require：加密，但不驗證伺服器",
   "Verify CA: the server's certificate is trusted": "Verify CA：伺服器憑證受信任",
   "Verify full: trusted, and names this host": "Verify full：受信任且與此主機名稱相符",
-  "No password entered for {0}.": "未輸入 {0} 的密碼。"
+  "No password entered for {0}.": "未輸入 {0} 的密碼。",
+  "Couldn't group every row on the server, so this shows the rows fetched: {0}": "無法在伺服器上將所有列分組,因此顯示的是已擷取的列:{0}",
+  "grouping every row on the server…": "正在伺服器上將所有列分組…",
+  "grouped on the server; only the first groups are shown": "已在伺服器上分組;僅顯示前面的群組",
+  "grouped on the server from every row": "已在伺服器上依所有列分組",
+  "Drawn from the first {0} matching rows. Sum or count the measures to cover every row.": "根據前 {0} 個符合的列繪製。對度量加總或計數即可涵蓋所有列。",
+  "Drawn from the first {0} matching rows.": "根據前 {0} 個符合的列繪製。"
 }

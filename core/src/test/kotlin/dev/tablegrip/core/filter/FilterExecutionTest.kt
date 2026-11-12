@@ -1,5 +1,9 @@
 package dev.tablegrip.core.filter
 
+import dev.tablegrip.core.chart.Aggregate
+import dev.tablegrip.core.chart.ChartSpec
+import dev.tablegrip.core.chart.ChartType
+import dev.tablegrip.core.chart.Measure
 import dev.tablegrip.core.connection.ConnectionConfig
 import dev.tablegrip.core.connection.DatabaseType
 import dev.tablegrip.core.dialect.SortColumn
@@ -13,6 +17,7 @@ import java.util.UUID
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlinx.coroutines.runBlocking
 
 /** Compiled filters run against a real (SQLite) database, through the same paging and counting the table viewer uses. */
@@ -113,5 +118,18 @@ class FilterExecutionTest {
         assertEquals(listOf(2L, 4L, 5L), ids(cheapOrUnpaid))
         assertEquals(listOf(2L), ids(cheapOrUnpaid, RawCondition(101, "length(customer) = 3")))
         assertEquals(listOf(1L, 3L), ids(FilterGroup(102, children = listOf(cheapOrUnpaid), negated = true)))
+    }
+
+    @Test
+    fun `charts group every matching row on the server, with the filter's parameters bound`() = runBlocking {
+        val details = database.tableDetails(table)
+        val columns = details.columns.map { FilterColumn(it.name, it.typeName, ValueKind.of(it.typeName, it.jdbcType, it.size)) }
+        val filter = FilterCompiler(database.dialect, columns, clock).compile(FilterGroup(0, children = listOf(cond("total", FilterOperator.GreaterOrEqual, "10")))).filter!!
+        assertEquals(1, filter.parameters.size)
+        val spec = ChartSpec(ChartType.Bar, "paid", listOf(Measure("total", Aggregate.Sum)))
+        val chart = database.aggregateChart(table, filter, spec, maxRows = 100)!!
+        assertEquals(ChartSpec(ChartType.Bar, "paid", listOf(Measure("sum(total)"))), chart.spec)
+        assertEquals(listOf("0" to 99.0, "1" to 260.5), chart.rows.rows.map { it[0]!! to it[1]!!.toDouble() })
+        assertNull(database.aggregateChart(table, filter, spec.copy(type = ChartType.Scatter, y = listOf(Measure("total"))), maxRows = 100))
     }
 }
