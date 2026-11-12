@@ -3,6 +3,29 @@
 All notable changes to TableGrip are listed here, newest first. Each entry is written from the Conventional Commits
 of its release and can be edited in the release PR before it is merged.
 
+## [1.0.0-beta.5] - 2026-11-12
+
+### ✨ Features
+- Adjust ConnectionDialog size and improve driver selection layout (090403c)
+- Implement password prompt for connections and add SSL options (7185f75)
+- Added functionality to navigate to the last page in TableDataTab (c06029e)
+- Website downloads follow the newest release in the feed (f8301c3)
+- Introduce Welcome window with recent connections and enhance timeline structure (587c61a)
+- Refactor BrandBackdrop for improved visual consistency and clarity (8a87974)
+- Enhance session management and UI with recent connections and welcome window (12cf131)
+- Added hover submenu for improved menu navigation (fb8da2a)
+- Reopen closed tabs, and tree-wide actions beside the add menu (5810f5c)
+- Visual EXPLAIN plans and Explain Analyze in the SQL console (#11) (02cf58e)
+- Functions, procedures, sequences and materialized views in the explorer (#12) (ddc723a)
+
+### 🧰 Maintenance
+- test: Wait for the drivers page, not the library, after removing a driver (550e5eb)
+
+### Contributors
+[@duongductrong](https://github.com/duongductrong)
+
+**Full Changelog**: https://github.com/duongductrong/TableGrip/compare/v1.0.0-beta.4...v1.0.0-beta.5
+
 ## [1.0.0-beta.4] - 2026-11-11
 
 ### ✨ Features
