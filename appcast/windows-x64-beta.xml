@@ -4,6 +4,21 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
   <channel>
     <title>TableGrip</title>
     <item>
+      <title>TableGrip 1.0.0-beta.4</title>
+      <pubDate>Thu, 12 Nov 2026 05:11:47 +0000</pubDate>
+      <sparkle:version>40</sparkle:version>
+      <sparkle:shortVersionString>1.0.0-beta.4</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>10.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/duongductrong/TableGrip/releases/tag/v1.0.0-beta.4</sparkle:fullReleaseNotesLink>
+      <description sparkle:format="markdown"><![CDATA[### ✨ Features
+- Complete in the record console's language
+- Script console with completion, and results as an editable grid, JSON or tree
+- Add macOS menu bar support with settings and functionality
+- Enhance UpdatesPanel with improved UI and functionality
+]]></description>
+      <enclosure url="https://github.com/duongductrong/TableGrip/releases/download/v1.0.0-beta.4/TableGrip-1.0.0-beta.4-windows-x64.msi" length="100401660" type="application/octet-stream" sparkle:edSignature="sr5b+vWcLL32ub8afd94vi29DkLXIJp2hfiLvdSqzFlDOe+syJ3UW3G44GC8keraTcW0wWYJFtkWPp/+T53JAw==" sparkle:os="windows-x64" sparkle:installerArguments="/passive"></enclosure>
+    </item>
+    <item>
       <title>TableGrip 1.0.0-beta.3</title>
       <pubDate>Wed, 11 Nov 2026 15:10:20 +0000</pubDate>
       <sparkle:version>34</sparkle:version>
@@ -52,6 +67,6 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
     </item>
   </channel>
 </rss><!-- sparkle-signatures:
-edSignature: dI+8/8CcDzsjQonTWIszAd85rzO4kZl6qrjaVUIOGkKQeBE/nCCA9KlbqhYutGjxSBHKFFZrjD4Ex3D02HMfCA==
-length: 3624
+edSignature: 5y2mU2Uo/N6KpoCwre/PcfSNyv18cj09Ls5D44Y+tvuqehtakHOAkMvqzYGT711KMAqRwPta41d8FCRCIlMkDg==
+length: 4784
 -->

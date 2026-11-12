@@ -60,5 +60,36 @@
         "url": "https://github.com/duongductrong/TableGrip/releases/download/v1.0.0-beta.3/TableGrip-1.0.0-beta.3-windows-x64.msi"
       }
     }
+  },
+  {
+    "version": "1.0.0-beta.4",
+    "build": 40,
+    "channel": "beta",
+    "date": "Thu, 12 Nov 2026 05:11:47 +0000",
+    "notesUrl": "https://github.com/duongductrong/TableGrip/releases/tag/v1.0.0-beta.4",
+    "notes": "### \u2728 Features\n- Complete in the record console's language\n- Script console with completion, and results as an editable grid, JSON or tree\n- Add macOS menu bar support with settings and functionality\n- Enhance UpdatesPanel with improved UI and functionality\n",
+    "targets": {
+      "macos-arm64": {
+        "length": 114392048,
+        "edSignature": "Hkie7lQ2Lmo/xOrv/HvXX+vkEq8O0kD4xTQIvXuC20vPBgAjJF+T8bZ4lRqxyGQnR0n+Q1/XZHDxW7QsGhhmCw==",
+        "minimumSystemVersion": "10.13",
+        "build": 40,
+        "url": "https://github.com/duongductrong/TableGrip/releases/download/v1.0.0-beta.4/TableGrip-1.0.0-beta.4-macos-arm64.dmg"
+      },
+      "macos-x64": {
+        "length": 115895923,
+        "edSignature": "4UqUoIBcPocomeYSFk+uvIr8XZChtz4v4lNUHaByqKp1mFEv3O4yAAs4GpcK0JQNh9qSIMF64LQMN1SIYUP0Cw==",
+        "minimumSystemVersion": "10.13",
+        "build": 40,
+        "url": "https://github.com/duongductrong/TableGrip/releases/download/v1.0.0-beta.4/TableGrip-1.0.0-beta.4-macos-x64.dmg"
+      },
+      "windows-x64": {
+        "length": 100401660,
+        "edSignature": "sr5b+vWcLL32ub8afd94vi29DkLXIJp2hfiLvdSqzFlDOe+syJ3UW3G44GC8keraTcW0wWYJFtkWPp/+T53JAw==",
+        "minimumSystemVersion": "10.0",
+        "build": 40,
+        "url": "https://github.com/duongductrong/TableGrip/releases/download/v1.0.0-beta.4/TableGrip-1.0.0-beta.4-windows-x64.msi"
+      }
+    }
   }
 ]
