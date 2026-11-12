@@ -3,6 +3,16 @@
 All notable changes to TableGrip are listed here, newest first. Each entry is written from the Conventional Commits
 of its release and can be edited in the release PR before it is merged.
 
+## [1.0.0-beta.8] - 2026-11-12
+
+### 🐛 Bug Fixes
+- Wait for the editor before pasting in tests and retry flaky UI tests on CI (#18) (097beac)
+
+### Contributors
+[@duongductrong](https://github.com/duongductrong)
+
+**Full Changelog**: https://github.com/duongductrong/TableGrip/compare/v1.0.0-beta.7...v1.0.0-beta.8
+
 ## [1.0.0-beta.7] - 2026-11-12
 
 ### 🐛 Bug Fixes
