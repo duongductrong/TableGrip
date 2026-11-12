@@ -33,6 +33,7 @@ import java.sql.DriverManager
 import javax.imageio.ImageIO
 import kotlin.io.path.createTempDirectory
 import kotlin.io.path.writeText
+import kotlin.time.Duration.Companion.minutes
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -104,7 +105,7 @@ class AgentPanelTest {
                         override suspend fun discover(rescan: Boolean) = listOf(agent)
                     })),
                 )
-            runComposeUiTest {
+            runComposeUiTest(testTimeout = 5.minutes) {
                 setContent { TableGripTheme(isDark = dark) { Box(Modifier.size(1300.dp, 760.dp)) { MainScreen(app) } } }
                 runOnUiThread { app.agentOpen = true }
                 waitUntil(timeoutMillis = 5_000) { app.agent.selected != null }

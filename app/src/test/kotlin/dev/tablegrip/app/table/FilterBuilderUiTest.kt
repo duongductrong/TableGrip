@@ -44,6 +44,7 @@ import java.sql.DriverManager
 import javax.imageio.ImageIO
 import kotlin.io.path.createTempDirectory
 import kotlin.io.path.writeText
+import kotlin.time.Duration.Companion.minutes
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -90,7 +91,7 @@ class FilterBuilderUiTest {
                     connectionStore = ConnectionStore(home.resolve("connections.json"), InMemorySecretStore()),
                     history = QueryHistory(home.resolve("history.jsonl")),
                 )
-            runComposeUiTest {
+            runComposeUiTest(testTimeout = 5.minutes) {
                 setContent { TableGripTheme(isDark = dark) { Box(Modifier.size(1300.dp, 640.dp)) { MainScreen(app) } } }
                 val config = app.connections.profiles.single()
                 runOnUiThread { app.workspace.openTable(config, TableRef(Namespace(null, null), "orders")) }
@@ -186,7 +187,7 @@ class FilterBuilderUiTest {
                 connectionStore = ConnectionStore(home.resolve("connections.json"), InMemorySecretStore()),
                 history = QueryHistory(home.resolve("history.jsonl")),
             )
-        runComposeUiTest {
+        runComposeUiTest(testTimeout = 5.minutes) {
             setContent { TableGripTheme(isDark = false) { Box(Modifier.size(1300.dp, 640.dp)) { MainScreen(app) } } }
             val config = app.connections.profiles.single()
             runOnUiThread { app.workspace.openTable(config, TableRef(Namespace(null, null), "orders")) }

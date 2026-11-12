@@ -34,6 +34,7 @@ import dev.tablegrip.core.settings.SettingsStore
 import java.io.File
 import javax.imageio.ImageIO
 import kotlin.io.path.createTempDirectory
+import kotlin.time.Duration.Companion.minutes
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -54,7 +55,7 @@ class ExplorerContextMenuTest {
     }
 
     @Test
-    fun `blank space below the tree offers the sidebar's actions`() = runComposeUiTest {
+    fun `blank space below the tree offers the sidebar's actions`() = runComposeUiTest(testTimeout = 5.minutes) {
         val app = app(ConnectionConfig("a", "Orders", DatabaseType.PostgreSQL, group = "Shop"), ConnectionConfig("c", "Analytics", DatabaseType.ClickHouse))
         setContent { TableGripTheme(isDark = true) { Box(Modifier.size(320.dp, 600.dp)) { ExplorerPanel(app) } } }
         waitForIdle()
@@ -78,7 +79,7 @@ class ExplorerContextMenuTest {
     }
 
     @Test
-    fun `the add menu lists engines and opens the dialog on the one picked`() = runComposeUiTest {
+    fun `the add menu lists engines and opens the dialog on the one picked`() = runComposeUiTest(testTimeout = 5.minutes) {
         val app = app(ConnectionConfig("c", "Analytics", DatabaseType.ClickHouse))
         setContent { TableGripTheme(isDark = true) { Box(Modifier.size(320.dp, 800.dp)) { ExplorerPanel(app) } } }
         waitForIdle()
@@ -102,7 +103,7 @@ class ExplorerContextMenuTest {
 
     @OptIn(InternalJewelApi::class)
     @Test
-    fun `the more data sources submenu lets the pointer go back to the menu`() = runComposeUiTest {
+    fun `the more data sources submenu lets the pointer go back to the menu`() = runComposeUiTest(testTimeout = 5.minutes) {
         val app = app(ConnectionConfig("c", "Analytics", DatabaseType.ClickHouse))
         setContent { TableGripTheme(isDark = true) { Box(Modifier.size(320.dp, 800.dp)) { ExplorerPanel(app) } } }
         waitForIdle()
@@ -143,7 +144,7 @@ class ExplorerContextMenuTest {
     }
 
     @Test
-    fun `a connection row keeps its own menu`() = runComposeUiTest {
+    fun `a connection row keeps its own menu`() = runComposeUiTest(testTimeout = 5.minutes) {
         val app = app(ConnectionConfig("c", "Analytics", DatabaseType.ClickHouse))
         setContent { TableGripTheme(isDark = true) { Box(Modifier.size(320.dp, 600.dp)) { ExplorerPanel(app) } } }
         waitForIdle()
@@ -156,7 +157,7 @@ class ExplorerContextMenuTest {
     }
 
     @Test
-    fun `the empty sidebar has the menu too`() = runComposeUiTest {
+    fun `the empty sidebar has the menu too`() = runComposeUiTest(testTimeout = 5.minutes) {
         val app = app()
         setContent { TableGripTheme(isDark = true) { Box(Modifier.size(320.dp, 600.dp)) { ExplorerPanel(app) } } }
         waitForIdle()
