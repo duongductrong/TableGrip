@@ -4,6 +4,19 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
   <channel>
     <title>TableGrip</title>
     <item>
+      <title>TableGrip 1.0.0-beta.9</title>
+      <pubDate>Thu, 12 Nov 2026 19:08:30 +0000</pubDate>
+      <sparkle:version>65</sparkle:version>
+      <sparkle:shortVersionString>1.0.0-beta.9</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>10.13</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/duongductrong/TableGrip/releases/tag/v1.0.0-beta.9</sparkle:fullReleaseNotesLink>
+      <sparkle:channel>beta</sparkle:channel>
+      <description sparkle:format="markdown"><![CDATA[### 🐛 Bug Fixes
+- Give the slowest UI tests a 5 minute timeout
+]]></description>
+      <enclosure url="https://github.com/duongductrong/TableGrip/releases/download/v1.0.0-beta.9/TableGrip-1.0.0-beta.9-macos-arm64.dmg" length="115336328" type="application/octet-stream" sparkle:edSignature="nCc1EBVF6w/KyPchZnVpnqdWj+wYUIXpPhBIlsN575dnCReBlBMn9Bt7sQEVEP0JA0ABdjpVyzVo9lIkoSOtAw=="></enclosure>
+    </item>
+    <item>
       <title>TableGrip 1.0.0-beta.5</title>
       <pubDate>Thu, 12 Nov 2026 16:25:22 +0000</pubDate>
       <sparkle:version>54</sparkle:version>
@@ -93,6 +106,6 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
     </item>
   </channel>
 </rss><!-- sparkle-signatures:
-edSignature: c+pgevz9Qap3TWfzSqlccz46Pr9eylBrnvYKBoq6jghpBi7W7++3hfXV87x6Qa5fbG//w5cJwxu8f+zj/F+UCw==
-length: 6376
+edSignature: 2KfflMUXsVsCQrRgUvj67hILuaR7o4DcXzfcNX3QuJH7tJMrLgRUAE9EXyqwwyvqqqYINkav3hj7OeK1enGkAA==
+length: 7326
 -->

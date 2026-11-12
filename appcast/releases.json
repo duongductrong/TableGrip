@@ -122,5 +122,36 @@
         "url": "https://github.com/duongductrong/TableGrip/releases/download/v1.0.0-beta.5/TableGrip-1.0.0-beta.5-windows-x64.msi"
       }
     }
+  },
+  {
+    "version": "1.0.0-beta.9",
+    "build": 65,
+    "channel": "beta",
+    "date": "Thu, 12 Nov 2026 19:08:30 +0000",
+    "notesUrl": "https://github.com/duongductrong/TableGrip/releases/tag/v1.0.0-beta.9",
+    "notes": "### \ud83d\udc1b Bug Fixes\n- Give the slowest UI tests a 5 minute timeout\n",
+    "targets": {
+      "macos-arm64": {
+        "length": 115336328,
+        "edSignature": "nCc1EBVF6w/KyPchZnVpnqdWj+wYUIXpPhBIlsN575dnCReBlBMn9Bt7sQEVEP0JA0ABdjpVyzVo9lIkoSOtAw==",
+        "minimumSystemVersion": "10.13",
+        "build": 65,
+        "url": "https://github.com/duongductrong/TableGrip/releases/download/v1.0.0-beta.9/TableGrip-1.0.0-beta.9-macos-arm64.dmg"
+      },
+      "macos-x64": {
+        "length": 116875457,
+        "edSignature": "uBDu5Uwq+h3xO65sLMAjf8/Fuo5hR8vWPTTnA1Zj+Otjx6JdXXgwWyWLroGdh7cbEm0MLS+F3Pvr0ky5GzE2Cw==",
+        "minimumSystemVersion": "10.13",
+        "build": 65,
+        "url": "https://github.com/duongductrong/TableGrip/releases/download/v1.0.0-beta.9/TableGrip-1.0.0-beta.9-macos-x64.dmg"
+      },
+      "windows-x64": {
+        "length": 101356029,
+        "edSignature": "Hm+kD/s6frZuFDAZBST8IURU1jP3EwM79ODnlOE8Pb7cUAQ6pLZB9JwIzCOrSnUCXD4aPmBTclThf4/NZZp4CQ==",
+        "minimumSystemVersion": "10.0",
+        "build": 65,
+        "url": "https://github.com/duongductrong/TableGrip/releases/download/v1.0.0-beta.9/TableGrip-1.0.0-beta.9-windows-x64.msi"
+      }
+    }
   }
 ]
