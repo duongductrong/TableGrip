@@ -12,10 +12,12 @@ internal class Introspector(private val dialect: SqlDialect) {
     fun tables(meta: DatabaseMetaData, namespace: Namespace): List<TableInfo> =
         meta.getTables(namespace.catalog, namespace.schema?.let { meta.escape(it) }, "%", dialect.tableTypes.keys.toTypedArray())
             .collect {
+                val type = getString("TABLE_TYPE")
                 TableInfo(
                     ref = TableRef(namespace, getString("TABLE_NAME")),
-                    isView = dialect.tableTypes[getString("TABLE_TYPE")] == true,
+                    isView = dialect.tableTypes[type] == true,
                     remarks = getString("REMARKS")?.takeIf { it.isNotBlank() },
+                    materialized = type.orEmpty().replace('_', ' ').equals("MATERIALIZED VIEW", ignoreCase = true),
                 )
             }
             .sortedBy { it.ref.name.lowercase() }

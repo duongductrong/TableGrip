@@ -76,7 +76,7 @@ tasks.test {
     // it.presto, it.db2, it.informix, it.iris, it.hive, it.spark, it.spanner: see
     // ServerEnginesIntegrationTest and JdbcEnginesIntegrationTest); -Pit.network=true downloads drivers.
     listOf(
-        "it.postgres", "it.mysql", "it.network", "it.cockroach", "it.timescale", "it.tidb", "it.mssql", "it.clickhouse", "it.etcd", "it.etcdauth",
+        "it.postgres", "it.mysql", "it.mariadb", "it.network", "it.cockroach", "it.timescale", "it.tidb", "it.mssql", "it.clickhouse", "it.etcd", "it.etcdauth",
         "it.oracle", "it.firebird", "it.trino", "it.yugabyte", "it.questdb", "it.starrocks", "it.oceanbase", "it.presto",
         "it.db2", "it.informix", "it.iris", "it.hive", "it.spark", "it.spanner",
         // Engines browsed as records: see SearchEnginesTest, DocumentEnginesTest, TimeSeriesEnginesTest and GraphEnginesTest.

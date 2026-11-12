@@ -16,6 +16,7 @@ import dev.tablegrip.app.keyvalue.CommandConsoleTab
 import dev.tablegrip.app.keyvalue.KeyBrowserTab
 import dev.tablegrip.app.schema.ErDiagramTab
 import dev.tablegrip.app.schema.SchemaCompareTab
+import dev.tablegrip.app.schema.SchemaObjectTab
 import dev.tablegrip.app.schema.TableDesignerTab
 import dev.tablegrip.core.connection.ConnectionConfig
 import dev.tablegrip.core.connection.ClientApi
@@ -25,6 +26,7 @@ import dev.tablegrip.app.records.RecordConsoleTab
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import kotlinx.coroutines.launch
 import dev.tablegrip.core.metadata.Namespace
+import dev.tablegrip.core.metadata.SchemaObjectRef
 import dev.tablegrip.core.metadata.TableRef
 import dev.tablegrip.core.session.SessionTab
 import java.io.File
@@ -142,6 +144,15 @@ class WorkspaceViewModel(private val app: AppState) {
             structure != null -> tab.showStructure(structure)
             existing == null -> tab.showData()
         }
+    }
+
+    /** A function's, procedure's or sequence's properties and source; focuses its tab if it is already open. */
+    fun openSchemaObject(config: ConnectionConfig, ref: SchemaObjectRef) {
+        tabs.firstOrNull { it is SchemaObjectTab && it.connectionId == config.id && it.ref == ref }?.let {
+            bringToFront(it)
+            return
+        }
+        open(SchemaObjectTab(app, config, ref))
     }
 
     /** Designs [table] of [namespace], or a new table there when null; focuses an open designer of the same table. */

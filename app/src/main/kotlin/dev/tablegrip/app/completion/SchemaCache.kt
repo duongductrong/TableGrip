@@ -7,12 +7,15 @@ import androidx.compose.runtime.setValue
 import dev.tablegrip.app.connections.DatabaseRegistry
 import dev.tablegrip.core.completion.ColumnEntry
 import dev.tablegrip.core.completion.Relation
+import dev.tablegrip.core.completion.RoutineEntry
 import dev.tablegrip.core.completion.SchemaProvider
 import dev.tablegrip.core.completion.TableEntry
 import dev.tablegrip.core.completion.ValueContext
 import dev.tablegrip.core.connection.ConnectionConfig
 import dev.tablegrip.core.connection.DatabaseType
 import dev.tablegrip.core.metadata.Namespace
+import dev.tablegrip.core.metadata.SchemaObjectInfo
+import dev.tablegrip.core.metadata.SchemaObjectKind
 import dev.tablegrip.core.metadata.TableRef
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -31,6 +34,7 @@ class SchemaCache(private val scope: CoroutineScope, private val databases: Data
     private val tablesByNamespace = mutableMapOf<String, List<TableEntry>>()
     private val columnsByNamespace = mutableMapOf<String, Map<String, List<ColumnEntry>>>()
     private val relationsByTable = mutableMapOf<Pair<String, String>, List<Relation>>()
+    private val objectsByNamespace = mutableMapOf<String, List<SchemaObjectInfo>>()
     private val loading = mutableSetOf<Any>()
 
     override val defaultNamespace: String?
@@ -55,6 +59,18 @@ class SchemaCache(private val scope: CoroutineScope, private val databases: Data
     override fun relations(namespace: String?, table: String): List<Relation>? {
         val key = key(namespace) ?: return null.also { loadNamespaces() }
         return relationsByTable[key to table] ?: null.also { loadRelations(key, table) }
+    }
+
+    override fun routines(namespace: String?): List<RoutineEntry>? {
+        val key = key(namespace) ?: return null.also { loadNamespaces() }
+        val objects = objectsByNamespace[key] ?: return null.also { loadObjects(key) }
+        return objects.filter { it.ref.kind != SchemaObjectKind.Sequence }.map { RoutineEntry(it.ref.name, it.ref.kind == SchemaObjectKind.Procedure, it.detail) }
+    }
+
+    /** Functions, procedures and sequences of every namespace loaded so far; starts loading the rest. */
+    fun allObjects(): List<SchemaObjectInfo> {
+        val loaded = namespaceList ?: return emptyList<SchemaObjectInfo>().also { loadNamespaces() }
+        return loaded.flatMap { namespace -> objectsByNamespace[namespace.displayName] ?: emptyList<SchemaObjectInfo>().also { loadObjects(namespace.displayName) } }
     }
 
     /** Every table and view of every namespace loaded so far, with whether it's a view; starts loading the rest. */
@@ -85,6 +101,7 @@ class SchemaCache(private val scope: CoroutineScope, private val databases: Data
         tablesByNamespace.clear()
         columnsByNamespace.clear()
         relationsByTable.clear()
+        objectsByNamespace.clear()
         version++
     }
 
@@ -112,6 +129,13 @@ class SchemaCache(private val scope: CoroutineScope, private val databases: Data
         load("tables:$key") {
             val namespace = namespaceOf(key) ?: return@load
             tablesByNamespace[key] = databases.database(config).tables(namespace).map { TableEntry(it.ref.name, it.isView) }
+        }
+
+    /** Failures leave the list empty rather than retrying on every keystroke: these are extras. */
+    private fun loadObjects(key: String) =
+        load("objects:$key") {
+            val namespace = namespaceOf(key) ?: return@load
+            objectsByNamespace[key] = runCatching { databases.database(config).schemaObjects(namespace) }.getOrDefault(emptyList())
         }
 
     private fun loadColumns(key: String) =

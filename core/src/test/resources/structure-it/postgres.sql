@@ -27,3 +27,7 @@ CREATE VIEW shop.big_orders AS SELECT id, total FROM shop.orders WHERE total > 1
 CREATE MATERIALIZED VIEW shop.totals AS SELECT customer_id, sum(total) AS s FROM shop.orders GROUP BY customer_id;
 CREATE TABLE shop.events (id int, at date NOT NULL) PARTITION BY RANGE (at);
 CREATE TABLE "Mixed Case" ("Id" int PRIMARY KEY, "a""b" text);
+CREATE FUNCTION shop.order_total(customer integer) RETURNS numeric LANGUAGE sql STABLE AS $$ SELECT coalesce(sum(total), 0) FROM shop.orders WHERE customer_id = customer $$;
+CREATE FUNCTION shop.order_total(customer integer, since date) RETURNS numeric LANGUAGE sql AS $$ SELECT 0::numeric $$;
+COMMENT ON FUNCTION shop.order_total(integer) IS 'Sum of a customer''s orders';
+CREATE PROCEDURE shop.close_orders(customer integer) LANGUAGE plpgsql AS $$ BEGIN UPDATE shop.orders SET status = 'done' WHERE customer_id = customer; END $$;

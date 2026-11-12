@@ -13,8 +13,13 @@ import dev.tablegrip.core.metadata.ColumnInfo
 import dev.tablegrip.core.metadata.ForeignKeyInfo
 import dev.tablegrip.core.metadata.IndexInfo
 import dev.tablegrip.core.metadata.Namespace
+import dev.tablegrip.core.metadata.SchemaObjectInfo
+import dev.tablegrip.core.metadata.SchemaObjectKind
+import dev.tablegrip.core.metadata.SchemaObjectRef
 import dev.tablegrip.core.metadata.TableInfo
 import dev.tablegrip.core.metadata.TableRef
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import org.jetbrains.jewel.foundation.lazy.SelectableLazyListState
 import org.jetbrains.jewel.foundation.lazy.tree.Tree
@@ -45,6 +50,11 @@ sealed interface ExplorerNode {
 
     data class Table(val connectionId: String, val info: TableInfo) : ExplorerNode {
         override val key = TableKey(connectionId, info.ref)
+    }
+
+    /** A function, procedure or sequence; opening it shows its properties and source. */
+    data class SchemaObject(val connectionId: String, val info: SchemaObjectInfo) : ExplorerNode {
+        override val key = SchemaObjectKey(connectionId, info.ref)
     }
 
     data class Column(val table: TableKey, val column: ColumnInfo) : ExplorerNode {
@@ -95,6 +105,8 @@ data class GroupKey(val name: String, val favorites: Boolean)
 
 data class TableKey(val connectionId: String, val ref: TableRef)
 
+data class SchemaObjectKey(val connectionId: String, val ref: SchemaObjectRef)
+
 data class RecordKey(val connectionId: String, val path: List<String>)
 
 private sealed interface Children {
@@ -142,6 +154,7 @@ class ExplorerViewModel(private val app: AppState) {
             is ExplorerNode.Connection -> config.name
             is ExplorerNode.Schema -> namespace.displayName
             is ExplorerNode.Table -> info.ref.name
+            is ExplorerNode.SchemaObject -> info.ref.name
             is ExplorerNode.Column -> column.name
             is ExplorerNode.DocumentDatabase -> name
             is ExplorerNode.Collection -> info.name
@@ -261,10 +274,27 @@ class ExplorerViewModel(private val app: AppState) {
                 namespaces.map { ExplorerNode.Schema(config.id, it) }
             }
             is ExplorerNode.Schema -> {
-                val (views, tables) = database.tables(key.namespace).partition { it.isView }
+                // Functions, procedures and sequences are extras: the tables still show when they can't be read.
+                val (all, objects) =
+                    coroutineScope {
+                        val objects = async { runCatching { database.schemaObjects(key.namespace) }.getOrDefault(emptyList()) }
+                        database.tables(key.namespace) to objects.await()
+                    }
+                val (views, tables) = all.partition { it.isView }
+                val (materialized, plain) = views.partition { it.materialized }
+                fun tableFolder(label: String, items: List<TableInfo>) =
+                    ExplorerNode.Folder(key, label, items.map { ExplorerNode.Table(config.id, it) }).takeIf { items.isNotEmpty() }
+                fun objectFolder(label: String, kind: SchemaObjectKind) =
+                    objects.filter { it.ref.kind == kind }.takeIf { it.isNotEmpty() }?.let { items ->
+                        ExplorerNode.Folder(key, label, items.map { ExplorerNode.SchemaObject(config.id, it) })
+                    }
                 listOfNotNull(
-                    ExplorerNode.Folder(key, tr("tables"), tables.map { ExplorerNode.Table(config.id, it) }).takeIf { tables.isNotEmpty() },
-                    ExplorerNode.Folder(key, tr("views"), views.map { ExplorerNode.Table(config.id, it) }).takeIf { views.isNotEmpty() },
+                    tableFolder(tr("tables"), tables),
+                    tableFolder(tr("views"), plain),
+                    tableFolder(tr("materialized views"), materialized),
+                    objectFolder(tr("functions"), SchemaObjectKind.Function),
+                    objectFolder(tr("procedures"), SchemaObjectKind.Procedure),
+                    objectFolder(tr("sequences"), SchemaObjectKind.Sequence),
                 )
             }
             is TableKey -> {
@@ -289,6 +319,26 @@ class ExplorerViewModel(private val app: AppState) {
                     app.status = tr("Copied DDL of {0}", table.name)
                 }
                 .onFailure { app.status = tr("Couldn't read DDL of {0}: {1}", table.name, it.message) }
+        }
+    }
+
+    fun copySource(config: ConnectionConfig, ref: SchemaObjectRef) {
+        app.scope.launch {
+            runCatching { app.databases.database(config).schemaObjectDefinition(ref).source }
+                .onSuccess {
+                    copyToClipboard(it)
+                    app.status = tr("Copied the source of {0}", ref.name)
+                }
+                .onFailure { app.status = tr("Couldn't read {0}: {1}", ref.name, it.message) }
+        }
+    }
+
+    /** A new console with the object's source, as a statement that replaces it where the engine can. */
+    fun openSourceInConsole(config: ConnectionConfig, ref: SchemaObjectRef) {
+        app.scope.launch {
+            runCatching { app.databases.database(config).schemaObjectDefinition(ref).replaceSql }
+                .onSuccess { app.workspace.openConsole(config, it) }
+                .onFailure { app.status = tr("Couldn't read {0}: {1}", ref.name, it.message) }
         }
     }
 
@@ -327,6 +377,7 @@ class ExplorerViewModel(private val app: AppState) {
             is ExplorerNode.Schema -> key.connectionId
             is ExplorerNode.DocumentDatabase -> key.connectionId
             is TableKey -> key.connectionId
+            is SchemaObjectKey -> key.connectionId
             is RecordKey -> key.connectionId
             is Pair<*, *> -> key.first?.let(::connectionIdOf)
             else -> null

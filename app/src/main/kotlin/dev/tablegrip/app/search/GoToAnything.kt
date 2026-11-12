@@ -59,6 +59,7 @@ import dev.tablegrip.app.ui.Shortcuts
 import dev.tablegrip.core.activity.ActivitySupport
 import dev.tablegrip.core.connection.ConnectionConfig
 import dev.tablegrip.core.connection.ClientApi
+import dev.tablegrip.core.metadata.SchemaObjectKind
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.Orientation
 import org.jetbrains.jewel.ui.component.Divider
@@ -74,6 +75,8 @@ enum class GoToKind(val heading: String) {
     Tab(tr("Open tabs")),
     Table(tr("Tables")),
     View(tr("Views")),
+    Routine(tr("Functions and procedures")),
+    Sequence(tr("Sequences")),
     Query(tr("Saved queries")),
     Connection(tr("Connections")),
     Action(tr("Actions")),
@@ -98,7 +101,7 @@ class GoToItem(
 
 /** Results for [query], best first; a blank query lists open tabs, connections and actions. */
 fun rankGoTo(items: List<GoToItem>, query: String, limit: Int = 80): List<GoToItem> {
-    if (query.isBlank()) return items.filter { it.kind != GoToKind.History && it.kind != GoToKind.Table && it.kind != GoToKind.View }.take(limit)
+    if (query.isBlank()) return items.filter { it.kind !in SchemaKinds }.take(limit)
     val scored =
         items.mapNotNull { item ->
             val score = fuzzyScore(item.label, query) ?: item.detail?.let { fuzzyScore("${it} ${item.label}", query) }?.minus(20) ?: return@mapNotNull null
@@ -114,6 +117,9 @@ fun rankGoTo(items: List<GoToItem>, query: String, limit: Int = 80): List<GoToIt
         .map { it.first }
 }
 
+/** Kinds listed only once something is typed: there are too many to browse. */
+private val SchemaKinds = setOf(GoToKind.History, GoToKind.Table, GoToKind.View, GoToKind.Routine, GoToKind.Sequence)
+
 /** Everything go-to-anything can reach right now; tables come from connections already connected. */
 fun goToItems(app: AppState): List<GoToItem> = buildList {
     val workspace = app.workspace
@@ -124,7 +130,12 @@ fun goToItems(app: AppState): List<GoToItem> = buildList {
                 GoToKind.Tab,
                 tab.title,
                 detail = config?.name,
-                icon = if (tab is ConsoleTab) AllIconsKeys.Nodes.Console else AllIconsKeys.Nodes.DataTables,
+                icon =
+                    when (tab) {
+                        is ConsoleTab -> AllIconsKeys.Nodes.Console
+                        is dev.tablegrip.app.schema.SchemaObjectTab -> AllIconsKeys.Nodes.Function
+                        else -> AllIconsKeys.Nodes.DataTables
+                    },
                 connection = config,
             ) { workspace.selected = tab }
         )
@@ -153,6 +164,24 @@ fun goToItems(app: AppState): List<GoToItem> = buildList {
                         altLabel = tr("structure"),
                         openAlt = { workspace.openTable(config, ref, StructureSection.Columns) },
                     ) { workspace.openTable(config, ref) }
+                )
+            }
+            app.schemaCache(config).allObjects().forEach { info ->
+                val ref = info.ref
+                val sequence = ref.kind == SchemaObjectKind.Sequence
+                add(
+                    GoToItem(
+                        if (sequence) GoToKind.Sequence else GoToKind.Routine,
+                        ref.name,
+                        // Overloads share a name; their signatures tell them apart.
+                        detail = listOfNotNull(config.name, ref.namespace.displayName, info.detail.takeUnless { sequence }).filter { it.isNotEmpty() }.joinToString(" · "),
+                        icon = when (ref.kind) {
+                            SchemaObjectKind.Function -> AllIconsKeys.Nodes.Function
+                            SchemaObjectKind.Procedure -> AllIconsKeys.Nodes.Method
+                            SchemaObjectKind.Sequence -> AllIconsKeys.Nodes.Constant
+                        },
+                        connection = config,
+                    ) { workspace.openSchemaObject(config, ref) }
                 )
             }
         }

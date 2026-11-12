@@ -12,3 +12,14 @@ CREATE TABLE orders (
 );
 CREATE TRIGGER orders_bi BEFORE INSERT ON orders FOR EACH ROW SET NEW.status = lower(NEW.status);
 CREATE VIEW big_orders AS SELECT id, total FROM orders WHERE total > 100;
+DELIMITER //
+CREATE FUNCTION order_total(customer int) RETURNS decimal(10,2) DETERMINISTIC READS SQL DATA COMMENT 'Sum of a customer''s orders'
+BEGIN
+  RETURN (SELECT COALESCE(SUM(total), 0) FROM orders WHERE customer_id = customer);
+END//
+CREATE PROCEDURE close_orders(IN customer int, OUT closed int)
+BEGIN
+  UPDATE orders SET status = 'paid' WHERE customer_id = customer;
+  SET closed = ROW_COUNT();
+END//
+DELIMITER ;
