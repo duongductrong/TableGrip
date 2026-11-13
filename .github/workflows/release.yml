@@ -453,6 +453,7 @@ jobs:
     needs: [version, publish]
     permissions:
       contents: write
+      actions: write
     uses: ./.github/workflows/appcast.yml
     with:
       tag: ${{ github.ref_name }}

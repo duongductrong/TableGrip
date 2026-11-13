@@ -11,7 +11,7 @@ import { links } from '#/content/site'
 export type DownloadTarget = 'macos-arm64' | 'macos-x64' | 'windows-x64' | 'linux-x64'
 export type DownloadOs = 'macos' | 'windows' | 'linux'
 
-type Feed = { version: string; build: number; targets: Partial<Record<DownloadTarget, { url: string; length?: number }>> }[]
+type Feed = { version: string; build: number; channel?: string; date?: string; notesUrl?: string; targets: Partial<Record<DownloadTarget, { url: string; length?: number }>> }[]
 
 const latest = (releasesFeed as Feed).reduce<Feed[number] | undefined>(
   (best, release) => (!best || release.build > best.build ? release : best),
@@ -19,6 +19,18 @@ const latest = (releasesFeed as Feed).reduce<Feed[number] | undefined>(
 )
 
 export const latestVersion: string | undefined = latest?.version
+
+/** What the feed records about the newest release, for the line that says what is on offer. */
+export const latestChannel: string | undefined = latest?.channel
+export const latestNotesUrl: string | undefined = latest?.notesUrl
+
+const published = latest?.date ? new Date(latest.date) : undefined
+
+/** The newest release's publish date, e.g. "November 12, 2026". */
+export const latestDate: string | undefined =
+  published && !Number.isNaN(published.getTime())
+    ? published.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })
+    : undefined
 
 const extension: Record<DownloadTarget, string> = {
   'macos-arm64': 'dmg',
@@ -45,7 +57,7 @@ export function fileName(target: DownloadTarget): string {
 export function downloadUrl(target: DownloadTarget): string {
   if (!latestVersion) return links.releases
   return (
-    latest.targets[target]?.url ??
+    latest?.targets[target]?.url ??
     `${links.github}/releases/download/v${latestVersion}/${fileName(target)}`
   )
 }

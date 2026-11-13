@@ -29,6 +29,7 @@ jobs:
     environment: release
     permissions:
       contents: write
+      actions: write # to start the website workflow below
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
@@ -87,3 +88,8 @@ jobs:
           git add appcast
           git commit -m "chore: update appcast for $TAG"
           git push origin HEAD:master
+
+      # The feed is committed with the workflow token, and a push made with it starts no workflows, so www.yml never
+      # sees the new appcast/releases.json. Start it by hand so the download buttons move to this release.
+      - name: Rebuild the website
+        run: gh workflow run www.yml --ref master

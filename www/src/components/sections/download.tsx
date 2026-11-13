@@ -5,7 +5,7 @@ import { GridPattern, Section } from '#/components/site/frame'
 import { GithubIcon } from '#/components/site/github-icon'
 import { Button } from '#/components/ui/button'
 import { links, platforms } from '#/content/site'
-import { defaultTarget, downloadSize, fileName, latestVersion } from '#/lib/download'
+import { defaultTarget, downloadSize, fileName, latestChannel, latestDate, latestNotesUrl, latestVersion } from '#/lib/download'
 import { cn } from '#/lib/utils'
 
 export function DownloadSection() {
@@ -18,6 +18,17 @@ export function DownloadSection() {
             <p className="flex items-center gap-2 text-[13px] text-muted-foreground">
               <span className="size-2 rounded-full bg-success" />
               Latest release <span className="font-mono text-[12px] text-foreground">v{latestVersion}</span>
+              {latestChannel && latestChannel !== 'stable' && (
+                <span className="rounded-full border border-rule px-2 py-0.5 text-[11px] capitalize">{latestChannel}</span>
+              )}
+              {latestDate && <span className="hidden sm:inline">· {latestDate}</span>}
+              <span aria-hidden>·</span>
+              <a
+                href={latestNotesUrl ?? '/changelog'}
+                className="text-foreground underline decoration-rule-strong underline-offset-4 hover:decoration-foreground"
+              >
+                Release notes
+              </a>
             </p>
           )}
           <img src="/logo.png" alt="" width={72} height={72} className="mt-6 size-[72px] rounded-[18px] shadow-lg" />

@@ -1,7 +1,8 @@
 # Builds the website (www/) on every pull request that touches it, and deploys it to Cloudflare Workers
 # (https://tablegrip.atcharm.com) when such a change lands on master. CHANGELOG.md counts as a site change: the
 # /changelog page bundles it at build time, and so does appcast/releases.json: the download buttons link straight to the
-# newest release's installers. The app's own workflows ignore www/ so a site-only change runs only this.
+# newest release's installers. The appcast workflow starts this one by dispatch after it commits that file, because
+# a push made with the workflow token starts nothing. The app's own workflows ignore www/ so a site-only change runs only this.
 #
 # Needs the repository secret CLOUDFLARE_API_TOKEN (an account API token with "Workers Scripts: Edit" and, for the
 # custom domain, "Workers Routes: Edit" + "Zone: Read" on atcharm.com) and the variable CLOUDFLARE_ACCOUNT_ID.
