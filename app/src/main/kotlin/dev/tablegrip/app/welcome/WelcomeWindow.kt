@@ -323,7 +323,7 @@ private fun StartAction(icon: IconKey, label: String, keys: String?, onClick: ()
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Box(
-            Modifier.size(26.dp).clip(RoundedCornerShape(7.dp)).background(islands.accent.copy(alpha = 0.14f)),
+            Modifier.size(26.dp).clip(RoundedCornerShape(7.dp)).background(islands.frame).border(1.dp, islands.islandBorder, RoundedCornerShape(7.dp)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(icon, null, Modifier.size(16.dp))
